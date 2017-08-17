@@ -15,7 +15,7 @@ describe Kubernetes::BuildJobExecutor do
 
   describe '#execute!' do
     def execute!(push: false)
-      executor.execute!(
+      executor.execute(
         build, project,
         docker_tag: 'latest', push: push
       )

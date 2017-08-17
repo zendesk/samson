@@ -50,7 +50,7 @@ class DeploysController < ApplicationController
 
   def create
     deploy_service = DeployService.new(current_user)
-    @deploy = deploy_service.deploy!(stage, deploy_params)
+    @deploy = deploy_service.deploy(stage, deploy_params)
 
     respond_to do |format|
       format.html do

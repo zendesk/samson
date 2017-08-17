@@ -22,19 +22,19 @@ describe ReleaseService do
     it "creates a new release" do
       count = Release.count
 
-      service.release!(commit: commit, author: author)
+      service.release(commit: commit, author: author)
 
       assert_equal count + 1, Release.count
     end
 
     it "tags the release" do
-      service.release!(commit: commit, author: author)
+      service.release(commit: commit, author: author)
       assert_equal [[project.github_repo, 'v124', target_commitish: commit]], release_params_used
     end
 
     it "deploys the commit to stages if they're configured to" do
       stage = project.stages.create!(name: "production", deploy_on_release: true)
-      release = service.release!(commit: commit, author: author)
+      release = service.release(commit: commit, author: author)
 
       assert_equal release.version, stage.deploys.first.reference
     end
@@ -46,7 +46,7 @@ describe ReleaseService do
         deployable_condition_check = lambda { |_, _| false }
 
         Samson::Hooks.with_callback(:release_deploy_conditions, deployable_condition_check) do |_|
-          service.release!(commit: commit, author: author)
+          service.release(commit: commit, author: author)
 
           stage.deploys.first.must_be_nil
         end
@@ -56,7 +56,7 @@ describe ReleaseService do
         deployable_condition_check = lambda { |_, _| true }
 
         Samson::Hooks.with_callback(:release_deploy_conditions, deployable_condition_check) do |_|
-          release = service.release!(commit: commit, author: author)
+          release = service.release(commit: commit, author: author)
 
           assert_equal release.version, stage.deploys.first.reference
         end

@@ -9,7 +9,7 @@ class TerminalOutputScanner
   def initialize(source)
     @source = source
     @queue = []
-    reset_buffer!
+    reset_buffer
   end
 
   def each(&block)
@@ -37,7 +37,7 @@ class TerminalOutputScanner
 
   def write_part(part)
     if part.start_with?("\r", "\n")
-      flush_buffer!
+      flush_buffer
 
       part.sub!(/^\r/, "") # chop off the leading \r
 
@@ -51,17 +51,17 @@ class TerminalOutputScanner
 
     @buffer << part
 
-    flush_buffer! if @buffer.end_with?("\n")
+    flush_buffer if @buffer.end_with?("\n")
   end
 
-  def flush_buffer!
+  def flush_buffer
     unless @buffer.empty?
       output(@state, @buffer)
-      reset_buffer!
+      reset_buffer
     end
   end
 
-  def reset_buffer!
+  def reset_buffer
     @buffer = "".dup
     @state = :append
   end

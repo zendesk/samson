@@ -33,11 +33,11 @@ describe Kubernetes::DeployExecutor do
     end
   end
 
-  describe "#execute!" do
-    def execute!
+  describe "#execute" do
+    def execute
       stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/pods\?}).
         to_return(body: pod_reply.to_json) # checks pod status to see if it's good
-      executor.execute!
+      executor.execute
     end
 
     def cancel_after_first_iteration
@@ -125,7 +125,7 @@ describe Kubernetes::DeployExecutor do
     end
 
     it "succeeds" do
-      assert execute!
+      assert execute
       out.must_include "resque-worker: Live\n"
       out.must_include "SUCCESS"
       out.wont_include "BigDecimal" # properly serialized configs
@@ -136,7 +136,7 @@ describe Kubernetes::DeployExecutor do
       GitRepository.any_instance.expects(:file_content).with('Dockerfile', commit).returns nil
 
       refute_difference 'Build.count' do
-        assert execute!
+        assert execute
         out.must_include "Not creating a Build"
         out.must_include "resque-worker: Live\n"
         out.must_include "SUCCESS"
@@ -145,7 +145,7 @@ describe Kubernetes::DeployExecutor do
 
     it "can deploy roles with 0 replicas to disable them" do
       worker_role.update_column(:replicas, 0)
-      assert execute!
+      assert execute
       out.wont_include "resque-worker: Live\n"
       out.must_include "app-server: Live\n"
     end
@@ -153,7 +153,7 @@ describe Kubernetes::DeployExecutor do
     it "does not test for stability when not deploying any pods" do
       worker_role.update_column(:replicas, 0)
       server_role.update_column(:replicas, 0)
-      assert execute!
+      assert execute
       out.must_include "SUCCESS"
       out.wont_include "Stable"
       out.wont_include "Deploy status after"
@@ -168,7 +168,7 @@ describe Kubernetes::DeployExecutor do
         GitRepository.any_instance.expects(:file_content).with { |file| file =~ /^kubernetes\// }.returns("oops: bad")
 
         e = assert_raises Samson::Hooks::UserError do
-          refute execute!
+          refute execute
         end
         e.message.must_include "Error found when parsing kubernetes/"
       end
@@ -179,7 +179,7 @@ describe Kubernetes::DeployExecutor do
           returns(read_kubernetes_sample_file('kubernetes_deployment.yml'))
 
         e = assert_raises Samson::Hooks::UserError do
-          refute execute!
+          refute execute
         end
         e.message.must_equal "metadata.labels.role must set and unique"
       end
@@ -192,7 +192,7 @@ describe Kubernetes::DeployExecutor do
         template[:spec][:template][:metadata][:annotations] = {"secret/foo": "bar"}
 
         e = assert_raises Samson::Hooks::UserError do
-          refute execute!
+          refute execute
         end
         e.message.must_include "Failed to resolve secret keys:\n\tbar"
       end
@@ -203,7 +203,7 @@ describe Kubernetes::DeployExecutor do
         template[:spec][:template][:metadata][:annotations] = {"samson/required_env": "FOO BAR"}
 
         e = assert_raises Samson::Hooks::UserError do
-          refute execute!
+          refute execute
         end
         e.message.must_include "Missing env variables FOO, BAR"
       end
@@ -211,7 +211,7 @@ describe Kubernetes::DeployExecutor do
 
     describe "role settings" do
       it "uses configured role settings" do
-        assert execute!
+        assert execute
         doc = Kubernetes::Release.last.release_docs.sort_by(&:kubernetes_role).last
         config = server_role
         doc.replica_target.must_equal config.replicas
@@ -221,7 +221,7 @@ describe Kubernetes::DeployExecutor do
 
       it "fails when role config is missing" do
         worker_role.delete
-        e = assert_raises(Samson::Hooks::UserError) { execute! }
+        e = assert_raises(Samson::Hooks::UserError) { execute }
         e.message.must_equal(
           "Role resque-worker for Pod 100 is not configured, but in repo at #{commit}"
         )
@@ -229,7 +229,7 @@ describe Kubernetes::DeployExecutor do
 
       it "fails when no role is setup in the project" do
         Kubernetes::Role.stubs(:configured_for_project).returns([worker_role])
-        e = assert_raises(Samson::Hooks::UserError) { execute! }
+        e = assert_raises(Samson::Hooks::UserError) { execute }
         e.message.must_equal(
           "Could not find config files for Pod 100 kubernetes/app_server.yml, kubernetes/resque_worker.yml" \
           " at #{commit}"
@@ -243,7 +243,7 @@ describe Kubernetes::DeployExecutor do
       end
 
       it "fails when the build is not built" do
-        e = assert_raises(Samson::Hooks::UserError) { execute! }
+        e = assert_raises(Samson::Hooks::UserError) { execute }
         e.message.must_equal "Build #{build.url} was created but never ran, run it manually."
         out.wont_include "Creating Build"
       end
@@ -260,7 +260,7 @@ describe Kubernetes::DeployExecutor do
           true
         end.returns job
 
-        assert execute!
+        assert execute
 
         out.must_include "Waiting for Build #{build.url} to finish."
         out.must_include "SUCCESS"
@@ -270,7 +270,7 @@ describe Kubernetes::DeployExecutor do
         build.create_docker_job.update_column(:status, 'cancelled')
         build.save!
         e = assert_raises Samson::Hooks::UserError do
-          execute!
+          execute
         end
         e.message.must_equal "Build #{build.url} is cancelled, rerun it manually."
         out.wont_include "Creating Build"
@@ -288,19 +288,19 @@ describe Kubernetes::DeployExecutor do
             build.update_column(:git_sha, job.commit)
             build.update_column(:docker_repo_digest, 'somet-digest') # a bit misleading since it should be running
           end
-          DockerBuilderService.any_instance.expects(:run!).never
-          assert execute!
+          DockerBuilderService.any_instance.expects(:run).never
+          assert execute
           out.must_include "SUCCESS"
           out.must_include "Build #{build.url} is looking good!"
         end
 
         it "succeeds when the build works" do
-          DockerBuilderService.any_instance.expects(:run!).with do
+          DockerBuilderService.any_instance.expects(:run).with do
             Build.last.create_docker_job.update_column(:status, 'succeeded')
             Build.last.update_column(:docker_repo_digest, 'some-sha')
             true
           end
-          assert execute!
+          assert execute
           out.must_include "SUCCESS"
           out.must_include "Creating Build for #{job.commit}"
           out.must_include "Build #{Build.last.url} is looking good"
@@ -313,20 +313,20 @@ describe Kubernetes::DeployExecutor do
           build.update_column(:docker_repo_digest, 'ababababab') # make build succeeded
           deploy.update_column(:kubernetes_reuse_build, true)
 
-          DockerBuilderService.any_instance.expects(:run!).never
+          DockerBuilderService.any_instance.expects(:run).never
 
-          assert execute!
+          assert execute
           out.must_include "SUCCESS"
           out.must_include "Build #{build.url} is looking good"
         end
 
         it "fails when the build fails" do
-          DockerBuilderService.any_instance.expects(:run!).with do
+          DockerBuilderService.any_instance.expects(:run).with do
             Build.any_instance.expects(:docker_build_job).at_least_once.returns Job.new(status: 'cancelled')
             true
           end
           e = assert_raises Samson::Hooks::UserError do
-            execute!
+            execute
           end
           e.message.must_equal "Build #{Build.last.url} is cancelled, rerun it manually."
           out.must_include "Creating Build for #{job.commit}.\n"
@@ -334,8 +334,8 @@ describe Kubernetes::DeployExecutor do
 
         it "stops when deploy is cancelled by user" do
           executor.cancel('FAKE-SIGNAL')
-          DockerBuilderService.any_instance.expects(:run!).returns(true)
-          refute execute!
+          DockerBuilderService.any_instance.expects(:run).returns(true)
+          refute execute
           out.scan(/.*Build.*/).must_equal ["Creating Build for #{job.commit}."] # not waiting for build
           out.must_include "STOPPED"
         end
@@ -381,7 +381,7 @@ describe Kubernetes::DeployExecutor do
 
       it "runs only jobs" do
         kubernetes_roles(:app_server).destroy
-        assert execute!
+        assert execute
         out.must_include "resque-worker: Live\n"
         out.must_include "SUCCESS"
         out.wont_include "stability"
@@ -390,7 +390,7 @@ describe Kubernetes::DeployExecutor do
       end
 
       it "runs prerequisites and then the deploy" do
-        assert execute!
+        assert execute
         out.must_include "resque-worker: Live\n"
         out.must_include "SUCCESS"
         out.must_include "stability" # testing deploy for stability
@@ -400,7 +400,7 @@ describe Kubernetes::DeployExecutor do
 
       it "fails when jobs fail" do
         executor.expects(:deploy_and_watch).returns false # jobs failed, they are the first execution
-        refute execute!
+        refute execute
         out.wont_include "SUCCESS"
         out.wont_include "stability"
         out.wont_include "other roles" # not announcing that we have more to deploy
@@ -409,21 +409,21 @@ describe Kubernetes::DeployExecutor do
 
     it "fails when release has errors" do
       Kubernetes::Release.any_instance.expects(:persisted?).at_least_once.returns(false)
-      e = assert_raises(Samson::Hooks::UserError) { execute! }
+      e = assert_raises(Samson::Hooks::UserError) { execute }
       e.message.must_equal "Failed to create release: []" # inspected errros
     end
 
     it "shows status of each individual pod when there is more than 1 per deploy group" do
       worker_role.update_column(:replicas, 2)
       pod_reply[:items] << pod_reply[:items].first
-      assert execute!
+      assert execute
       out.scan(/resque-worker: Live/).count.must_equal 2
       out.must_include "SUCCESS"
     end
 
     it "stops the loop when cancelling" do
       executor.cancel('FAKE-SIGNAL')
-      refute execute!
+      refute execute
       out.wont_include "SUCCESS"
       out.must_include "STOPPED"
     end
@@ -433,7 +433,7 @@ describe Kubernetes::DeployExecutor do
       pod_status.delete(:conditions)
 
       cancel_after_first_iteration
-      refute execute!
+      refute execute
 
       out.must_include "resque-worker: Waiting (Pending, Unknown)\n"
       out.must_include "STOPPED"
@@ -442,7 +442,7 @@ describe Kubernetes::DeployExecutor do
     it "stops when detecting a restart" do
       worker_is_unstable
 
-      refute execute!
+      refute execute
 
       out.must_include "resque-worker: Restarted\n"
       out.must_include "UNSTABLE"
@@ -452,7 +452,7 @@ describe Kubernetes::DeployExecutor do
       worker_is_unstable
       Kubernetes::DeployExecutor::ReleaseStatus.any_instance.stubs(:pod)
 
-      refute execute!
+      refute execute
 
       out.must_include "resque-worker: Restarted\n"
       out.must_include "UNSTABLE"
@@ -461,7 +461,7 @@ describe Kubernetes::DeployExecutor do
     it "stops when detecting a failure" do
       pod_status[:phase] = "Failed"
 
-      refute execute!
+      refute execute
 
       out.must_include "resque-worker: Failed\n"
       out.must_include "UNSTABLE"
@@ -483,7 +483,7 @@ describe Kubernetes::DeployExecutor do
           }.to_json
         )
 
-      refute execute!
+      refute execute
 
       out.must_include "resque-worker: Error\n"
       out.must_include "UNSTABLE"
@@ -494,14 +494,14 @@ describe Kubernetes::DeployExecutor do
     it "stops when taking too long to go live" do
       pod_status[:phase] = "Pending"
       timeout_after_first_iteration
-      refute execute!
+      refute execute
       out.must_include "TIMEOUT"
     end
 
     it "waits when less then exected pods are found" do
       Kubernetes::ReleaseDoc.any_instance.stubs(:desired_pod_count).returns(2)
       timeout_after_first_iteration
-      refute execute!
+      refute execute
       out.must_include "TIMEOUT"
     end
 
@@ -509,7 +509,7 @@ describe Kubernetes::DeployExecutor do
       pod_status[:conditions][0][:status] = "False"
 
       cancel_after_first_iteration
-      refute execute!
+      refute execute
 
       out.must_include "resque-worker: Waiting (Running, Unknown)\n"
       out.must_include "STOPPED"
@@ -519,7 +519,7 @@ describe Kubernetes::DeployExecutor do
       pod_status[:containerStatuses][0][:restartCount] = 1
       executor.instance_variable_set(:@testing_for_stability, 0)
       executor.expects(:raise).with("prerequisites should not check for stability") # ignore sanity check
-      refute execute!
+      refute execute
       out.must_include "resque-worker: Restarted"
       out.must_include "UNSTABLE"
     end
@@ -529,7 +529,7 @@ describe Kubernetes::DeployExecutor do
       pod_reply[:items].clear
 
       cancel_after_first_iteration
-      refute execute!
+      refute execute
 
       out.must_include "resque-worker: Missing\n"
       out.must_include "STOPPED"
@@ -543,7 +543,7 @@ describe Kubernetes::DeployExecutor do
       it "rolls back when previous resource existed" do
         stub_request(:get, service_url).to_return(body: {metadata: {uid: '123'}}.to_json)
 
-        refute execute!
+        refute execute
 
         out.must_include "resque-worker: Restarted\n"
         out.must_include "UNSTABLE"
@@ -554,7 +554,7 @@ describe Kubernetes::DeployExecutor do
       end
 
       it "deletes when there was no previous deployed resource" do
-        refute execute!
+        refute execute
 
         out.must_include "resque-worker: Restarted\n"
         out.must_include "UNSTABLE"
@@ -568,7 +568,7 @@ describe Kubernetes::DeployExecutor do
       it "does not crash when rollback fails" do
         Kubernetes::Resource::Deployment.any_instance.stubs(:revert).raises("Weird error")
 
-        refute execute!
+        refute execute
 
         out.must_include "resque-worker: Restarted\n"
         out.must_include "UNSTABLE"
@@ -580,7 +580,7 @@ describe Kubernetes::DeployExecutor do
         deploy.update_column(:kubernetes_rollback, false)
         Kubernetes::Resource::Deployment.any_instance.stubs(:revert).never
 
-        refute execute!
+        refute execute
 
         out.must_include "resque-worker: Restarted\n"
         out.must_include "UNSTABLE"
@@ -616,7 +616,7 @@ describe Kubernetes::DeployExecutor do
 
         worker_is_unstable
 
-        refute execute!
+        refute execute
 
         # failed
         out.must_include "resque-worker: Restarted\n"

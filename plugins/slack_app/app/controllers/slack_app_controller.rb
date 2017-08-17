@@ -66,7 +66,7 @@ class SlackAppController < ApplicationController
     return unknown_stage(project, stage_name) unless stage.present?
 
     deploy_service = DeployService.new(@current_user_from_slack)
-    deploy = deploy_service.deploy!(stage, reference: ref_name || 'master')
+    deploy = deploy_service.deploy(stage, reference: ref_name || 'master')
     DeployResponseUrl.create! deploy: deploy, response_url: @payload[:response_url]
 
     SlackMessage.new(deploy).message_body

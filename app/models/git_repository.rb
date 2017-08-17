@@ -121,17 +121,17 @@ class GitRepository
   end
 
   def clone!
-    executor.execute! "git -c core.askpass=true clone --mirror #{repository_url} #{repo_cache_dir}"
+    executor.execute "git -c core.askpass=true clone --mirror #{repository_url} #{repo_cache_dir}"
   end
   add_method_tracer :clone!
 
   def create_workspace(temp_dir)
-    executor.execute! "git clone #{repo_cache_dir} #{temp_dir}"
+    executor.execute "git clone #{repo_cache_dir} #{temp_dir}"
   end
   add_method_tracer :create_workspace
 
   def update!
-    executor.execute!("cd #{repo_cache_dir}", 'git fetch -p')
+    executor.execute("cd #{repo_cache_dir}", 'git fetch -p')
   end
   add_method_tracer :update!
 
@@ -140,14 +140,14 @@ class GitRepository
   end
 
   def checkout(git_reference, pwd)
-    executor.execute!("cd #{pwd}", "git checkout --quiet #{git_reference.shellescape}")
+    executor.execute("cd #{pwd}", "git checkout --quiet #{git_reference.shellescape}")
   end
 
   def checkout_submodules(pwd)
     return true unless File.exist? "#{pwd}/.gitmodules"
 
     recursive_flag = " --recursive" if git_supports_recursive_flag?
-    executor.execute!(
+    executor.execute(
       "cd #{pwd}",
       "git submodule sync#{recursive_flag}",
       "git submodule update --init --recursive"

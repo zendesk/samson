@@ -43,11 +43,11 @@ class JobExecution
     end
   end
 
-  def start!
-    @thread = Thread.new { ActiveRecord::Base.connection_pool.with_connection { run! } }
+  def start
+    @thread = Thread.new { ActiveRecord::Base.connection_pool.with_connection { run } }
   end
 
-  def wait!
+  def wait
     @thread.join
   end
 
@@ -111,18 +111,18 @@ class JobExecution
     @job.errored! if @job.active?
   end
 
-  def run!
+  def run
     @output.write('', :started)
     @start_callbacks.each(&:call)
     @job.running!
 
     success = make_tempdir do |dir|
-      return @job.errored! unless setup!(dir)
+      return @job.errored! unless setup(dir)
 
       if @execution_block
         @execution_block.call(self, dir)
       else
-        execute!(dir)
+        execute(dir)
       end
     end
 
@@ -138,7 +138,7 @@ class JobExecution
   ensure
     finish unless @cancelled
   end
-  add_transaction_tracer :run!,
+  add_transaction_tracer :run,
     category: :task,
     params: '{ job_id: id, project: job.project.try(:name), reference: reference }'
 
@@ -148,7 +148,7 @@ class JobExecution
     @finish_callbacks.each(&:call)
   end
 
-  def execute!(dir)
+  def execute(dir)
     Samson::Hooks.fire(:after_deploy_setup, dir, @job, @output, @reference)
 
     @output.write("\n# Executing deploy\n")
@@ -165,9 +165,9 @@ class JobExecution
       payload[:success] =
         if defined?(Kubernetes::DeployExecutor) && stage&.kubernetes
           @executor = Kubernetes::DeployExecutor.new(@output, job: @job, reference: @reference)
-          @executor.execute!
+          @executor.execute
         else
-          @executor.execute!(*cmds)
+          @executor.execute(*cmds)
         end
     end
 
@@ -176,7 +176,7 @@ class JobExecution
     payload[:success]
   end
 
-  def setup!(dir)
+  def setup(dir)
     return unless resolve_ref_to_commit
     stage.try(:kubernetes) || @repository.checkout_workspace(dir, @reference)
   end

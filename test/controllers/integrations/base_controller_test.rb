@@ -142,7 +142,7 @@ describe Integrations::BaseController do
       end
 
       it "stops deploy to further stages when first fails" do
-        DeployService.any_instance.expects(:deploy!).times(1).returns(Deploy.new)
+        DeployService.any_instance.expects(:deploy).times(1).returns(Deploy.new)
         post :create, params: {test_route: true, token: token}
         assert_response :unprocessable_entity
       end

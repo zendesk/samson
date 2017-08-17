@@ -266,7 +266,7 @@ describe Deploy do
 
   describe "#confirm_buddy!" do
     it "starts the deploy" do
-      DeployService.any_instance.expects(:confirm_deploy!)
+      DeployService.any_instance.expects(:confirm_deploy)
       deploy.confirm_buddy!(users(:viewer))
       deploy.buddy.must_equal users(:viewer)
       assert deploy.start_time
@@ -277,7 +277,7 @@ describe Deploy do
     before { deploy.job.update_column(:status, 'pending') }
 
     it "starts deploys that we put on hold" do
-      DeployService.any_instance.expects(:confirm_deploy!)
+      DeployService.any_instance.expects(:confirm_deploy)
       Deploy.start_deploys_waiting_for_restart!
       deploy.reload
       deploy.updated_at.must_be :>, 2.seconds.ago # did expire caches
@@ -286,7 +286,7 @@ describe Deploy do
 
     it "does not start deploys waiting for buddy" do
       Deploy.any_instance.expects(:waiting_for_buddy?).returns(true)
-      DeployService.any_instance.expects(:confirm_deploy!).never
+      DeployService.any_instance.expects(:confirm_deploy).never
       Deploy.start_deploys_waiting_for_restart!
     end
   end
@@ -429,20 +429,20 @@ describe Deploy do
   end
 
   describe "#validate_stage_is_unlocked" do
-    def deploy!
+    def deploy
       create_deploy!(job_attributes: { user: user })
     end
 
-    it("can deploy") { deploy! }
+    it("can deploy") { deploy }
 
     it "can deploy when locked by myself" do
       stage.create_lock!(user: user)
-      deploy!
+      deploy
     end
 
     it "cannot deploy when locked by someone else" do
       stage.create_lock!(user: user2)
-      assert_raise(ActiveRecord::RecordInvalid) { deploy! }
+      assert_raise(ActiveRecord::RecordInvalid) { deploy }
     end
 
     it "can update a deploy while something else is deployed" do
@@ -452,7 +452,7 @@ describe Deploy do
   end
 
   describe "#validate_stage_uses_deploy_groups_properly" do
-    def deploy!
+    def deploy
       create_deploy!(job_attributes: { user: user })
     end
 
@@ -462,14 +462,14 @@ describe Deploy do
     end
 
     it "is valid when using $DEPLOY_GROUPS and having deploy groups selected" do
-      deploy!
+      deploy
     end
 
     describe "when not selecting deploy groups" do
       before { stage.deploy_groups.clear }
 
       it "is invalid" do
-        e = assert_raise(ActiveRecord::RecordInvalid) { deploy! }
+        e = assert_raise(ActiveRecord::RecordInvalid) { deploy }
         e.message.must_equal \
           "Validation failed: Stage contains at least one command using the $DEPLOY_GROUPS " \
           "environment variable, but there are no Deploy Groups associated with this stage."
@@ -477,7 +477,7 @@ describe Deploy do
 
       it "valid when not using $DEPLOY_GROUPS" do
         DeployGroup.unstub(:enabled?)
-        deploy!
+        deploy
       end
     end
   end

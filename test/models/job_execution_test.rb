@@ -11,7 +11,7 @@ describe JobExecution do
     execution = JobExecution.new(branch, job, options)
     execution.on_finish(&on_finish) if on_finish.present?
     execution.on_start(&on_start) if on_start.present?
-    execution.send(:run!)
+    execution.send(:run)
   end
 
   def last_line_of_output
@@ -48,7 +48,7 @@ describe JobExecution do
   end
 
   it "clones the project's repository if it's not already cloned" do
-    execution.send(:run!)
+    execution.send(:run)
     assert File.directory?(repo_dir)
   end
 
@@ -67,7 +67,7 @@ describe JobExecution do
 
   it 'does not fail with nil ENV vars' do
     User.any_instance.expects(:name).at_least_once.returns(nil)
-    execution.send(:run!)
+    execution.send(:run)
   end
 
   it 'checks out the specified remote branch' do
@@ -163,7 +163,7 @@ describe JobExecution do
   it 'works without a deploy' do
     job_without_deploy = project.jobs.build(command: 'cat foo', user: user, project: project)
     execution = JobExecution.new('master', job_without_deploy)
-    execution.send(:run!)
+    execution.send(:run)
     # if you like, pretend there's a wont_raise assertion here
     # this is to make sure we don't add a hard dependency on having a deploy
   end
@@ -190,7 +190,7 @@ describe JobExecution do
 
     JobExecution.find_by_id(job.id).wont_be_nil
 
-    execution.wait!
+    execution.wait
 
     JobExecution.find_by_id(job.id).must_be_nil
   end
@@ -217,7 +217,7 @@ describe JobExecution do
   it 'outputs start / stop events' do
     execution = JobExecution.new('master', job)
     output = execution.output
-    execution.send(:run!)
+    execution.send(:run)
 
     assert output.include?(:started, '')
     assert output.include?(:finished, '')
@@ -227,7 +227,7 @@ describe JobExecution do
     called_subscriber = false
 
     execution = JobExecution.new('master', job)
-    execution.start!
+    execution.start
     execution.on_finish { called_subscriber = true }
     execution.cancel
 
@@ -255,10 +255,10 @@ describe JobExecution do
 
   it 'cannot setup project if project is locked' do
     JobExecution.any_instance.stubs(lock_timeout: 0.5) # 2 runs in the loop
-    project.repository.expects(:setup!).never
+    project.repository.expects(:setup).never
     begin
       MultiLock.send(:try_lock, project.id, 'me')
-      execution.send(:run!)
+      execution.send(:run)
     ensure
       MultiLock.send(:unlock, project.id)
     end
@@ -286,7 +286,7 @@ describe JobExecution do
   it 'can run with a block' do
     x = :not_called
     execution = JobExecution.new('master', job) { x = :called }
-    assert execution.send(:run!)
+    assert execution.send(:run)
     x.must_equal :called
   end
 
@@ -300,7 +300,7 @@ describe JobExecution do
     before { stage.update_column :kubernetes, true }
 
     it "does the execution with the kubernetes executor" do
-      Kubernetes::DeployExecutor.any_instance.expects(:execute!).returns true
+      Kubernetes::DeployExecutor.any_instance.expects(:execute).returns true
       execute_job("master")
     end
 
@@ -322,8 +322,8 @@ describe JobExecution do
     let(:model_file) { 'app/models/job_execution.rb' }
 
     it "runs a job" do
-      execution.start!
-      execution.wait!
+      execution.start
+      execution.wait
       execution.output.to_s.must_include "cat foo"
       job.reload.output.must_include "cat foo"
     end
@@ -331,8 +331,8 @@ describe JobExecution do
     it "records exceptions to output" do
       Airbrake.expects(:notify)
       job.expects(:running!).raises("Oh boy")
-      execution.start!
-      execution.wait!
+      execution.start
+      execution.wait
       execution.output.to_s.must_include "JobExecution failed: Oh boy"
       job.reload.output.must_include "JobExecution failed: Oh boy" # shows error message
       job.reload.output.must_include model_file # shows important backtrace
@@ -342,8 +342,8 @@ describe JobExecution do
     it "does not spam airbrake on user erorrs" do
       Airbrake.expects(:notify).never
       job.expects(:running!).raises(Samson::Hooks::UserError, "Oh boy")
-      execution.start!
-      execution.wait!
+      execution.start
+      execution.wait
       execution.output.to_s.must_include "JobExecution failed: Oh boy"
     end
 
@@ -351,8 +351,8 @@ describe JobExecution do
       with_hidden_errors do
         Airbrake.expects(:notify)
         job.expects(:running!).raises("Oh boy")
-        execution.start!
-        execution.wait!
+        execution.start
+        execution.wait
         execution.output.to_s.must_include "JobExecution failed: Oh boy"
         execution.output.to_s.wont_include model_file
       end
@@ -363,8 +363,8 @@ describe JobExecution do
         Airbrake.expects(:notify_sync).returns('id' => "12345")
         Airbrake.expects(:user_information).returns('href="http://foo.com/{{error_id}}"')
         job.expects(:running!).raises("Oh boy")
-        execution.start!
-        execution.wait!
+        execution.start
+        execution.wait
         execution.output.to_s.must_include "JobExecution failed: Oh boy"
         execution.output.to_s.must_include "http://foo.com/12345"
       end
@@ -374,8 +374,8 @@ describe JobExecution do
       with_hidden_errors do
         Airbrake.expects(:notify_sync).returns({})
         job.expects(:running!).raises("Oh boy")
-        execution.start!
-        execution.wait!
+        execution.start
+        execution.wait
         execution.output.to_s.must_include "JobExecution failed: Oh boy"
         execution.output.to_s.must_include "Airbrake did not return an error id"
       end
@@ -390,12 +390,12 @@ describe JobExecution do
 
     before do
       execution.executor.expects(:execute).never # avoid executing any commands
-      execution.stubs(:setup!).returns(true) # avoid state from executing git commands
+      execution.stubs(:setup).returns(true) # avoid state from executing git commands
       lock.lock # pretend things are stalling
     end
 
     it "stops the execution with interrupt" do
-      execution.start!
+      execution.start
       TerminalExecutor.any_instance.expects(:cancel).with do |signal|
         lock.unlock # pretend the command finished
         signal.must_equal 'INT'
@@ -405,7 +405,7 @@ describe JobExecution do
     end
 
     it "stops the execution with kill if job did not respond to interrupt" do
-      execution.start!
+      execution.start
       TerminalExecutor.any_instance.expects(:cancel).twice.with do |signal|
         lock.unlock if signal == 'KILL' # pretend the command finished
         ['KILL', 'INT'].must_include(signal)
@@ -417,7 +417,7 @@ describe JobExecution do
     it "calls on_finish hooks once when killing stuck thread" do
       called = []
       execution.on_finish { called << 1 }
-      execution.start!
+      execution.start
       execution.cancel
       called.must_equal [1]
     end
@@ -425,7 +425,7 @@ describe JobExecution do
     it "calls on_finish hooks once when stopping execution with INT" do
       called = []
       execution.on_finish { called << 1 }
-      execution.start!
+      execution.start
       TerminalExecutor.any_instance.expects(:cancel).with do |signal|
         lock.unlock # pretend the command finished
         signal.must_equal 'INT'
@@ -443,7 +443,7 @@ describe JobExecution do
       JobExecution.start_job(execution)
       sleep 0.4
       execution.pid.wont_equal nil
-      execution.wait!
+      execution.wait
     end
   end
 

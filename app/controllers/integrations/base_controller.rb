@@ -59,14 +59,14 @@ class Integrations::BaseController < ApplicationController
   def find_or_create_release
     latest_release = project.releases.order(:id).last
     return latest_release if latest_release&.contains_commit?(commit)
-    ReleaseService.new(project).release!(release_params)
+    ReleaseService.new(project).release(release_params)
   end
 
   # returns stage that failed to deploy or nil
   def deploy_to_stages(release, stages)
     deploy_service = DeployService.new(user)
     stages.detect do |stage|
-      deploy = deploy_service.deploy!(stage, reference: release&.version || commit)
+      deploy = deploy_service.deploy(stage, reference: release&.version || commit)
       if deploy.new_record?
         record_log :error, "Deploy to #{stage.name} failed: #{deploy.errors.full_messages}"
         true
@@ -114,7 +114,7 @@ class Integrations::BaseController < ApplicationController
   def create_docker_image(release)
     build = find_or_create_build(branch)
     release.update_attribute(:build, build) if release
-    DockerBuilderService.new(build).run!(push: true, tag_as_latest: true)
+    DockerBuilderService.new(build).run(push: true, tag_as_latest: true)
   end
 
   # TODO: use first_or_create here ... some weird rails bug breaks

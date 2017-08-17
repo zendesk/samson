@@ -25,8 +25,7 @@ class TerminalExecutor
     @cancelled = false
   end
 
-  # TODO: rename to execute since it does not blow up on failure
-  def execute!(*commands)
+  def execute(*commands)
     return false if @cancelled
     options = {in: '/dev/null', unsetenv_others: true}
     output, input, pid = PTY.spawn(whitelisted_env, script(commands), options)

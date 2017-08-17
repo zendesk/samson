@@ -18,7 +18,7 @@ module Kubernetes
       raise if @registry.is_a?(Hash)
     end
 
-    def execute!(build, project, docker_tag:, push: false, tag_as_latest: false)
+    def execute(build, project, docker_tag:, push: false, tag_as_latest: false)
       job_log = job_name = job_namespace = ""
       k8s_job = nil
 

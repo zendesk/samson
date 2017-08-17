@@ -16,7 +16,7 @@ class DockerBuilderService
         file = " -f #{dockerfile.shellescape}" if dockerfile
         build = "docker build#{file}#{tag} ."
         executor = TerminalExecutor.new(output)
-        return unless executor.execute!(
+        return unless executor.execute(
           "cd #{dir.shellescape}",
           *login_commands,
           executor.verbose_command(build)
@@ -66,7 +66,7 @@ class DockerBuilderService
     @build = build
   end
 
-  def run!(push: false, tag_as_latest: false)
+  def run(push: false, tag_as_latest: false)
     return unless Rails.cache.write("build-service-#{build.id}", true, unless_exist: true, expires_in: 10.seconds)
     build.docker_build_job&.destroy # if there's an old build job, delete it
     build.docker_tag = build.label.try(:parameterize).presence || 'latest'
@@ -112,7 +112,7 @@ class DockerBuilderService
       job: local_job,
       registry: DockerRegistry.first
     )
-    success, build_log = k8s_job.execute!(
+    success, build_log = k8s_job.execute(
       build, project,
       docker_tag: build.docker_tag,
       push: push,
@@ -138,7 +138,7 @@ class DockerBuilderService
   def execute_build_command(tmp_dir, command)
     return unless command
     commands = execution.base_commands(tmp_dir) + command.command.split(/\r?\n|\r/)
-    unless execution.executor.execute!(*commands)
+    unless execution.executor.execute(*commands)
       raise Samson::Hooks::UserError, "Error running build command"
     end
   end
