@@ -39,12 +39,26 @@ class DockerBuilderService
         credentials = DockerRegistry.all.select { |r| r.password && r.username }.map do |r|
           username = r.username.shellescape
           password = r.password.shellescape
-          "docker login --username #{username} --password #{password} --email no@example.com #{r.host.shellescape}"
+          email = (docker_major_version >= 17 ? "" : "--email no@example.com ")
+          "docker login --username #{username} --password #{password} #{email}#{r.host.shellescape}"
         end
 
         # run commands and then cleanup after
         yield ["export DOCKER_CONFIG=#{docker_config_folder.shellescape}", *credentials]
       end
+    end
+
+    def docker_major_version
+      @@docker_major_version ||= begin
+        Timeout.timeout(0.2) { read_docker_version[/(\d+)\.\d+\.\d+/, 1].to_i }
+      rescue Timeout::Error
+        0
+      end
+    end
+
+    # just here to get stubbed
+    def read_docker_version
+      `docker -v 2>/dev/null`
     end
   end
 

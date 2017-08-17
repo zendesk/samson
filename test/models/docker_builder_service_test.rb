@@ -369,11 +369,31 @@ describe DockerBuilderService do
       (DockerBuilderService.send(:local_docker_login) { 1 }).must_equal 1
     end
 
-    it "adds login commands" do
-      DockerRegistry.expects(:all).returns([DockerRegistry.new("http://fo+o:ba+r@ba+z.com")])
-      called = []
-      DockerBuilderService.send(:local_docker_login) { |commands| called = commands }
-      called[1].must_equal "docker login --username fo\\+o --password ba\\+r --email no@example.com ba\\+z.com"
+    describe "login commands" do
+      let(:called) do
+        all = []
+        DockerBuilderService.send(:local_docker_login) { |commands| all = commands }
+        all
+      end
+
+      before do
+        DockerRegistry.expects(:all).returns([DockerRegistry.new("http://fo+o:ba+r@ba+z.com")])
+        DockerBuilderService.class_variable_set(:@@docker_major_version, nil)
+      end
+
+      it "adds login commands" do
+        called[1].must_equal "docker login --username fo\\+o --password ba\\+r --email no@example.com ba\\+z.com"
+      end
+
+      it "uses email flag when docker check fails" do
+        DockerBuilderService.expects(:read_docker_version).raises(Timeout::Error)
+        called[1].must_equal "docker login --username fo\\+o --password ba\\+r --email no@example.com ba\\+z.com"
+      end
+
+      it "does not use email flag on newer docker versions" do
+        DockerBuilderService.expects(:docker_major_version).returns(17)
+        called[1].must_equal "docker login --username fo\\+o --password ba\\+r ba\\+z.com"
+      end
     end
 
     it "copies previous config files from ENV location" do
