@@ -17,20 +17,22 @@
     <% end %>
   </p>
 
-  <table class="table" id="dashboard-table">
-    <thead>
-    <tr>
-      <th>Project</th>
-      <% @deploy_groups.each do |deploy_group| %>
-        <th><%= link_to deploy_group.name, deploy_group %></th>
-      <% end %>
-    </tr>
-    </thead>
+  <div>
+    <table class="table fixed-header-column">
+      <thead>
+      <tr>
+        <th>Project</th>
+        <% @deploy_groups.each do |deploy_group| %>
+          <th><%= link_to deploy_group.name, deploy_group %></th>
+        <% end %>
+      </tr>
+      </thead>
 
-    <tbody>
-      <% @projects.each do |project| %>
-        <%= render partial: 'row', locals: {project: project} %>
-      <% end %>
-    </tbody>
-  </table>
+      <tbody>
+        <% @projects.each do |project| %>
+          <%= render partial: 'row', locals: {project: project} %>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
 </section>

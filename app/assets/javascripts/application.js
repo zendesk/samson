@@ -15,9 +15,6 @@
 //= require jquery-ujs
 //= require jquery-cookie
 //= require jquery-ui
-//= require datatables.net
-//= require datatables.net-bs
-//= require datatables.net-fixedcolumns
 //= require angular
 //= require underscore
 //= require moment

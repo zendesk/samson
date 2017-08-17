@@ -91,10 +91,6 @@ group :assets do
     gem 'rails-assets-x-editable'
     gem 'rails-assets-jstimezonedetect'
     gem 'rails-assets-jquery-cookie'
-    gem 'rails-assets-datatables.net'
-    gem 'rails-assets-datatables.net-bs'
-    gem 'rails-assets-datatables.net-fixedcolumns'
-    gem 'rails-assets-datatables.net-fixedcolumns-bs'
   end
 end
 
