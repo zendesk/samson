@@ -312,6 +312,13 @@ describe Job do
       job.canceller.must_equal user
     end
 
+    it "does not cancel finished job" do
+      job.failed!
+      job.cancel(user)
+      assert job.failed?
+      job.canceller.must_be_nil
+    end
+
     it "cancels a queued job" do
       active_job = project.jobs.new(command: 'cat foo', user: user, project: project, commit: 'master')
       active = JobExecution.new('master', active_job) { sleep 10 }
