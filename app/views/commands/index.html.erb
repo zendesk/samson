@@ -26,8 +26,8 @@
           <td>
             <%= link_to "Edit", command %>
             |
-            <% unless command.unused? %>
-              <% used = usage_ids.count(command.id) %>
+            <% used = usage_ids.count(command.id) %>
+            <% if used > 0 %>
               <%= content_tag :span, "Used by #{used}", title: "Click Edit to see usage details" %>
             <% else %>
               <%= link_to_delete(command, remove_container: 'tr') %>

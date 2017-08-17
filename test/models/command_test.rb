@@ -5,13 +5,6 @@ SingleCov.covered!
 
 describe Command do
   let(:command) { commands(:echo) }
-  let(:other_project) do
-    p = projects(:test).dup
-    p.name = 'xxxxx'
-    p.permalink = 'xxxxx'
-    p.save!(validate: false)
-    p
-  end
 
   describe '.for_stage' do
     let(:stage) { stages(:test_staging) }
@@ -82,80 +75,9 @@ describe Command do
       end
     end
 
-    describe "when only used as build command" do
+    describe "with usages" do
       before do
-        StageCommand.delete_all
-        projects(:test).update_column(:build_command_id, command.id)
-        assert_equal command.stages.count, 0
-        assert_equal command.projects.count, 1
-      end
-
-      it "destroys successfully" do
-        assert command.destroy
-      end
-    end
-
-    describe "when only used as stage command" do
-      before do
-        StageCommand.last.delete
-        assert_equal command.stages.count, 1
-        assert_equal command.projects.count, 0
-      end
-
-      it "fails to destroy" do
-        refute command.destroy
-      end
-
-      it "has an error message" do
-        command.destroy
-        assert_equal command.errors.full_messages, ['Can only delete unused commands.']
-      end
-    end
-
-    describe "when used as build command and stage command" do
-      before do
-        projects(:test).update_column(:build_command_id, command.id)
-        assert_equal command.stages.count, 2
-        assert_equal command.projects.count, 1
-      end
-
-      it "fails to destroy" do
-        refute command.destroy
-      end
-
-      it "has an error message" do
-        command.destroy
-        assert_equal command.errors.full_messages, ['Can only delete unused commands.']
-      end
-    end
-
-    # It isn't possible through the UI to associate a build command with multiple projects.
-    # However, it is possible through the API and the console to do this. So in the case that
-    # this does happen, we should prevent such commands from being destroyed.
-    describe "when used as multiple build commands" do
-      before do
-        StageCommand.delete_all
-        projects(:test).update_column(:build_command_id, command.id)
-        other_project.update_column(:build_command_id, command.id)
-
-        assert_equal command.stages.count, 0
-        assert_equal command.projects.count, 2
-      end
-
-      it "fails to destroy" do
-        refute command.destroy
-      end
-
-      it "has an error message" do
-        command.destroy
-        assert_equal command.errors.full_messages, ['Can only delete unused commands.']
-      end
-    end
-
-    describe "when used in multiple stage commands" do
-      before do
-        assert_equal command.stages.count, 2
-        assert_equal command.projects.count, 0
+        assert_not_equal command.usages.count, 0
       end
 
       it "fails to destroy" do

@@ -47,23 +47,10 @@ class Command < ActiveRecord::Base
     Project.pluck(:build_command_id)
   end
 
-  # We should not destroy the command if it is associated with any stages.
-  # Also, we should not destroy the command if it is the build commands for multiple projects.
-  #
-  # It isn't possible through the UI to associate a build command with multiple projects.
-  # However, it is possible through the API and the console to do this. So in the case that
-  # this does happen, we should prevent such commands from being destroyed.
-  #
-  # When the build command is associated with only one project, it can be destroyed via this code path:
-  # https://github.com/zendesk/samson/blob/master/app/controllers/build_commands_controller.rb#L13
-  def unused?
-    stages.empty? && projects.count <= 1
-  end
-
   private
 
   def ensure_unused
-    unless unused?
+    if usages.any?
       errors.add(:base, 'Can only delete unused commands.')
       throw(:abort)
     end

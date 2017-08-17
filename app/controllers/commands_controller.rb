@@ -8,7 +8,7 @@ class CommandsController < ApplicationController
   before_action :authorize_custom_project_admin!, except: PUBLIC
 
   def index
-    @commands = Command.order(:project_id).page(page).includes(:stages, :projects)
+    @commands = Command.order(:project_id).page(page)
     if search = params[:search]
       if query = search[:query].presence
         query = ActiveRecord::Base.send(:sanitize_sql_like, query)

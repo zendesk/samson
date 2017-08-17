@@ -1,5 +1,5 @@
 <%= page_title "#{@project.name} Build Command" %>
-<% unused = @command.unused? %>
+<% reused = @command.usages.count > 1 %>
 <%= breadcrumb @project, "Pre Build Command" %>
 
 <section>
@@ -13,13 +13,13 @@
 
     <br/>
 
-    <% unless unused %>
+    <% if reused %>
       <p><b>This command is used multiple times, go <%= link_to "here", command_path(@command) %> to edit.</b></p>
     <% end %>
 
-    <%= form.text_area :command, cols: 155, rows: [form.object.command.to_s.count("\n") + 1, 10].max, disabled: !unused %>
+    <%= form.text_area :command, cols: 155, rows: [form.object.command.to_s.count("\n") + 1, 10].max, disabled: reused %>
 
-    <% if unused %>
+    <% unless reused %>
       <%= form.submit "Save", class: "btn btn-primary" %> |
     <% end %>
     <%= link_to_history @command %>
