@@ -22,12 +22,12 @@ class TerminalExecutor
     @verbose = verbose
     @deploy = deploy
     @project = project
-    @stopped = false
+    @cancelled = false
   end
 
   # TODO: rename to execute since it does not blow up on failure
   def execute!(*commands)
-    return false if @stopped
+    return false if @cancelled
     options = {in: '/dev/null', unsetenv_others: true}
     output, input, pid = PTY.spawn(whitelisted_env, script(commands), options)
     record_pid(pid) do
@@ -47,8 +47,8 @@ class TerminalExecutor
     end
   end
 
-  def stop!(signal)
-    @stopped = true
+  def cancel(signal)
+    @cancelled = true
     system('kill', "-#{signal}", "-#{pgid}") if pgid
   end
 
@@ -62,7 +62,7 @@ class TerminalExecutor
     timeout = Integer(ENV["DEPLOY_TIMEOUT"] || 2.hours.to_i)
     Timeout.timeout(timeout, &block)
   rescue Timeout::Error
-    stop! 'INT'
+    cancel 'INT'
     @output.puts "Timeout: execution took longer then #{timeout}s and was terminated"
     false
   end

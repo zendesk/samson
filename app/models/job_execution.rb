@@ -10,7 +10,7 @@ class JobExecution
     attr_accessor :enabled
   end
 
-  cattr_accessor(:stop_timeout, instance_writer: false) { 15.seconds }
+  cattr_accessor(:cancel_timeout, instance_writer: false) { 15.seconds }
 
   attr_reader :output, :reference, :job, :viewers, :executor
 
@@ -28,7 +28,7 @@ class JobExecution
     @job = job
     @reference = reference
     @execution_block = block
-    @stopped = false
+    @cancelled = false
     @finished = false
     @thread = nil
 
@@ -58,12 +58,12 @@ class JobExecution
     @output.close
   end
 
-  def stop!
-    @stopped = true
-    @executor.stop! 'INT'
-    unless @thread.join(stop_timeout)
-      @executor.stop! 'KILL'
-      @thread.join(stop_timeout) || @thread.kill
+  def cancel
+    @cancelled = true
+    @executor.cancel 'INT'
+    unless @thread.join(cancel_timeout)
+      @executor.cancel 'KILL'
+      @thread.join(cancel_timeout) || @thread.kill
     end
     finish
   end
@@ -108,16 +108,16 @@ class JobExecution
     puts_if_present report_to_airbrake(exception)
     puts_if_present "JobExecution failed: #{exception.message}"
     puts_if_present render_backtrace(exception)
-    @job.error! if @job.active?
+    @job.errored! if @job.active?
   end
 
   def run!
     @output.write('', :started)
     @start_callbacks.each(&:call)
-    @job.run!
+    @job.running!
 
     success = make_tempdir do |dir|
-      return @job.error! unless setup!(dir)
+      return @job.errored! unless setup!(dir)
 
       if @execution_block
         @execution_block.call(self, dir)
@@ -127,16 +127,16 @@ class JobExecution
     end
 
     if success
-      @job.success!
+      @job.succeeded!
     else
-      @job.fail!
+      @job.failed!
     end
 
-  # when thread was killed by 'stop!' it is in a bad state, avoid working
+  # when thread was killed by 'cancel' it is in a bad state, avoid working
   rescue => e
-    error!(e) unless @stopped
+    error!(e) unless @cancelled
   ensure
-    finish unless @stopped
+    finish unless @cancelled
   end
   add_transaction_tracer :run!,
     category: :task,

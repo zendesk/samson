@@ -69,7 +69,7 @@ describe RestartSignalHandler do
       JobExecution.enabled.must_equal true
     end
 
-    it "stops running jobs" do
+    it "cancels running jobs" do
       RestartSignalHandler.after_restart
       jobs(:running_test).status.must_equal "cancelled"
     end

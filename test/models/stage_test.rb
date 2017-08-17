@@ -241,7 +241,7 @@ describe Stage do
     let(:user) { users(:super_admin) }
     let(:deploy) do
       deploy = subject.create_deploy(user, reference: "commita")
-      deploy.job.fail!
+      deploy.job.failed!
       deploy
     end
     let(:previous_deploy) { deploys(:succeeded_test) }
@@ -261,12 +261,12 @@ describe Stage do
     end
 
     it "is empty when deploy was a success" do
-      deploy.job.success!
+      deploy.job.succeeded!
       emails.must_be_nil
     end
 
     it "is empty when last deploy was also a failure" do
-      previous_deploy.job.fail!
+      previous_deploy.job.failed!
       emails.must_be_nil
     end
 

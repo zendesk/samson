@@ -157,18 +157,18 @@ describe DeploysHelper do
     end
   end
 
-  describe "#stop_button" do
+  describe "#cancel_button" do
     before { stubs(request: stub(fullpath: '/hello')) }
 
     it "builds with a deploy" do
-      button = stop_button(deploy: deploy, project: deploy.project)
-      button.must_include ">Stop<"
+      button = cancel_button(deploy: deploy, project: deploy.project)
+      button.must_include ">Cancel<"
       button.must_include "?redirect_to=%2Fhello\""
     end
 
     it "builds with a job" do
-      button = stop_button(deploy: deploy.job, project: deploy.project)
-      button.must_include ">Stop<"
+      button = cancel_button(deploy: deploy.job, project: deploy.project)
+      button.must_include ">Cancel<"
     end
   end
 end

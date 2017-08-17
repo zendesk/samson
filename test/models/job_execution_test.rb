@@ -2,7 +2,7 @@
 require_relative '../test_helper'
 require 'ar_multi_threaded_transactional_tests'
 
-SingleCov.covered! uncovered: 5
+SingleCov.covered! uncovered: 5 # randomly says it only has 4 ... keep at 5
 
 describe JobExecution do
   include GitRepoTestHelper
@@ -229,7 +229,7 @@ describe JobExecution do
     execution = JobExecution.new('master', job)
     execution.start!
     execution.on_finish { called_subscriber = true }
-    execution.stop!
+    execution.cancel
 
     assert called_subscriber
   end
@@ -330,7 +330,7 @@ describe JobExecution do
 
     it "records exceptions to output" do
       Airbrake.expects(:notify)
-      job.expects(:run!).raises("Oh boy")
+      job.expects(:running!).raises("Oh boy")
       execution.start!
       execution.wait!
       execution.output.to_s.must_include "JobExecution failed: Oh boy"
@@ -341,7 +341,7 @@ describe JobExecution do
 
     it "does not spam airbrake on user erorrs" do
       Airbrake.expects(:notify).never
-      job.expects(:run!).raises(Samson::Hooks::UserError, "Oh boy")
+      job.expects(:running!).raises(Samson::Hooks::UserError, "Oh boy")
       execution.start!
       execution.wait!
       execution.output.to_s.must_include "JobExecution failed: Oh boy"
@@ -350,7 +350,7 @@ describe JobExecution do
     it "does not show error backtraces in production to hide internals" do
       with_hidden_errors do
         Airbrake.expects(:notify)
-        job.expects(:run!).raises("Oh boy")
+        job.expects(:running!).raises("Oh boy")
         execution.start!
         execution.wait!
         execution.output.to_s.must_include "JobExecution failed: Oh boy"
@@ -362,7 +362,7 @@ describe JobExecution do
       with_hidden_errors do
         Airbrake.expects(:notify_sync).returns('id' => "12345")
         Airbrake.expects(:user_information).returns('href="http://foo.com/{{error_id}}"')
-        job.expects(:run!).raises("Oh boy")
+        job.expects(:running!).raises("Oh boy")
         execution.start!
         execution.wait!
         execution.output.to_s.must_include "JobExecution failed: Oh boy"
@@ -373,7 +373,7 @@ describe JobExecution do
     it "shows warnings to users when things went wrong instead of blowing up" do
       with_hidden_errors do
         Airbrake.expects(:notify_sync).returns({})
-        job.expects(:run!).raises("Oh boy")
+        job.expects(:running!).raises("Oh boy")
         execution.start!
         execution.wait!
         execution.output.to_s.must_include "JobExecution failed: Oh boy"
@@ -382,8 +382,8 @@ describe JobExecution do
     end
   end
 
-  describe "#stop!" do
-    with_job_stop_timeout 0.1
+  describe "#cancel" do
+    with_job_cancel_timeout 0.1
 
     let(:lock) { Mutex.new }
     let(:execution) { JobExecution.new('master', job) { lock.lock } }
@@ -396,29 +396,29 @@ describe JobExecution do
 
     it "stops the execution with interrupt" do
       execution.start!
-      TerminalExecutor.any_instance.expects(:stop!).with do |signal|
+      TerminalExecutor.any_instance.expects(:cancel).with do |signal|
         lock.unlock # pretend the command finished
         signal.must_equal 'INT'
         true
       end
-      execution.stop!
+      execution.cancel
     end
 
     it "stops the execution with kill if job did not respond to interrupt" do
       execution.start!
-      TerminalExecutor.any_instance.expects(:stop!).twice.with do |signal|
+      TerminalExecutor.any_instance.expects(:cancel).twice.with do |signal|
         lock.unlock if signal == 'KILL' # pretend the command finished
         ['KILL', 'INT'].must_include(signal)
         true
       end
-      execution.stop!
+      execution.cancel
     end
 
     it "calls on_finish hooks once when killing stuck thread" do
       called = []
       execution.on_finish { called << 1 }
       execution.start!
-      execution.stop!
+      execution.cancel
       called.must_equal [1]
     end
 
@@ -426,12 +426,12 @@ describe JobExecution do
       called = []
       execution.on_finish { called << 1 }
       execution.start!
-      TerminalExecutor.any_instance.expects(:stop!).with do |signal|
+      TerminalExecutor.any_instance.expects(:cancel).with do |signal|
         lock.unlock # pretend the command finished
         signal.must_equal 'INT'
         true
       end
-      execution.stop!
+      execution.cancel
       called.must_equal [1]
     end
   end

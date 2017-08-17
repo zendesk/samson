@@ -39,7 +39,7 @@ module Kubernetes
       pid
     end
 
-    def stop!(_signal)
+    def cancel(_signal)
       @stopped = true
     end
 

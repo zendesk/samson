@@ -40,8 +40,8 @@ describe Kubernetes::DeployExecutor do
       executor.execute!
     end
 
-    def stop_after_first_iteration
-      executor.expects(:sleep).with { executor.stop!('FAKE-SGINAL'); true }
+    def cancel_after_first_iteration
+      executor.expects(:sleep).with { executor.cancel('FAKE-SGINAL'); true }
     end
 
     # make the first sleep take a long time so we trigger our timeout condition
@@ -332,8 +332,8 @@ describe Kubernetes::DeployExecutor do
           out.must_include "Creating Build for #{job.commit}.\n"
         end
 
-        it "stops when deploy is stopped by user" do
-          executor.stop!('FAKE-SIGNAL')
+        it "stops when deploy is cancelled by user" do
+          executor.cancel('FAKE-SIGNAL')
           DockerBuilderService.any_instance.expects(:run!).returns(true)
           refute execute!
           out.scan(/.*Build.*/).must_equal ["Creating Build for #{job.commit}."] # not waiting for build
@@ -421,8 +421,8 @@ describe Kubernetes::DeployExecutor do
       out.must_include "SUCCESS"
     end
 
-    it "stops the loop when stopping" do
-      executor.stop!('FAKE-SIGNAL')
+    it "stops the loop when cancelling" do
+      executor.cancel('FAKE-SIGNAL')
       refute execute!
       out.wont_include "SUCCESS"
       out.must_include "STOPPED"
@@ -432,7 +432,7 @@ describe Kubernetes::DeployExecutor do
       pod_status[:phase] = "Pending"
       pod_status.delete(:conditions)
 
-      stop_after_first_iteration
+      cancel_after_first_iteration
       refute execute!
 
       out.must_include "resque-worker: Waiting (Pending, Unknown)\n"
@@ -508,7 +508,7 @@ describe Kubernetes::DeployExecutor do
     it "waits when deploy is running but Unknown" do
       pod_status[:conditions][0][:status] = "False"
 
-      stop_after_first_iteration
+      cancel_after_first_iteration
       refute execute!
 
       out.must_include "resque-worker: Waiting (Running, Unknown)\n"
@@ -528,7 +528,7 @@ describe Kubernetes::DeployExecutor do
     it "shows error when pod could not be found" do
       pod_reply[:items].clear
 
-      stop_after_first_iteration
+      cancel_after_first_iteration
       refute execute!
 
       out.must_include "resque-worker: Missing\n"

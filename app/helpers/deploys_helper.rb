@@ -88,10 +88,10 @@ module DeploysHelper
   end
 
   # using project as argument to avoid an additional fetch
-  def stop_button(project:, deploy:, **options)
+  def cancel_button(project:, deploy:, **options)
     raise if !project || !deploy
     link_to(
-      'Stop',
+      'Cancel',
       [project, deploy, {redirect_to: request.fullpath}],
       options.merge(method: :delete, class: options.fetch(:class, 'btn btn-danger btn-xl'))
     )

@@ -257,7 +257,7 @@ describe Kubernetes::Role do
       Kubernetes::Role.configured_for_project(project, 'HEAD').must_equal []
     end
 
-    it "raises when a role is invalid so the deploy is stopped" do
+    it "raises when a role is invalid so the deploy is cancelled" do
       assert config_content_yml.sub!('Deployment', 'Broken')
       write_config role.config_file, config_content_yml
 

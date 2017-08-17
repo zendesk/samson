@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 require 'samson/periodical' # avoid auto-load since we setup global state
 
-Samson::Periodical.register :stop_expired_deploys, "Stop deploys when buddy approval request timed out" do
-  Deploy.expired.each { |d| d.stop!(nil) }
+Samson::Periodical.register :stop_expired_deploys, "Cancel deploys when buddy approval request timed out" do
+  Deploy.expired.each { |d| d.cancel(nil) }
 end
 
 Samson::Periodical.register :renew_vault_token, "Renew vault token" do
