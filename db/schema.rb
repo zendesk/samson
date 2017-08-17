@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170728231915) do
+ActiveRecord::Schema.define(version: 20170817213634) do
 
   create_table "audits", force: :cascade do |t|
     t.integer "auditable_id", null: false
@@ -21,7 +21,7 @@ ActiveRecord::Schema.define(version: 20170728231915) do
     t.string "user_type"
     t.string "username"
     t.string "action", null: false
-    t.text "audited_changes"
+    t.text "audited_changes", limit: 4294967295
     t.integer "version", default: 0, null: false
     t.string "comment"
     t.string "remote_address"
