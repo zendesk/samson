@@ -52,8 +52,14 @@ class CommandsController < ApplicationController
   end
 
   def destroy
-    @command.destroy
-    successful_response('Command removed.')
+    if @command.destroy
+      successful_response('Command removed.')
+    else
+      respond_to do |format|
+        format.html { render :show }
+        format.js { render json: {}, status: :unprocessable_entity }
+      end
+    end
   end
 
   private

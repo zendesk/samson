@@ -13,6 +13,8 @@ class Command < ActiveRecord::Base
 
   validates :command, presence: true
 
+  before_destroy :ensure_unused
+
   def self.global
     where(project_id: nil)
   end
@@ -43,5 +45,14 @@ class Command < ActiveRecord::Base
   def self.usage_ids
     StageCommand.pluck(:command_id) +
     Project.pluck(:build_command_id)
+  end
+
+  private
+
+  def ensure_unused
+    if usages.any?
+      errors.add(:base, 'Can only delete unused commands.')
+      throw(:abort)
+    end
   end
 end

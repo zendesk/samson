@@ -62,4 +62,32 @@ describe Command do
       Command.usage_ids.uniq.sort.must_equal [extra_id, command.id].sort
     end
   end
+
+  describe "#destroy" do
+    describe "with no usages" do
+      before do
+        StageCommand.delete_all
+        assert_equal command.usages.count, 0
+      end
+
+      it "destroys successfully" do
+        assert command.destroy
+      end
+    end
+
+    describe "with usages" do
+      before do
+        assert_not_equal command.usages.count, 0
+      end
+
+      it "fails to destroy" do
+        refute command.destroy
+      end
+
+      it "has an error message" do
+        command.destroy
+        assert_equal command.errors.full_messages, ['Can only delete unused commands.']
+      end
+    end
+  end
 end
