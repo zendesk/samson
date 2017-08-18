@@ -73,7 +73,7 @@ describe BuildCommandsController do
               patch :update, params: {project_id: project, command: {command: '   '}}
             end
           end
-          project.reload.build_command.command.must_equal 'foo'
+          project.reload.build_command.must_equal nil
         end
       end
     end
