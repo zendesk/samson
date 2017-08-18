@@ -442,7 +442,12 @@ module Kubernetes
         end
 
         # make sure each set of templates is valid
-        configs = roles.map { |r| r.fetch(:role).role_config_file(@job.commit).primary }.compact
+        configs = roles.map do |r|
+          role = r.fetch(:role)
+          config = role.role_config_file(@job.commit)
+          raise Samson::Hooks::UserError, "Error parsing #{role.config_file}" unless config
+          config.primary
+        end.compact
         Kubernetes::RoleVerifier.verify_group(configs)
       end
     end
