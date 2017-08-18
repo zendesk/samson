@@ -199,6 +199,12 @@ describe Project do
       project.errors.messages.must_equal repository_url: ["is not valid or accessible"]
     end
 
+    it 'converts repo url with trailing slash' do
+      project = Project.new(id: 9999, name: 'demo_apps', repository_url: 'https://example.com/foo/bar/')
+      project.valid?.must_equal true
+      project.repository_url.must_equal 'https://example.com/foo/bar'
+    end
+
     describe "private url switching" do
       let(:project) { Project.new(id: 9999, name: 'demo_apps', repository_url: 'https://my_bad_url/foo.git') }
 
