@@ -38,7 +38,7 @@
               <%= link_to kubernetes_release.build.label, [kubernetes_release.project, kubernetes_release.build] if kubernetes_release.build %>
             </td>
             <td>
-              <% kubernetes_release.release_docs.map(&:deploy_group).sort_by(&:natural_order).each do |deploy_group| %>
+              <% kubernetes_release.release_docs.map(&:deploy_group).uniq.sort_by(&:natural_order).each do |deploy_group| %>
                  <span class="label label-info"><%= deploy_group.name %></span>
               <% end %>
             </td>
