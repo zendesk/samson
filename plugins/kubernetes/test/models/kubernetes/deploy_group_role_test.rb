@@ -186,16 +186,35 @@ describe Kubernetes::DeployGroupRole do
       assert_valid deploy_group_role
     end
 
-    it "is not valid when requests are above usage_limit" do
-      deploy_group_role.requests_cpu = deploy_group_role.limits_cpu = 1
-      deploy_group_role.requests_memory = 200
-      refute_valid deploy_group_role
-      deploy_group_role.errors.full_messages.must_equal(
-        [
-          "Requests cpu (1.0 * 3) must be less than or equal to kubernetes usage limit 1.0 (##{usage_limit.id})",
-          "Requests memory (200 * 3) must be less than or equal to kubernetes usage limit 400 (##{usage_limit.id})"
-        ]
-      )
+    describe "when requests are above usage_limit" do
+      before do
+        deploy_group_role.requests_cpu = deploy_group_role.limits_cpu = 1
+        deploy_group_role.requests_memory = 200
+      end
+
+      it "is not valid when " do
+        refute_valid deploy_group_role
+        deploy_group_role.errors.full_messages.must_equal(
+          [
+            "Requests cpu (1.0 * 3) must be less than or equal to kubernetes usage limit 1.0 (##{usage_limit.id})",
+            "Requests memory (200 * 3) must be less than or equal to kubernetes usage limit 400 (##{usage_limit.id})"
+          ]
+        )
+      end
+
+      it "adds custom wanring" do
+        with_env KUBERNETES_USAGE_LIMIT_WARNING: 'Stay under the limit dammit!' do
+          refute_valid deploy_group_role
+        end
+        deploy_group_role.errors.full_messages.must_equal(
+          [
+            "Requests cpu (1.0 * 3) must be less than or equal to kubernetes usage limit 1.0 (##{usage_limit.id})." \
+            " Stay under the limit dammit!",
+            "Requests memory (200 * 3) must be less than or equal to kubernetes usage limit 400 (##{usage_limit.id})." \
+            " Stay under the limit dammit!"
+          ]
+        )
+      end
     end
   end
 end
