@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170817213634) do
+ActiveRecord::Schema.define(version: 20170821222130) do
 
   create_table "audits", force: :cascade do |t|
     t.integer "auditable_id", null: false
@@ -369,6 +369,7 @@ ActiveRecord::Schema.define(version: 20170817213634) do
     t.string "release_source", default: "any", null: false
     t.integer "build_command_id"
     t.text "dashboard"
+    t.boolean "docker_image_building_disabled", default: false, null: false
     t.index ["build_command_id"], name: "index_projects_on_build_command_id"
     t.index ["permalink"], name: "index_projects_on_permalink", unique: true, length: { permalink: 191 }
     t.index ["token"], name: "index_projects_on_token", unique: true, length: { token: 191 }

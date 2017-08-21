@@ -143,6 +143,16 @@ describe Kubernetes::DeployExecutor do
       end
     end
 
+    it "fails to build when builds are disabled" do
+      Build.delete_all
+      project.update_column :docker_image_building_disabled, true
+
+      refute_difference 'Build.count' do
+        e = assert_raises(Samson::Hooks::UserError) { execute }
+        e.message.must_include "Not creating a Build"
+      end
+    end
+
     it "can deploy roles with 0 replicas to disable them" do
       worker_role.update_column(:replicas, 0)
       assert execute
