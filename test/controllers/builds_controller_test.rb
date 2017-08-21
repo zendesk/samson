@@ -71,6 +71,13 @@ describe BuildsController do
         get :new, params: {project_id: project.to_param}
         assert_response :ok
       end
+
+      it "does not render when disabled" do
+        project.update_column :docker_image_building_disabled, true
+        get :new, params: {project_id: project.to_param}
+        assert_redirected_to project_builds_path(project)
+        assert flash[:alert]
+      end
     end
 
     describe "#create" do
@@ -136,6 +143,13 @@ describe BuildsController do
           DockerBuilderService.any_instance.expects(:run).never
           stub_git_reference_check(returns: false)
           create
+        end
+
+        it "does not create when disabled" do
+          project.update_column :docker_image_building_disabled, true
+          create
+          assert_redirected_to project_builds_path(project)
+          assert flash[:alert]
         end
 
         it_renders_error
@@ -220,16 +234,27 @@ describe BuildsController do
     end
 
     describe "#build_docker_image" do
-      before do
-        DockerBuilderService.any_instance.expects(:run)
+      def build
         post :build_docker_image, params: {project_id: project.to_param, id: default_build.id, format: format}
       end
+
+      before { DockerBuilderService.any_instance.expects(:run) }
 
       describe 'html' do
         let(:format) { 'html' }
 
         it "builds an image" do
+          build
           assert_redirected_to [project, default_build]
+        end
+
+        it "does not build when disabled" do
+          DockerBuilderService.any_instance.unstub(:run)
+          DockerBuilderService.any_instance.expects(:run).never
+          project.update_column :docker_image_building_disabled, true
+          build
+          assert_redirected_to project_builds_path(project)
+          assert flash[:alert]
         end
       end
 
@@ -237,6 +262,7 @@ describe BuildsController do
         let(:format) { 'json' }
 
         it "builds an image" do
+          build
           assert_response :success
         end
       end

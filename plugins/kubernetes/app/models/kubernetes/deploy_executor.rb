@@ -268,7 +268,12 @@ module Kubernetes
     end
 
     def create_build
-      if @job.project.repository.file_content('Dockerfile', @job.commit)
+      if @job.project.docker_image_building_disabled?
+        raise(
+          Samson::Hooks::UserError,
+          "Not creating a Build for #{@job.commit} since build creation is disabled, use the api to create builds."
+        )
+      elsif @job.project.repository.file_content('Dockerfile', @job.commit)
         @output.puts("Creating Build for #{@job.commit}.")
         build = Build.create!(
           git_sha: @job.commit,

@@ -3,6 +3,7 @@ class BuildsController < ApplicationController
   include CurrentProject
 
   before_action :authorize_resource!
+  before_action :enforce_disabled_docker_builds, only: [:new, :create, :build_docker_image]
   before_action :find_build, only: [:show, :build_docker_image, :edit, :update]
 
   def index
@@ -95,5 +96,10 @@ class BuildsController < ApplicationController
 
   def git_sha
     @git_sha ||= current_project.repository.commit_from_ref(new_build_params[:git_ref])
+  end
+
+  def enforce_disabled_docker_builds
+    return unless @project.docker_image_building_disabled?
+    redirect_to project_builds_path(@project), alert: "Image building is disabled, they must be created via the api."
   end
 end

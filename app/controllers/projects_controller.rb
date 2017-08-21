@@ -95,6 +95,7 @@ class ProjectsController < ApplicationController
         :release_branch,
         :release_source,
         :docker_release_branch,
+        :docker_image_building_disabled,
         :include_new_deploy_groups,
         :dashboard,
       ] + Samson::Hooks.fire(:project_permitted_params)
