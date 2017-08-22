@@ -217,6 +217,16 @@ describe Kubernetes::DeployExecutor do
         end
         e.message.must_include "Missing env variables FOO, BAR"
       end
+
+      it "fails before building when role config is missing" do
+        GitRepository.any_instance.stubs(:file_content).with('kubernetes/resque_worker.yml', commit, anything).
+          returns(nil)
+
+        e = assert_raises Samson::Hooks::UserError do
+          refute execute
+        end
+        e.message.must_include "Error parsing kubernetes/resque_worker.yml"
+      end
     end
 
     describe "role settings" do

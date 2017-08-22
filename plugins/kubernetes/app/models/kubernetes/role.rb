@@ -126,7 +126,7 @@ module Kubernetes
       begin
         RoleConfigFile.new(raw_template, config_file)
       rescue Samson::Hooks::UserError
-        return
+        nil
       end
     end
 
