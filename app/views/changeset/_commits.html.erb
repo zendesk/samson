@@ -10,7 +10,10 @@
             <%= image_tag url, width: 20, height: 20 %>
           <% end %>
         </td>
-        <td><%= link_to_if commit.author.present?, commit.author_name, commit.author&.url %></td>
+        <td>
+          <% name = commit.author_name.presence || "Unknown" %>
+          <% url = commit.author&.url %>
+          <%= link_to_if(url, name, url) %></td>
         <td><%= link_to commit.summary, commit.url %></td>
         <td align="right"><code><%= link_to commit.short_sha, commit.url %></code></td>
       </tr>
