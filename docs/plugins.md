@@ -16,6 +16,7 @@ Available plugins:
  - [ENV var management](https://github.com/zendesk/samson/tree/master/plugins/env)
  - [Flowdock notification](https://github.com/zendesk/samson/tree/master/plugins/flowdock)
  - [Github](https://github.com/zendesk/samson/tree/master/plugins/github)
+ - [Gcloud image tagger](https://github.com/zendesk/samson/tree/master/plugins/gcloud_image_tagger)
  - [Jenkins jobs management](https://github.com/zendesk/samson/tree/master/plugins/jenkins)
  - [Hipchat notification](https://github.com/listia/samson_hipchat)
  - [Hyperclair security scanner for docker images](https://github.com/zendesk/samson/tree/master/plugins/hyperclair)

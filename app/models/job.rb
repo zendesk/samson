@@ -137,6 +137,11 @@ class Job < ActiveRecord::Base
     execution.try :pid
   end
 
+  def append_output!(more)
+    reload
+    update_columns(output: "#{output}#{more}", updated_at: Time.now)
+  end
+
   private
 
   def validate_globally_unlocked

@@ -28,8 +28,7 @@ module SamsonHyperclair
     # external builds have no job ... so we cannot store output
     def append_output(job, output)
       if job
-        job.reload
-        job.update_column(:output, job.output + output)
+        job.append_output!(output)
       else
         Rails.logger.info(output)
       end
