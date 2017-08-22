@@ -78,7 +78,7 @@ module Kubernetes
     end
 
     def set_deployer
-      annotations[:deployer] = @doc.kubernetes_release.user&.email
+      annotations[:deployer] = @doc.kubernetes_release.user&.email.to_s
     end
 
     def secret_annotations
