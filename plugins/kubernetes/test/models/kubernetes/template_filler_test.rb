@@ -90,6 +90,11 @@ describe Kubernetes::TemplateFiller do
       template.to_hash[:spec][:template][:metadata][:annotations].must_equal(deployer: "deployer@example.com")
     end
 
+    it "does not set nil deployer which breaks kubernetes api" do
+      doc.kubernetes_release.user.email = nil
+      template.to_hash[:spec][:template][:metadata][:annotations].must_equal(deployer: "")
+    end
+
     describe "containers" do
       let(:result) { template.to_hash }
       let(:container) { result.fetch(:spec).fetch(:template).fetch(:spec).fetch(:containers).first }
