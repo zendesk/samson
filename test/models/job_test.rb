@@ -346,4 +346,26 @@ describe Job do
       job.duration.must_equal 25
     end
   end
+
+  describe "#append_output!" do
+    before { job.update_column(:output, "before") }
+
+    it "adds to empty" do
+      job.update_column(:output, nil)
+      job.append_output!("Hello")
+      job.reload.output.must_equal "Hello"
+    end
+
+    it "adds output" do
+      job.append_output!("Hello")
+      job.reload.output.must_equal "beforeHello"
+    end
+
+    it "adds from different models" do
+      job2 = Job.find(job.id)
+      job.append_output!("Hello")
+      job2.append_output!("World")
+      job.reload.output.must_equal "beforeHelloWorld"
+    end
+  end
 end
