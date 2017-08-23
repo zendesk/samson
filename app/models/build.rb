@@ -50,12 +50,7 @@ class Build < ActiveRecord::Base
   end
 
   def docker_image
-    @docker_image ||= Docker::Image.get(docker_image_id) if docker_image_id
-  end
-
-  def docker_image=(image)
-    self.docker_image_id = image ? image.json.fetch('Id') : nil
-    @docker_image = image
+    @docker_image ||= Docker::Image.get(docker_repo_digest.split('@', 2).last) if docker_repo_digest
   end
 
   def url

@@ -79,10 +79,10 @@ class DockerBuilderService
       if build.kubernetes_job
         run_build_image_job(job, push: push, tag_as_latest: tag_as_latest)
       else
-        if build_image(tmp_dir) # rubocop:disable Style/IfInsideElse
+        if image = build_image(tmp_dir) # rubocop:disable Style/IfInsideElse
           ret = true
-          ret = push_image(tag_as_latest: tag_as_latest) if push
-          build.docker_image.remove(force: true) unless ENV["DOCKER_KEEP_BUILT_IMGS"] == "1"
+          ret = push_image(image, tag_as_latest: tag_as_latest) if push
+          image.remove(force: true) unless ENV["DOCKER_KEEP_BUILT_IMGS"] == "1"
           ret
         else
           output.puts("Docker build failed (image id not found in response)")
@@ -155,20 +155,20 @@ class DockerBuilderService
 
     before_docker_build(tmp_dir)
 
-    build.docker_image = DockerBuilderService.build_docker_image(tmp_dir, output)
+    DockerBuilderService.build_docker_image(tmp_dir, output)
   end
   add_method_tracer :build_image
 
-  def push_image(tag_as_latest: false)
+  def push_image(image, tag_as_latest: false)
     tag = build.docker_tag
     tag_is_latest = (tag == 'latest')
 
-    unless build.docker_repo_digest = push_image_to_registries(tag: tag, override_tag: tag_is_latest)
+    unless build.docker_repo_digest = push_image_to_registries(image, tag: tag, override_tag: tag_is_latest)
       raise Docker::Error::DockerError, "Unable to get repo digest"
     end
 
     if tag_as_latest && !tag_is_latest
-      push_image_to_registries tag: 'latest', override_tag: true
+      push_image_to_registries image, tag: 'latest', override_tag: true
     end
 
     build.save!
@@ -179,7 +179,7 @@ class DockerBuilderService
   end
   add_method_tracer :push_image
 
-  def push_image_to_registries(tag:, override_tag: false)
+  def push_image_to_registries(image, tag:, override_tag: false)
     digest = nil
 
     DockerRegistry.all.each_with_index do |registry, i|
@@ -193,14 +193,14 @@ class DockerBuilderService
       end
 
       # tag locally so we can push .. otherwise get `Repository does not exist`
-      build.docker_image.tag(repo: repo, tag: tag, force: true)
+      image.tag(repo: repo, tag: tag, force: true)
 
       # push and optionally override tag for the image
       # needs repo_tag to enable pushing to multiple registries
       # otherwise will read first existing RepoTags info
       push_options = {repo_tag: "#{repo}:#{tag}", force: override_tag}
 
-      success = build.docker_image.push(registry_credentials(registry), push_options) do |chunk|
+      success = image.push(registry_credentials(registry), push_options) do |chunk|
         parsed_chunk = output.write_docker_chunk(chunk)
         if primary && !digest
           parsed_chunk.each do |output_hash|

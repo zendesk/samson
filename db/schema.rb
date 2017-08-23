@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170821222130) do
+ActiveRecord::Schema.define(version: 20170823212626) do
 
   create_table "audits", force: :cascade do |t|
     t.integer "auditable_id", null: false
@@ -39,7 +39,6 @@ ActiveRecord::Schema.define(version: 20170821222130) do
     t.integer "number"
     t.string "git_sha", null: false
     t.string "git_ref", null: false
-    t.string "docker_image_id"
     t.string "docker_tag"
     t.string "docker_repo_digest"
     t.integer "docker_build_job_id"
