@@ -129,4 +129,19 @@ describe Kubernetes::Cluster do
       cluster.schedulable_nodes.must_equal []
     end
   end
+
+  describe "#ensure_unused" do
+    it "does not destroy used" do
+      Kubernetes::ClusterDeployGroup.any_instance.stubs(:validate_namespace_exists)
+      cluster.cluster_deploy_groups.create! deploy_group: deploy_groups(:pod100), namespace: 'foo'
+
+      refute cluster.destroy
+      cluster.errors.full_messages.must_equal ["Cannot be deleted since it is currently used by Pod 100."]
+    end
+
+    it "destroys when unused" do
+      assert cluster.destroy
+      cluster.errors.full_messages.must_equal []
+    end
+  end
 end

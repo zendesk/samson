@@ -4,6 +4,7 @@ require 'kubeclient'
 module Kubernetes
   class Cluster < ActiveRecord::Base
     self.table_name = 'kubernetes_clusters'
+    audited
 
     IP_PREFIX_PATTERN = /\A(?:[\d]{1,3}\.){0,2}[\d]{1,3}\z/ # also used in js
 
@@ -15,6 +16,8 @@ module Kubernetes
     validates :config_context, presence: true
     validates :ip_prefix, format: IP_PREFIX_PATTERN, allow_blank: true
     validate :test_client_connection
+
+    before_destroy :ensure_unused
 
     def client
       @client ||= build_client :default
@@ -83,6 +86,13 @@ module Kubernetes
         end
       else
         errors.add(:config_filepath, "File does not exist")
+      end
+    end
+
+    def ensure_unused
+      if groups = deploy_groups.presence
+        errors.add(:base, "Cannot be deleted since it is currently used by #{groups.map(&:name).join(", ")}.")
+        throw(:abort)
       end
     end
   end

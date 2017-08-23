@@ -3,11 +3,10 @@ class Kubernetes::ClustersController < ApplicationController
   before_action :authorize_admin!
   before_action :authorize_super_admin!, except: [:index, :show, :seed_ecr]
 
-  before_action :find_cluster, only: [:show, :edit, :update, :seed_ecr]
-  before_action :load_default_config_file, only: [:new, :edit, :update, :create]
+  before_action :find_cluster, only: [:show, :edit, :update, :destroy, :seed_ecr]
 
   def new
-    @cluster = ::Kubernetes::Cluster.new(config_filepath: @config_file)
+    @cluster = ::Kubernetes::Cluster.new(config_filepath: new_config_file_path)
     render :edit
   end
 
@@ -39,6 +38,14 @@ class Kubernetes::ClustersController < ApplicationController
     end
   end
 
+  def destroy
+    if @cluster.destroy
+      redirect_to({action: :index}, notice: "Deleted!")
+    else
+      render :edit
+    end
+  end
+
   def seed_ecr
     SamsonAwsEcr::Engine.refresh_credentials
     @cluster.namespaces.each do |namespace|
@@ -59,18 +66,12 @@ class Kubernetes::ClustersController < ApplicationController
     )
   end
 
-  def load_default_config_file
-    @config_file =
-      if @cluster
-        @cluster.config_filepath
-      elsif file = ENV['KUBE_CONFIG_FILE']
-        File.expand_path(file)
-      elsif last_cluster = ::Kubernetes::Cluster.last
-        last_cluster.config_filepath
-      end
-
-    @context_options = Kubeclient::Config.read(@config_file).contexts if @config_file
-    @context_options ||= []
+  def new_config_file_path
+    if file = ENV['KUBE_CONFIG_FILE']
+      File.expand_path(file)
+    else
+      ::Kubernetes::Cluster.last&.config_filepath
+    end
   end
 
   # same as this does under the hood:
