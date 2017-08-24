@@ -329,7 +329,9 @@ describe Kubernetes::DeployExecutor do
         it "reuses build when told to do so" do
           previous = deploys(:failed_staging_test)
           previous.update_column(:id, deploy.id - 1) # make previous_deploy work
-          kubernetes_releases(:test_release).update_column(:deploy_id, previous.id) # find previous deploy
+          kubernetes_releases(:test_release).update_columns(
+            deploy_id: previous.id, git_sha: 'something-else'
+          ) # find previous deploy
           build.update_column(:docker_repo_digest, 'ababababab') # make build succeeded
           deploy.update_column(:kubernetes_reuse_build, true)
 

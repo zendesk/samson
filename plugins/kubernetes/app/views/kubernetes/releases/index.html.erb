@@ -35,7 +35,7 @@
               <% end %>
             </td>
             <td>
-              <%= link_to kubernetes_release.build.label, [kubernetes_release.project, kubernetes_release.build] if kubernetes_release.build %>
+              <%= link_to "Build", project_builds_path(@project, search: {git_sha: kubernetes_release.git_sha}) %>
             </td>
             <td>
               <% kubernetes_release.release_docs.map(&:deploy_group).uniq.sort_by(&:natural_order).each do |deploy_group| %>

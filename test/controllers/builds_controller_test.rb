@@ -9,7 +9,6 @@ describe BuildsController do
   let(:tmp_dir) { Dir.mktmpdir }
   let(:project_repo_url) { repo_temp_dir }
   let(:project) { projects(:test).tap { |p| p.repository_url = project_repo_url } }
-
   let(:default_build) do
     project.builds.create!(label: 'master branch', git_ref: 'master', git_sha: 'a' * 40, creator: user)
   end
@@ -30,7 +29,7 @@ describe BuildsController do
     unauthorized :post, :build_docker_image, id: 1, project_id: :foo
 
     describe '#index' do
-      it 'works with no builds' do
+      it 'works without builds' do
         get :index, params: {project_id: project.to_param}
         assert_response :ok
       end
@@ -42,6 +41,12 @@ describe BuildsController do
         assert_response :ok
         @response.body.must_include 'test branch'
         @response.body.must_include 'master branch'
+      end
+
+      it 'can search' do
+        build = builds(:docker_build)
+        get :index, params: {project_id: project.to_param, search: {git_sha: build.git_sha}}
+        assigns(:builds).must_equal [build]
       end
     end
 

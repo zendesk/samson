@@ -106,16 +106,26 @@ describe Integrations::BaseController do
       result.fetch(:request_params).must_equal("token" => "[FILTERED]", "foo" => "bar")
     end
 
-    it 'creates a release and a connected build' do
-      Project.any_instance.stubs(:build_docker_image_for_branch?).returns(true)
+    describe "when docker builds are enabled" do
+      before { Project.any_instance.stubs(:build_docker_image_for_branch?).returns(true) }
 
-      post :create, params: {test_route: true, token: token}
+      it 'creates a release and a connected build' do
+        post :create, params: {test_route: true, token: token}
+        assert_response :success
+        project.reload
+        project.releases.count.must_equal 1
+        project.builds.count.must_equal 1
+        project.builds.last.git_sha.must_equal project.releases.last.commit
+      end
 
-      assert_response :success
-      project.reload
-      project.releases.count.must_equal 1
-      project.builds.count.must_equal 1
-      project.builds.first.releases.must_equal project.releases
+      it 'does not create a duplicate build or release' do
+        post :create, params: {test_route: true, token: token}
+        post :create, params: {test_route: true, token: token}
+        assert_response :success
+        project.reload
+        project.releases.count.must_equal 1
+        project.builds.count.must_equal 1
+      end
     end
 
     it "fails with invalid token" do

@@ -1,7 +1,6 @@
 test_release:
   user: deployer
-  build: docker_build
   project: test
-  git_sha: abababababa
+  git_sha: 1a6f551a2ffa6d88e15eef5461384da0bfb1c194
   git_ref: master
   deploy: succeeded_test

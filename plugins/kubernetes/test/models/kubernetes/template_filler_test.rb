@@ -29,7 +29,7 @@ describe Kubernetes::TemplateFiller do
       spec.fetch(:uniqueLabelKey).must_equal "rc_unique_identifier"
       spec.fetch(:replicas).must_equal doc.replica_target
       spec.fetch(:template).fetch(:metadata).fetch(:labels).symbolize_keys.must_equal(
-        revision: "abababababa",
+        revision: "1a6f551a2ffa6d88e15eef5461384da0bfb1c194",
         tag: "master",
         release_id: doc.kubernetes_release_id.to_s,
         project: "some-project",
@@ -106,7 +106,7 @@ describe Kubernetes::TemplateFiller do
       end
 
       it "does not override image when no build was made" do
-        doc.kubernetes_release.build = nil
+        doc.kubernetes_release.builds.delete_all
         container.fetch(:image).must_equal(
           "docker-registry.zende.sk/truth_service:latest"
         )
