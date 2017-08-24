@@ -52,8 +52,8 @@ describe DockerBuilderService do
       job.send(:finish)
     end
 
-    it "uses label as tag when present" do
-      build.label = 'Foo Bar baz'
+    it "uses name as tag when present" do
+      build.name = 'Foo Bar baz'
       call
       job.send(:finish)
       build.docker_tag.must_equal 'foo-bar-baz'

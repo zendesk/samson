@@ -3,7 +3,7 @@ class Build < ActiveRecord::Base
   SHA1_REGEX = /\A[0-9a-f]{40}\Z/i
   SHA256_REGEX = /\A(sha256:)?[0-9a-f]{64}\Z/i
   DIGEST_REGEX = /\A[\w.-]+[\w\/-]*@sha256:[0-9a-f]{64}\Z/i
-  ASSIGNABLE_KEYS = [:git_ref, :label, :description, :source_url, :dockerfile] +
+  ASSIGNABLE_KEYS = [:git_ref, :name, :description, :source_url, :dockerfile] +
     Samson::Hooks.fire(:build_permitted_params)
 
   belongs_to :project
@@ -22,7 +22,7 @@ class Build < ActiveRecord::Base
   before_create :assign_number
 
   def nice_name
-    label.presence || "Build #{id}"
+    name.presence || "Build #{id}"
   end
 
   def commit_url

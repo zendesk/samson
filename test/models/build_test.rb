@@ -124,8 +124,8 @@ describe Build do
       build.nice_name.must_equal "Build #{build.id}"
     end
 
-    it "uses the label when avialable" do
-      build.label = 'foo'
+    it "uses the name when avialable" do
+      build.name = 'foo'
       build.nice_name.must_equal "foo"
     end
   end

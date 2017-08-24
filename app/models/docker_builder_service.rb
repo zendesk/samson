@@ -69,7 +69,7 @@ class DockerBuilderService
   def run(push: false, tag_as_latest: false)
     return unless Rails.cache.write("build-service-#{build.id}", true, unless_exist: true, expires_in: 10.seconds)
     build.docker_build_job&.destroy # if there's an old build job, delete it
-    build.docker_tag = build.label.try(:parameterize).presence || 'latest'
+    build.docker_tag = build.name&.parameterize.presence || 'latest'
     build.started_at = Time.now
 
     job = build.create_docker_job
