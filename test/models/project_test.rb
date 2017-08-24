@@ -325,7 +325,15 @@ describe Project do
     with_registries ["docker-registry.example.com/bar"]
 
     it "builds" do
-      project.docker_repo(DockerRegistry.first).must_equal "docker-registry.example.com/bar/foo"
+      project.docker_repo(DockerRegistry.first, "Dockerfile").must_equal "docker-registry.example.com/bar/foo"
+    end
+
+    it "builds nonstandard" do
+      project.docker_repo(DockerRegistry.first, "Dockerfile.baz").must_equal "docker-registry.example.com/bar/foo-baz"
+    end
+
+    it "builds folders" do
+      project.docker_repo(DockerRegistry.first, "baz/Dockerfile").must_equal "docker-registry.example.com/bar/foo-baz"
     end
   end
 
@@ -405,6 +413,7 @@ describe Project do
         project.docker_release_branch = 'master'
         project.release_branch = 'master-of-puppets'
       end
+
       it 'returns false for the wrong branch' do
         refute project.build_docker_image_for_branch?('master-of-puppets')
       end
@@ -419,6 +428,7 @@ describe Project do
         project.docker_release_branch = nil
         project.release_branch = 'master-of-puppets'
       end
+
       it 'returns false' do
         refute project.build_docker_image_for_branch?(nil)
         refute project.build_docker_image_for_branch?('master-of-puppets')
@@ -439,6 +449,17 @@ describe Project do
   describe "#url" do
     it "builds a url" do
       project.url.must_equal "http://www.test-url.com/projects/foo"
+    end
+  end
+
+  describe "#dockerfile_list" do
+    it "is Dockerfile by default" do
+      project.dockerfile_list.must_equal ["Dockerfile"]
+    end
+
+    it "splits user input" do
+      project.dockerfiles = "Dockerfile  Muh File"
+      project.dockerfile_list.must_equal ["Dockerfile", "Muh", "File"]
     end
   end
 end

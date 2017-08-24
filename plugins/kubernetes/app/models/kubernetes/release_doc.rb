@@ -19,10 +19,6 @@ module Kubernetes
 
     attr_reader :previous_resources
 
-    def build
-      kubernetes_release&.builds&.first
-    end
-
     def deploy
       @previous_resources = resources.map(&:resource)
       resources.each(&:deploy)
@@ -115,7 +111,7 @@ module Kubernetes
     end
 
     def validate_config_file
-      return if !build || !kubernetes_role
+      return unless kubernetes_role
       raw_template # trigger RoleConfigFile validations
     rescue Samson::Hooks::UserError
       errors.add(:kubernetes_release, $!.message)

@@ -14,6 +14,7 @@ describe DockerBuilderService do
   let(:docker_image_id) { '2d2b0b3204b0166435c3d96d0b27d0ad2083e5e040192632c58eeb9491d6bfaa' }
   let(:docker_image_json) { { 'Id' => docker_image_id } }
   let(:mock_docker_image) { stub(json: docker_image_json) }
+  let(:primary_repo) { project.docker_repo(DockerRegistry.first, 'Dockerfile') }
 
   with_registries ["docker-registry.example.com"]
   with_project_on_remote_repo
@@ -131,7 +132,7 @@ describe DockerBuilderService do
     let(:k8s_job) { stub }
     let(:repo_digest) { 'sha256:5f1d7c7381b2e45ca73216d7b06004fdb0908ed7bb8786b62f2cdfa5035fde2c' }
     let(:build_log) do
-      ["status: Random status", "BUILD DIGEST: #{project.docker_repo(DockerRegistry.first)}@#{repo_digest}"].join("\n")
+      ["status: Random status", "BUILD DIGEST: #{primary_repo}@#{repo_digest}"].join("\n")
     end
 
     before { Kubernetes::BuildJobExecutor.expects(:new).returns k8s_job }
@@ -140,7 +141,7 @@ describe DockerBuilderService do
       k8s_job.expects(:execute).returns([true, build_log])
 
       service.send(:run_build_image_job, local_job)
-      assert_equal("#{project.docker_repo(DockerRegistry.first)}@#{repo_digest}", build.docker_repo_digest)
+      build.docker_repo_digest.must_equal "#{primary_repo}@#{repo_digest}"
     end
 
     it 'leaves the build docker metadata empty when the remote job fails' do
@@ -159,7 +160,7 @@ describe DockerBuilderService do
     before { service.instance_variable_set(:@execution, execution) }
 
     it 'fires the before_docker_build hook' do
-      Samson::Hooks.expects(:fire).with(:before_docker_repository_usage, build.project)
+      Samson::Hooks.expects(:fire).with(:before_docker_repository_usage, build)
       Samson::Hooks.expects(:fire).with(:before_docker_build, tmp_dir, build, anything)
       service.send(:before_docker_build, tmp_dir)
     end
@@ -259,7 +260,6 @@ describe DockerBuilderService do
       ]
     end
     let(:tag) { 'my-test' }
-    let(:primary_repo) { project.docker_repo(DockerRegistry.first) }
     let(:output) { service.send(:output).to_s }
 
     before do
@@ -272,7 +272,16 @@ describe DockerBuilderService do
       stub_push primary_repo, tag, true
 
       assert service.send(:push_image), output
-      build.docker_repo_digest.must_equal "#{project.docker_repo(DockerRegistry.first)}@#{repo_digest}"
+      build.docker_repo_digest.must_equal "#{primary_repo}@#{repo_digest}"
+    end
+
+    it 'uses a different repo for a uncommon dockerfile' do
+      build.update_column(:dockerfile, "Dockerfile.secondary")
+      mock_docker_image.expects(:tag).once
+      stub_push "#{primary_repo}-secondary", tag, true
+
+      assert service.send(:push_image), output
+      build.docker_repo_digest.must_equal "#{primary_repo}-secondary@#{repo_digest}"
     end
 
     it 'saves docker output to the buffer' do
@@ -315,7 +324,7 @@ describe DockerBuilderService do
     end
 
     describe "with secondary registry" do
-      let(:secondary_repo) { project.docker_repo(DockerRegistry.all[1]) }
+      let(:secondary_repo) { project.docker_repo(DockerRegistry.all[1], 'Dockerfile') }
 
       with_registries ["docker-registry.example.com", 'extra.registry']
 

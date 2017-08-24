@@ -137,7 +137,7 @@ describe Kubernetes::DeployExecutor do
 
       refute_difference 'Build.count' do
         assert execute
-        out.must_include "Not creating a Build"
+        out.must_include "Not creating builds"
         out.must_include "resque-worker: Live\n"
         out.must_include "SUCCESS"
       end
@@ -322,7 +322,7 @@ describe Kubernetes::DeployExecutor do
           end
           assert execute
           out.must_include "SUCCESS"
-          out.must_include "Creating Build for #{job.commit}"
+          out.must_include "Creating builds for #{job.commit}"
           out.must_include "Build #{Build.last.url} is looking good"
         end
 
@@ -351,14 +351,14 @@ describe Kubernetes::DeployExecutor do
             execute
           end
           e.message.must_equal "Build #{Build.last.url} is cancelled, rerun it manually."
-          out.must_include "Creating Build for #{job.commit}.\n"
+          out.must_include "Creating builds for #{job.commit}.\n"
         end
 
         it "stops when deploy is cancelled by user" do
           executor.cancel('FAKE-SIGNAL')
           DockerBuilderService.any_instance.expects(:run).returns(true)
           refute execute
-          out.scan(/.*Build.*/).must_equal ["Creating Build for #{job.commit}."] # not waiting for build
+          out.scan(/.*build.*/).must_equal ["Creating builds for #{job.commit}."] # not waiting for build
           out.must_include "STOPPED"
         end
       end

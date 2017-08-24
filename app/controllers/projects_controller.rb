@@ -95,6 +95,7 @@ class ProjectsController < ApplicationController
         :release_branch,
         :release_source,
         :docker_release_branch,
+        :dockerfiles,
         :docker_image_building_disabled,
         :include_new_deploy_groups,
         :dashboard,

@@ -93,17 +93,19 @@ module Kubernetes
     # /secretkeys are where the annotations from the config are mounted
     def set_secret_puller
       secret_vol = { mountPath: "/secrets", name: "secrets-volume" }
-      unshift_init_container(
-        image: SECRET_PULLER_IMAGE,
-        imagePullPolicy: 'IfNotPresent',
-        name: 'secret-puller',
-        volumeMounts: [
-          { mountPath: "/vault-auth", name: "vaultauth" },
-          { mountPath: "/secretkeys", name: "secretkeys" },
-          secret_vol
-        ],
-        env: vault_env
-      )
+      modify_init_container do |containers|
+        containers.unshift(
+          image: SECRET_PULLER_IMAGE,
+          imagePullPolicy: 'IfNotPresent',
+          name: 'secret-puller',
+          volumeMounts: [
+            { mountPath: "/vault-auth", name: "vaultauth" },
+            { mountPath: "/secretkeys", name: "secretkeys" },
+            secret_vol
+          ],
+          env: vault_env
+        )
+      end
 
       # share secrets volume between all containers
       containers.each do |container|
@@ -125,11 +127,11 @@ module Kubernetes
 
     # Init containers are stored as a json annotation
     # see http://kubernetes.io/docs/user-guide/production-pods/#handling-initialization
-    def unshift_init_container(container)
+    def modify_init_container
       key = Kubernetes::Api::Pod::INIT_CONTAINER_KEY
-      init_containers = JSON.parse(annotations[key] || '[]')
-      init_containers.unshift(container)
-      annotations[key] = JSON.pretty_generate(init_containers)
+      init_containers = JSON.parse(annotations[key] || '[]', symbolize_names: true)
+      yield init_containers
+      annotations[key] = JSON.pretty_generate(init_containers) if init_containers.any?
     end
 
     # This key replaces the default kubernetes key: 'deployment.kubernetes.io/podTemplateHash'
@@ -180,12 +182,25 @@ module Kubernetes
       }
     end
 
+    # To not break previous workflows for sidecars we do not pick the default Dockerfile
     def set_docker_image
-      if @doc.build
-        docker_path = @doc.build.docker_repo_digest ||
-          "#{project.docker_repo(DockerRegistry.first)}:#{@doc.build.docker_tag}"
-        # Assume first container is one we want to update docker image in
-        container[:image] = docker_path
+      builds = @doc.kubernetes_release.builds
+      set_docker_image_for_containers(builds, containers, default: true)
+      modify_init_container do |containers|
+        set_docker_image_for_containers(builds, containers, default: false)
+      end
+    end
+
+    def set_docker_image_for_containers(builds, containers, default:)
+      containers.each do |container|
+        build =
+          if selected = container[:"samson/dockerfile"]
+            builds.detect { |b| b.dockerfile == selected } ||
+              raise(Samson::Hooks::UserError, "Build for dockerfile #{selected} not found")
+          elsif default
+            builds.detect { |b| b.dockerfile == "Dockerfile" }
+          end
+        container[:image] = build.docker_repo_digest if build
       end
     end
 

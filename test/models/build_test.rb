@@ -33,9 +33,13 @@ describe Build do
     it 'validates git sha' do
       Dir.chdir(repo_temp_dir) do
         assert_valid(valid_build(git_ref: nil, git_sha: current_commit))
-        refute_valid(valid_build(git_ref: nil, git_sha: '0123456789012345678901234567890123456789'))
+        refute_valid(valid_build(git_ref: nil, git_sha: '0123456789012345678901234567890123456789')) # sha no in repo
         refute_valid(valid_build(git_ref: nil, git_sha: 'This is a string of 40 characters.......'))
         refute_valid(valid_build(git_ref: nil, git_sha: 'abc'))
+
+        build.update_column(:git_sha, current_commit)
+        refute_valid(valid_build(git_ref: nil, git_sha: current_commit)) # not unique
+        assert_valid(valid_build(git_ref: nil, git_sha: current_commit, dockerfile: 'Other'))
       end
     end
 
