@@ -13,7 +13,7 @@
 
       <% @clusters.each do |cluster| %>
         <tr>
-          <td><%= link_to cluster.name, kubernetes_cluster_path(cluster) %></td>
+          <td><%= link_to cluster.name, cluster %></td>
           <td><%= cluster.description %></td>
           <td>
             <%= render 'deploy_group_list', deploy_groups: cluster.deploy_groups %>

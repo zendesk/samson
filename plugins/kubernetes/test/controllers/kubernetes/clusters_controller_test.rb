@@ -25,6 +25,7 @@ describe Kubernetes::ClustersController do
     unauthorized :post, :create
     unauthorized :get, :edit, id: 1
     unauthorized :patch, :update, id: 1
+    unauthorized :delete, :destroy, id: 1
 
     describe "#index" do
       it "renders" do
@@ -82,6 +83,7 @@ describe Kubernetes::ClustersController do
       it "renders" do
         get :new
         assert_template :edit
+        assigns(:cluster).config_filepath.must_include Dir.tmpdir
       end
 
       it "renders when ECR plugin is active" do
@@ -89,11 +91,30 @@ describe Kubernetes::ClustersController do
         get :new
         assert_template :edit
       end
+
+      describe "when config file env is not set" do
+        with_env KUBE_CONFIG_FILE: nil
+
+        it "uses last config" do
+          get :new
+          assert_template :edit
+          assigns(:cluster).config_filepath.must_equal "plugins/kubernetes/test/cluster_config.yml"
+        end
+
+        it "can render without any config file" do
+          Kubernetes::Cluster.delete_all
+          get :new
+          assert_template :edit
+          assigns(:cluster).config_filepath.must_equal nil
+        end
+      end
     end
 
     describe "#create" do
       use_example_config
-      let(:params) { {config_filepath: __FILE__, config_context: 'y', name: 'foobar', ip_prefix: '1.2'} }
+      let(:params) do
+        {config_filepath: ENV.fetch("KUBE_CONFIG_FILE"), config_context: 'y', name: 'foobar', ip_prefix: '1.2'}
+      end
 
       before { Kubernetes::Cluster.any_instance.stubs(connection_valid?: true) } # avoid real connection
 
@@ -133,47 +154,22 @@ describe Kubernetes::ClustersController do
       end
     end
 
-    describe "#load_default_config_file" do
-      before { ::Kubernetes::Cluster.destroy_all }
-
-      it "works even without an ENV var or old cluster" do
-        get :new
-        assert_template :edit
-        assigns['context_options'].must_be_empty
-      end
-
-      it "works with an existing config file from ENV" do
-        with_example_kube_config do |f|
-          with_env KUBE_CONFIG_FILE: f do
-            get :new
-            assert_template :edit
-            assigns['context_options'].wont_be_empty
-          end
-        end
-      end
-
-      it "uses the config file from latest cluster" do
-        with_example_kube_config do |f|
-          create_kubernetes_cluster(config_filepath: f)
-          get :new
-          assert_template :edit
-          assigns['context_options'].wont_be_empty
-        end
-      end
-
-      it "uses the config file from current cluster" do
+    describe "#destroy" do
+      it "destroys" do
         cluster
-        bad = create_kubernetes_cluster(name: 'bad')
-        bad.update_column(:config_filepath, 'bad')
-        get :edit, params: {id: cluster.id}
-        assert_template :edit
-        assigns['context_options'].wont_be_empty
+        assert_difference 'Kubernetes::Cluster.count', -1 do
+          delete :destroy, params: {id: cluster.id}
+          assert_redirected_to "/kubernetes/clusters"
+        end
       end
 
-      it "blows up with missing config file" do
-        with_env KUBE_CONFIG_FILE: "nope" do
-          assert_raises(Errno::ENOENT) { get :new }
-        end
+      it "renders when it fails to destroy" do
+        # cluster still has usages, cannot destroy
+        Kubernetes::ClusterDeployGroup.any_instance.stubs(:validate_namespace_exists)
+        cluster.cluster_deploy_groups.create! deploy_group: deploy_groups(:pod100), namespace: 'foo'
+
+        delete :destroy, params: {id: cluster.id}
+        assert_template :edit
       end
     end
   end

@@ -63,31 +63,16 @@ describe Command do
     end
   end
 
-  describe "#destroy" do
-    describe "with no usages" do
-      before do
-        StageCommand.delete_all
-        assert_equal command.usages.count, 0
-      end
-
-      it "destroys successfully" do
-        assert command.destroy
-      end
+  describe "#ensure_unused" do
+    it "does not destroy used" do
+      refute command.destroy
+      command.errors.full_messages.must_equal ['Can only delete when unused.']
     end
 
-    describe "with usages" do
-      before do
-        assert_not_equal command.usages.count, 0
-      end
-
-      it "fails to destroy" do
-        refute command.destroy
-      end
-
-      it "has an error message" do
-        command.destroy
-        assert_equal command.errors.full_messages, ['Can only delete unused commands.']
-      end
+    it "destroys when unused" do
+      command.stage_commands.delete_all
+      assert command.destroy
+      command.errors.full_messages.must_equal []
     end
   end
 end

@@ -51,7 +51,7 @@ class Command < ActiveRecord::Base
 
   def ensure_unused
     if usages.any?
-      errors.add(:base, 'Can only delete unused commands.')
+      errors.add(:base, 'Can only delete when unused.')
       throw(:abort)
     end
   end
