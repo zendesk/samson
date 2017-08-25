@@ -8,10 +8,9 @@ describe Kubernetes::Release do
   let(:user)   { users(:deployer) }
   let(:release) do
     Kubernetes::Release.new(
-      build: build,
       user: user,
       project: project,
-      git_sha: 'abababa',
+      git_sha: build.git_sha,
       git_ref: 'master',
       deploy: deploys(:succeeded_test)
     )
@@ -59,7 +58,6 @@ describe Kubernetes::Release do
     it 'creates with 1 role' do
       expect_file_contents_from_repo
       release = assert_create_succeeds(release_params)
-      release.build.id.must_equal release_params[:build_id]
       release.release_docs.count.must_equal 1
       release.release_docs.first.kubernetes_role.id.must_equal app_server.id
       release.release_docs.first.kubernetes_role.name.must_equal app_server.name
@@ -68,7 +66,6 @@ describe Kubernetes::Release do
     it 'creates with multiple roles' do
       2.times { expect_file_contents_from_repo }
       release = assert_create_succeeds(multiple_roles_release_params)
-      release.build.id.must_equal release_params[:build_id]
       release.release_docs.count.must_equal 2
       release.release_docs.first.kubernetes_role.name.must_equal app_server.name
       release.release_docs.first.replica_target.must_equal 1
@@ -143,8 +140,13 @@ describe Kubernetes::Release do
 
   describe '#validate_docker_image_in_registry' do
     it 'ensures image is in registry' do
-      release.build = builds(:staging) # does not have a docker image pushed
+      build.update_column(:docker_repo_digest, nil)
       refute_valid(release, :build)
+    end
+
+    it 'is valid wihout a build' do
+      build.update_column(:git_sha, 'sdfsddfssdf')
+      assert_valid(release)
     end
   end
 
@@ -161,7 +163,6 @@ describe Kubernetes::Release do
 
   def release_params
     {
-      build_id: build.id,
       git_sha: build.git_sha,
       git_ref: build.git_ref,
       project: project,

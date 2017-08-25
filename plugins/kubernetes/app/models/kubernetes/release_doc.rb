@@ -20,7 +20,7 @@ module Kubernetes
     attr_reader :previous_resources
 
     def build
-      kubernetes_release.try(:build)
+      kubernetes_release&.builds&.first
     end
 
     def deploy

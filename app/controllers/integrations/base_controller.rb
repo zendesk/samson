@@ -22,7 +22,7 @@ class Integrations::BaseController < ApplicationController
     end
 
     if project.build_docker_image_for_branch?(branch)
-      create_docker_image(release)
+      create_docker_image
     end
 
     stages = project.webhook_stages_for(branch, service_type, service_name)
@@ -111,23 +111,17 @@ class Integrations::BaseController < ApplicationController
     @service_name ||= self.class.name.demodulize.sub('Controller', '').downcase
   end
 
-  def create_docker_image(release)
-    build = find_or_create_build(branch)
-    release.update_attribute(:build, build) if release
-    DockerBuilderService.new(build).run(push: true, tag_as_latest: true)
-  end
-
-  # TODO: use first_or_create here ... some weird rails bug breaks
-  # test/controllers/integrations/base_controller_test.rb
-  def find_or_create_build(label)
+  def create_docker_image
     options = {git_sha: commit}
     scope = project.builds
-    scope.where(options).first || project.builds.create!(options.merge(
+    return if scope.where(options).first
+    build = project.builds.create!(options.merge(
       git_ref: branch,
       description: message,
       creator: user,
-      label: label
+      label: branch
     ))
+    DockerBuilderService.new(build).run(push: true, tag_as_latest: true)
   end
 
   def record_log(level, message)

@@ -4,7 +4,6 @@ module Kubernetes
     self.table_name = 'kubernetes_releases'
 
     belongs_to :user
-    belongs_to :build, optional: true
     belongs_to :project
     belongs_to :deploy
     has_many :release_docs, class_name: 'Kubernetes::ReleaseDoc', foreign_key: 'kubernetes_release_id'
@@ -54,6 +53,10 @@ module Kubernetes
       Rails.application.routes.url_helpers.project_kubernetes_release_url(project, self)
     end
 
+    def builds
+      project.builds.where(git_sha: git_sha)
+    end
+
     private
 
     # Creates a ReleaseDoc per each DeployGroup and Role combination.
@@ -75,7 +78,7 @@ module Kubernetes
     end
 
     def validate_docker_image_in_registry
-      if build && !build.docker_repo_digest?
+      unless builds.all?(&:docker_repo_digest?)
         errors.add(:build, 'Docker image was not pushed to registry')
       end
     end

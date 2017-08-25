@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170821222130) do
+ActiveRecord::Schema.define(version: 20170824174718) do
 
   create_table "audits", force: :cascade do |t|
     t.integer "auditable_id", null: false
@@ -237,13 +237,11 @@ ActiveRecord::Schema.define(version: 20170821222130) do
   create_table "kubernetes_releases", id: :integer, force: :cascade do |t|
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.integer "build_id"
     t.integer "user_id"
     t.integer "project_id", null: false
     t.integer "deploy_id"
     t.string "git_sha", limit: 40, null: false
     t.string "git_ref"
-    t.index ["build_id"], name: "index_kubernetes_releases_on_build_id"
   end
 
   create_table "kubernetes_roles", id: :integer, force: :cascade do |t|
@@ -383,8 +381,6 @@ ActiveRecord::Schema.define(version: 20170821222130) do
     t.string "author_type", null: false
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.integer "build_id"
-    t.index ["build_id"], name: "index_releases_on_build_id"
     t.index ["project_id", "number"], name: "index_releases_on_project_id_and_number", unique: true
   end
 

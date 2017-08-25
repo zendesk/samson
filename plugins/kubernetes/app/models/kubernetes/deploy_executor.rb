@@ -45,9 +45,9 @@ module Kubernetes
 
     def execute(*)
       verify_kubernetes_templates!
-      build = find_or_create_build
+      ensure_successful_build
       return false if stopped?
-      release = create_release(build)
+      release = create_release
 
       prerequisites, deploys = release.release_docs.partition(&:prerequisite?)
       if prerequisites.any?
@@ -243,7 +243,7 @@ module Kubernetes
       end
     end
 
-    def find_or_create_build
+    def ensure_successful_build
       return unless build = (find_build || create_build)
       wait_for_build(build)
       ensure_build_is_successful(build) unless @stopped
@@ -252,7 +252,7 @@ module Kubernetes
 
     def find_build
       find_build_with_retry ||
-        (@job.deploy.kubernetes_reuse_build && @job.deploy.previous_deploy&.kubernetes_release&.build)
+        (@job.deploy.kubernetes_reuse_build && @job.deploy.previous_deploy&.kubernetes_release&.builds&.first)
     end
 
     def find_build_with_retry
@@ -325,11 +325,10 @@ module Kubernetes
     end
 
     # create a release, storing all the configuration
-    def create_release(build)
+    def create_release
       release = Kubernetes::Release.create_release(
         deploy_id: @job.deploy.id,
         deploy_groups: deploy_group_configs,
-        build_id: build.try(:id),
         git_sha: @job.commit,
         git_ref: @reference,
         user: @job.user,

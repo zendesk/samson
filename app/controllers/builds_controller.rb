@@ -8,6 +8,9 @@ class BuildsController < ApplicationController
 
   def index
     @builds = current_project.builds.order('id desc').page(page)
+    if search = params[:search]
+      @builds = @builds.where(search.permit(*Build.column_names))
+    end
 
     respond_to do |format|
       format.html

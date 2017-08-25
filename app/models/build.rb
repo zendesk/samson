@@ -9,7 +9,6 @@ class Build < ActiveRecord::Base
   belongs_to :docker_build_job, class_name: 'Job', optional: true
   belongs_to :creator, class_name: 'User', foreign_key: 'created_by'
   has_many :deploys
-  has_many :releases
 
   validates :project, presence: true
   validates :git_sha, format: SHA1_REGEX, allow_nil: true, uniqueness: true
