@@ -280,7 +280,7 @@ module Kubernetes
           git_ref: @reference,
           creator: @job.user,
           project: @job.project,
-          label: "Automated build triggered via Deploy ##{@job.deploy.id}"
+          label: "Autobuild for Deploy ##{@job.deploy.id}"
         )
         DockerBuilderService.new(build).run(push: true)
         build
