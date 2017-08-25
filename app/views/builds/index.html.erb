@@ -6,7 +6,7 @@
   <p class="pull-right">
     <% unless @project.docker_image_building_disabled? %>
       <%= link_to "Edit Pre Build Command", project_build_command_path(@project), class: "btn btn-default"  %>
-      <%= link_to "Create Build", new_project_build_path(@project), class: "btn btn-default" %>
+      <%= link_to "New", new_project_build_path(@project), class: "btn btn-default" %>
     <% end %>
   </p>
 

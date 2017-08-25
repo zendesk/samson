@@ -21,7 +21,7 @@ class Build < ActiveRecord::Base
   before_create :assign_number
 
   def nice_name
-    "Build #{label.presence || id}"
+    label.presence || "Build #{id}"
   end
 
   def commit_url

@@ -122,7 +122,7 @@ describe Build do
 
     it "uses the label when avialable" do
       build.label = 'foo'
-      build.nice_name.must_equal "Build foo"
+      build.nice_name.must_equal "foo"
     end
   end
 
