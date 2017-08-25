@@ -212,7 +212,7 @@ describe Kubernetes::ReleaseDoc do
 
   describe "#build" do
     it "fetches the build" do
-      doc.build.must_equal builds(:docker_build)
+      doc.kubernetes_release.builds.must_equal [builds(:docker_build)]
     end
   end
 

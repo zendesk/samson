@@ -47,8 +47,16 @@ class Project < ActiveRecord::Base
 
   scope :search, ->(name) { where("name like ?", "%#{name}%") }
 
-  def docker_repo(registry)
-    File.join(registry.base, permalink_base)
+  def docker_repo(registry, dockerfile)
+    repo = File.join(registry.base, permalink_base)
+    if suffix = dockerfile.gsub(/^Dockerfile\.?|\/Dockerfile\.?/, '').presence
+      repo << "-#{suffix.parameterize}"
+    end
+    repo
+  end
+
+  def dockerfile_list
+    dockerfiles.to_s.split(/\s+/).presence || ["Dockerfile"]
   end
 
   # Whether to create new releases when the branch is updated.

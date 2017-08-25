@@ -22,7 +22,7 @@ class Integrations::BaseController < ApplicationController
     end
 
     if project.build_docker_image_for_branch?(branch)
-      create_docker_image
+      create_docker_images
     end
 
     stages = project.webhook_stages_for(branch, service_type, service_name)
@@ -111,17 +111,20 @@ class Integrations::BaseController < ApplicationController
     @service_name ||= self.class.name.demodulize.sub('Controller', '').downcase
   end
 
-  def create_docker_image
-    options = {git_sha: commit}
+  def create_docker_images
     scope = project.builds
-    return if scope.where(options).first
-    build = project.builds.create!(options.merge(
-      git_ref: branch,
-      description: message,
-      creator: user,
-      label: branch
-    ))
-    DockerBuilderService.new(build).run(push: true, tag_as_latest: true)
+    project.dockerfile_list.each do |dockerfile|
+      options = {git_sha: commit, dockerfile: dockerfile}
+      next if scope.where(options).first
+
+      build = project.builds.create!(options.merge(
+        git_ref: branch,
+        description: message,
+        creator: user,
+        label: branch
+      ))
+      DockerBuilderService.new(build).run(push: true, tag_as_latest: true)
+    end
   end
 
   def record_log(level, message)

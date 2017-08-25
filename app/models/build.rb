@@ -3,7 +3,8 @@ class Build < ActiveRecord::Base
   SHA1_REGEX = /\A[0-9a-f]{40}\Z/i
   SHA256_REGEX = /\A(sha256:)?[0-9a-f]{64}\Z/i
   DIGEST_REGEX = /\A[\w.-]+[\w\/-]*@sha256:[0-9a-f]{64}\Z/i
-  ASSIGNABLE_KEYS = [:git_ref, :label, :description, :source_url] + Samson::Hooks.fire(:build_permitted_params)
+  ASSIGNABLE_KEYS = [:git_ref, :label, :description, :source_url, :dockerfile] +
+    Samson::Hooks.fire(:build_permitted_params)
 
   belongs_to :project
   belongs_to :docker_build_job, class_name: 'Job', optional: true
@@ -11,7 +12,7 @@ class Build < ActiveRecord::Base
   has_many :deploys
 
   validates :project, presence: true
-  validates :git_sha, format: SHA1_REGEX, allow_nil: true, uniqueness: true
+  validates :git_sha, format: SHA1_REGEX, allow_nil: true, uniqueness: {scope: :dockerfile}
   validates :docker_image_id, format: SHA256_REGEX, allow_nil: true
   validates :docker_repo_digest, format: DIGEST_REGEX, allow_nil: true
   validates :source_url, format: /\Ahttps?:\/\/\S+\z/, allow_nil: true

@@ -81,7 +81,7 @@ module Kubernetes
       container_params = {
         env: [{name: 'DOCKER_REGISTRY', value: @registry.host }],
         args: [
-          project.repository_url, build.git_sha, project.docker_repo(@registry), docker_tag,
+          project.repository_url, build.git_sha, project.docker_repo(@registry, build.dockerfile), docker_tag,
           push ? "yes" : "no",
           tag_as_latest ? "yes" : "no"
         ]

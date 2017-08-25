@@ -9,10 +9,10 @@ module SamsonAwsEcr
       # we make sure the repo exists so pushes do not fail
       # - ignores if the repo already exists
       # - ignores if the repo cannot be created due to permission problems
-      def ensure_repositories(project)
+      def ensure_repositories(build)
         DockerRegistry.all.each do |registry|
           next unless client = ecr_client(registry)
-          name = project.docker_repo(registry).split('/', 2).last
+          name = build.project.docker_repo(registry, build.dockerfile).split('/', 2).last
 
           begin
             begin
@@ -63,7 +63,7 @@ end
 
 # need credentials to pull (via Dockerfile FROM) and push images
 # ATM this only authenticates the default docker registry and not any extra registries
-Samson::Hooks.callback :before_docker_repository_usage do |project|
-  SamsonAwsEcr::Engine.ensure_repositories(project)
+Samson::Hooks.callback :before_docker_repository_usage do |build|
+  SamsonAwsEcr::Engine.ensure_repositories(build)
   SamsonAwsEcr::Engine.refresh_credentials
 end

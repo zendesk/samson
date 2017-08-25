@@ -52,8 +52,9 @@ ActiveRecord::Schema.define(version: 20170824174718) do
     t.datetime "started_at"
     t.datetime "finished_at"
     t.string "source_url"
+    t.string "dockerfile", default: "Dockerfile", null: false
     t.index ["created_by"], name: "index_builds_on_created_by"
-    t.index ["git_sha"], name: "index_builds_on_git_sha", unique: true
+    t.index ["git_sha", "dockerfile"], name: "index_builds_on_git_sha_and_dockerfile", unique: true
     t.index ["project_id"], name: "index_builds_on_project_id"
   end
 
@@ -368,6 +369,7 @@ ActiveRecord::Schema.define(version: 20170824174718) do
     t.integer "build_command_id"
     t.text "dashboard"
     t.boolean "docker_image_building_disabled", default: false, null: false
+    t.string "dockerfiles"
     t.index ["build_command_id"], name: "index_projects_on_build_command_id"
     t.index ["permalink"], name: "index_projects_on_permalink", unique: true, length: { permalink: 191 }
     t.index ["token"], name: "index_projects_on_token", unique: true, length: { token: 191 }

@@ -4,6 +4,11 @@ require_relative "../../test_helper"
 SingleCov.covered!
 
 describe Kubernetes::TemplateFiller do
+  def add_init_container(container)
+    annotations = (raw_template[:spec][:template][:metadata][:annotations] ||= {})
+    annotations[init_container_key] = [container].to_json
+  end
+
   let(:doc) { kubernetes_release_docs(:test_release_pod_1) }
   let(:raw_template) do
     raw_template = YAML.safe_load(read_kubernetes_sample_file('kubernetes_deployment.yml')).deep_symbolize_keys
@@ -11,6 +16,10 @@ describe Kubernetes::TemplateFiller do
     raw_template
   end
   let(:template) { Kubernetes::TemplateFiller.new(doc, raw_template) }
+  let(:init_container_key) { :'pod.beta.kubernetes.io/init-containers' }
+  let(:init_containers) do
+    JSON.parse(template.to_hash[:spec][:template][:metadata][:annotations][init_container_key])
+  end
 
   before do
     doc.send(:resource_template=, YAML.load_stream(read_kubernetes_sample_file('kubernetes_deployment.yml')))
@@ -98,11 +107,12 @@ describe Kubernetes::TemplateFiller do
     describe "containers" do
       let(:result) { template.to_hash }
       let(:container) { result.fetch(:spec).fetch(:template).fetch(:spec).fetch(:containers).first }
+      let(:image) do
+        'docker-registry.example.com/test@sha256:5f1d7c7381b2e45ca73216d7b06004fdb0908ed7bb8786b62f2cdfa5035fde2c'
+      end
 
       it "overrides image" do
-        container.fetch(:image).must_equal(
-          'docker-registry.example.com/test@sha256:5f1d7c7381b2e45ca73216d7b06004fdb0908ed7bb8786b62f2cdfa5035fde2c'
-        )
+        container.fetch(:image).must_equal image
       end
 
       it "does not override image when no build was made" do
@@ -110,6 +120,35 @@ describe Kubernetes::TemplateFiller do
         container.fetch(:image).must_equal(
           "docker-registry.zende.sk/truth_service:latest"
         )
+      end
+
+      describe "when dockerfile was selected" do
+        before { raw_template[:spec][:template][:spec][:containers][0][:"samson/dockerfile"] = "Dockerfile.new" }
+
+        it "finds special build" do
+          digest = "docker-registry.example.com/new@sha256:#{"a" * 64}"
+          builds(:v1_tag).update_columns(
+            git_sha: doc.kubernetes_release.git_sha,
+            docker_repo_digest: digest,
+            dockerfile: 'Dockerfile.new'
+          )
+          container.fetch(:image).must_equal digest
+        end
+
+        it "complains when build was not found" do
+          e = assert_raises(Samson::Hooks::UserError) { container }
+          e.message.must_equal "Build for dockerfile Dockerfile.new not found"
+        end
+      end
+
+      it "allows selecting dockerfile for init containers" do
+        add_init_container "samson/dockerfile": 'Dockerfile'
+        init_containers[0].must_equal("samson/dockerfile" => "Dockerfile", "image" => image)
+      end
+
+      it "does not auto-set dockerfile for init containers since they are mostly special" do
+        add_init_container a: 1
+        init_containers[0].must_equal('a' => 1)
       end
 
       it "copies resource values" do
@@ -178,10 +217,6 @@ describe Kubernetes::TemplateFiller do
     describe "secret-puler-containers" do
       let(:secret_key) { "global/global/global/bar" }
       let(:template_env) { template.to_hash[:spec][:template][:spec][:containers].first[:env] }
-      let(:init_container_key) { :'pod.beta.kubernetes.io/init-containers' }
-      let(:init_containers) do
-        JSON.parse(template.to_hash[:spec][:template][:metadata][:annotations][init_container_key])
-      end
 
       around do |test|
         klass = Kubernetes::TemplateFiller
@@ -213,8 +248,7 @@ describe Kubernetes::TemplateFiller do
       end
 
       it "keeps existing init containers" do
-        annotations = raw_template[:spec][:template][:metadata][:annotations]
-        annotations[init_container_key] = [{a: 1}].to_json
+        add_init_container a: 1
         init_containers[1].must_equal('a' => 1)
       end
 

@@ -17,6 +17,7 @@
     <% end %>
     <% if ENV['DOCKER_FEATURE'] %>
       <%= form.input :docker_release_branch, help: 'New commits on this branch will cause a docker image to be built when a webhook arrives.' %>
+      <%= form.input :dockerfiles, help: 'Space separated list of dockerfiles to build, default: Dockerfile' %>
       <%= form.input :docker_image_building_disabled, as: :check_box, help: 'Disable building of docker images, they must be added via api.' %>
     <% end %>
     <% if DeployGroup.enabled? %>

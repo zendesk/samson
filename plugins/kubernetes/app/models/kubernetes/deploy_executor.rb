@@ -45,7 +45,7 @@ module Kubernetes
 
     def execute(*)
       verify_kubernetes_templates!
-      ensure_successful_build
+      ensure_successful_builds
       return false if stopped?
       release = create_release
 
@@ -243,23 +243,25 @@ module Kubernetes
       end
     end
 
-    def ensure_successful_build
-      return unless build = (find_build || create_build)
-      wait_for_build(build)
-      ensure_build_is_successful(build) unless @stopped
-      build
+    def ensure_successful_builds
+      return unless builds = (find_builds || create_builds)
+      builds.each do |build|
+        wait_for_build(build)
+        ensure_build_is_successful(build) unless @stopped
+      end
     end
 
-    def find_build
-      find_build_with_retry ||
-        (@job.deploy.kubernetes_reuse_build && @job.deploy.previous_deploy&.kubernetes_release&.builds&.first)
+    def find_builds
+      find_builds_with_retry.presence ||
+        (@job.deploy.kubernetes_reuse_build && @job.deploy.previous_deploy&.kubernetes_release&.builds)
     end
 
-    def find_build_with_retry
-      build = Build.find_by_git_sha(@job.commit)
-      return build if build || !@job.project.docker_release_branch.present?
+    def find_builds_with_retry
+      builds = Build.where(git_sha: @job.commit).all
+      all_builds_found = (@job.project.dockerfile_list.sort - builds.map(&:dockerfile)).empty?
+      return builds if all_builds_found || !@job.project.docker_release_branch.present?
       wait_for_parallel_build_creation
-      Build.find_by_git_sha(@job.commit)
+      Build.where(git_sha: @job.commit).all
     end
 
     # stub anchor for tests
@@ -267,25 +269,32 @@ module Kubernetes
       sleep 5
     end
 
-    def create_build
+    def create_builds
       if @job.project.docker_image_building_disabled?
         raise(
           Samson::Hooks::UserError,
           "Not creating a Build for #{@job.commit} since build creation is disabled, use the api to create builds."
         )
-      elsif @job.project.repository.file_content('Dockerfile', @job.commit)
-        @output.puts("Creating Build for #{@job.commit}.")
-        build = Build.create!(
-          git_sha: @job.commit,
-          git_ref: @reference,
-          creator: @job.user,
-          project: @job.project,
-          label: "Autobuild for Deploy ##{@job.deploy.id}"
-        )
-        DockerBuilderService.new(build).run(push: true)
-        build
+      end
+
+      # NOTE: ideally check for all builds the template will use
+      dockerfiles = @job.project.dockerfile_list
+      if dockerfiles.all? { |df| @job.project.repository.file_content(df, @job.commit) }
+        @output.puts("Creating builds for #{@job.commit}.")
+        dockerfiles.map do |dockerfile|
+          build = Build.create!(
+            git_sha: @job.commit,
+            git_ref: @reference,
+            creator: @job.user,
+            project: @job.project,
+            dockerfile: dockerfile,
+            label: "Autobuild for Deploy ##{@job.deploy.id}"
+          )
+          DockerBuilderService.new(build).run(push: true)
+          build
+        end
       else
-        @output.puts("Not creating a Build for #{@job.commit} since it does not have a Dockerfile.")
+        @output.puts("Not creating builds for #{@job.commit} since it does not have #{dockerfiles.join(", ")}.")
         false
       end
     end

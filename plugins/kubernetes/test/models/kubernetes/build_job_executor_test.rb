@@ -88,14 +88,22 @@ describe Kubernetes::BuildJobExecutor do
           build_config.primary[:spec][:template][:metadata][:labels]
         ]
         labels_config.each do |v|
-          assert_equal v[:project], project_name_dash
-          assert_equal v[:role], 'docker-build-job'
-          assert_equal v[:foo], 'bar'
+          v[:project].must_equal project_name_dash
+          v[:role].must_equal 'docker-build-job'
+          v[:foo].must_equal 'bar'
         end
 
-        assert_equal build_config.primary[:spec][:template][:spec][:containers][0][:args],
-          [project.repository_url, build.git_sha, project.docker_repo(DockerRegistry.first), 'latest', 'no', 'no']
-        assert_equal build_config.primary[:spec][:template][:spec][:containers][0][:env].length, 1
+        build_config.primary[:spec][:template][:spec][:containers][0][:args].must_equal(
+          [
+            project.repository_url,
+            build.git_sha,
+            project.docker_repo(DockerRegistry.first, 'Dockerfile'),
+            'latest',
+            'no',
+            'no'
+          ]
+        )
+        build_config.primary[:spec][:template][:spec][:containers][0][:env].length.must_equal 1
       end
 
       it "rescues internal errors" do

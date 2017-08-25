@@ -10,10 +10,10 @@ class DockerBuilderService
   attr_reader :build, :execution
 
   class << self
-    def build_docker_image(dir, output, dockerfile: nil, tag: nil)
+    def build_docker_image(dir, output, dockerfile:, tag: nil)
       local_docker_login do |login_commands|
         tag = " -t #{tag.shellescape}" if tag
-        file = " -f #{dockerfile.shellescape}" if dockerfile
+        file = " -f #{dockerfile.shellescape}"
         build = "docker build#{file}#{tag} ."
         executor = TerminalExecutor.new(output)
         return unless executor.execute(
@@ -144,7 +144,7 @@ class DockerBuilderService
   end
 
   def before_docker_build(tmp_dir)
-    Samson::Hooks.fire(:before_docker_repository_usage, build.project)
+    Samson::Hooks.fire(:before_docker_repository_usage, build)
     Samson::Hooks.fire(:before_docker_build, tmp_dir, build, output)
     execute_build_command(tmp_dir, build.project.build_command)
   end
@@ -155,7 +155,9 @@ class DockerBuilderService
 
     before_docker_build(tmp_dir)
 
-    build.docker_image = DockerBuilderService.build_docker_image(tmp_dir, output)
+    build.docker_image = DockerBuilderService.build_docker_image(
+      tmp_dir, output, dockerfile: build.dockerfile
+    )
   end
   add_method_tracer :build_image
 
@@ -184,7 +186,7 @@ class DockerBuilderService
 
     DockerRegistry.all.each_with_index do |registry, i|
       primary = i.zero?
-      repo = project.docker_repo(registry)
+      repo = project.docker_repo(registry, build.dockerfile)
 
       if override_tag
         output.puts("### Tagging and pushing Docker image to #{repo}:#{tag}")
