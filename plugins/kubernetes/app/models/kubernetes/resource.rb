@@ -112,6 +112,14 @@ module Kubernetes
       def loop_sleep
         sleep 2 unless Rails.env == 'test'
       end
+
+      def restore_template
+        original = @template
+        @template = original.deep_dup
+        yield
+      ensure
+        @template = original
+      end
     end
 
     class ConfigMap < Base
@@ -148,8 +156,10 @@ module Kubernetes
 
       def request_delete
         # Make kubernetes kill all the pods by scaling down
-        @template[:spec][:replicas] = 0
-        update
+        restore_template do
+          @template[:spec][:replicas] = 0
+          update
+        end
 
         # Wait for there to be zero pods
         loop do
@@ -207,22 +217,13 @@ module Kubernetes
         return super if no_pods_running? # delete when already dead from previous deletion try, update would fail
 
         # make it match no node
-        @template[:spec][:template][:spec][:nodeSelector] = {rand(9999).to_s => rand(9999).to_s}
-        update
-
-        # wait for it to terminate all it's pods
-        max = 30
-        (1..max).each do |i|
-          loop_sleep
-          expire_cache
-          break if no_pods_running?
-          if i == max
-            raise Samson::Hooks::UserError, "Unable to terminate previous DaemonSet because it still has pods"
-          end
+        restore_template do
+          @template[:spec][:template][:spec][:nodeSelector] = {rand(9999).to_s => rand(9999).to_s}
+          update
         end
 
-        # delete it
-        super
+        wait_for_termination_of_all_pods
+        super # delete it
       end
 
       def no_pods_running?
@@ -231,6 +232,15 @@ module Kubernetes
 
       def client
         @deploy_group.kubernetes_cluster.extension_client
+      end
+
+      def wait_for_termination_of_all_pods
+        30.times do
+          loop_sleep
+          expire_cache
+          return if no_pods_running?
+        end
+        raise Samson::Hooks::UserError, "Unable to terminate previous DaemonSet because it still has pods"
       end
     end
 
