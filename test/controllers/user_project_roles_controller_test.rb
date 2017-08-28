@@ -23,8 +23,9 @@ describe UserProjectRolesController do
       it 'filters' do
         get :index, params: {project_id: project.to_param, search: "Admin"}
         assert_template :index
-        assigns(:users).map(&:name).sort.must_equal ["Admin", "Deployer Project Admin", "Super Admin"]
-        assigns(:users).first.user_project_role_id.must_equal nil
+        users = assigns(:users).sort_by(&:name)
+        users.map(&:name).sort.must_equal ["Admin", "Deployer Project Admin", "Super Admin"]
+        users.first.user_project_role_id.must_equal nil
       end
 
       it 'filters by role' do
