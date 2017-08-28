@@ -20,7 +20,7 @@ describe JenkinsHelper do
 
   let(:deploy) { deploys(:succeeded_test) }
   let(:jenkins) { Samson::Jenkins.new('test_job', deploy) }
-  let(:job_url) { "https://jenkins.zende.sk/job/foo/110/" }
+  let(:job_url) { "https://jenkins.zende.sk/job/test_job/110/" }
 
   describe "#jenkins_status_panel" do
     it "shows Passed message when build status in database is PASSED" do
@@ -33,6 +33,12 @@ describe JenkinsHelper do
       jenkins_job = stub_jenkins_job("FAILURE", job_url)
       html = jenkins_status_panel(deploy, jenkins_job)
       html.must_equal "<a target=\"_blank\" href=\"#{job_url}\"><div class=\"alert alert-danger\">Jenkins build test_job for Staging has failed.</div></a>"
+    end
+
+    it "links to index page when no url was returned" do
+      jenkins_job = stub_jenkins_job("FAILURE", nil)
+      html = jenkins_status_panel(deploy, jenkins_job)
+      html.must_equal "<a target=\"_blank\" href=\"http://www.test-url.com/job/test_job\"><div class=\"alert alert-danger\">Jenkins build test_job for Staging has failed.</div></a>"
     end
 
     it "shows Passed from jenkins when build starts" do
