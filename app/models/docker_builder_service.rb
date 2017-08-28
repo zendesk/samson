@@ -82,7 +82,10 @@ class DockerBuilderService
         if build_image(tmp_dir) # rubocop:disable Style/IfInsideElse
           ret = true
           ret = push_image(tag_as_latest: tag_as_latest) if push
-          build.docker_image.remove(force: true) unless ENV["DOCKER_KEEP_BUILT_IMGS"] == "1"
+          unless ENV["DOCKER_KEEP_BUILT_IMGS"] == "1"
+            output.puts("Deleting docker image #{build.docker_image.id}")
+            build.docker_image.remove(force: true)
+          end
           ret
         else
           output.puts("Docker build failed (image id not found in response)")
