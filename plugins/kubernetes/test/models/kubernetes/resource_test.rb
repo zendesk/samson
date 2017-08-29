@@ -11,6 +11,12 @@ describe Kubernetes::Resource do
   let(:url) { "http://foobar.server/api/v1/namespaces/pod1/services/some-project" }
   let(:base_url) { File.dirname(url) }
 
+  it "does modify passed in template" do
+    content = File.read(File.expand_path("../../../app/models/kubernetes/resource.rb", __dir__))
+    reset_code_usages = 3
+    content.scan(/@template.*=/).size.must_equal content.scan('restore_template do').size + reset_code_usages
+  end
+
   describe ".build" do
     it "builds based on kind" do
       Kubernetes::Resource.build({kind: 'Service'}, deploy_group).class.must_equal Kubernetes::Resource::Service
@@ -210,7 +216,11 @@ describe Kubernetes::Resource do
         )
         client.expects(:delete_daemon_set)
         client.expects(:create_daemon_set)
+
         resource.deploy
+
+        # reverts changes to template so create is clean
+        refute template[:spec][:template][:spec].key?(:nodeSelector)
       end
 
       it "tells the user what is wrong when the pods never get terminated" do
