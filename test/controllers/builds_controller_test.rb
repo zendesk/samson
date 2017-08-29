@@ -10,7 +10,7 @@ describe BuildsController do
   let(:project_repo_url) { repo_temp_dir }
   let(:project) { projects(:test).tap { |p| p.repository_url = project_repo_url } }
   let(:default_build) do
-    project.builds.create!(label: 'master branch', git_ref: 'master', git_sha: 'a' * 40, creator: user)
+    project.builds.create!(name: 'master branch', git_ref: 'master', git_sha: 'a' * 40, creator: user)
   end
 
   before do
@@ -35,8 +35,8 @@ describe BuildsController do
       end
 
       it 'displays basic build info' do
-        project.builds.create!(creator: user, label: 'test branch', git_ref: 'test_branch', git_sha: 'a' * 40)
-        project.builds.create!(creator: user, label: 'master branch', git_ref: 'master', git_sha: 'b' * 40)
+        project.builds.create!(creator: user, name: 'test branch', git_ref: 'test_branch', git_sha: 'a' * 40)
+        project.builds.create!(creator: user, name: 'master branch', git_ref: 'master', git_sha: 'b' * 40)
         get :index, params: {project_id: project.to_param}
         assert_response :ok
         @response.body.must_include 'test branch'
@@ -56,7 +56,7 @@ describe BuildsController do
       it 'displays information about the build' do
         get :show, params: {project_id: project.to_param, id: default_build.id}
         assert_response :ok
-        @response.body.must_include default_build.label
+        @response.body.must_include default_build.name
       end
 
       it 'displays the output of docker builds' do
@@ -102,7 +102,7 @@ describe BuildsController do
           :create,
           params: {
             project_id: project.to_param,
-            build: { label: 'Test creation', git_ref: 'master', description: 'hi there' },
+            build: { name: 'Test creation', git_ref: 'master', description: 'hi there' },
             format: format
           }
         )
@@ -122,7 +122,7 @@ describe BuildsController do
           assert_response :redirect
 
           new_build = Build.last
-          assert_equal('Test creation', new_build.label)
+          assert_equal('Test creation', new_build.name)
           assert_equal(git_sha, new_build.git_sha)
           assert_redirected_to project_build_path(project, new_build)
         end
@@ -133,10 +133,10 @@ describe BuildsController do
             :create,
             params: {
               project_id: project.to_param,
-              build: { label: 'Test creation 2', git_ref: 'master', description: 'hi there' }
+              build: { name: 'Test creation 2', git_ref: 'master', description: 'hi there' }
             }
           )
-          Build.last.label.must_equal 'Test creation 2'
+          Build.last.name.must_equal 'Test creation 2'
         end
 
         it 'starts the build' do
@@ -179,12 +179,12 @@ describe BuildsController do
       it 'renders' do
         get :edit, params: {project_id: project.to_param, id: default_build.id}
         assert_response :ok
-        @response.body.must_include default_build.label
+        @response.body.must_include default_build.name
       end
     end
 
     describe "#update" do
-      def update(params = {label: 'New updated label!'})
+      def update(params = {name: 'New updated name!'})
         put :update, params: {project_id: project.to_param, id: default_build.id, build: params, format: format}
       end
 
@@ -196,7 +196,7 @@ describe BuildsController do
         it 'updates the build' do
           update
           assert_response :redirect
-          default_build.reload.label.must_equal 'New updated label!'
+          default_build.reload.name.must_equal 'New updated name!'
         end
 
         it "renders when it fails to update" do
@@ -226,7 +226,7 @@ describe BuildsController do
           update
           assert_response :success
           response.body.must_equal "{}"
-          default_build.reload.label.must_equal 'New updated label!'
+          default_build.reload.name.must_equal 'New updated name!'
         end
 
         it "renders when it fails to update" do

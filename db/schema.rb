@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170824174718) do
+ActiveRecord::Schema.define(version: 20170825225929) do
 
   create_table "audits", force: :cascade do |t|
     t.integer "auditable_id", null: false
@@ -43,7 +43,7 @@ ActiveRecord::Schema.define(version: 20170824174718) do
     t.string "docker_tag"
     t.string "docker_repo_digest"
     t.integer "docker_build_job_id"
-    t.string "label"
+    t.string "name"
     t.string "description", limit: 1024
     t.integer "created_by"
     t.datetime "created_at"

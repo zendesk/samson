@@ -65,7 +65,7 @@ class BuildsController < ApplicationController
   end
 
   def edit_build_params
-    params.require(:build).permit(:label, :description)
+    params.require(:build).permit(:name, :description)
   end
 
   def start_docker_build

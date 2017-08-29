@@ -288,7 +288,7 @@ module Kubernetes
             creator: @job.user,
             project: @job.project,
             dockerfile: dockerfile,
-            label: "Autobuild for Deploy ##{@job.deploy.id}"
+            name: "Autobuild for Deploy ##{@job.deploy.id}"
           )
           DockerBuilderService.new(build).run(push: true)
           build

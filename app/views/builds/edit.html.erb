@@ -12,7 +12,7 @@
     <%= form.input :created do %>
       <p class="form-control-static"><%= @build.created_at.to_s %></p>
     <% end %>
-    <%= form.input :label %>
+    <%= form.input :name %>
     <%= form.input :description, as: :text_area, input_html: { rows: 3 } %>
     <%= form.input :git_ref, label: 'Git Reference' do %>
       <p class="form-control-static"><%= git_ref_and_sha_for(@build) %></p>

@@ -121,7 +121,7 @@ class Integrations::BaseController < ApplicationController
         git_ref: branch,
         description: message,
         creator: user,
-        label: branch
+        name: "Release #{branch}"
       ))
       DockerBuilderService.new(build).run(push: true, tag_as_latest: true)
     end
