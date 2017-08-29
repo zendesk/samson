@@ -83,7 +83,7 @@ class DockerBuilderService
           ret = true
           ret = push_image(tag_as_latest: tag_as_latest) if push
           unless ENV["DOCKER_KEEP_BUILT_IMGS"] == "1"
-            output.puts("Deleting docker image #{build.docker_image.id}")
+            output.puts("### Deleting local docker image")
             build.docker_image.remove(force: true)
           end
           ret

@@ -74,7 +74,6 @@ describe DockerBuilderService do
 
       # simulate falling removal ... should not change return value
       build.stubs(docker_image: stub)
-      build.docker_image.expects(:id).returns(docker_image_id)
       build.docker_image.expects(:remove).with(force: true).returns(false)
 
       assert execute_job
