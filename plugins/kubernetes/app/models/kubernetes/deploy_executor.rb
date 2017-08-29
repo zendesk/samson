@@ -40,13 +40,13 @@ module Kubernetes
     end
 
     def cancel(_signal)
-      @stopped = true
+      @cancelled = true
     end
 
     def execute(*)
       verify_kubernetes_templates!
       ensure_successful_builds
-      return false if stopped?
+      return false if cancelled?
       release = create_release
 
       prerequisites, deploys = release.release_docs.partition(&:prerequisite?)
@@ -105,7 +105,7 @@ module Kubernetes
         end
 
         sleep TICK
-        return statuses if stopped?
+        return statuses if cancelled?
       end
     end
 
@@ -194,10 +194,10 @@ module Kubernetes
       end
     end
 
-    # user clicked stop button in UI
-    def stopped?
-      if @stopped
-        @output.puts "STOPPED"
+    # user clicked cancel button in UI
+    def cancelled?
+      if @cancelled
+        @output.puts "CANCELLED"
         true
       end
     end
@@ -247,7 +247,7 @@ module Kubernetes
       return unless builds = (find_builds || create_builds)
       builds.each do |build|
         wait_for_build(build)
-        ensure_build_is_successful(build) unless @stopped
+        ensure_build_is_successful(build) unless @cancelled
       end
     end
 
@@ -303,7 +303,7 @@ module Kubernetes
       if !build.docker_repo_digest && build.docker_build_job&.active?
         @output.puts("Waiting for Build #{build.url} to finish.")
         loop do
-          break if @stopped
+          break if @cancelled
           sleep TICK
           break if build.docker_build_job.reload.finished?
         end

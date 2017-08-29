@@ -359,7 +359,7 @@ describe Kubernetes::DeployExecutor do
           DockerBuilderService.any_instance.expects(:run).returns(true)
           refute execute
           out.scan(/.*build.*/).must_equal ["Creating builds for #{job.commit}."] # not waiting for build
-          out.must_include "STOPPED"
+          out.must_include "CANCELLED"
         end
       end
     end
@@ -447,7 +447,7 @@ describe Kubernetes::DeployExecutor do
       executor.cancel('FAKE-SIGNAL')
       refute execute
       out.wont_include "SUCCESS"
-      out.must_include "STOPPED"
+      out.must_include "CANCELLED"
     end
 
     it "waits when deploy is not running" do
@@ -458,7 +458,7 @@ describe Kubernetes::DeployExecutor do
       refute execute
 
       out.must_include "resque-worker: Waiting (Pending, Unknown)\n"
-      out.must_include "STOPPED"
+      out.must_include "CANCELLED"
     end
 
     it "stops when detecting a restart" do
@@ -534,7 +534,7 @@ describe Kubernetes::DeployExecutor do
       refute execute
 
       out.must_include "resque-worker: Waiting (Running, Unknown)\n"
-      out.must_include "STOPPED"
+      out.must_include "CANCELLED"
     end
 
     it "fails when pod is failing to boot" do
@@ -554,7 +554,7 @@ describe Kubernetes::DeployExecutor do
       refute execute
 
       out.must_include "resque-worker: Missing\n"
-      out.must_include "STOPPED"
+      out.must_include "CANCELLED"
     end
 
     describe "when rollback is needed" do
