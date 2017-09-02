@@ -156,6 +156,7 @@ describe JobExecution do
     lines.must_include "[04:05:06] DEPLOYER_NAME=John Doe"
     lines.must_include "[04:05:06] REFERENCE=master"
     lines.must_include "[04:05:06] REVISION=#{job.commit}"
+    lines.must_include "[04:05:06] COMMIT_RANGE=#{job.commit}...#{job.commit}"
     lines.must_include "[04:05:06] TAG=v1"
     lines.must_include "[04:05:06] FOO=bar"
   end
