@@ -60,6 +60,11 @@ describe GithubDeployment do
       github_deployment.send(:state).must_equal "error"
     end
 
+    it "renders cancelled" do
+      deploy.job.status = "cancelled"
+      github_deployment.send(:state).must_equal "failure"
+    end
+
     it "fails for impossible" do
       deploy.job.status = "pending"
       assert_raises(ArgumentError) { github_deployment.send(:state) }

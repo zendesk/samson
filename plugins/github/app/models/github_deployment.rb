@@ -43,7 +43,7 @@ class GithubDeployment
       'success'
     elsif @deploy.errored?
       'error'
-    elsif @deploy.failed?
+    elsif @deploy.failed? || @deploy.cancelled?
       'failure'
     else
       raise ArgumentError, "Unsupported deployment stage #{@deploy.job.status}"
