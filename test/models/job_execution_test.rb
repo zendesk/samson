@@ -280,7 +280,7 @@ describe JobExecution do
 
     JobExecution.find_by_id(job.id).must_be_nil
     JobExecution.queued?(job.id).must_be_nil
-    JobExecution.active?(job.id).must_be_nil
+    JobExecution.executing?(job.id).must_be_nil
   end
 
   it 'can run with a block' do

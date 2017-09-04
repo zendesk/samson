@@ -8,7 +8,7 @@ ActiveSupport::TestCase.class_eval do
     yield
   ensure
     JobExecution.send(:job_queue).instance_variable_get(:@queue).clear
-    JobExecution.send(:job_queue).instance_variable_get(:@active).clear
+    JobExecution.send(:job_queue).instance_variable_get(:@executing).clear
     JobExecution.enabled = false
   end
 

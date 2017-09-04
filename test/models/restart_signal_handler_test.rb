@@ -46,7 +46,7 @@ describe RestartSignalHandler do
       job_exec = stub(id: 123, pid: 444, pgid: 5555, descriptor: 'Job thingy')
 
       # we call it twice in each iteration
-      job_queue.expects(:active).times(2).returns [job_exec], []
+      job_queue.expects(:executing).times(2).returns [job_exec], []
 
       RestartSignalHandler.any_instance.expects(:sleep).with(5)
       handle

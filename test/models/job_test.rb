@@ -131,16 +131,10 @@ describe Job do
   describe "#queued?" do
     before do
       JobExecution.stubs(:queued?).returns true
-      job.status = 'pending'
     end
 
     it "is queued" do
       assert job.queued?
-    end
-
-    it "is not queued when not pending" do
-      job.status = 'running'
-      refute job.queued?
     end
 
     it "is not queued when not queued" do
@@ -168,21 +162,13 @@ describe Job do
   end
 
   describe "#executing?" do
-    before { job.status = 'pending' }
-
-    it "is executing" do
+    it "executing when executing" do
+      JobExecution.stubs(:executing?).returns true
       assert job.executing?
     end
 
-    it "is not executing when not running" do
-      job.status = 'cancelled'
+    it "not executing when not executing" do
       refute job.executing?
-    end
-
-    it "executing when not running but active" do
-      job.status = 'cancelled'
-      JobExecution.stubs(:active?).returns true
-      assert job.executing?
     end
   end
 
@@ -294,19 +280,19 @@ describe Job do
   describe "#cancel" do
     with_full_job_execution
 
-    it "cancels an active job" do
+    it "cancels an executing job" do
       ex = JobExecution.new('master', job) { sleep 10 }
       JobExecution.start_job(ex)
       sleep 0.1 # make the job spin up properly
 
-      assert JobExecution.active?(ex.id)
+      assert JobExecution.executing?(ex.id)
       job.cancel(user)
       assert job.cancelled? # job execution callbacks sets it to cancelled
       job.canceller.must_equal user
     end
 
-    it "cancels an inactive job" do
-      refute JobExecution.active?(job.id)
+    it "cancels an stopped job" do
+      refute JobExecution.executing?(job.id)
       job.cancel(user)
       assert job.cancelled?
       job.canceller.must_equal user
@@ -320,10 +306,10 @@ describe Job do
     end
 
     it "cancels a queued job" do
-      active_job = project.jobs.new(command: 'cat foo', user: user, project: project, commit: 'master')
-      active = JobExecution.new('master', active_job) { sleep 10 }
-      JobExecution.start_job(active, queue: 'foo')
-      assert JobExecution.active?(active.id)
+      executing_job = project.jobs.new(command: 'cat foo', user: user, project: project, commit: 'master')
+      executing = JobExecution.new('master', executing_job) { sleep 10 }
+      JobExecution.start_job(executing, queue: 'foo')
+      assert JobExecution.executing?(executing.id)
 
       queued = JobExecution.new('master', job) { sleep 10 }
       JobExecution.start_job(queued, queue: 'foo')
@@ -332,7 +318,7 @@ describe Job do
       sleep 0.1 # let jobs spin up
 
       job.cancel(user)
-      active_job.cancel(user)
+      executing_job.cancel(user)
 
       assert job.cancelled?
       refute JobExecution.queued?(job.id)

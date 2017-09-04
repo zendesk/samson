@@ -62,12 +62,12 @@ class RestartSignalHandler
   def wait_for_active_jobs_to_finish
     loop do
       # dup-ing to avoid racing with other threads
-      active = JobExecution.active.dup
+      executing = JobExecution.executing.dup
       locks = MultiLock.locks.dup
-      break if active.empty? && locks.empty?
+      break if executing.empty? && locks.empty?
 
       info = {
-        jobs: active.map do |job_exec|
+        jobs: executing.map do |job_exec|
           {
             job_id: job_exec.id,
             pid: job_exec.pid,

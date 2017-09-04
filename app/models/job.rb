@@ -102,7 +102,7 @@ class Job < ActiveRecord::Base
   end
 
   def queued?
-    pending? && JobExecution.queued?(id)
+    JobExecution.queued?(id)
   end
 
   def active?
@@ -110,7 +110,7 @@ class Job < ActiveRecord::Base
   end
 
   def executing?
-    active? || JobExecution.active?(id)
+    JobExecution.executing?(id)
   end
 
   def waiting_for_restart?

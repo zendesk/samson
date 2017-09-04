@@ -47,23 +47,23 @@ describe DeploysController do
         end
       end
 
-      it "renders debug output with job/deploy and active/queued" do
+      it "renders debug output with job/deploy and executing/queued" do
         JobExecution.any_instance.expects(:on_finish).times(4)
         JobExecution.any_instance.expects(:start)
         with_job_execution do
           # start 1 job and queue another
-          active = Job.create!(project: project, command: "echo 1", user: user) { |j| j.id = 123321 }
-          active.stubs(:deploy).returns(deploy)
+          executing = Job.create!(project: project, command: "echo 1", user: user) { |j| j.id = 123321 }
+          executing.stubs(:deploy).returns(deploy)
           queued = Job.create!(project: project, command: "echo 1", user: user) { |j| j.id = 234432 }
-          JobExecution.start_job(JobExecution.new('master', active), queue: :x)
+          JobExecution.start_job(JobExecution.new('master', executing), queue: :x)
           JobExecution.start_job(JobExecution.new('master', queued), queue: :x)
-          JobExecution.active.size.must_equal 1
+          JobExecution.executing.size.must_equal 1
           assert JobExecution.queued?(queued.id)
 
           get :active, params: {debug: '1'}
 
-          response.body.wont_include active.id.to_s
-          response.body.must_include active.deploy.id.to_s # renders as deploy
+          response.body.wont_include executing.id.to_s
+          response.body.must_include executing.deploy.id.to_s # renders as deploy
           response.body.must_include queued.id.to_s # renders as job
         end
       end
