@@ -207,6 +207,10 @@ class JobExecution
       TAG: (@job.tag || @job.commit)
     }.merge(@env)
 
+    if deploy = @job.deploy
+      env[:COMMIT_RANGE] = deploy.changeset.commit_range
+    end
+
     env.merge!(Hash[*Samson::Hooks.fire(:job_additional_vars, @job)])
 
     base_commands(dir, env) + @job.commands
