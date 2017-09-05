@@ -254,8 +254,8 @@ class JobExecution
       job_queue.find_by_id(id)
     end
 
-    def active?(id)
-      job_queue.active?(id)
+    def executing?(id)
+      job_queue.executing?(id)
     end
 
     def queued?(id)
@@ -270,8 +270,8 @@ class JobExecution
       job_queue.add(*args)
     end
 
-    def active
-      job_queue.active
+    def executing
+      job_queue.executing
     end
 
     def debug

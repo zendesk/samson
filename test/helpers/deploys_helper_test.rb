@@ -28,11 +28,25 @@ describe DeploysHelper do
 
       it "renders restart warning when deploy is waiting for restart" do
         result.wont_include output
-        result.must_include 'Samson has restarted'
+        result.must_include 'Deploy is queued and will be started when Samson finishes restarting'
       end
 
-      it "renders queued warning when job is waiting to be executed" do
-        with_job_execution do
+      describe "when jobs are executing" do
+        with_job_execution
+
+        it "renders error when job is pending but not queued" do
+          result.wont_include output
+          result.must_include 'Deploy is pending but not queued or executing, so it will never start.'
+        end
+
+        it "renders active warning when job is active" do
+          deploy.job.stubs(executing?: true)
+          result.wont_include output
+          result.must_include 'Deploy is running, refresh this page'
+        end
+
+        it "renders queued warning when job is waiting to be executed" do
+          deploy.job.stubs(queued?: true)
           result.wont_include output
           result.must_include 'previous deploys have finished'
         end

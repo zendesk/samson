@@ -20,7 +20,7 @@ describe JobQueue do
     end
   end
 
-  def with_active_job
+  def with_executing_job
     job_execution.expects(:start)
 
     with_job_execution do
@@ -52,9 +52,9 @@ describe JobQueue do
   end
 
   describe "#add" do
-    it 'immediately starts a job when active is empty' do
-      with_active_job do
-        assert subject.active?(1)
+    it 'immediately starts a job when executing is empty' do
+      with_executing_job do
+        assert subject.executing?(1)
         refute subject.queued?(1)
         subject.find_by_id(1).must_equal(job_execution)
       end
@@ -66,7 +66,7 @@ describe JobQueue do
 
         with_job_execution { subject.add(job) }
 
-        assert subject.active?(job.id)
+        assert subject.executing?(job.id)
       end
     end
 
@@ -76,23 +76,23 @@ describe JobQueue do
 
       subject.add(job_execution)
 
-      refute subject.active?(1)
+      refute subject.executing?(1)
       refute subject.queued?(1)
       refute subject.find_by_id(1)
     end
 
     it 'does not queue a job if job execution is disabled' do
-      with_active_job do
+      with_executing_job do
         JobExecution.enabled = false
         subject.add(queued_job_execution, queue: :x)
 
-        refute subject.active?(2)
+        refute subject.executing?(2)
         refute subject.queued?(2)
         refute subject.find_by_id(2)
       end
     end
 
-    it 'reports to airbrake when active jobs were in an unexpected state' do
+    it 'reports to airbrake when executing jobs were in an unexpected state' do
       job_execution.stubs(:start)
 
       with_job_execution do
@@ -101,7 +101,7 @@ describe JobQueue do
         e = assert_raises RuntimeError do
           subject.send(:delete_and_enqueue_next, :x, queued_job_execution)
         end
-        e.message.must_equal 'Unexpected active job found in queue x: expected 2 got 1'
+        e.message.must_equal 'Unexpected executing job found in queue x: expected 2 got 1'
       end
     end
 
@@ -115,18 +115,18 @@ describe JobQueue do
       with_a_queued_job
 
       it 'has a queued job' do
-        refute subject.active?(2)
+        refute subject.executing?(2)
         assert subject.queued?(2)
         subject.find_by_id(2).must_equal(queued_job_execution)
       end
 
-      it 'starts then next job when active job completes' do
+      it 'starts then next job when executing job completes' do
         queued_job_execution.expects(:start)
 
         with_job_execution { job_execution.finish }
 
         refute subject.find_by_id(1)
-        assert subject.active?(2)
+        assert subject.executing?(2)
         refute subject.queued?(2)
       end
 
@@ -137,7 +137,7 @@ describe JobQueue do
         job_execution.finish
 
         refute subject.find_by_id(1)
-        refute subject.active?(2)
+        refute subject.executing?(2)
         assert subject.queued?(2)
       end
 
@@ -153,7 +153,7 @@ describe JobQueue do
         refute subject.find_by_id(2)
 
         # make sure we cleaned up nicely
-        subject.instance_variable_get(:@active).must_equal({})
+        subject.instance_variable_get(:@executing).must_equal({})
         subject.instance_variable_get(:@queue).must_equal({})
       end
     end
@@ -182,16 +182,16 @@ describe JobQueue do
       end
     end
 
-    it "keeps active since they will complete on their own" do
-      with_active_job do
+    it "keeps executing since they will complete on their own" do
+      with_executing_job do
         subject.clear
-        assert subject.active?(1)
+        assert subject.executing?(1)
       end
     end
   end
 
   describe "#debug" do
-    it "returns active and queued" do
+    it "returns executing and queued" do
       subject.debug.must_equal([{}, {}])
     end
   end
