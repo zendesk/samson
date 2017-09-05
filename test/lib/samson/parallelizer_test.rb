@@ -25,7 +25,7 @@ describe Samson::Parallelizer do
       Samson::Parallelizer.map(Array.new(20)) do
         list << Thread.current.object_id
         Thread.pass
-        sleep 0.01
+        sleep 0.05
       end
       list.uniq.size.must_equal 10
     end
