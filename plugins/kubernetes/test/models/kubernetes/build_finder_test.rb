@@ -31,7 +31,7 @@ describe Kubernetes::BuildFinder do
 
       refute_difference 'Build.count' do
         e = assert_raises(Samson::Hooks::UserError) { execute }
-        e.message.must_include "Not creating a Build"
+        e.message.must_include "Not creating build for Dockerfile"
       end
     end
 
@@ -41,7 +41,18 @@ describe Kubernetes::BuildFinder do
 
       refute_difference 'Build.count' do
         refute execute # no build found or created
-        out.must_include "Not creating builds"
+        out.must_include "Not creating build"
+      end
+    end
+
+    it "fails to build when custom dockerfile is missing" do
+      Build.delete_all
+      job.project.update_column :dockerfiles, 'Foobarfile'
+      GitRepository.any_instance.expects(:file_content).with('Foobarfile', job.commit).returns nil
+
+      refute_difference 'Build.count' do
+        e = assert_raises(Samson::Hooks::UserError) { execute }
+        e.message.must_include "Could not create build for Foobarfile"
       end
     end
 
@@ -96,7 +107,7 @@ describe Kubernetes::BuildFinder do
           true
         end
         assert execute
-        out.must_include "Creating builds for #{job.commit}"
+        out.must_include "Creating build for Dockerfile."
         out.must_include "Build #{Build.last.url} is looking good"
       end
 
@@ -124,14 +135,14 @@ describe Kubernetes::BuildFinder do
           execute
         end
         e.message.must_equal "Build #{Build.last.url} is cancelled, rerun it manually."
-        out.must_include "Creating builds for #{job.commit}.\n"
+        out.must_include "Creating build for Dockerfile."
       end
 
       it "stops when deploy is cancelled by user" do
         finder.cancelled!
         DockerBuilderService.any_instance.expects(:run).returns(true)
         execute
-        out.scan(/.*build.*/).must_equal ["Creating builds for #{job.commit}."] # not waiting for build
+        out.scan(/.*build.*/).must_equal ["Creating build for Dockerfile."] # not waiting for build
       end
     end
   end
@@ -140,6 +151,11 @@ describe Kubernetes::BuildFinder do
     it "sleeps ... test to get coverage" do
       finder.expects(:sleep)
       finder.send(:wait_for_parallel_build_creation)
+    end
+
+    it "does not sleep when already executed" do
+      finder.expects(:sleep)
+      2.times { finder.send(:wait_for_parallel_build_creation) }
     end
   end
 end
