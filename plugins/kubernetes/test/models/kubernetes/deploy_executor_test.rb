@@ -131,28 +131,6 @@ describe Kubernetes::DeployExecutor do
       out.wont_include "BigDecimal" # properly serialized configs
     end
 
-    it "succeeds without a build when there is no Dockerfile" do
-      Build.delete_all
-      GitRepository.any_instance.expects(:file_content).with('Dockerfile', commit).returns nil
-
-      refute_difference 'Build.count' do
-        assert execute
-        out.must_include "Not creating builds"
-        out.must_include "resque-worker: Live\n"
-        out.must_include "SUCCESS"
-      end
-    end
-
-    it "fails to build when builds are disabled" do
-      Build.delete_all
-      project.update_column :docker_image_building_disabled, true
-
-      refute_difference 'Build.count' do
-        e = assert_raises(Samson::Hooks::UserError) { execute }
-        e.message.must_include "Not creating a Build"
-      end
-    end
-
     it "can deploy roles with 0 replicas to disable them" do
       worker_role.update_column(:replicas, 0)
       assert execute
@@ -254,113 +232,6 @@ describe Kubernetes::DeployExecutor do
           "Could not find config files for Pod 100 kubernetes/app_server.yml, kubernetes/resque_worker.yml" \
           " at #{commit}"
         )
-      end
-    end
-
-    describe "build" do
-      before do
-        build.update_column(:docker_repo_digest, nil)
-      end
-
-      it "fails when the build is not built" do
-        e = assert_raises(Samson::Hooks::UserError) { execute }
-        e.message.must_equal "Build #{build.url} was created but never ran, run it manually."
-        out.wont_include "Creating Build"
-      end
-
-      it "waits when build is running" do
-        build.create_docker_job.update_column(:status, 'running')
-        build.save!
-
-        job = build.docker_build_job
-        job.class.any_instance.expects(:reload).with do
-          # inside wait loop ... pretend the build worked
-          job.status = 'succeeded'
-          build.update_column(:docker_repo_digest, 'somet-digest')
-          true
-        end.returns job
-
-        assert execute
-
-        out.must_include "Waiting for Build #{build.url} to finish."
-        out.must_include "SUCCESS"
-      end
-
-      it "fails when build job failed" do
-        build.create_docker_job.update_column(:status, 'cancelled')
-        build.save!
-        e = assert_raises Samson::Hooks::UserError do
-          execute
-        end
-        e.message.must_equal "Build #{build.url} is cancelled, rerun it manually."
-        out.wont_include "Creating Build"
-      end
-
-      describe "when build needs to be created" do
-        before do
-          build.update_column(:git_sha, 'something-else')
-          Build.any_instance.stubs(:validate_git_reference)
-        end
-
-        it "retries finding when build is created through parallel execution of build" do
-          job.project.docker_release_branch = 'master' # indicates that there will be a build kicked off on merge
-          executor.expects(:wait_for_parallel_build_creation).with do
-            build.update_column(:git_sha, job.commit)
-            build.update_column(:docker_repo_digest, 'somet-digest') # a bit misleading since it should be running
-          end
-          DockerBuilderService.any_instance.expects(:run).never
-          assert execute
-          out.must_include "SUCCESS"
-          out.must_include "Build #{build.url} is looking good!"
-        end
-
-        it "succeeds when the build works" do
-          DockerBuilderService.any_instance.expects(:run).with do
-            Build.last.create_docker_job.update_column(:status, 'succeeded')
-            Build.last.update_column(:docker_repo_digest, 'some-sha')
-            true
-          end
-          assert execute
-          out.must_include "SUCCESS"
-          out.must_include "Creating builds for #{job.commit}"
-          out.must_include "Build #{Build.last.url} is looking good"
-        end
-
-        it "reuses build when told to do so" do
-          previous = deploys(:failed_staging_test)
-          previous.update_column(:id, deploy.id - 1) # make previous_deploy work
-          kubernetes_releases(:test_release).update_columns(
-            deploy_id: previous.id, git_sha: 'something-else'
-          ) # find previous deploy
-          build.update_column(:docker_repo_digest, 'ababababab') # make build succeeded
-          deploy.update_column(:kubernetes_reuse_build, true)
-
-          DockerBuilderService.any_instance.expects(:run).never
-
-          assert execute
-          out.must_include "SUCCESS"
-          out.must_include "Build #{build.url} is looking good"
-        end
-
-        it "fails when the build fails" do
-          DockerBuilderService.any_instance.expects(:run).with do
-            Build.any_instance.expects(:docker_build_job).at_least_once.returns Job.new(status: 'cancelled')
-            true
-          end
-          e = assert_raises Samson::Hooks::UserError do
-            execute
-          end
-          e.message.must_equal "Build #{Build.last.url} is cancelled, rerun it manually."
-          out.must_include "Creating builds for #{job.commit}.\n"
-        end
-
-        it "stops when deploy is cancelled by user" do
-          executor.cancel('FAKE-SIGNAL')
-          DockerBuilderService.any_instance.expects(:run).returns(true)
-          refute execute
-          out.scan(/.*build.*/).must_equal ["Creating builds for #{job.commit}."] # not waiting for build
-          out.must_include "CANCELLED"
-        end
       end
     end
 
@@ -652,13 +523,6 @@ describe Kubernetes::DeployExecutor do
         out.must_match /LOGS:\s+LOG-1/
         out.must_include "RESOURCE EVENTS staging.some-project:\n  FailedScheduling:"
       end
-    end
-  end
-
-  describe "#wait_for_parallel_build_creation" do
-    it "sleeps ... test to get coverage" do
-      executor.expects(:sleep)
-      executor.send(:wait_for_parallel_build_creation)
     end
   end
 
