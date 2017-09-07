@@ -472,6 +472,11 @@ describe ApplicationHelper do
       result.must_equal "<h2>x</h2>"
       content_for(:page_title).must_equal "x"
     end
+
+    it "does not escape simple entities" do
+      page_title "a & b ; c"
+      content_for(:page_title).must_equal "a & b ; c"
+    end
   end
 
   describe "#redirect_to_field" do
