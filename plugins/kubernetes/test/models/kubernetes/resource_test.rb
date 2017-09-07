@@ -345,6 +345,34 @@ describe Kubernetes::Resource do
     end
   end
 
+  describe Kubernetes::Resource::StatefulSet do
+    def deployment_stub(replica_count)
+      stub(
+        "StatefulSet",
+        to_hash: {
+          spec: {},
+          status: {replicas: replica_count}
+        }
+      )
+    end
+
+    let(:kind) { 'StatefulSet' }
+    let(:url) { "http://foobar.server/apis/apps/v1beta1/namespaces/pod1/statefulsets/some-project" }
+
+    describe "#client" do
+      it "uses the apps client because it is in beta" do
+        resource.send(:client).must_equal deploy_group.kubernetes_cluster.apps_client
+      end
+    end
+
+    describe "#desired_pod_count" do
+      it "reads the value from config" do
+        template[:spec] = {replicas: 3}
+        resource.desired_pod_count.must_equal 3
+      end
+    end
+  end
+
   describe Kubernetes::Resource::Job do
     let(:kind) { 'Job' }
     let(:url) { "http://foobar.server/apis/batch/v1/namespaces/pod1/jobs/some-project" }

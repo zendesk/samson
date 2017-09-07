@@ -6,7 +6,7 @@ module Kubernetes
   class RoleConfigFile
     attr_reader :path, :elements
 
-    DEPLOY_KINDS = ['Deployment', 'DaemonSet'].freeze
+    DEPLOY_KINDS = ['Deployment', 'DaemonSet', 'StatefulSet'].freeze
     JOB_KINDS = ['Job'].freeze
     PRIMARY_KINDS = (DEPLOY_KINDS + JOB_KINDS + ['Pod']).freeze
     SERVICE_KINDS = ['Service'].freeze
