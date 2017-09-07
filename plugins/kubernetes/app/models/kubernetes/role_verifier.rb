@@ -62,11 +62,23 @@ module Kubernetes
     end
 
     def verify_kinds
-      kinds = map_attributes([:kind]).sort_by(&:to_s)
-      return if SUPPORTED_KINDS.include?(kinds - ['ConfigMap'])
+      kinds = map_attributes([:kind])
+      kinds.delete 'ConfigMap' # ignore config maps
+      uniq_element!(kinds, 'Service') # ignore multiple services
+      kinds.sort_by!(&:to_s)
+
+      return if SUPPORTED_KINDS.include?(kinds)
       supported = SUPPORTED_KINDS.map { |c| c.join(' + ') }.join(', ')
       @errors << "Unsupported combination of kinds: #{kinds.join(' + ')}" \
         ", supported combinations are: #{supported} and ConfigMap"
+    end
+
+    # [1,2,3,1,4] -> [2,3,4,1]
+    def uniq_element!(array, element)
+      if array.count(element) > 1
+        array.delete(element)
+        array << element
+      end
     end
 
     # spec actually allows this, but blows up when used

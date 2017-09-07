@@ -106,9 +106,9 @@ describe Kubernetes::RoleVerifier do
       errors.to_s.must_include "Namespaces need to be unique"
     end
 
-    it "reports multiple services" do
+    it "allows multiple services" do
       role << role.last.dup
-      errors.to_s.must_include "Unsupported combination of kinds: Deployment + Service + Service, supported"
+      errors.must_be_nil
     end
 
     it "reports numeric cpu" do

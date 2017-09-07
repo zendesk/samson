@@ -69,14 +69,7 @@ module Kubernetes
 
         case resource[:kind]
         when 'Service'
-          name = kubernetes_role.service_name
-          if name.to_s.include?(Kubernetes::Role::GENERATED)
-            raise(
-              Samson::Hooks::UserError,
-              "Service name for role #{kubernetes_role.name} was generated and needs to be changed before deploying."
-            )
-          end
-          resource[:metadata][:name] = name.presence || resource[:metadata][:name]
+          resource[:metadata][:name] = generate_service_name(resource[:metadata][:name])
 
           prefix_service_cluster_ip(resource)
 
@@ -90,6 +83,25 @@ module Kubernetes
           resource
         end
       end
+    end
+
+    def generate_service_name(config_name)
+      return config_name unless name = kubernetes_role.service_name.presence
+      if name.include?(Kubernetes::Role::GENERATED)
+        raise(
+          Samson::Hooks::UserError,
+          "Service name for role #{kubernetes_role.name} was generated and needs to be changed before deploying."
+        )
+      end
+
+      # users can only enter a single service-name so for each additional service we make up a name
+      # unless the given name already fits the pattern ... slight chance that it might end up being not unique
+      return config_name if config_name.start_with?(name)
+
+      @service_names_generated ||= 0
+      @service_names_generated += 1
+      name += "-#{@service_names_generated}" if @service_names_generated >= 2
+      name
     end
 
     # no ipv6 support
