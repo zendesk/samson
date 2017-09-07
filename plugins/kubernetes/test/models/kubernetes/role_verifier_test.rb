@@ -4,9 +4,10 @@ require_relative "../../test_helper"
 SingleCov.covered!
 
 describe Kubernetes::RoleVerifier do
-  let(:role) do
+  let(:deployment_role) do
     YAML.load_stream(read_kubernetes_sample_file('kubernetes_deployment.yml')).map(&:deep_symbolize_keys)
   end
+  let(:role) { deployment_role }
 
   describe '.verify' do
     let(:spec) { role[0][:spec][:template][:spec] }
@@ -15,6 +16,24 @@ describe Kubernetes::RoleVerifier do
     end
     let(:pod_role) do
       [{kind: 'Pod', metadata: {name: 'my-map'}, spec: {containers: [{name: "foo"}]}}]
+    end
+    let(:stateful_set_role) do
+      labels = {project: "some-project", role: "some-role"}
+      [
+        deployment_role[1],
+        {
+          kind: 'StatefulSet',
+          metadata: {name: 'my-map', labels: labels},
+          spec: {
+            serviceName: 'foobar',
+            selector: {matchLabels: labels},
+            template: {
+              metadata: {labels: labels},
+              spec: {containers: [{name: 'foo'}]}
+            }
+          }
+        }
+      ]
     end
     let(:role_json) { role.to_json }
     let(:errors) do
@@ -56,6 +75,22 @@ describe Kubernetes::RoleVerifier do
       errors.to_s.must_include "Unsupported combination of kinds: Ohno + Service, supported"
     end
 
+    describe 'StatefulSet' do
+      before do
+        stateful_set_role[0][:metadata][:name] = 'foobar'
+        role.replace(stateful_set_role)
+      end
+
+      it "allows" do
+        errors.must_equal nil
+      end
+
+      it "enforces service and serviceName consistency" do
+        stateful_set_role[0][:metadata][:name] = 'nope'
+        errors.must_equal ["Service metadata.name and StatefulSet spec.serviceName must be consistent"]
+      end
+    end
+
     it "allows only Job" do
       role.replace(job_role)
       errors.must_be_nil
@@ -83,7 +118,7 @@ describe Kubernetes::RoleVerifier do
 
     it "reports missing containers" do
       role.first[:spec][:template][:spec].delete(:containers)
-      errors.must_include "Deployment/DaemonSet/Job/Pod need at least 1 container"
+      errors.must_include "Deployment/DaemonSet/StatefulSet/Job/Pod need at least 1 container"
     end
 
     it "ignores unknown types" do
@@ -186,7 +221,7 @@ describe Kubernetes::RoleVerifier do
 
       it "fails without containers" do
         role[0][:spec][:containers].clear
-        errors.must_equal ["Deployment/DaemonSet/Job/Pod need at least 1 container"]
+        errors.must_equal ["Deployment/DaemonSet/StatefulSet/Job/Pod need at least 1 container"]
       end
 
       it "fails without name" do

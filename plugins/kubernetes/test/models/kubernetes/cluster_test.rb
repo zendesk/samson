@@ -68,6 +68,12 @@ describe Kubernetes::Cluster do
     end
   end
 
+  describe '#apps_client' do
+    it 'creates a client' do
+      cluster.apps_client.must_be_kind_of Kubeclient::Client
+    end
+  end
+
   describe '#batch_client' do
     it 'creates a client' do
       cluster.batch_client.must_be_kind_of Kubeclient::Client

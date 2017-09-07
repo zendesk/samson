@@ -1,7 +1,10 @@
 # frozen_string_literal: true
 module Kubernetes
   # abstraction for interacting with kubernetes resources
-  # ... could be merged with Kubernetes::Api counterparts
+  #
+  # Add a new resource:
+  # run an example file through `kubectl create/replace/delete -f test.yml -v8`
+  # and see what it does internally ... simple create/update/delete requests or special magic ?
   module Resource
     class Base
       def initialize(template, deploy_group)
@@ -241,6 +244,18 @@ module Kubernetes
           return if no_pods_running?
         end
         raise Samson::Hooks::UserError, "Unable to terminate previous DaemonSet because it still has pods"
+      end
+    end
+
+    class StatefulSet < Base
+      def desired_pod_count
+        @template[:spec][:replicas]
+      end
+
+      private
+
+      def client
+        @deploy_group.kubernetes_cluster.apps_client
       end
     end
 
