@@ -15,7 +15,8 @@ class RollbarNotification
       @webhook_url,
       access_token: @access_token,
       environment: @environment,
-      revision: @revision
+      revision: @revision,
+      local_username: 'Samson'
     )
 
     if response.success?

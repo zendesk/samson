@@ -20,7 +20,8 @@ describe RollbarNotification do
         body: {
           access_token: 'token',
           environment: 'test',
-          revision: 'v1'
+          revision: 'v1',
+          local_username: 'Samson'
         }
       )
 
