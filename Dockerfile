@@ -1,4 +1,4 @@
-FROM ruby:2.3.3-slim
+FROM ruby:2.4.1-slim
 
 RUN apt-get update && apt-get install -y build-essential libmysqlclient-dev libpq-dev libsqlite3-dev wget apt-transport-https git curl
 RUN curl -sL https://deb.nodesource.com/setup_6.x | bash - && apt-get install nodejs
