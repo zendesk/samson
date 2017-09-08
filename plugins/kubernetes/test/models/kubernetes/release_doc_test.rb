@@ -86,6 +86,23 @@ describe Kubernetes::ReleaseDoc do
       e.message.must_equal "Service name for role app-server was generated and needs to be changed before deploying."
     end
 
+    it "adds counter to service names when using multiple services" do
+      doc.kubernetes_role.update_column(:service_name, 'foo')
+      template = Kubernetes::ReleaseDoc.new.send(:raw_template) # stubs makes all docs share the same template
+      template.push template[1].deep_dup # 2 Services
+      create!.resource_template[1][:metadata][:name].must_equal 'foo'
+      create!.resource_template[2][:metadata][:name].must_equal 'foo-2'
+    end
+
+    it "keeps prefixed service names when using multiple services" do
+      doc.kubernetes_role.update_column(:service_name, 'foo')
+      template = Kubernetes::ReleaseDoc.new.send(:raw_template) # stubs makes all docs share the same template
+      template.push template[1].deep_dup # 2 Services
+      template[2][:metadata][:name] = 'foo-other'
+      create!.resource_template[1][:metadata][:name].must_equal 'foo'
+      create!.resource_template[2][:metadata][:name].must_equal 'foo-other'
+    end
+
     it "keeps default service namespace because it is a unique system namespace" do
       doc.send(:raw_template)[0][:metadata][:namespace] = "default"
       doc.send(:raw_template)[0][:metadata][:labels] = {"kubernetes.io/cluster-service": 'true'}

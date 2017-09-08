@@ -44,14 +44,14 @@ describe Kubernetes::RoleConfigFile do
     end
   end
 
-  describe "#service" do
+  describe "#services" do
     it 'loads a service with its content' do
-      config_file.service[:kind].must_equal 'Service'
+      config_file.services[0][:kind].must_equal 'Service'
     end
 
-    it 'is nil when no service is found' do
+    it 'is empty when no service is found' do
       content.replace(read_kubernetes_sample_file('kubernetes_job.yml'))
-      config_file.service.must_be_nil
+      config_file.services.must_equal []
     end
   end
 end

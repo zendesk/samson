@@ -31,17 +31,17 @@ module Kubernetes
     end
 
     def primary
-      find_by_kind(PRIMARY_KINDS)
+      find_by_kind(PRIMARY_KINDS).first
     end
 
-    def service
+    def services
       find_by_kind(SERVICE_KINDS)
     end
 
     private
 
     def find_by_kind(kinds)
-      @elements.detect { |doc| kinds.include?(doc[:kind]) }
+      @elements.select { |doc| kinds.include?(doc[:kind]) }
     end
   end
 end

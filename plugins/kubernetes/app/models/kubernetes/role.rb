@@ -58,7 +58,7 @@ module Kubernetes
         name = resource.fetch(:metadata).fetch(:labels).fetch(:role)
 
         # service
-        if service = config_file.service
+        if service = config_file.services.first
           service_name = service[:metadata][:name]
           if where(service_name: service_name).exists?
             service_name << "#{GENERATED}#{rand(9999999)}"
