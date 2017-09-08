@@ -8,8 +8,8 @@
   <table class="table">
     <thead>
     <tr>
-      <th>Application</th>
       <th>Description</th>
+      <th>Application</th>
       <th>Scope</th>
       <th>Last used</th>
       <th>Created</th>
@@ -20,8 +20,8 @@
     <tbody>
     <% @access_tokens.each do |token| %>
     <tr>
+      <td><%= token.description.presence || "No Description" %></td>
       <td><%= link_to_if current_user.super_admin?, token.application.name, oauth_application_path(token.application) %></td>
-      <td><%= token.description %></td>
       <td><%= token.scopes.to_a.join(", ") %></td>
       <td><%= token.last_used_at ? relative_time(token.last_used_at) : "Never" %></td>
       <td><%= relative_time token.created_at %></td>

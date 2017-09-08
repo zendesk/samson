@@ -17,7 +17,7 @@ class AccessTokensController < ApplicationController
     )
     redirect_to(
       {action: :index},
-      notice: "Token created: copy this token, it will not be shown again: #{token.token}"
+      notice: "Token created: copy this token, it will not be shown again: <b>#{token.token}</b>".html_safe
     )
   end
 
