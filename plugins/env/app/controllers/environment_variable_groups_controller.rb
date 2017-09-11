@@ -1,19 +1,29 @@
 # frozen_string_literal: true
 class EnvironmentVariableGroupsController < ApplicationController
-  before_action :authorize_admin!, except: [:index, :show, :preview]
+  before_action :authorize_user!, except: [:index, :show, :preview]
   before_action :group, only: [:show]
+
+  # poor mans access_control.rb `can?` replacement
+  def self.write?(user, group)
+    return true if user.admin?
+
+    administrated = user.administrated_projects.pluck(:id)
+    return true if administrated.any? && group.projects.pluck(&:id).all? { |id| administrated.include?(id) }
+
+    false
+  end
 
   def index
     @groups = EnvironmentVariableGroup.all
   end
 
   def new
-    @group = EnvironmentVariableGroup.new
     render 'form'
   end
 
   def create
-    EnvironmentVariableGroup.create!(attributes)
+    group.attributes = attributes
+    group.save!
     redirect_to action: :index
   end
 
@@ -45,7 +55,11 @@ class EnvironmentVariableGroupsController < ApplicationController
   private
 
   def group
-    @group ||= EnvironmentVariableGroup.find(params[:id])
+    @group ||= if ['new', 'create'].include?(action_name)
+      EnvironmentVariableGroup.new
+    else
+      EnvironmentVariableGroup.find(params[:id])
+    end
   end
 
   def attributes
@@ -54,5 +68,9 @@ class EnvironmentVariableGroupsController < ApplicationController
       :comment,
       AcceptsEnvironmentVariables::ASSIGNABLE_ATTRIBUTES
     )
+  end
+
+  def authorize_user!
+    unauthorized! unless self.class.write?(current_user, group)
   end
 end
