@@ -57,27 +57,32 @@ module Kubernetes
       end
 
       missing.map do |deploy_group, role|
-        next unless defaults = role.defaults
-        replicas = defaults.fetch(:replicas)
-        requests_cpu = defaults.fetch(:requests_cpu)
-        requests_memory = defaults.fetch(:requests_memory)
+        if defaults = role.defaults
+          replicas = defaults.fetch(:replicas)
+          requests_cpu = defaults.fetch(:requests_cpu)
+          requests_memory = defaults.fetch(:requests_memory)
 
-        if replicas.nonzero? && usage_limit = Kubernetes::UsageLimit.most_specific(role.project, deploy_group)
-          requests_cpu = [usage_limit.cpu / replicas, requests_cpu].min
-          requests_memory = [usage_limit.memory / replicas, requests_memory].min
+          if replicas.nonzero? && usage_limit = Kubernetes::UsageLimit.most_specific(role.project, deploy_group)
+            requests_cpu = [usage_limit.cpu / replicas, requests_cpu].min
+            requests_memory = [usage_limit.memory / replicas, requests_memory].min
+          end
+
+          create(
+            project: stage.project,
+            deploy_group: deploy_group,
+            kubernetes_role: role,
+            replicas: replicas,
+            requests_cpu: requests_cpu,
+            requests_memory: requests_memory,
+            limits_cpu: defaults.fetch(:limits_cpu),
+            limits_memory: defaults.fetch(:limits_memory)
+          )
+        else
+          dgr = DeployGroupRole.new(kubernetes_role: role, deploy_group: deploy_group)
+          dgr.errors.add(:base, "Role has no defaults")
+          dgr
         end
-
-        create(
-          project: stage.project,
-          deploy_group: deploy_group,
-          kubernetes_role: role,
-          replicas: replicas,
-          requests_cpu: requests_cpu,
-          requests_memory: requests_memory,
-          limits_cpu: defaults.fetch(:limits_cpu),
-          limits_memory: defaults.fetch(:limits_memory)
-        ).persisted?
-      end.all?
+      end
     end
 
     def requests_below_limits
