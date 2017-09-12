@@ -8,7 +8,7 @@
       <%= form.select :key, SecretStorage.shareable_keys, {required: true}, Samson::FormBuilder::LIVE_SELECT_OPTIONS %>
     <% end %>
     <%= form.input :project_id, required: true do %>
-      <% projects = Project.pluck(:name, :id) %>
+      <% projects = Project.order(:name).pluck(:name, :id) %>
       <%= form.select :project_id, projects, {}, Samson::FormBuilder::LIVE_SELECT_OPTIONS %>
     <% end %>
     <hr>
