@@ -78,11 +78,21 @@ module Kubernetes
           resource[:spec][:type] = 'NodePort'
           resource
         when *Kubernetes::RoleConfigFile::PRIMARY_KINDS
+          make_stateful_set_match_service(resource)
           TemplateFiller.new(self, resource).to_hash
         else
           resource
         end
       end
+    end
+
+    # If the user renames the service the StatefulSet will not match it, so we fix.
+    # Will not work with multiple services ... but that usecase hopefully does not exist.
+    def make_stateful_set_match_service(resource)
+      return unless resource[:kind] == "StatefulSet"
+      return unless resource[:spec][:serviceName]
+      return unless service_name = kubernetes_role.service_name.presence
+      resource[:spec][:serviceName] = service_name
     end
 
     def generate_service_name(config_name)

@@ -152,6 +152,30 @@ describe Kubernetes::ReleaseDoc do
         result.must_equal 'None'
       end
     end
+
+    describe "statefulset serviceName" do
+      let(:result) { create!.resource_template[0][:spec][:serviceName] }
+
+      before do
+        doc.kubernetes_role.update_column(:service_name, 'changed')
+        doc.send(:raw_template)[0][:kind] = "StatefulSet"
+        doc.send(:raw_template)[0][:spec][:serviceName] = "unchanged"
+      end
+
+      it "changes the set serviceName" do
+        result.must_equal 'changed'
+      end
+
+      it "does nothing when service_name was not set" do
+        doc.kubernetes_role.update_column(:service_name, '')
+        result.must_equal 'unchanged'
+      end
+
+      it "does nothing when serviceName was not used" do
+        doc.send(:raw_template)[0][:spec].delete :serviceName
+        result.must_be_nil
+      end
+    end
   end
 
   describe "#deploy" do
