@@ -162,17 +162,21 @@ describe Kubernetes::DeployGroupRolesController do
 
     describe "#seed" do
       it "adds missing roles" do
-        Kubernetes::DeployGroupRole.expects(:seed!).returns true
         post :seed, params: {stage_id: stage.id}
         assert_redirected_to [stage.project, stage]
         assert flash[:notice]
       end
 
       it "fails to add missing roles" do
-        Kubernetes::DeployGroupRole.expects(:seed!).returns false
+        deploy_group_role.errors.add :base, 'foo'
+        deploy_group_role.stubs(persisted?: false)
+        Kubernetes::DeployGroupRole.expects(:seed!).returns [deploy_group_role]
         post :seed, params: {stage_id: stage.id}
+
         assert_redirected_to [stage.project, stage]
-        assert flash[:alert]
+        error = flash[:alert]
+        error.must_equal "<p>Roles failed to seed, fill them in manually.\n<br />app-server for Pod1: foo</p>"
+        assert error.html_safe?
       end
     end
   end

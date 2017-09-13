@@ -51,12 +51,16 @@ class Kubernetes::DeployGroupRolesController < ApplicationController
   end
 
   def seed
-    success = ::Kubernetes::DeployGroupRole.seed!(@stage)
+    created = ::Kubernetes::DeployGroupRole.seed!(@stage)
     options =
-      if success
+      if created.all?(&:persisted?)
         {notice: "Missing roles seeded."}
       else
-        {alert: "Some roles failed to seed, fill them in manually."}
+        errors = ["Roles failed to seed, fill them in manually."]
+        errors.concat(created.map do |dgr|
+          "#{dgr.kubernetes_role.name} for #{dgr.deploy_group.name}: #{dgr.errors.full_messages.to_sentence}"
+        end)
+        {alert: view_context.simple_format(errors.join("\n"))}
       end
     redirect_to [@stage.project, @stage], options
   end
