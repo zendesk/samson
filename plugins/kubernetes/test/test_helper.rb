@@ -135,5 +135,15 @@ class ActiveSupport::TestCase
       ]
     }
     stub_request(:get, "http://foobar.server/apis/batch/v1").to_return(body: batch_v1.to_json)
+
+    apps_v1 = {
+      "kind" => "APIResourceList",
+      "apiVersion" => "v1",
+      "groupVersion" => "apps/v1beta1",
+      "resources" => [
+        {"name" => "statefulsets", "namespaced" => true, "kind" => "StatefulSet"}
+      ]
+    }
+    stub_request(:get, "http://foobar.server/apis/apps/v1beta1").to_return(body: apps_v1.to_json)
   end
 end

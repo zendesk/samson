@@ -4,12 +4,29 @@ require_relative "../../test_helper"
 SingleCov.covered!
 
 describe Kubernetes::Resource do
+  def assert_pod_deletion
+    delete_pod = stub_request(:delete, "http://foobar.server/api/v1/namespaces/name1/pods/pod1").
+      to_return(body: '{}')
+    yield
+    assert_requested delete_pod
+  end
+
   let(:kind) { 'Service' }
-  let(:template) { {kind: kind, metadata: {name: 'some-project', namespace: 'pod1'}, spec: {}} }
+  let(:template) do
+    {
+      kind: kind,
+      metadata: {name: 'some-project', namespace: 'pod1'},
+      spec: {
+        template: {spec: {containers: [{image: "bar"}]}}
+      }
+    }
+  end
   let(:deploy_group) { deploy_groups(:pod1) }
   let(:resource) { Kubernetes::Resource.build(template, deploy_group) }
   let(:url) { "http://foobar.server/api/v1/namespaces/pod1/services/some-project" }
   let(:base_url) { File.dirname(url) }
+
+  before { Kubernetes::Resource::Base.any_instance.expects(:sleep).never }
 
   it "does modify passed in template" do
     content = File.read(File.expand_path("../../../app/models/kubernetes/resource.rb", __dir__))
@@ -312,7 +329,7 @@ describe Kubernetes::Resource do
       it "waits for pods to terminate before deleting" do
         client = resource.send(:client)
         client.expects(:update_deployment).with do |template|
-          template[:spec].must_equal(replicas: 0)
+          template[:spec][:replicas].must_equal 0
         end
         client.expects(:get_deployment).raises(KubeException.new(404, 'Not Found', {}))
         client.expects(:get_deployment).times(3).returns(
@@ -371,6 +388,47 @@ describe Kubernetes::Resource do
         resource.desired_pod_count.must_equal 3
       end
     end
+
+    describe "#deploy" do
+      it "creates when missing" do
+        stub_request(:get, url).to_return(status: 404)
+
+        create = stub_request(:post, base_url).to_return(body: "{}")
+        resource.deploy
+        assert_requested create
+      end
+
+      it "updates when running and using RollingUpdate" do
+        template[:spec][:updateStrategy] = "RollingUpdate"
+        stub_request(:get, url).to_return(body: "{}")
+
+        update = stub_request(:put, url).to_return(body: "{}")
+        resource.deploy
+        assert_requested update
+      end
+
+      it "patches and deletes pods when using OnDelete (default)" do
+        set = {
+          spec: {
+            replicas: 2,
+            selector: {matchLabels: {project: "foo", release: "bar"}},
+            template: {spec: {containers: []}}
+          }
+        }
+        stub_request(:get, url).to_return(body: set.to_json)
+        assert_pod_deletion do
+          update = stub_request(:patch, url).
+            with(headers: {"Content-Type" => "application/json-patch+json"}).
+            to_return(body: "{}")
+          resource.expects(:pods).times(2).returns(
+            [{metadata: {creationTimestamp: '1', name: 'pod1', namespace: 'name1'}}],
+            [{metadata: {creationTimestamp: '2'}}]
+          )
+          resource.deploy
+          assert_requested update
+        end
+      end
+    end
   end
 
   describe Kubernetes::Resource::Job do
@@ -393,20 +451,21 @@ describe Kubernetes::Resource do
       end
 
       it "replaces existing" do
-        job = {spec: {selector: {matchLabels: {project: 'foo', release: 'bar'}}}}
+        job = {spec: {template: {metadata: {labels: {release_id: 123, deploy_group_id: 234}}}}}
         stub_request(:get, url).to_return({body: job.to_json}, status: 404)
         delete_job = stub_request(:delete, url).to_return(body: '{}')
-        query = "http://foobar.server/api/v1/namespaces/pod1/pods?labelSelector=project=foo,release=bar"
+        create = nil
+
+        query = "http://foobar.server/api/v1/namespaces/pod1/pods?labelSelector=release_id=123,deploy_group_id=234"
         get_pods = stub_request(:get, query).
           to_return(body: '{"items":[{"metadata":{"name":"pod1","namespace":"name1"}}]}')
-        delete_pod = stub_request(:delete, "http://foobar.server/api/v1/namespaces/name1/pods/pod1").
-          to_return(body: '{}')
-        create = stub_request(:post, base_url).to_return(body: "{}")
-        resource.deploy
+        assert_pod_deletion do
+          create = stub_request(:post, base_url).to_return(body: "{}")
+          resource.deploy
+        end
 
-        assert_requested delete_job
         assert_requested get_pods
-        assert_requested delete_pod
+        assert_requested delete_job
         assert_requested create
       end
     end
@@ -503,6 +562,8 @@ describe Kubernetes::Resource do
       end
 
       it "waits for deletion to finish before replacing to avoid duplication errors" do
+        resource.expects(:sleep).times(2)
+
         get = stub_request(:get, url).to_return(
           {body: "{}"},
           {body: "{}"},

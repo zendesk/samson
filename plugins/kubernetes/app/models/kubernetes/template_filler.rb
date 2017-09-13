@@ -156,15 +156,13 @@ module Kubernetes
       end
     end
 
-    # have to match Kubernetes::Release#clients selector
-    # TODO: dry
     def release_doc_metadata
       @release_doc_metadata ||= begin
         release = @doc.kubernetes_release
         role = @doc.kubernetes_role
         deploy_group = @doc.deploy_group
 
-        release.pod_selector(deploy_group).merge(
+        Kubernetes::Release.pod_selector(release.id, deploy_group.id, query: false).merge(
           deploy_id: release.deploy_id,
           project_id: release.project_id,
           role_id: role.id,
