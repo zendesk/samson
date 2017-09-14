@@ -80,6 +80,10 @@ class DockerBuilderService
         run_build_image_job(job, push: push, tag_as_latest: tag_as_latest)
       else
         if build_image(tmp_dir) # rubocop:disable Style/IfInsideElse
+          if !Rails.env.test? && !JobExecution.find_by_id(job.id)
+            Airbrake.notify("Unable to find docker build in job execution", job: job.id)
+          end
+
           ret = true
           ret = push_image(tag_as_latest: tag_as_latest) if push
           unless ENV["DOCKER_KEEP_BUILT_IMGS"] == "1"
