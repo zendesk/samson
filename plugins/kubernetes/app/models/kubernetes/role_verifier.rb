@@ -30,6 +30,7 @@ module Kubernetes
       verify_numeric_limits
       verify_project_and_role_consistent
       verify_stateful_set_service_consistent
+      verify_stateful_set_restart_policy
       verify_annotations || verify_prerequisites
       verify_env_values
       verify_host_volume_paths
@@ -146,9 +147,20 @@ module Kubernetes
 
     def verify_stateful_set_service_consistent
       return unless service = @elements.detect { |t| t[:kind] == "Service" }
-      return unless set = @elements.detect { |t| t[:kind] == "StatefulSet" }
+      return unless set = find_stateful_set
       return if set.dig(:spec, :serviceName) == service.dig(:metadata, :name)
       @errors << "Service metadata.name and StatefulSet spec.serviceName must be consistent"
+    end
+
+    def verify_stateful_set_restart_policy
+      return unless set = find_stateful_set
+      return if set.dig(:spec, :updateStrategy)
+      @errors << "StatefulSet spec.updateStrategy must be set. " \
+        "OnDelete will be supported soon but is brittle/rough, prefer RollingUpdate on kubernetes 1.7+."
+    end
+
+    def find_stateful_set
+      @elements.detect { |t| t[:kind] == "StatefulSet" }
     end
 
     def verify_containers
