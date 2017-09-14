@@ -147,6 +147,12 @@ Via [Template filler](/plugins/kubernetes/app/models/kubernetes/template_filler.
 Add a role with only a `Pod`, the annotation `samson/prerequisite: true`, and command to run a migrations.
 It will be executed before the rest is deployed.
 
+### StatefulSet
+
+On kubernetes <1.7 they can only be updated with `OnDelete` updateStrategy,
+which is supported by updating only the pod containers and replica count (not set metadata/annotations).
+Prefer `RollingUpdate` if possible instead.
+
 ### Clair security scans
 
 To security scan docker images using hyperclair, enable hyperclair plugin and add:

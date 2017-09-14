@@ -25,28 +25,32 @@ module Kubernetes
       end
     end
 
+    # simple method to tie all selector logic together
+    def self.pod_selector(release_id, deploy_group_id, query:)
+      selector = {
+        release_id: release_id,
+        deploy_group_id: deploy_group_id,
+      }
+      query ? selector.map { |k, v| "#{k}=#{v}" }.join(",") : selector
+    end
+
     # optimization to not do multiple queries to the same cluster+namespace because we have many roles
     # ... needs to check doc namespace too since it might be not overwritten
     # ... assumes that there is only 1 namespace per release_doc
+    # ... supports that the same namespace might exist on different clusters
     def clients
       scopes = release_docs.map do |release_doc|
-        [release_doc.deploy_group, release_doc.resources.first.namespace]
-      end.uniq
-
-      scopes.map do |group, namespace|
-        query = {
-          namespace: namespace,
-          label_selector: pod_selector(group).map { |k, v| "#{k}=#{v}" }.join(",")
-        }
-        [group.kubernetes_cluster.client, query, group]
+        release_id = resource_release_id(release_doc)
+        [
+          release_doc.deploy_group,
+          {
+            namespace: release_doc.resources.first.namespace,
+            label_selector: self.class.pod_selector(release_id, release_doc.deploy_group.id, query: true)
+          }
+        ]
       end
-    end
-
-    def pod_selector(deploy_group)
-      {
-        release_id: id,
-        deploy_group_id: deploy_group.id,
-      }
+      # avoiding doing a .uniq on clients which might do weird stuff
+      scopes.uniq.map { |group, query| [group.kubernetes_cluster.client, query] }
     end
 
     def url
@@ -58,6 +62,17 @@ module Kubernetes
     end
 
     private
+
+    # StatefulSet does not update the labels when using patch_replace, so find by old label
+    def resource_release_id(release_doc)
+      stateful_set = release_doc.resources.detect do |r|
+        r.is_a?(Kubernetes::Resource::StatefulSet) && r.patch_replace?
+      end
+      return id unless stateful_set
+
+      stateful_set.resource.dig(:spec, :template, :metadata, :labels, :release_id) ||
+        raise(KeyError, "Unable to find previous release_id")
+    end
 
     # Creates a ReleaseDoc per each DeployGroup and Role combination.
     def create_release_docs(params)

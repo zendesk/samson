@@ -47,12 +47,10 @@ module Kubernetes
       def delete
         return true unless running?
         request_delete
-        [0.0, 0.1, 0.2, 0.5, 1, 2, 4, 8, 16].each do |wait|
+        backoff_wait([0.0, 0.1, 0.2, 0.5, 1, 2, 4, 8, 16], "delete resource") do
           expire_cache
           return true unless running?
-          sleep wait
         end
-        raise "Unable to delete resource"
       end
 
       def running?
@@ -69,6 +67,14 @@ module Kubernetes
       end
 
       private
+
+      def backoff_wait(backoff, reason)
+        backoff.each do |wait|
+          yield
+          sleep wait
+        end
+        raise "Unable to #{reason}"
+      end
 
       def request_delete
         request(:delete, name, namespace)
@@ -97,6 +103,18 @@ module Kubernetes
         nil
       end
 
+      def pods
+        ids = resource.dig(:spec, :template, :metadata, :labels).values_at(:release_id, :deploy_group_id)
+        selector = Kubernetes::Release.pod_selector(*ids, query: true)
+        pod_client.get_pods(label_selector: selector, namespace: namespace).map(&:to_hash)
+      end
+
+      def delete_pods(pods)
+        pods.each do |pod|
+          pod_client.delete_pod pod[:metadata][:name], pod[:metadata][:namespace]
+        end
+      end
+
       def request(method, *args)
         client.send("#{method}_#{@template.fetch(:kind).underscore}", *args)
       rescue
@@ -109,6 +127,10 @@ module Kubernetes
       end
 
       def client
+        pod_client
+      end
+
+      def pod_client
         @deploy_group.kubernetes_cluster.client
       end
 
@@ -248,11 +270,54 @@ module Kubernetes
     end
 
     class StatefulSet < Base
+      def patch_replace?
+        [nil, "OnDelete"].include?(@template.dig(:spec, :updateStrategy)) && running?
+      end
+
       def desired_pod_count
         @template[:spec][:replicas]
       end
 
+      # StatefulSet cannot be updated normally when OnDelete is used or kubernetes <1.7
+      # So we patch and then delete all pods to let them re-create
+      def deploy
+        return super unless patch_replace?
+
+        # update the template via special magic
+        # https://kubernetes.io/docs/tutorials/stateful-application/basic-stateful-set/#on-delete
+        # fails when trying to update anything outside of containers or replicas
+        update = resource.deep_dup
+        update[:spec][:replicas] = @template[:spec][:replicas]
+        update[:spec][:template][:spec][:containers] =
+          @template[:spec][:template][:spec][:containers]
+        with_patch_header do
+          request :patch, name, [{op: "replace", path: "/spec", value: update.fetch(:spec)}], namespace
+        end
+
+        # pods will restart with updated settings
+        # need to wait here or deploy_executor.rb will instantly finish since everything is running
+        wait_for_pods_to_restart
+      end
+
       private
+
+      def wait_for_pods_to_restart
+        old_pods = pods
+        delete_pods(old_pods)
+        old_created = old_pods.map { |pod| pod.dig(:metadata, :creationTimestamp) }
+        backoff_wait(Array.new(60) { 2 }, "restart pods") do
+          return if pods.none? { |pod| old_created.include?(pod.dig(:metadata, :creationTimestamp)) }
+        end
+      end
+
+      # https://github.com/abonas/kubeclient/issues/268
+      def with_patch_header
+        old = client.headers['Content-Type']
+        client.headers['Content-Type'] = 'application/json-patch+json'
+        yield
+      ensure
+        client.headers['Content-Type'] = old
+      end
 
       def client
         @deploy_group.kubernetes_cluster.apps_client
@@ -278,15 +343,9 @@ module Kubernetes
       # deleting the job leaves the pods running, so we have to delete them manually
       # kubernetes is a little more careful with running pods, but we just want to get rid of them
       def request_delete
-        selector = resource.dig(:spec, :selector, :matchLabels).map { |k, v| "#{k}=#{v}" }.join(",")
-
-        # delete the job
-        super
-
-        # delete the pods
-        client = @deploy_group.kubernetes_cluster.client # pod api is not part of the extension client
-        pods = client.get_pods(label_selector: selector, namespace: namespace)
-        pods.each { |pod| client.delete_pod pod.metadata.name, pod.metadata.namespace }
+        old_pods = pods
+        super # delete the job
+        delete_pods(old_pods)
       end
 
       # FYI per docs it is supposed to use batch api, but extension api works

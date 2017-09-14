@@ -111,7 +111,7 @@ describe Kubernetes::Release do
 
     it "returns scoped queries" do
       release = kubernetes_releases(:test_release)
-      stub_request(:get, %r{http://foobar.server/api/v1/namespaces/pod1/pods}).to_return(body: {
+      stub_request(:get, %r{namespaces/pod1/pods\?labelSelector=release_id=\d+,deploy_group_id=\d+}).to_return(body: {
         resourceVersion: "1",
         items: [{}, {}]
       }.to_json)
@@ -127,12 +127,27 @@ describe Kubernetes::Release do
       }.to_json)
       release.clients.map { |c, q| c.get_pods(q) }.first.size.must_equal 2
     end
+
+    it "scoped statefulset for previous release since they do not update their labels when using patch" do
+      resource = {spec: {template: {metadata: {labels: {release_id: 123 }}}}}
+      Kubernetes::Resource.expects(:build).returns(stub(
+        is_a?: true, patch_replace?: true, resource: resource, namespace: 'pod1'
+      ))
+      release = kubernetes_releases(:test_release)
+      release.clients[0][1].must_equal namespace: "pod1", label_selector: "release_id=123,deploy_group_id=431971589"
+    end
   end
 
-  describe "#pod_selector" do
+  describe ".pod_selector" do
     it "generates a query that selects all pods for this deploy group" do
-      release.pod_selector(deploy_group).must_equal(
-        release_id: release.id,
+      Kubernetes::Release.pod_selector(123, deploy_group.id, query: true).must_equal(
+        "release_id=123,deploy_group_id=#{deploy_group.id}"
+      )
+    end
+
+    it "generates raw labels" do
+      Kubernetes::Release.pod_selector(123, deploy_group.id, query: false).must_equal(
+        release_id: 123,
         deploy_group_id: deploy_group.id
       )
     end
