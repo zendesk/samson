@@ -153,6 +153,11 @@ On kubernetes <1.7 they can only be updated with `OnDelete` updateStrategy,
 which is supported by updating only the pod containers and replica count (not set metadata/annotations).
 Prefer `RollingUpdate` if possible instead.
 
+### Building multiple Dockerfiles
+
+ - Set the projects `dockerfiles` attribute to all the files that need to be built.
+ - Add a `samson/dockerfile: Dockerfile.foobar` annotation to the container you want to have a different Dockerfile
+
 ### Clair security scans
 
 To security scan docker images using hyperclair, enable hyperclair plugin and add:
