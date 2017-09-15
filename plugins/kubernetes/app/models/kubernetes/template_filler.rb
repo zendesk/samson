@@ -18,6 +18,7 @@ module Kubernetes
         kind = template[:kind]
 
         set_namespace
+        set_project_labels if template.dig(:metadata, :annotations, :"samson/override_project_label")
 
         case kind
         when *Kubernetes::RoleConfigFile::SERVICE_KINDS
@@ -65,6 +66,19 @@ module Kubernetes
     end
 
     private
+
+    def set_project_labels
+      project_label = project.permalink
+      template.dig_set([:metadata, :labels, :project], project_label)
+
+      kind = template.fetch(:kind)
+      if kind == "Service"
+        template.dig_set([:spec, :selector, :project], project_label)
+      elsif kind != "Pod"
+        template.dig_set([:spec, :selector, :matchLabels, :project], project_label)
+        template.dig_set([:spec, :template, :metadata, :labels, :project], project_label)
+      end
+    end
 
     def set_service_name
       template[:metadata][:name] = generate_service_name(template[:metadata][:name])

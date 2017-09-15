@@ -153,6 +153,11 @@ On kubernetes <1.7 they can only be updated with `OnDelete` updateStrategy,
 which is supported by updating only the pod containers and replica count (not set metadata/annotations).
 Prefer `RollingUpdate` if possible instead.
 
+### Duplicate deployments
+
+To deploy the same repository multiple times, create separate projects and then set `metadata.annotations.samson/override_project_label: "true"`,
+samson will then override the `project` labels and keep deployments/services unique.  
+
 ### Building multiple Dockerfiles
 
  - Set the projects `dockerfiles` attribute to all the files that need to be built.
