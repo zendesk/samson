@@ -15,7 +15,7 @@ describe Kubernetes::TemplateFiller do
     raw_template[:metadata][:namespace] = "pod1"
     raw_template
   end
-  let(:template) { Kubernetes::TemplateFiller.new(doc, raw_template) }
+  let(:template) { Kubernetes::TemplateFiller.new(doc, raw_template, index: 0) }
   let(:init_container_key) { :'pod.beta.kubernetes.io/init-containers' }
   let(:init_containers) do
     JSON.parse(template.to_hash[:spec][:template][:metadata][:annotations][init_container_key])
@@ -24,7 +24,7 @@ describe Kubernetes::TemplateFiller do
   before do
     doc.send(:resource_template=, YAML.load_stream(read_kubernetes_sample_file('kubernetes_deployment.yml')))
     doc.kubernetes_release.deploy_id = 123
-    stub_request(:get, "http://foobar.server/api/v1/namespaces/pod1/secrets").to_return(body: "{}")
+    stub_request(:get, %r{http://foobar.server/api/v1/namespaces/\S+/secrets}).to_return(body: "{}")
     Samson::Secrets::VaultClient.any_instance.stubs(:client).
       returns(stub(options: {address: 'https://test.hvault.server', ssl_verify: false}))
   end
@@ -95,13 +95,139 @@ describe Kubernetes::TemplateFiller do
       template.to_hash[:spec][:revisionHistoryLimit].must_equal 1
     end
 
-    it "sets deployer" do
-      template.to_hash[:spec][:template][:metadata][:annotations].must_equal(deployer: "deployer@example.com")
+    it "keeps default namespace because it is a unique system namespace" do
+      raw_template[:metadata][:namespace] = "default"
+      raw_template[:metadata][:labels] = {"kubernetes.io/cluster-service": 'true'}
+      template.to_hash[:metadata][:namespace].must_equal 'default'
     end
 
-    it "does not set nil deployer which breaks kubernetes api" do
-      doc.kubernetes_release.user.email = nil
-      template.to_hash[:spec][:template][:metadata][:annotations].must_equal(deployer: "")
+    it "keeps kube-system namespace because it's valid for cluster services " do
+      raw_template[:metadata][:namespace] = "kube-system"
+      raw_template[:metadata][:labels] = {"kubernetes.io/cluster-service": 'true'}
+      template.to_hash[:metadata][:namespace].must_equal 'kube-system'
+    end
+
+    describe "deployer" do
+      it "sets deployer" do
+        template.to_hash[:spec][:template][:metadata][:annotations].must_equal(deployer: "deployer@example.com")
+      end
+
+      it "does not set nil deployer which breaks kubernetes api" do
+        doc.kubernetes_release.user.email = nil
+        template.to_hash[:spec][:template][:metadata][:annotations].must_equal(deployer: "")
+      end
+    end
+
+    describe "configmap" do
+      it "only modifies namespec" do
+        raw_template[:kind] = "ConfigMap"
+        raw_template[:metadata][:namespace] = 'old'
+        old = raw_template.deep_dup
+        old[:metadata][:namespace] = 'pod1'
+        template.to_hash.must_equal old
+      end
+    end
+
+    describe "service" do
+      before { raw_template[:kind] = 'Service' }
+
+      it "sets node port" do
+        template.to_hash[:spec][:type].must_equal 'NodePort'
+      end
+
+      it "does not override with blank service name" do
+        doc.kubernetes_role.update_column(:service_name, '') # user left field empty
+        template.to_hash[:metadata][:name].must_equal 'some-project-rc'
+      end
+
+      it "fails when trying to fill for a generated service" do
+        doc.kubernetes_role.update_column(:service_name, "app-server#{Kubernetes::Role::GENERATED}1211212")
+        e = assert_raises Samson::Hooks::UserError do
+          template.to_hash
+        end
+        e.message.must_equal "Service name for role app-server was generated and needs to be changed before deploying."
+      end
+
+      describe "when using multiple services" do
+        before do
+          doc.kubernetes_role.update_column(:service_name, 'foo')
+          template.instance_variable_set(:@index, 1)
+        end
+
+        it "adds counter to service names" do
+          template.to_hash[:metadata][:name].must_equal 'foo-2'
+        end
+
+        it "keeps prefixed service names when using multiple services" do
+          raw_template[:metadata][:name] = 'foo-other'
+          template.to_hash[:metadata][:name].must_equal 'foo-other'
+        end
+
+        it "does not keeps identical service names" do
+          raw_template[:metadata][:name] = 'foo'
+          template.to_hash[:metadata][:name].must_equal 'foo-2'
+        end
+      end
+
+      describe "clusterIP" do
+        let(:ip) { template.to_hash[:spec][:clusterIP] }
+
+        before do
+          doc.deploy_group.kubernetes_cluster.update_column(:ip_prefix, '123.34')
+          raw_template[:spec][:clusterIP] = "1.2.3.4"
+        end
+
+        it "replaces ip prefix" do
+          ip.must_equal '123.34.3.4'
+        end
+
+        it "replaces with trailing ." do
+          doc.deploy_group.kubernetes_cluster.update_column(:ip_prefix, '123.34.')
+          ip.must_equal '123.34.3.4'
+        end
+
+        it "does nothing when service has no clusterIP" do
+          raw_template[:spec].delete(:clusterIP)
+          ip.must_be_nil
+        end
+
+        it "does nothing when ip prefix is blank" do
+          doc.deploy_group.kubernetes_cluster.update_column(:ip_prefix, '')
+          ip.must_equal '1.2.3.4'
+        end
+
+        it "leaves None alone" do
+          raw_template[:spec][:clusterIP] = "None"
+          ip.must_equal 'None'
+        end
+      end
+    end
+
+    describe "statefulset" do
+      before { raw_template[:kind] = "StatefulSet" }
+
+      describe "serviceName" do
+        let(:service_name) { template.to_hash[:spec][:serviceName] }
+
+        before do
+          doc.kubernetes_role.update_column(:service_name, 'changed')
+          raw_template[:spec][:serviceName] = "unchanged"
+        end
+
+        it "changes the set serviceName" do
+          service_name.must_equal 'changed'
+        end
+
+        it "does nothing when service_name was not set" do
+          doc.kubernetes_role.update_column(:service_name, '')
+          service_name.must_equal 'unchanged'
+        end
+
+        it "does nothing when serviceName was not used" do
+          raw_template[:spec].delete :serviceName
+          service_name.must_be_nil
+        end
+      end
     end
 
     describe "containers" do

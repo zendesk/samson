@@ -7,29 +7,43 @@ module Kubernetes
     CUSTOM_UNIQUE_LABEL_KEY = 'rc_unique_identifier'
     SECRET_PULLER_IMAGE = ENV['SECRET_PULLER_IMAGE'].presence
 
-    def initialize(release_doc, template)
+    def initialize(release_doc, template, index:)
       @doc = release_doc
       @template = template
+      @index = index
     end
 
     def to_hash
       @to_hash ||= begin
-        if template[:kind] != 'Pod'
-          set_rc_unique_label_key
-          set_history_limit
+        kind = template[:kind]
+
+        set_namespace
+
+        case kind
+        when *Kubernetes::RoleConfigFile::SERVICE_KINDS
+          set_service_name
+          set_service_node_port
+          prefix_service_cluster_ip
+        when *Kubernetes::RoleConfigFile::PRIMARY_KINDS
+          if kind != 'Pod'
+            set_rc_unique_label_key
+            set_history_limit
+          end
+
+          set_replica_target unless ['DaemonSet', 'Pod'].include?(kind)
+
+          make_stateful_set_match_service if kind == 'StatefulSet'
+
+          set_name
+          set_deployer
+          set_spec_template_metadata
+          set_docker_image
+          set_resource_usage
+          set_env
+          set_secrets
+          set_image_pull_secrets
+          set_vault_env
         end
-
-        set_replica_target unless ['DaemonSet', 'Pod'].include?(template[:kind])
-
-        set_name
-        set_deployer
-        set_spec_template_metadata
-        set_docker_image
-        set_resource_usage
-        set_env
-        set_secrets
-        set_image_pull_secrets
-        set_vault_env
 
         hash = template
         Rails.logger.info "Created Kubernetes hash: #{hash.to_json}"
@@ -51,6 +65,59 @@ module Kubernetes
     end
 
     private
+
+    def set_service_name
+      template[:metadata][:name] = generate_service_name(template[:metadata][:name])
+    end
+
+    # For now, create a NodePort for each service, so we can expose any
+    # apps running in the Kubernetes cluster to traffic outside the cluster.
+    def set_service_node_port
+      template[:spec][:type] = 'NodePort'
+    end
+
+    def generate_service_name(config_name)
+      return config_name unless name = @doc.kubernetes_role.service_name.presence
+      if name.include?(Kubernetes::Role::GENERATED)
+        raise(
+          Samson::Hooks::UserError,
+          "Service name for role #{@doc.kubernetes_role.name} was generated and needs to be changed before deploying."
+        )
+      end
+
+      # users can only enter a single service-name so for each additional service we make up a name
+      # unless the given name already fits the pattern ... slight chance that it might end up being not unique
+      return config_name if config_name.start_with?(name) && config_name.size > name.size
+
+      name += "-#{@index + 1}" if @index > 0
+      name
+    end
+
+    # no ipv6 support
+    def prefix_service_cluster_ip
+      return unless ip = template[:spec][:clusterIP]
+      return if ip == "None"
+      return unless prefix = @doc.deploy_group.kubernetes_cluster.ip_prefix.presence
+      ip = ip.split('.')
+      prefix = prefix.split('.')
+      ip[0...prefix.size] = prefix
+      template[:spec][:clusterIP] = ip.join('.')
+    end
+
+    def set_namespace
+      system_namespaces = ["default", "kube-system"]
+      return if system_namespaces.include?(template.dig(:metadata, :namespace)) &&
+        template.dig(:metadata, :labels, :'kubernetes.io/cluster-service') == 'true'
+      template[:metadata][:namespace] = @doc.deploy_group.kubernetes_namespace
+    end
+
+    # If the user renames the service the StatefulSet will not match it, so we fix.
+    # Will not work with multiple services ... but that usecase hopefully does not exist.
+    def make_stateful_set_match_service
+      return unless template[:spec][:serviceName]
+      return unless service_name = @doc.kubernetes_role.service_name.presence
+      template[:spec][:serviceName] = service_name
+    end
 
     # make sure we clean up old replicasets
     # we only ever do rollback to latest release ... and the default is infinite

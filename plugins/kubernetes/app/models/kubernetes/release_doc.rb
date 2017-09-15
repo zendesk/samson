@@ -35,7 +35,7 @@ module Kubernetes
     # this create a bit of duplicated work, but fails the deploy fast
     def verify_template
       primary_config = raw_template.detect { |e| Kubernetes::RoleConfigFile::PRIMARY_KINDS.include?(e.fetch(:kind)) }
-      template = Kubernetes::TemplateFiller.new(self, primary_config)
+      template = Kubernetes::TemplateFiller.new(self, primary_config, index: 0)
       template.set_secrets
       template.verify_env
     end
@@ -64,72 +64,11 @@ module Kubernetes
 
     # dynamically fill out the templates and store the result
     def store_resource_template
+      counter = Hash.new(-1)
       self.resource_template = raw_template.map do |resource|
-        update_namespace resource
-
-        case resource[:kind]
-        when 'Service'
-          resource[:metadata][:name] = generate_service_name(resource[:metadata][:name])
-
-          prefix_service_cluster_ip(resource)
-
-          # For now, create a NodePort for each service, so we can expose any
-          # apps running in the Kubernetes cluster to traffic outside the cluster.
-          resource[:spec][:type] = 'NodePort'
-          resource
-        when *Kubernetes::RoleConfigFile::PRIMARY_KINDS
-          make_stateful_set_match_service(resource)
-          TemplateFiller.new(self, resource).to_hash
-        else
-          resource
-        end
+        index = (counter[resource.fetch(:kind)] += 1)
+        TemplateFiller.new(self, resource, index: index).to_hash
       end
-    end
-
-    # If the user renames the service the StatefulSet will not match it, so we fix.
-    # Will not work with multiple services ... but that usecase hopefully does not exist.
-    def make_stateful_set_match_service(resource)
-      return unless resource[:kind] == "StatefulSet"
-      return unless resource[:spec][:serviceName]
-      return unless service_name = kubernetes_role.service_name.presence
-      resource[:spec][:serviceName] = service_name
-    end
-
-    def generate_service_name(config_name)
-      return config_name unless name = kubernetes_role.service_name.presence
-      if name.include?(Kubernetes::Role::GENERATED)
-        raise(
-          Samson::Hooks::UserError,
-          "Service name for role #{kubernetes_role.name} was generated and needs to be changed before deploying."
-        )
-      end
-
-      # users can only enter a single service-name so for each additional service we make up a name
-      # unless the given name already fits the pattern ... slight chance that it might end up being not unique
-      return config_name if config_name.start_with?(name)
-
-      @service_names_generated ||= 0
-      @service_names_generated += 1
-      name += "-#{@service_names_generated}" if @service_names_generated >= 2
-      name
-    end
-
-    # no ipv6 support
-    def prefix_service_cluster_ip(resource)
-      return unless ip = resource[:spec][:clusterIP]
-      return if ip == "None"
-      return unless prefix = deploy_group.kubernetes_cluster.ip_prefix.presence
-      ip = ip.split('.')
-      prefix = prefix.split('.')
-      ip[0...prefix.size] = prefix
-      resource[:spec][:clusterIP] = ip.join('.')
-    end
-
-    def update_namespace(resource)
-      system_namespaces = ["default", "kube-system"]
-      return if system_namespaces.include?(resource[:metadata][:namespace]) &&
-        (resource[:metadata][:labels] || {})[:'kubernetes.io/cluster-service'] == 'true'
-      resource[:metadata][:namespace] = deploy_group.kubernetes_namespace
     end
 
     def validate_config_file
