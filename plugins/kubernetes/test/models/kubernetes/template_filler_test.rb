@@ -107,6 +107,35 @@ describe Kubernetes::TemplateFiller do
       template.to_hash[:metadata][:namespace].must_equal 'kube-system'
     end
 
+    describe "unqiue deployments" do
+      let(:labels) do
+        hash = template.to_hash
+        [
+          hash.dig(:metadata, :labels, :project),
+          hash.dig(:spec, :selector, :project),
+          hash.dig(:spec, :selector, :matchLabels, :project),
+          hash.dig(:spec, :template, :metadata, :labels, :project),
+        ]
+      end
+
+      before { raw_template[:metadata][:annotations] = {"samson/override_project_label": "true"} }
+
+      it "overrides project label in primary" do
+        labels.must_equal ["foo", nil, "foo", "foo"]
+      end
+
+      it "overrides project label in pod" do
+        raw_template.replace(raw_template.dig(:spec, :template).merge(raw_template.slice(:metadata)))
+        raw_template[:kind] = "Pod"
+        labels.must_equal ["foo", nil, nil, nil]
+      end
+
+      it "overrides project label in service" do
+        raw_template[:kind] = "Service"
+        labels.must_equal ["foo", "foo", "some-project", "some-project"]
+      end
+    end
+
     describe "deployer" do
       it "sets deployer" do
         template.to_hash[:spec][:template][:metadata][:annotations].must_equal(deployer: "deployer@example.com")
