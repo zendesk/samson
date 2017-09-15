@@ -54,6 +54,9 @@ Style/StringLiteralsInInterpolation:
 Style/NumericLiterals:
   Enabled: false
 
+Style/NumericPredicate:
+  Enabled: false
+
 Style/FirstParameterIndentation:
   Enabled: false
 

@@ -67,23 +67,10 @@ describe Kubernetes::ReleaseDoc do
       create!.resource_template[0][:kind].must_equal 'Deployment'
     end
 
-    it "does not store blank service name" do
-      doc.kubernetes_role.update_column(:service_name, '') # user left field empty
-      create!.resource_template[1][:metadata][:name].must_equal 'some-project'
-    end
-
     it "fails to create with missing config file" do
       Kubernetes::ReleaseDoc.any_instance.unstub(:raw_template)
       GitRepository.any_instance.expects(:file_content).returns(nil) # File not found
       assert_raises(ActiveRecord::RecordInvalid) { create! }
-    end
-
-    it "fails when trying to create for a generated service" do
-      doc.kubernetes_role.update_column(:service_name, "app-server#{Kubernetes::Role::GENERATED}1211212")
-      e = assert_raises Samson::Hooks::UserError do
-        create!
-      end
-      e.message.must_equal "Service name for role app-server was generated and needs to be changed before deploying."
     end
 
     it "adds counter to service names when using multiple services" do
@@ -92,89 +79,6 @@ describe Kubernetes::ReleaseDoc do
       template.push template[1].deep_dup # 2 Services
       create!.resource_template[1][:metadata][:name].must_equal 'foo'
       create!.resource_template[2][:metadata][:name].must_equal 'foo-2'
-    end
-
-    it "keeps prefixed service names when using multiple services" do
-      doc.kubernetes_role.update_column(:service_name, 'foo')
-      template = Kubernetes::ReleaseDoc.new.send(:raw_template) # stubs makes all docs share the same template
-      template.push template[1].deep_dup # 2 Services
-      template[2][:metadata][:name] = 'foo-other'
-      create!.resource_template[1][:metadata][:name].must_equal 'foo'
-      create!.resource_template[2][:metadata][:name].must_equal 'foo-other'
-    end
-
-    it "keeps default service namespace because it is a unique system namespace" do
-      doc.send(:raw_template)[0][:metadata][:namespace] = "default"
-      doc.send(:raw_template)[0][:metadata][:labels] = {"kubernetes.io/cluster-service": 'true'}
-      create!.resource_template[0][:metadata][:namespace].must_equal 'default'
-    end
-
-    it "keeps the kube-system namespace because it's valid for cluster services " do
-      doc.send(:raw_template)[0][:metadata][:namespace] = "kube-system"
-      doc.send(:raw_template)[0][:metadata][:labels] = {"kubernetes.io/cluster-service": 'true'}
-      create!.resource_template[0][:metadata][:namespace].must_equal 'kube-system'
-    end
-
-    it "configures ConfigMap" do
-      doc.send(:raw_template)[1][:kind] = "ConfigMap"
-      create!.resource_template[1][:metadata][:namespace].must_equal 'pod1'
-    end
-
-    describe 'service clusterIP' do
-      let(:result) { create!.resource_template[1][:spec][:clusterIP] }
-
-      before do
-        doc.deploy_group.kubernetes_cluster.update_column(:ip_prefix, '123.34')
-        doc.send(:raw_template)[1][:spec][:clusterIP] = "1.2.3.4"
-      end
-
-      it "replaces ip prefix" do
-        result.must_equal '123.34.3.4'
-      end
-
-      it "replaces with trailing ." do
-        doc.deploy_group.kubernetes_cluster.update_column(:ip_prefix, '123.34.')
-        result.must_equal '123.34.3.4'
-      end
-
-      it "does nothing when service has no clusterIP" do
-        doc.send(:raw_template)[1][:spec].delete(:clusterIP)
-        result.must_be_nil
-      end
-
-      it "does nothing when ip prefix is blank" do
-        doc.deploy_group.kubernetes_cluster.update_column(:ip_prefix, '')
-        result.must_equal '1.2.3.4'
-      end
-
-      it "leaves None alone" do
-        doc.send(:raw_template)[1][:spec][:clusterIP] = "None"
-        result.must_equal 'None'
-      end
-    end
-
-    describe "statefulset serviceName" do
-      let(:result) { create!.resource_template[0][:spec][:serviceName] }
-
-      before do
-        doc.kubernetes_role.update_column(:service_name, 'changed')
-        doc.send(:raw_template)[0][:kind] = "StatefulSet"
-        doc.send(:raw_template)[0][:spec][:serviceName] = "unchanged"
-      end
-
-      it "changes the set serviceName" do
-        result.must_equal 'changed'
-      end
-
-      it "does nothing when service_name was not set" do
-        doc.kubernetes_role.update_column(:service_name, '')
-        result.must_equal 'unchanged'
-      end
-
-      it "does nothing when serviceName was not used" do
-        doc.send(:raw_template)[0][:spec].delete :serviceName
-        result.must_be_nil
-      end
     end
   end
 
