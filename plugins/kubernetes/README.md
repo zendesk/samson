@@ -161,7 +161,7 @@ samson will then override the `project` labels and keep deployments/services uni
 ### Building multiple Dockerfiles
 
  - Set the projects `dockerfiles` attribute to all the files that need to be built.
- - Add a `samson/dockerfile: Dockerfile.foobar` annotation to the container you want to have a different Dockerfile
+ - Add `samson/dockerfile: Dockerfile.foobar` to the container configuration (same level as `image`) to use a different Dockerfile
 
 ### Clair security scans
 
