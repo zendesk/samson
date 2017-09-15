@@ -17,6 +17,7 @@ describe Kubernetes::Resource do
       kind: kind,
       metadata: {name: 'some-project', namespace: 'pod1'},
       spec: {
+        replicas: 2,
         template: {spec: {containers: [{image: "bar"}]}}
       }
     }
@@ -31,7 +32,7 @@ describe Kubernetes::Resource do
   it "does modify passed in template" do
     content = File.read(File.expand_path("../../../app/models/kubernetes/resource.rb", __dir__))
     reset_code_usages = 3
-    content.scan(/@template.*=/).size.must_equal content.scan('restore_template do').size + reset_code_usages
+    content.scan(/@template.*(=|dig_set)/).size.must_equal content.scan('restore_template do').size + reset_code_usages
   end
 
   describe ".build" do

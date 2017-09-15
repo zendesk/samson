@@ -74,7 +74,7 @@ module Kubernetes
     end
 
     def pod_template
-      template[:kind] == 'Pod' ? template : template[:spec][:template]
+      template[:kind] == 'Pod' ? template : template.dig_fetch(:spec, :template)
     end
 
     def set_deployer
@@ -137,22 +137,22 @@ module Kubernetes
     # This key replaces the default kubernetes key: 'deployment.kubernetes.io/podTemplateHash'
     # This label is used by kubernetes to identify a RC and corresponding Pods
     def set_rc_unique_label_key
-      template[:spec][:uniqueLabelKey] = CUSTOM_UNIQUE_LABEL_KEY
+      template.dig_set [:spec, :uniqueLabelKey], CUSTOM_UNIQUE_LABEL_KEY
     end
 
     def set_replica_target
-      template[:spec][:replicas] = @doc.replica_target
+      template.dig_set [:spec, :replicas], @doc.replica_target
     end
 
     def set_name
-      template[:metadata][:name] = @doc.kubernetes_role.resource_name
+      template.dig_set [:metadata, :name], @doc.kubernetes_role.resource_name
     end
 
     # Sets the labels for each new Pod.
     # Adding the Release ID to allow us to track the progress of a new release from the UI.
     def set_spec_template_metadata
       release_doc_metadata.each do |key, value|
-        pod_template[:metadata][:labels][key] ||= value.to_s
+        pod_template.dig_fetch(:metadata, :labels)[key] ||= value.to_s
       end
     end
 
@@ -247,7 +247,7 @@ module Kubernetes
       end
 
       [:PROJECT, :ROLE].each do |k|
-        env[k] = pod_template[:metadata][:labels][k.downcase]
+        env[k] = pod_template.dig_fetch(:metadata, :labels, k.downcase)
       end
 
       # name of the cluster
@@ -278,14 +278,14 @@ module Kubernetes
     # in kubernetes 1.3 this might work without this workaround
     def set_image_pull_secrets
       client = @doc.deploy_group.kubernetes_cluster.client
-      secrets = client.get_secrets(namespace: template.fetch(:metadata).fetch(:namespace))
+      secrets = client.get_secrets(namespace: template.dig_fetch(:metadata, :namespace))
       docker_credentials = secrets.
         select { |secret| secret.type == "kubernetes.io/dockercfg" }.
         map! { |c| {name: c.metadata.name} }
 
       return if docker_credentials.empty?
 
-      pod_template.fetch(:spec, {})[:imagePullSecrets] = docker_credentials
+      pod_template.fetch(:spec)[:imagePullSecrets] = docker_credentials
     end
 
     def needs_secret_puller?
@@ -293,7 +293,7 @@ module Kubernetes
     end
 
     def containers
-      pod_template[:spec][:containers]
+      pod_template.dig_fetch(:spec, :containers)
     end
 
     def container

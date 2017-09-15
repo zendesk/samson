@@ -13,11 +13,11 @@ module Kubernetes
       end
 
       def name
-        @template.fetch(:metadata).fetch(:name)
+        @template.dig_fetch(:metadata, :name)
       end
 
       def namespace
-        @template.fetch(:metadata).fetch(:namespace)
+        @template.dig_fetch(:metadata, :namespace)
       end
 
       # should it be deployed before all other things get deployed ?
@@ -63,7 +63,7 @@ module Kubernetes
       end
 
       def uid
-        resource&.fetch(:metadata)&.fetch(:uid)
+        resource&.dig_fetch(:metadata, :uid)
       end
 
       private
@@ -104,14 +104,14 @@ module Kubernetes
       end
 
       def pods
-        ids = resource.dig(:spec, :template, :metadata, :labels).values_at(:release_id, :deploy_group_id)
+        ids = resource.dig_fetch(:spec, :template, :metadata, :labels).values_at(:release_id, :deploy_group_id)
         selector = Kubernetes::Release.pod_selector(*ids, query: true)
         pod_client.get_pods(label_selector: selector, namespace: namespace).map(&:to_hash)
       end
 
       def delete_pods(pods)
         pods.each do |pod|
-          pod_client.delete_pod pod[:metadata][:name], pod[:metadata][:namespace]
+          pod_client.delete_pod pod.dig_fetch(:metadata, :name), pod.dig_fetch(:metadata, :namespace)
         end
       end
 
@@ -166,7 +166,7 @@ module Kubernetes
 
     class Deployment < Base
       def desired_pod_count
-        @template[:spec][:replicas]
+        @template.dig_fetch :spec, :replicas
       end
 
       def revert(previous)
@@ -182,14 +182,14 @@ module Kubernetes
       def request_delete
         # Make kubernetes kill all the pods by scaling down
         restore_template do
-          @template[:spec][:replicas] = 0
+          @template.dig_set [:spec, :replicas], 0
           update
         end
 
         # Wait for there to be zero pods
         loop do
           loop_sleep
-          break if fetch_resource[:status][:replicas].to_i.zero?
+          break if fetch_resource.dig_fetch(:status, :replicas).zero?
         end
 
         # delete the actual deployment
@@ -212,14 +212,14 @@ module Kubernetes
       # only makes sense to call this after deploying / while waiting for pods
       def desired_pod_count
         @desired_pod_count ||= begin
-          desired = resource[:status][:desiredNumberScheduled]
+          desired = resource.dig_fetch :status, :desiredNumberScheduled
           return desired unless desired.zero?
 
           # in bad state or does not yet know how many it needs
           loop_sleep
           expire_cache
 
-          desired = resource[:status][:desiredNumberScheduled]
+          desired = resource.dig_fetch :status, :desiredNumberScheduled
           return desired unless desired.zero?
 
           raise(
@@ -243,7 +243,7 @@ module Kubernetes
 
         # make it match no node
         restore_template do
-          @template[:spec][:template][:spec][:nodeSelector] = {rand(9999).to_s => rand(9999).to_s}
+          @template.dig_set [:spec, :template, :spec, :nodeSelector], rand(9999).to_s => rand(9999).to_s
           update
         end
 
@@ -252,7 +252,8 @@ module Kubernetes
       end
 
       def no_pods_running?
-        resource[:status][:currentNumberScheduled].zero? && resource[:status][:numberMisscheduled].zero?
+        resource.dig_fetch(:status, :currentNumberScheduled).zero? &&
+          resource.dig_fetch(:status, :numberMisscheduled).zero?
       end
 
       def client
@@ -275,7 +276,7 @@ module Kubernetes
       end
 
       def desired_pod_count
-        @template[:spec][:replicas]
+        @template.dig_fetch :spec, :replicas
       end
 
       # StatefulSet cannot be updated normally when OnDelete is used or kubernetes <1.7
@@ -287,9 +288,9 @@ module Kubernetes
         # https://kubernetes.io/docs/tutorials/stateful-application/basic-stateful-set/#on-delete
         # fails when trying to update anything outside of containers or replicas
         update = resource.deep_dup
-        update[:spec][:replicas] = @template[:spec][:replicas]
-        update[:spec][:template][:spec][:containers] =
-          @template[:spec][:template][:spec][:containers]
+        [[:spec, :replicas], [:spec, :template, :spec, :containers]].each do |keys|
+          update.dig_set keys, @template.dig_fetch(*keys)
+        end
         with_patch_header do
           request :patch, name, [{op: "replace", path: "/spec", value: update.fetch(:spec)}], namespace
         end
@@ -304,9 +305,9 @@ module Kubernetes
       def wait_for_pods_to_restart
         old_pods = pods
         delete_pods(old_pods)
-        old_created = old_pods.map { |pod| pod.dig(:metadata, :creationTimestamp) }
+        old_created = old_pods.map { |pod| pod.dig_fetch(:metadata, :creationTimestamp) }
         backoff_wait(Array.new(60) { 2 }, "restart pods") do
-          return if pods.none? { |pod| old_created.include?(pod.dig(:metadata, :creationTimestamp)) }
+          return if pods.none? { |pod| old_created.include?(pod.dig_fetch(:metadata, :creationTimestamp)) }
         end
       end
 
@@ -331,7 +332,7 @@ module Kubernetes
       end
 
       def desired_pod_count
-        @template[:spec][:replicas]
+        @template.dig_fetch :spec, :replicas
       end
 
       def revert(_previous)
