@@ -278,7 +278,9 @@ describe Kubernetes::TemplateFiller do
       end
 
       describe "when dockerfile was selected" do
-        before { raw_template[:spec][:template][:spec][:containers][0][:"samson/dockerfile"] = "Dockerfile.new" }
+        let(:dockerfile) { "Dockerfile.new".dup }
+
+        before { raw_template[:spec][:template][:spec][:containers][0][:"samson/dockerfile"] = dockerfile }
 
         it "finds special build" do
           digest = "docker-registry.example.com/new@sha256:#{"a" * 64}"
@@ -293,6 +295,11 @@ describe Kubernetes::TemplateFiller do
         it "complains when build was not found" do
           e = assert_raises(Samson::Hooks::UserError) { container }
           e.message.must_equal "Build for dockerfile Dockerfile.new not found"
+        end
+
+        it "does not replace when none build was selected" do
+          dockerfile.replace('none')
+          container.fetch(:image).must_equal "docker-registry.zende.sk/truth_service:latest"
         end
       end
 
