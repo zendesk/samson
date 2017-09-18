@@ -5,7 +5,6 @@ if ENV.fetch('ENABLE_DATADOG_APM', 'false') != 'false'
 
   Rails.configuration.datadog_trace = {
     auto_instrument: true,
-    auto_instrument_redis: true,
     default_service: 'samson',
     trace_agent_hostname: ENV.fetch('STATSD_HOST', 'localhost')
   }
