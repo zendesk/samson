@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 # http://www.rubydoc.info/gems/ddtrace/#Ruby_on_Rails
 
 if ENV.fetch('ENABLE_DATADOG_APM', 'false') != 'false'
