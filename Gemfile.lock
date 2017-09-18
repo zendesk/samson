@@ -189,6 +189,8 @@ GEM
     crack (0.4.3)
       safe_yaml (~> 1.0.0)
     dalli (2.7.6)
+    ddtrace (0.8.2)
+      msgpack
     diffy (3.2.0)
     docker-api (1.33.6)
       excon (>= 0.38.0)
@@ -501,6 +503,7 @@ DEPENDENCIES
   concurrent-ruby
   connection_pool
   dalli
+  ddtrace
   diffy
   docker-api
   dogstatsd-ruby
@@ -586,4 +589,4 @@ RUBY VERSION
    ruby 2.4.1p111
 
 BUNDLED WITH
-   1.15.3
+   1.16.0.pre.2
