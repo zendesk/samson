@@ -58,7 +58,7 @@ module Kubernetes
     end
 
     def builds
-      project.builds.where(git_sha: git_sha)
+      Build.where(git_sha: git_sha)
     end
 
     private
