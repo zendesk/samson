@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 # http://www.rubydoc.info/gems/ddtrace/#Ruby_on_Rails
 
-if ENV.fetch('ENABLE_DATADOG_APM', 'false') != 'false'
+if ENV.fetch('DATADOG_ENABLE_APM', 'false') != 'false'
   require 'ddtrace'
 
   Rails.configuration.datadog_trace = {
