@@ -172,6 +172,13 @@ describe Kubernetes::Release do
     end
   end
 
+  describe "#builds" do
+    it "finds builds accross projects" do
+      release.project = nil
+      release.builds.must_equal [build]
+    end
+  end
+
   def expect_file_contents_from_repo
     GitRepository.any_instance.expects(:file_content).returns(role_config_file)
   end
