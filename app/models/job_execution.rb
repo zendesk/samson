@@ -36,6 +36,13 @@ class JobExecution
     @repository.executor = @executor
 
     on_finish do
+      # weird issue we are seeing with docker builds never finishing
+      if !Rails.env.test? && !JobExecution.find_by_id(@job.id) && @job.active?
+        Airbrake.notify("Active but not running job found", job: @job.id)
+        @output.write("Active but not running job found")
+        @job.failed!
+      end
+
       @output.write('', :finished)
       @output.close
 
