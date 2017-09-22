@@ -1,4 +1,4 @@
-<fieldset>
+<fieldset class="unfoldable">
   <%= form.input :name, required: true %>
   <%= form.input :permalink, required: true if form.object.persisted? %>
   <%= form.input :notify_email_address,
@@ -50,31 +50,14 @@
 
 <%= render 'commands', form: form %>
 <%= render 'shared/dashboard_field', form: form %>
-
-<fieldset>
-  <legend>Email on automated deploy failure</legend>
-  <div class="col-lg-offset-2">
-    <p>When an automated deploy initially fails, send a email to:</p>
-  </div>
-
-  <%= form.input :email_committers_on_automated_deploy_failure, as: :check_box, label: "Committers in the diff to last successful deploy" %>
-
-  <div class="col-lg-offset-2">
-    <div class="form-group">
-      <div class="col-lg-6">
-        <p>Addresses (comma separated):</p>
-        <%= form.text_field :static_emails_on_automated_deploy_failure, class: "form-control" %>
-      </div>
-    </div>
-  </div>
-</fieldset>
-
+<%= render 'deploy_failure_emails', form: form %>
 <%= Samson::Hooks.render_views(:stage_form, self, form: form) %>
 
 <script>
   // fold empty fieldsets and let users unfold them to reduce clutter
+  // except for the attributes and command fieldsets
   $(function(){
-    $("fieldset").each(function(_, fieldset){
+    $("fieldset").not(".unfoldable").each(function(_, fieldset){
       var fieldset = $(fieldset);
       var form_elements = fieldset.find('> *').not('legend');
 

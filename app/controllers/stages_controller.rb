@@ -34,7 +34,7 @@ class StagesController < ApplicationController
   end
 
   def new
-    @stage = @project.stages.build(command_ids: Command.global.pluck(:id))
+    @stage = @project.stages.new
   end
 
   def create
