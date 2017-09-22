@@ -20,7 +20,7 @@
   </ul>
 
   <% if admin_for_project? %>
-    <%= link_to "Add Stage", new_project_stage_path(@project), class: "btn btn-default" %>
+    <%= link_to "New", new_project_stage_path(@project), class: "btn btn-default" %>
   <% end %>
 
   <button id="error_message" class="messages btn btn-danger" disabled>
