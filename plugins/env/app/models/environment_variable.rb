@@ -1,4 +1,6 @@
 # frozen_string_literal: true
+require 'validates_lengths_from_database'
+
 class EnvironmentVariable < ActiveRecord::Base
   include GroupScope
   audited
@@ -6,6 +8,9 @@ class EnvironmentVariable < ActiveRecord::Base
   belongs_to :parent, polymorphic: true # Resource they are set on
 
   validates :name, presence: true
+
+  include ValidatesLengthsFromDatabase
+  validates_lengths_from_database only: :value
 
   class << self
     # preview parameter can be used to not raise an error,

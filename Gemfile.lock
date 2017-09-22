@@ -462,6 +462,8 @@ GEM
       unf_ext
     unf_ext (0.0.7.2)
     unicode-display_width (1.1.1)
+    validates_lengths_from_database (0.6.0)
+      activerecord (>= 3)
     vault (0.7.1)
     warden (1.2.7)
       rack (>= 1.0)
@@ -581,6 +583,7 @@ DEPENDENCIES
   sse-rails-engine
   sucker_punch
   uglifier
+  validates_lengths_from_database
   vault
   warden
   webmock
