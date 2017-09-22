@@ -611,6 +611,11 @@ describe ApplicationHelper do
       chart.must_include "https://chart.googleapis.com/chart"
     end
 
+    it "renders all 0" do
+      chart = link_to_chart("Hello world", [0, 0, 0, 0, 0])
+      chart.must_include "https://chart.googleapis.com/chart"
+    end
+
     it "does not render for useless data" do
       link_to_chart("Hello world", []).must_equal nil
       link_to_chart("Hello world", [1]).must_equal nil
