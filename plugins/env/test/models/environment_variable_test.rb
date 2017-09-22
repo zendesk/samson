@@ -11,6 +11,16 @@ describe EnvironmentVariable do
   let(:deploy_group_scope_type_and_id) { "DeployGroup-#{deploy_group.id}" }
   let(:environment_variable) { EnvironmentVariable.new(name: "NAME", parent: project) }
 
+  describe "validations" do
+    # postgres and sqlite do not have string limits defined
+    if ActiveRecord::Base.connection.class.name == "ActiveRecord::ConnectionAdapters::Mysql2Adapter"
+      it "validates value length" do
+        environment_variable.value = "a" * 1_000_000
+        refute_valid environment_variable
+      end
+    end
+  end
+
   describe ".env" do
     before do
       EnvironmentVariableGroup.create!(
