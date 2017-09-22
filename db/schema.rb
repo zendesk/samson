@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170825225929) do
+ActiveRecord::Schema.define(version: 20170922174850) do
 
   create_table "audits", force: :cascade do |t|
     t.integer "auditable_id", null: false
@@ -131,7 +131,7 @@ ActiveRecord::Schema.define(version: 20170825225929) do
 
   create_table "environment_variables", id: :integer, force: :cascade do |t|
     t.string "name", null: false
-    t.string "value", null: false
+    t.string "value", limit: 2048, null: false
     t.integer "parent_id", null: false
     t.string "parent_type", null: false
     t.integer "scope_id"
