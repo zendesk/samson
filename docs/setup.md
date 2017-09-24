@@ -132,6 +132,19 @@ Set the following variables in your `.env` file or set them as environment varia
       </td>
     </tr>
     <tr>
+      <td>BITBUCKET_KEY<BR>BITBUCKET_SECRET</td>
+      <td></td>
+      <td>
+        These settings are used if you want to allow users to login/authenticate with Bitbucket OAuth
+        <ul>
+          <li> Navigate to https://bitbucket.org/account/user/{username}/api and register a new OAuth customer</li>
+          <li> Set the Homepage URL to http://localhost:3000</li>
+          <li> Set the Authorization callback URL to http://localhost:3000/auth/bitbucket/callback</li>
+          <li> You should now have Key and Secret values to populate the these with</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
       <td>NEWRELIC_API_KEY</td>
       <td></td>
       <td>You may fill in using the instructions below if you would like a dynamic chart of response time and throughput during deploys.

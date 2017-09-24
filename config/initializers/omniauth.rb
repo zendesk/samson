@@ -55,4 +55,11 @@ Rails.application.config.middleware.use OmniAuth::Builder do
       bind_dn: Rails.application.config.samson.ldap.bind_dn,
       password: Rails.application.config.samson.ldap.password
   end
+
+  if Rails.application.config.samson.auth.bitbucket
+    require 'omniauth-bitbucket'
+    provider :bitbucket,
+      ENV.fetch('BITBUCKET_KEY'),
+      ENV.fetch('BITBUCKET_SECRET')
+  end
 end
