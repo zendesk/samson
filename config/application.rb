@@ -127,6 +127,7 @@ module Samson
     config.samson.auth.google = Samson::EnvCheck.set?("AUTH_GOOGLE")
     config.samson.auth.ldap = Samson::EnvCheck.set?("AUTH_LDAP")
     config.samson.auth.gitlab = Samson::EnvCheck.set?("AUTH_GITLAB")
+    config.samson.auth.bitbucket = Samson::EnvCheck.set?("AUTH_BITBUCKET")
 
     config.samson.uri = URI(ENV["DEFAULT_URL"] || 'http://localhost:3000')
     config.sse_rails_engine.access_control_allow_origin = config.samson.uri.to_s
