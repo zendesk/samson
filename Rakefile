@@ -77,7 +77,7 @@ end
 
 desc 'Run brakeman ... use brakewan -I to add new ignores'
 task :brakeman do
-  sh "brakeman --exit-on-warn --exit-on-err --format plain --add-engine-path 'plugins/*' --ensure-latest"
+  sh "brakeman --no-pager --add-engine-path 'plugins/*' --ensure-latest"
 end
 
 desc 'Scan for gem vulnerabilities'
