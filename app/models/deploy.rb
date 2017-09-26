@@ -122,7 +122,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def self.start_deploys_waiting_for_restart!
-    pending.reject(&:waiting_for_buddy?).each do |deploy|
+    pending.reorder(nil).reject(&:waiting_for_buddy?).each do |deploy|
       deploy.touch # HACK: refresh is immediate with update
       deploy.send :start
     end
