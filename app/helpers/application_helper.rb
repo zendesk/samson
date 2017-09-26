@@ -284,7 +284,7 @@ module ApplicationHelper
 
     max = values.max.round
     y_axis = [0, max / 4, max / 2, (max / 1.333333).to_i, max].map { |t| duration_text(t) }.join("|")
-    y_values = values.reverse.join(",")
+    y_values = values.reverse.map { |v| max.zero? ? max : (v * 100.0 / max).round }.join(",") # values as % of max
     params = {
       cht: "lc", # chart type
       chtt: name,
