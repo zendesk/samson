@@ -289,6 +289,21 @@ describe Deploy do
       DeployService.any_instance.expects(:confirm_deploy).never
       Deploy.start_deploys_waiting_for_restart!
     end
+
+    it "starts deploys in correct order" do
+      other = deploys(:succeeded_production_test)
+      other.job.update_column(:status, 'pending')
+      Deploy.any_instance.expects(:start).times(2).with do
+        later = 1.minute.from_now
+        Time.stubs(:now).returns later # make the clock tick a few seconds so we can rely on updated_at
+        true
+      end
+
+      Deploy.start_deploys_waiting_for_restart!
+
+      deploy.id.must_be :<, other.id
+      deploy.reload.updated_at.must_be :<, other.reload.updated_at
+    end
   end
 
   describe ".active" do
