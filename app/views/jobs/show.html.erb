@@ -24,9 +24,4 @@
   </div>
 </section>
 
-<% if @job.executing? %>
-  <script>
-    toggleOutputToolbar();
-    startStream();
-  </script>
-<% end %>
+<%= render 'shared/output_stream', job: @job %>
