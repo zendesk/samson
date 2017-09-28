@@ -3,8 +3,6 @@ class Build < ActiveRecord::Base
   SHA1_REGEX = /\A[0-9a-f]{40}\Z/i
   SHA256_REGEX = /\A(sha256:)?[0-9a-f]{64}\Z/i
   DIGEST_REGEX = /\A[\w.-]+[\w\/-]*@sha256:[0-9a-f]{64}\Z/i
-  ASSIGNABLE_KEYS = [:git_ref, :name, :description, :source_url, :dockerfile] +
-    Samson::Hooks.fire(:build_permitted_params)
 
   belongs_to :project
   belongs_to :docker_build_job, class_name: 'Job', optional: true
@@ -17,6 +15,7 @@ class Build < ActiveRecord::Base
   validates :docker_repo_digest, format: DIGEST_REGEX, allow_nil: true
   validates :source_url, format: /\Ahttps?:\/\/\S+\z/, allow_nil: true
 
+  validate :validate_docker_repo_digest_matches_git_sha, on: :create
   validate :validate_git_reference, on: :create
 
   before_create :assign_number
@@ -63,6 +62,11 @@ class Build < ActiveRecord::Base
   end
 
   private
+
+  def validate_docker_repo_digest_matches_git_sha
+    return if git_sha.present? || docker_repo_digest.blank?
+    errors.add(:git_sha, 'supply git_sha when using docker_repo_digest')
+  end
 
   def validate_git_reference
     if git_ref.blank? && git_sha.blank?
