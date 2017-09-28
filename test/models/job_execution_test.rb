@@ -162,7 +162,7 @@ describe JobExecution do
   end
 
   it 'works without a deploy' do
-    job_without_deploy = project.jobs.build(command: 'cat foo', user: user, project: project)
+    job_without_deploy = project.jobs.create!(command: 'cat foo', user: user, project: project)
     execution = JobExecution.new('master', job_without_deploy)
     execution.send(:run)
     # if you like, pretend there's a wont_raise assertion here

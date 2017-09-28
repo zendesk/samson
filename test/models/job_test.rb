@@ -306,7 +306,7 @@ describe Job do
     end
 
     it "cancels a queued job" do
-      executing_job = project.jobs.new(command: 'cat foo', user: user, project: project, commit: 'master')
+      executing_job = project.jobs.create!(command: 'cat foo', user: user, project: project, commit: 'master')
       executing = JobExecution.new('master', executing_job) { sleep 10 }
       JobExecution.start_job(executing, queue: 'foo')
       assert JobExecution.executing?(executing.id)
