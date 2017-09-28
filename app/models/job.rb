@@ -150,7 +150,7 @@ class Job < ActiveRecord::Base
   end
 
   def status!(status)
-    update_attribute(:status, status)
+    update_column(:status, status)
   end
 
   def short_reference
