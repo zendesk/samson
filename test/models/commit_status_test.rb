@@ -25,7 +25,7 @@ describe CommitStatus do
 
   let(:stage) { stages(:test_staging) }
   let(:reference) { 'master' }
-  let(:url) { "repos/#{stage.project.user_repo_part}/commits/#{reference}/status" }
+  let(:url) { "repos/#{stage.project.repository_path}/commits/#{reference}/status" }
   let(:status) { CommitStatus.new(stage, reference) }
 
   describe "#status" do
@@ -101,7 +101,7 @@ describe CommitStatus do
 
     describe "with bad ref" do
       let(:reference) { '[/r' }
-      let(:url) { "repos/#{stage.project.user_repo_part}/commits/%255B/r/status" }
+      let(:url) { "repos/#{stage.project.repository_path}/commits/%255B/r/status" }
 
       it "escapes the url" do
         failure!

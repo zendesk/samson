@@ -10,7 +10,7 @@ class GithubDeployment
   # https://developer.github.com/v3/repos/deployments/#create-a-deployment
   def create
     GITHUB.create_deployment(
-      @project.github_repo,
+      @project.repository_path,
       @deploy.job.commit,
       payload: {
         deployer: @deploy.user.attributes.slice("id", "name", "email"),

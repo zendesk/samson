@@ -38,7 +38,11 @@ describe ProjectsController do
         result = JSON.parse(response.body)
         projects = result['projects']
         projects.length.must_equal 1
-        projects.first['name'].must_equal 'Foo'
+        project = projects.first
+        project['name'].must_equal 'Foo'
+        project['repository_path'].must_equal 'bar/foo'
+        refute project.key?('deleted_at')
+        refute project.key?('token')
       end
 
       it "returns the last deploy date in JSON" do
@@ -97,8 +101,11 @@ describe ProjectsController do
         it "is json and does not include :token" do
           get :show, params: {id: project.permalink, format: :json}
           assert_response :success
-          result = JSON.parse(response.body)
-          result.keys.wont_include('token')
+          project = JSON.parse(response.body)
+          project['name'].must_equal 'Foo'
+          project['repository_path'].must_equal 'bar/foo'
+          refute project.key?('deleted_at')
+          refute project.key?('token')
         end
       end
     end

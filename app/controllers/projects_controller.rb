@@ -50,7 +50,7 @@ class ProjectsController < ApplicationController
   def show
     respond_to do |format|
       format.html { @stages = @project.stages }
-      format.json { render json: @project.to_json(except: [:token, :deleted_at]) }
+      format.json { render json: @project.as_json }
     end
   end
 
@@ -122,6 +122,7 @@ class ProjectsController < ApplicationController
     @project = (Project.find_by_param!(params[:id]) if params[:id])
   end
 
+  # Avoiding N+1 queries on project index
   def last_deploy_for(project)
     @projects_last_deployed_at ||= Deploy.successful.
       last_deploys_for_projects.
@@ -131,8 +132,6 @@ class ProjectsController < ApplicationController
     @projects_last_deployed_at[project.id]
   end
 
-  # Renders a collection of projects as an array of Hashes, with the
-  # intention that #to_json be called on the result
   def projects_as_json(projects)
     projects.map do |project|
       json = project.as_json
@@ -144,7 +143,6 @@ class ProjectsController < ApplicationController
     end
   end
 
-  # Renders a collection of projects into a CSV file
   def projects_as_csv(projects)
     CSV.generate do |csv|
       header = ProjectSerializer.csv_header

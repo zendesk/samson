@@ -8,7 +8,7 @@ class Changeset::CodePush
   end
 
   def self.changeset_from_webhook(project, payload)
-    new(project.github_repo, payload)
+    new(project.repository_path, payload)
   end
 
   def self.valid_webhook?(_)

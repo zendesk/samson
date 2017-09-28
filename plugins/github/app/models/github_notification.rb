@@ -12,7 +12,7 @@ class GithubNotification
 
     in_multiple_threads(pull_requests) do |pull_request|
       pull_id = pull_request.number
-      GITHUB.add_comment(@project.github_repo, pull_id, body)
+      GITHUB.add_comment(@project.repository_path, pull_id, body)
       Rails.logger.info "Updated GitHub PR: #{pull_id}"
     end
   end
