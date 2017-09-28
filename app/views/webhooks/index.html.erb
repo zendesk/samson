@@ -17,7 +17,7 @@
         <% if source == 'github' && token = Integrations::GithubController.secret_token %>
           <br/>
           <% if current_user.admin_for?(@project) %>
-            (Set <%= link_to "secret token", "javascript:prompt('Copy this token', '#{token}')" %> in <%= link_to 'hook settings', "https://github.com/#{@project.user_repo_part}/settings/hooks" %>)
+            (Set <%= link_to "secret token", "javascript:prompt('Copy this token', '#{token}')" %> in <%= link_to 'hook settings', "https://github.com/#{@project.repository_path}/settings/hooks" %>)
           <% else %>
             (Secret token required, ask a project admin)
           <% end %>

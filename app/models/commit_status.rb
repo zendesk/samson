@@ -40,7 +40,7 @@ class CommitStatus
   # need to do weird escape logic since other wise either 'foo/bar' or 'bar[].foo' do not work
   def github_status
     escaped_ref = @reference.gsub(/[^a-zA-Z\/\d_-]+/) { |v| CGI.escape(v) }
-    GITHUB.combined_status(@stage.project.user_repo_part, escaped_ref).to_h
+    GITHUB.combined_status(@stage.project.repository_path, escaped_ref).to_h
   rescue Octokit::NotFound
     {
       state: "failure",

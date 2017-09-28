@@ -78,20 +78,10 @@ class Project < ActiveRecord::Base
   end
 
   # The user/repo part of the repository URL.
-  def user_repo_part
+  def repository_path
     # GitHub allows underscores, hyphens and dots in repo names
     # but only hyphens in user/organisation names (as well as alphanumeric).
     repository_url.scan(%r{[:/]([A-Za-z0-9-]+/[\w.-]+?)(?:\.git)?$}).join
-  end
-
-  # TODO: remove, this is misleading
-  def github_repo
-    user_repo_part
-  end
-
-  # TODO: remove, this is misleading
-  def gitlab_repo
-    user_repo_part
   end
 
   def repository_directory
@@ -142,14 +132,18 @@ class Project < ActiveRecord::Base
     Rails.application.routes.url_helpers.project_url(self)
   end
 
+  def as_json
+    super(except: [:token, :deleted_at], methods: [:repository_path])
+  end
+
   private
 
   def repository_homepage_github
-    "#{Rails.application.config.samson.github.web_url}/#{github_repo}"
+    "#{Rails.application.config.samson.github.web_url}/#{repository_path}"
   end
 
   def repository_homepage_gitlab
-    "#{Rails.application.config.samson.gitlab.web_url}/#{gitlab_repo}"
+    "#{Rails.application.config.samson.gitlab.web_url}/#{repository_path}"
   end
 
   def deploys_by_group(before, include_failed_deploys = false)
@@ -236,7 +230,7 @@ class Project < ActiveRecord::Base
     return if ReleaseService.new(self).can_release?
     errors.add(
       :release_branch,
-      "could not be set. Samson's github user needs 'Write' permission to push new tags to #{user_repo_part}."
+      "could not be set. Samson's github user needs 'Write' permission to push new tags to #{repository_path}."
     )
   end
 

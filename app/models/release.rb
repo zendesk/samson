@@ -21,7 +21,7 @@ class Release < ActiveRecord::Base
   end
 
   def changeset
-    @changeset ||= Changeset.new(project.github_repo, previous_release.try(:commit), commit)
+    @changeset ||= Changeset.new(project.repository_path, previous_release.try(:commit), commit)
   end
 
   def previous_release
@@ -59,11 +59,13 @@ class Release < ActiveRecord::Base
   def contains_commit?(other_commit)
     return true if other_commit == commit
     # status values documented here: http://stackoverflow.com/questions/23943855/github-api-to-compare-commits-response-status-is-diverged
-    ['behind', 'identical'].include?(GITHUB.compare(project.github_repo, commit, other_commit).status)
+    ['behind', 'identical'].include?(GITHUB.compare(project.repository_path, commit, other_commit).status)
   rescue Octokit::NotFound
     false
   rescue Octokit::Error => e
-    Airbrake.notify(e, parameters: { github_repo: project.github_repo, commit: commit, other_commit: other_commit})
+    Airbrake.notify(e, parameters: {
+      repository_path: project.repository_path, commit: commit, other_commit: other_commit
+    })
     false # Err on side of caution and cause a new release to be created.
   end
 

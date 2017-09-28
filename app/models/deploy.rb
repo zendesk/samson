@@ -88,7 +88,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def changeset_to(other)
-    Changeset.new(project.github_repo, other.try(:commit), commit)
+    Changeset.new(project.repository_path, other.try(:commit), commit)
   end
 
   def production

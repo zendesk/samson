@@ -4,7 +4,7 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe GithubNotification do
-  let(:project) { stub(name: "Glitter", github_repo: "glitter/glitter", to_param: "3-glitter") }
+  let(:project) { stub(name: "Glitter", repository_path: "glitter/glitter", to_param: "3-glitter") }
   let(:stage) { stub(name: "staging", project: project) }
   let(:changeset) { stub_everything(commits: [], files: [], pull_requests: [pull_requests]) }
   let(:deploy) { stub(changeset: changeset, short_reference: "7e6c415", id: 18, stage: stage) }
