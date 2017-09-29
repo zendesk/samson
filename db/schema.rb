@@ -56,7 +56,7 @@ ActiveRecord::Schema.define(version: 20170929181901) do
     t.string "external_id"
     t.string "external_status"
     t.index ["created_by"], name: "index_builds_on_created_by"
-    t.index ["external_id"], name: "index_builds_on_external_id", unique: true
+    t.index ["external_id"], name: "index_builds_on_external_id", unique: true, length: { external_id: 40 }
     t.index ["git_sha", "dockerfile"], name: "index_builds_on_git_sha_and_dockerfile", unique: true
     t.index ["project_id"], name: "index_builds_on_project_id"
   end
