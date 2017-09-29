@@ -3,6 +3,7 @@ class BuildsController < ApplicationController
   include CurrentProject
 
   before_action :authorize_resource!
+  before_action :rename_source_url, only: [:create, :update]
   before_action :enforce_disabled_docker_builds, only: [:new, :create, :build_docker_image]
   before_action :find_build, only: [:show, :build_docker_image, :edit, :update]
 
@@ -23,9 +24,18 @@ class BuildsController < ApplicationController
   end
 
   def create
-    @build = current_project.builds.create(new_build_params.merge(creator: current_user))
-    start_docker_build if @build.persisted? && !@build.docker_repo_digest
-    respond_to_save @build.persisted?, :created, :new
+    scope = current_project.builds
+    external_id = params.dig(:build, :external_id).presence
+    if external_id && @build = scope.where(external_id: external_id).first
+      @build.attributes = edit_build_params(validate: false)
+    else
+      @build = scope.new(new_build_params.merge(creator: current_user))
+    end
+
+    saved = @build.save
+
+    start_docker_build if saved && !@build.docker_repo_digest && @build.external_id.blank?
+    respond_to_save saved, :created, :new
   end
 
   def show
@@ -36,7 +46,7 @@ class BuildsController < ApplicationController
   end
 
   def update
-    success = @build.update_attributes(edit_build_params)
+    success = @build.update_attributes(edit_build_params(validate: true))
     respond_to_save success, :ok, :edit
   end
 
@@ -59,15 +69,29 @@ class BuildsController < ApplicationController
     @build = Build.find(params[:id])
   end
 
+  # previously the attribute was called source_url so some clients might still use that
+  def rename_source_url
+    if (build = params[:build]) && source_url = build.delete(:source_url)
+      build[:external_url] = source_url
+    end
+  end
+
   def new_build_params
     params.require(:build).permit(
-      :git_ref, :name, :description, :source_url, :dockerfile, :docker_repo_digest, :git_sha,
+      :git_ref, :name, :description, :dockerfile, :docker_repo_digest, :git_sha,
+      :external_id, :external_status, :external_url,
       *Samson::Hooks.fire(:build_permitted_params)
     )
   end
 
-  def edit_build_params
-    params.require(:build).permit(:name, :description)
+  def edit_build_params(validate:)
+    attributes = params.require(:build)
+    allowed = [:name, :description, :external_status]
+    if validate
+      attributes.permit(*allowed)
+    else
+      attributes.to_unsafe_h.slice(*allowed)
+    end
   end
 
   def start_docker_build

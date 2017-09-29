@@ -13,7 +13,7 @@ class Build < ActiveRecord::Base
   validates :git_sha, format: SHA1_REGEX, allow_nil: true, uniqueness: {scope: :dockerfile}
   validates :docker_image_id, format: SHA256_REGEX, allow_nil: true
   validates :docker_repo_digest, format: DIGEST_REGEX, allow_nil: true
-  validates :source_url, format: /\Ahttps?:\/\/\S+\z/, allow_nil: true
+  validates :external_url, format: /\Ahttps?:\/\/\S+\z/, allow_nil: true
 
   validate :validate_docker_repo_digest_matches_git_sha, on: :create
   validate :validate_git_reference, on: :create
