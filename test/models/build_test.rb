@@ -12,7 +12,11 @@ describe Build do
   let(:build) { builds(:staging) }
 
   def valid_build(attributes = {})
-    Build.new(attributes.reverse_merge(project: project, git_ref: 'master', creator: users(:admin)))
+    Build.new(attributes.reverse_merge(
+      project: project,
+      git_ref: 'master',
+      creator: users(:admin)
+    ))
   end
 
   describe 'validations' do
@@ -36,7 +40,11 @@ describe Build do
         refute_valid(valid_build(git_ref: nil, git_sha: '0123456789012345678901234567890123456789')) # sha no in repo
         refute_valid(valid_build(git_ref: nil, git_sha: 'This is a string of 40 characters.......'))
         refute_valid(valid_build(git_ref: nil, git_sha: 'abc'))
+      end
+    end
 
+    it "validates git sha uniqueness" do
+      Dir.chdir(repo_temp_dir) do
         build.update_column(:git_sha, current_commit)
         refute_valid(valid_build(git_ref: nil, git_sha: current_commit)) # not unique
         assert_valid(valid_build(git_ref: nil, git_sha: current_commit, dockerfile: 'Other'))
@@ -61,11 +69,12 @@ describe Build do
     end
 
     it 'validates docker digest' do
-      assert_valid(valid_build(docker_repo_digest: repo_digest))
-      assert_valid(valid_build(docker_repo_digest: "my-registry.zende.sk/samson/another_project@sha256:#{example_sha}"))
-      assert_valid(valid_build(docker_repo_digest: "ruby@sha256:#{"a" * 64}"))
-      refute_valid(valid_build(docker_repo_digest: example_sha))
-      refute_valid(valid_build(docker_repo_digest: 'some random string'))
+      assert_valid(valid_build(docker_repo_digest: repo_digest, git_sha: 'a' * 40))
+      multi_slash = "my-registry.zende.sk/samson/another_project@sha256:#{example_sha}"
+      assert_valid(valid_build(docker_repo_digest: multi_slash, git_sha: 'a' * 40))
+      assert_valid(valid_build(docker_repo_digest: "ruby@sha256:#{"a" * 64}", git_sha: 'a' * 40))
+      refute_valid(valid_build(docker_repo_digest: example_sha, git_sha: 'a' * 40))
+      refute_valid(valid_build(docker_repo_digest: 'some random string', git_sha: 'a' * 40))
     end
 
     it 'is invalid with protocol weird url' do
@@ -76,6 +85,10 @@ describe Build do
     it 'is valid with real url' do
       assert_valid(valid_build(source_url: 'http://foo.com'))
       assert_valid(valid_build(source_url: 'https://foo.com'))
+    end
+
+    it 'is invalid when docker_repo_digest was given without an exact git_sha' do
+      refute_valid(valid_build(docker_repo_digest: repo_digest))
     end
   end
 

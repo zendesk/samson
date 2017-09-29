@@ -21,6 +21,13 @@ describe BuildsController do
     GitRepository.any_instance.stubs(:commit_from_ref).returns(returns)
   end
 
+  it "recognizes deprecated api route" do
+    assert_recognizes(
+      {controller: 'builds', action: 'create', project_id: 'foo'},
+      path: "api/projects/foo/builds", method: :post
+    )
+  end
+
   as_a_viewer do
     unauthorized :get, :new, project_id: :foo
     unauthorized :post, :create, project_id: :foo
@@ -97,12 +104,12 @@ describe BuildsController do
         end
       end
 
-      def create
+      def create(attributes = {})
         post(
           :create,
           params: {
             project_id: project.to_param,
-            build: { name: 'Test creation', git_ref: 'master', description: 'hi there' },
+            build: { name: 'Test creation', git_ref: 'master', description: 'hi there' }.merge(attributes),
             format: format
           }
         )
@@ -127,18 +134,6 @@ describe BuildsController do
           assert_redirected_to project_build_path(project, new_build)
         end
 
-        it 'can create a build with same git_ref as previous' do
-          create
-          post(
-            :create,
-            params: {
-              project_id: project.to_param,
-              build: { name: 'Test creation 2', git_ref: 'master', description: 'hi there' }
-            }
-          )
-          Build.last.name.must_equal 'Test creation 2'
-        end
-
         it 'starts the build' do
           DockerBuilderService.any_instance.expects(:run)
           create
@@ -150,11 +145,24 @@ describe BuildsController do
           create
         end
 
-        it "does not create when disabled" do
-          project.update_column :docker_image_building_disabled, true
-          create
-          assert_redirected_to project_builds_path(project)
-          assert flash[:alert]
+        describe "when building is disabled" do
+          before { project.update_column :docker_image_building_disabled, true }
+
+          it "does not create to build" do
+            refute_difference 'Build.count' do
+              create
+              assert_redirected_to project_builds_path(project)
+              assert flash[:alert]
+            end
+          end
+
+          it "creates when digest was given" do
+            assert_difference 'Build.count', +1 do
+              create git_sha: 'a' * 40, docker_repo_digest: builds(:docker_build).docker_repo_digest
+              assert_redirected_to project_build_path(project, Build.last)
+              refute flash[:alert]
+            end
+          end
         end
 
         it_renders_error

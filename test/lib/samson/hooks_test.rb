@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../../test_helper'
 
-SingleCov.covered! uncovered: 7 # untestable mintest if/else and render_stylesheets / render_javascripts
+SingleCov.covered! uncovered: 7 # untestable minitest if/else and render_stylesheets / render_javascripts
 
 describe Samson::Hooks do
   let(:number_of_plugins) { Dir['plugins/*'].size }
@@ -84,6 +84,14 @@ describe Samson::Hooks do
         hooks.size.must_equal before + 1
       end
       hooks.size.must_equal before
+    end
+
+    it "can fire the extra hook" do
+      called = []
+      Samson::Hooks.with_callback(:stage_clone, ->(*) { called << 1 }) do
+        Samson::Hooks.fire(:stage_clone, stages(:test_staging), stages(:test_staging))
+        called.must_equal [1]
+      end
     end
   end
 

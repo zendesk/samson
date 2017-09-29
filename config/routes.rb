@@ -13,7 +13,6 @@ Samson::Application.routes.draw do
 
     resources :projects, only: [:index] do
       resources :automated_deploys, only: [:create]
-      resources :builds, only: [:create]
       resources :deploys, only: [:index]
       resources :stages, only: [:index] do
         member do
@@ -131,6 +130,8 @@ Samson::Application.routes.draw do
       post :sync
     end
   end
+
+  post '/api/projects/:project_id/builds', to: 'builds#create' # legacy, can be removed when it is no longer used
 
   get '/auth/github/callback', to: 'sessions#github'
   get '/auth/google/callback', to: 'sessions#google'

@@ -23,10 +23,9 @@ class BuildsController < ApplicationController
   end
 
   def create
-    @build = new_or_modified_build
-    @build.creator = current_user
-    start_docker_build if saved = @build.save
-    respond_to_save saved, :created, :new
+    @build = current_project.builds.create(new_build_params.merge(creator: current_user))
+    start_docker_build if @build.persisted? && !@build.docker_repo_digest
+    respond_to_save @build.persisted?, :created, :new
   end
 
   def show
@@ -61,7 +60,10 @@ class BuildsController < ApplicationController
   end
 
   def new_build_params
-    params.require(:build).permit(*Build::ASSIGNABLE_KEYS)
+    params.require(:build).permit(
+      :git_ref, :name, :description, :source_url, :dockerfile, :docker_repo_digest, :git_sha,
+      *Samson::Hooks.fire(:build_permitted_params)
+    )
   end
 
   def edit_build_params
@@ -70,15 +72,6 @@ class BuildsController < ApplicationController
 
   def start_docker_build
     DockerBuilderService.new(@build).run(push: true)
-  end
-
-  def new_or_modified_build
-    if old_build = current_project.builds.where(git_sha: git_sha).last
-      old_build.update_attributes(new_build_params)
-      old_build
-    else
-      current_project.builds.build(new_build_params)
-    end
   end
 
   def respond_to_save(saved, status, template)
@@ -97,12 +90,12 @@ class BuildsController < ApplicationController
     end
   end
 
-  def git_sha
-    @git_sha ||= current_project.repository.commit_from_ref(new_build_params[:git_ref])
+  def enforce_disabled_docker_builds
+    return if !@project.docker_image_building_disabled? || registering_external_build?
+    redirect_to project_builds_path(@project), alert: "Image building is disabled, they must be created via the api."
   end
 
-  def enforce_disabled_docker_builds
-    return unless @project.docker_image_building_disabled?
-    redirect_to project_builds_path(@project), alert: "Image building is disabled, they must be created via the api."
+  def registering_external_build?
+    action_name == "create" && params.dig(:build, :docker_repo_digest).present?
   end
 end
