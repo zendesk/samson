@@ -107,8 +107,7 @@ class ProjectsController < ApplicationController
     per_page = 9 # 3 or 1 column layout depending on size
     scope = Project.alphabetical
     if query = params.dig(:search, :query).presence
-      query = ActiveRecord::Base.send(:sanitize_sql_like, query)
-      scope = scope.where('name like ?', "%#{query}%")
+      scope = scope.search(query)
     elsif ids = current_user.starred_project_ids.presence
       # fake association sorting since order by array is hard to support in mysql+postgres+sqlite
       array = scope.all.sort_by { |p| ids.include?(p.id) ? 0 : 1 }
