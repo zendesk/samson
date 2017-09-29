@@ -128,10 +128,25 @@ describe BuildsController do
           create
           assert_response :redirect
 
-          new_build = Build.last
-          assert_equal('Test creation', new_build.name)
-          assert_equal(git_sha, new_build.git_sha)
-          assert_redirected_to project_build_path(project, new_build)
+          build = Build.last
+          assert_equal('Test creation', build.name)
+          assert_equal(git_sha, build.git_sha)
+          assert_redirected_to project_build_path(project, build)
+        end
+
+        it 'can use deprecated source_url' do
+          create source_url: 'http://foo.com'
+          Build.last.external_url.must_equal 'http://foo.com'
+        end
+
+        it 'updates a build via external_id' do
+          build = Build.last
+          build.update_columns(external_id: 'foo', external_status: 'running')
+
+          create external_id: 'foo', external_status: 'succeeded'
+          assert_response :redirect
+
+          build.reload.external_status.must_equal 'succeeded'
         end
 
         it 'starts the build' do
@@ -143,6 +158,11 @@ describe BuildsController do
           DockerBuilderService.any_instance.expects(:run).never
           stub_git_reference_check(returns: false)
           create
+        end
+
+        it "does not start the build when build is external" do
+          DockerBuilderService.any_instance.expects(:run).never
+          create external_id: "123"
         end
 
         describe "when building is disabled" do

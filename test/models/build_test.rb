@@ -78,13 +78,13 @@ describe Build do
     end
 
     it 'is invalid with protocol weird url' do
-      refute_valid(valid_build(source_url: 'foo.com'))
-      refute_valid(valid_build(source_url: 'ftp://foo.com'))
+      refute_valid(valid_build(external_url: 'foo.com'))
+      refute_valid(valid_build(external_url: 'ftp://foo.com'))
     end
 
     it 'is valid with real url' do
-      assert_valid(valid_build(source_url: 'http://foo.com'))
-      assert_valid(valid_build(source_url: 'https://foo.com'))
+      assert_valid(valid_build(external_url: 'http://foo.com'))
+      assert_valid(valid_build(external_url: 'https://foo.com'))
     end
 
     it 'is invalid when docker_repo_digest was given without an exact git_sha' do
