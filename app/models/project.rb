@@ -45,7 +45,13 @@ class Project < ActiveRecord::Base
       alphabetical
   }
 
-  scope :search, ->(name) { where("name like ?", "%#{name}%") }
+  scope :search, ->(query) {
+    scope = self
+    sanitize_sql_like(query).split(' ').each do |word|
+      scope = scope.where(Project.arel_table[:name].matches("%#{word}%"))
+    end
+    scope
+  }
 
   def docker_repo(registry, dockerfile)
     repo = File.join(registry.base, permalink_base)

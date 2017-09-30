@@ -321,6 +321,30 @@ describe Project do
     end
   end
 
+  describe '#search' do
+    it 'filters and returns projects by name' do
+      Project.create!(name: 'Test #1', repository_url: url)
+      Project.create!(name: 'Test #2', repository_url: url)
+      Project.create!(name: 'random name', repository_url: url)
+
+      Project.search('Test #').map(&:name).must_equal ['Test #1', 'Test #2']
+    end
+
+    it 'is case insensitive' do
+      Project.create!(name: 'PROJECT ONE', repository_url: url)
+      Project.create!(name: 'pRoJeCt TwO', repository_url: url)
+
+      Project.search('project').map(&:name).must_equal ['PROJECT ONE', 'pRoJeCt TwO']
+    end
+
+    it 'returns empty relation when no results are found' do
+      Project.create!(name: 'PROJECT ONE', repository_url: url)
+      Project.create!(name: 'pRoJeCt TwO', repository_url: url)
+
+      Project.search('no match').must_equal []
+    end
+  end
+
   describe '#docker_repo' do
     with_registries ["docker-registry.example.com/bar"]
 
