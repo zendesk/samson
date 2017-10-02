@@ -43,8 +43,7 @@ module Samson
     deprecated_url = ->(var) do
       url = ENV[var].presence
       return url if !url || url.start_with?('http')
-      warn "Using deprecated url without protocol for #{var}"
-      "https://#{url}"
+      raise "Using deprecated url without protocol for #{var}"
     end
 
     config.eager_load_paths << "#{config.root}/lib"
