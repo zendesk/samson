@@ -12,8 +12,10 @@ if ENV.fetch('DATADOG_ENABLE_APM', 'false') != 'false'
     default_controller_service: 'samson-rails-controller',
     default_cache_service: 'samson-cache',
     default_database_service: 'samson-mysql',
+    distributed_tracing_enabled: true,
     trace_agent_hostname: ENV.fetch('STATSD_HOST', 'localhost'),
     tags: {
+      env: ENV['RAILS_ENV'],
       project: 'samson'
     }
   }

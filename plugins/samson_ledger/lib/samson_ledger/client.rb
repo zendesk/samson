@@ -71,8 +71,15 @@ module SamsonLedger
         "<ul>#{results.join}</ul>" if results.any?
       end
 
+      def ledger_url
+        ENV.fetch("LEDGER_BASE_URL") + LEDGER_PATH
+      end
+
       def post(data)
-        connection = Faraday.new(url: ENV.fetch("LEDGER_BASE_URL") + LEDGER_PATH)
+        connection = Faraday.new(url: ledger_url) do |builder|
+          builder.use(:ddtrace, split_by_domain: true, distributed_tracing: true) if ENV.fetch('DATADOG_ENABLE_APM', 'false') != 'false'
+        end
+
         connection.post do |request|
           request.headers['Content-Type'] = "application/json"
           request.headers['Authorization'] = "Token token=#{ENV.fetch("LEDGER_TOKEN")}"
