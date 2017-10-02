@@ -27,6 +27,8 @@ if ENV.fetch('DATADOG_ENABLE_APM', 'false') != 'false'
 
   # Faraday instrumentation
   Datadog::Monkey.patch_module(:faraday)
+  pin = Datadog::Pin.get_from(::Faraday)
+  pin.service = 'samson'
 
   # SuckerPunch instrumentation
   require 'sucker_punch'
