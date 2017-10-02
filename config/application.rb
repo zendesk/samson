@@ -170,6 +170,9 @@ module Samson
     ActiveModelSerializers.config.adapter = :json
 
     config.active_support.deprecation = :raise
+
+    # avoid permission errors in production and cleanliness test failures in test
+    config.active_record.dump_schema_after_migration = Rails.env.development?
   end
 
   RELEASE_NUMBER = '\d+(:?\.\d+)*'
