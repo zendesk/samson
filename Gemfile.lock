@@ -1,3 +1,11 @@
+GIT
+  remote: https://github.com/DataDog/dd-trace-rb.git
+  revision: befb82f6e52763213d40491199b87492b999406d
+  tag: 0.9.0-RC1
+  specs:
+    ddtrace (0.8.2)
+      msgpack
+
 PATH
   remote: plugins/airbrake
   specs:
@@ -189,8 +197,6 @@ GEM
     crack (0.4.3)
       safe_yaml (~> 1.0.0)
     dalli (2.7.6)
-    ddtrace (0.8.2)
-      msgpack
     diffy (3.2.0)
     docker-api (1.33.6)
       excon (>= 0.38.0)
@@ -513,7 +519,7 @@ DEPENDENCIES
   concurrent-ruby
   connection_pool
   dalli
-  ddtrace
+  ddtrace!
   diffy
   docker-api
   dogstatsd-ruby
