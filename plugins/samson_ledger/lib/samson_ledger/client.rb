@@ -78,6 +78,7 @@ module SamsonLedger
       def post(data)
         connection = Faraday.new(url: ledger_url) do |builder|
           builder.use(:ddtrace, split_by_domain: true, distributed_tracing: true) if ENV.fetch('DATADOG_ENABLE_APM', 'false') != 'false'
+          builder.adapter Faraday.default_adapter
         end
 
         connection.post do |request|
