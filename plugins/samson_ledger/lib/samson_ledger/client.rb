@@ -25,6 +25,7 @@ module SamsonLedger
       private
 
       def post_event(deploy)
+        Rails.logger.debug("Posting result of deploy #{deploy.id} to #{ledger_url}")
         results = post(build_event(deploy))
         if results.status.to_i != 200
           Rails.logger.error("Ledger Client got a #{results.status} from #{ENV.fetch("LEDGER_BASE_URL")}")
