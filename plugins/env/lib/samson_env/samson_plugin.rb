@@ -36,6 +36,7 @@ module SamsonEnv
       groups.each do |suffix, data|
         generated_file = "#{base_file}#{suffix}"
         File.write(generated_file, generate_dotenv(data))
+        File.chmod(0600, generated_file)
       end
     end
 
