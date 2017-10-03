@@ -116,7 +116,21 @@ module Kubernetes
       end
 
       def request(method, *args)
-        client.send("#{method}_#{@template.fetch(:kind).underscore}", *args)
+        resource_name = @template.fetch(:kind).underscore
+        client_method = "#{method}_#{resource_name}"
+
+        if DatadogAPM.enabled?
+          Datadog.tracer.trace('k8s.api') do |span|
+            span.service = 'kubernetes'
+            span.resource = client_method
+            span.set_tag('kube_cluster', @deploy_group.kubernetes_cluster.name)
+            span.set_tag('kube_resource', resource_name)
+
+            client.send(client_method, *args)
+          end
+        else
+          client.send(client_method, *args)
+        end
       rescue
         message = $!.message.to_s
         if message.include?(" is invalid:") || message.include?(" no kind ")
