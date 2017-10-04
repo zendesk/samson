@@ -8,47 +8,25 @@ describe AccessRequestHelper do
 
   describe '#display_access_request_link?' do
     around { |t| enable_access_request &t }
+    before { stubs(current_user: users(:viewer)) }
 
-    describe 'feature enabled' do
-      describe 'not authed' do
-        let(:current_user) { nil }
-
-        it 'returns false' do
-          refute display_access_request_link?
-        end
-      end
-
-      describe 'viewer user' do
-        let(:current_user) { users(:viewer) }
-
-        it 'returns true for authorization_error' do
-          assert display_access_request_link?(:authorization_error)
-        end
-
-        it 'returns true for default params' do
-          assert display_access_request_link?
-        end
-
-        it 'returns false for other flash types' do
-          refute display_access_request_link?(:success)
-        end
-      end
-
-      describe 'super_admin user' do
-        let(:current_user) { users(:super_admin) }
-
-        it 'returns false for super_admin' do
-          refute display_access_request_link?
-        end
-      end
+    it 'returns true for underpriviledged user' do
+      assert display_access_request_link?
     end
 
-    describe 'feature disabled' do
-      with_env REQUEST_ACCESS_FEATURE: nil
+    it 'returns false not logged in' do
+      stubs(current_user: nil)
+      refute display_access_request_link?
+    end
 
-      it 'returns false for all flash types' do
-        refute display_access_request_link?(:authorization_error)
-        refute display_access_request_link?(:success)
+    it 'returns false for users that cannot get more permissions' do
+      stubs(current_user: users(:super_admin))
+      refute display_access_request_link?
+    end
+
+    it 'returns false when disabled' do
+      with_env REQUEST_ACCESS_FEATURE: nil do
+        refute display_access_request_link?
       end
     end
   end
