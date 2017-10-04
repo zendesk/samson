@@ -221,7 +221,8 @@ describe Kubernetes::DeployExecutor do
         worker_role.delete
         e = assert_raises(Samson::Hooks::UserError) { execute }
         e.message.must_equal(
-          "Role resque-worker for Pod 100 is not configured, but in repo at #{commit}"
+          "Role resque-worker for Pod 100 is not configured, but in repo at #{commit}. " \
+          "Remove it from the repo or configure via it the stage page."
         )
       end
 

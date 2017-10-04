@@ -301,9 +301,11 @@ module Kubernetes
           end
 
           if extra = (roles_present_in_repo - group_role_configs.map(&:kubernetes_role)).presence
+            roles = extra.map(&:name).join(', ')
             raise(
               Samson::Hooks::UserError,
-              "Role #{extra.map(&:name).join(', ')} for #{group.name} is not configured, but in repo at #{@job.commit}"
+              "Role #{roles} for #{group.name} is not configured, but in repo at #{@job.commit}. " \
+              "Remove it from the repo or configure via it the stage page."
             )
           end
 
