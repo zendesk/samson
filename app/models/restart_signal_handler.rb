@@ -18,7 +18,7 @@ class RestartSignalHandler
 
         # start all non-deploys jobs waiting for restart
         Job.non_deploy.pending.each do |job|
-          JobExecution.start_job(JobExecution.new(job.commit, job))
+          JobExecution.perform_later(JobExecution.new(job.commit, job))
         end
 
         # start all ready deploy jobs waiting for restart

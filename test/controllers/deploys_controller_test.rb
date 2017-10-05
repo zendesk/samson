@@ -48,16 +48,17 @@ describe DeploysController do
       end
 
       it "renders debug output with job/deploy and executing/queued" do
-        JobExecution.any_instance.expects(:on_finish).times(4)
-        JobExecution.any_instance.expects(:start)
-        with_job_execution do
-          # start 1 job and queue another
-          executing = Job.create!(project: project, command: "echo 1", user: user) { |j| j.id = 123321 }
+        with_blocked_jobs 2 do
+          # start 1 job and keep it executing
+          executing = Job.create!(project: project, command: "echo 1", user: user) { |j| j.id = 11111 }
           executing.stubs(:deploy).returns(deploy)
-          queued = Job.create!(project: project, command: "echo 1", user: user) { |j| j.id = 234432 }
-          JobExecution.start_job(JobExecution.new('master', executing), queue: :x)
-          JobExecution.start_job(JobExecution.new('master', queued), queue: :x)
-          JobExecution.executing.size.must_equal 1
+          JobExecution.perform_later(JobExecution.new('master', executing), queue: :x)
+
+          # queue 1 job after it
+          queued = Job.create!(project: project, command: "echo 1", user: user) { |j| j.id = 22222 }
+          JobExecution.perform_later(JobExecution.new('master', queued), queue: :x)
+
+          assert JobExecution.executing?(executing.id)
           assert JobExecution.queued?(queued.id)
 
           get :active, params: {debug: '1'}

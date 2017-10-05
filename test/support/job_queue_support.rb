@@ -7,9 +7,8 @@ ActiveSupport::TestCase.class_eval do
     JobExecution.enabled = true
     yield
   ensure
-    JobExecution.send(:job_queue).instance_variable_get(:@queue).clear
-    JobExecution.send(:job_queue).instance_variable_get(:@executing).clear
     JobExecution.enabled = false
+    JobExecution.send(:job_queue).clear
   end
 
   def self.with_job_execution
@@ -33,5 +32,22 @@ ActiveSupport::TestCase.class_eval do
     with_job_cancel_timeout 0.1
     with_project_on_remote_repo
     around { |t| ArMultiThreadedTransactionalTests.activate &t }
+  end
+
+  def wait_for_jobs_to_finish
+    sleep 0.01 until JobExecution.send(:job_queue).debug == [{}, {}]
+  end
+
+  def with_blocked_jobs(count)
+    with_job_execution do
+      begin
+        lock = Mutex.new.lock
+        JobExecution.any_instance.expects(:perform).times(count).with { lock.synchronize { true } }
+        yield
+      ensure
+        lock.unlock
+        wait_for_jobs_to_finish
+      end
+    end
   end
 end

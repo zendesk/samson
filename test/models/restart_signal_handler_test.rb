@@ -76,7 +76,7 @@ describe RestartSignalHandler do
 
     it "starts pending jobs" do
       jobs(:running_test).update_column(:status, 'pending')
-      JobExecution.expects(:start_job)
+      JobExecution.expects(:perform_later)
       RestartSignalHandler.after_restart
     end
   end

@@ -13,6 +13,7 @@ class JobExecution
   cattr_accessor(:cancel_timeout, instance_writer: false) { 15.seconds }
 
   attr_reader :output, :reference, :job, :viewers, :executor
+  attr_writer :thread
 
   delegate :id, to: :job
   delegate :pid, :pgid, to: :executor
@@ -30,7 +31,6 @@ class JobExecution
     @execution_block = block
     @cancelled = false
     @finished = false
-    @thread = nil
 
     @repository = @job.project.repository
     @repository.executor = @executor
@@ -50,8 +50,9 @@ class JobExecution
     end
   end
 
-  def start
-    @thread = Thread.new { ActiveRecord::Base.connection_pool.with_connection { run } }
+  def perform
+    raise "Thread needs to be assigned" unless @thread
+    ActiveRecord::Base.connection_pool.with_connection { run }
   end
 
   def wait
@@ -277,7 +278,7 @@ class JobExecution
       job_queue.dequeue(id)
     end
 
-    def start_job(*args)
+    def perform_later(*args)
       job_queue.add(*args)
     end
 

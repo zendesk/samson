@@ -266,7 +266,7 @@ describe Job do
     it "has a pid when running" do
       job.command = 'sleep 0.5'
       job_execution = JobExecution.new('master', job)
-      JobExecution.start_job(job_execution)
+      JobExecution.perform_later(job_execution)
       sleep 0.5
       job.pid.wont_be_nil
       job_execution.wait
@@ -282,7 +282,7 @@ describe Job do
 
     it "cancels an executing job" do
       ex = JobExecution.new('master', job) { sleep 10 }
-      JobExecution.start_job(ex)
+      JobExecution.perform_later(ex)
       sleep 0.1 # make the job spin up properly
 
       assert JobExecution.executing?(ex.id)
@@ -308,11 +308,11 @@ describe Job do
     it "cancels a queued job" do
       executing_job = project.jobs.create!(command: 'cat foo', user: user, project: project, commit: 'master')
       executing = JobExecution.new('master', executing_job) { sleep 10 }
-      JobExecution.start_job(executing, queue: 'foo')
+      JobExecution.perform_later(executing, queue: 'foo')
       assert JobExecution.executing?(executing.id)
 
       queued = JobExecution.new('master', job) { sleep 10 }
-      JobExecution.start_job(queued, queue: 'foo')
+      JobExecution.perform_later(queued, queue: 'foo')
       assert JobExecution.queued?(queued.id)
 
       sleep 0.1 # let jobs spin up
