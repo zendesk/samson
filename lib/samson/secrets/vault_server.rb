@@ -75,7 +75,7 @@ module Samson
             allowed_groups.include?(scope.fetch(:deploy_group_permalink))
         end
 
-        Samson::Parallelizer.map(keys.each_slice(100)) do |keys|
+        Samson::Parallelizer.map(keys.each_slice(100).to_a) do |keys|
           # create new clients to avoid any kind of blocking or race conditions
           other_client = other.create_client
           local_client = create_client
