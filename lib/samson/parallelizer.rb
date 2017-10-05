@@ -3,9 +3,11 @@ module Samson
   class Parallelizer
     class << self
       def map(elements, db: false)
+        raise ArgumentError, "argument must be arrayish" unless elements.respond_to?(:[])
+
         max = elements.size
         return [] if max.zero?
-        return [yield(elements.first)] if max == 1
+        return [yield(elements[0])] if max == 1
 
         mutex = Mutex.new
         current = -1
