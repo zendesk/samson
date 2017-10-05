@@ -361,7 +361,7 @@ module Kubernetes
       client = @doc.deploy_group.kubernetes_cluster.client
       secrets = client.get_secrets(namespace: template.dig_fetch(:metadata, :namespace))
       docker_credentials = secrets.
-        select { |secret| secret.type == "kubernetes.io/dockercfg" }.
+        select { |secret| ['kubernetes.io/dockercfg', 'kubernetes.io/dockerconfigjson'].include? secret.type }.
         map! { |c| {name: c.metadata.name} }
 
       return if docker_credentials.empty?

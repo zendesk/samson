@@ -82,7 +82,8 @@ describe Kubernetes::TemplateFiller do
         items: [
           {type: "kubernetes.io/dockercfg", metadata: {name: 'a'}},
           {type: "kubernetes.io/nope", metadata: {name: 'b'}},
-          {type: "kubernetes.io/dockercfg", metadata: {name: 'c'}}
+          {type: "kubernetes.io/dockerconfigjson", metadata: {name: 'c'}},
+          {type: "kubernetes.io/dockerNotValidConfigThing", metadata: {name: 'd'}}
         ]
       }
       stub_request(:get, "http://foobar.server/api/v1/namespaces/pod1/secrets").to_return(body: reply.to_json)
