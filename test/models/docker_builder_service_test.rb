@@ -23,7 +23,7 @@ describe DockerBuilderService do
 
   describe "#run" do
     def call(options = {})
-      JobExecution.expects(:start_job).capture(start_jobs)
+      JobExecution.expects(:perform_later).capture(perform_laters)
       service.run(options)
     end
 
@@ -31,11 +31,11 @@ describe DockerBuilderService do
       job.instance_variable_get(:@execution_block).call(job, Dir.mktmpdir)
     end
 
-    let(:start_jobs) { [] }
-    let(:job) { start_jobs[0][0] }
+    let(:perform_laters) { [] }
+    let(:job) { perform_laters[0][0] }
 
     it "skips when already running to combat racey parallel deploys/builds" do
-      JobExecution.expects(:start_job).never
+      JobExecution.expects(:perform_later).never
       Rails.cache.write("build-service-#{build.id}", true)
       service.run
     end

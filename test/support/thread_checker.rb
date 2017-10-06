@@ -15,7 +15,7 @@ ActiveSupport::TestCase.class_eval do
   end
 
   def wait_for_threads
-    sleep 0.1 while extra_threads.any?
+    sleep 0.01 while extra_threads.any?
   end
 
   def kill_extra_threads

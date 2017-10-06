@@ -102,7 +102,7 @@ class DockerBuilderService
       send_after_notifications
     end
 
-    JobExecution.start_job(@execution)
+    JobExecution.perform_later(@execution)
   end
 
   private

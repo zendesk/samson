@@ -186,14 +186,15 @@ describe JobExecution do
     assert_equal '[04:05:06] hello', last_line_of_output
   end
 
-  it 'removes the job from the queue' do
-    execution = JobExecution.start_job(JobExecution.new('master', job))
+  it 'removes the job from the queue when done' do
+    execution = JobExecution.new('master', job)
+    JobExecution.perform_later(execution)
 
-    JobExecution.find_by_id(job.id).wont_be_nil
+    JobExecution.find_by_id(execution.id).wont_be_nil
 
     execution.wait
 
-    JobExecution.find_by_id(job.id).must_be_nil
+    JobExecution.find_by_id(execution.id).must_be_nil
   end
 
   it 'calls on complete subscribers after finishing' do
@@ -228,8 +229,8 @@ describe JobExecution do
     called_subscriber = false
 
     execution = JobExecution.new('master', job)
-    execution.start
     execution.on_finish { called_subscriber = true }
+    execution.thread = Thread.new { execution.perform }
     execution.cancel
 
     assert called_subscriber
@@ -276,12 +277,12 @@ describe JobExecution do
   it 'does not add the job to the queue when JobExecution is disabled' do
     JobExecution.enabled = false
 
-    job_execution = JobExecution.start_job(JobExecution.new('master', job))
-    job_execution.wont_be_nil
+    execution = JobExecution.new('master', job)
+    JobExecution.perform_later(execution)
 
-    JobExecution.find_by_id(job.id).must_be_nil
-    JobExecution.queued?(job.id).must_be_nil
-    JobExecution.executing?(job.id).must_be_nil
+    JobExecution.find_by_id(execution.id).must_be_nil
+    JobExecution.queued?(execution.id).must_be_nil
+    JobExecution.executing?(execution.id).must_be_nil
   end
 
   it 'can run with a block' do
@@ -311,7 +312,11 @@ describe JobExecution do
     end
   end
 
-  describe "#start!" do
+  describe "#perform" do
+    def perform
+      execution.thread = Thread.new { execution.perform }
+    end
+
     def with_hidden_errors
       Rails.application.config.consider_all_requests_local = false
       yield
@@ -323,7 +328,7 @@ describe JobExecution do
     let(:model_file) { 'app/models/job_execution.rb' }
 
     it "runs a job" do
-      execution.start
+      perform
       execution.wait
       execution.output.to_s.must_include "cat foo"
       job.reload.output.must_include "cat foo"
@@ -332,18 +337,18 @@ describe JobExecution do
     it "records exceptions to output" do
       Airbrake.expects(:notify)
       job.expects(:running!).raises("Oh boy")
-      execution.start
+      perform
       execution.wait
       execution.output.to_s.must_include "JobExecution failed: Oh boy"
       job.reload.output.must_include "JobExecution failed: Oh boy" # shows error message
       job.reload.output.must_include model_file # shows important backtrace
-      job.reload.output.wont_include 'test/models/job_execution_test.rb' # hides unimportant backtrace
+      job.reload.output.wont_include '/gems/' # hides unimportant backtrace
     end
 
     it "does not spam airbrake on user erorrs" do
       Airbrake.expects(:notify).never
       job.expects(:running!).raises(Samson::Hooks::UserError, "Oh boy")
-      execution.start
+      perform
       execution.wait
       execution.output.to_s.must_include "JobExecution failed: Oh boy"
     end
@@ -352,7 +357,7 @@ describe JobExecution do
       with_hidden_errors do
         Airbrake.expects(:notify)
         job.expects(:running!).raises("Oh boy")
-        execution.start
+        perform
         execution.wait
         execution.output.to_s.must_include "JobExecution failed: Oh boy"
         execution.output.to_s.wont_include model_file
@@ -364,7 +369,7 @@ describe JobExecution do
         Airbrake.expects(:notify_sync).returns('id' => "12345")
         Airbrake.expects(:user_information).returns('href="http://foo.com/{{error_id}}"')
         job.expects(:running!).raises("Oh boy")
-        execution.start
+        perform
         execution.wait
         execution.output.to_s.must_include "JobExecution failed: Oh boy"
         execution.output.to_s.must_include "http://foo.com/12345"
@@ -375,7 +380,7 @@ describe JobExecution do
       with_hidden_errors do
         Airbrake.expects(:notify_sync).returns({})
         job.expects(:running!).raises("Oh boy")
-        execution.start
+        perform
         execution.wait
         execution.output.to_s.must_include "JobExecution failed: Oh boy"
         execution.output.to_s.must_include "Airbrake did not return an error id"
@@ -384,6 +389,10 @@ describe JobExecution do
   end
 
   describe "#cancel" do
+    def perform
+      execution.thread = Thread.new { execution.perform }
+    end
+
     with_job_cancel_timeout 0.1
 
     let(:lock) { Mutex.new }
@@ -396,7 +405,7 @@ describe JobExecution do
     end
 
     it "stops the execution with interrupt" do
-      execution.start
+      perform
       TerminalExecutor.any_instance.expects(:cancel).with do |signal|
         lock.unlock # pretend the command finished
         signal.must_equal 'INT'
@@ -406,7 +415,7 @@ describe JobExecution do
     end
 
     it "stops the execution with kill if job did not respond to interrupt" do
-      execution.start
+      perform
       TerminalExecutor.any_instance.expects(:cancel).twice.with do |signal|
         lock.unlock if signal == 'KILL' # pretend the command finished
         ['KILL', 'INT'].must_include(signal)
@@ -418,7 +427,7 @@ describe JobExecution do
     it "calls on_finish hooks once when killing stuck thread" do
       called = []
       execution.on_finish { called << 1 }
-      execution.start
+      perform
       execution.cancel
       called.must_equal [1]
     end
@@ -426,7 +435,7 @@ describe JobExecution do
     it "calls on_finish hooks once when stopping execution with INT" do
       called = []
       execution.on_finish { called << 1 }
-      execution.start
+      perform
       TerminalExecutor.any_instance.expects(:cancel).with do |signal|
         lock.unlock # pretend the command finished
         signal.must_equal 'INT'
@@ -441,7 +450,7 @@ describe JobExecution do
     it "returns current pid" do
       job.command = 'sleep 0.5'
       execution = JobExecution.new('master', job)
-      JobExecution.start_job(execution)
+      JobExecution.perform_later(execution)
       sleep 0.4
       execution.pid.wont_equal nil
       execution.wait
