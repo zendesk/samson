@@ -15,6 +15,11 @@ describe "cleanliness" do
   end
 
   let(:all_tests) { Dir["{,plugins/*/}test/**/*_test.rb"] }
+  let(:controllers) do
+    controllers = Dir["{,plugins/*/}app/controllers/**/*.rb"]
+    controllers.size.must_be :>, 50
+    controllers
+  end
 
   it "does not have boolean limit 1 in schema since this breaks mysql" do
     File.read("db/schema.rb").wont_match /\st\.boolean.*limit: 1/
@@ -171,8 +176,6 @@ describe "cleanliness" do
   end
 
   it "uses whitelists for authorization so new actions ar restricted by default" do
-    controllers = Dir["{,plugins/*/}app/controllers/**/*.rb"]
-    controllers.size.must_be :>, 50
     assert_content controllers do |content|
       if content =~ /before_action\s+:authorize_.*only:/
         "do not use authorization filters with :only, use :except"
@@ -226,6 +229,14 @@ describe "cleanliness" do
     assert_content Dir["{,plugins/*/}db/migrate/*.rb"] do |content|
       if content =~ /^\s*puts\b/
         "use `write` instead of `puts` to avoid printing outputs when migrations are silenced"
+      end
+    end
+  end
+
+  it "does not use json with a list since that includes associations" do
+    assert_content controllers do |content|
+      if content =~ /format.json\s+(\{|do)\s+render\s+json:\s@\S+s\s/m
+        "do not use render json with a list, it will include associations"
       end
     end
   end

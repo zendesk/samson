@@ -12,7 +12,7 @@ class Kubernetes::RolesController < ApplicationController
     @roles = ::Kubernetes::Role.not_deleted.where(project: current_project).order('name desc').to_a
     respond_to do |format|
       format.html
-      format.json { render json: @roles, root: false }
+      format.json { render json: @roles.as_json }
     end
   end
 
