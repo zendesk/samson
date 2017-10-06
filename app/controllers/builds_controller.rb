@@ -15,7 +15,7 @@ class BuildsController < ApplicationController
 
     respond_to do |format|
       format.html
-      format.json { render json: @builds }
+      format.json { render json: {builds: @builds} }
     end
   end
 

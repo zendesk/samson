@@ -34,7 +34,7 @@ class DeploysController < ApplicationController
 
     respond_to do |format|
       format.json do
-        render json: @deploys
+        render json: {deploys: @deploys}
       end
       format.csv do
         datetime = Time.now.strftime "%Y%m%d_%H%M"

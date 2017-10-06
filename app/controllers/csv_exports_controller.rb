@@ -12,7 +12,7 @@ class CsvExportsController < ApplicationController
     @csv_exports = CsvExport.where(user_id: current_user.id)
     respond_to do |format|
       format.html
-      format.json { render json: @csv_exports }
+      format.json { render json: {csv_exports: @csv_exports} }
     end
   end
 

@@ -55,6 +55,12 @@ describe BuildsController do
         get :index, params: {project_id: project.to_param, search: {git_sha: build.git_sha}}
         assigns(:builds).must_equal [build]
       end
+
+      it 'renders json without associations' do
+        get :index, params: {project_id: project.to_param}, format: :json
+        json = JSON.parse(@response.body)
+        refute json['builds'][0].key?('project')
+      end
     end
 
     describe '#show' do
