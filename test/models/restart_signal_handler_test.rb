@@ -62,7 +62,9 @@ describe RestartSignalHandler do
   end
 
   describe ".after_restart" do
-    after { JobExecution.enabled = false }
+    before do
+      csv_exports(:pending).update_column(:status, 'started')
+    end
 
     it "turns job-execution on" do
       RestartSignalHandler.after_restart
@@ -76,6 +78,12 @@ describe RestartSignalHandler do
 
     it "starts pending jobs" do
       jobs(:running_test).update_column(:status, 'pending')
+      JobExecution.expects(:perform_later)
+      RestartSignalHandler.after_restart
+    end
+
+    it "starts pending csv_export_jobs" do
+      csv_exports(:pending).update_column(:status, 'pending')
       JobExecution.expects(:perform_later)
       RestartSignalHandler.after_restart
     end

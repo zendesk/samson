@@ -55,8 +55,6 @@ gem 'validates_lengths_from_database'
 # treat included plugins like gems
 Dir[File.join(Bundler.root, 'plugins/*/')].each { |f| gemspec path: f }
 
-gem 'sucker_punch'
-
 group :mysql2 do
   gem 'mysql2'
 end

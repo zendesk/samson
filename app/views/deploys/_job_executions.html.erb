@@ -14,16 +14,26 @@
     <% job_executions.each do |queue, job_exs| %>
       <tr><td colspan="6">Queue <%= queue %></td></tr>
       <% Array(job_exs).each do |job_ex| %>
-        <% job = job_ex.job %>
-        <% if deploy = job.deploy %>
-          <%= render deploy %>
+        <% if job_ex.is_a?(JobExecution) %>
+          <% job = job_ex.job %>
+          <% if deploy = job.deploy %>
+            <%= render deploy %>
+          <% else %>
+            <tr>
+              <td><%= link_to_resource job.project %></td>
+              <td><%= render_time(job.created_at) %></td>
+              <td><%= link_to "#{job.summary}", [job.project, job] %></td>
+              <td></td>
+              <td><%= job_status_badge job %></td>
+            </tr>
+          <% end %>
         <% else %>
           <tr>
-            <td><%= link_to_resource job.project %></td>
-            <td><%= render_time(job.created_at) %></td>
-            <td><%= link_to "#{job.summary}", [job.project, job] %></td>
+            <td><%= job_ex.class %>: <%= job_ex.id %></td>
             <td></td>
-            <td><%= job_status_badge job %></td>
+            <td></td>
+            <td></td>
+            <td></td>
           </tr>
         <% end %>
       <% end %>

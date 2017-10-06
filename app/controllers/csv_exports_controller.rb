@@ -48,7 +48,7 @@ class CsvExportsController < ApplicationController
   def create
     filters = deploy_filter
     csv_export = CsvExport.create!(user: current_user, filters: filters)
-    CsvExportJob.perform_later(csv_export)
+    JobExecution.perform_later CsvExportJob.new(csv_export)
     redirect_to csv_export
   end
 

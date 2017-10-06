@@ -1,13 +1,22 @@
 # frozen_string_literal: true
 require 'csv'
 
-class CsvExportJob < ActiveJob::Base
-  queue_as :csv_jobs
+class CsvExportJob
+  attr_writer :thread # assigned by job_queue, but not used
 
-  def perform(csv_export)
+  def initialize(csv_export)
+    @csv_export = csv_export
+  end
+
+  # used by job_queue
+  def id
+    "csv-export-#{@csv_export.id}"
+  end
+
+  def perform
     ActiveRecord::Base.connection_pool.with_connection do
-      create_export_folder(csv_export)
-      generate_csv(csv_export)
+      create_export_folder(@csv_export)
+      generate_csv(@csv_export)
       cleanup_downloaded
     end
   end
