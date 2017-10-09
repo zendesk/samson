@@ -3,15 +3,19 @@ require 'soft_deletion'
 
 module Kubernetes
   class Role < ActiveRecord::Base
+    # https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#meaning-of-memory
+    # TL;DR:
+    # You can express memory as a plain integer or as a fixed-point integer using one of these
+    # suffixes: E, P, T, G, M, K. You can also use the power-of-two equivalents: Ei, Pi, Ti, Gi, Mi, Ki.
     KUBE_RESOURCE_VALUES = {
       "" => 1,
       'm' => 0.001,
-      'K' => 1024,
-      'Ki' => 1000,
-      'M' => 1024**2,
-      'Mi' => 1000**2,
-      'G' => 1024**3,
-      'Gi' => 1000**3
+      'K' => 1000,
+      'Ki' => 1024,
+      'M' => 1000**2,
+      'Mi' => 1024**2,
+      'G' => 1000**3,
+      'Gi' => 1024**3
     }.freeze
 
     self.table_name = 'kubernetes_roles'
