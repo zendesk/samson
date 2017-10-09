@@ -256,8 +256,8 @@ module Kubernetes
 
     def set_resource_usage
       container[:resources] = {
-        requests: { cpu: @doc.requests_cpu.to_f, memory: "#{@doc.requests_memory}Mi" },
-        limits: { cpu: @doc.limits_cpu.to_f, memory: "#{@doc.limits_memory}Mi" }
+        requests: { cpu: @doc.requests_cpu.to_f, memory: "#{@doc.requests_memory}M" },
+        limits: { cpu: @doc.limits_cpu.to_f, memory: "#{@doc.limits_memory}M" }
       }
     end
 
