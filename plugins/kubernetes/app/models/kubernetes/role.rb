@@ -3,15 +3,19 @@ require 'soft_deletion'
 
 module Kubernetes
   class Role < ActiveRecord::Base
+    # https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#meaning-of-memory
+    # TL;DR:
+    # You can express memory as a plain integer or as a fixed-point integer using one of these
+    # suffixes: E, P, T, G, M, K. You can also use the power-of-two equivalents: Ei, Pi, Ti, Gi, Mi, Ki.
     KUBE_RESOURCE_VALUES = {
       "" => 1,
       'm' => 0.001,
-      'K' => 1024,
-      'Ki' => 1000,
-      'M' => 1024**2,
-      'Mi' => 1000**2,
-      'G' => 1024**3,
-      'Gi' => 1000**3
+      'K' => 1000,
+      'Ki' => 1024,
+      'M' => 1000**2,
+      'Mi' => 1024**2,
+      'G' => 1000**3,
+      'Gi' => 1024**3
     }.freeze
 
     self.table_name = 'kubernetes_roles'
@@ -103,12 +107,12 @@ module Kubernetes
       return unless limits = spec.dig(:containers, 0, :resources, :limits)
       return unless limits_cpu = parse_resource_value(limits[:cpu])
       return unless limits_memory = parse_resource_value(limits[:memory])
-      limits_memory /= 1024**2 # we store megabyte
+      limits_memory /= 1000**2 # we store megabyte
 
       if requests = spec.dig(:containers, 0, :resources, :requests)
         requests_cpu = parse_resource_value(requests[:cpu])
         if requests_memory = parse_resource_value(requests[:memory])
-          requests_memory /= 1024**2 # we store megabyte
+          requests_memory /= 1000**2 # we store megabyte
         end
       end
 

@@ -311,11 +311,11 @@ describe Kubernetes::TemplateFiller do
         container.fetch(:resources).must_equal(
           requests: {
             cpu: 0.5,
-            memory: "50Mi"
+            memory: "50M"
           },
           limits: {
             cpu: 1.0,
-            memory: "100Mi"
+            memory: "100M"
           }
         )
       end
