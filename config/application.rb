@@ -142,7 +142,6 @@ module Samson
     config.action_controller.action_on_unpermitted_parameters = :raise
     config.action_view.default_form_builder = 'Samson::FormBuilder' # string so we can auto-reload it
 
-    config.active_job.queue_adapter = :sucker_punch
     config.samson.export_job = ActiveSupport::OrderedOptions.new
     config.samson.export_job.downloaded_age = Integer(ENV['EXPORT_JOB_DOWNLOADED_AGE'] || 12.hours)
     config.samson.export_job.max_age = Integer(ENV['EXPORT_JOB_MAX_AGE'] || 1.day)

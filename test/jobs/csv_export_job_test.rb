@@ -9,8 +9,11 @@ describe CsvExportJob do
   let(:deploy_export_job) { csv_exports(:pending) }
 
   it "enqueues properly" do
-    assert_enqueued_jobs 1 do
-      CsvExportJob.perform_later(deploy_export_job)
+    with_job_execution do
+      job = CsvExportJob.new(deploy_export_job)
+      JobExecution.perform_later(job)
+      assert JobExecution.executing?(job.id)
+      wait_for_jobs_to_finish
     end
   end
 
@@ -19,7 +22,7 @@ describe CsvExportJob do
     old.update_attributes(created_at: DateTime.now - 1.year, updated_at: DateTime.now - 1.year)
     old_id = old.id
 
-    CsvExportJob.perform_now(deploy_export_job)
+    CsvExportJob.new(deploy_export_job).perform
     assert_raises(ActiveRecord::RecordNotFound) { CsvExport.find(old_id) }
   end
 
@@ -32,7 +35,7 @@ describe CsvExportJob do
 
     it "sets :failed" do
       Airbrake.expects(:notify)
-      CsvExportJob.perform_now(deploy_export_job)
+      CsvExportJob.new(deploy_export_job).perform
       assert deploy_export_job.status?('failed'), "Not Finished"
     end
   end
@@ -41,7 +44,7 @@ describe CsvExportJob do
     after { deploy_export_job.delete_file }
 
     it "finishes with file" do
-      CsvExportJob.perform_now(deploy_export_job)
+      CsvExportJob.new(deploy_export_job).perform
       job = CsvExport.find(deploy_export_job.id)
       assert job.status?('finished'), "Not Finished"
       assert File.exist?(job.path_file), "File Not exist"
@@ -143,7 +146,7 @@ describe CsvExportJob do
 
       it "sends mail" do
         assert_difference('ActionMailer::Base.deliveries.size', 1) do
-          CsvExportJob.perform_now(deploy_export_job)
+          CsvExportJob.new(deploy_export_job).perform
         end
       end
 
@@ -151,7 +154,7 @@ describe CsvExportJob do
         deploy_export_job.update_attribute('user_id', -999)
         assert_difference('ActionMailer::Base.deliveries.size', 0) do
           assert_raises ActiveRecord::RecordInvalid do
-            CsvExportJob.perform_now(deploy_export_job)
+            CsvExportJob.new(deploy_export_job).perform
             assert deploy_export_job.email.nil?
           end
         end
@@ -169,7 +172,7 @@ describe CsvExportJob do
 
   def completeness_test(filters, expected_count)
     deploy_export_job.update_attribute(:filters, filters)
-    CsvExportJob.perform_now(deploy_export_job)
+    CsvExportJob.new(deploy_export_job).perform
     filename = deploy_export_job.reload.path_file
 
     csv_response = CSV.read(filename)

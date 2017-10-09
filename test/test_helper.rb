@@ -22,8 +22,6 @@ require 'maxitest/timeout'
 require 'webmock/minitest'
 require 'mocha/setup'
 
-require 'sucker_punch/testing/inline'
-
 # Use ActiveSupport::TestCase for everything that was not matched before
 MiniTest::Spec::DSL::TYPES[-1] = [//, ActiveSupport::TestCase]
 

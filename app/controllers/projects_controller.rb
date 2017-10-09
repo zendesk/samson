@@ -38,7 +38,7 @@ class ProjectsController < ApplicationController
 
     if @project.save
       if Rails.application.config.samson.project_created_email
-        ProjectMailer.created_email(@current_user, @project).deliver_later
+        ProjectMailer.created_email(@current_user, @project).deliver_now
       end
       redirect_to @project
       Rails.logger.info("#{@current_user.name_and_email} created a new project #{@project.to_param}")
@@ -69,7 +69,7 @@ class ProjectsController < ApplicationController
     @project.soft_delete(validate: false)
 
     if Rails.application.config.samson.project_deleted_email
-      ProjectMailer.deleted_email(@current_user, @project).deliver_later
+      ProjectMailer.deleted_email(@current_user, @project).deliver_now
     end
     redirect_to projects_path, notice: "Project removed."
   end

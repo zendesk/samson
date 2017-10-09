@@ -209,7 +209,7 @@ describe CsvExportsController do
           if [:finished, :downloaded].include?(state) # Only run these tests if ready
             describe "as csv with file" do
               before do
-                CsvExportJob.perform_now(export)
+                CsvExportJob.new(export).perform
                 export.update_attribute("status", state)
               end
 

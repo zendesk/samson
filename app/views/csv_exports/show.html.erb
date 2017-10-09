@@ -9,7 +9,7 @@
     <% elsif @csv_export.status? :failed %>
       <p>Your report has failed.  Please contact an administrator to check the logs export <%= @csv_export.id %>.</p>
     <% else %>
-      <p >Your report is being prepared.  You will receive an email when your report is ready for download or you can refresh this page.</p>
+      <p>Your report is being prepared.  You will receive an email when your report is ready for download or you can refresh this page.</p>
       <p>If you do not receive an email in a couple of hours, please try again.</p>
     <% end %>
   </div>

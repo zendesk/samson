@@ -21,6 +21,11 @@ class RestartSignalHandler
           JobExecution.perform_later(JobExecution.new(job.commit, job))
         end
 
+        # start all csv-exports jobs waiting for restart
+        CsvExport.where(status: 'pending').each do |export|
+          JobExecution.perform_later(CsvExportJob.new(export))
+        end
+
         # start all ready deploy jobs waiting for restart
         Deploy.start_deploys_waiting_for_restart!
       end
