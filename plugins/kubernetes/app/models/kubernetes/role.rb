@@ -107,12 +107,12 @@ module Kubernetes
       return unless limits = spec.dig(:containers, 0, :resources, :limits)
       return unless limits_cpu = parse_resource_value(limits[:cpu])
       return unless limits_memory = parse_resource_value(limits[:memory])
-      limits_memory /= 1024**2 # we store megabyte
+      limits_memory /= 1000**2 # we store megabyte
 
       if requests = spec.dig(:containers, 0, :resources, :requests)
         requests_cpu = parse_resource_value(requests[:cpu])
         if requests_memory = parse_resource_value(requests[:memory])
-          requests_memory /= 1024**2 # we store megabyte
+          requests_memory /= 1000**2 # we store megabyte
         end
       end
 

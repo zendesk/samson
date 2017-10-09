@@ -123,7 +123,7 @@ describe Kubernetes::DeployGroupRole do
       it "fills in missing roles" do
         seed!.must_equal []
         created_role.limits_cpu.must_equal 0.5
-        created_role.limits_memory.must_equal 95
+        created_role.limits_memory.must_equal 100
         created_role.replicas.must_equal 2
       end
 
