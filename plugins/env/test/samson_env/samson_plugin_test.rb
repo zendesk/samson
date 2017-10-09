@@ -44,7 +44,6 @@ describe SamsonEnv do
         it "writes to .env" do
           fire
           File.read(".env").must_equal "HELLO=\"world\"\nWORLD=\"hello\"\n"
-          ("%o" % File.stat(".env").mode).must_equal "100600"
         end
       end
 
@@ -74,7 +73,6 @@ describe SamsonEnv do
     it "writes to .env" do
       fire
       File.read(".env").must_equal "HELLO=\"world\"\nWORLD=\"hello\"\n"
-      ("%o" % File.stat(".env").mode).must_equal "100600"
     end
   end
 
