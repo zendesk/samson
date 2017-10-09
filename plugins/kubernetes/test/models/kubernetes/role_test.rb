@@ -28,7 +28,7 @@ describe Kubernetes::Role do
     {
       kind: 'Pod',
       metadata: {name: 'foo', labels: {role: 'migrate', project: 'bar'}},
-      spec: {containers: [{name: 'foo', resources: {limits: {cpu: '0.5', memory: '300Mi'}}}]}
+      spec: {containers: [{name: 'foo', resources: {limits: {cpu: '0.5', memory: '300M'}}}]}
     }
   end
   let(:config_content) do
@@ -286,9 +286,9 @@ describe Kubernetes::Role do
       role.defaults.must_equal(
         replicas: 2,
         requests_cpu: 0.25,
-        requests_memory: 48,
+        requests_memory: 50,
         limits_cpu: 0.5,
-        limits_memory: 95
+        limits_memory: 100
       )
     end
 
@@ -297,9 +297,9 @@ describe Kubernetes::Role do
       role.defaults.must_equal(
         replicas: 0,
         requests_cpu: 0.5,
-        requests_memory: 286,
+        requests_memory: 300,
         limits_cpu: 0.5,
-        limits_memory: 286
+        limits_memory: 300
       )
     end
 
@@ -324,9 +324,9 @@ describe Kubernetes::Role do
       role.defaults.must_equal(
         replicas: 2,
         requests_cpu: 0.25,
-        requests_memory: 48,
+        requests_memory: 50,
         limits_cpu: 0.5,
-        limits_memory: 95
+        limits_memory: 100
       )
     end
 
@@ -344,18 +344,18 @@ describe Kubernetes::Role do
       '10000Ki' => 10,
       '10M' => 10,
       '10Mi' => 10,
-      '10G' => 10 * 1024,
-      '10.5G' => 10.5 * 1024,
+      '10G' => 10 * 1000,
+      '10.5G' => 10.5 * 1000,
       '10Gi' => 9537,
     }.each do |ram, expected|
       it "converts memory units #{ram}" do
-        assert config_content_yml.sub!('100Mi', ram)
+        assert config_content_yml.sub!('100M', ram)
         role.defaults.try(:[], :limits_memory).must_equal expected
       end
     end
 
     it "ignores unknown units" do
-      assert config_content_yml.sub!('100Mi', '200T')
+      assert config_content_yml.sub!('100M', '200T')
       role.defaults.must_be_nil
     end
 
