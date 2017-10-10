@@ -182,6 +182,14 @@ describe BuildsController do
             refute flash[:alert]
           end
         end
+
+        it "creates when external_id was given" do
+          assert_difference 'Build.count', +1 do
+            create git_sha: 'a' * 40, external_id: 'foobar'
+            assert_redirected_to project_build_path(project, Build.last)
+            refute flash[:alert]
+          end
+        end
       end
 
       describe "with error" do
@@ -261,7 +269,7 @@ describe BuildsController do
           Build.any_instance.expects(:update_attributes).returns false
           update
           assert_response :unprocessable_entity
-          response.body.must_equal "{}"
+          response.body.must_equal "{\"status\":422,\"error\":{}}"
         end
       end
     end

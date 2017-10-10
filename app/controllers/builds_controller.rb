@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 class BuildsController < ApplicationController
+  EXTERNAL_BUILD_ATTRIBUTES = [:external_id, :docker_repo_digest].freeze
   include CurrentProject
 
   before_action :authorize_resource!
@@ -34,7 +35,7 @@ class BuildsController < ApplicationController
 
     saved = @build.save
 
-    start_docker_build if saved && !@build.docker_repo_digest && @build.external_id.blank?
+    start_docker_build if saved && EXTERNAL_BUILD_ATTRIBUTES.all? { |e| @build.public_send(e).blank? }
     respond_to_save saved, :created, :new
   end
 
@@ -124,6 +125,6 @@ class BuildsController < ApplicationController
   end
 
   def registering_external_build?
-    action_name == "create" && params.dig(:build, :docker_repo_digest).present?
+    action_name == "create" && EXTERNAL_BUILD_ATTRIBUTES.any? { |e| params.dig(:build, e).present? }
   end
 end
