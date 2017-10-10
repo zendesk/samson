@@ -109,7 +109,11 @@ class BuildsController < ApplicationController
       end
 
       format.json do
-        render json: {}, status: (saved ? status : :unprocessable_entity)
+        if saved
+          render json: {}, status: status
+        else
+          render_json_error 422, @build.errors # same as json_exceptions.rb
+        end
       end
     end
   end
