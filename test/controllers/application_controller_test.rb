@@ -116,16 +116,14 @@ describe "ApplicationController Integration" do
       end
 
       it 'cannot POST without authenticity_token' do
-        assert_raises ActionController::InvalidAuthenticityToken do
-          post '/api/locks', params: post_params
-        end
+        post '/api/locks', params: post_params
+        assert_response :unauthorized
       end
     end
 
     it 'cannot POST without authenticity_token when not logged in' do
-      assert_raises ActionController::InvalidAuthenticityToken do
-        post '/api/locks', params: post_params
-      end
+      post '/api/locks', params: post_params
+      assert_response :unauthorized
     end
   end
 end

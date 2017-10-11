@@ -159,15 +159,15 @@ class ActiveSupport::TestCase
   end
 
   def self.with_forgery_protection
-    around do |test|
-      begin
-        old = ActionController::Base.allow_forgery_protection
-        ActionController::Base.allow_forgery_protection = true
-        test.call
-      ensure
-        ActionController::Base.allow_forgery_protection = old
-      end
-    end
+    around { |test| with_forgery_protection(&test) }
+  end
+
+  def with_forgery_protection
+    old = ActionController::Base.allow_forgery_protection
+    ActionController::Base.allow_forgery_protection = true
+    yield
+  ensure
+    ActionController::Base.allow_forgery_protection = old
   end
 
   def self.with_registries(registries)
