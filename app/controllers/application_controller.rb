@@ -11,6 +11,7 @@ class ApplicationController < ActionController::Base
 
   include CurrentUser # must be after protect_from_forgery, so that authenticate! is called
   include JsonExceptions
+  include JsonRenderer
 
   protected
 

@@ -8,7 +8,7 @@ class UsersController < ApplicationController
     @users = User.search_by_criteria(params)
     respond_to do |format|
       format.html
-      format.json { render json: {users: @users} }
+      format.json { render_json_with_includes :users, @users, allowed: [:user_project_roles] }
       format.csv do
         redirect_to(new_csv_export_path(format: :csv, type: :users))
       end

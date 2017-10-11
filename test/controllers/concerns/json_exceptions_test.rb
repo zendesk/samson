@@ -3,7 +3,7 @@ require_relative '../../test_helper'
 
 SingleCov.covered!
 
-describe "Api::BaseController Integration" do
+describe "JsonExceptions Integration" do
   describe "errors" do
     let(:user) { users(:super_admin) }
     let(:token) { Doorkeeper::AccessToken.create!(resource_owner_id: user.id, scopes: 'default') }
