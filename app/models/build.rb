@@ -9,6 +9,8 @@ class Build < ActiveRecord::Base
   belongs_to :creator, class_name: 'User', foreign_key: 'created_by'
   has_many :deploys
 
+  before_validation :nil_out_blank_docker_repo_digest
+
   validates :project, presence: true
   validates :git_sha, format: SHA1_REGEX, allow_nil: true, uniqueness: {scope: :dockerfile}
   validates :docker_image_id, format: SHA256_REGEX, allow_nil: true
@@ -62,6 +64,10 @@ class Build < ActiveRecord::Base
   end
 
   private
+
+  def nil_out_blank_docker_repo_digest
+    self.docker_repo_digest = docker_repo_digest.presence if docker_repo_digest_changed?
+  end
 
   def validate_docker_repo_digest_matches_git_sha
     return if git_sha.present? || docker_repo_digest.blank?
