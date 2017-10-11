@@ -70,6 +70,7 @@ describe Build do
 
     it 'validates docker digest' do
       assert_valid(valid_build(docker_repo_digest: repo_digest, git_sha: 'a' * 40))
+      assert_valid(valid_build(docker_repo_digest: "", git_sha: 'a' * 40))
       multi_slash = "my-registry.zende.sk/samson/another_project@sha256:#{example_sha}"
       assert_valid(valid_build(docker_repo_digest: multi_slash, git_sha: 'a' * 40))
       assert_valid(valid_build(docker_repo_digest: "ruby@sha256:#{"a" * 64}", git_sha: 'a' * 40))
