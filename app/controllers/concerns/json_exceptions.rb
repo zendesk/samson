@@ -22,6 +22,12 @@ module JsonExceptions
       details = exception.params.each_with_object({}) { |p, h| h[p] = ["is not permitted"] }
       render_json_error 400, details
     end
+
+    # renders as {} 422 otherwise which is super unhelpful
+    base.rescue_from ActionController::InvalidAuthenticityToken do
+      raise unless request.format.json?
+      render_json_error 401, "Unauthorized"
+    end
   end
 
   private

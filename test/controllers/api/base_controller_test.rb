@@ -8,17 +8,11 @@ describe Api::BaseController do
     def test_render
       head :ok
     end
-
-    private
-
-    # turned off in test ... but we want to simulate it
-    def allow_forgery_protection
-      true
-    end
   end
 
   tests ApiBaseTestController
   use_test_routes ApiBaseTestController
+  with_forgery_protection
 
   before { @controller.stubs(:store_requested_oauth_scope) }
 

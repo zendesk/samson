@@ -57,5 +57,12 @@ describe "JsonExceptions Integration" do
       delete '/api/locks/1.json', params: {id: 1}, headers: headers
       assert_json 500, "Internal Server Error"
     end
+
+    it "presents csrf errors" do
+      with_forgery_protection do
+        delete '/api/locks/1.json', params: {id: 1}
+        assert_json 401, "Unauthorized"
+      end
+    end
   end
 end
