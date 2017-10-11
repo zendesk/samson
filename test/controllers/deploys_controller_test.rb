@@ -282,6 +282,17 @@ describe DeploysController do
         assigns[:deploys].map(&:stage).map(&:name).uniq.must_equal ["Production"]
       end
 
+      it "filters by updated_at (finished_at)" do
+        t = Time.now - 1.day
+        expected = Deploy.last(3)
+        expected.each_with_index { |d, i| d.update_column :updated_at, (t + i).to_s(:db) }
+
+        get :index, params: {search: {updated_at: [t.to_s(:db), (t + 2).to_s(:db)]}}, format: "json"
+
+        assert_response :ok
+        assigns[:deploys].map(&:id).sort.must_equal expected.map(&:id).sort
+      end
+
       it "fails when filtering for unknown" do
         e = assert_raises RuntimeError do
           get :index, params: {search: {group: "Blob-#{environments(:production).id}"}}, format: "json"
