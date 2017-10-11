@@ -21,7 +21,7 @@ ActiveRecord::Schema.define(version: 20170929181901) do
     t.string "user_type"
     t.string "username"
     t.string "action", null: false
-    t.text "audited_changes", limit: 4294967295
+    t.text "audited_changes", limit: 1073741823
     t.integer "version", default: 0, null: false
     t.string "comment"
     t.string "remote_address"

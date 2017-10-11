@@ -25,6 +25,14 @@ describe "cleanliness" do
     File.read("db/schema.rb").wont_match /\st\.boolean.*limit: 1/
   end
 
+  it "does not have limits too big for postgres in schema" do
+    File.readlines("db/schema.rb").each do |line|
+      if line[/limit: (\d+)/, 1].to_i > 1073741823
+        raise "Line >#{line}< has a too big limit ... use 1073741823 or lower"
+      end
+    end
+  end
+
   it "does not have string index without limit since that breaks our mysql migrations" do
     table_definitions = File.read("db/schema.rb").scan(/  create_table "(\S+)"(.*?)\n  end/m)
     table_definitions.size.must_be :>, 10
