@@ -160,6 +160,9 @@ class DeploysController < ApplicationController
     deploys = deploys_scope
     deploys = deploys.where(stage: stages) if stages
     deploys = deploys.where(job: jobs) if jobs
+    if updated_at = search[:updated_at].presence
+      deploys = deploys.where("updated_at between ? AND ?", *updated_at)
+    end
     deploys.page(page).per(30)
   end
 
