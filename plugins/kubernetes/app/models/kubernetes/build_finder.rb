@@ -14,12 +14,13 @@ module Kubernetes
   class BuildFinder
     TICK = 2.seconds
 
-    def initialize(output, job, reference)
+    def initialize(output, job, reference, images:)
       @output = output
       @job = job
       @reference = reference
       @cancelled = false
       @waited = false
+      @images = images
     end
 
     # deploy was cancelled, so finish up as fast as possible
@@ -28,13 +29,40 @@ module Kubernetes
     end
 
     def ensure_successful_builds
-      requested = @job.project.dockerfile_list
-      builds = requested.map do |dockerfile|
-        find_build(dockerfile) || create_build(dockerfile)
-      end
+      builds =
+        if @images
+          find_build_by_image_name
+        else
+          find_or_create_builds_by_dockerfile
+        end
+
       builds.compact.each do |build|
         wait_for_build(build)
         ensure_build_is_successful(build) unless @cancelled
+      end
+    end
+
+    def find_or_create_builds_by_dockerfile
+      requested = @job.project.dockerfile_list
+      requested.map do |dockerfile|
+        find_build(dockerfile) || create_build(dockerfile)
+      end
+    end
+
+    # Finds build by comparing their name (foo.com/bar/baz -> baz) to pre-build images image_name column
+    #
+    # TODO: this will need some sleeping to wait for hooks to arrive
+    # since samson and the image building can be triggered at the same time
+    def find_build_by_image_name
+      possible_builds = reused_builds + Build.where(git_sha: @job.commit)
+      @images.map do |image|
+        image_name = image.split('/').last.split(':', 2).first
+        possible_builds.detect { |b| b.image_name == image_name } ||
+          raise(
+            Samson::Hooks::UserError,
+            "Did not find build for #{@job.commit} and image_name #{image_name} (from #{image}).\n" \
+            "Found image_names #{possible_builds.map(&:image_name).uniq.join(", ")}."
+          )
       end
     end
 
@@ -72,13 +100,6 @@ module Kubernetes
 
     def create_build(dockerfile)
       name = "build for #{dockerfile}"
-
-      if @job.project.docker_image_building_disabled?
-        raise(
-          Samson::Hooks::UserError,
-          "Not creating #{name} since building creation is disabled, use the api to create builds."
-        )
-      end
 
       if @job.project.repository.file_content(dockerfile, @job.commit)
         @output.puts("Creating #{name}.")

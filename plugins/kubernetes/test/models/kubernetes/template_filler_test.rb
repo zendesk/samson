@@ -519,4 +519,15 @@ describe Kubernetes::TemplateFiller do
       end
     end
   end
+
+  describe "#images" do
+    it "finds images from containers" do
+      template.images.must_equal ["docker-registry.zende.sk/truth_service:latest"]
+    end
+
+    it "finds images from init-containers" do
+      add_init_container image: 'init-container'
+      template.images.must_equal ["docker-registry.zende.sk/truth_service:latest", "init-container"]
+    end
+  end
 end

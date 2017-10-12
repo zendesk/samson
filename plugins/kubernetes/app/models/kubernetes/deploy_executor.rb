@@ -27,7 +27,12 @@ module Kubernetes
       @output = output
       @job = job
       @reference = reference
-      @build_finder = BuildFinder.new(@output, @job, @reference)
+      @build_finder = BuildFinder.new(
+        @output,
+        @job,
+        @reference,
+        images: @job.project.docker_image_building_disabled? && used_images
+      )
     end
 
     # here to make restart_signal_handler happy
@@ -364,17 +369,20 @@ module Kubernetes
       release.release_docs.detect { |rd| break rd.deploy_group if rd.deploy_group_id == pod.deploy_group_id }
     end
 
+    def used_images
+      Kubernetes::ReleaseDoc.new(kubernetes_release: temp_release).images
+    end
+
     # verify with a temp release so we can verify everything before creating a real release
     # and having to wait for docker build to finish
     def verify_kubernetes_templates!
-      release = Kubernetes::Release.new(project: @job.project, git_sha: @job.commit, git_ref: 'master')
       deploy_group_configs.each do |config|
         roles = config.fetch(:roles)
 
         # make sure each template is valid
         roles.each do |role|
           Kubernetes::ReleaseDoc.new(
-            kubernetes_release: release,
+            kubernetes_release: temp_release,
             deploy_group: config.fetch(:deploy_group),
             kubernetes_role: role.fetch(:role)
           ).verify_template
@@ -389,6 +397,10 @@ module Kubernetes
         end.compact
         Kubernetes::RoleVerifier.verify_group(configs)
       end
+    end
+
+    def temp_release
+      @temp_release ||= Kubernetes::Release.new(project: @job.project, git_sha: @job.commit, git_ref: 'master')
     end
   end
 end
