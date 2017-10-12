@@ -20,6 +20,9 @@
     <%= form.input :dockerfile do %>
       <p class="form-control-static"><%= @build.dockerfile %></p>
     <% end %>
+    <%= form.input :image_name do %>
+      <p class="form-control-static"><%= @build.image_name %></p>
+    <% end %>
     <%= form.input :docker_repo_digest, label: 'Docker Digest' do %>
       <p class="form-control-static"><%= @build.docker_repo_digest %></p>
     <% end %>

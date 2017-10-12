@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170929181901) do
+ActiveRecord::Schema.define(version: 20171012004814) do
 
   create_table "audits", force: :cascade do |t|
     t.integer "auditable_id", null: false
@@ -52,12 +52,14 @@ ActiveRecord::Schema.define(version: 20170929181901) do
     t.datetime "started_at"
     t.datetime "finished_at"
     t.string "external_url"
-    t.string "dockerfile", default: "Dockerfile", null: false
+    t.string "dockerfile", default: "Dockerfile"
     t.string "external_id"
     t.string "external_status"
+    t.string "image_name"
     t.index ["created_by"], name: "index_builds_on_created_by"
     t.index ["external_id"], name: "index_builds_on_external_id", unique: true, length: { external_id: 40 }
     t.index ["git_sha", "dockerfile"], name: "index_builds_on_git_sha_and_dockerfile", unique: true
+    t.index ["git_sha", "image_name"], name: "index_builds_on_git_sha_and_image_name", unique: true, length: { git_sha: 80, image_name: 80 }
     t.index ["project_id"], name: "index_builds_on_project_id"
   end
 

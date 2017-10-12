@@ -9,10 +9,19 @@ class Build < ActiveRecord::Base
   belongs_to :creator, class_name: 'User', foreign_key: 'created_by'
   has_many :deploys
 
-  before_validation :nil_out_blank_docker_repo_digest
+  before_validation :nil_out_blanks
+  before_validation :make_default_dockerfile_and_image_name_not_collide, on: :create
 
   validates :project, presence: true
-  validates :git_sha, format: SHA1_REGEX, allow_nil: true, uniqueness: {scope: :dockerfile}
+  validates :git_sha, allow_nil: true, format: SHA1_REGEX
+  [:dockerfile, :image_name].each do |attribute|
+    validates(
+      :git_sha,
+      allow_nil: true,
+      uniqueness: {scope: attribute, message: "already exists with this #{attribute}"},
+      if: attribute
+    )
+  end
   validates :docker_image_id, format: SHA256_REGEX, allow_nil: true
   validates :docker_repo_digest, format: DIGEST_REGEX, allow_nil: true
   validates :external_url, format: /\Ahttps?:\/\/\S+\z/, allow_nil: true
@@ -65,8 +74,15 @@ class Build < ActiveRecord::Base
 
   private
 
-  def nil_out_blank_docker_repo_digest
-    self.docker_repo_digest = docker_repo_digest.presence if docker_repo_digest_changed?
+  def nil_out_blanks
+    [:docker_repo_digest, :image_name, :dockerfile].each do |attribute|
+      send("#{attribute}=", send(attribute).presence) if changes_include? attribute
+    end
+  end
+
+  # if we enforce uniqueness via image_name then having a default dockerfile set will break that uniqueness
+  def make_default_dockerfile_and_image_name_not_collide
+    self.dockerfile = nil if dockerfile == 'Dockerfile' && image_name
   end
 
   def validate_docker_repo_digest_matches_git_sha
