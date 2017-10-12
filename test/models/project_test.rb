@@ -334,7 +334,7 @@ describe Project do
       Project.create!(name: 'PROJECT ONE', repository_url: url)
       Project.create!(name: 'pRoJeCt TwO', repository_url: url)
 
-      Project.search('project').map(&:name).must_equal ['PROJECT ONE', 'pRoJeCt TwO']
+      Project.search('project').map(&:name).sort.must_equal ['PROJECT ONE', 'pRoJeCt TwO']
     end
 
     it 'returns empty relation when no results are found' do
