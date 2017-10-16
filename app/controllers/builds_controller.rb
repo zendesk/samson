@@ -9,9 +9,18 @@ class BuildsController < ApplicationController
   before_action :find_build, only: [:show, :build_docker_image, :edit, :update]
 
   def index
-    @builds = current_project.builds.order('id desc').page(page)
-    if search = params[:search]
-      @builds = @builds.where(search.permit(*Build.column_names))
+    @builds = scope.order('id desc').page(page)
+    if search = params[:search]&.except(:time_format)
+      if external = search.delete(:external).presence
+        @builds =
+          case external
+          when "YES" then @builds.where.not(external_id: nil)
+          when "NO" then @builds.where(external_id: nil)
+          else raise
+          end
+      end
+
+      @builds = @builds.where(search.permit(*Build.column_names)) unless search.empty?
     end
 
     respond_to do |format|
@@ -21,11 +30,11 @@ class BuildsController < ApplicationController
   end
 
   def new
-    @build = current_project.builds.build
+    @build = scope.new
   end
 
   def create
-    scope = current_project.builds
+    scope = scope()
     external_id = params.dig(:build, :external_id).presence
     if external_id && @build = scope.where(external_id: external_id).first
       @build.attributes = edit_build_params(validate: false)
@@ -126,5 +135,9 @@ class BuildsController < ApplicationController
 
   def registering_external_build?
     action_name == "create" && EXTERNAL_BUILD_ATTRIBUTES.any? { |e| params.dig(:build, e).present? }
+  end
+
+  def scope
+    current_project&.builds || Build.where(nil)
   end
 end
