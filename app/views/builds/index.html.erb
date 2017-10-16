@@ -1,10 +1,17 @@
 <% page_title "Builds" %>
 
-<%= render 'projects/header', project: @project, tab: "builds" %>
+<%= render 'projects/header', project: @project, tab: "builds" if @project %>
 
 <section class="tabs">
+  <div class="row">
+    <%= search_form do %>
+      <%= search_select :external, [["Yes", "true"], ["No", "false"]], size: 1 %>
+      <%= search_select :time_format, User::TIME_FORMATS, selected: params.dig(:search, :time_format) || current_user.time_format, label: 'Time', size: 1 %>
+    <% end %>
+  </div>
+
   <p class="pull-right">
-    <% unless @project.docker_image_building_disabled? %>
+    <% if @project && !@project.docker_image_building_disabled? %>
       <%= link_to "Edit Pre Build Command", project_build_command_path(@project), class: "btn btn-default"  %>
       <%= link_to "New", new_project_build_path(@project), class: "btn btn-default" %>
     <% end %>

@@ -12,6 +12,7 @@ describe BuildsController do
   let(:default_build) do
     project.builds.create!(name: 'master branch', git_ref: 'master', git_sha: 'a' * 40, creator: user)
   end
+  let(:build) { builds(:docker_build) }
 
   before do
     create_repo_with_an_additional_branch('test_branch')
@@ -50,16 +51,50 @@ describe BuildsController do
         @response.body.must_include 'master branch'
       end
 
-      it 'can search' do
-        build = builds(:docker_build)
+      it 'can search for sha' do
         get :index, params: {project_id: project.to_param, search: {git_sha: build.git_sha}}
         assigns(:builds).must_equal [build]
+      end
+
+      it 'does not blow up when setting time_format' do
+        get :index, params: {search: {time_format: 'relative'}}
+        assert_response :success
+      end
+
+      describe "external" do
+        it "ignores search for external blank" do
+          get :index, params: {search: {external: ''}}
+          assigns(:builds).count.must_equal Build.count
+        end
+
+        it "can search for external YES" do
+          build.update_column(:external_id, 123)
+          get :index, params: {search: {external: 'YES'}}
+          assigns(:builds).must_equal [build]
+        end
+
+        it "can search for external NO" do
+          Build.where.not(id: build.id).all.each { |b| b.update_column :external_id, b.id }
+          get :index, params: {search: {external: 'NO'}}
+          assigns(:builds).must_equal [build]
+        end
+
+        it "cannot search for unknown external" do
+          assert_raises do
+            get :index, params: {search: {external: 'FOOBAR'}}
+          end
+        end
       end
 
       it 'renders json without associations' do
         get :index, params: {project_id: project.to_param}, format: :json
         json = JSON.parse(@response.body)
         refute json['builds'][0].key?('project')
+      end
+
+      it "can render without a project" do
+        get :index
+        assigns(:builds).must_include builds(:docker_build)
       end
     end
 

@@ -96,6 +96,8 @@ Samson::Application.routes.draw do
     end
   end
 
+  resources :builds, only: [:index]
+
   resource :profile, only: [:show, :update]
 
   resources :users, only: [:index, :show, :update, :destroy]

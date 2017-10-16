@@ -60,6 +60,7 @@
         <a href="#" class="dropdown-toggle" data-toggle="dropdown">Manage <b class="caret"></b></a>
         <ul class="dropdown-menu">
           <li><%= link_to "Audits", audits_path %></li>
+          <li><%= link_to "Builds", Build %></li>
           <% if DeployGroup.enabled? %>
             <li><%= link_to "Environments", environments_path %></li>
             <li><%= link_to "Deploy Groups", deploy_groups_path %></li>
