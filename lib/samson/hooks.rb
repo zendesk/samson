@@ -228,6 +228,3 @@ end
 class << ActionController::Base
   prepend Samson::LoadDecorators
 end
-class << ActiveModel::Serializer
-  prepend Samson::LoadDecorators
-end

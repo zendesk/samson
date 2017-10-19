@@ -104,7 +104,7 @@
     <p>
       <%= link_to 'Example payload', '#', class: 'toggle', data: {target: '#payload-sample'} %>
     </p>
-    <% example = JSON.pretty_generate(DeploySerializer.new(@project.deploys.last).as_json) %>
+    <% example = JSON.pretty_generate(OutboundWebhook.deploy_as_json(@project.deploys.last)) %>
     <pre id='payload-sample' style='display:none'><%= example %></pre>
   <% else %>
     <p>Deploy this project at least once to see a sample payload.</p>

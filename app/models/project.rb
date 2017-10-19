@@ -142,6 +142,12 @@ class Project < ActiveRecord::Base
     super(except: [:token, :deleted_at], methods: [:repository_path])
   end
 
+  CSV_PROPERTIES = [:id, :name, :url, :permalink, :repository_url, :owner, :created_at]
+
+  def as_csv
+    CSV_PROPERTIES.map { |p| public_send p }
+  end
+
   private
 
   def repository_homepage_github

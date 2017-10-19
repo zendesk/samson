@@ -193,7 +193,7 @@ class Deploy < ActiveRecord::Base
     ]
   end
 
-  def csv_line
+  def as_csv
     [
       id, project.name, summary, commit, job.status, updated_at, start_time, user.try(:name), user.try(:email),
       buddy_name, buddy_email, stage.name, stage.production?, !stage.no_code_deployed, project.deleted_at,

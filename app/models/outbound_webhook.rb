@@ -17,12 +17,20 @@ class OutboundWebhook < ActiveRecord::Base
   validates_presence_of :username, if: proc { |outbound_webhook| outbound_webhook.password.present? }
   validates_presence_of :password, if: proc { |outbound_webhook| outbound_webhook.username.present? }
 
+  def self.deploy_as_json(deploy)
+    deploy.as_json.merge(
+      project: deploy.project.as_json,
+      stage: deploy.stage.as_json,
+      user: deploy.user.as_json,
+    )
+  end
+
   def deliver(deploy)
     Rails.logger.info "Sending webhook notification to #{url}. Deploy: #{deploy.id}"
 
     response = connection.post do |req|
       req.headers['Content-Type'] = 'application/json'
-      req.body = DeploySerializer.new(deploy).to_json
+      req.body = self.class.deploy_as_json(deploy)
     end
 
     if response.success?

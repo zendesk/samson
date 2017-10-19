@@ -2,7 +2,7 @@
 class CsvExportsController < ApplicationController
   rescue_from ActiveRecord::RecordNotFound do |exception|
     respond_to do |format|
-      format.json { render json: {status: "not found"}.to_json, status: :not_found }
+      format.json { render json: {status: "not found"}, status: :not_found }
       format.csv  { render body: "not found", status: :not_found }
       format.html { raise exception }
     end
