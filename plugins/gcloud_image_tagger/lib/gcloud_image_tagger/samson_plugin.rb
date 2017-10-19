@@ -8,7 +8,7 @@ module SamsonGcloudImageTagger
       # ideally do not tag any builds for projects that use shared builds ... but that is hard to know atm
       def tag(deploy)
         return unless ENV["DOCKER_FEATURE"]
-        return unless deploy.succeeded?
+#        return unless deploy.succeeded?
         return unless builds = deploy.project.builds.
           where(git_sha: deploy.job.commit).where.not(docker_repo_digest: nil).to_a.presence
 
