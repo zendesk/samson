@@ -31,6 +31,10 @@ class Changeset::IssueComment
     'pull_request' # Samson webhook category
   end
 
+  def message
+    ''
+  end
+
   private
 
   def pull_request

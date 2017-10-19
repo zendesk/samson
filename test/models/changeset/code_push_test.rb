@@ -7,7 +7,10 @@ describe Changeset::CodePush do
   let(:data) do
     {
       "ref" => "refs/heads/master",
-      "after" => "abc-sha"
+      "after" => "abc-sha",
+      "head_commit" => {
+        "message" => "hi!"
+      }
     }
   end
   let(:push) { Changeset::CodePush.new('foo/bar', data) }
@@ -33,6 +36,12 @@ describe Changeset::CodePush do
   describe "#service_type" do
     it "is code" do
       push.service_type.must_equal "code"
+    end
+  end
+
+  describe "#message" do
+    it "finds" do
+      push.message.must_equal "hi!"
     end
   end
 

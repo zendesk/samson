@@ -123,6 +123,10 @@ class Changeset::PullRequest
     'pull_request' # Samson webhook category
   end
 
+  def message
+    ''
+  end
+
   private
 
   def parse_risks(body)

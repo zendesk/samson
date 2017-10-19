@@ -76,4 +76,10 @@ describe Changeset::IssueComment do
       Changeset::IssueComment.new('foo/bar', {}).service_type.must_equal 'pull_request'
     end
   end
+
+  describe "#message" do
+    it "is empty" do
+      Changeset::IssueComment.new('foo/bar', {}).message.must_equal ''
+    end
+  end
 end

@@ -31,7 +31,11 @@ class Integrations::GithubController < Integrations::BaseController
   end
 
   def deploy?
-    webhook_handler&.valid_webhook?(payload)
+    webhook_handler&.valid_webhook?(payload) && !skip?
+  end
+
+  def skip?
+    contains_skip_token?(message)
   end
 
   # https://developer.github.com/webhooks/securing/
@@ -52,6 +56,10 @@ class Integrations::GithubController < Integrations::BaseController
 
   def branch
     webhook_event.branch
+  end
+
+  def message
+    webhook_event.message
   end
 
   private

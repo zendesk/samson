@@ -366,6 +366,12 @@ describe Changeset::PullRequest do
     end
   end
 
+  describe "#message" do
+    it "is empty" do
+      pr.message.must_equal ""
+    end
+  end
+
   describe "#risks" do
     before { add_risks }
 
