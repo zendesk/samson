@@ -162,6 +162,7 @@ samson will then override the `project` labels and keep deployments/services uni
 
  - Set the projects `dockerfiles` attribute to all the files that need to be built.
  - Add `samson/dockerfile: Dockerfile.foobar` to the container configuration (same level as `image`) to use a different Dockerfile
+ - Add `samson/dockerfile: none` to have samson not replace the `image`
 
 ### Clair security scans
 

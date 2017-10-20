@@ -274,8 +274,10 @@ module Kubernetes
       containers.each do |container|
         build =
           if selected = container[:"samson/dockerfile"]
-            builds.detect { |b| b.dockerfile == selected } ||
-              raise(Samson::Hooks::UserError, "Build for dockerfile #{selected} not found")
+            if selected != "none"
+              builds.detect { |b| b.dockerfile == selected } ||
+                raise(Samson::Hooks::UserError, "Build for dockerfile #{selected} not found")
+            end
           elsif default
             builds.detect { |b| b.dockerfile == "Dockerfile" }
           end
