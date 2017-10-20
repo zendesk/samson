@@ -21,7 +21,7 @@ end
 module Samson
   module Secrets
     class VaultServer < ActiveRecord::Base
-      PREFIX = 'secret/apps/'
+      PREFIX = ENV['VAULT_PREFIX'] || 'secret/apps/'
 
       audited
       include AttrEncryptedSupport
