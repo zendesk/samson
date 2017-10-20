@@ -34,9 +34,8 @@ class BuildsController < ApplicationController
   end
 
   def create
-    scope = scope()
     external_id = params.dig(:build, :external_id).presence
-    if external_id && @build = scope.where(external_id: external_id).first
+    if external_id && @build = Build.where(external_id: external_id).first
       @build.attributes = edit_build_params(validate: false)
     else
       @build = scope.new(new_build_params.merge(creator: current_user))
