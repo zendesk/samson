@@ -16,5 +16,6 @@
   </div>
 
   <%= link_to_history @secret_sharing_grant %> |
+  <%= link_to_delete @secret_sharing_grant %> |
   <%= link_to "Secrets", secrets_path(search: {key: @secret_sharing_grant.key, project_permalink: 'global'}) %>
 </section>
