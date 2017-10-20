@@ -184,8 +184,8 @@ describe BuildsController do
         build = Build.last
         build.update_columns(external_id: 'foo', external_status: 'running')
 
-        create external_id: 'foo', external_status: 'succeeded'
-        assert_response :redirect
+        create external_id: 'foo', external_status: 'succeeded', format: :json
+        assert_response :success
 
         build.reload.external_status.must_equal 'succeeded'
       end

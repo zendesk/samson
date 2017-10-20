@@ -41,10 +41,11 @@ class BuildsController < ApplicationController
       @build = scope.new(new_build_params.merge(creator: current_user))
     end
 
+    new = @build.new_record?
     saved = @build.save
 
     start_docker_build if saved && EXTERNAL_BUILD_ATTRIBUTES.all? { |e| @build.public_send(e).blank? }
-    respond_to_save saved, :created, :new
+    respond_to_save saved, (new ? :created : :ok), :new
   end
 
   def show
