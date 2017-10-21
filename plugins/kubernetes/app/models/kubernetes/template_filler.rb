@@ -65,6 +65,12 @@ module Kubernetes
       expand_secret_annotations
     end
 
+    def images
+      all = containers
+      modify_init_container { |containers| all += containers }
+      all.map { |c| c.fetch(:image) }.uniq
+    end
+
     private
 
     def set_project_labels

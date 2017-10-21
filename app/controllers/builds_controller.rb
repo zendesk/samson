@@ -4,7 +4,7 @@ class BuildsController < ApplicationController
   include CurrentProject
 
   before_action :authorize_resource!
-  before_action :rename_source_url, only: [:create, :update]
+  before_action :rename_deprecated_attributes, only: [:create, :update]
   before_action :enforce_disabled_docker_builds, only: [:new, :create, :build_docker_image]
   before_action :find_build, only: [:show, :build_docker_image, :edit, :update]
 
@@ -34,18 +34,18 @@ class BuildsController < ApplicationController
   end
 
   def create
-    scope = scope()
     external_id = params.dig(:build, :external_id).presence
-    if external_id && @build = scope.where(external_id: external_id).first
+    if external_id && @build = Build.where(external_id: external_id).first
       @build.attributes = edit_build_params(validate: false)
     else
       @build = scope.new(new_build_params.merge(creator: current_user))
     end
 
+    new = @build.new_record?
     saved = @build.save
 
     start_docker_build if saved && EXTERNAL_BUILD_ATTRIBUTES.all? { |e| @build.public_send(e).blank? }
-    respond_to_save saved, :created, :new
+    respond_to_save saved, (new ? :created : :ok), :new
   end
 
   def show
@@ -79,16 +79,15 @@ class BuildsController < ApplicationController
     @build = Build.find(params[:id])
   end
 
-  # previously the attribute was called source_url so some clients might still use that
-  def rename_source_url
-    if (build = params[:build]) && source_url = build.delete(:source_url)
-      build[:external_url] = source_url
-    end
+  def rename_deprecated_attributes
+    return unless build = params[:build]
+    return unless source_url = build.delete(:source_url)
+    build[:external_url] = source_url
   end
 
   def new_build_params
     params.require(:build).permit(
-      :git_ref, :name, :description, :dockerfile, :docker_repo_digest, :git_sha,
+      :git_ref, :name, :description, :dockerfile, :image_name, :docker_repo_digest, :git_sha,
       :external_id, :external_status, :external_url,
       *Samson::Hooks.fire(:build_permitted_params)
     )

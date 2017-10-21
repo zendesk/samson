@@ -173,12 +173,19 @@ describe BuildsController do
         Build.last.external_url.must_equal 'http://foo.com'
       end
 
+      it 'can set dockerfile and image_name' do
+        create dockerfile: 'bar', image_name: 'foo'
+        build = Build.last
+        build.dockerfile.must_equal 'bar'
+        build.image_name.must_equal 'foo'
+      end
+
       it 'updates a build via external_id' do
         build = Build.last
         build.update_columns(external_id: 'foo', external_status: 'running')
 
-        create external_id: 'foo', external_status: 'succeeded'
-        assert_response :redirect
+        create external_id: 'foo', external_status: 'succeeded', format: :json
+        assert_response :success
 
         build.reload.external_status.must_equal 'succeeded'
       end

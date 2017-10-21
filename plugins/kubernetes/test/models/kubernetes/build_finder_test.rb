@@ -4,11 +4,21 @@ require_relative "../../test_helper"
 SingleCov.covered!
 
 describe Kubernetes::BuildFinder do
+  def setup_using_previous_builds
+    previous = deploys(:failed_staging_test)
+    previous.update_column(:id, job.deploy.id - 1) # make previous_deploy work
+    previous_sha = 'something-else'
+    kubernetes_releases(:test_release).update_columns(deploy_id: previous.id, git_sha: previous_sha) # previous deploy
+    build.update_columns(docker_repo_digest: 'ababababab', git_sha: previous_sha) # make build succeeded
+    job.deploy.update_column(:kubernetes_reuse_build, true)
+  end
+
   let(:output) { StringIO.new }
   let(:out) { output.string }
   let(:build) { builds(:docker_build) }
   let(:job) { jobs(:succeeded_test) }
-  let(:finder) { Kubernetes::BuildFinder.new(output, job, 'master') }
+  let(:images) { nil }
+  let(:finder) { Kubernetes::BuildFinder.new(output, job, 'master', images: images) }
 
   before do
     build.update_column(:docker_repo_digest, nil) # build is needed
@@ -23,16 +33,6 @@ describe Kubernetes::BuildFinder do
       e = assert_raises(Samson::Hooks::UserError) { execute }
       e.message.must_equal "Build #{build.url} was created but never ran, run it manually."
       out.wont_include "Creating Build"
-    end
-
-    it "fails to build when builds are disabled" do
-      Build.delete_all
-      job.project.update_column :docker_image_building_disabled, true
-
-      refute_difference 'Build.count' do
-        e = assert_raises(Samson::Hooks::UserError) { execute }
-        e.message.must_include "Not creating build for Dockerfile"
-      end
     end
 
     it "succeeds without a build when there is no Dockerfile" do
@@ -112,13 +112,7 @@ describe Kubernetes::BuildFinder do
       end
 
       it "reuses build when told to do so" do
-        previous = deploys(:failed_staging_test)
-        previous.update_column(:id, job.deploy.id - 1) # make previous_deploy work
-        kubernetes_releases(:test_release).update_columns(
-          deploy_id: previous.id, git_sha: 'something-else'
-        ) # find previous deploy
-        build.update_column(:docker_repo_digest, 'ababababab') # make build succeeded
-        job.deploy.update_column(:kubernetes_reuse_build, true)
+        setup_using_previous_builds
 
         DockerBuilderService.any_instance.expects(:run).never
 
@@ -143,6 +137,37 @@ describe Kubernetes::BuildFinder do
         DockerBuilderService.any_instance.expects(:run).returns(true)
         execute
         out.scan(/.*build.*/).must_equal ["Creating build for Dockerfile."] # not waiting for build
+      end
+    end
+
+    describe "when finding builds via image_name" do
+      let(:images) { ["foo.com/foo/bar:latest"] }
+
+      before do
+        build.update_columns(image_name: 'bar', docker_repo_digest: "some-digest")
+      end
+
+      it "finds the matching build" do
+        execute.must_equal [build]
+      end
+
+      it "does not find for different sha" do
+        build.update_column(:git_sha, 'other')
+        e = assert_raises(Samson::Hooks::UserError) { execute }
+        e.message.must_include(
+          "Did not find build for 1a6f551a2ffa6d88e15eef5461384da0bfb1c194 and image_name bar"
+        )
+      end
+
+      it "finds accross projects" do
+        Build.any_instance.expects(:url).returns("foo") # bogus project not found so url building fails
+        build.update_column(:project_id, 123)
+        execute.must_equal [build]
+      end
+
+      it "can reuse previous build" do
+        setup_using_previous_builds
+        execute.must_equal [build]
       end
     end
   end

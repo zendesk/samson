@@ -9,6 +9,7 @@ module Kubernetes
 
     serialize :resource_template, JSON
     delegate :desired_pod_count, :prerequisite?, to: :primary_resource
+    delegate :images, to: :verification_template
 
     validates :deploy_group, presence: true
     validates :kubernetes_role, presence: true
@@ -34,8 +35,7 @@ module Kubernetes
     # run on unsaved mock ReleaseDoc to test template and secrets before we save or create a build
     # this create a bit of duplicated work, but fails the deploy fast
     def verify_template
-      primary_config = raw_template.detect { |e| Kubernetes::RoleConfigFile::PRIMARY_KINDS.include?(e.fetch(:kind)) }
-      template = Kubernetes::TemplateFiller.new(self, primary_config, index: 0)
+      template = verification_template
       template.set_secrets
       template.verify_env
     end
@@ -52,6 +52,13 @@ module Kubernetes
     end
 
     private
+
+    # Temporary template we run validations on ... so can be cheap / not fully fleshed out
+    # and only be the primary since services/configmaps are not very interesting anyway
+    def verification_template
+      primary_config = raw_template.detect { |e| Kubernetes::RoleConfigFile::PRIMARY_KINDS.include?(e.fetch(:kind)) }
+      Kubernetes::TemplateFiller.new(self, primary_config, index: 0)
+    end
 
     def primary_resource
       resources.detect(&:primary?)

@@ -103,7 +103,7 @@ describe Kubernetes::DeployExecutor do
       stub_request(:put, "#{deployments_url}/test-resque-worker").
         to_return(body: {}.to_json) # updating deployment during delete for rollback
 
-      executor.stubs(:sleep)
+      Kubernetes::DeployExecutor.any_instance.stubs(:sleep) # not using executor to keep it uninitialized
       stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/events}).
         to_return(body: {items: []}.to_json)
       stub_request(:get, /#{Regexp.escape(log_url)}/)
@@ -129,6 +129,14 @@ describe Kubernetes::DeployExecutor do
       out.must_include "resque-worker: Live\n"
       out.must_include "SUCCESS"
       out.wont_include "BigDecimal" # properly serialized configs
+    end
+
+    it "succeeds with external builds" do
+      build.update_columns(dockerfile: nil, image_name: 'truth_service')
+      job.project.update_column :docker_image_building_disabled, true
+      assert execute
+      out.must_include "resque-worker: Live\n"
+      out.must_include "SUCCESS"
     end
 
     it "can deploy roles with 0 replicas to disable them" do

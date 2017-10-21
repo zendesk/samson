@@ -8,6 +8,6 @@
   <td><%= build.creator&.name || "Trigger" %></td>
   <td><%= duration_text job.duration if job %></td>
   <td><%= git_ref_and_sha_for(build) %></td>
-  <td><%= build.dockerfile %></td>
+  <td><%= build.image_name.presence || build.dockerfile %></td>
   <td><%= job ? job_status_badge(job) : build.docker_status %></td>
 </tr>

@@ -43,11 +43,25 @@ describe Build do
       end
     end
 
-    it "validates git sha uniqueness" do
+    it "validates git sha uniqueness with dockerfile" do
       Dir.chdir(repo_temp_dir) do
         build.update_column(:git_sha, current_commit)
         refute_valid(valid_build(git_ref: nil, git_sha: current_commit)) # not unique
         assert_valid(valid_build(git_ref: nil, git_sha: current_commit, dockerfile: 'Other'))
+        assert_valid(valid_build(git_ref: nil, git_sha: current_commit, dockerfile: nil))
+      end
+    end
+
+    it "validates git sha uniqueness with image_name" do
+      Dir.chdir(repo_temp_dir) do
+        Build.all.each { |b| b.update_column :dockerfile, b.id }
+        build.update_columns(git_sha: current_commit, image_name: 'hello', dockerfile: 'Other')
+        builds(:v1_tag).update_columns(git_sha: current_commit, image_name: nil)
+
+        refute_valid(valid_build(git_ref: nil, git_sha: current_commit, image_name: 'hello')) # not unique
+        assert_valid(valid_build(git_ref: nil, git_sha: current_commit, image_name: 'world'))
+        assert_valid(valid_build(git_ref: nil, git_sha: current_commit, image_name: ''))
+        assert_valid(valid_build(git_ref: nil, git_sha: current_commit, image_name: nil))
       end
     end
 
@@ -174,6 +188,23 @@ describe Build do
   describe "#create_docker_job" do
     it "creates a job" do
       build.create_docker_job.class.must_equal Job
+    end
+  end
+
+  describe "#nil_out_blanks" do
+    it "nils out dockerfile so it stays unique" do
+      build.update_attributes!(image_name: '   ')
+      build.image_name.must_be_nil
+    end
+  end
+
+  describe "#make_dockerfile_and_image_name_not_collide" do
+    it "stores nil dockerfile so index does not collide when using image_name for uniqueness" do
+      GitRepository.any_instance.expects(:commit_from_ref).returns('a' * 40)
+      build = valid_build(image_name: 'foobar')
+      build.save!
+      build.dockerfile.must_be_nil
+      build.image_name.must_equal 'foobar'
     end
   end
 end
