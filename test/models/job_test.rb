@@ -270,6 +270,7 @@ describe Job do
       sleep 0.5
       job.pid.wont_be_nil
       job_execution.wait
+      sleep 0.1
     end
 
     it "has no pid when not running" do
