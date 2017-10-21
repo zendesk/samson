@@ -327,7 +327,7 @@ describe Project do
       Project.create!(name: 'Test #2', repository_url: url)
       Project.create!(name: 'random name', repository_url: url)
 
-      Project.search('Test #').map(&:name).must_equal ['Test #1', 'Test #2']
+      Project.search('Test #').map(&:name).sort.must_equal ['Test #1', 'Test #2']
     end
 
     it 'is case insensitive' do
