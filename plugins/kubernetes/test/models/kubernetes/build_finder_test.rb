@@ -153,8 +153,18 @@ describe Kubernetes::BuildFinder do
 
       it "does not find for different sha" do
         build.update_column(:git_sha, 'other')
+        finder.expects(:sleep) # waiting for external builds to arrive
         e = assert_raises(Samson::Hooks::UserError) { execute }
         e.message.must_include("Did not find build")
+      end
+
+      it "can find build that arrives late" do
+        matching_sha = build.git_sha
+        build.update_column(:git_sha, 'other')
+        finder.expects(:sleep).with do
+          build.update_column(:git_sha, matching_sha)
+        end # waiting for external builds to arrive
+        execute.must_equal [build]
       end
 
       it "finds accross projects" do
