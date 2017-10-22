@@ -3,12 +3,7 @@ class Integrations::SemaphoreController < Integrations::BaseController
   protected
 
   def deploy?
-    params[:result] == 'passed' &&
-      !skip?
-  end
-
-  def skip?
-    contains_skip_token?(message)
+    params[:result] == 'passed'
   end
 
   def commit

@@ -31,11 +31,7 @@ class Integrations::GithubController < Integrations::BaseController
   end
 
   def deploy?
-    webhook_handler&.valid_webhook?(payload) && !skip?
-  end
-
-  def skip?
-    contains_skip_token?(message)
+    webhook_handler&.valid_webhook?(payload)
   end
 
   # https://developer.github.com/webhooks/securing/

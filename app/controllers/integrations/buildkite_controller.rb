@@ -3,15 +3,11 @@ class Integrations::BuildkiteController < Integrations::BaseController
   protected
 
   def deploy?
-    build_passed? && no_skip_token_present?
+    build_passed?
   end
 
   def build_passed?
     build_param[:state] == 'passed'
-  end
-
-  def no_skip_token_present?
-    !contains_skip_token?(message)
   end
 
   def commit
