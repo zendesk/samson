@@ -7,11 +7,15 @@ describe Integrations::GithubController do
   extend IntegrationsControllerTestHelper
 
   let(:commit) { "dc395381e650f3bac18457909880829fc20e34ba" }
+  let(:commit_message) { "hi" }
   let(:project) { projects(:test) }
   let(:payload) do
     {
       ref: 'refs/heads/dev',
-      after: commit
+      after: commit,
+      head_commit: {
+        message: commit_message
+      }
     }.with_indifferent_access
   end
   let(:user_name) { 'Github' }
@@ -23,6 +27,8 @@ describe Integrations::GithubController do
   end
 
   test_regular_commit "Github", no_mapping: { ref: 'refs/heads/foobar' }, failed: false
+
+  it_ignores_skipped_commits
 
   it_does_not_deploy 'when the event is invalid' do
     request.headers['X-Github-Event'] = 'event'

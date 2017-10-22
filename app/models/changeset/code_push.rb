@@ -23,6 +23,10 @@ class Changeset::CodePush
     data['ref'][/\Arefs\/heads\/(\S+)\z/, 1]
   end
 
+  def message
+    data['head_commit']['message']
+  end
+
   def service_type
     'code' # Samson webhook category
   end
