@@ -8,7 +8,7 @@ class Integrations::BaseController < ApplicationController
   wrap_parameters format: [] # wrapped params make debugging messy, avoid
 
   def create
-    unless deploy?
+    if !deploy? || skip?
       record_log :info, "Request is not supposed to trigger a deploy"
       return render plain: @recorded_log.to_s
     end
@@ -98,6 +98,10 @@ class Integrations::BaseController < ApplicationController
   end
 
   private
+
+  def skip?
+    contains_skip_token?(message)
+  end
 
   def validate_token
     project || render(plain: "Invalid token", status: :unauthorized)

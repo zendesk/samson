@@ -13,4 +13,8 @@ class Integrations::JenkinsController < Integrations::BaseController
   def branch
     params[:build][:scm][:branch]
   end
+
+  def message
+    ''
+  end
 end

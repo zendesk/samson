@@ -7,11 +7,7 @@ class Integrations::CircleciController < Integrations::BaseController
   end
 
   def deploy?
-    project && %w[success fixed].include?(status) && !skip?
-  end
-
-  def skip?
-    contains_skip_token?(message)
+    project && %w[success fixed].include?(status)
   end
 
   def status
