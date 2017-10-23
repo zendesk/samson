@@ -80,7 +80,7 @@ class Integrations::BaseController < ApplicationController
 
   def contains_skip_token?(message)
     ["[deploy skip]", "[skip deploy]"].any? do |token|
-      message.include?(token)
+      message&.include?(token)
     end
   end
 

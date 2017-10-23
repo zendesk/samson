@@ -124,7 +124,7 @@ class Changeset::PullRequest
   end
 
   def message
-    ''
+    nil
   end
 
   private
