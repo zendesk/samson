@@ -194,7 +194,7 @@ class DockerBuilderService
       if override_tag
         output.puts("### Tagging and pushing Docker image to #{repo}:#{tag}")
       else
-        output.puts("### Not Tagging and pushing Docker image to #{repo}")
+        output.puts("### Pushing Docker image to #{repo} without tag")
       end
 
       # tag locally so we can push .. otherwise get `Repository does not exist`
