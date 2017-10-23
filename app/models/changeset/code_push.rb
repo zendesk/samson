@@ -24,7 +24,7 @@ class Changeset::CodePush
   end
 
   def message
-    data['head_commit']['message']
+    data['head_commit']&.[]('message')
   end
 
   def service_type

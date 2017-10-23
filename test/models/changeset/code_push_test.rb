@@ -43,6 +43,11 @@ describe Changeset::CodePush do
     it "finds" do
       push.message.must_equal "hi!"
     end
+
+    it "is empty when push is for a branch and does not have a head commit" do
+      data.delete('head_commit')
+      push.message.must_equal nil
+    end
   end
 
   describe ".valid_webhook?" do

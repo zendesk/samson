@@ -368,7 +368,7 @@ describe Changeset::PullRequest do
 
   describe "#message" do
     it "is empty" do
-      pr.message.must_equal ""
+      pr.message.must_equal nil
     end
   end
 

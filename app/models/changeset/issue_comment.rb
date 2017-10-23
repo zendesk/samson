@@ -32,7 +32,7 @@ class Changeset::IssueComment
   end
 
   def message
-    ''
+    nil
   end
 
   private

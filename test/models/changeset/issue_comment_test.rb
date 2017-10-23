@@ -79,7 +79,7 @@ describe Changeset::IssueComment do
 
   describe "#message" do
     it "is empty" do
-      Changeset::IssueComment.new('foo/bar', {}).message.must_equal ''
+      Changeset::IssueComment.new('foo/bar', {}).message.must_equal nil
     end
   end
 end
