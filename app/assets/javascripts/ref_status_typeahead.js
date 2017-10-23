@@ -81,7 +81,7 @@ function refStatusTypeahead(options){
   initializeTypeahead();
 
   // TODO: clean up by wrapping this in a limiter function
-  $reference.on('input', function(e) {
+  $reference.on('input', function() {
     $ref_status_container.addClass("hidden");
     $tag_form_group.removeClass("has-success has-warning has-error");
 
@@ -91,6 +91,8 @@ function refStatusTypeahead(options){
     if(status_check_timeout) {
       clearTimeout(status_check_timeout);
     }
+
+    if(options.changed) options.changed();
 
     if(ref !== "") {
       status_check_timeout = setTimeout(function() { check_status(ref); }, 200);

@@ -51,6 +51,7 @@ $(function () {
   }
   toggleConfirmed();
 
+  // when changing the reference users need to check 'Review' again to get updated commit listings
   refStatusTypeahead({changed: function() { if(confirmed) { toggleConfirmed(); } }});
 
   function showDeployConfirmationTab($this) {
