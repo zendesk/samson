@@ -99,7 +99,7 @@ class DockerBuilderService
 
     @execution.on_finish do
       build.update_column(:finished_at, Time.now)
-      send_after_notifications
+      Samson::Hooks.fire(:after_docker_build, build)
     end
 
     JobExecution.perform_later(@execution)
@@ -242,10 +242,5 @@ class DockerBuilderService
 
   def project
     @build.project
-  end
-
-  def send_after_notifications
-    Samson::Hooks.fire(:after_docker_build, build)
-    SseRailsEngine.send_event('builds', type: 'finish', build: BuildSerializer.new(build, root: nil))
   end
 end

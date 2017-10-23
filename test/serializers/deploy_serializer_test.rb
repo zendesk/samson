@@ -3,7 +3,7 @@ require_relative '../test_helper'
 
 SingleCov.covered!
 
-describe BuildSerializer do
+describe DeploySerializer do
   let(:deploy) { deploys(:succeeded_test) }
   let(:parsed) { JSON.parse(DeploySerializer.new(deploy).to_json) }
 
