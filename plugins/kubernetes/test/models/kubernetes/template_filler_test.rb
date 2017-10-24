@@ -263,48 +263,67 @@ describe Kubernetes::TemplateFiller do
     describe "containers" do
       let(:result) { template.to_hash }
       let(:container) { result.fetch(:spec).fetch(:template).fetch(:spec).fetch(:containers).first }
-      let(:image) do
-        'docker-registry.example.com/test@sha256:5f1d7c7381b2e45ca73216d7b06004fdb0908ed7bb8786b62f2cdfa5035fde2c'
-      end
 
-      it "overrides image" do
-        container.fetch(:image).must_equal image
-      end
+      describe "image manipulation" do
+        let(:build) { builds(:docker_build) }
+        let(:image) { build.docker_repo_digest }
 
-      it "does not override image when no build was made" do
-        doc.kubernetes_release.builds.delete_all
-        container.fetch(:image).must_equal(
-          "docker-registry.zende.sk/truth_service:latest"
-        )
-      end
+        it "overrides image" do
+          container.fetch(:image).must_equal image
+        end
 
-      describe "when dockerfile was selected" do
-        before { raw_template[:spec][:template][:spec][:containers][0][:"samson/dockerfile"] = "Dockerfile.new" }
-
-        it "finds special build" do
-          digest = "docker-registry.example.com/new@sha256:#{"a" * 64}"
-          builds(:v1_tag).update_columns(
-            git_sha: doc.kubernetes_release.git_sha,
-            docker_repo_digest: digest,
-            dockerfile: 'Dockerfile.new'
+        it "does not override image when no build was made" do
+          doc.kubernetes_release.builds.delete_all
+          container.fetch(:image).must_equal(
+            "docker-registry.zende.sk/truth_service:latest"
           )
-          container.fetch(:image).must_equal digest
         end
 
-        it "complains when build was not found" do
-          e = assert_raises(Samson::Hooks::UserError) { container }
-          e.message.must_equal "Build for dockerfile Dockerfile.new not found"
+        describe "when dockerfile was selected" do
+          before { raw_template[:spec][:template][:spec][:containers][0][:"samson/dockerfile"] = "Dockerfile.new" }
+
+          it "finds special build" do
+            digest = "docker-registry.example.com/new@sha256:#{"a" * 64}"
+            builds(:v1_tag).update_columns(
+              git_sha: doc.kubernetes_release.git_sha,
+              docker_repo_digest: digest,
+              dockerfile: 'Dockerfile.new'
+            )
+            container.fetch(:image).must_equal digest
+          end
+
+          it "complains when build was not found" do
+            e = assert_raises(Samson::Hooks::UserError) { container }
+            e.message.must_equal "Build for dockerfile Dockerfile.new not found"
+          end
         end
-      end
 
-      it "allows selecting dockerfile for init containers" do
-        add_init_container "samson/dockerfile": 'Dockerfile'
-        init_containers[0].must_equal("samson/dockerfile" => "Dockerfile", "image" => image)
-      end
+        it "allows selecting dockerfile for init containers" do
+          add_init_container "samson/dockerfile": 'Dockerfile'
+          init_containers[0].must_equal("samson/dockerfile" => "Dockerfile", "image" => image)
+        end
 
-      it "does not auto-set dockerfile for init containers since they are mostly special" do
-        add_init_container a: 1
-        init_containers[0].must_equal('a' => 1)
+        it "does not auto-set dockerfile for init containers since they are mostly special" do
+          add_init_container a: 1
+          init_containers[0].must_equal('a' => 1)
+        end
+
+        describe "when project does not build images" do
+          before do
+            doc.kubernetes_release.project.docker_image_building_disabled = true
+            build.update_column(:image_name, 'truth_service')
+          end
+
+          it "fills matching image from builds" do
+            container.fetch(:image).must_equal image
+          end
+
+          it "fails when build is not found" do
+            build.update_column(:image_name, 'nope')
+            e = assert_raises(Samson::Hooks::UserError) { container.fetch(:image).must_equal image }
+            e.message.must_include "Did not find build for image_name truth_service"
+          end
+        end
       end
 
       it "copies resource values" do

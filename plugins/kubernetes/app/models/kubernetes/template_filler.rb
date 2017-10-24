@@ -276,10 +276,14 @@ module Kubernetes
       end
     end
 
+    # NOTE: the whole inner loop might make sense to pull out and unify in BuildFinder
+    # so that needed dockerfiles are also detected there instead of via project `dockerfiles` column
     def set_docker_image_for_containers(builds, containers, default:)
       containers.each do |container|
         build =
-          if selected = container[:"samson/dockerfile"]
+          if project.docker_image_building_disabled?
+            Kubernetes::BuildFinder.detect_build_by_image_name!(builds, container.fetch(:image))
+          elsif selected = container[:"samson/dockerfile"]
             builds.detect { |b| b.dockerfile == selected } ||
               raise(Samson::Hooks::UserError, "Build for dockerfile #{selected} not found")
           elsif default

@@ -154,9 +154,7 @@ describe Kubernetes::BuildFinder do
       it "does not find for different sha" do
         build.update_column(:git_sha, 'other')
         e = assert_raises(Samson::Hooks::UserError) { execute }
-        e.message.must_include(
-          "Did not find build for 1a6f551a2ffa6d88e15eef5461384da0bfb1c194 and image_name bar"
-        )
+        e.message.must_include("Did not find build")
       end
 
       it "finds accross projects" do
