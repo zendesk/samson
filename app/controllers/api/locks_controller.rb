@@ -3,12 +3,12 @@ class Api::LocksController < Api::BaseController
   before_action :authorize_resource!
 
   def index
-    render json: paginate(Lock)
+    render json: {locks: paginate(Lock)}
   end
 
   def create
     lock = Lock.create!(params.require(:lock).permit(Lock::ASSIGNABLE_KEYS).merge(user: current_user))
-    render json: lock
+    render json: {lock: lock}
   end
 
   def destroy

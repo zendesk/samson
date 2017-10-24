@@ -66,7 +66,7 @@ class CsvExportJob
     CSV.open(filename, 'w+') do |csv|
       csv << Deploy.csv_header
       deploys.find_each do |deploy|
-        csv << deploy.csv_line
+        csv << deploy.as_csv
       end
       csv << summary
       csv << filters_applied

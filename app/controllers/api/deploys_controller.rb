@@ -4,11 +4,11 @@ class Api::DeploysController < Api::BaseController
   before_action :validate_filter, only: :index
 
   def index
-    render json: paginate(deploy_scope)
+    render json: {deploys: paginate(deploy_scope)}
   end
 
   def show
-    render json: Deploy.find(params.require(:id))
+    render json: {deploy: Deploy.find(params.require(:id))}
   end
 
   def active_count

@@ -5,7 +5,7 @@ class Api::StagesController < Api::BaseController
   before_action :require_project
 
   def index
-    render json: @project.stages
+    render json: {stages: @project.stages}
   end
 
   def clone
@@ -13,7 +13,7 @@ class Api::StagesController < Api::BaseController
     new_stage.name = stage_name
     new_stage.deploy_groups = deploy_groups if deploy_groups.any?
     if new_stage.save
-      render json: new_stage, status: 201
+      render json: {stage: new_stage}, status: 201
     else
       render json: new_stage.errors, status: 422
     end

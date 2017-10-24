@@ -1,3 +1,4 @@
+// refresh current deploys when deploys update
 samson.controller("currentDeploysCtrl", function($http, SseFactory) {
   'use strict';
 

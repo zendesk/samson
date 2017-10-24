@@ -63,7 +63,7 @@ class DeploysController < ApplicationController
 
       format.json do
         status = (@deploy.persisted? ? :created : :unprocessable_entity)
-        render json: @deploy.to_json, status: status, location: [current_project, @deploy]
+        render json: @deploy, status: status, location: [current_project, @deploy]
       end
     end
   end
@@ -213,7 +213,7 @@ class DeploysController < ApplicationController
     deploys.pop if deploy_count > csv_limit
     CSV.generate do |csv|
       csv << Deploy.csv_header
-      deploys.each { |deploy| csv << deploy.csv_line }
+      deploys.each { |deploy| csv << deploy.as_csv }
       csv << ['-', 'count:', [deploy_count, csv_limit].min]
       csv << ['-', 'params:', params]
       if deploy_count > csv_limit

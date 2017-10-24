@@ -4,7 +4,7 @@ class Api::DeployGroupsController < Api::BaseController
 
   def index
     scope = current_project.present? ? stage.deploy_groups : DeployGroup.all
-    render json: paginate(scope.sort_by(&:natural_order))
+    render json: {deploy_groups: paginate(scope.sort_by(&:natural_order))}
   end
 
   protected
