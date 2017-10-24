@@ -10,6 +10,8 @@ describe DeployGroupsController do
 
   as_a_viewer do
     describe "#index" do
+      let(:json) { JSON.parse(response.body) }
+
       it "renders" do
         get :index
         assert_template :index
@@ -21,13 +23,22 @@ describe DeployGroupsController do
         get :index, format: :json
         json.keys.must_equal ['deploy_groups']
         json['deploy_groups'].size.must_equal DeployGroup.count
-        json['deploy_groups'].first.keys.sort.must_equal ["id", "kubernetes_cluster", "name"]
       end
 
       it "filters by stage for json api" do
         get :index, params: {project_id: stage.project.id, id: stage.id}, format: :json
         json.keys.must_equal ['deploy_groups']
         json['deploy_groups'].size.must_equal 1
+        json['deploy_groups'].first.keys.must_include "name"
+      end
+
+      it "can include kubernetes_cluster" do
+        get :index, params: {includes: 'kubernetes_cluster'}, format: :json
+        json.keys.must_equal ['deploy_groups', 'kubernetes_clusters']
+
+        # can find the references
+        json['deploy_groups'].first.keys.must_include "kubernetes_cluster_id"
+        json['kubernetes_clusters'].first.keys.wont_include "deploy_group_id"
       end
     end
 

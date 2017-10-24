@@ -21,9 +21,13 @@ module JsonRenderer
     associations = {}
     requested.each do |association_name|
       resources.each_with_index do |resource, i|
-        associated_klass_namespace = resource.association(association_name).klass.name.underscore.pluralize
+        associated_klass_namespace = resource.association(association_name).klass.name.underscore.tr("/", "_").pluralize
         associated = resource.public_send(association_name)
-        all[name][i]["#{association_name}_ids"] = associated.map(&:id) if associated.respond_to?(:map)
+        if associated.respond_to?(:map)
+          all[name][i]["#{association_name}_ids"] = associated.map(&:id)
+        else
+          all[name][i]["#{association_name}_id"] ||= associated&.id
+        end
         (associations[associated_klass_namespace] ||= []).concat Array(associated)
       end
     end

@@ -16,7 +16,9 @@ class DeployGroupsController < ApplicationController
 
     respond_to do |format|
       format.html
-      format.json { render json: @deploy_groups }
+      format.json do
+        render_json_with_includes(:deploy_groups, @deploy_groups, allowed: Samson::Hooks.fire(:deploy_group_includes))
+      end
     end
   end
 

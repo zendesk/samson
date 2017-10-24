@@ -44,6 +44,12 @@ describe "JsonRenderer Integration" do
       ids.size.must_equal ids.uniq.size
     end
 
+    it "renders has_one with id" do
+      get '/deploy_groups.json', params: {includes: 'kubernetes_cluster'}
+      json.keys.must_equal ['deploy_groups', 'kubernetes_clusters']
+      json['deploy_groups'].first.keys.must_include "kubernetes_cluster_id"
+    end
+
     it "shows a descriptive error to users that use unsupported includes" do
       get '/deploys.json', params: {includes: "nope"}
       assert_response :bad_request
