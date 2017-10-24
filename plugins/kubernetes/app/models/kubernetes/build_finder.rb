@@ -31,7 +31,12 @@ module Kubernetes
     def ensure_successful_builds
       builds =
         if @images
-          find_build_by_image_name
+          find_build_by_image_name(try: true) || begin
+            # need some sleeping to wait for callbacks to arrive from external builders
+            # since samson and the image building can be triggered at the same time
+            sleep 5
+            find_build_by_image_name(try: false)
+          end
         else
           find_or_create_builds_by_dockerfile
         end
@@ -50,24 +55,27 @@ module Kubernetes
     end
 
     # Finds build by comparing their name (foo.com/bar/baz -> baz) to pre-build images image_name column
-    #
-    # TODO: this will need some sleeping to wait for hooks to arrive
-    # since samson and the image building can be triggered at the same time
-    def find_build_by_image_name
+    def find_build_by_image_name(try:)
       possible_builds = reused_builds + Build.where(git_sha: @job.commit)
       @images.map do |image|
-        self.class.detect_build_by_image_name!(possible_builds, image)
+        self.class.detect_build_by_image_name!(possible_builds, image, try: try) ||
+          return # rubocop:disable Lint/NonLocalExitFromIterator
       end
     end
 
-    def self.detect_build_by_image_name!(builds, image)
+    def self.detect_build_by_image_name!(builds, image, try:)
       image_name = image.split('/').last.split(/[:@]/, 2).first
-      builds.detect { |b| b.image_name == image_name } ||
-        raise(
-          Samson::Hooks::UserError,
-          "Did not find build for image_name #{image_name} (from #{image}).\n" \
-          "Found image_names #{builds.map(&:image_name).uniq.join(", ")}."
-        )
+      builds.detect { |b| b.image_name == image_name } || begin
+        if try
+          nil
+        else
+          raise(
+            Samson::Hooks::UserError,
+            "Did not find build for image_name #{image_name} (from #{image}).\n" \
+            "Found image_names #{builds.map(&:image_name).uniq.join(", ")}."
+          )
+        end
+      end
     end
 
     private
