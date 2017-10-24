@@ -132,8 +132,13 @@ describe Kubernetes::DeployExecutor do
     end
 
     it "succeeds with external builds" do
-      build.update_columns(dockerfile: nil, image_name: 'truth_service')
+      # image_name has to match the repo_digest
+      template = Kubernetes::ReleaseDoc.new.send(:raw_template)[0]
+      template[:spec][:template][:spec][:containers][0][:image] = "something.com/test:foobar"
+      build.update_columns(dockerfile: nil, image_name: 'test')
+
       job.project.update_column :docker_image_building_disabled, true
+
       assert execute
       out.must_include "resque-worker: Live\n"
       out.must_include "SUCCESS"

@@ -56,14 +56,18 @@ module Kubernetes
     def find_build_by_image_name
       possible_builds = reused_builds + Build.where(git_sha: @job.commit)
       @images.map do |image|
-        image_name = image.split('/').last.split(':', 2).first
-        possible_builds.detect { |b| b.image_name == image_name } ||
-          raise(
-            Samson::Hooks::UserError,
-            "Did not find build for #{@job.commit} and image_name #{image_name} (from #{image}).\n" \
-            "Found image_names #{possible_builds.map(&:image_name).uniq.join(", ")}."
-          )
+        self.class.detect_build_by_image_name!(possible_builds, image)
       end
+    end
+
+    def self.detect_build_by_image_name!(builds, image)
+      image_name = image.split('/').last.split(/[:@]/, 2).first
+      builds.detect { |b| b.image_name == image_name } ||
+        raise(
+          Samson::Hooks::UserError,
+          "Did not find build for image_name #{image_name} (from #{image}).\n" \
+          "Found image_names #{builds.map(&:image_name).uniq.join(", ")}."
+        )
     end
 
     private
