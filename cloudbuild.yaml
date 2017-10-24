@@ -1,0 +1,44 @@
+#secrets:
+#  - kmsKeyName: projects/docker-images-180022/locations/global/keyRings/docker-images-keyring/cryptoKeys/docker-images-crypto
+#    secretEnv:
+#      ARTIFACTORY_API_KEY: CiQAyTSKy3YsKY28YVSl01/Q/HqMOEa7zZTNlGVWBZzxbktieO8ScgDYdHPURG+NVWToKWGQ42OsO1xKQ3CEvryGCKwOIyYq7p1VqxtapQ179YimojWqINQS4bkL0e+t6VYx+plfcnfeZfMMi18e3p9M0Vmw76d9+/HYMSwwBn+lb2J/x7vrS51XSQ0CAyFnrhu7yDn/dk35nA==
+
+steps:
+  # Note: You need a shell to resolve environment variables with $$
+#  - id: 'get-artifactory-credentials'
+#    name: 'gcr.io/cloud-builders/wget'
+#    entrypoint: "bash"
+#    args:
+#      - '-c'
+#      - 'wget --output-document=.npm.credentials --quiet=on https://artifact-builder:$$ARTIFACTORY_API_KEY@zdrepo.jfrog.io/zdrepo/api/npm/npm/auth/zendesk'
+#    secretEnv:
+#      - ARTIFACTORY_API_KEY
+#
+#  - id: 'append-credentials'
+#    name: 'alpine:latest'
+#    args:
+#      - "/bin/sh"
+#      - "-c"
+#      - "cat .npm.credentials >> .npmrc"
+
+  - id: "install-js-assets"
+    name: "gcr.io/cloud-builders/npm"
+    args:
+      - "install"
+      - "--no-progress"
+      - "--log-level error"
+
+  # Alternate syntax: args: ["install","--no-progress","--log-level error"]
+
+  - id: "docker-build"
+    name: "gcr.io/cloud-builders/docker"
+    args:
+      - "build"
+      - “--build-arg=BASE_IMAGE=gcr.io/docker-image-builder-179319/base/ruby:2.3.1”
+      - "--tag=gcr.io/$PROJECT_ID/bkranjac/samson"
+      - "--file=./Dockerfile-gcb"
+      - "."
+
+timeout: "1200s"
+images:
+  - "gcr.io/$PROJECT_ID/bkranjac/samson"
