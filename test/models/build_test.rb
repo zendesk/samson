@@ -48,7 +48,7 @@ describe Build do
         build.update_column(:git_sha, current_commit)
         refute_valid(valid_build(git_ref: nil, git_sha: current_commit)) # not unique
         assert_valid(valid_build(git_ref: nil, git_sha: current_commit, dockerfile: 'Other'))
-        assert_valid(valid_build(git_ref: nil, git_sha: current_commit, dockerfile: nil))
+        assert_valid(valid_build(git_ref: nil, git_sha: current_commit, dockerfile: nil, external_id: '123'))
       end
     end
 
@@ -58,10 +58,11 @@ describe Build do
         build.update_columns(git_sha: current_commit, image_name: 'hello', dockerfile: 'Other')
         builds(:v1_tag).update_columns(git_sha: current_commit, image_name: nil)
 
-        refute_valid(valid_build(git_ref: nil, git_sha: current_commit, image_name: 'hello')) # not unique
-        assert_valid(valid_build(git_ref: nil, git_sha: current_commit, image_name: 'world'))
-        assert_valid(valid_build(git_ref: nil, git_sha: current_commit, image_name: ''))
-        assert_valid(valid_build(git_ref: nil, git_sha: current_commit, image_name: nil))
+        base = {git_ref: nil, git_sha: current_commit, external_id: '123'}
+        assert_valid(valid_build(base))
+        refute_valid(valid_build(base.merge(image_name: 'hello'))) # not unique
+        assert_valid(valid_build(base.merge(image_name: 'world'))) # unique
+        assert_valid(valid_build(base.merge(image_name: '')))
       end
     end
 
@@ -104,6 +105,12 @@ describe Build do
 
     it 'is invalid when docker_repo_digest was given without an exact git_sha' do
       refute_valid(valid_build(docker_repo_digest: repo_digest))
+    end
+
+    it 'validates dockerfile exists when build needs to be done by samson' do
+      assert_valid(valid_build(dockerfile: 'Dockerfile'))
+      refute_valid(valid_build(dockerfile: nil))
+      assert_valid(valid_build(dockerfile: nil, external_id: '123'))
     end
   end
 
@@ -201,7 +208,7 @@ describe Build do
   describe "#make_dockerfile_and_image_name_not_collide" do
     it "stores nil dockerfile so index does not collide when using image_name for uniqueness" do
       GitRepository.any_instance.expects(:commit_from_ref).returns('a' * 40)
-      build = valid_build(image_name: 'foobar')
+      build = valid_build(image_name: 'foobar', external_id: '123')
       build.save!
       build.dockerfile.must_be_nil
       build.image_name.must_equal 'foobar'

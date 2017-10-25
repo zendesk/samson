@@ -14,6 +14,7 @@ class Build < ActiveRecord::Base
 
   validates :project, presence: true
   validates :git_sha, allow_nil: true, format: SHA1_REGEX
+  validates :dockerfile, presence: true, unless: :external_id
   [:dockerfile, :image_name].each do |attribute|
     validates(
       :git_sha,
