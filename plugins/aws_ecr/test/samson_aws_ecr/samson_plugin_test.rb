@@ -34,8 +34,10 @@ describe SamsonAwsEcr::Engine do
   end
 
   describe :before_docker_repository_usage do
+    let(:build) { builds(:docker_build) }
+
     def fire
-      Samson::Hooks.fire(:before_docker_repository_usage, builds(:docker_build))
+      Samson::Hooks.fire(:before_docker_repository_usage, build)
     end
 
     run_inside_of_temp_directory
@@ -96,6 +98,12 @@ describe SamsonAwsEcr::Engine do
         ecr_client.
           expects(:create_repository).
           with(repository_name: 'foo')
+        fire
+      end
+
+      it 'derives repository from dockerfile' do
+        build.update_column :dockerfile, 'Dockerfile.foobar'
+        ecr_client.expects(:describe_repositories).with(repository_names: ['foo-foobar'])
         fire
       end
 
