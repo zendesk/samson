@@ -1,5 +1,5 @@
 <%= page_title "#{@project.name} Build Command" %>
-<% reused = @command.usages.count > 1 %>
+<% reused = @command.usage_ids.count > 1 %>
 <%= breadcrumb @project, "Pre Build Command" %>
 
 <section>
