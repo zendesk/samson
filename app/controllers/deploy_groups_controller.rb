@@ -7,7 +7,17 @@ class DeployGroupsController < ApplicationController
   ]
 
   def index
-    @deploy_groups = DeployGroup.all.sort_by(&:natural_order)
+    @deploy_groups =
+      if project_id = params[:project_id]
+        Project.find(project_id).stages.find(params.require(:id)).deploy_groups
+      else
+        DeployGroup.where(nil)
+      end.sort_by(&:natural_order)
+
+    respond_to do |format|
+      format.html
+      format.json { render json: @deploy_groups }
+    end
   end
 
   def show

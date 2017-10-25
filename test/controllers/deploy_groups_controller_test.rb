@@ -6,6 +6,7 @@ SingleCov.covered!
 describe DeployGroupsController do
   let(:deploy_group) { deploy_groups(:pod100) }
   let(:stage) { stages(:test_staging) }
+  let(:json) { JSON.parse(response.body) }
 
   as_a_viewer do
     describe "#index" do
@@ -14,6 +15,19 @@ describe DeployGroupsController do
         assert_template :index
         assert_response :success
         assert_select('tbody tr').count.must_equal DeployGroup.count
+      end
+
+      it "renders json" do
+        get :index, format: :json
+        json.keys.must_equal ['deploy_groups']
+        json['deploy_groups'].size.must_equal DeployGroup.count
+        json['deploy_groups'].first.keys.sort.must_equal ["id", "kubernetes_cluster", "name"]
+      end
+
+      it "filters by stage for json api" do
+        get :index, params: {project_id: stage.project.id, id: stage.id}, format: :json
+        json.keys.must_equal ['deploy_groups']
+        json['deploy_groups'].size.must_equal 1
       end
     end
 
@@ -27,7 +41,7 @@ describe DeployGroupsController do
       it 'renders json with deploys and dependent projects' do
         get :show, params: {id: deploy_group.id}, format: :json
         assert_response :success
-        JSON.parse(response.body).keys.must_equal ["deploy_group", "deploys", "projects"]
+        json.keys.must_equal ["deploy_group", "deploys", "projects"]
       end
     end
 

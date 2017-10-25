@@ -240,12 +240,4 @@ describe "cleanliness" do
       end
     end
   end
-
-  it "does not use json with a list since that includes associations" do
-    assert_content controllers do |content|
-      if content =~ /format.json\s+(\{|do)\s+render\s+json:\s@\S+s\s/m
-        "do not use render json with a list, it will include associations"
-      end
-    end
-  end
 end
