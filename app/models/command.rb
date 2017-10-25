@@ -42,6 +42,10 @@ class Command < ActiveRecord::Base
     stages + projects
   end
 
+  def usage_ids
+    self.class.usage_ids.select { |id| id == self.id }
+  end
+
   def self.usage_ids
     StageCommand.pluck(:command_id) +
     Project.pluck(:build_command_id)
@@ -50,7 +54,7 @@ class Command < ActiveRecord::Base
   private
 
   def ensure_unused
-    if usages.any?
+    if usage_ids.any?
       errors.add(:base, 'Can only delete when unused.')
       throw(:abort)
     end
