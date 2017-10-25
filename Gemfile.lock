@@ -475,7 +475,7 @@ GEM
     unicode-display_width (1.1.1)
     validates_lengths_from_database (0.6.0)
       activerecord (>= 3)
-    vault (0.7.1)
+    vault (0.10.1)
     warden (1.2.7)
       rack (>= 1.0)
     webmock (3.0.1)
