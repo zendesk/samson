@@ -9,16 +9,10 @@ Samson::Application.routes.draw do
       end
     end
 
-    resources :deploy_groups, only: [:index]
-
     resources :projects, only: [:index] do
       resources :automated_deploys, only: [:create]
       resources :deploys, only: [:index]
-      resources :stages, only: [:index] do
-        member do
-          get :deploy_groups, to: 'deploy_groups#index'
-        end
-      end
+      resources :stages, only: [:index]
     end
 
     resources :stages, only: [] do
@@ -133,7 +127,10 @@ Samson::Application.routes.draw do
     end
   end
 
-  post '/api/projects/:project_id/builds', to: 'builds#create' # legacy, can be removed when it is no longer used
+  # legacy, can be removed when it is no longer used
+  post '/api/projects/:project_id/builds', to: 'builds#create'
+  get '/api/deploy_groups', to: 'deploy_groups#index'
+  get '/api/projects/:project_id/stages/:id/deploy_groups', to: 'deploy_groups#index'
 
   get '/auth/github/callback', to: 'sessions#github'
   get '/auth/google/callback', to: 'sessions#google'
