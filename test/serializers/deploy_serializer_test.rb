@@ -15,8 +15,8 @@ describe DeploySerializer do
     parsed['summary'].must_equal "staging was deployed to Staging"
   end
 
-  it 'serializes created_at to milliseconds' do
-    parsed['updated_at'].must_equal deploy.updated_at.to_i * 1000
+  it 'serializes created_at' do
+    parsed['updated_at'].must_equal '2014-01-01T20:10:00.000Z'
   end
 
   it 'can serialize with deleted stage' do
