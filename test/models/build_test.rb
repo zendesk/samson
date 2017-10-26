@@ -47,6 +47,7 @@ describe Build do
       Dir.chdir(repo_temp_dir) do
         build.update_column(:git_sha, current_commit)
         refute_valid(valid_build(git_ref: nil, git_sha: current_commit)) # not unique
+        refute_valid(valid_build) # not unique since ref resolves to sha
         assert_valid(valid_build(git_ref: nil, git_sha: current_commit, dockerfile: 'Other'))
         assert_valid(valid_build(git_ref: nil, git_sha: current_commit, dockerfile: nil, external_id: '123'))
       end
