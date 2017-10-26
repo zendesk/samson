@@ -182,12 +182,15 @@ describe BuildsController do
 
       it 'updates a build via external_id' do
         build = Build.last
-        build.update_columns(external_id: 'foo', external_status: 'running')
+        build.update_columns(external_id: 'foo', external_status: 'running', docker_repo_digest: nil)
 
-        create external_id: 'foo', external_status: 'succeeded', format: :json
+        digest = 'foo.com/test@sha256:5f1d7c7381b2e45ca73216d7b06004fdb0908ed7bb8786b62f2cdfa5035fde2c'
+        create external_id: 'foo', external_status: 'succeeded', docker_repo_digest: digest, format: :json
         assert_response :success
 
-        build.reload.external_status.must_equal 'succeeded'
+        build.reload
+        build.external_status.must_equal 'succeeded'
+        build.docker_repo_digest.must_equal digest
       end
 
       it 'starts the build' do

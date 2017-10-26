@@ -96,6 +96,7 @@ class BuildsController < ApplicationController
   def edit_build_params(validate:)
     attributes = params.require(:build)
     allowed = [:name, :description, :external_status]
+    allowed << :docker_repo_digest unless @build.docker_repo_digest # can update external build to set digest
     if validate
       attributes.permit(*allowed)
     else
