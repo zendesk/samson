@@ -171,7 +171,7 @@ describe Kubernetes::DeployExecutor do
         e = assert_raises Samson::Hooks::UserError do
           refute execute
         end
-        e.message.must_include "Error found when parsing kubernetes/"
+        e.message.must_include "Error parsing kubernetes/" # order is random so we check prefix
       end
 
       it "fails before building when roles as a group are invalid" do
