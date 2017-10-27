@@ -12,13 +12,15 @@ module SamsonGcloudImageTagger
         return unless builds = deploy.project.builds.
           where(git_sha: deploy.job.commit).where.not(docker_repo_digest: nil).to_a.presence
 
+        gcloud_options = ENV.fetch('GCLOUD_IMG_TAGGER_OPTS', '').split(' ')
+
         builds.each do |build|
           digest = build.docker_repo_digest
           next unless digest =~ /(^|\/|\.)gcr.io\// # gcr.io or https://gcr.io or region like asia.gcr.io
           base = digest.split('@').first
           tag = deploy.stage.permalink
           beta = container_in_beta
-          command = ["gcloud", *beta, "container", "images", "add-tag", digest, "#{base}:#{tag}", "--quiet"]
+          command = ["gcloud", *beta, "container", "images", "add-tag", digest, "#{base}:#{tag}", "--quiet", *gcloud_options]
           success, output = Samson::CommandExecutor.execute(*command, timeout: 10)
           deploy.job.append_output!(
             "Tagging GCR image:\n#{command.join(" ")}\n#{output.strip}\n#{success ? "SUCCESS" : "FAILED"}\n"

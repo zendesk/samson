@@ -9,3 +9,7 @@ Tag gcloud images with the stage permalink they deployed to, so developers can p
  - download credentials for that account
  - run `gcloud auth activate-service-account --key-file <YOUR-KEY>` on the samson host
  - run `gcloud config set account $(jq -r .client_email < <YOUR-KEY>)` on the samson host
+
+## ENV Vars
+
+  - `GCLOUD_IMG_TAGGER_OPTS` - options ENV var to specify options that are passed to the `gcloud` command
