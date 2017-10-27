@@ -74,7 +74,7 @@ describe SamsonGcloudImageTagger::Engine do
       with_env('GCLOUD_IMG_TAGGER_OPTS' => '--verbose debug') do
         Samson::CommandExecutor.expects(:execute).with(
           'gcloud', 'container', 'images', 'add-tag', 'gcr.io/sdfsfsdf@some-sha', 'gcr.io/sdfsfsdf:staging',
-          '--quiet', '--verbose', 'debug'
+          '--quiet', '--verbose', 'debug', anything
         ).returns([true, "OUT"])
         tag
       end
