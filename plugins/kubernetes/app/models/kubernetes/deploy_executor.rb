@@ -369,38 +369,43 @@ module Kubernetes
       release.release_docs.detect { |rd| break rd.deploy_group if rd.deploy_group_id == pod.deploy_group_id }
     end
 
+    # all images used ... they vary by role and not by deploy-group
     def used_images
-      Kubernetes::ReleaseDoc.new(kubernetes_release: temp_release).images
+      temp_release_docs.uniq(&:kubernetes_role_id).flat_map(&:images).uniq
     end
 
     # verify with a temp release so we can verify everything before creating a real release
     # and having to wait for docker build to finish
     def verify_kubernetes_templates!
+      # - make sure each file exists
+      # - make sure each deploy group has consistent labels
       deploy_group_configs.each do |config|
-        roles = config.fetch(:roles)
-
-        # make sure each template is valid
-        roles.each do |role|
-          Kubernetes::ReleaseDoc.new(
-            kubernetes_release: temp_release,
-            deploy_group: config.fetch(:deploy_group),
-            kubernetes_role: role.fetch(:role)
-          ).verify_template
-        end
-
-        # make sure each set of templates is valid
-        configs = roles.map do |r|
-          role = r.fetch(:role)
+        primary_resources = config.fetch(:roles).map do |role_config|
+          role = role_config.fetch(:role)
           config = role.role_config_file(@job.commit)
           raise Samson::Hooks::UserError, "Error parsing #{role.config_file}" unless config
           config.primary
         end.compact
-        Kubernetes::RoleVerifier.verify_group(configs)
+        Kubernetes::RoleVerifier.verify_group(primary_resources)
       end
+
+      # make sure each template is valid
+      temp_release_docs.each(&:verify_template)
     end
 
-    def temp_release
-      @temp_release ||= Kubernetes::Release.new(project: @job.project, git_sha: @job.commit, git_ref: 'master')
+    def temp_release_docs
+      @temp_release_docs ||= begin
+        release = Kubernetes::Release.new(project: @job.project, git_sha: @job.commit, git_ref: 'master')
+        deploy_group_configs.flat_map do |config|
+          config.fetch(:roles).map do |role|
+            Kubernetes::ReleaseDoc.new(
+              kubernetes_release: release,
+              deploy_group: config.fetch(:deploy_group),
+              kubernetes_role: role.fetch(:role)
+            )
+          end
+        end
+      end
     end
   end
 end
