@@ -12,6 +12,8 @@ class Build < ActiveRecord::Base
   before_validation :nil_out_blanks
   before_validation :make_default_dockerfile_and_image_name_not_collide, on: :create
 
+  validate :validate_docker_repo_digest_matches_git_sha, on: :create
+  validate :validate_git_reference, on: :create
   validates :project, presence: true
   validates :git_sha, allow_nil: true, format: SHA1_REGEX
   validates :dockerfile, presence: true, unless: :external_id
@@ -26,9 +28,6 @@ class Build < ActiveRecord::Base
   validates :docker_image_id, format: SHA256_REGEX, allow_nil: true
   validates :docker_repo_digest, format: DIGEST_REGEX, allow_nil: true
   validates :external_url, format: /\Ahttps?:\/\/\S+\z/, allow_nil: true
-
-  validate :validate_docker_repo_digest_matches_git_sha, on: :create
-  validate :validate_git_reference, on: :create
 
   before_create :assign_number
 
