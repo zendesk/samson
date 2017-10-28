@@ -104,7 +104,7 @@ describe Kubernetes::ReleaseDoc do
         to_return(body: '{"SER":"VICE"}')
 
       # check and update deployment
-      client.expects(:get_deployment).returns(DE: "PLOY")
+      client.expects(:get_deployment).returns({DE: "PLOY"}.to_json)
       client.expects(:update_deployment).returns("Rest client resonse")
 
       doc.deploy
