@@ -215,4 +215,29 @@ describe Build do
       build.image_name.must_equal 'foobar'
     end
   end
+
+  describe "#active?" do
+    it "is not active when not running a job" do
+      build.create_docker_job
+      assert build.active?
+    end
+
+    it "is active when running a job" do
+      build.create_docker_job
+      assert build.active?
+    end
+
+    describe "when external" do
+      before { build.external_id = '123' }
+
+      it "is active when not finished" do
+        assert build.active?
+      end
+
+      it "is active when finished" do
+        build.docker_repo_digest = 'some-digest'
+        refute build.active?
+      end
+    end
+  end
 end

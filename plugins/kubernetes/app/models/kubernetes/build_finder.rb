@@ -137,24 +137,23 @@ module Kubernetes
     end
 
     def wait_for_build(build)
-      if !build.docker_repo_digest && build.docker_build_job&.active?
-        @output.puts("Waiting for Build #{build.url} to finish.")
-        loop do
-          break if @cancelled
-          sleep TICK
-          break if build.docker_build_job.reload.finished?
-        end
+      return unless build.reload.active?
+
+      @output.puts("Waiting for Build #{build.url} to finish.")
+      loop do
+        break if @cancelled
+        sleep TICK
+        break unless build.reload.active?
       end
-      build.reload
     end
 
     def ensure_build_is_successful(build)
       if build.docker_repo_digest
         @output.puts("Build #{build.url} is looking good!")
       elsif build_job = build.docker_build_job
-        raise Samson::Hooks::UserError, "Build #{build.url} is #{build_job.status}, rerun it manually."
+        raise Samson::Hooks::UserError, "Build #{build.url} is #{build_job.status}, rerun it."
       else
-        raise Samson::Hooks::UserError, "Build #{build.url} was created but never ran, run it manually."
+        raise Samson::Hooks::UserError, "Build #{build.url} was created but never ran, run it."
       end
     end
   end

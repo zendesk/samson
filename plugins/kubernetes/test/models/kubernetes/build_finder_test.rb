@@ -31,7 +31,7 @@ describe Kubernetes::BuildFinder do
 
     it "fails when the build is not built" do
       e = assert_raises(Samson::Hooks::UserError) { execute }
-      e.message.must_equal "Build #{build.url} was created but never ran, run it manually."
+      e.message.must_equal "Build #{build.url} was created but never ran, run it."
       out.wont_include "Creating Build"
     end
 
@@ -56,17 +56,12 @@ describe Kubernetes::BuildFinder do
       end
     end
 
-    it "waits when build is running" do
-      build.create_docker_job.update_column(:status, 'running')
-      build.save!
-
-      job = build.docker_build_job
-      job.class.any_instance.expects(:reload).with do
-        # inside wait loop ... pretend the build worked
-        job.status = 'succeeded'
-        build.update_column(:docker_repo_digest, 'somet-digest')
-        true
-      end.returns job
+    it "waits when build is active" do
+      done = false
+      build.class.any_instance.expects(:active?).times(2).with do
+        build.class.any_instance.stubs(:docker_repo_digest).returns('some-digest') unless done
+        done = true
+      end.returns(true, false)
 
       assert execute
 
@@ -79,7 +74,7 @@ describe Kubernetes::BuildFinder do
       e = assert_raises Samson::Hooks::UserError do
         execute
       end
-      e.message.must_equal "Build #{build.url} is cancelled, rerun it manually."
+      e.message.must_equal "Build #{build.url} is cancelled, rerun it."
       out.wont_include "Creating Build"
     end
 
@@ -128,7 +123,7 @@ describe Kubernetes::BuildFinder do
         e = assert_raises Samson::Hooks::UserError do
           execute
         end
-        e.message.must_equal "Build #{Build.last.url} is cancelled, rerun it manually."
+        e.message.must_equal "Build #{Build.last.url} is cancelled, rerun it."
         out.must_include "Creating build for Dockerfile."
       end
 
