@@ -61,6 +61,16 @@ describe Command do
       projects(:test).update_column(:build_command_id, extra_id)
       Command.usage_ids.uniq.sort.must_equal [extra_id, command.id].sort
     end
+
+    it "does not include nils" do
+      Command.usage_ids.wont_include nil
+    end
+  end
+
+  describe "#usage_ids" do
+    it "is empty for new" do
+      Command.new.usage_ids.must_equal []
+    end
   end
 
   describe "#ensure_unused" do

@@ -48,7 +48,7 @@ class Command < ActiveRecord::Base
 
   def self.usage_ids
     StageCommand.pluck(:command_id) +
-    Project.pluck(:build_command_id)
+    Project.pluck(:build_command_id).compact
   end
 
   private
