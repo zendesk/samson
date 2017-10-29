@@ -18,7 +18,7 @@ describe StreamsController do
         # Override the job retrieval in the streams controller. This way we don't have
         # to stub out all the rest of the JobExecution setup/execute/... flow.
         fake_execution = JobExecution.new("foo", job)
-        JobExecution.expects(:find_by_id).returns(fake_execution)
+        JobQueue.expects(:find_by_id).returns(fake_execution)
 
         # make sure that the JobExecution object responds to the pid method
         assert fake_execution.respond_to?(:pid)

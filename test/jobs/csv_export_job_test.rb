@@ -11,8 +11,8 @@ describe CsvExportJob do
   it "enqueues properly" do
     with_job_execution do
       job = CsvExportJob.new(deploy_export_job)
-      JobExecution.perform_later(job)
-      assert JobExecution.executing?(job.id)
+      JobQueue.perform_later(job)
+      assert JobQueue.executing?(job.id)
       wait_for_jobs_to_finish
     end
   end

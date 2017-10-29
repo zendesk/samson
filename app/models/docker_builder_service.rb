@@ -102,7 +102,7 @@ class DockerBuilderService
       Samson::Hooks.fire(:after_docker_build, build)
     end
 
-    JobExecution.perform_later(@execution)
+    JobQueue.perform_later(@execution)
   end
 
   private

@@ -36,17 +36,16 @@ describe RestartSignalHandler do
     end
 
     it "turns job processing off" do
-      JobExecution.enabled.must_equal true
+      JobQueue.enabled.must_equal true
       handle
-      JobExecution.enabled.must_equal false
+      JobQueue.enabled.must_equal false
     end
 
     it "waits for running jobs" do
-      job_queue = JobExecution.send(:job_queue)
       job_exec = stub(id: 123, pid: 444, pgid: 5555, descriptor: 'Job thingy')
 
       # we call it twice in each iteration
-      job_queue.expects(:executing).times(2).returns [job_exec], []
+      JobQueue.expects(:executing).times(2).returns [job_exec], []
 
       RestartSignalHandler.any_instance.expects(:sleep).with(5)
       handle
@@ -68,7 +67,7 @@ describe RestartSignalHandler do
 
     it "turns job-execution on" do
       RestartSignalHandler.after_restart
-      JobExecution.enabled.must_equal true
+      JobQueue.enabled.must_equal true
     end
 
     it "cancels running jobs" do
@@ -78,13 +77,13 @@ describe RestartSignalHandler do
 
     it "starts pending jobs" do
       jobs(:running_test).update_column(:status, 'pending')
-      JobExecution.expects(:perform_later)
+      JobQueue.expects(:perform_later)
       RestartSignalHandler.after_restart
     end
 
     it "starts pending csv_export_jobs" do
       csv_exports(:pending).update_column(:status, 'pending')
-      JobExecution.expects(:perform_later)
+      JobQueue.expects(:perform_later)
       RestartSignalHandler.after_restart
     end
   end

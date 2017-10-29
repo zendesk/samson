@@ -23,7 +23,7 @@ describe DockerBuilderService do
 
   describe "#run" do
     def call(options = {})
-      JobExecution.expects(:perform_later).capture(perform_laters)
+      JobQueue.expects(:perform_later).capture(perform_laters)
       service.run(options)
     end
 
@@ -35,7 +35,7 @@ describe DockerBuilderService do
     let(:job) { perform_laters[0][0] }
 
     it "skips when already running to combat racey parallel deploys/builds" do
-      JobExecution.expects(:perform_later).never
+      JobQueue.expects(:perform_later).never
       Rails.cache.write("build-service-#{build.id}", true)
       service.run
     end

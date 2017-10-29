@@ -14,7 +14,7 @@ class StreamsController < ApplicationController
     response.headers['Access-Control-Allow-Credentials'] = true
 
     @job = Job.find(params[:id])
-    @execution = JobExecution.find_by_id(@job.id)
+    @execution = JobQueue.find_by_id(@job.id)
 
     return response.stream.close unless @job.active? && @execution
 

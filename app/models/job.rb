@@ -75,7 +75,7 @@ class Job < ActiveRecord::Base
   end
 
   def cancel(canceller)
-    !JobExecution.dequeue(id) && ex = execution # is executing
+    !JobQueue.dequeue(id) && ex = execution # is executing
     return true if !ex && !active?
 
     update_attribute(:canceller, canceller) unless self.canceller
@@ -102,7 +102,7 @@ class Job < ActiveRecord::Base
   end
 
   def queued?
-    JobExecution.queued?(id)
+    JobQueue.queued?(id)
   end
 
   def active?
@@ -110,11 +110,11 @@ class Job < ActiveRecord::Base
   end
 
   def executing?
-    JobExecution.executing?(id)
+    JobQueue.executing?(id)
   end
 
   def waiting_for_restart?
-    !JobExecution.enabled && pending?
+    !JobQueue.enabled && pending?
   end
 
   def output
@@ -151,7 +151,7 @@ class Job < ActiveRecord::Base
   end
 
   def execution
-    JobExecution.find_by_id(id)
+    JobQueue.find_by_id(id)
   end
 
   def status!(status)

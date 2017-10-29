@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
+JobQueue.clear
+
 SingleCov.covered!
 
 describe JobQueue do
@@ -27,7 +29,7 @@ describe JobQueue do
 
     with_job_execution do
       locked do
-        subject.add(job_execution)
+        subject.perform_later(job_execution)
         yield
       end
     end
@@ -40,8 +42,8 @@ describe JobQueue do
 
     with_job_execution do
       locked do
-        subject.add(job_execution, queue: queue_name)
-        subject.add(queued_job_execution, queue: queue_name)
+        subject.perform_later(job_execution, queue: queue_name)
+        subject.perform_later(queued_job_execution, queue: queue_name)
         yield
       end
     end
@@ -58,7 +60,7 @@ describe JobQueue do
     wait_for_jobs_to_finish
   end
 
-  let(:subject) { JobQueue.new }
+  let(:subject) { JobQueue }
   let(:job_execution) { fake_execution.new(:active) }
   let(:queued_job_execution) { fake_execution.new(:queued) }
   let(:active_lock) { Mutex.new }
@@ -66,10 +68,10 @@ describe JobQueue do
   let(:queue_name) { :my_queue }
 
   before do
-    JobExecution.stubs(:new).returns(job_execution).returns(queued_job_execution)
+    JobQueue.stubs(:new).returns(job_execution).returns(queued_job_execution)
   end
 
-  describe "#add" do
+  describe "#perform_later" do
     it 'immediately performs a job when executing is empty' do
       with_executing_job do
         assert subject.executing?(:active)
@@ -79,22 +81,24 @@ describe JobQueue do
     end
 
     it 'performs parallel jobs when they are in different queues' do
-      locked do
-        [job_execution, queued_job_execution].each do |job|
-          job.expects(:perform).with { active_lock.synchronize { true } }
+      with_job_execution do
+        locked do
+          [job_execution, queued_job_execution].each do |job|
+            job.expects(:perform).with { active_lock.synchronize { true } }
 
-          with_job_execution { subject.add(job) }
+            subject.perform_later(job)
 
-          assert subject.executing?(job.id)
+            assert subject.executing?(job.id)
+          end
         end
       end
     end
 
     it 'does not perform a job if job execution is disabled' do
-      JobExecution.enabled = false
+      JobQueue.enabled = false
       job_execution.expects(:perform).never
 
-      subject.add(job_execution)
+      subject.perform_later(job_execution)
 
       refute subject.executing?(:active)
       refute subject.queued?(:active)
@@ -103,8 +107,8 @@ describe JobQueue do
 
     it 'does not queue a job if job execution is disabled' do
       with_executing_job do
-        JobExecution.enabled = false
-        subject.add(queued_job_execution, queue: queue_name)
+        JobQueue.enabled = false
+        subject.perform_later(queued_job_execution, queue: queue_name)
 
         refute subject.executing?(:queued)
         refute subject.queued?(:queued)
@@ -114,10 +118,10 @@ describe JobQueue do
 
     it 'reports to airbrake when executing jobs were in an unexpected state' do
       with_job_execution do
-        subject.instance_variable_get(:@executing)[queue_name] = job_execution
+        subject.instance.instance_variable_get(:@executing)[queue_name] = job_execution
 
         e = assert_raises RuntimeError do
-          subject.send(:delete_and_enqueue_next, queued_job_execution, queue_name)
+          subject.instance.send(:delete_and_enqueue_next, queued_job_execution, queue_name)
         end
         e.message.must_equal 'Unexpected executing job found in queue my_queue: expected queued got active'
       end
@@ -158,7 +162,7 @@ describe JobQueue do
 
       it 'does not perform the next job when job execution is disabled' do
         with_a_queued_job do
-          JobExecution.enabled = false
+          JobQueue.enabled = false
 
           queued_job_execution.unstub(:perform)
           queued_job_execution.expects(:perform).never
@@ -183,8 +187,7 @@ describe JobQueue do
           refute subject.find_by_id(:queued)
 
           # make sure we cleaned up nicely
-          subject.instance_variable_get(:@executing).must_equal({})
-          subject.instance_variable_get(:@queue).must_equal({})
+          subject.debug.must_equal([{}, {}])
         end
       end
     end

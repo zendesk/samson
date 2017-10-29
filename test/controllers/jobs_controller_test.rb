@@ -13,13 +13,13 @@ describe JobsController do
   as_a_viewer do
     describe "#enabled" do
       it "is no_content when enabled" do
-        JobExecution.expects(:enabled).returns true
+        JobQueue.expects(:enabled).returns true
         get :enabled
         assert_response :no_content
       end
 
       it "is accepted when disabled" do
-        refute JobExecution.enabled
+        refute JobQueue.enabled
         get :enabled
         assert_response :accepted
       end
