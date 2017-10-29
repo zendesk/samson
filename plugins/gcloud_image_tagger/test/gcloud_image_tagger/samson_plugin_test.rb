@@ -68,6 +68,17 @@ describe SamsonGcloudImageTagger::Engine do
       ).returns([true, "OUT"])
       tag
     end
+
+    it "includes options from ENV var" do
+      expect_version_check("")
+      with_env(GCLOUD_IMG_TAGGER_OPTS: '--foo "bar baz"') do
+        Samson::CommandExecutor.expects(:execute).with(
+          'gcloud', 'container', 'images', 'add-tag', 'gcr.io/sdfsfsdf@some-sha', 'gcr.io/sdfsfsdf:staging',
+          '--quiet', '--foo', 'bar baz', anything
+        ).returns([true, "OUT"])
+        tag
+      end
+    end
   end
 
   describe :after_deploy do
