@@ -153,18 +153,6 @@ describe Kubernetes::Release do
     end
   end
 
-  describe '#validate_docker_image_in_registry' do
-    it 'ensures image is in registry' do
-      build.update_column(:docker_repo_digest, nil)
-      refute_valid(release, :build)
-    end
-
-    it 'is valid wihout a build' do
-      build.update_column(:git_sha, 'sdfsddfssdf')
-      assert_valid(release)
-    end
-  end
-
   describe "#url" do
     it "builds" do
       release.id = 123
