@@ -203,7 +203,7 @@ describe "cleanliness" do
     ]
     controller_tests.reject! { |c| c =~ %r{/(integrations|concerns)/} }
 
-    controller_tests.size.must_be :>, 50 # make sure splat works correctly
+    controller_tests.size.must_be :>, 40 # make sure splat works correctly
 
     bad = controller_tests.map do |f|
       # find all actions in the controller

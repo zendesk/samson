@@ -4,7 +4,6 @@ class Lock < ActiveRecord::Base
   RESOURCE_TYPES = ['Stage', 'Environment', nil].freeze # sorted by specificity
   CACHE_KEY = 'lock-cache-key'
   ALL_CACHE_KEY = 'lock-all'
-  ASSIGNABLE_KEYS = [:description, :resource_id, :resource_type, :warning, :delete_in].freeze
 
   attr_reader :delete_in
 
