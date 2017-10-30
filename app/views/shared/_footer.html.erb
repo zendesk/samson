@@ -1,22 +1,22 @@
-<div class="footer">
+<div class="footer navbar">
   <div class="container">
-    <div class="links">
+    <ul class="nav navbar-nav">
+      <li>
+        <p class="navbar-text">Built by Zendesk</p>
+      </li>
+    </ul>
 
-      <div class="pull-left">
-        Built by Zendesk
-      </div>
-
-      <div class="pull-right">
-      <% if revision = Rails.application.config.samson.revision.presence %>
-        <span class="sha">
-          <%= link_to "https://github.com/zendesk/samson/commit/#{revision}",
-              title: "Currently deployed samson version since #{Rails.application.config.samson.start_time.to_s(:db)}", class: "sha" do %>
-            <%= revision[0..7] %>
-            <i class="glyphicon glyphicon-circle-arrow-right"></i>
-          <% end %>
-        </span>
+    <ul class="nav navbar-nav pull-right">
+      <% if link = ENV['HELP_LINK'] %>
+        <li><%= link.html_safe %></li>
       <% end %>
-      </div>
+
+      <% if revision = Rails.application.config.samson.revision.presence %>
+        <li>
+          <%= link_to revision[0..7], "https://github.com/zendesk/samson/commit/#{revision}",
+              title: "Currently deployed samson version since #{Rails.application.config.samson.start_time.to_s(:db)}", class: "sha" %>
+        </li>
+      <% end %>
 
     </div>
   </div>
