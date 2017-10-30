@@ -10,6 +10,16 @@
     <dd><%= @user.name %></dd>
     <dt>System Role:</dt>
     <dd><%= @user.role.display_name %></dd>
+    <% if @user.integration %>
+      <dt>Created by:</dt>
+      <dd>
+        <% if audit = @user.audits.where(action: "create").first %>
+          <%= audit_author audit %>
+        <% else %>
+          Unknown
+        <% end %>
+      </dd>
+    <% end %>
   </dl>
 
   <%= link_to_history @user %>

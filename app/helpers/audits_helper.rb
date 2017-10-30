@@ -10,4 +10,15 @@ module AuditsHelper
   def text_diff(a, b)
     Diffy::Diff.new(a, b).to_s(:html).html_safe
   end
+
+  def audit_author(audit)
+    case audit.user
+    when String
+      "".html_safe << audit.user << " " << additional_info("System event")
+    when User
+      link_to_resource(audit.user)
+    else
+      "User##{audit.user_id}" if audit.user_id
+    end
+  end
 end
