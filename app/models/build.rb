@@ -11,6 +11,7 @@ class Build < ActiveRecord::Base
 
   before_validation :nil_out_blanks
   before_validation :make_default_dockerfile_and_image_name_not_collide, on: :create
+  before_validation :set_default_external_status, on: :create
 
   validate :validate_docker_repo_digest_matches_git_sha, on: :create
   validate :validate_git_reference, on: :create
@@ -28,6 +29,7 @@ class Build < ActiveRecord::Base
   validates :docker_image_id, format: SHA256_REGEX, allow_nil: true
   validates :docker_repo_digest, format: DIGEST_REGEX, allow_nil: true
   validates :external_url, format: /\Ahttps?:\/\/\S+\z/, allow_nil: true
+  validates :external_status, inclusion: Job::VALID_STATUSES, allow_nil: true
 
   before_create :assign_number
 
@@ -87,6 +89,10 @@ class Build < ActiveRecord::Base
   # if we enforce uniqueness via image_name then having a default dockerfile set will break that uniqueness
   def make_default_dockerfile_and_image_name_not_collide
     self.dockerfile = nil if dockerfile == 'Dockerfile' && image_name
+  end
+
+  def set_default_external_status
+    self.external_status ||= 'succeeded' if external_id
   end
 
   def validate_docker_repo_digest_matches_git_sha

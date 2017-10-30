@@ -113,6 +113,34 @@ describe Build do
       refute_valid(valid_build(dockerfile: nil))
       assert_valid(valid_build(dockerfile: nil, external_id: '123'))
     end
+
+    describe 'external_status' do
+      it 'ignores when not external' do
+        build = valid_build
+        assert_valid build
+        build.external_status.must_be_nil
+      end
+
+      it 'backfills missing' do
+        build = valid_build(external_id: '123')
+        assert_valid build
+        build.external_status.must_equal 'succeeded'
+      end
+
+      it 'is valid with valid status' do
+        build = valid_build(external_id: '123', external_status: 'running')
+        assert_valid build
+        build.external_status.must_equal 'running'
+      end
+
+      it 'is invalid with invalid status' do
+        refute_valid valid_build(external_id: '123', external_status: 'sdfsfsfdf')
+      end
+
+      it 'is invalid with invalid status on non-external' do
+        refute_valid valid_build(external_status: 'sdfsfsfdf')
+      end
+    end
   end
 
   describe 'create' do
