@@ -10,7 +10,6 @@ module Kubernetes
     has_many :deploy_groups, through: :release_docs
 
     validates :project, :git_sha, :git_ref, presence: true
-    validate :validate_docker_image_in_registry, on: :create
 
     def user
       super || NullUser.new(user_id)
@@ -90,12 +89,6 @@ module Kubernetes
         end
       end
       raise Samson::Hooks::UserError, 'No roles or deploy groups given' if release_docs.empty?
-    end
-
-    def validate_docker_image_in_registry
-      unless builds.all?(&:docker_repo_digest?)
-        errors.add(:build, 'Docker image was not pushed to registry')
-      end
     end
   end
 end
