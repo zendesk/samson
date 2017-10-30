@@ -55,6 +55,13 @@ class User < ActiveRecord::Base
     if email = criteria[:email].presence
       scope = scope.where(email: email)
     end
+    if criteria.key?(:integration)
+      value = criteria[:integration]
+      if !value.nil? && value != ''
+        value = !ActiveModel::Type::Boolean::FALSE_VALUES.include?(value)
+        scope = scope.where(integration: value)
+      end
+    end
     scope
   end
 
