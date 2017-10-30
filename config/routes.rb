@@ -12,7 +12,6 @@ Samson::Application.routes.draw do
     resources :projects, only: [:index] do
       resources :automated_deploys, only: [:create]
       resources :deploys, only: [:index]
-      resources :stages, only: [:index]
     end
 
     resources :stages, only: [] do
