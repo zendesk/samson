@@ -72,6 +72,10 @@ class Build < ActiveRecord::Base
     Rails.application.routes.url_helpers.project_build_url(project, self)
   end
 
+  def active?
+    external_id? ? !docker_repo_digest? : docker_build_job&.active?
+  end
+
   private
 
   def nil_out_blanks
