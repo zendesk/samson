@@ -77,6 +77,13 @@ describe StagesController do
           assert_template :show
         end
 
+        it 'renders json' do
+          get :show, params: {project_id: subject.project.to_param, id: subject.to_param}, format: :json
+          assert_response :success
+          json.keys.must_equal ['stage']
+          json['stage'].keys.must_include 'name'
+        end
+
         it 'displays a sanitized dashboard' do
           subject.update_attribute :dashboard,
             'START_OF_TEXT<p>PARAGRAPH_TEXT</p><img src="foo.jpg"/>' \
@@ -127,10 +134,11 @@ describe StagesController do
     unauthorized :delete, :destroy, project_id: :foo, id: 1
     unauthorized :patch, :reorder, project_id: :foo, id: 1
     unauthorized :get, :clone, project_id: :foo, id: 1
+    unauthorized :post, :clone, project_id: :foo, id: 1
   end
 
   as_a_project_admin do
-    describe 'GET to #new' do
+    describe '#new' do
       describe 'valid' do
         before { get :new, params: {project_id: subject.project.to_param } }
 
@@ -150,7 +158,7 @@ describe StagesController do
       end
     end
 
-    describe 'POST to #create' do
+    describe '#create' do
       let(:project) { projects(:test) }
 
       describe 'valid' do
@@ -199,7 +207,7 @@ describe StagesController do
       end
     end
 
-    describe 'GET to #edit' do
+    describe '#edit' do
       describe 'valid' do
         before { get :edit, params: {project_id: subject.project.to_param, id: subject.to_param } }
 
@@ -242,7 +250,7 @@ describe StagesController do
       end
     end
 
-    describe 'PATCH to #update' do
+    describe '#update' do
       describe 'valid id' do
         before do
           patch :update, params: {project_id: subject.project.to_param, id: subject.to_param, stage: attributes}
@@ -300,7 +308,7 @@ describe StagesController do
       end
     end
 
-    describe 'DELETE to #destroy' do
+    describe '#destroy' do
       describe 'valid' do
         before { delete :destroy, params: {project_id: subject.project.to_param, id: subject.to_param } }
 
@@ -327,15 +335,30 @@ describe StagesController do
       end
     end
 
-    describe 'GET to #clone' do
-      before { get :clone, params: {project_id: subject.project.to_param, id: subject.to_param } }
+    describe '#clone' do
+      def clone(method, format, extra = {})
+        send(
+          method,
+          :clone,
+          params: {project_id: subject.project.to_param, id: subject.to_param}.merge(extra),
+          format: format
+        )
+      end
 
-      it 'renders :new' do
+      it 'renders' do
+        clone :get, :html
         assert_template :new
+      end
+
+      it 'creates for json and modifies' do
+        clone :post, :json, stage: {name: 'Foo'}
+        assert_response :success
+        json.keys.must_equal ['stage']
+        json['stage']['name'].must_equal 'Foo'
       end
     end
 
-    describe 'PATCH to #reorder' do
+    describe '#reorder' do
       before { patch :reorder, params: {project_id: subject.project.to_param, stage_id: [subject.id] } }
 
       it 'succeeds' do
