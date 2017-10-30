@@ -312,6 +312,19 @@ describe User do
       user = users(:admin)
       User.search_by_criteria(search: "", email: user.email).map(&:name).must_equal [user.name]
     end
+
+    it "can filter by integration" do
+      user = users(:admin)
+      user.update_column :integration, true
+      User.search_by_criteria(search: "", integration: 'true').map(&:name).must_equal [user.name]
+    end
+
+    it "can filter by integration from api" do
+      user = users(:admin)
+      user.update_column :integration, true
+      User.search_by_criteria(search: "", integration: false).map(&:name).sort.
+        must_equal User.all.map(&:name).sort - [user.name]
+    end
   end
 
   describe ".with_role" do

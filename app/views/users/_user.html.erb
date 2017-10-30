@@ -2,9 +2,7 @@
   <td><%= user.id %></td>
   <td><%= link_to user.name, user %></td>
   <td><%= user.email %></td>
-  <td>
-    <%= render "roles", user: user %>
-  </td>
+  <td><%= render "roles", user: user %></td>
   <td>
     <%= link_to "Delete", user, method: :delete, data: { confirm: "Delete ##{user.id} #{user.name} #{user.email} ?" }, class: "btn-sm btn-danger" if current_user.super_admin? %>
   </td>

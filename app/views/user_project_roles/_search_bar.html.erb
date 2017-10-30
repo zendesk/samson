@@ -1,9 +1,13 @@
 <%# used by multiple views %>
 <%= form_tag '?', method: :get do %>
-  <div class="col-md-6 clearfix">&nbsp;</div>
+  <div class="col-md-5 clearfix">&nbsp;</div>
 
   <div class="col-md-3 clearfix">
     <%= text_field_tag :search, params[:search], class: 'form-control', placeholder: 'Search' %>
+  </div>
+
+  <div class="col-md-1 clearfix">
+    <%= select_tag :integration, options_for_select([['', nil], ['Integration', 'true'], ['Regular', 'false']], params[:integration]), class: 'form-control' %>
   </div>
 
   <div class="col-md-2 clearfix">
