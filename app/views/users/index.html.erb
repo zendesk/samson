@@ -29,5 +29,13 @@
     </tbody>
   </table>
 
-  <%= paginate @users %>
+  <div class="admin-actions">
+    <% if can?(:write, "users") %>
+      <div class="pull-right">
+        <%= link_to "New", new_user_path, class: "btn btn-default" %>
+      </div>
+    <% end %>
+
+    <%= paginate @users %>
+  </div>
 </section>

@@ -2,6 +2,7 @@
 
 <section>
   <%= form_for @access_token, url: access_tokens_path, html: { class: "form-horizontal" } do |form| %>
+    <%= form.input :resource_owner_id, as: :hidden_field %>
     <%= form.input :application_id do %>
       <%= form.select :application_id, options_for_select(Doorkeeper::Application.all.map { |a| [a.name, a.id] }), {}, {class: 'form-control'} %>
     <% end %>

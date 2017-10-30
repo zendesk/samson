@@ -24,6 +24,7 @@
 
   <%= link_to_history @user %>
 </section>
+
 <section id="user-project-roles" class="clearfix">
   <h2 class="section-subtitle">Project Level Roles</h2>
 
@@ -66,5 +67,14 @@
       <% end %>
     <% end %>
     <%= submit_tag "Create", class: 'btn btn-default' %>
+  <% end %>
+</section>
+
+<section id="access-tokens" class="clearfix">
+  <h2 class="section-subtitle">Access Tokens</h2>
+
+  <%= render 'shared/access_token_table', access_tokens: @user.access_tokens %>
+  <% if can? :write, 'access_tokens' %>
+    <%= link_to "New", new_access_token_path(doorkeeper_access_token: {resource_owner_id: @user.id}), class: "btn btn-default" %>
   <% end %>
 </section>

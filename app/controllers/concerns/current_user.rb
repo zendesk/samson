@@ -64,8 +64,8 @@ module CurrentUser
     (['index', 'show'].include?(action_name) ? :read : :write)
   end
 
-  def can?(action, scope, project = nil)
-    project ||= current_project if respond_to?(:current_project)
-    AccessControl.can?(current_user, action, scope, project)
+  def can?(action, resource_namespace, scope = nil)
+    scope ||= current_project if respond_to?(:current_project)
+    AccessControl.can?(current_user, action, resource_namespace, scope)
   end
 end

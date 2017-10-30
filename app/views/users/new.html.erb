@@ -1,0 +1,15 @@
+<%= page_title "New integration user" %>
+
+<section>
+  <%= form_for @user, html: { class: "form-horizontal" } do |form| %>
+    <%= render 'shared/errors', object: @user %>
+
+    <fieldset>
+      <%= form.input :name, required: true %>
+    </fieldset>
+
+    <hr>
+
+    <%= form.actions %>
+  <% end %>
+</section>

@@ -4,9 +4,21 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe AccessTokensController do
-  as_a_viewer do
-    let(:application) { Doorkeeper::Application.create!(name: 'Foobar', redirect_uri: 'http://example.com') }
+  def create(attributes = {})
+    post :create, params: {
+      doorkeeper_access_token: attributes.merge(
+        description: 'D',
+        scopes: 'locks, projects',
+        application_id: application.id
+      )
+    }
+  end
 
+  let(:application) { Doorkeeper::Application.create!(name: 'Foobar', redirect_uri: 'http://example.com') }
+
+  unauthorized :post, :create
+
+  as_a_viewer do
     describe "#index" do
       let!(:token) { Doorkeeper::AccessToken.create!(application: application, resource_owner_id: user.id) }
       let!(:other_token) { Doorkeeper::AccessToken.create!(application: application, resource_owner_id: 123) }
@@ -25,12 +37,12 @@ describe AccessTokensController do
         assigns[:access_token].scopes.to_a.must_equal ['default']
       end
 
-      it "ensures the personal token exists" do
+      it "ensures the personal application exists" do
         get :new
         Doorkeeper::Application.pluck(:name).must_equal ["Personal Access Token"]
       end
 
-      it "does not create multiple personal tokens" do
+      it "does not create multiple personal application" do
         get :new
         get :new
         Doorkeeper::Application.pluck(:name).must_equal ["Personal Access Token"]
@@ -40,14 +52,19 @@ describe AccessTokensController do
     describe "#create" do
       it "creates a token for the current user" do
         assert_difference 'Doorkeeper::AccessToken.count', +1 do
-          post :create, params: {
-            doorkeeper_access_token: {description: 'D', scopes: 'locks, projects', application_id: application.id}
-          }
+          create
           assert_redirected_to '/access_tokens'
         end
         token = Doorkeeper::AccessToken.last
         token.resource_owner_id.must_equal user.id # scoped to current user
         flash[:notice].must_include token.token # user was able to copy the token
+      end
+
+      it "cannot create for another user" do
+        refute_difference 'Doorkeeper::AccessToken.count' do
+          create resource_owner_id: users(:admin).id
+          assert_response :unauthorized
+        end
       end
     end
 
@@ -67,6 +84,28 @@ describe AccessTokensController do
             delete :destroy, params: {id: token.id}
           end
         end
+      end
+    end
+  end
+
+  as_a_super_admin do
+    describe "#create" do
+      it "can create for another user and returns where they came from" do
+        assert_difference 'Doorkeeper::AccessToken.count', +1 do
+          create resource_owner_id: users(:admin).id
+          assert_redirected_to "/users/#{users(:admin).id}"
+        end
+      end
+    end
+
+    describe "#destroy" do
+      it "destroys other peoples tokens" do
+        other = users(:admin)
+        token = Doorkeeper::AccessToken.create!(application: application, resource_owner_id: other.id)
+        assert_difference 'Doorkeeper::AccessToken.count', -1 do
+          delete :destroy, params: {id: token.id, doorkeeper_access_token: {resource_owner_id: other.id}}
+        end
+        assert_redirected_to "/users/#{other.id}"
       end
     end
   end
