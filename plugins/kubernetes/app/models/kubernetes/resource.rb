@@ -97,7 +97,8 @@ module Kubernetes
       end
 
       def fetch_resource
-        request(:get, name, namespace).to_hash
+        reply = request(:get, name, namespace, as: :raw)
+        JSON.parse(reply, symbolize_names: true)
       rescue KubeException => e
         raise e unless e.error_code == 404
         nil

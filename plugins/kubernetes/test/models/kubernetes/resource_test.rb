@@ -176,22 +176,19 @@ describe Kubernetes::Resource do
 
   describe Kubernetes::Resource::DaemonSet do
     def daemonset_stub(scheduled, misscheduled)
-      stub(
-        "Daemonset",
-        to_hash: {
-          status: {
-            currentNumberScheduled: scheduled,
-            numberMisscheduled:     misscheduled
-          },
-          spec: {
-            template: {
-              spec: {
-                'nodeSelector=' => nil
-              }
+      {
+        status: {
+          currentNumberScheduled: scheduled,
+          numberMisscheduled:     misscheduled
+        },
+        spec: {
+          template: {
+            spec: {
+              'nodeSelector=' => nil
             }
           }
         }
-      )
+      }.to_json
     end
 
     let(:kind) { 'DaemonSet' }
@@ -302,13 +299,10 @@ describe Kubernetes::Resource do
 
   describe Kubernetes::Resource::Deployment do
     def deployment_stub(replica_count)
-      stub(
-        "Deployment",
-        to_hash: {
-          spec: {},
-          status: {replicas: replica_count}
-        }
-      )
+      {
+        spec: {},
+        status: {replicas: replica_count}
+      }.to_json
     end
 
     let(:kind) { 'Deployment' }
@@ -365,13 +359,10 @@ describe Kubernetes::Resource do
 
   describe Kubernetes::Resource::StatefulSet do
     def deployment_stub(replica_count)
-      stub(
-        "StatefulSet",
-        to_hash: {
-          spec: {},
-          status: {replicas: replica_count}
-        }
-      )
+      {
+        spec: {},
+        status: {replicas: replica_count}
+      }.to_json
     end
 
     let(:kind) { 'StatefulSet' }
