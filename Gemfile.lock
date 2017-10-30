@@ -156,7 +156,7 @@ GEM
     airbrake (6.1.2)
       airbrake-ruby (~> 2.2, >= 2.2.5)
     airbrake-ruby (2.2.6)
-    airbrake-user_informer (0.2.0)
+    airbrake-user_informer (0.3.0)
       airbrake (~> 6.0)
       airbrake-ruby (~> 2.0)
       rack
