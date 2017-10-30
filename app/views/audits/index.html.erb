@@ -30,15 +30,7 @@
           <br/>
         <% end %>
 
-        <% case audit.user %>
-        <% when String %>
-          <%= audit.user %>
-          <%= additional_info "System event" %>
-        <% when User %>
-          <%= link_to_resource(audit.user) %>
-        <% else %>
-          <%= "User##{audit.user_id}" if audit.user_id %>
-        <% end %>
+        <%= audit_author audit %>
         <br/>
 
         <%= render_time audit.created_at %>
