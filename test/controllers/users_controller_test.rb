@@ -139,7 +139,7 @@ describe UsersController do
         user = User.last
         assert_redirected_to "/users/#{user.id}"
         assert user.integration
-        user.email.must_equal 'noreply@example.com'
+        user.email.must_be_nil
         user.external_id.must_be_nil
       end
 
