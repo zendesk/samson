@@ -5,6 +5,8 @@
 <section class="tabs table-responsive">
   <form id="date-chooser">
     <p class="form-inline">
+      Branch:
+      <input type="text" class="form-control" value="<%= @branch.to_s %>" name="branch" id="branch">
       Changes made between
       <input type="text" class="form-control" value="<%= @start_date.to_s %>"  name="start_date" id="start-date"> and
       <input type="text" class="form-control" value="<%= @end_date.to_s %>" name="end_date" id="end-date">
