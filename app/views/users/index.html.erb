@@ -30,7 +30,7 @@
   </table>
 
   <div class="admin-actions">
-    <% if can?(:write, "users") %>
+    <% if can?(:write, :users) %>
       <div class="pull-right">
         <%= link_to "New", new_user_path, class: "btn btn-default" %>
       </div>

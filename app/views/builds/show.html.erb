@@ -8,7 +8,7 @@
 
 <section class="clearfix tabs">
 
-  <% if can?(:write, 'builds') %>
+  <% if can?(:write, :builds) %>
     <div class="admin-actions">
       <div class="pull-right">
         <%= link_to "Edit", edit_project_build_path, class: "btn btn-default" %>

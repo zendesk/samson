@@ -19,7 +19,7 @@
       <td><%= token.last_used_at ? relative_time(token.last_used_at) : "Never" %></td>
       <td><%= relative_time token.created_at %></td>
       <td>
-        <% if can? :write, 'access_tokens', token %>
+        <% if can? :write, :access_tokens, token %>
           <%= link_to_delete(access_token_path(token, doorkeeper_access_token: {resource_owner_id: token.resource_owner_id})) %>
         <% end %>
       </td>

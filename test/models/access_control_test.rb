@@ -7,7 +7,7 @@ SingleCov.covered!
 describe AccessControl do
   def described_scope
     descs = self.class.ancestors.map { |a| a.instance_variable_get(:@desc) }
-    descs[descs.index(AccessControl) - 1]
+    descs.fetch(descs.index(AccessControl) - 1).to_sym
   end
 
   def can?(user, action, project = nil)
@@ -23,7 +23,7 @@ describe AccessControl do
   let(:super_admin) { users(:super_admin) }
 
   it "fails on unknown resource" do
-    assert_raises(ArgumentError) { AccessControl.can?(admin, :write, 'sdsdf') }
+    assert_raises(ArgumentError) { AccessControl.can?(admin, :write, :sdsdf) }
   end
 
   describe "access_tokens" do

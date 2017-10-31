@@ -3,18 +3,18 @@ class AccessControl
   class << self
     def can?(user, action, resource_namespace, scope = nil)
       case resource_namespace
-      when 'access_tokens'
+      when :access_tokens
         case action
         when :write then user.super_admin? || user.id == scope&.resource_owner_id
         else raise ArgumentError, "Unsupported action #{action}"
         end
-      when 'builds', 'webhooks'
+      when :builds, :webhooks
         case action
         when :read then true
         when :write then user.deployer_for?(scope)
         else raise ArgumentError, "Unsupported action #{action}"
         end
-      when 'locks'
+      when :locks
         case action
         when :read then true
         when :write
@@ -25,25 +25,25 @@ class AccessControl
           end
         else raise ArgumentError, "Unsupported action #{action}"
         end
-      when 'projects', 'build_commands', 'stages', 'user_project_roles'
+      when :projects, :build_commands, :stages, :user_project_roles
         case action
         when :read then true
         when :write then user.admin_for?(scope)
         else raise ArgumentError, "Unsupported action #{action}"
         end
-      when 'users'
+      when :users
         case action
         when :read then user.admin?
         when :write then user.super_admin?
         else raise ArgumentError, "Unsupported action #{action}"
         end
-      when 'secrets'
+      when :secrets
         case action
         when :read then can_deploy_anything?(user)
         when :write then user.admin_for?(scope)
         else raise ArgumentError, "Unsupported action #{action}"
         end
-      when 'user_merges', 'vault_servers', 'environments'
+      when :user_merges, :vault_servers, :environments
         case action
         when :read then true
         when :write then user.super_admin?
