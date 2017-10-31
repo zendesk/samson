@@ -1,0 +1,29 @@
+<table class="table">
+  <thead>
+  <tr>
+    <th>Description</th>
+    <th>Application</th>
+    <th>Scope</th>
+    <th>Last used</th>
+    <th>Created</th>
+    <th></th>
+  </tr>
+  </thead>
+
+  <tbody>
+  <% access_tokens.each do |token| %>
+    <tr>
+      <td><%= token.description.presence || "No Description" %></td>
+      <td><%= link_to_if current_user.super_admin?, token.application.name, oauth_application_path(token.application) %></td>
+      <td><%= token.scopes.to_a.join(", ") %></td>
+      <td><%= token.last_used_at ? relative_time(token.last_used_at) : "Never" %></td>
+      <td><%= relative_time token.created_at %></td>
+      <td>
+        <% if can? :write, 'access_tokens', token %>
+          <%= link_to_delete(access_token_path(token, doorkeeper_access_token: {resource_owner_id: token.resource_owner_id})) %>
+        <% end %>
+      </td>
+    </tr>
+  <% end %>
+  </tbody>
+</table>

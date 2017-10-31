@@ -15,6 +15,24 @@ class UsersController < ApplicationController
     end
   end
 
+  def new
+    @user = User.new
+  end
+
+  def create
+    name = params.require(:user).require(:name)
+    @user = User.new(
+      name: name,
+      email: 'noreply@example.com',
+      integration: true
+    )
+    if @user.save
+      redirect_to @user, notice: "User created!"
+    else
+      render 'new'
+    end
+  end
+
   def show
     @projects = Project.search_by_criteria(params).joins(:user_project_roles).
       where(user_project_roles: {user_id: user.id})

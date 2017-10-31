@@ -1,20 +1,25 @@
 # frozen_string_literal: true
 class AccessControl
   class << self
-    def can?(user, action, resource, project = nil)
-      case resource
+    def can?(user, action, resource_namespace, scope = nil)
+      case resource_namespace
+      when 'access_tokens'
+        case action
+        when :write then user.super_admin? || user.id == scope&.resource_owner_id
+        else raise ArgumentError, "Unsupported action #{action}"
+        end
       when 'builds', 'webhooks'
         case action
         when :read then true
-        when :write then user.deployer_for?(project)
+        when :write then user.deployer_for?(scope)
         else raise ArgumentError, "Unsupported action #{action}"
         end
       when 'locks'
         case action
         when :read then true
         when :write
-          if project
-            user.deployer_for?(project) # stage locks
+          if scope
+            user.deployer_for?(scope) # stage locks
           else
             user.admin? # global locks
           end
@@ -23,7 +28,7 @@ class AccessControl
       when 'projects', 'build_commands', 'stages', 'user_project_roles'
         case action
         when :read then true
-        when :write then user.admin_for?(project)
+        when :write then user.admin_for?(scope)
         else raise ArgumentError, "Unsupported action #{action}"
         end
       when 'users'
@@ -35,7 +40,7 @@ class AccessControl
       when 'secrets'
         case action
         when :read then can_deploy_anything?(user)
-        when :write then user.admin_for?(project)
+        when :write then user.admin_for?(scope)
         else raise ArgumentError, "Unsupported action #{action}"
         end
       when 'user_merges', 'vault_servers', 'environments'
@@ -45,7 +50,7 @@ class AccessControl
         else raise ArgumentError, "Unsupported action #{action}"
         end
       else
-        raise ArgumentError, "Unsupported resource #{resource}"
+        raise ArgumentError, "Unsupported resource_namespace #{resource_namespace}"
       end
     end
 

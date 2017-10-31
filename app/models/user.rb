@@ -18,12 +18,14 @@ class User < ActiveRecord::Base
   has_many :user_project_roles, dependent: :destroy
   has_many :projects, through: :user_project_roles
   has_many :csv_exports, dependent: :destroy
+  has_many :access_tokens, dependent: :destroy, class_name: 'Doorkeeper::AccessToken', foreign_key: :resource_owner_id
 
   validates :role_id, inclusion: { in: Role.all.map(&:id) }
 
   before_create :set_token
   validates :time_format, inclusion: { in: TIME_FORMATS }
-  validates :external_id, presence: :true, unless: :integration?
+  validates :external_id,
+    uniqueness: {scope: :deleted_at}, presence: :true, unless: :integration?, if: :external_id_changed?
 
   before_soft_delete :destroy_user_project_roles
 

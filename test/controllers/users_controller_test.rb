@@ -12,6 +12,8 @@ describe UsersController do
   end
 
   as_an_admin do
+    unauthorized :get, :new
+    unauthorized :post, :create
     unauthorized :delete, :destroy, id: 1
     unauthorized :put, :update, id: 1
 
@@ -124,6 +126,30 @@ describe UsersController do
   end
 
   as_a_super_admin do
+    describe '#new' do
+      it "renders" do
+        get :new
+        assert_response :success
+      end
+    end
+
+    describe '#create' do
+      it "creates a integration user" do
+        post :create, params: {user: {name: 'Foo Bar'}}
+        user = User.last
+        assert_redirected_to "/users/#{user.id}"
+        assert user.integration
+        user.email.must_equal 'noreply@example.com'
+        user.external_id.must_be_nil
+      end
+
+      it "fails to create an invalid user" do
+        User.any_instance.expects(:save).returns(false)
+        post :create, params: {user: {name: 'github-super_admin'}}
+        assert_response :success # renders new
+      end
+    end
+
     describe '#update' do
       let(:modified_user) { users(:viewer) }
 

@@ -94,7 +94,7 @@ Samson::Application.routes.draw do
 
   resource :profile, only: [:show, :update]
 
-  resources :users, only: [:index, :show, :update, :destroy]
+  resources :users
 
   resources :access_tokens, only: [:index, :new, :create, :destroy]
 

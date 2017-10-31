@@ -26,6 +26,26 @@ describe AccessControl do
     assert_raises(ArgumentError) { AccessControl.can?(admin, :write, 'sdsdf') }
   end
 
+  describe "access_tokens" do
+    it "fails on unknown action" do
+      assert_raises(ArgumentError) { can?(admin, :fooo) }
+    end
+
+    describe :write do
+      it "allows super-admins to update everything" do
+        assert can?(super_admin, :write)
+      end
+
+      it "allows owners to update their tokens" do
+        assert can?(viewer, :write, Doorkeeper::AccessToken.new(resource_owner_id: viewer.id))
+      end
+
+      it "forbids viewers to update everything" do
+        refute can?(viewer, :write)
+      end
+    end
+  end
+
   ["builds", "webhooks"].each do |resource|
     describe resource do
       it "fails on unknown action" do
