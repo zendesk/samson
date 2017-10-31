@@ -11,7 +11,7 @@
         <th>Stage Name</th>
         <th>Last Deploy</th>
         <th class="pull-right">
-          <% if can? :write, 'stages', @project %>
+          <% if can? :write, :stages, @project %>
             <%= link_to 'Manage', project_stages_path(@project) %>
           <% end %>
         </th>

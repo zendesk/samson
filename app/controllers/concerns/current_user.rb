@@ -57,7 +57,7 @@ module CurrentUser
 
   # tested via access checks in the actual controllers
   def authorize_resource!
-    unauthorized! unless can?(resource_action, controller_name)
+    unauthorized! unless can?(resource_action, controller_name.to_sym)
   end
 
   def resource_action

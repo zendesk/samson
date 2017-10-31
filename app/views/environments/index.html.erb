@@ -20,7 +20,7 @@
             </td>
             <td><%= env.production ? 'Yes' : 'No' %></td>
             <td>
-              <%= link_to_delete env if can? :write, 'environments' %>
+              <%= link_to_delete env if can? :write, :environments %>
             </td>
           </tr>
         <% end %>

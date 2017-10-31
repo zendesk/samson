@@ -93,7 +93,7 @@ class CommandsController < ApplicationController
       end
 
     projects.each do |project|
-      unauthorized! unless can? :write, 'projects', project
+      unauthorized! unless can? :write, :projects, project
     end
   end
 
