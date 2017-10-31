@@ -21,11 +21,7 @@ class UsersController < ApplicationController
 
   def create
     name = params.require(:user).require(:name)
-    @user = User.new(
-      name: name,
-      email: 'noreply@example.com',
-      integration: true
-    )
+    @user = User.new(name: name, integration: true)
     if @user.save
       redirect_to @user, notice: "User created!"
     else

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171026135700) do
+ActiveRecord::Schema.define(version: 20171031110801) do
 
   create_table "audits", force: :cascade do |t|
     t.integer "auditable_id", null: false
@@ -539,7 +539,7 @@ ActiveRecord::Schema.define(version: 20171026135700) do
     t.string "time_format", default: "relative", null: false
     t.datetime "last_login_at"
     t.datetime "last_seen_at"
-    t.index ["external_id", "deleted_at"], name: "index_users_on_external_id_and_deleted_at"
+    t.index ["external_id", "deleted_at"], name: "index_users_on_external_id_and_deleted_at", unique: true
   end
 
   create_table "vault_servers", id: :integer, force: :cascade do |t|
