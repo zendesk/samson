@@ -4,7 +4,7 @@
       Deploy is running, refresh this page.
     <% elsif @deploy.job.queued? %>
       Deploy is queued and it will be started when previous deploys have finished.
-    <% elsif JobExecution.enabled %>
+    <% elsif JobQueue.enabled %>
       Deploy is pending but not queued or executing, so it will never start.
       Something went wrong during job creation, cancel it and try again.
     <% else %>

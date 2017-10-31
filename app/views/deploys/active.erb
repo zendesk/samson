@@ -6,7 +6,7 @@
   </section>
   <%= link_to 'job execution debug info', '?debug=1' %>
 <% else %>
-  <% active, queued = JobExecution.debug %>
+  <% active, queued = JobQueue.debug %>
   <section class="tabs">
     <h2>Active</h2>
     <%= render 'job_executions', job_executions: active %>

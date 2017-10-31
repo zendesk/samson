@@ -11,19 +11,19 @@ class RestartSignalHandler
 
     def after_restart
       ActiveRecord::Base.connection_pool.with_connection do
-        JobExecution.enabled = true
+        JobQueue.enabled = true
 
         # any job that was left running is dead now, so we can cancel it
         Job.running.each { |j| j.cancel(nil) }
 
         # start all non-deploys jobs waiting for restart
         Job.non_deploy.pending.each do |job|
-          JobExecution.perform_later(JobExecution.new(job.commit, job))
+          JobQueue.perform_later(JobExecution.new(job.commit, job))
         end
 
         # start all csv-exports jobs waiting for restart
         CsvExport.where(status: 'pending').each do |export|
-          JobExecution.perform_later(CsvExportJob.new(export))
+          JobQueue.perform_later(CsvExportJob.new(export))
         end
 
         # start all ready deploy jobs waiting for restart
@@ -49,7 +49,7 @@ class RestartSignalHandler
 
     output 'preparing restart'
 
-    JobExecution.enabled = false # Disable new job execution
+    JobQueue.enabled = false # Disable new job execution
     wait_for_active_jobs_to_finish
 
     output "Passing #{PASSED_SIGNAL} on."
@@ -67,7 +67,7 @@ class RestartSignalHandler
   def wait_for_active_jobs_to_finish
     loop do
       # dup-ing to avoid racing with other threads
-      executing = JobExecution.executing.dup
+      executing = JobQueue.executing.dup
       locks = MultiLock.locks.dup
       break if executing.empty? && locks.empty?
 

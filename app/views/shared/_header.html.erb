@@ -45,7 +45,7 @@
         </li>
         <li class="current-deploys <%= 'active' if current_page?(controller: '/deploys', action: 'active') %>" ng-controller="currentDeployBadgeCtrl">
           <%= link_to active_deploys_path do %>
-            <%= JobExecution.enabled ? "Deploying" : "Restarting" %>
+            <%= JobQueue.enabled ? "Deploying" : "Restarting" %>
             <%= content_tag :span, '{{ currentActiveDeploys }}',
                 class: 'badge badge-deploys',
                 style: 'display: none',

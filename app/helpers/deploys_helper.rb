@@ -14,7 +14,7 @@ module DeploysHelper
   def deploy_output
     output = ActiveSupport::SafeBuffer.new
 
-    if JobExecution.enabled
+    if JobQueue.enabled
       output << Samson::Hooks.render_views(:deploy_view, self, deploy: @deploy, project: @project)
     end
 

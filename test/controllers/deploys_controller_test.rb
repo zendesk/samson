@@ -52,14 +52,14 @@ describe DeploysController do
           # start 1 job and keep it executing
           executing = Job.create!(project: project, command: "echo 1", user: user) { |j| j.id = 11111 }
           executing.stubs(:deploy).returns(deploy)
-          JobExecution.perform_later(JobExecution.new('master', executing), queue: :x)
+          JobQueue.perform_later(JobExecution.new('master', executing), queue: :x)
 
           # queue 1 job after it
           queued = Job.create!(project: project, command: "echo 1", user: user) { |j| j.id = 22222 }
-          JobExecution.perform_later(JobExecution.new('master', queued), queue: :x)
+          JobQueue.perform_later(JobExecution.new('master', queued), queue: :x)
 
-          assert JobExecution.executing?(executing.id)
-          assert JobExecution.queued?(queued.id)
+          assert JobQueue.executing?(executing.id)
+          assert JobQueue.queued?(queued.id)
 
           get :active, params: {debug: '1'}
 

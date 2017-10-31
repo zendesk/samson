@@ -40,7 +40,7 @@ class DeployService
       send_after_notifications(deploy)
     end
 
-    JobExecution.perform_later(job_execution, queue: deploy.job_execution_queue_name)
+    JobQueue.perform_later(job_execution, queue: deploy.job_execution_queue_name)
 
     send_sse_deploy_update('start')
   end

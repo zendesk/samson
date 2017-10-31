@@ -188,13 +188,13 @@ describe JobExecution do
 
   it 'removes the job from the queue when done' do
     execution = JobExecution.new('master', job)
-    JobExecution.perform_later(execution)
+    JobQueue.perform_later(execution)
 
-    JobExecution.find_by_id(execution.id).wont_be_nil
+    JobQueue.find_by_id(execution.id).wont_be_nil
 
     execution.wait
 
-    JobExecution.find_by_id(execution.id).must_be_nil
+    JobQueue.find_by_id(execution.id).must_be_nil
   end
 
   it 'calls on complete subscribers after finishing' do
@@ -256,7 +256,6 @@ describe JobExecution do
   end
 
   it 'cannot setup project if project is locked' do
-    JobExecution.any_instance.stubs(lock_timeout: 0.5) # 2 runs in the loop
     project.repository.expects(:setup).never
     begin
       MultiLock.send(:try_lock, project.id, 'me')
@@ -275,14 +274,14 @@ describe JobExecution do
   end
 
   it 'does not add the job to the queue when JobExecution is disabled' do
-    JobExecution.enabled = false
+    JobQueue.enabled = false
 
     execution = JobExecution.new('master', job)
-    JobExecution.perform_later(execution)
+    JobQueue.perform_later(execution)
 
-    JobExecution.find_by_id(execution.id).must_be_nil
-    JobExecution.queued?(execution.id).must_be_nil
-    JobExecution.executing?(execution.id).must_be_nil
+    JobQueue.find_by_id(execution.id).must_be_nil
+    JobQueue.queued?(execution.id).must_be_nil
+    JobQueue.executing?(execution.id).must_be_nil
   end
 
   it 'can run with a block' do
@@ -450,7 +449,7 @@ describe JobExecution do
     it "returns current pid" do
       job.command = 'sleep 0.5'
       execution = JobExecution.new('master', job)
-      JobExecution.perform_later(execution)
+      JobQueue.perform_later(execution)
       sleep 0.4
       execution.pid.wont_equal nil
       execution.wait
@@ -466,19 +465,6 @@ describe JobExecution do
         FileUtils.rm_rf(dir)
         111
       end.must_equal 111
-    end
-  end
-
-  describe ".debug" do
-    it "returns job queue interansl" do
-      JobExecution.debug.must_equal([{}, {}])
-    end
-  end
-
-  describe ".dequeue" do
-    it "calls job queue" do
-      JobExecution.send(:job_queue).expects(:dequeue)
-      JobExecution.dequeue(12)
     end
   end
 end

@@ -24,7 +24,7 @@ class JobsController < ApplicationController
   end
 
   def enabled
-    if JobExecution.enabled
+    if JobQueue.enabled
       head :no_content
     else
       head :accepted

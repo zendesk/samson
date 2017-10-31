@@ -4,12 +4,6 @@ require 'shellwords'
 class JobExecution
   include ::NewRelic::Agent::Instrumentation::ControllerInstrumentation
 
-  # Whether or not execution is enabled. This allows completely disabling job
-  # execution for testing purposes and when restarting samson.
-  class << self
-    attr_accessor :enabled
-  end
-
   cattr_accessor(:cancel_timeout, instance_writer: false) { 15.seconds }
 
   attr_reader :output, :reference, :job, :viewers, :executor
@@ -37,7 +31,7 @@ class JobExecution
 
     on_finish do
       # weird issue we are seeing with docker builds never finishing
-      if !Rails.env.test? && !JobExecution.find_by_id(@job.id) && @job.active?
+      if !Rails.env.test? && !JobQueue.find_by_id(@job.id) && @job.active?
         Airbrake.notify("Active but not running job found", job: @job.id)
         @output.write("Active but not running job found")
         @job.failed!
@@ -259,41 +253,5 @@ class JobExecution
   rescue Errno::ENOTEMPTY, Errno::ENOENT
     Airbrake.notify("Notify: make_tempdir error #{$!.message.split('@').first}")
     result # tempdir ensure sometimes fails ... not sure why ... return normally
-  end
-
-  class << self
-    def find_by_id(id)
-      job_queue.find_by_id(id)
-    end
-
-    def executing?(id)
-      job_queue.executing?(id)
-    end
-
-    def queued?(id)
-      job_queue.queued?(id)
-    end
-
-    def dequeue(id)
-      job_queue.dequeue(id)
-    end
-
-    def perform_later(*args)
-      job_queue.add(*args)
-    end
-
-    def executing
-      job_queue.executing
-    end
-
-    def debug
-      job_queue.debug
-    end
-
-    private
-
-    def job_queue
-      @job_queue ||= JobQueue.new
-    end
   end
 end
