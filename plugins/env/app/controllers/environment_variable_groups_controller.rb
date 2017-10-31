@@ -8,7 +8,7 @@ class EnvironmentVariableGroupsController < ApplicationController
     return true if user.admin?
 
     administrated = user.administrated_projects.pluck(:id)
-    return true if administrated.any? && group.projects.pluck(&:id).all? { |id| administrated.include?(id) }
+    return true if administrated.any? && group.projects.pluck(:id).all? { |id| administrated.include?(id) }
 
     false
   end

@@ -151,7 +151,7 @@ describe EnvironmentVariableGroupsController do
 
       it_updates
 
-      it "destoys variables" do
+      it "destroys variables" do
         variable = env_group.environment_variables.first
         assert_difference "EnvironmentVariable.count", -1 do
           put :update, params: {
@@ -164,6 +164,13 @@ describe EnvironmentVariableGroupsController do
         end
 
         assert_redirected_to "/environment_variable_groups"
+      end
+
+      it 'updates when the group is used by a project where the user is an admin' do
+        ProjectEnvironmentVariableGroup.create!(environment_variable_group: env_group, project: project)
+        assert_difference "EnvironmentVariable.count", +1 do
+          put :update, params: params
+        end
       end
 
       it "cannot update when not an admin for any used projects" do
