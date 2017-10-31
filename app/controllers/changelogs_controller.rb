@@ -11,6 +11,10 @@ class ChangelogsController < ApplicationController
     @branch = params[:branch] || 'master'
     @start_date = Date.strptime(params[:start_date], '%Y-%m-%d')
     @end_date = Date.strptime(params[:end_date], '%Y-%m-%d')
-    @changeset = Changeset.new(current_project.repository_path, "#{@branch}@{#{@start_date}}", "#{@branch}@{#{@end_date}}")
+    @changeset = Changeset.new(
+      current_project.repository_path,
+      "#{@branch}@{#{@start_date}}",
+      "#{@branch}@{#{@end_date}}"
+    )
   end
 end
