@@ -13,6 +13,7 @@ class StagesController < ApplicationController
 
     respond_to do |format|
       format.html
+      format.json { render json: {stages: @stages} }
     end
   end
 

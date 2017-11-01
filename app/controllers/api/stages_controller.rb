@@ -4,10 +4,6 @@ class Api::StagesController < Api::BaseController
 
   before_action :require_project
 
-  def index
-    render json: @project.stages
-  end
-
   def clone
     new_stage = Stage.build_clone(stage_to_clone)
     new_stage.name = stage_name

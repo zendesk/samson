@@ -6,6 +6,7 @@ SingleCov.covered!
 describe StagesController do
   subject { stages(:test_staging) }
   let(:project) { subject.project }
+  let(:json) { JSON.parse(response.body) }
 
   unauthorized :get, :show, project_id: :foo, id: 1, token: Rails.application.config.samson.badge_token
   unauthorized :get, :index, project_id: :foo, token: Rails.application.config.samson.badge_token, format: :svg
@@ -107,6 +108,13 @@ describe StagesController do
       it "renders html" do
         get :index, params: {project_id: project}
         assert_template 'index'
+      end
+
+      it "renders json" do
+        get :index, params: {project_id: project}, format: :json
+        assert_response :success
+        json.keys.must_equal ['stages']
+        json['stages'][0].keys.must_include 'name'
       end
     end
   end

@@ -8,23 +8,6 @@ describe Api::StagesController do
   let(:project) { projects(:test) }
   let(:stages) { project.stages }
 
-  describe 'get #index' do
-    before do
-      get :index, params: {project_id: project.id}, format: :json
-    end
-
-    subject { JSON.parse(response.body) }
-
-    it 'succeeds' do
-      assert_response :success
-      response.content_type.must_equal 'application/json'
-    end
-
-    it 'contains a stage' do
-      subject.size.must_equal 1
-    end
-  end
-
   describe 'post #clone' do
     describe '#stage_name' do
       before do
