@@ -20,9 +20,6 @@ Samson::Application.routes.draw do
       post :clone, to: 'stages#clone'
     end
 
-    resources :locks, only: [:index, :create, :destroy]
-    delete '/locks', to: 'locks#destroy_via_resource'
-
     resources :users, only: [:destroy]
   end
 
@@ -82,7 +79,7 @@ Samson::Application.routes.draw do
 
   resources :user_project_roles, only: [:index, :create]
   resources :streams, only: [:show]
-  resources :locks, only: [:create, :destroy]
+  resources :locks, only: [:index, :create, :destroy]
 
   resources :deploys, only: [:index] do
     collection do
@@ -131,6 +128,10 @@ Samson::Application.routes.draw do
   post '/api/projects/:project_id/builds', to: 'builds#create'
   get '/api/deploy_groups', to: 'deploy_groups#index'
   get '/api/projects/:project_id/stages/:id/deploy_groups', to: 'deploy_groups#index'
+  get '/api/locks', to: 'locks#index'
+  post '/api/locks', to: 'locks#create'
+  delete '/api/locks/:id', to: 'locks#destroy'
+  delete '/locks', to: 'locks#destroy_via_resource'
 
   get '/auth/github/callback', to: 'sessions#github'
   get '/auth/google/callback', to: 'sessions#google'
