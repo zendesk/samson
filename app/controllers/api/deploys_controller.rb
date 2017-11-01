@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 class Api::DeploysController < Api::BaseController
-  skip_before_action :require_project, only: [:active_count]
   before_action :validate_filter, only: :index
 
   def index
@@ -9,10 +8,6 @@ class Api::DeploysController < Api::BaseController
 
   def show
     render json: Deploy.find(params.require(:id))
-  end
-
-  def active_count
-    render json: Deploy.active.count
   end
 
   protected
