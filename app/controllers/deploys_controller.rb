@@ -66,8 +66,11 @@ class DeploysController < ApplicationController
       end
 
       format.json do
-        status = (@deploy.persisted? ? :created : :unprocessable_entity)
-        render json: @deploy.to_json, status: status, location: [current_project, @deploy]
+        if @deploy.persisted?
+          render json: @deploy.as_json, status: :created, location: [current_project, @deploy]
+        else
+          render_json_error 422, @deploy.errors
+        end
       end
     end
   end
@@ -86,14 +89,14 @@ class DeploysController < ApplicationController
   def show
     respond_to do |format|
       format.html
-      format.json do
-        render_as_json :deploy, @deploy
-      end
       format.text do
         datetime = @deploy.updated_at.strftime "%Y%m%d_%H%M%Z"
         send_data @deploy.output,
           filename: "#{current_project.name}-#{@deploy.stage.name.parameterize}-#{@deploy.id}-#{datetime}.log",
           type: 'text/plain'
+      end
+      format.json do
+        render_as_json :deploy, @deploy, allowed_includes: [:job, :user, :project, :stage]
       end
     end
   end

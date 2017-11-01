@@ -46,7 +46,7 @@ describe "JsonRenderer Integration" do
       get '/users.json', params: {includes: "user_project_roles"}
       assert_response :success
       json.keys.must_equal ['users', 'user_project_roles']
-      json['users'].first.keys.must_include 'user_project_roles_ids'
+      json['users'].first.keys.must_include 'user_project_role_ids'
       ids = json['user_project_roles'].map { |upr| upr['id'] }
       ids.size.must_equal ids.uniq.size
     end

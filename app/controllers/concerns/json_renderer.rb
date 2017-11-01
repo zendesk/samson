@@ -6,7 +6,6 @@ module JsonRenderer
   class << self
     # make sure we are not including sensitive/unsupported associations
     def validate_includes(requested, allowed)
-      return if allowed == :all
       forbidden = (requested - allowed.map(&:to_s))
       return if forbidden.empty?
       raise(
@@ -21,15 +20,14 @@ module JsonRenderer
 
       includes.each do |association_name|
         resources.each do |resource, resource_as_json|
-          associated_klass_namespace = resource.association(association_name).
-            klass.name.underscore.tr("/", "_").pluralize
           associated = resource.public_send(association_name)
           if associated.is_a?(ActiveRecord::Base) || associated.nil?
             resource_as_json["#{association_name}_id"] ||= associated&.id
+            (associations[association_name.pluralize] ||= []) << associated
           else
-            resource_as_json["#{association_name}_ids"] = associated.map(&:id)
+            resource_as_json["#{association_name.singularize}_ids"] = associated.map(&:id)
+            (associations[association_name] ||= []).concat associated
           end
-          (associations[associated_klass_namespace] ||= []).concat Array(associated)
         end
       end
 

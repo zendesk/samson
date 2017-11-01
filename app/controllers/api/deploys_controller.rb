@@ -6,10 +6,6 @@ class Api::DeploysController < Api::BaseController
     render json: paginate(deploy_scope)
   end
 
-  def show
-    render json: Deploy.find(params.require(:id))
-  end
-
   protected
 
   def job_filter

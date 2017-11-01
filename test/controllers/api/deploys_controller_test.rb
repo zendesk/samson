@@ -118,11 +118,4 @@ describe Api::DeploysController do
       end
     end
   end
-
-  describe '#show' do
-    it 'renders' do
-      get :show, params: {id: deploys(:succeeded_test).id}, format: :json
-      assert_response :success
-    end
-  end
 end
