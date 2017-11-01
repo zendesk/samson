@@ -43,9 +43,6 @@ class UsersController < ApplicationController
 
   def update
     if user.update_attributes(user_params)
-      Rails.logger.info(
-        "#{current_user.name_and_email} changed the role of #{user.name_and_email} to #{user.role.name}"
-      )
       head :ok
     else
       head :bad_request
@@ -54,14 +51,17 @@ class UsersController < ApplicationController
 
   def destroy
     user.soft_delete!
-    Rails.logger.info("#{current_user.name_and_email} just deleted #{user.name_and_email})")
-    redirect_to users_path
+
+    respond_to do |format|
+      format.html { redirect_to users_path }
+      format.json { head :ok }
+    end
   end
 
   private
 
   def user
-    @user ||= User.find(params[:id])
+    @user ||= User.find(params.require(:id))
   end
 
   def user_params

@@ -19,8 +19,6 @@ Samson::Application.routes.draw do
       resources :deploys, only: [:index]
       post :clone, to: 'stages#clone'
     end
-
-    resources :users, only: [:destroy]
   end
 
   resources :projects do
@@ -125,6 +123,7 @@ Samson::Application.routes.draw do
   end
 
   # legacy, can be removed when it is no longer used
+  delete '/api/users/:id', to: 'users#destroy'
   post '/api/projects/:project_id/builds', to: 'builds#create'
   get '/api/deploy_groups', to: 'deploy_groups#index'
   get '/api/projects/:project_id/stages/:id/deploy_groups', to: 'deploy_groups#index'

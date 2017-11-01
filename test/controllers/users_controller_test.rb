@@ -179,6 +179,12 @@ describe UsersController do
         modified_user.reload.deleted_at.wont_be_nil
         assert_redirected_to users_path
       end
+
+      it 'soft delete the user via json' do
+        delete :destroy, params: {id: modified_user.id}, format: :json
+        modified_user.reload.deleted_at.wont_be_nil
+        assert_response :success
+      end
     end
   end
 end
