@@ -1,9 +1,9 @@
 # frozen_string_literal: true
-require_relative '../../test_helper'
+require_relative '../test_helper'
 
 SingleCov.covered!
 
-describe Api::AutomatedDeploysController do
+describe AutomatedDeploysController do
   def assert_created
     assert_difference 'Stage.count', +1 do
       assert_difference 'Deploy.count', +1 do

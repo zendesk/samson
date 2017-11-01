@@ -10,7 +10,6 @@ Samson::Application.routes.draw do
     end
 
     resources :projects, only: [] do
-      resources :automated_deploys, only: [:create]
       resources :deploys, only: [:index]
     end
 
@@ -131,6 +130,7 @@ Samson::Application.routes.draw do
   delete '/api/locks/:id', to: 'locks#destroy'
   delete '/locks', to: 'locks#destroy_via_resource'
   get '/api/projects', to: 'projects#index'
+  post '/api/projects/:project_id/automated_deploys', to: 'automated_deploys#create'
 
   get '/auth/github/callback', to: 'sessions#github'
   get '/auth/google/callback', to: 'sessions#google'
