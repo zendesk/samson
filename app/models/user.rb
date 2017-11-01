@@ -33,8 +33,8 @@ class User < ActiveRecord::Base
     if query.blank?
       self
     else
-      query = ActiveRecord::Base.send(:sanitize_sql_like, query)
-      where("name LIKE ? OR email LIKE ?", "%#{query}%", "%#{query}%")
+      query = "%#{ActiveRecord::Base.send(:sanitize_sql_like, query)}%"
+      where(User.arel_table[:name].matches(query).or(User.arel_table[:email].matches(query)))
     end
   }
 

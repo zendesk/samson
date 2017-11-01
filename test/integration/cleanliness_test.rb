@@ -20,6 +20,11 @@ describe "cleanliness" do
     controllers.size.must_be :>, 50
     controllers
   end
+  let(:all_code) do
+    controllers = Dir["{,plugins/*/}{app,lib}/**/*.rb"]
+    controllers.size.must_be :>, 50
+    controllers
+  end
 
   it "does not have boolean limit 1 in schema since this breaks mysql" do
     File.read("db/schema.rb").wont_match /\st\.boolean.*limit: 1/
@@ -130,7 +135,7 @@ describe "cleanliness" do
 
   it "tests all files" do
     SingleCov.assert_tested(
-      files: Dir['{,plugins/*/}{app,lib}/**/*.rb'],
+      files: all_code,
       tests: all_tests
     )
   end
@@ -237,6 +242,14 @@ describe "cleanliness" do
     assert_content Dir["{,plugins/*/}db/migrate/*.rb"] do |content|
       if content =~ /^\s*puts\b/
         "use `write` instead of `puts` to avoid printing outputs when migrations are silenced"
+      end
+    end
+  end
+
+  it "does not use like since that is different on different dbs" do
+    assert_content all_code do |content|
+      if content =~ /\slike\s+\?/i
+        "use Arel#matches instead of like since like behaves differently on different dbs"
       end
     end
   end
