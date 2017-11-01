@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 # deploys that automatically get triggered when new hosts come up or are restarted
-class Api::AutomatedDeploysController < Api::BaseController
+class AutomatedDeploysController < ApplicationController
   before_action :find_or_create_stage
   before_action :find_deploy_group
   before_action :find_last_deploy
@@ -19,7 +19,7 @@ class Api::AutomatedDeploysController < Api::BaseController
     )
 
     if deploy.persisted?
-      render json: deploy.to_json, status: :created, location: api_deploys_path(deploy)
+      render json: deploy.as_json, status: :created, location: api_deploys_path(deploy)
     else
       failed! "Unable to start deploy: #{deploy.errors.full_messages}"
     end
