@@ -192,7 +192,7 @@ describe JobExecution do
 
     JobQueue.find_by_id(execution.id).wont_be_nil
 
-    execution.wait
+    assert JobQueue.wait(execution.id)
 
     JobQueue.find_by_id(execution.id).must_be_nil
   end
@@ -313,7 +313,7 @@ describe JobExecution do
 
   describe "#perform" do
     def perform
-      execution.thread = Thread.new { execution.perform }
+      execution.perform
     end
 
     def with_hidden_errors
@@ -328,7 +328,6 @@ describe JobExecution do
 
     it "runs a job" do
       perform
-      execution.wait
       execution.output.to_s.must_include "cat foo"
       job.reload.output.must_include "cat foo"
     end
@@ -337,7 +336,6 @@ describe JobExecution do
       Airbrake.expects(:notify)
       job.expects(:running!).raises("Oh boy")
       perform
-      execution.wait
       execution.output.to_s.must_include "JobExecution failed: Oh boy"
       job.reload.output.must_include "JobExecution failed: Oh boy" # shows error message
       job.reload.output.must_include model_file # shows important backtrace
@@ -348,7 +346,6 @@ describe JobExecution do
       Airbrake.expects(:notify).never
       job.expects(:running!).raises(Samson::Hooks::UserError, "Oh boy")
       perform
-      execution.wait
       execution.output.to_s.must_include "JobExecution failed: Oh boy"
     end
 
@@ -357,7 +354,6 @@ describe JobExecution do
         Airbrake.expects(:notify)
         job.expects(:running!).raises("Oh boy")
         perform
-        execution.wait
         execution.output.to_s.must_include "JobExecution failed: Oh boy"
         execution.output.to_s.wont_include model_file
       end
@@ -369,7 +365,6 @@ describe JobExecution do
         Airbrake.expects(:user_information).returns('href="http://foo.com/{{error_id}}"')
         job.expects(:running!).raises("Oh boy")
         perform
-        execution.wait
         execution.output.to_s.must_include "JobExecution failed: Oh boy"
         execution.output.to_s.must_include "http://foo.com/12345"
       end
@@ -380,7 +375,6 @@ describe JobExecution do
         Airbrake.expects(:notify_sync).returns({})
         job.expects(:running!).raises("Oh boy")
         perform
-        execution.wait
         execution.output.to_s.must_include "JobExecution failed: Oh boy"
         execution.output.to_s.must_include "Airbrake did not return an error id"
       end
@@ -389,7 +383,7 @@ describe JobExecution do
 
   describe "#cancel" do
     def perform
-      execution.thread = Thread.new { execution.perform }
+      JobQueue.instance.instance_variable_get(:@threads)[execution.id] = Thread.new { execution.perform }
     end
 
     with_job_cancel_timeout 0.1
@@ -452,7 +446,7 @@ describe JobExecution do
       JobQueue.perform_later(execution)
       sleep 0.4
       execution.pid.wont_equal nil
-      execution.wait
+      JobQueue.wait(execution.id)
     end
   end
 

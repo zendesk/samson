@@ -45,12 +45,7 @@ class JobExecution
   end
 
   def perform
-    raise "Thread needs to be assigned" unless @thread
     ActiveRecord::Base.connection_pool.with_connection { run }
-  end
-
-  def wait
-    @thread.join
   end
 
   # Used on queued jobs when shutting down
@@ -64,9 +59,9 @@ class JobExecution
     @cancelled = true
     @job.cancelling!
     @executor.cancel 'INT'
-    unless @thread.join(cancel_timeout)
+    unless JobQueue.wait(id, cancel_timeout)
       @executor.cancel 'KILL'
-      @thread.join(cancel_timeout) || @thread.kill
+      JobQueue.wait(id, cancel_timeout) || JobQueue.kill(id)
     end
     @job.cancelled!
     finish

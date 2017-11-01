@@ -2,13 +2,11 @@
 require 'csv'
 
 class CsvExportJob
-  attr_writer :thread # assigned by job_queue, but not used
-
   def initialize(csv_export)
     @csv_export = csv_export
   end
 
-  # used by job_queue
+  # used to identify in JobQueue
   def id
     "csv-export-#{@csv_export.id}"
   end
