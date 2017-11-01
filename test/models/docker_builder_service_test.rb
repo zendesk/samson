@@ -112,44 +112,6 @@ describe DockerBuilderService do
 
       execute_job.must_equal(false)
     end
-
-    it "runs via kubernetes when job is marked as kubernetes_job" do
-      build.kubernetes_job = true
-      with_env "DOCKER_KEEP_BUILT_IMGS" => "1" do
-        call
-
-        # simulate that build worked
-        service.expects(:build_image).never
-        service.expects(:run_build_image_job).returns(123)
-
-        execute_job.must_equal(123)
-      end
-    end
-  end
-
-  describe "#run_build_image_job" do
-    let(:local_job) { stub }
-    let(:k8s_job) { stub }
-    let(:repo_digest) { 'sha256:5f1d7c7381b2e45ca73216d7b06004fdb0908ed7bb8786b62f2cdfa5035fde2c' }
-    let(:build_log) do
-      ["status: Random status", "BUILD DIGEST: #{primary_repo}@#{repo_digest}"].join("\n")
-    end
-
-    before { Kubernetes::BuildJobExecutor.expects(:new).returns k8s_job }
-
-    it 'updates build metadata when the remote job completes' do
-      k8s_job.expects(:execute).returns([true, build_log])
-
-      service.send(:run_build_image_job, local_job)
-      build.docker_repo_digest.must_equal "#{primary_repo}@#{repo_digest}"
-    end
-
-    it 'leaves the build docker metadata empty when the remote job fails' do
-      k8s_job.expects(:execute).returns([false, build_log])
-
-      service.send(:run_build_image_job, local_job)
-      assert_nil build.docker_repo_digest
-    end
   end
 
   describe '#before_docker_build' do
