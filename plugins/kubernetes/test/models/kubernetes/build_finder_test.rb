@@ -96,11 +96,12 @@ describe Kubernetes::BuildFinder do
       end
 
       it "succeeds when the build works" do
-        DockerBuilderService.any_instance.expects(:run).with do
-          Build.last.create_docker_job.update_column(:status, 'succeeded')
-          Build.last.update_column(:docker_repo_digest, 'some-sha')
+        DockerBuilderService.expects(:new).with do |build|
+          build.create_docker_job.update_column(:status, 'succeeded')
+          build.update_column(:docker_repo_digest, 'some-sha')
+          build.expects(:reload).never # instance is not shared with BuildFinder to avoid both modifying the same
           true
-        end
+        end.returns(stub(run: true))
         assert execute
         out.must_include "Creating build for Dockerfile."
         out.must_include "Build #{Build.last.url} is looking good"
