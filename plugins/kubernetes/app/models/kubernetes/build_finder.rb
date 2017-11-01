@@ -137,14 +137,21 @@ module Kubernetes
     end
 
     def wait_for_build(build)
-      return unless build.reload.active?
+      # We reload the build object from the DB each time we check this, because we want
+      # to know if our instance is stale. But we don't want to keeping calling
+      # build.reload, because that may mutate the object that's being used in another
+      # thread.
+      return unless Build.find(build.id).active?
 
       @output.puts("Waiting for Build #{build.url} to finish.")
       loop do
         break if @cancelled
         sleep TICK
-        break unless build.reload.active?
+        break unless Build.find(build.id).active?
       end
+    ensure
+      # We can now safely reload the build object, because it is no longer actively running
+      build.reload
     end
 
     def ensure_build_is_successful(build)
