@@ -19,14 +19,12 @@ Samson::Hooks.view :deploy_group_show, "samson_kubernetes/deploy_group_show"
 Samson::Hooks.view :deploy_group_form, "samson_kubernetes/deploy_group_form"
 Samson::Hooks.view :deploy_group_table_header, "samson_kubernetes/deploy_group_table_header"
 Samson::Hooks.view :deploy_group_table_cell, "samson_kubernetes/deploy_group_table_cell"
-Samson::Hooks.view :build_new, "samson_kubernetes/build_new"
 
 Samson::Hooks.callback :deploy_group_permitted_params do
   { cluster_deploy_group_attributes: [:kubernetes_cluster_id, :namespace] }
 end
 Samson::Hooks.callback(:stage_permitted_params) { :kubernetes }
 Samson::Hooks.callback(:deploy_permitted_params) { [:kubernetes_rollback, :kubernetes_reuse_build] }
-Samson::Hooks.callback(:build_permitted_params) { :kubernetes_job }
 Samson::Hooks.callback(:link_parts_for_resource) do
   [
     "Kubernetes::Cluster",

@@ -18,12 +18,6 @@ describe SamsonKubernetes do
     end
   end
 
-  describe :build_permitted_params do
-    it "adds ours" do
-      Samson::Hooks.fire(:build_permitted_params).must_include :kubernetes_job
-    end
-  end
-
   describe :deploy_group_permitted_params do
     it "adds ours" do
       params = Samson::Hooks.fire(:deploy_group_permitted_params).flatten

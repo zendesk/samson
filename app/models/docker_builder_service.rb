@@ -76,21 +76,17 @@ class DockerBuilderService
     build.save!
 
     @execution = JobExecution.new(build.git_sha, job) do |_, tmp_dir|
-      if build.kubernetes_job
-        run_build_image_job(job, push: push, tag_as_latest: tag_as_latest)
-      else
-        if build_image(tmp_dir) # rubocop:disable Style/IfInsideElse
-          ret = true
-          ret = push_image(tag_as_latest: tag_as_latest) if push
-          unless ENV["DOCKER_KEEP_BUILT_IMGS"] == "1"
-            output.puts("### Deleting local docker image")
-            build.docker_image.remove(force: true)
-          end
-          ret
-        else
-          output.puts("Docker build failed (image id not found in response)")
-          false
+      if build_image(tmp_dir)
+        ret = true
+        ret = push_image(tag_as_latest: tag_as_latest) if push
+        unless ENV["DOCKER_KEEP_BUILT_IMGS"] == "1"
+          output.puts("### Deleting local docker image")
+          build.docker_image.remove(force: true)
         end
+        ret
+      else
+        output.puts("Docker build failed (image id not found in response)")
+        false
       end
     end
 
@@ -106,37 +102,6 @@ class DockerBuilderService
   end
 
   private
-
-  # TODO: not calling before_docker_build hooks since we don't have a temp directory
-  # possibly call it anyway with nil so calls do not get lost
-  def run_build_image_job(local_job, push: false, tag_as_latest: false)
-    k8s_job = Kubernetes::BuildJobExecutor.new(
-      output,
-      job: local_job,
-      registry: DockerRegistry.first
-    )
-    success, build_log = k8s_job.execute(
-      build, project,
-      docker_tag: build.docker_tag,
-      push: push,
-      tag_as_latest: tag_as_latest
-    )
-
-    build.docker_repo_digest = nil
-
-    if success
-      build_log.each_line do |line|
-        if (match = line[DOCKER_REPO_REGEX, 1])
-          build.docker_repo_digest = match
-        end
-      end
-    end
-    if build.docker_repo_digest.blank?
-      output.puts "### Failed to get the image digest"
-    end
-
-    build.save!
-  end
 
   def execute_build_command(tmp_dir, command)
     return unless command
