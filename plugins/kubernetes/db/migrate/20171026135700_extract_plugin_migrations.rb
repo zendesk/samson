@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 class ExtractPluginMigrations < ActiveRecord::Migration[5.1]
+  class KubernetesRelease < ActiveRecord::Base
+  end
+
   def up
-    remove_column :kubernetes_releases, :build_id
-  rescue ActiveRecord::StatementInvalid
-    # ignore errors since this might have run before as part of 20170824174718_remove_build_from_releases.rb
-    nil
+    remove_column :kubernetes_releases, :build_id if KubernetesRelease.columns_hash.key?('build_id')
   end
 
   def down
