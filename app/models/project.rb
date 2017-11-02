@@ -47,8 +47,8 @@ class Project < ActiveRecord::Base
 
   scope :search, ->(query) {
     scope = self
-    sanitize_sql_like(query).split(' ').each do |word|
-      scope = scope.where(Project.arel_table[:name].matches("%#{word}%"))
+    query.split(' ').each do |word|
+      scope = scope.where(Project.arel_table[:name].matches("%#{sanitize_sql_like(word)}%"))
     end
     scope
   }

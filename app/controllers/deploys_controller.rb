@@ -121,13 +121,13 @@ class DeploysController < ApplicationController
 
     if deployer = search[:deployer].presence
       users = User.where(
-        "name LIKE ?", "%#{ActiveRecord::Base.send(:sanitize_sql_like, deployer)}%"
+        User.arel_table[:name].matches("%#{ActiveRecord::Base.send(:sanitize_sql_like, deployer)}%")
       ).pluck(:id)
     end
 
     if project_name = search[:project_name].presence
       projects = Project.where(
-        "name LIKE ?", "%#{ActiveRecord::Base.send(:sanitize_sql_like, project_name)}%"
+        Project.arel_table[:name].matches("%#{ActiveRecord::Base.send(:sanitize_sql_like, project_name)}%")
       ).pluck(:id)
     end
 

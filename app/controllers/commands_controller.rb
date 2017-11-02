@@ -12,7 +12,7 @@ class CommandsController < ApplicationController
     if search = params[:search]
       if query = search[:query].presence
         query = ActiveRecord::Base.send(:sanitize_sql_like, query)
-        @commands = @commands.where('command like ?', "%#{query}%")
+        @commands = @commands.where(Command.arel_table[:command].matches("%#{query}%"))
       end
 
       if project_id = search[:project_id].presence
