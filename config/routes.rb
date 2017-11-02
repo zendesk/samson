@@ -15,7 +15,6 @@ Samson::Application.routes.draw do
 
     resources :stages, only: [] do
       resources :deploys, only: [:index]
-      post :clone, to: 'stages#clone'
     end
   end
 
@@ -50,6 +49,7 @@ Samson::Application.routes.draw do
 
       member do
         get :clone, to: 'stages#clone'
+        post :clone, to: 'stages#clone'
       end
 
       resources :deploys, only: [:new, :create] do

@@ -22,6 +22,7 @@ class StagesController < ApplicationController
       format.html do
         @deploys = @stage.deploys.page(page)
       end
+      format.json { render json: {stage: @stage} }
       format.svg do
         badge =
           if deploy = @stage.last_successful_deploy
@@ -73,7 +74,13 @@ class StagesController < ApplicationController
 
   def clone
     @stage = Stage.build_clone(@stage)
-    render :new
+    if request.post?
+      @stage.attributes = stage_params
+      @stage.save!
+      render json: {stage: @stage}
+    else
+      render :new
+    end
   end
 
   private
