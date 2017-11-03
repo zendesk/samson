@@ -1,42 +1,67 @@
 # frozen_string_literal: true
 module JsonRenderer
-  private
+  class ForbiddenIncludesError < RuntimeError
+  end
 
-  # render a json response <association>_ids and <association>s
-  def render_json_with_includes(name, resources, allowed:)
-    all = {name => resources.as_json}
-
+  class << self
     # make sure we are not including sensitive/unsupported associations
-    requested = (params[:includes] || "").split(",")
-    forbidden = requested - allowed.map(&:to_s)
-    if forbidden.any?
-
-      return render_json_error(
-        400,
+    def validate_includes(requested, allowed)
+      return if allowed == :all
+      forbidden = (requested - allowed.map(&:to_s))
+      return if forbidden.empty?
+      raise(
+        JsonRenderer::ForbiddenIncludesError,
         "Forbidden includes [#{forbidden.join(",")}] found, allowed includes are [#{allowed.join(", ")}]"
       )
     end
 
-    # collect associations and insert _ids placeholders for referencing them
-    associations = {}
-    requested.each do |association_name|
-      resources.each_with_index do |resource, i|
-        associated_klass_namespace = resource.association(association_name).klass.name.underscore.tr("/", "_").pluralize
-        associated = resource.public_send(association_name)
-        if associated.respond_to?(:map)
-          all[name][i]["#{association_name}_ids"] = associated.map(&:id)
-        else
-          all[name][i]["#{association_name}_id"] ||= associated&.id
+    # fill in <association>_ids/<association>_id and objects into the json response
+    def add_includes(root, resources, includes)
+      associations = {}
+
+      includes.each do |association_name|
+        resources.each do |resource, resource_as_json|
+          associated_klass_namespace = resource.association(association_name).
+            klass.name.underscore.tr("/", "_").pluralize
+          associated = resource.public_send(association_name)
+          if associated.is_a?(ActiveRecord::Base) || associated.nil?
+            resource_as_json["#{association_name}_id"] ||= associated&.id
+          else
+            resource_as_json["#{association_name}_ids"] = associated.map(&:id)
+          end
+          (associations[associated_klass_namespace] ||= []).concat Array(associated)
         end
-        (associations[associated_klass_namespace] ||= []).concat Array(associated)
+      end
+
+      # add items to the existing collection, but avoid calling as_json multiple times for the same object
+      associations.each do |namespace, objects|
+        root[namespace] = objects.uniq.as_json # can remove as_json once serializers are gone
       end
     end
+  end
 
-    # combine all includes, but avoid calling as_json multiple times for the same object
-    associations.each do |namespace, objects|
-      all[namespace] = objects.uniq.map(&:as_json)
-    end
+  private
 
-    render json: all
+  def render_as_json(namespace, resource, status: :ok, allowed_includes: [])
+    # validate includes
+    requested_includes = (params[:includes] || "").split(",")
+    JsonRenderer.validate_includes(requested_includes, allowed_includes)
+
+    # prepare resources for include collection
+    resource_json = resource.as_json
+    resource_list =
+      if resource.is_a?(ActiveRecord::Base)
+        [[resource, resource_json]]
+      else
+        resource.zip(resource_json)
+      end
+
+    # build reply
+    json = {namespace => resource_json}
+    JsonRenderer.add_includes(json, resource_list, requested_includes)
+
+    render status: status, json: json
+  rescue ActiveRecord::AssociationNotFoundError, JsonRenderer::ForbiddenIncludesError
+    render status: 400, json: {status: 400, error: $!.message}
   end
 end

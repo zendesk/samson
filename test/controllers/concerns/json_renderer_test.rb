@@ -19,6 +19,13 @@ describe "JsonRenderer Integration" do
       json['deploys'].first.keys.wont_include "job"
     end
 
+    it "renders single without includes" do
+      get "/projects/#{projects(:test).to_param}/deploys/#{deploys(:succeeded_test).id}.json"
+      assert_response :success
+      json.keys.must_equal ['deploy']
+      json['deploy'].keys.must_include "job_id"
+    end
+
     it "renders single includes" do
       get '/deploys.json', params: {includes: "job"}
       assert_response :success
