@@ -98,12 +98,14 @@ describe DeploysController do
     end
 
     describe "#show" do
-      describe "with a valid deploy" do
-        before { get :show, params: {project_id: project.to_param, id: deploy.to_param } }
+      it "renders" do
+        get :show, params: {project_id: project, id: deploy }
+        assert_template :show
+      end
 
-        it "renders the template" do
-          assert_template :show
-        end
+      it "renders json" do
+        get :show, params: {project_id: project, id: deploy }, format: :json
+        JSON.parse(response.body).keys.must_equal ['deploy']
       end
 
       it "fails with unknown deploy" do
