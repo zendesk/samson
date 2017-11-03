@@ -223,4 +223,59 @@ describe JobQueue do
       subject.debug.must_equal [{}, {}]
     end
   end
+
+  describe "#wait" do
+    it "waits" do
+      with_job_execution do
+        time = Benchmark.realtime do
+          job_execution.expects(:perform).with { sleep 0.1 }
+          subject.perform_later(job_execution)
+          assert subject.wait(job_execution.id) # blocks until thread unlocks
+        end
+        time.must_be :>, 0.1
+      end
+    end
+
+    it "waits a limited amount" do
+      with_job_execution do
+        time = Benchmark.realtime do
+          job_execution.expects(:perform).with { sleep 0.1 }
+          subject.perform_later(job_execution)
+          refute subject.wait(job_execution.id, 0.05) # blocks until thread unlocks
+        end
+        wait_for_jobs_to_finish
+        (0.05..0.1).must_include time
+      end
+    end
+
+    it "does not wait when job is dead" do
+      with_job_execution do
+        time = Benchmark.realtime { refute subject.wait(123) }
+        time.must_be :<, 0.1
+      end
+    end
+  end
+
+  describe "#kill" do
+    it "kills the job" do
+      with_job_execution do
+        called = false
+        time = Benchmark.realtime do
+          job_execution.stubs(:perform).with do # cannot use expect since it is killed
+            called = true
+            sleep 0.1
+          end
+          subject.perform_later(job_execution)
+          sleep 0.05
+          subject.kill(job_execution.id)
+        end
+        time.must_be :<, 0.1
+        assert called
+      end
+    end
+
+    it "does nothing when job is dead" do
+      subject.kill(123)
+    end
+  end
 end

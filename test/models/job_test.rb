@@ -269,7 +269,7 @@ describe Job do
       JobQueue.perform_later(job_execution)
       sleep 0.5
       job.pid.wont_be_nil
-      job_execution.wait
+      JobQueue.wait(job_execution.id)
       sleep 0.1
     end
 

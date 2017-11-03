@@ -7,6 +7,7 @@ ActiveSupport::TestCase.class_eval do
     JobQueue.enabled = true
     yield
   ensure
+    puts $!
     JobQueue.enabled = false
     JobQueue.clear
   end

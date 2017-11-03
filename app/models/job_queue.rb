@@ -10,7 +10,8 @@ class JobQueue
   end
 
   class << self
-    delegate :executing, :executing?, :queued?, :dequeue, :find_by_id, :perform_later, :debug, :clear, to: :instance
+    delegate :executing, :executing?, :queued?, :dequeue, :find_by_id, :perform_later, :debug, :clear, :wait, :kill,
+      to: :instance
   end
 
   def executing
@@ -60,8 +61,19 @@ class JobQueue
 
   def clear
     raise unless Rails.env.test?
+    @threads.each_value(&:kill) # cleans itself ... but we clear for good measure
+    @threads.each_value(&:join)
+    @threads.clear
     @executing.clear
     @queue.clear
+  end
+
+  def wait(id, timeout = nil)
+    @threads[id]&.join(timeout)
+  end
+
+  def kill(id)
+    @threads[id]&.kill
   end
 
   private
@@ -70,17 +82,19 @@ class JobQueue
     @queue = Hash.new { |h, q| h[q] = [] }
     @lock = Mutex.new
     @executing = {}
+    @threads = {}
   end
 
   # assign the thread first so we do not get into a state where the execution is findable but has no thread
   # so our mutex guarantees that all jobs/queues are in a valid state
   # ideally the job_execution should not know about it's thread and we would call cancel/wait on the job-queue instead
   def perform_job(job_execution, queue)
-    job_execution.thread = Thread.new do
+    @threads[job_execution.id] = Thread.new do
       begin
         job_execution.perform
       ensure
         delete_and_enqueue_next(job_execution, queue)
+        @threads.delete(job_execution.id)
       end
     end
   end
