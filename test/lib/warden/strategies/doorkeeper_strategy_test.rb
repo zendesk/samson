@@ -9,9 +9,9 @@ describe 'Warden::Strategies::DoorkeeperStrategy Integration' do
     get path, headers: {HTTP_AUTHORIZATION: authorization}
   end
 
-  let(:path) { "/api/deploys/active_count.json".dup }
+  let(:path) { "/deploys/active_count.json".dup }
   let!(:user) { users(:admin) }
-  let(:token) { Doorkeeper::AccessToken.create!(resource_owner_id: user.id, scopes: 'api') }
+  let(:token) { Doorkeeper::AccessToken.create!(resource_owner_id: user.id, scopes: 'deploys') }
   let!(:valid_header) { "Bearer #{token.token}" }
 
   it "logs the user in" do
@@ -51,7 +51,7 @@ describe 'Warden::Strategies::DoorkeeperStrategy Integration' do
 
     before { stub_request(:get, "https://status.github.com/api/status.json").to_return(body: "{}") }
 
-    it "checks and fails when using api token" do
+    it "checks and fails when using restricted token" do
       perform_get(valid_header)
       assert_response :unauthorized
     end

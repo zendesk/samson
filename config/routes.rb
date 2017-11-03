@@ -2,12 +2,10 @@
 Samson::Application.routes.draw do
   root to: 'projects#index'
 
+  get '/api/deploys/active_count', to: 'deploys#active_count' # can be moved down once show is moved
+
   namespace :api do
-    resources :deploys, only: [:index, :show] do
-      collection do
-        get :active_count
-      end
-    end
+    resources :deploys, only: [:index, :show]
 
     resources :projects, only: [] do
       resources :deploys, only: [:index]
@@ -80,6 +78,7 @@ Samson::Application.routes.draw do
   resources :deploys, only: [:index] do
     collection do
       get :active
+      get :active_count
     end
   end
 

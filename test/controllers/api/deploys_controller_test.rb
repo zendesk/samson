@@ -5,25 +5,6 @@ SingleCov.covered!
 describe Api::DeploysController do
   oauth_setup!
 
-  describe '#active_count' do
-    before do
-      Deploy.stubs(:active).returns(['a'])
-      get :active_count, format: :json
-    end
-
-    it 'responds successfully' do
-      assert_response :success
-    end
-
-    it 'responds as json' do
-      response.content_type.must_equal 'application/json'
-    end
-
-    it 'returns as expected' do
-      response.body.must_equal "1"
-    end
-  end
-
   describe '#index' do
     let!(:job_failure) do
       Job.create! do |job|

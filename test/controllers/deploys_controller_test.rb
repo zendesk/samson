@@ -70,6 +70,14 @@ describe DeploysController do
       end
     end
 
+    describe '#active_count' do
+      it "renders" do
+        jobs(:succeeded_test).update_column :status, 'running'
+        get :active_count, format: :json
+        response.body.must_equal "1"
+      end
+    end
+
     describe "#changeset" do
       before do
         get :changeset, params: {id: deploy.id, project_id: project.to_param}
