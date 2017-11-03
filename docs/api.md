@@ -1,10 +1,10 @@
 # API
 
-Many endpoints offer a `.json` response, open PRs for missing ones, there is also a deprecated & dedicated `/api` endpoint.
+Many endpoints offer a `.json` response, open PRs for missing ones.
 
-Api authentication is done via OAuth tokens and scopes.
+Api authentication is done via OAuth tokens and scopes, see [lib/warden/strategies/doorkeeper_strategy.rb]() for details.
 
-Scopes are default=all ... api=/api/* ... locks=read+write locks.
+Scopes are default="all" ... locks="allowed to read+write locks".
 
 Users can create their own personal access tokens or use an OAuth flow to request access for registered OAuth applications.
 

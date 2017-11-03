@@ -130,6 +130,7 @@ Samson::Application.routes.draw do
   post '/api/projects/:project_id/automated_deploys', to: 'automated_deploys#create'
   get '/api/deploys/active_count', to: 'deploys#active_count'
   get '/api/deploys/:id', to: 'deploys#show'
+  get '/api/deploys', to: 'deploys#index'
 
   get '/auth/github/callback', to: 'sessions#github'
   get '/auth/google/callback', to: 'sessions#google'

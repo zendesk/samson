@@ -31,10 +31,8 @@ class DeploysController < ApplicationController
       if ids = params[:ids]
         Kaminari.paginate_array(deploys_scope.find(ids)).page(1).per(1000)
       else
-        search
+        search || return
       end
-
-    return if performed?
 
     respond_to do |format|
       format.json do
@@ -122,10 +120,10 @@ class DeploysController < ApplicationController
 
   def search
     search = params[:search] || {}
-    status = search[:status].presence
+    status = (search[:status] || search[:filter]).presence # :filter is deprecated
 
     if status && !Job.valid_status?(status)
-      render json: { errors: "invalid status given" }, status: 400
+      render_json_error 400, "invalid status given"
       return
     end
 
