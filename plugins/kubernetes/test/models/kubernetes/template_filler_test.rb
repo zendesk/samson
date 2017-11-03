@@ -515,6 +515,21 @@ describe Kubernetes::TemplateFiller do
         refute result[:spec].key?(:replicas)
       end
     end
+
+    describe "preStop" do
+      it "adds preStop to avoid 502 errors when server addresses are cached for a few seconds" do
+        template.to_hash.dig_fetch(:spec, :template, :spec, :containers, 0, :lifecycle).must_equal(
+          preStop: {exec: {command: ["sleep", "3"]}}
+        )
+      end
+
+      it "does not add preStop when it was already defined" do
+        raw_template.dig_fetch(:spec, :template, :spec, :containers, 0)[:lifecycle] = {preStop: "OLD"}
+        template.to_hash.dig_fetch(:spec, :template, :spec, :containers, 0, :lifecycle).must_equal(
+          preStop: "OLD"
+        )
+      end
+    end
   end
 
   describe "#verify_env" do

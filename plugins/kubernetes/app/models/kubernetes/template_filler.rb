@@ -34,6 +34,7 @@ module Kubernetes
           set_replica_target unless ['DaemonSet', 'Pod'].include?(kind)
 
           make_stateful_set_match_service if kind == 'StatefulSet'
+          set_pre_stop if kind == 'Deployment'
 
           set_name
           set_deployer
@@ -381,6 +382,12 @@ module Kubernetes
 
     def needs_secret_puller?
       SECRET_PULLER_IMAGE && secret_annotations.any?
+    end
+
+    def set_pre_stop
+      containers.each do |container|
+        (container[:lifecycle] ||= {})[:preStop] ||= {exec: {command: ["sleep", "3"]}}
+      end
     end
 
     def containers
