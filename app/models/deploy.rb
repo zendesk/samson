@@ -14,9 +14,12 @@ class Deploy < ActiveRecord::Base
   validate :validate_stage_is_unlocked, on: :create
   validate :validate_stage_uses_deploy_groups_properly, on: :create
 
-  delegate :started_by?, :can_be_cancelled_by?, :cancel, :status, :user, :output, to: :job
-  delegate :active?, :pending?, :running?, :cancelling?, :cancelled?, :succeeded?, to: :job
-  delegate :finished?, :errored?, :failed?, to: :job
+  delegate(
+    :started_by?, :can_be_cancelled_by?, :cancel, :status, :user, :output,
+    :active?, :pending?, :running?, :cancelling?, :cancelled?, :succeeded?,
+    :finished?, :errored?, :failed?,
+    to: :job
+  )
   delegate :production?, to: :stage
 
   before_validation :trim_reference
@@ -199,6 +202,12 @@ class Deploy < ActiveRecord::Base
       buddy_name, buddy_email, stage.name, stage.production?, !stage.no_code_deployed, project.deleted_at,
       stage.deploy_group_names.join('|')
     ]
+  end
+
+  def as_json
+    hash = super(methods: [:status, :url, :production])
+    hash["summary"] = summary_for_timeline
+    hash
   end
 
   private

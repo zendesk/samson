@@ -614,6 +614,18 @@ describe Deploy do
     end
   end
 
+  describe "#as_json" do
+    it "includes simple methods status" do
+      deploy.as_json.fetch("status").must_equal "succeeded"
+      deploy.as_json.must_include "url"
+      deploy.as_json.must_include "production"
+    end
+
+    it "includes the summary" do
+      deploy.as_json.fetch("summary").must_equal deploy.summary_for_timeline
+    end
+  end
+
   def create_deploy!(attrs = {})
     default_attrs = {
       reference: "baz",

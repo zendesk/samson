@@ -2,8 +2,6 @@
 Samson::Application.routes.draw do
   root to: 'projects#index'
 
-  get '/api/deploys/active_count', to: 'deploys#active_count' # can be moved down once show is moved
-
   namespace :api do
     resources :deploys, only: [:index, :show]
 
@@ -130,6 +128,8 @@ Samson::Application.routes.draw do
   delete '/locks', to: 'locks#destroy_via_resource'
   get '/api/projects', to: 'projects#index'
   post '/api/projects/:project_id/automated_deploys', to: 'automated_deploys#create'
+  get '/api/deploys/active_count', to: 'deploys#active_count'
+  get '/api/deploys/:id', to: 'deploys#show'
 
   get '/auth/github/callback', to: 'sessions#github'
   get '/auth/google/callback', to: 'sessions#google'

@@ -23,6 +23,7 @@ describe DeploysController do
   let(:deploy_service) { stub(deploy: nil, cancel: nil) }
   let(:deploy_called) { [] }
   let(:changeset) { stub_everything(commits: [], files: [], pull_requests: [], jira_issues: []) }
+  let(:json) { JSON.parse(@response.body) }
 
   it "routes" do
     assert_routing(
@@ -103,11 +104,6 @@ describe DeploysController do
         assert_template :show
       end
 
-      it "renders json" do
-        get :show, params: {project_id: project, id: deploy }, format: :json
-        JSON.parse(response.body).keys.must_equal ['deploy']
-      end
-
       it "fails with unknown deploy" do
         assert_raises ActiveRecord::RecordNotFound do
           get :show, params: {project_id: project.to_param, id: "deploy:nope"}
@@ -123,6 +119,19 @@ describe DeploysController do
 
         it "responds with a .log file" do
           assert response.header["Content-Disposition"] =~ /\.log"$/
+        end
+      end
+
+      describe "with format .json" do
+        it "renders without project" do
+          get :show, params: {format: :json, id: deploy.to_param }
+          json.keys.must_equal ['deploy']
+          json['deploy']['id'].must_equal deploy.id
+        end
+
+        it "renders with includes" do
+          get :show, params: {format: :json, id: deploy.to_param, includes: 'project,stage'}
+          json.keys.must_equal ['deploy', 'projects', 'stages']
         end
       end
     end
@@ -239,8 +248,7 @@ describe DeploysController do
       it "filters by non-production via json" do
         get :index, params: {search: {production: 0}}, format: "json"
         assert_response :ok
-        deploys = JSON.parse(@response.body)
-        deploys["deploys"].count.must_equal 1
+        json["deploys"].count.must_equal 1
       end
 
       it "filters by non-production" do
