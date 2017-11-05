@@ -143,15 +143,16 @@ class ProjectsController < ApplicationController
   end
 
   def projects_as_csv(projects)
+    attributes = [:id, :name, :url, :permalink, :repository_url, :owner, :created_at].freeze
     CSV.generate do |csv|
-      header = ProjectSerializer.csv_header
+      header = attributes.map { |a| a.to_s.humanize }
       header << 'Last Deploy At'
       header << 'Last Deploy By'
       header << 'Last Deploy URL'
       csv << header
 
       projects.each do |project|
-        line = ProjectSerializer.new(project).csv_line
+        line = attributes.map { |a| project.public_send(a) }
         last_deploy = last_deploy_for(project)
         line << last_deploy&.created_at
         line << last_deploy&.user&.email
