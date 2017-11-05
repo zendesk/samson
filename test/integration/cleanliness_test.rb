@@ -201,7 +201,6 @@ describe "cleanliness" do
   # for example: as_a_deployer { unauthenticated :get, :index } + as_an_admin { get :index } is good.
   it "checks authentication levels for all actions" do
     controller_tests = Dir["{,plugins/*/}test/controllers/**/*_test.rb"] - [
-      'test/controllers/api/base_controller_test.rb',
       'test/controllers/application_controller_test.rb',
       'test/controllers/doorkeeper_base_controller_test.rb',
       'test/controllers/unauthorized_controller_test.rb',

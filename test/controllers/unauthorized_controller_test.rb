@@ -41,7 +41,7 @@ describe 'Unauthorized' do
       end
 
       describe "with api" do
-        let(:path) { "/api/deploys/active_count.json" }
+        let(:path) { "deploys/active_count.json" }
 
         it 'responds unauthorized' do
           last_response.status.must_equal 401
