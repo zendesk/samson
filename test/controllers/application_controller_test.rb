@@ -91,19 +91,19 @@ describe "ApplicationController Integration" do
     with_forgery_protection
 
     it 'can POST without authenticity_token when logging in via per request doorkeeper auth' do
-      post '/api/locks', params: post_params, headers: {'Authorization' => "Bearer #{token.token}"}
+      post '/locks', params: post_params, headers: {'Authorization' => "Bearer #{token.token}"}
       assert_response :success
     end
 
     it 'can POST without authenticity_token when logging in via per request basic auth' do
       auth = "Basic #{Base64.encode64(user.email + ':' + user.token).strip}"
-      post '/api/locks', params: post_params, headers: {'Authorization' => auth}
+      post '/locks', params: post_params, headers: {'Authorization' => auth}
       assert_response :success
     end
 
     it 'does not authenticate twice' do
       ::Doorkeeper::OAuth::Token.expects(:authenticate).returns(token) # called inside of DoorkeeperStrategy
-      post '/api/locks', params: post_params, headers: {'Authorization' => "Bearer #{token.token}"}
+      post '/locks', params: post_params, headers: {'Authorization' => "Bearer #{token.token}"}
       assert_response :success
     end
 
@@ -111,18 +111,18 @@ describe "ApplicationController Integration" do
       before { stub_session_auth }
 
       it 'can GET without authenticity_token' do
-        get '/api/locks', params: {format: :json}
+        get '/locks', params: {format: :json}
         assert_response :success
       end
 
       it 'cannot POST without authenticity_token' do
-        post '/api/locks', params: post_params
+        post '/locks', params: post_params
         assert_response :unauthorized
       end
     end
 
     it 'cannot POST without authenticity_token when not logged in' do
-      post '/api/locks', params: post_params
+      post '/locks', params: post_params
       assert_response :unauthorized
     end
   end

@@ -2,18 +2,6 @@
 Samson::Application.routes.draw do
   root to: 'projects#index'
 
-  namespace :api do
-    resources :deploys, only: [:index, :show]
-
-    resources :projects, only: [] do
-      resources :deploys, only: [:index]
-    end
-
-    resources :stages, only: [] do
-      resources :deploys, only: [:index]
-    end
-  end
-
   resources :projects do
     resources :jobs, only: [:index, :show, :destroy]
 

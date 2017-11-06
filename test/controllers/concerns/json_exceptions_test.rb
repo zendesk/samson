@@ -33,34 +33,34 @@ describe "JsonExceptions Integration" do
     before { stub_session_auth }
 
     it "presents validation errors" do
-      post '/api/locks.json', params: {lock: {warning: true}}, headers: headers
+      post '/locks.json', params: {lock: {warning: true}}, headers: headers
       assert_json 422, description: ["can't be blank"]
     end
 
     it "presents missing params errors" do
-      post '/api/locks.json', params: {}, headers: headers
+      post '/locks.json', params: {}, headers: headers
       assert_json 400, lock: ["is required"]
     end
 
     it "presents invalid keys errors" do
-      post '/api/locks.json', params: {lock: {foo: :bar, baz: :bar}}, headers: headers
+      post '/locks.json', params: {lock: {foo: :bar, baz: :bar}}, headers: headers
       assert_json 400, foo: ["is not permitted"], baz: ["is not permitted"]
     end
 
     it "presents unfound records" do
-      delete '/api/locks/1.json', params: {id: 'does-not-exist'}, headers: headers
+      delete '/locks/1.json', params: {id: 'does-not-exist'}, headers: headers
       assert_json 404, "Not Found"
     end
 
     it "presents random errors" do
       Lock.expects(:find).raises("Something bad")
-      delete '/api/locks/1.json', params: {id: 1}, headers: headers
+      delete '/locks/1.json', params: {id: 1}, headers: headers
       assert_json 500, "Internal Server Error"
     end
 
     it "presents csrf errors" do
       with_forgery_protection do
-        delete '/api/locks/1.json', params: {id: 1}
+        delete '/locks/1.json', params: {id: 1}
         assert_json 401, "Unauthorized"
       end
     end
