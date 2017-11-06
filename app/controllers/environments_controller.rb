@@ -6,7 +6,7 @@ class EnvironmentsController < ApplicationController
   def index
     respond_to do |format|
       format.html
-      format.json { render json: Environment.all }
+      format.json { render_as_json :environments, Environment.all, allowed_includes: [:deploy_groups] }
     end
   end
 
