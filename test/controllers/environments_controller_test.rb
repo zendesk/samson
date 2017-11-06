@@ -4,6 +4,8 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe EnvironmentsController do
+  let(:json) { JSON.parse(response.body) }
+
   as_a_viewer do
     describe "#index" do
       it 'renders' do
@@ -14,9 +16,13 @@ describe EnvironmentsController do
 
       it 'renders json' do
         get :index, format: 'json'
-        result = JSON.parse(response.body)
-        result.wont_be_nil
-        result['environments'].count.must_equal Environment.count
+        json.keys.must_equal ['environments']
+        json['environments'].count.must_equal Environment.count
+      end
+
+      it 'renders json with includes' do
+        get :index, params: {includes: 'deploy_groups'}, format: 'json'
+        json.keys.must_equal ['environments', 'deploy_groups']
       end
     end
 
