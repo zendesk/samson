@@ -33,15 +33,3 @@ module Kubeclient
     end
   end
 end
-
-# Make our exceptions tell us what url/server/method they were triggered from
-# https://github.com/abonas/kubeclient/pull/221
-class KubeException < StandardError
-  def to_s
-    string = "HTTP status code #{@error_code} #{@message}"
-    if @response.is_a?(RestClient::Response) && @response.request
-      string += " for #{@response.request.method.upcase} #{@response.request.url}"
-    end
-    string
-  end
-end
