@@ -31,12 +31,3 @@ describe Kubeclient::Client do
     end
   end
 end
-
-describe KubeException do
-  it "has request information" do
-    client = Kubeclient::Client.new('http://foobar.server/apis')
-    stub_request(:get, "http://foobar.server/apis/v1").to_return(status: 404)
-    e = assert_raises(KubeException) { client.get_secret 'nope' }
-    e.to_s.must_equal "HTTP status code 404 404 Not Found for GET http://foobar.server/apis/v1"
-  end
-end
