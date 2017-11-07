@@ -22,7 +22,7 @@ class OutboundWebhook < ActiveRecord::Base
 
     response = connection.post do |req|
       req.headers['Content-Type'] = 'application/json'
-      req.body = DeploySerializer.new(deploy).to_json
+      req.body = self.class.deploy_as_json(deploy)
     end
 
     if response.success?
@@ -32,6 +32,14 @@ class OutboundWebhook < ActiveRecord::Base
     end
 
     response.success?
+  end
+
+  def self.deploy_as_json(deploy)
+    deploy.as_json.merge(
+      "project" => deploy.project.as_json,
+      "stage" => deploy.stage.as_json,
+      "user" => deploy.user.as_json
+    )
   end
 
   private

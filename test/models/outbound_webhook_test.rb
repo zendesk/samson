@@ -108,7 +108,7 @@ describe OutboundWebhook do
     before do
       @webhook = OutboundWebhook.create!(webhook_attributes)
       OutboundWebhook.any_instance.stubs(:connection).returns(stub_delivery)
-      DeploySerializer.stubs(:new).returns({})
+      OutboundWebhook.stubs(:deploy_as_json).returns({})
     end
 
     describe "with a successful request" do
@@ -125,6 +125,16 @@ describe OutboundWebhook do
       it "tries to post to the webhook url" do
         refute @webhook.deliver(Deploy.new), "Deliver should not succeed"
       end
+    end
+  end
+
+  describe ".deploy_as_json" do
+    it "renders a deploy" do
+      json = OutboundWebhook.deploy_as_json(deploys(:succeeded_test))
+      json.keys.must_include 'id'
+      json.keys.must_include 'user'
+      json.keys.must_include 'project'
+      json.keys.must_include 'stage'
     end
   end
 end
