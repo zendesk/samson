@@ -141,7 +141,8 @@ module Kubernetes
     end
 
     # make sure we clean up old replicasets
-    # we only ever do rollback to latest release ... and the default is infinite
+    # we never rollback since that might be a rollback to a broken release (failed during stability test)
+    # but still keep 1 around so we can do a manual `kubectl rollback` if something goes horribly wrong
     # see discussion in https://github.com/kubernetes/kubernetes/issues/23597
     def set_history_limit
       template[:spec][:revisionHistoryLimit] ||= 1

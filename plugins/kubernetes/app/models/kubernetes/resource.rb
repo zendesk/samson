@@ -170,12 +170,13 @@ module Kubernetes
         @template.dig_fetch :spec, :replicas
       end
 
+      # Avoid "the object has been modified" error by removing internal attributes kubernetes adds
       def revert(previous)
         if previous
-          client.rollback_deployment(name, namespace)
-        else
-          delete
+          previous = previous.deep_dup
+          previous[:metadata].except! :selfLink, :uid, :resourceVersion, :generation, :creationTimestamp
         end
+        super
       end
 
       private

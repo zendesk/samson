@@ -337,22 +337,27 @@ describe Kubernetes::Resource do
       end
     end
 
-    describe "#desired_pod_count" do
-      it "reads the value from config" do
-        template[:spec] = {replicas: 3}
-        resource.desired_pod_count.must_equal 3
-      end
-    end
-
     describe "#revert" do
       it "reverts to previous version" do
-        stub_request(:post, "#{url}/rollback").to_return(body: "{}")
-        resource.revert(foo: :bar)
+        basic = {kind: 'Deployment', metadata: {name: 'some-project', namespace: 'pod1'}}
+        previous = basic.deep_merge(metadata: {uid: 'UID'}).freeze
+
+        stub_request(:get, url).to_return(body: "{}")
+        stub_request(:put, url).with { |request| request.body.must_equal basic.to_json }
+
+        resource.revert(previous)
       end
 
       it "deletes when there was no previous version" do
         resource.expects(:delete)
         resource.revert(nil)
+      end
+    end
+
+    describe "#desired_pod_count" do
+      it "reads the value from config" do
+        template[:spec] = {replicas: 3}
+        resource.desired_pod_count.must_equal 3
       end
     end
   end
