@@ -384,6 +384,7 @@ describe JobExecution do
   describe "#cancel" do
     def perform
       JobQueue.instance.instance_variable_get(:@threads)[execution.id] = Thread.new { execution.perform }
+      Thread.pass # make sure thread starts
     end
 
     with_job_cancel_timeout 0.1
