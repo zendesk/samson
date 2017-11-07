@@ -230,7 +230,7 @@ describe JobExecution do
 
     execution = JobExecution.new('master', job)
     execution.on_finish { called_subscriber = true }
-    execution.thread = Thread.new { execution.perform }
+    execution.perform
     execution.cancel
 
     assert called_subscriber

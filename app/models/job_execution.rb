@@ -7,7 +7,6 @@ class JobExecution
   cattr_accessor(:cancel_timeout, instance_writer: false) { 15.seconds }
 
   attr_reader :output, :reference, :job, :viewers, :executor
-  attr_writer :thread
 
   delegate :id, to: :job
   delegate :pid, :pgid, to: :executor
