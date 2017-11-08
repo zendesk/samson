@@ -10,11 +10,12 @@ class DockerBuilderService
   attr_reader :build, :execution
 
   class << self
-    def build_docker_image(dir, output, dockerfile:, tag: nil)
+    def build_docker_image(dir, output, dockerfile:, tag: nil, cache_from: nil)
       local_docker_login do |login_commands|
         tag = " -t #{tag.shellescape}" if tag
         file = " -f #{dockerfile.shellescape}"
-        build = "docker build#{file}#{tag} ."
+        cache_from = " --cache-from #{cache_from.shellescape}" if cache_from
+        build = "docker build#{file}#{tag} .#{cache_from}"
         executor = TerminalExecutor.new(output)
         return unless executor.execute(
           "cd #{dir.shellescape}",
@@ -123,8 +124,9 @@ class DockerBuilderService
 
     before_docker_build(tmp_dir)
 
+    cache = build.project.builds.where.not(docker_repo_digest: nil).last&.docker_repo_digest
     build.docker_image = DockerBuilderService.build_docker_image(
-      tmp_dir, output, dockerfile: build.dockerfile
+      tmp_dir, output, dockerfile: build.dockerfile, cache_from: cache
     )
   end
   add_method_tracer :build_image
