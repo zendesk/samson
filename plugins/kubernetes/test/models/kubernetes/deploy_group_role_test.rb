@@ -157,6 +157,14 @@ describe Kubernetes::DeployGroupRole do
         end
       end
 
+      describe "when role would be above 0 limits" do
+        before { Kubernetes::UsageLimit.create!(cpu: 0, memory: 0) }
+
+        it "lets the role be invalid" do
+          seed!.to_s.must_include "Requests cpu (0.25 * 2) must be less than"
+        end
+      end
+
       it "ignores invalid roles" do
         assert content.sub!('cpu: 500m', 'cpu: 100m') # limit below requests
         seed!.must_equal ["Requests cpu must be less than or equal to the limit"]

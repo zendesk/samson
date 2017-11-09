@@ -63,8 +63,8 @@ module Kubernetes
           requests_memory = defaults.fetch(:requests_memory)
 
           if replicas.nonzero? && usage_limit = Kubernetes::UsageLimit.most_specific(role.project, deploy_group)
-            requests_cpu = [usage_limit.cpu / replicas, requests_cpu].min
-            requests_memory = [usage_limit.memory / replicas, requests_memory].min
+            requests_cpu = [usage_limit.cpu / replicas, requests_cpu].min if usage_limit.cpu > 0
+            requests_memory = [usage_limit.memory / replicas, requests_memory].min if usage_limit.memory > 0
           end
 
           create(
