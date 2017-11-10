@@ -78,7 +78,7 @@ Samson::Application.routes.draw do
 
   resources :environments, except: [:edit]
 
-  resources :audits, only: [:index]
+  resources :audits, only: [:index, :show]
 
   resources :commands, except: [:edit]
 
