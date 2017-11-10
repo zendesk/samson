@@ -3,7 +3,7 @@ require_relative '../test_helper'
 
 SingleCov.covered!
 
-describe SamsonGcloudImageTagger::Engine do
+describe SamsonGcloud::Engine do
   let(:deploy) { deploys(:succeeded_test) }
   let(:build) { builds(:docker_build) }
 
@@ -13,7 +13,7 @@ describe SamsonGcloudImageTagger::Engine do
     end
 
     def tag
-      SamsonGcloudImageTagger::Engine.tag(deploy)
+      SamsonGcloud::Engine.tag(deploy)
     end
 
     with_env DOCKER_FEATURE: 'true'
@@ -24,7 +24,7 @@ describe SamsonGcloudImageTagger::Engine do
         project_id: deploy.project_id,
         docker_repo_digest: 'gcr.io/sdfsfsdf@some-sha'
       )
-      SamsonGcloudImageTagger::Engine.class_variable_set(:@@container_in_beta, nil)
+      SamsonGcloud::Engine.class_variable_set(:@@container_in_beta, nil)
     end
 
     it "tags" do
@@ -83,8 +83,10 @@ describe SamsonGcloudImageTagger::Engine do
 
   describe :after_deploy do
     it "tags" do
-      SamsonGcloudImageTagger::Engine.expects(:tag)
-      Samson::Hooks.fire(:after_deploy, deploy, deploy.user)
+      with_env GCLOUD_IMG_TAGGER: 'true' do
+        SamsonGcloud::Engine.expects(:tag)
+        Samson::Hooks.fire(:after_deploy, deploy, deploy.user)
+      end
     end
   end
 end

@@ -1,4 +1,4 @@
-# Gcloud image tagger Plugin
+# Gcloud Plugin
 
 Tag gcloud images with the stage permalink they deployed to, so developers can pull down the "producion" image.
 
@@ -12,4 +12,5 @@ Tag gcloud images with the stage permalink they deployed to, so developers can p
 
 ## ENV Vars
 
-  - `GCLOUD_IMG_TAGGER_OPTS` - options ENV var to specify options that are passed to the `gcloud` command
+  - `GCLOUD_IMG_TAGGER` - set to `true` to enable tagging on deploy
+  - `GCLOUD_IMG_TAGGER_OPTS` - specify options that are passed to the `gcloud` command

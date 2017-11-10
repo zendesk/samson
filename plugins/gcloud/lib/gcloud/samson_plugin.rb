@@ -1,8 +1,7 @@
 # frozen_string_literal: true
-require 'aws-sdk-core'
 require 'shellwords'
 
-module SamsonGcloudImageTagger
+module SamsonGcloud
   class Engine < Rails::Engine
     class << self
       # Note: not tagging builds from different project since that would be confusing ...
@@ -21,8 +20,10 @@ module SamsonGcloudImageTagger
           base = digest.split('@').first
           tag = deploy.stage.permalink
           beta = container_in_beta
-          command = ["gcloud", *beta, "container", "images", "add-tag", digest, "#{base}:#{tag}",
-                     "--quiet", *gcloud_options]
+          command = [
+            "gcloud", *beta, "container", "images", "add-tag", digest, "#{base}:#{tag}",
+            "--quiet", *gcloud_options
+          ]
           success, output = Samson::CommandExecutor.execute(*command, timeout: 10)
           deploy.job.append_output!(
             "Tagging GCR image:\n#{command.join(" ")}\n#{output.strip}\n#{success ? "SUCCESS" : "FAILED"}\n"
@@ -44,5 +45,5 @@ module SamsonGcloudImageTagger
 end
 
 Samson::Hooks.callback :after_deploy do |deploy, _|
-  SamsonGcloudImageTagger::Engine.tag(deploy)
+  SamsonGcloud::Engine.tag(deploy) if ENV['GCLOUD_IMG_TAGGER'] == 'true'
 end
