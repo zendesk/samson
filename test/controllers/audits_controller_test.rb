@@ -48,5 +48,14 @@ describe AuditsController do
         end
       end
     end
+
+    describe "#show" do
+      before { create_audit user }
+
+      it "renders" do
+        get :show, params: {id: Audited::Audit.last.id}
+        assert_template :show
+      end
+    end
   end
 end
