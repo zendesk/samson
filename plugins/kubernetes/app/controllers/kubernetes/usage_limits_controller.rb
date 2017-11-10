@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 class Kubernetes::UsageLimitsController < ApplicationController
-  before_action :authorize_admin!
+  before_action :authorize_admin!, except: [:show, :index]
   before_action :find_usage_limit, only: [:show, :update, :destroy]
 
   def new

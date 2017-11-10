@@ -10,22 +10,15 @@ describe Kubernetes::ClustersController do
 
   let(:cluster) { create_kubernetes_cluster }
 
+  unauthorized :get, :index
+  unauthorized :get, :show, id: 1
+
   as_a_deployer do
-    unauthorized :get, :index
     unauthorized :get, :new
     unauthorized :post, :create
-    unauthorized :get, :show, id: 1
     unauthorized :get, :edit, id: 1
     unauthorized :patch, :update, id: 1
     unauthorized :post, :seed_ecr, id: 1
-  end
-
-  as_an_admin do
-    unauthorized :get, :new
-    unauthorized :post, :create
-    unauthorized :get, :edit, id: 1
-    unauthorized :patch, :update, id: 1
-    unauthorized :delete, :destroy, id: 1
 
     describe "#index" do
       it "renders" do
@@ -48,6 +41,14 @@ describe Kubernetes::ClustersController do
         assert_template :show
       end
     end
+  end
+
+  as_an_admin do
+    unauthorized :get, :new
+    unauthorized :post, :create
+    unauthorized :get, :edit, id: 1
+    unauthorized :patch, :update, id: 1
+    unauthorized :delete, :destroy, id: 1
 
     describe "#seed_ecr" do
       let(:secrets_url) { "http://foobar.server/api/v1/namespaces/foobar/secrets" }

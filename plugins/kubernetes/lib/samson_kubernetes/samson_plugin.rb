@@ -9,7 +9,7 @@ module SamsonKubernetes
 end
 
 Samson::Hooks.view :project_tabs_view, 'samson_kubernetes/project_tab'
-Samson::Hooks.view :admin_menu, 'samson_kubernetes/admin_menu'
+Samson::Hooks.view :manage_menu, 'samson_kubernetes/manage_menu'
 Samson::Hooks.view :stage_form, "samson_kubernetes/stage_form"
 Samson::Hooks.view :stage_show, "samson_kubernetes/stage_show"
 Samson::Hooks.view :deploy_tab_nav, "samson_kubernetes/deploy_tab_nav"

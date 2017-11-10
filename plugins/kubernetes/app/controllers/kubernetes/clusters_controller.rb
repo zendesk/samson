@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 class Kubernetes::ClustersController < ApplicationController
-  before_action :authorize_admin!
-  before_action :authorize_super_admin!, except: [:index, :show, :seed_ecr]
+  PUBLIC = [:index, :show].freeze
+  before_action :authorize_admin!, except: PUBLIC
+  before_action :authorize_super_admin!, except: PUBLIC + [:seed_ecr]
 
   before_action :find_cluster, only: [:show, :edit, :update, :destroy, :seed_ecr]
 

@@ -8,13 +8,45 @@ describe Kubernetes::UsageLimitsController do
   let(:project) { projects(:test) }
   let!(:usage_limit) { Kubernetes::UsageLimit.create!(scope: deploy_group, project: project, cpu: 1, memory: 10) }
 
+  unauthorized :get, :index
+  unauthorized :get, :show, id: 1
+
   as_a_deployer do
-    unauthorized :get, :index
     unauthorized :get, :new
     unauthorized :post, :create
-    unauthorized :get, :show, id: 1
     unauthorized :patch, :update, id: 1
     unauthorized :delete, :destroy, id: 1
+
+    describe "#index" do
+      let!(:other) { Kubernetes::UsageLimit.create!(cpu: 1, memory: 10) }
+
+      it "renders" do
+        get :index
+        assert_template :index
+      end
+
+      it "sorts" do
+        get :index
+        assigns(:usage_limits).map(&:id).must_equal [other.id, usage_limit.id]
+      end
+
+      it "can find by project" do
+        get :index, params: {search: {project_id: usage_limit.project_id}}
+        assigns(:usage_limits).map(&:id).must_equal [usage_limit.id]
+      end
+
+      it "can find by scope" do
+        get :index, params: {search: {scope_type_and_id: "#{usage_limit.scope_type}-#{usage_limit.scope_id}"}}
+        assigns(:usage_limits).map(&:id).must_equal [usage_limit.id]
+      end
+    end
+
+    describe "#show" do
+      it "renders" do
+        get :show, params: {id: usage_limit.id}
+        assert_template :show
+      end
+    end
   end
 
   as_an_admin do
