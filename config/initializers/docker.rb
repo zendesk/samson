@@ -17,4 +17,19 @@ if !Rails.env.test? && !ENV['PRECOMPILE'] && ENV['DOCKER_FEATURE']
     warn "Unable to connect to docker!"
     Airbrake.notify($!)
   end
+
+  # ensure that --cache-from is supported (v13+)
+  min_version = 13
+  begin
+    Timeout.timeout(1) do
+      local = Integer(`docker -v`[/Docker version (\d+)/, 1])
+      server = Integer(Docker.version.fetch("Version")[/\d+/, 0])
+      if local < min_version || server < min_version
+        raise Docker::Error::VersionError, "Expected docker version to be >= #{min_version}"
+      end
+    end
+  rescue
+    warn "Unable to verify local docker!"
+    Airbrake.notify($!)
+  end
 end

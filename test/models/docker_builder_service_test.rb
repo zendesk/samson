@@ -103,7 +103,7 @@ describe DockerBuilderService do
       end
     end
 
-    it "fails when bla" do
+    it "fails when image fails to build" do
       call(push: true)
 
       # simulate that build worked
@@ -199,6 +199,25 @@ describe DockerBuilderService do
       OutputBuffer.any_instance.expects(:to_s).never
       service.send(:build_image, tmp_dir).must_be_nil
       build.docker_image_id.must_be_nil
+    end
+
+    describe "caching from the previous build" do
+      before { TerminalExecutor.any_instance.unstub(:execute) }
+
+      it 'uses last build as cache' do
+        TerminalExecutor.any_instance.expects(:execute).
+          with { |*args| args.join(" ").must_include " --cache-from #{build.docker_repo_digest}"; true }.
+          returns(true)
+        service.send(:build_image, tmp_dir)
+      end
+
+      it 'does not use cache when the last build failed' do
+        Build.update_all docker_repo_digest: nil
+        TerminalExecutor.any_instance.expects(:execute).
+          with { |*args| args.join(" ").wont_include "--cache-from"; true }.
+          returns(true)
+        service.send(:build_image, tmp_dir)
+      end
     end
   end
 
