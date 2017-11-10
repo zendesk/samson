@@ -3,17 +3,13 @@ require_relative '../test_helper'
 
 SingleCov.covered!
 
-describe SamsonGcloud::Engine do
+describe SamsonGcloud::ImageTagger do
   let(:deploy) { deploys(:succeeded_test) }
   let(:build) { builds(:docker_build) }
 
   describe ".tag" do
-    def expect_version_check(version)
-      Samson::CommandExecutor.expects(:execute).with("gcloud", "--version", anything).returns([true, version])
-    end
-
     def tag
-      SamsonGcloud::Engine.tag(deploy)
+      SamsonGcloud::ImageTagger.tag(deploy)
     end
 
     with_env DOCKER_FEATURE: 'true'
@@ -24,11 +20,10 @@ describe SamsonGcloud::Engine do
         project_id: deploy.project_id,
         docker_repo_digest: 'gcr.io/sdfsfsdf@some-sha'
       )
-      SamsonGcloud::Engine.class_variable_set(:@@container_in_beta, nil)
+      SamsonGcloud.stubs(container_in_beta: [])
     end
 
     it "tags" do
-      expect_version_check("")
       Samson::CommandExecutor.expects(:execute).with(
         'gcloud', 'container', 'images', 'add-tag', 'gcr.io/sdfsfsdf@some-sha', 'gcr.io/sdfsfsdf:staging',
         anything, anything
@@ -39,7 +34,7 @@ describe SamsonGcloud::Engine do
 
     it "tags other regions" do
       build.update_column(:docker_repo_digest, 'asia.gcr.io/sdfsfsdf@some-sha')
-      Samson::CommandExecutor.expects(:execute).twice.returns([true, "OUT"])
+      Samson::CommandExecutor.expects(:execute).returns([true, "OUT"])
       tag
     end
 
@@ -56,13 +51,13 @@ describe SamsonGcloud::Engine do
     end
 
     it "shows tagging errors" do
-      Samson::CommandExecutor.expects(:execute).twice.returns([true, "VERSION"], [false, "NOPE"])
+      Samson::CommandExecutor.expects(:execute).returns([false, "NOPE"])
       tag
       deploy.job.output.must_include "NOPE"
     end
 
     it "tags with beta when containers are in beta" do
-      expect_version_check("Google Cloud SDK 145.12")
+      SamsonGcloud.stubs(container_in_beta: ['beta'])
       Samson::CommandExecutor.expects(:execute).with(
         'gcloud', 'beta', 'container', 'images', 'add-tag', anything, anything, anything, anything, anything
       ).returns([true, "OUT"])
@@ -70,22 +65,12 @@ describe SamsonGcloud::Engine do
     end
 
     it "includes options from ENV var" do
-      expect_version_check("")
       with_env(GCLOUD_IMG_TAGGER_OPTS: '--foo "bar baz"') do
         Samson::CommandExecutor.expects(:execute).with(
           'gcloud', 'container', 'images', 'add-tag', 'gcr.io/sdfsfsdf@some-sha', 'gcr.io/sdfsfsdf:staging',
           '--quiet', '--foo', 'bar baz', anything
         ).returns([true, "OUT"])
         tag
-      end
-    end
-  end
-
-  describe :after_deploy do
-    it "tags" do
-      with_env GCLOUD_IMG_TAGGER: 'true' do
-        SamsonGcloud::Engine.expects(:tag)
-        Samson::Hooks.fire(:after_deploy, deploy, deploy.user)
       end
     end
   end

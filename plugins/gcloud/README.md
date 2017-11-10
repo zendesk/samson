@@ -1,6 +1,13 @@
 # Gcloud Plugin
 
+## Image tagging
+
 Tag gcloud images with the stage permalink they deployed to, so developers can pull down the "producion" image.
+
+## Image building
+
+When a deploy is requested on a project with 'builds disabled' that has builds from `gcr`,
+trigger a build. This only works if something is notifying samson about new GCR builds.
 
 ## Setup
 
