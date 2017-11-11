@@ -15,18 +15,11 @@ describe Kubernetes::RolesController do
     }
   end
 
-  as_a_viewer do
-    unauthorized :get, :index, project_id: :foo
-    unauthorized :post, :seed, project_id: :foo
-    unauthorized :get, :example, project_id: :foo
-    unauthorized :get, :new, project_id: :foo
-    unauthorized :post, :create, project_id: :foo
-    unauthorized :get, :show, project_id: :foo, id: 1
-    unauthorized :put, :update, project_id: :foo, id: 1
-    unauthorized :delete, :destroy, project_id: :foo, id: 1
-  end
+  unauthorized :get, :index, project_id: :foo
+  unauthorized :get, :show, project_id: :foo, id: 1
+  unauthorized :get, :example, project_id: :foo
 
-  as_a_deployer do
+  as_a_viewer do
     unauthorized :post, :seed, project_id: :foo
     unauthorized :get, :new, project_id: :foo
     unauthorized :post, :create, project_id: :foo
@@ -62,6 +55,14 @@ describe Kubernetes::RolesController do
         Kubernetes::RoleConfigFile.new(template, 'app-server.yml')
       end
     end
+  end
+
+  as_a_deployer do
+    unauthorized :post, :seed, project_id: :foo
+    unauthorized :get, :new, project_id: :foo
+    unauthorized :post, :create, project_id: :foo
+    unauthorized :put, :update, project_id: :foo, id: 1
+    unauthorized :delete, :destroy, project_id: :foo, id: 1
   end
 
   as_a_project_admin do
