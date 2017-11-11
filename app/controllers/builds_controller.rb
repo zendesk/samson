@@ -13,9 +13,9 @@ class BuildsController < ApplicationController
     if search = params[:search]&.except(:time_format)
       if external = search.delete(:external).presence
         @builds =
-          case external
-          when "YES" then @builds.where.not(external_id: nil)
-          when "NO" then @builds.where(external_id: nil)
+          case external.to_s
+          when "true" then @builds.where.not(external_id: nil)
+          when "false" then @builds.where(external_id: nil)
           else raise
           end
       end

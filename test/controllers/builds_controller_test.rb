@@ -69,13 +69,13 @@ describe BuildsController do
 
         it "can search for external YES" do
           build.update_column(:external_id, 123)
-          get :index, params: {search: {external: 'YES'}}
+          get :index, params: {search: {external: true}}
           assigns(:builds).must_equal [build]
         end
 
         it "can search for external NO" do
           Build.where.not(id: build.id).all.each { |b| b.update_column :external_id, b.id }
-          get :index, params: {search: {external: 'NO'}}
+          get :index, params: {search: {external: false}}
           assigns(:builds).must_equal [build]
         end
 
