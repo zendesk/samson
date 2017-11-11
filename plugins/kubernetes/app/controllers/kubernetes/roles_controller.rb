@@ -9,7 +9,7 @@ class Kubernetes::RolesController < ApplicationController
   before_action :find_role, only: [:show, :update, :destroy]
 
   def index
-    @roles = ::Kubernetes::Role.not_deleted.where(project: current_project).order('name desc').to_a
+    @roles = ::Kubernetes::Role.not_deleted.where(project: current_project).order(:name).to_a
     respond_to do |format|
       format.html
       format.json { render json: @roles.as_json }

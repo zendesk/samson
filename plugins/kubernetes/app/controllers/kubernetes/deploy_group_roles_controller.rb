@@ -25,7 +25,9 @@ class Kubernetes::DeployGroupRolesController < ApplicationController
         @deploy_group_roles = @deploy_group_roles.where(scope => id)
       end
     end
-    @deploy_group_roles = @deploy_group_roles.all
+    @deploy_group_roles = @deploy_group_roles.
+      joins(:project, :kubernetes_role).
+      order('projects.name, kubernetes_roles.name')
   end
 
   def show
