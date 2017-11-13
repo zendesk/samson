@@ -19,6 +19,7 @@ trigger a build. This only works if something is notifying samson about new GCR 
 
 ## ENV Vars
 
-  - `GCLOUD_IMG_TAGGER` - set to `true` to enable tagging on deploy
-  - `GCLOUD_IMG_TAGGER_OPTS` - specify options that are passed to the `gcloud` command
-  - `GCLOUD_BUILDER_PROJECT_ID` - project id to use when building gcloud images via build_with_gcb
+  - `GCLOUD_PROJECT` - project to use
+  - `GCLOUD_ACCOUNT` - account to use
+  - `GCLOUD_OPTIONS` - additional commandline options
+  - `GCLOUD_IMAGE_TAGGER` - set to `true` to enable tagging on deploy

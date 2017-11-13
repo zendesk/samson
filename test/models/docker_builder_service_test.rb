@@ -236,11 +236,12 @@ describe DockerBuilderService do
       end
 
       it "stores docker_repo_digest directly" do
-        SamsonGcloud::ImageBuilder.expects(:gcloud_project_id).at_least_once.returns("p-123")
-        build.project.build_with_gcb = true
-        assert service.send(:build_image, tmp_dir)
-        refute build.docker_image_id
-        build.docker_repo_digest.sub(/samson\/[^@]+/, "X").must_equal "gcr.io/p-123/X@sha-123:abc"
+        with_env GCLOUD_PROJECT: 'p-123', GCLOUD_ACCOUNT: 'acc' do
+          build.project.build_with_gcb = true
+          assert service.send(:build_image, tmp_dir)
+          refute build.docker_image_id
+          build.docker_repo_digest.sub(/samson\/[^@]+/, "X").must_equal "gcr.io/p-123/X@sha-123:abc"
+        end
       end
     end
   end

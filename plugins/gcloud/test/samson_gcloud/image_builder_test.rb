@@ -15,7 +15,7 @@ describe SamsonGcloud::ImageBuilder do
     let(:output) { OutputBuffer.new }
     let(:dockerfile) { "Dockerfile".dup }
 
-    with_env GCLOUD_BUILDER_PROJECT_ID: 'p-123'
+    with_env GCLOUD_PROJECT: 'p-123', GCLOUD_ACCOUNT: 'acc'
 
     before { SamsonGcloud.stubs(container_in_beta: []) }
 

@@ -12,7 +12,9 @@ describe SamsonGcloud::ImageTagger do
       SamsonGcloud::ImageTagger.tag(deploy)
     end
 
-    with_env DOCKER_FEATURE: 'true'
+    with_env DOCKER_FEATURE: 'true', GCLOUD_PROJECT: '123', GCLOUD_ACCOUNT: 'acc'
+
+    let(:auth_options) { ['--account', 'acc', '--project', '123'] }
 
     before do
       build.update_columns(
@@ -26,7 +28,7 @@ describe SamsonGcloud::ImageTagger do
     it "tags" do
       Samson::CommandExecutor.expects(:execute).with(
         'gcloud', 'container', 'images', 'add-tag', 'gcr.io/sdfsfsdf@some-sha', 'gcr.io/sdfsfsdf:staging',
-        anything, anything
+        '--quiet', *auth_options, anything
       ).returns([true, "OUT"])
       tag
       deploy.job.output.must_include "\nOUT\nSUCCESS"
@@ -59,16 +61,16 @@ describe SamsonGcloud::ImageTagger do
     it "tags with beta when containers are in beta" do
       SamsonGcloud.stubs(container_in_beta: ['beta'])
       Samson::CommandExecutor.expects(:execute).with(
-        'gcloud', 'beta', 'container', 'images', 'add-tag', anything, anything, anything, anything, anything
+        'gcloud', 'beta', 'container', 'images', 'add-tag', anything, anything, '--quiet', *auth_options, anything
       ).returns([true, "OUT"])
       tag
     end
 
     it "includes options from ENV var" do
-      with_env(GCLOUD_IMG_TAGGER_OPTS: '--foo "bar baz"') do
+      with_env(GCLOUD_OPTIONS: '--foo "bar baz"') do
         Samson::CommandExecutor.expects(:execute).with(
           'gcloud', 'container', 'images', 'add-tag', 'gcr.io/sdfsfsdf@some-sha', 'gcr.io/sdfsfsdf:staging',
-          '--quiet', '--foo', 'bar baz', anything
+          '--quiet', '--foo', 'bar baz', *auth_options, anything
         ).returns([true, "OUT"])
         tag
       end
