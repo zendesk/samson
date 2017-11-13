@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 1
+SingleCov.covered!
 
 describe DockerBuilderService do
   include GitRepoTestHelper
@@ -112,6 +112,15 @@ describe DockerBuilderService do
 
       execute_job.must_equal(false)
     end
+
+    it "can store docker_repo_digest from GCB" do
+      digest = "foo.com@sha256:#{"a" * 64}"
+      build.project.build_with_gcb = true
+      service.expects(:build_image).with { build.docker_repo_digest = digest }.returns(true)
+      call
+      assert execute_job
+      build.reload.docker_repo_digest.must_equal digest
+    end
   end
 
   describe '#before_docker_build' do
@@ -177,12 +186,12 @@ describe DockerBuilderService do
       service.send(:build_image, tmp_dir)
       revision_filepath = File.join(tmp_dir, 'REVISION')
       assert File.exist?(revision_filepath)
-      assert_equal(build.git_sha, File.read(revision_filepath))
+      File.read(revision_filepath).must_equal build.git_sha
     end
 
     it 'updates the Build object' do
       service.send(:build_image, tmp_dir)
-      assert_equal(docker_image_id, build.docker_image_id)
+      build.docker_image_id.must_equal docker_image_id
     end
 
     it 'fails when docker build did not contain a image id' do
@@ -217,6 +226,22 @@ describe DockerBuilderService do
           with { |*args| args.join(" ").wont_include "--cache-from"; true }.
           returns(true)
         service.send(:build_image, tmp_dir)
+      end
+    end
+
+    describe "build_with_gcb" do
+      before do
+        OutputBuffer.any_instance.unstub(:to_s)
+        OutputBuffer.any_instance.expects(:to_s).returns("digest: sha-123:abc")
+      end
+
+      it "stores docker_repo_digest directly" do
+        with_env GCLOUD_PROJECT: 'p-123', GCLOUD_ACCOUNT: 'acc' do
+          build.project.build_with_gcb = true
+          assert service.send(:build_image, tmp_dir)
+          refute build.docker_image_id
+          build.docker_repo_digest.sub(/samson\/[^@]+/, "X").must_equal "gcr.io/p-123/X@sha-123:abc"
+        end
       end
     end
   end

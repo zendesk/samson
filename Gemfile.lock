@@ -40,7 +40,7 @@ PATH
       flowdock (~> 0.6.0)
 
 PATH
-  remote: plugins/gcloud_image_tagger
+  remote: plugins/gcloud
   specs:
     gcloud_image_tagger (0.0.0)
 

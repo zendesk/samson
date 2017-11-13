@@ -8,6 +8,7 @@ module Samson
       :stage_form,
       :stage_show,
       :project_form,
+      :project_form_checkbox,
       :build_new,
       :deploy_group_show,
       :deploy_group_form,

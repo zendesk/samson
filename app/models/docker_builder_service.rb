@@ -49,6 +49,7 @@ class DockerBuilderService
       end
     end
 
+    # TODO: same as in config/initializers/docker.rb ... dry it up
     def docker_major_version
       @@docker_major_version ||= begin
         Timeout.timeout(0.2) { read_docker_version[/(\d+)\.\d+\.\d+/, 1].to_i }
@@ -79,11 +80,14 @@ class DockerBuilderService
     @execution = JobExecution.new(build.git_sha, job) do |_, tmp_dir|
       if build_image(tmp_dir)
         ret = true
-        ret = push_image(tag_as_latest: tag_as_latest) if push
-        unless ENV["DOCKER_KEEP_BUILT_IMGS"] == "1"
-          output.puts("### Deleting local docker image")
-          build.docker_image.remove(force: true)
+        unless build.docker_repo_digest
+          ret = push_image(tag_as_latest: tag_as_latest) if push
+          unless ENV["DOCKER_KEEP_BUILT_IMGS"] == "1"
+            output.puts("### Deleting local docker image")
+            build.docker_image.remove(force: true)
+          end
         end
+        build.save!
         ret
       else
         output.puts("Docker build failed (image id not found in response)")
@@ -124,10 +128,17 @@ class DockerBuilderService
 
     before_docker_build(tmp_dir)
 
-    cache = build.project.builds.where.not(docker_repo_digest: nil).last&.docker_repo_digest
-    build.docker_image = DockerBuilderService.build_docker_image(
-      tmp_dir, output, dockerfile: build.dockerfile, cache_from: cache
-    )
+    if defined?(SamsonGcloud::ImageBuilder) && build.project.build_with_gcb
+      # TODO: cache-from + tagging as latest + different dockerfiles
+      build.docker_repo_digest = SamsonGcloud::ImageBuilder.build_image(
+        build, tmp_dir, output, dockerfile: build.dockerfile
+      )
+    else
+      cache = build.project.builds.where.not(docker_repo_digest: nil).last&.docker_repo_digest
+      build.docker_image = DockerBuilderService.build_docker_image(
+        tmp_dir, output, dockerfile: build.dockerfile, cache_from: cache
+      )
+    end
   end
   add_method_tracer :build_image
 
@@ -142,9 +153,7 @@ class DockerBuilderService
     if tag_as_latest && !tag_is_latest
       push_image_to_registries tag: 'latest', override_tag: true
     end
-
-    build.save!
-    build
+    true
   rescue Docker::Error::DockerError => e
     output.puts("Docker push failed: #{e.message}\n")
     nil
