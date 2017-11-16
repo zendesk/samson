@@ -73,6 +73,7 @@ class DockerBuilderService
     build.docker_build_job&.destroy # if there's an old build job, delete it
     build.docker_tag = build.name&.parameterize.presence || 'latest'
     build.started_at = Time.now
+    build.docker_repo_digest = nil
 
     job = build.create_docker_job
     build.save!

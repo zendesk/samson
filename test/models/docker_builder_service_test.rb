@@ -15,6 +15,7 @@ describe DockerBuilderService do
   let(:docker_image_json) { { 'Id' => docker_image_id } }
   let(:mock_docker_image) { stub(json: docker_image_json) }
   let(:primary_repo) { project.docker_repo(DockerRegistry.first, 'Dockerfile') }
+  let(:digest) { "foo.com@sha256:#{"a" * 64}" }
 
   with_registries ["docker-registry.example.com"]
   with_project_on_remote_repo
@@ -114,12 +115,25 @@ describe DockerBuilderService do
     end
 
     it "can store docker_repo_digest from GCB" do
-      digest = "foo.com@sha256:#{"a" * 64}"
       build.project.build_with_gcb = true
       service.expects(:build_image).with { build.docker_repo_digest = digest }.returns(true)
       call
       assert execute_job
       build.reload.docker_repo_digest.must_equal digest
+    end
+
+    it "updates docker_repo_digest when rebuildng an image" do
+      with_env DOCKER_KEEP_BUILT_IMGS: "1" do
+        build.update_column :docker_repo_digest, "old-#{digest}"
+        call(push: true)
+
+        # simulate that build worked
+        service.expects(:build_image).returns(true)
+        service.expects(:push_image).with { build.docker_repo_digest = digest }.returns(123)
+
+        assert execute_job
+        build.reload.docker_repo_digest.must_equal digest
+      end
     end
   end
 
