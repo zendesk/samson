@@ -22,6 +22,7 @@ describe SamsonGcloud::ImageBuilder do
     it "returns the docker repo digest" do
       TerminalExecutor.any_instance.expects(:execute).with { output.write "foo digest: sha-123:abc" }.returns(true)
       build_image.must_equal "gcr.io/p-123/samson/bar-foo@sha-123:abc"
+      build.external_url.must_be_nil
     end
 
     it "returns nil on failure" do
@@ -32,6 +33,16 @@ describe SamsonGcloud::ImageBuilder do
     it "returns nil when digest was not found" do
       TerminalExecutor.any_instance.expects(:execute).returns(true)
       build_image.must_be_nil
+    end
+
+    it "stores external url" do
+      url = "https://console.cloud.google.com/gcr/builds/someid?project=fooo"
+      TerminalExecutor.any_instance.expects(:execute).with do
+        output.puts "[23:45:46] Logs are permanently available at [#{url}]."
+        output.puts "[23:45:46] foo digest: sha-123:abc"
+      end.returns(true)
+      build_image.must_equal "gcr.io/p-123/samson/bar-foo@sha-123:abc"
+      build.external_url.must_equal url
     end
 
     it "blows up when trying to use an unsupported Dockerfile" do
