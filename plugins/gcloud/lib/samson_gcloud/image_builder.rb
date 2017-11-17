@@ -18,7 +18,9 @@ module SamsonGcloud
           "cd #{dir.shellescape}",
           executor.verbose_command(command.join(" "))
         )
-        return unless digest = output.to_s[/digest: (\S+:\S+)/, 1]
+        log = output.to_s
+        build.external_url = log[/Logs are permanently available at \[(.*?)\]/, 1]
+        return unless digest = log[/digest: (\S+:\S+)/, 1]
         "#{base}@#{digest}"
       end
     end
