@@ -31,11 +31,19 @@ module Kubernetes
     def ensure_successful_builds
       builds =
         if @images
-          find_build_by_image_name(try: true) || begin
-            # need some sleeping to wait for callbacks to arrive from external builders
-            # since samson and the image building can be triggered at the same time
-            sleep 5
-            find_build_by_image_name(try: false)
+          # need some sleeping to wait for callbacks to arrive from external builders
+          # since samson and the image building can be triggered at the same time
+          # we check if the image is there every 5 seconds up to a maximum of <max> seconds
+          step = 5
+          max = Integer(ENV['KUBERNETES_EXTERNAL_BUILD_WAIT'] || '5')
+          loop do
+            builds = find_build_by_image_name(try: true)
+            break builds if builds
+
+            sleep step
+            max -= step
+
+            break find_build_by_image_name(try: false) if max <= 0
           end
         else
           find_or_create_builds_by_dockerfile
