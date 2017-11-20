@@ -203,7 +203,7 @@ module Kubernetes
 
       # define the shared volumes in the pod
       (pod_template[:spec][:volumes] ||= []).concat [
-        {name: secret_vol.fetch(:name), emptyDir: {}},
+        {name: secret_vol.fetch(:name), emptyDir: {medium: 'Memory'}},
         {name: "vaultauth", secret: {secretName: "vaultauth"}},
         {
           name: "secretkeys",
