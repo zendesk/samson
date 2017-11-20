@@ -225,12 +225,18 @@ describe DockerBuilderService do
     end
 
     describe "caching from the previous build" do
-      before { TerminalExecutor.any_instance.unstub(:execute) }
+      before do
+        TerminalExecutor.any_instance.unstub(:execute)
+        build.update_column(:docker_repo_digest, digest)
+      end
 
       it 'uses last build as cache' do
         TerminalExecutor.any_instance.expects(:execute).
-          with { |*args| args.join(" ").must_include " --cache-from #{build.docker_repo_digest}"; true }.
-          returns(true)
+          with do |*args|
+          args.join(" ").must_include " --cache-from #{build.docker_repo_digest}"
+          args.join(" ").must_include "docker pull #{build.docker_repo_digest}"
+          true
+        end.returns(true)
         service.send(:build_image, tmp_dir)
       end
 
