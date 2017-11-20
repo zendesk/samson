@@ -6,6 +6,13 @@ module SamsonKubernetes
       app.config.assets.precompile.append %w[kubernetes/icon.png]
     end
   end
+
+  # http errors and ssl errors are not handled uniformly, but we want to ignore/retry on both
+  # see https://github.com/abonas/kubeclient/issues/240
+  # using a method to avoid loading kubeclient on every boot ~0.1s
+  def self.connection_errors
+    [OpenSSL::SSL::SSLError, KubeException, Errno::ECONNREFUSED].freeze
+  end
 end
 
 Samson::Hooks.view :project_tabs_view, 'samson_kubernetes/project_tab'

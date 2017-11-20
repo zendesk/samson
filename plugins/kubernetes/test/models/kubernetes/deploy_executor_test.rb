@@ -547,5 +547,12 @@ describe Kubernetes::DeployExecutor do
         executor.send(:fetch_pods, kubernetes_releases(:test_release))
       end
     end
+
+    it "retries on ssl failure" do
+      Kubeclient::Client.any_instance.expects(:get_pods).times(4).raises(OpenSSL::SSL::SSLError.new)
+      assert_raises OpenSSL::SSL::SSLError do
+        executor.send(:fetch_pods, kubernetes_releases(:test_release))
+      end
+    end
   end
 end

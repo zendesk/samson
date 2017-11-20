@@ -61,10 +61,10 @@ module Kubernetes
       # tries to get logs from current or previous pod depending on if it restarted
       def logs(container, end_time)
         fetch_logs(container, end_time, previous: restarted?)
-      rescue KubeException # not found or pod is initializing
+      rescue *SamsonKubernetes.connection_errors # not found or pod is initializing
         begin
           fetch_logs(container, end_time, previous: !restarted?)
-        rescue KubeException
+        rescue *SamsonKubernetes.connection_errors
           nil
         end
       end
