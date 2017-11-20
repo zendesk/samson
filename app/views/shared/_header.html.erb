@@ -40,6 +40,20 @@
             </ul>
           </li>
         <% end %>
+        <% if ProjectGroup.enabled? %>
+          <li class="dropdown <%= 'active' if request.path.starts_with?('/projectgroups') %>">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Project Groups <b class="caret"></b></a>
+            <ul class="dropdown-menu">
+              <% Environment.all.each do |env| %>
+                <li>
+                  <%= link_to projectgroup_path(env) do %>
+                    <span class="glyphicon">&nbsp;</span> <%= env.name %>
+                  <% end %>
+                </li>
+              <% end %>
+            </ul>
+          </li>
+        <% end %>
         <li class="<%= 'active' if request.path =~ %r{^/deploys[/\?]?$} %>">
           <%= link_to "Deploys", deploys_path %>
         </li>
