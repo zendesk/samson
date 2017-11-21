@@ -100,7 +100,7 @@ module Kubernetes
         reply = request(:get, name, namespace, as: :raw)
         JSON.parse(reply, symbolize_names: true)
       rescue *SamsonKubernetes.connection_errors => e
-        raise e unless e.error_code == 404
+        raise e unless e.respond_to?(:error_code) && e.error_code == 404
         nil
       end
 
