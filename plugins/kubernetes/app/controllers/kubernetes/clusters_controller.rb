@@ -110,7 +110,7 @@ class Kubernetes::ClustersController < ApplicationController
   def secret_exist?(secret)
     @cluster.client.get_secret(secret.fetch(:metadata).fetch(:name), secret.fetch(:metadata).fetch(:namespace))
     true
-  rescue KubeException
+  rescue *SamsonKubernetes.connection_errors
     false
   end
 end

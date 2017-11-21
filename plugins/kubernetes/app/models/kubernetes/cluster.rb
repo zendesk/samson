@@ -45,7 +45,7 @@ module Kubernetes
 
     def namespace_exists?(namespace)
       connection_valid? && namespaces.include?(namespace)
-    rescue KubeException
+    rescue *SamsonKubernetes.connection_errors
       false
     end
 
@@ -63,7 +63,7 @@ module Kubernetes
 
     def connection_valid?
       client.api_valid?
-    rescue KubeException, Errno::ECONNREFUSED
+    rescue *SamsonKubernetes.connection_errors
       false
     end
 

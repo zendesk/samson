@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 require_relative "../test_helper"
+require "kubeclient"
 
 SingleCov.covered!
 
@@ -48,6 +49,12 @@ describe SamsonKubernetes do
     it "links to cluster" do
       cluster = kubernetes_clusters(:test_cluster)
       link_parts(cluster).must_equal ["test", cluster]
+    end
+  end
+
+  describe ".connection_errors" do
+    it "works" do
+      SamsonKubernetes.connection_errors
     end
   end
 end
