@@ -106,6 +106,11 @@ describe Kubernetes::Resource do
       stub_request(:get, url).to_return(status: 500)
       assert_raises(KubeException) { resource.running? }
     end
+
+    it "raises SSL exception is raised" do
+      stub_request(:get, url).to_raise(OpenSSL::SSL::SSLError)
+      assert_raises(OpenSSL::SSL::SSLError) { resource.running? }
+    end
   end
 
   describe "#delete" do
