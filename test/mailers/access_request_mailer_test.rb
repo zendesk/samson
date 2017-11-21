@@ -43,16 +43,17 @@ describe AccessRequestMailer do
       end
 
       it 'has a correct subject' do
-        subject.subject.must_match /#{user.name}/
-        subject.subject.must_match /#{role.display_name}/
+        subject.subject.must_include user.name
+        subject.subject.must_include role.display_name
       end
 
       it 'includes relevant information in body' do
-        subject.body.to_s.must_match /#{user.email}/
-        subject.body.to_s.must_match /#{role.display_name}/
-        subject.body.to_s.must_match /#{hostname}/
-        subject.body.to_s.must_match /#{reason}/
-        Project.all.each { |project| subject.body.to_s.must_match /#{project.name}/ }
+        subject.body.to_s.must_include user.email
+        subject.body.to_s.must_include manager_email
+        subject.body.to_s.must_include role.display_name
+        subject.body.to_s.must_include hostname
+        subject.body.to_s.must_include reason
+        Project.all.each { |project| subject.body.to_s.must_include project.name }
       end
 
       describe 'no subject prefix' do
@@ -86,7 +87,7 @@ describe AccessRequestMailer do
       end
 
       it 'includes target project name in body' do
-        subject.body.to_s.must_match /#{projects(:test).name}/
+        subject.body.to_s.must_include projects(:test).name
       end
     end
   end

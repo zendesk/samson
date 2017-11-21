@@ -31,12 +31,13 @@ class AccessRequestMailer < ApplicationMailer
   def build_body
     message = []
     message << "Please bump access rights for user #{@user.name_and_email} on #{@host}."
-    message << ''
+    message << ""
     message << "Desired role: #{@role.display_name}"
-    message << 'Target projects:'
+    message << "Target projects:"
     @projects.each { |project| message << "  - #{project.name}" }
-    message << ''
+    message << ""
     message << "Reason: #{@reason}"
+    message << "Manager: #{@manager_email}" if @manager_email
     message.join "\n"
   end
 end
