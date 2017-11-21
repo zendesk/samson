@@ -14,12 +14,19 @@ class DockerBuilderService
       local_docker_login do |login_commands|
         tag = " -t #{tag.shellescape}" if tag
         file = " -f #{dockerfile.shellescape}"
-        cache_from = " --cache-from #{cache_from.shellescape}" if cache_from
-        build = "docker build#{file}#{tag} .#{cache_from}"
         executor = TerminalExecutor.new(output)
+
+        if cache_from
+          pull_cache = executor.verbose_command("docker pull #{cache_from.shellescape} || true")
+          cache_option = " --cache-from #{cache_from.shellescape}"
+        end
+
+        build = "docker build#{file}#{tag} .#{cache_option}"
+
         return unless executor.execute(
           "cd #{dir.shellescape}",
           *login_commands,
+          *pull_cache,
           executor.verbose_command(build)
         )
         image_id = output.to_s.scan(/Successfully built (\S+)/).last&.first
