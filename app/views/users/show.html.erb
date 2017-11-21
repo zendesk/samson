@@ -57,7 +57,7 @@
   <h3>Create new project role</h3>
   <%= form_tag user_project_roles_path(user_id: @user.id), class: 'form-horizontal' do %>
     <div class="col-md-2">
-      <%= select_tag :project_id, options_from_collection_for_select(@projects_without_role, :id, :name), required: true, class: 'form-control col-md-2' %>
+      <%= live_select_tag :project_id, options_from_collection_for_select(@projects_without_role, :id, :name), required: true, class: 'form-control col-md-2 form-control selectpicker' %>
     </div>
     &nbsp;
     <% UserProjectRole::ROLES.each do |role| %>
