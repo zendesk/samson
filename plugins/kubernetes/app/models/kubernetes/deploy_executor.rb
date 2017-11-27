@@ -124,7 +124,7 @@ module Kubernetes
     # efficient pod fetching by querying once per cluster instead of once per deploy group
     def fetch_pods(release)
       release.clients.flat_map do |client, query|
-        pods = Vault.with_retries(*SamsonKubernetes.connection_errors, attempts: 3) { client.get_pods(query) }
+        pods = SamsonKubernetes.retry_on_connection_errors { client.get_pods(query) }
         pods.map! { |p| Kubernetes::Api::Pod.new(p, client: client) }
       end
     end

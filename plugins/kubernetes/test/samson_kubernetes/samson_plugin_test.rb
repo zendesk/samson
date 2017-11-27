@@ -57,4 +57,17 @@ describe SamsonKubernetes do
       SamsonKubernetes.connection_errors
     end
   end
+
+  describe ".retry_on_connection_errors" do
+    it "retries" do
+      count = 0
+      assert_raises OpenSSL::SSL::SSLError do
+        SamsonKubernetes.retry_on_connection_errors do
+          count += 1
+          raise OpenSSL::SSL::SSLError
+        end
+      end
+      count.must_equal 4
+    end
+  end
 end
