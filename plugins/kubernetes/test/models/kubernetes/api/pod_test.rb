@@ -246,6 +246,12 @@ describe Kubernetes::Api::Pod do
       refute events_indicate_failure?
     end
 
+    it "retries on errors" do
+      request = stub_request(:get, events_url).to_timeout
+      assert_raises(KubeException) { pod_with_client.events_indicate_failure? }
+      assert_requested request, times: 4
+    end
+
     describe "with bad events" do
       before { event[:type] = "Warning" }
 

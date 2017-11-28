@@ -13,6 +13,15 @@ module SamsonKubernetes
   def self.connection_errors
     [OpenSSL::SSL::SSLError, KubeException, Errno::ECONNREFUSED].freeze
   end
+
+  def self.retry_on_connection_errors
+    yield
+  rescue *connection_errors
+    retries ||= 3
+    retries -= 1
+    raise if retries < 0
+    retry
+  end
 end
 
 Samson::Hooks.view :project_tabs_view, 'samson_kubernetes/project_tab'

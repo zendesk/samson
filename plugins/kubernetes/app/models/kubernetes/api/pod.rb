@@ -78,10 +78,7 @@ module Kubernetes
       end
 
       def events
-        @events ||= @client.get_events(
-          namespace: namespace,
-          field_selector: "involvedObject.name=#{name}"
-        ).select do |event|
+        @events ||= raw_events.select do |event|
           # compare strings to avoid parsing time '2017-03-31T22:56:20Z'
           event.metadata.creationTimestamp >= @pod.status.startTime.to_s
         end
@@ -93,6 +90,15 @@ module Kubernetes
       end
 
       private
+
+      def raw_events
+        SamsonKubernetes.retry_on_connection_errors do
+          @client.get_events(
+            namespace: namespace,
+            field_selector: "involvedObject.name=#{name}"
+          )
+        end
+      end
 
       # if the pod is still running we stream the logs until it times out to get as much info as possible
       # necessary since logs often hang for a while even if the pod is already done
