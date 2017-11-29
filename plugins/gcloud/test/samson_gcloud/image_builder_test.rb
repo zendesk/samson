@@ -11,17 +11,20 @@ describe SamsonGcloud::ImageBuilder do
       SamsonGcloud::ImageBuilder.build_image(build, dir, output, dockerfile: dockerfile)
     end
 
-    let(:dir) { "foo" }
+    let(:dir) { "some-dir" }
     let(:output) { OutputBuffer.new }
-    let(:dockerfile) { "Dockerfile".dup }
+    let(:dockerfile) { +"Dockerfile" }
 
     with_env GCLOUD_PROJECT: 'p-123', GCLOUD_ACCOUNT: 'acc'
 
-    before { SamsonGcloud.stubs(container_in_beta: []) }
+    before do
+      SamsonGcloud.stubs(container_in_beta: [])
+      File.stubs(:write).with("some-dir/cloudbuild.yml", anything)
+    end
 
     it "returns the docker repo digest" do
       TerminalExecutor.any_instance.expects(:execute).with { output.write "foo digest: sha-123:abc" }.returns(true)
-      build_image.must_equal "gcr.io/p-123/samson/bar-foo@sha-123:abc"
+      build_image.must_equal "gcr.io/p-123/samson/foo@sha-123:abc"
       build.external_url.must_be_nil
     end
 
@@ -41,14 +44,15 @@ describe SamsonGcloud::ImageBuilder do
         output.puts "[23:45:46] Logs are permanently available at [#{url}]."
         output.puts "[23:45:46] foo digest: sha-123:abc"
       end.returns(true)
-      build_image.must_equal "gcr.io/p-123/samson/bar-foo@sha-123:abc"
+      build_image.must_equal "gcr.io/p-123/samson/foo@sha-123:abc"
       build.external_url.must_equal url
     end
 
-    it "blows up when trying to use an unsupported Dockerfile" do
-      dockerfile << 'foo'
-      e = assert_raises(RuntimeError) { build_image }
-      e.message.must_include "Dockerfile"
+    it "builds different Dockerfiles" do
+      dockerfile << '.changed'
+      TerminalExecutor.any_instance.expects(:execute).with { output.write "foo digest: sha-123:abc" }.returns(true)
+      build_image.must_equal "gcr.io/p-123/samson/foo-changed@sha-123:abc"
+      build.external_url.must_be_nil
     end
   end
 end

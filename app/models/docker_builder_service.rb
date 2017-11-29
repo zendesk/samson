@@ -137,7 +137,8 @@ class DockerBuilderService
     before_docker_build(tmp_dir)
 
     if defined?(SamsonGcloud::ImageBuilder) && build.project.build_with_gcb
-      # TODO: cache-from + tagging as latest + different dockerfiles
+      # TODO: cache-from + tagging as latest
+      # we do not push after this since GCR handles that
       build.docker_repo_digest = SamsonGcloud::ImageBuilder.build_image(
         build, tmp_dir, output, dockerfile: build.dockerfile
       )
