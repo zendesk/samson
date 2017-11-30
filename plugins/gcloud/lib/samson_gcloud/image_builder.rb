@@ -2,15 +2,24 @@
 module SamsonGcloud
   class ImageBuilder
     class << self
+      # TODO: use build.dockerfile
       def build_image(build, dir, output, dockerfile:)
-        raise "Only supports building Dockerfile atm" if dockerfile != "Dockerfile"
-
-        repo = build.project.repository_path.parameterize
-        base = "gcr.io/#{SamsonGcloud.project}/samson/#{repo}"
+        fake_registry = OpenStruct.new(base: "gcr.io/#{SamsonGcloud.project}/samson")
+        base = build.project.docker_repo(fake_registry, dockerfile)
+        config = "#{dir}/cloudbuild.yml" # inside of the directory or we get 'Could not parse into a message'
         tag = "#{base}:#{build.git_sha}"
+
+        File.write(config, <<~YAML)
+          steps:
+          - name: 'gcr.io/cloud-builders/docker'
+            args: [ 'build', '--tag', '#{tag}', '--file', '#{dockerfile}', '.' ]
+          images:
+          - '#{tag}'
+        YAML
+
         command = [
           "gcloud", *SamsonGcloud.container_in_beta, "container", "builds", "submit", ".",
-          "--tag", tag, *SamsonGcloud.cli_options
+          "--config", config, *SamsonGcloud.cli_options
         ]
 
         executor = TerminalExecutor.new(output)
@@ -18,6 +27,7 @@ module SamsonGcloud
           "cd #{dir.shellescape}",
           executor.verbose_command(command.join(" "))
         )
+
         log = output.to_s
         build.external_url = log[/Logs are permanently available at \[(.*?)\]/, 1]
         return unless digest = log[/digest: (\S+:\S+)/, 1]
