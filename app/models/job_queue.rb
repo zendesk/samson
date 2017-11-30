@@ -23,11 +23,24 @@ class JobQueue
   end
 
   def queued?(id)
-    @queue.values.detect { |jes| jes.detect { |je| return je if je.id == id } }
+    @queue.each do |i|
+      if i[:job_execution].id == id
+        return i[:job_execution]
+      end
+    end
+
+    nil
   end
 
   def dequeue(id)
-    !!@queue.values.detect { |jes| jes.reject! { |je| je.id == id } }
+    @queue.each do |i|
+      if i[:job_execution].id == id
+        @queue.delete(i)
+        return true
+      end
+    end
+
+    false
   end
 
   def find_by_id(id)
@@ -41,8 +54,8 @@ class JobQueue
 
     if JobQueue.enabled
       @lock.synchronize do
-        if @executing[queue]
-          @queue[queue] << job_execution
+        if should_queue_job?(queue)
+          @queue.push('queue': queue, 'job_execution': job_execution)
           false
         else
           @executing[queue] = job_execution
@@ -79,7 +92,7 @@ class JobQueue
   private
 
   def initialize
-    @queue = Hash.new { |h, q| h[q] = [] }
+    @queue = []
     @lock = Mutex.new
     @executing = {}
     @threads = {}
@@ -99,6 +112,15 @@ class JobQueue
     end
   end
 
+  def should_queue_job?(queue)
+    return true if @executing[queue]
+
+    limit = ENV['MAX_CONCURRENT_JOBS'].to_i
+    return false if limit == 0
+
+    executing.length >= limit
+  end
+
   def delete_and_enqueue_next(job_execution, queue)
     @lock.synchronize do
       previous = @executing.delete(queue)
@@ -106,12 +128,17 @@ class JobQueue
         raise "Unexpected executing job found in queue #{queue}: expected #{job_execution&.id} got #{previous&.id}"
       end
 
-      if JobQueue.enabled && (next_execution = @queue[queue].shift)
-        @executing[queue] = next_execution
-        perform_job(next_execution, queue)
+      if JobQueue.enabled && !@queue.empty?
+        @queue.each do |i|
+          if @executing[i[:queue]]
+            next
+          end
+          @queue.delete(i)
+          @executing[i[:queue]] = i[:job_execution]
+          perform_job(i[:job_execution], i[:queue])
+          break
+        end
       end
-
-      @queue.delete(queue) if @queue[queue].empty? # save memory, and time when iterating all queues
     end
 
     instrument
@@ -121,7 +148,7 @@ class JobQueue
     ActiveSupport::Notifications.instrument(
       "job_queue.samson",
       threads: @executing.length,
-      queued: @queue.values.sum(&:count)
+      queued: @queue.length
     )
   end
 end
