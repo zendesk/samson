@@ -102,7 +102,8 @@ module Kubernetes
       if name.include?(Kubernetes::Role::GENERATED)
         raise(
           Samson::Hooks::UserError,
-          "Service name for role #{@doc.kubernetes_role.name} was generated and needs to be changed before deploying."
+          "Service name for role #{@doc.kubernetes_role.name} was generated while seeding " \
+          "and needs to be changed via kubernetes role UI before deploying."
         )
       end
 

@@ -175,7 +175,7 @@ describe Kubernetes::TemplateFiller do
         e = assert_raises Samson::Hooks::UserError do
           template.to_hash
         end
-        e.message.must_equal "Service name for role app-server was generated and needs to be changed before deploying."
+        e.message.must_include "Service name for role app-server was generated"
       end
 
       describe "when using multiple services" do
