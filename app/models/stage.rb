@@ -103,7 +103,7 @@ class Stage < ActiveRecord::Base
   end
 
   def notify_email_addresses
-    notify_email_address.to_s.split(/\s*;\s*/).map(&:strip)
+    notify_email_address.to_s.strip.split(/\s*;\s*/).map(&:strip)
   end
 
   # this logic is replicated in SQL inside of app/jobs/csv_export_job.rb#filter_deploys for report filtering

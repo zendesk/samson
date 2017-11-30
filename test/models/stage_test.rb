@@ -217,6 +217,11 @@ describe Stage do
       stage = Stage.new(notify_email_address: "a@foo.com;b@foo.com ; c@foo.com; ")
       stage.notify_email_addresses.must_equal ["a@foo.com", "b@foo.com", "c@foo.com"]
     end
+
+    it "ignores whitespace" do
+      stage = Stage.new(notify_email_address: "  ")
+      stage.notify_email_addresses.must_equal []
+    end
   end
 
   describe "#next_stage" do
