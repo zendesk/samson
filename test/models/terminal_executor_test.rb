@@ -86,15 +86,19 @@ describe TerminalExecutor do
       refute subject.pid
       refute subject.pgid
 
-      Thread.new { subject.execute('sleep 0.1') }
+      begin
+        t = Thread.new { subject.execute('sleep 0.1') }
 
-      sleep 0.05 # wait for execution to start
-      assert subject.pid
-      assert subject.pgid
+        sleep 0.05 # wait for execution to start
+        assert subject.pid
+        assert subject.pgid
 
-      sleep 0.1 # wait for execution to finish
-      refute subject.pid
-      refute subject.pgid
+        sleep 0.1 # wait for execution to stop
+        refute subject.pid
+        refute subject.pgid
+      ensure
+        t.join # wait for execution to finish
+      end
     end
 
     it "can timeout" do
@@ -226,6 +230,26 @@ describe TerminalExecutor do
       subject.execute('echo 1').must_equal true
       subject.cancel 'INT'
       subject.execute('echo 1').must_equal false
+    end
+  end
+
+  describe '#script_as_executable' do
+    it "makes a unreadable script" do
+      subject.send(:script_as_executable, "echo 1") do |path|
+        File.stat(path).mode.must_equal 0o100700
+      end
+    end
+
+    it "cleans up the script even on error" do
+      p = nil
+      assert_raises RuntimeError do
+        subject.send(:script_as_executable, "echo 1") do |path|
+          assert File.exist?(path)
+          p = path
+          raise
+        end
+      end
+      refute File.exist?(p)
     end
   end
 end

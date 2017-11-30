@@ -28,19 +28,21 @@ class TerminalExecutor
   def execute(*commands)
     return false if @cancelled
     options = {in: '/dev/null', unsetenv_others: true}
-    output, input, pid = PTY.spawn(whitelisted_env, script(commands), options)
-    record_pid(pid) do
-      timeout do
-        stream from: output, to: @output
+    script_as_executable(script(commands)) do |path|
+      output, input, pid = PTY.spawn(whitelisted_env, path, options)
+      record_pid(pid) do
+        timeout do
+          stream from: output, to: @output
 
-        begin
-          _pid, status = Process.wait2(pid)
-          status.success?
-        rescue Errno::ECHILD
-          @output.puts "#{$!.class}: #{$!.message}"
-          false
-        ensure
-          input.close
+          begin
+            _pid, status = Process.wait2(pid)
+            status.success?
+          rescue Errno::ECHILD
+            @output.puts "#{$!.class}: #{$!.message}"
+            false
+          ensure
+            input.close
+          end
         end
       end
     end
@@ -56,6 +58,17 @@ class TerminalExecutor
   end
 
   private
+
+  # write script to a file so it cannot be seen via `ps`
+  def script_as_executable(script)
+    f = Tempfile.new "samson-terminal-executor"
+    File.chmod(0o700, f.path) # making sure nobody can read it before we add content
+    f.write script
+    f.close
+    yield f.path
+  ensure
+    f.unlink
+  end
 
   def timeout(&block)
     timeout = Integer(ENV["DEPLOY_TIMEOUT"] || 2.hours.to_i)
