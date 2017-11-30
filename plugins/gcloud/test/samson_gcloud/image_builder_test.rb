@@ -7,8 +7,8 @@ describe SamsonGcloud::ImageBuilder do
   let(:build) { builds(:docker_build) }
 
   describe ".build_image" do
-    def build_image(tag_as_latest: false)
-      SamsonGcloud::ImageBuilder.build_image(build, dir, output, tag_as_latest: tag_as_latest)
+    def build_image(tag_as_latest: false, cache_from: nil)
+      SamsonGcloud::ImageBuilder.build_image(build, dir, output, tag_as_latest: tag_as_latest, cache_from: cache_from)
     end
 
     let(:dir) { "some-dir" }
@@ -35,6 +35,38 @@ describe SamsonGcloud::ImageBuilder do
         tags:
         - '#{build.git_sha}'
       YML
+    end
+
+    it "can use cache" do
+      Samson::CommandExecutor.expects(:execute).returns([true, "sha256:abc\n"])
+      old = 'gcr.io/something-old@sha256:abc'
+      build_image(cache_from: old)
+      File.read("some-dir/cloudbuild.yml").must_equal <<~YML
+        steps:
+        - name: 'gcr.io/cloud-builders/docker'
+          args: ['pull', '#{old}']
+        - name: 'gcr.io/cloud-builders/docker'
+          args: [ 'build', '--tag', '#{repo}:#{build.git_sha}', '--file', 'Dockerfile', '--cache-from', '#{old}', '.' ]
+        images:
+        - '#{repo}'
+        tags:
+        - '#{build.git_sha}'
+      YML
+    end
+
+    it "does not use cache when image is not available" do
+      Samson::CommandExecutor.expects(:execute).returns([true, "\n"])
+      build_image(cache_from: 'gcr.io/something-old')
+      File.read("some-dir/cloudbuild.yml").must_equal <<~YML
+        steps:
+        - name: 'gcr.io/cloud-builders/docker'
+          args: [ 'build', '--tag', '#{repo}:#{build.git_sha}', '--file', 'Dockerfile', '.' ]
+        images:
+        - '#{repo}'
+        tags:
+        - '#{build.git_sha}'
+      YML
+      output.to_s.must_include "not found in gcr"
     end
 
     it "tags latest when requested" do
