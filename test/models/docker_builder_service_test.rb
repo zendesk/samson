@@ -193,25 +193,25 @@ describe DockerBuilderService do
 
     it 'calls #before_docker_build' do
       service.expects(:before_docker_build).with(tmp_dir)
-      service.send(:build_image, tmp_dir)
+      service.send(:build_image, tmp_dir, tag_as_latest: false)
     end
 
     it 'writes the REVISION file' do
-      service.send(:build_image, tmp_dir)
+      service.send(:build_image, tmp_dir, tag_as_latest: false)
       revision_filepath = File.join(tmp_dir, 'REVISION')
       assert File.exist?(revision_filepath)
       File.read(revision_filepath).must_equal build.git_sha
     end
 
     it 'updates the Build object' do
-      service.send(:build_image, tmp_dir)
+      service.send(:build_image, tmp_dir, tag_as_latest: false)
       build.docker_image_id.must_equal docker_image_id
     end
 
     it 'fails when docker build did not contain a image id' do
       OutputBuffer.any_instance.unstub(:to_s)
       OutputBuffer.any_instance.expects(:to_s).returns("some internal docker error")
-      service.send(:build_image, tmp_dir).must_be_nil
+      service.send(:build_image, tmp_dir, tag_as_latest: false).must_be_nil
       build.docker_image_id.must_be_nil
     end
 
@@ -220,7 +220,7 @@ describe DockerBuilderService do
       TerminalExecutor.any_instance.expects(:execute).returns(false)
       OutputBuffer.any_instance.unstub(:to_s)
       OutputBuffer.any_instance.expects(:to_s).never
-      service.send(:build_image, tmp_dir).must_be_nil
+      service.send(:build_image, tmp_dir, tag_as_latest: false).must_be_nil
       build.docker_image_id.must_be_nil
     end
 
@@ -237,7 +237,7 @@ describe DockerBuilderService do
           args.join(" ").must_include "docker pull #{build.docker_repo_digest}"
           true
         end.returns(true)
-        service.send(:build_image, tmp_dir)
+        service.send(:build_image, tmp_dir, tag_as_latest: false)
       end
 
       it 'does not use cache when the last build failed' do
@@ -245,7 +245,7 @@ describe DockerBuilderService do
         TerminalExecutor.any_instance.expects(:execute).
           with { |*args| args.join(" ").wont_include "--cache-from"; true }.
           returns(true)
-        service.send(:build_image, tmp_dir)
+        service.send(:build_image, tmp_dir, tag_as_latest: false)
       end
     end
 
@@ -258,7 +258,7 @@ describe DockerBuilderService do
       it "stores docker_repo_digest directly" do
         with_env GCLOUD_PROJECT: 'p-123', GCLOUD_ACCOUNT: 'acc' do
           build.project.build_with_gcb = true
-          assert service.send(:build_image, tmp_dir)
+          assert service.send(:build_image, tmp_dir, tag_as_latest: false)
           refute build.docker_image_id
           build.docker_repo_digest.sub(/samson\/[^@]+/, "X").must_equal "gcr.io/p-123/X@sha-123:abc"
         end
