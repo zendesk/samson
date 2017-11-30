@@ -8,12 +8,11 @@ describe SamsonGcloud::ImageBuilder do
 
   describe ".build_image" do
     def build_image(tag_as_latest: false)
-      SamsonGcloud::ImageBuilder.build_image(build, dir, output, dockerfile: dockerfile, tag_as_latest: tag_as_latest)
+      SamsonGcloud::ImageBuilder.build_image(build, dir, output, tag_as_latest: tag_as_latest)
     end
 
     let(:dir) { "some-dir" }
     let(:output) { OutputBuffer.new }
-    let(:dockerfile) { +"Dockerfile" }
     let(:repo) { 'gcr.io/p-123/samson/foo' }
 
     with_env GCLOUD_PROJECT: 'p-123', GCLOUD_ACCOUNT: 'acc'
@@ -79,7 +78,7 @@ describe SamsonGcloud::ImageBuilder do
     end
 
     it "builds different Dockerfiles" do
-      dockerfile << '.changed'
+      build.dockerfile = 'Dockerfile.changed'
       TerminalExecutor.any_instance.expects(:execute).with { output.write "foo digest: sha-123:abc" }.returns(true)
       build_image.must_equal "#{repo}-changed@sha-123:abc"
       build.external_url.must_be_nil

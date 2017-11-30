@@ -2,10 +2,9 @@
 module SamsonGcloud
   class ImageBuilder
     class << self
-      # TODO: use build.dockerfile
-      def build_image(build, dir, output, dockerfile:, tag_as_latest:)
+      def build_image(build, dir, output, tag_as_latest:)
         fake_registry = OpenStruct.new(base: "gcr.io/#{SamsonGcloud.project}/samson")
-        base = build.project.docker_repo(fake_registry, dockerfile)
+        base = build.project.docker_repo(fake_registry, build.dockerfile)
         config = "#{dir}/cloudbuild.yml" # inside of the directory or we get 'Could not parse into a message'
         tags = [build.git_sha]
         tags << "latest" if tag_as_latest
@@ -15,7 +14,7 @@ module SamsonGcloud
         File.write(config, <<~YAML)
           steps:
           - name: 'gcr.io/cloud-builders/docker'
-            args: [ 'build', #{tag_arguments}, '--file', '#{dockerfile}', '.' ]
+            args: [ 'build', #{tag_arguments}, '--file', '#{build.dockerfile}', '.' ]
           images:
           - '#{base}'
           tags:

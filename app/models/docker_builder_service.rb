@@ -141,7 +141,7 @@ class DockerBuilderService
       # TODO: cache-from
       # we do not push after this since GCR handles that
       build.docker_repo_digest = SamsonGcloud::ImageBuilder.build_image(
-        build, tmp_dir, output, dockerfile: build.dockerfile, tag_as_latest: tag_as_latest
+        build, tmp_dir, output, tag_as_latest: tag_as_latest
       )
     else
       cache = build.project.builds.where.not(docker_repo_digest: nil).last&.docker_repo_digest
