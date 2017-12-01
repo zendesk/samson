@@ -19,6 +19,7 @@ class Kubernetes::UsageLimitsController < ApplicationController
 
   def index
     limits = ::Kubernetes::UsageLimit.all
+    @projects = limits.map(&:project).uniq.compact.sort_by(&:name)
 
     if project_id = params.dig(:search, :project_id).presence
       limits = limits.where(project_id: project_id)
