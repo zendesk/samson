@@ -10,6 +10,7 @@ class DockerBuilderService
   attr_reader :build, :execution
 
   class << self
+    # TODO: extract to basic docker builder so that swapping it out is easier
     def build_docker_image(dir, output, dockerfile:, tag: nil, cache_from: nil)
       local_docker_login do |login_commands|
         tag = " -t #{tag.shellescape}" if tag
@@ -86,7 +87,7 @@ class DockerBuilderService
     build.save!
 
     @execution = JobExecution.new(build.git_sha, job) do |_, tmp_dir|
-      if build_image(tmp_dir)
+      if build_image(tmp_dir, tag_as_latest: tag_as_latest)
         ret = true
         unless build.docker_repo_digest
           ret = push_image(tag_as_latest: tag_as_latest) if push
@@ -131,16 +132,16 @@ class DockerBuilderService
   end
   add_method_tracer :before_docker_build
 
-  def build_image(tmp_dir)
+  def build_image(tmp_dir, tag_as_latest:)
     File.write("#{tmp_dir}/REVISION", build.git_sha)
 
     before_docker_build(tmp_dir)
 
     if defined?(SamsonGcloud::ImageBuilder) && build.project.build_with_gcb
-      # TODO: cache-from + tagging as latest
+      # TODO: cache-from
       # we do not push after this since GCR handles that
       build.docker_repo_digest = SamsonGcloud::ImageBuilder.build_image(
-        build, tmp_dir, output, dockerfile: build.dockerfile
+        build, tmp_dir, output, dockerfile: build.dockerfile, tag_as_latest: tag_as_latest
       )
     else
       cache = build.project.builds.where.not(docker_repo_digest: nil).last&.docker_repo_digest
