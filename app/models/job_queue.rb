@@ -11,6 +11,7 @@ class JobQueue
 
   class << self
     delegate :executing, :executing?, :queued?, :dequeue, :find_by_id, :perform_later, :debug, :clear, :wait, :kill,
+      :grouped_queue,
       to: :instance
   end
 
@@ -87,6 +88,15 @@ class JobQueue
 
   def kill(id)
     @threads[id]&.kill
+  end
+
+  def grouped_queue
+    grouped = Hash.new { |h, q| h[q] = [] }
+    @queue.each do |i|
+      grouped[i[:queue]] << i[:job_execution]
+    end
+
+    grouped
   end
 
   private
