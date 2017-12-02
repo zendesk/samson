@@ -94,6 +94,23 @@ describe JobQueue do
       end
     end
 
+    it 'queues a job if max concurrent jobs is hit' do
+      with_job_execution do
+        locked do
+          JobQueue.concurrency = 1
+
+          job_execution.expects(:perform).with { active_lock.synchronize { true } }
+          queued_job_execution.expects(:perform).with { queued_lock.synchronize { true } }
+
+          subject.perform_later(job_execution)
+          subject.perform_later(queued_job_execution)
+
+          assert subject.executing?(:active)
+          refute subject.executing?(:queued)
+        end
+      end
+    end
+
     it 'does not perform a job if job execution is disabled' do
       JobQueue.enabled = false
       job_execution.expects(:perform).never
