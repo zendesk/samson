@@ -150,6 +150,11 @@ Set the following variables in your `.env` file or set them as environment varia
       <td>You may fill in using the instructions below if you would like a dynamic chart of response time and throughput during deploys.
           https://docs.newrelic.com/docs/features/getting-started-with-the-new-relic-rest-api#setup</td>
     </tr>
+    <tr>
+      <td>MAX_CONCURRENT_JOBS</td>
+      <td></td>
+      <td>The maximum number of concurrent jobs Samson will run. If a user tried to create a deployment that cause Samson to surpass this limit it will be added to a queue. Setting to 0, or not including all will allow unlimited concurrent jobs</td>
+    </tr>
   </tbody>
 </table>
 
