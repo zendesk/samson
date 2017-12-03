@@ -55,7 +55,7 @@ class JobQueue
 
     if JobQueue.enabled
       @lock.synchronize do
-        if should_queue_job?(queue)
+        if full?(queue)
           @queue.push('queue': queue, 'job_execution': job_execution)
           false
         else
@@ -123,7 +123,7 @@ class JobQueue
     end
   end
 
-  def should_queue_job?(queue)
+  def full?(queue)
     return true if @executing[queue]
 
     return false if JobQueue.concurrency == 0
