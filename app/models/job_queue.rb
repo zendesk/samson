@@ -24,13 +24,7 @@ class JobQueue
   end
 
   def queued?(id)
-    @queue.each do |i|
-      if i[:job_execution].id == id
-        return i[:job_execution]
-      end
-    end
-
-    nil
+    @queue.detect { |i| return i[:job_execution] if i[:job_execution].id == id }
   end
 
   def dequeue(id)
