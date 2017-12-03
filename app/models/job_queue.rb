@@ -34,14 +34,7 @@ class JobQueue
   end
 
   def dequeue(id)
-    @queue.each do |i|
-      if i[:job_execution].id == id
-        @queue.delete(i)
-        return true
-      end
-    end
-
-    false
+    !!@queue.reject!{ |i| i[:job_execution].id == id }
   end
 
   def find_by_id(id)
