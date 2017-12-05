@@ -116,7 +116,7 @@ describe EnvironmentVariable do
         it "does not show secret values in preview mode" do
           create_secret 'global/global/global/foobar'
           EnvironmentVariable.env(project, nil, preview: true).must_equal(
-            "PROJECT" => "secret://foobar ✓", "X" => "Y", "Y" => "Z"
+            "PROJECT" => "secret://global/global/global/foobar ✓", "X" => "Y", "Y" => "Z"
           )
         end
 
@@ -128,8 +128,8 @@ describe EnvironmentVariable do
           all.sort_by { |x| x["PROJECT"] }.must_equal(
             [
               {"PROJECT" => "DEPLOY", "Z" => "A", "X" => "Y", "Y" => "Z"},
-              {"PROJECT" => "secret://foobar ✓", "X" => "Y", "Y" => "Z"},
-              {"PROJECT" => "secret://foobar ✓", "X" => "Y", "Y" => "Z"}
+              {"PROJECT" => "secret://global/global/global/foobar ✓", "X" => "Y", "Y" => "Z"},
+              {"PROJECT" => "secret://global/global/global/foobar ✓", "X" => "Y", "Y" => "Z"}
             ]
           )
         end
