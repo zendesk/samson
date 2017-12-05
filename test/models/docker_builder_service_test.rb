@@ -267,34 +267,38 @@ describe DockerBuilderService do
   end
 
   describe "#push_image" do
-    def stub_push(repo, tag, result, force: false)
-      mock_docker_image.
-        expects(:push).
-        with(anything, repo_tag: "#{repo}:#{tag}", force: force).
-        multiple_yields(*push_output).
-        returns(result)
+    def stub_push(repo, tag, result)
+      executor.expects(:execute).with do |*commands|
+        service.send(:output).puts push_output.join("\n")
+        commands.to_s.include?("export DOCKER_CONFIG") &&
+          commands.to_s.include?("docker tag fake-id #{repo}:#{tag}") &&
+          commands.to_s.include?("docker push #{repo}:#{tag}")
+      end.returns(result)
     end
 
     let(:repo_digest) { 'sha256:5f1d7c7381b2e45ca73216d7b06004fdb0908ed7bb8786b62f2cdfa5035fde2c' }
     let(:push_output) do
       [
-        [{status: "pushing image to repo..."}.to_json],
-        [{status: "completed push."}.to_json],
-        [{status: "Frobinating..."}.to_json],
-        [{status: "Digest: #{repo_digest}"}.to_json],
-        [{status: "Done"}.to_json]
+        "pushing image to repo...",
+        "completed push.",
+        "Frobinating...",
+        "Digest: #{repo_digest}",
+        "Done"
       ]
     end
     let(:tag) { 'my-test' }
     let(:output) { service.send(:output).to_s }
+    let(:executor) { TerminalExecutor.new(service.output) }
 
     before do
       build.docker_image = mock_docker_image
       build.docker_tag = tag
+      execution = stub("Execution", executor: executor)
+      service.instance_variable_set(:@execution, execution)
+      mock_docker_image.stubs(:id).returns("fake-id")
     end
 
     it 'stores generated repo digest' do
-      mock_docker_image.expects(:tag).once
       stub_push primary_repo, tag, true
 
       assert service.send(:push_image), output
@@ -303,7 +307,6 @@ describe DockerBuilderService do
 
     it 'uses a different repo for a uncommon dockerfile' do
       build.update_column(:dockerfile, "Dockerfile.secondary")
-      mock_docker_image.expects(:tag).once
       stub_push "#{primary_repo}-secondary", tag, true
 
       assert service.send(:push_image), output
@@ -311,7 +314,6 @@ describe DockerBuilderService do
     end
 
     it 'saves docker output to the buffer' do
-      mock_docker_image.expects(:tag).once
       stub_push primary_repo, tag, true
 
       assert service.send(:push_image), output
@@ -324,25 +326,8 @@ describe DockerBuilderService do
       output.to_s.must_include "Docker push failed: Docker::Error::DockerError"
     end
 
-    describe 'with credentials' do
-      with_registries ['usr:pas@reg']
-
-      it 'pushes with credentials' do
-        with_env(DOCKER_REGISTRY_EMAIL: 'eml') do
-          mock_docker_image.expects(:tag)
-          mock_docker_image.expects(:push).with(
-            {username: 'usr', password: 'pas', email: 'eml', serveraddress: DockerRegistry.first.host},
-            repo_tag: "#{primary_repo}:#{tag}", force: false
-          ).multiple_yields(*push_output).returns(true)
-
-          assert service.send(:push_image), output
-        end
-      end
-    end
-
     it 'fails when digest cannot be found' do
-      assert push_output.reject! { |e| e.first =~ /Digest/ }
-      mock_docker_image.expects(:tag)
+      assert push_output.reject! { |e| e =~ /Digest/ }
       stub_push primary_repo, tag, true
 
       refute service.send(:push_image)
@@ -355,21 +340,18 @@ describe DockerBuilderService do
       with_registries ["docker-registry.example.com", 'extra.registry']
 
       it "pushes to primary and secondary registry" do
-        mock_docker_image.expects(:tag).twice
-        stub_push primary_repo, tag, true
         stub_push secondary_repo, tag, true
+        stub_push primary_repo, tag, true
         assert service.send(:push_image), output
         build.docker_tag.must_equal tag
       end
 
       it "stops and fails when pushing to primary registry fails" do
-        mock_docker_image.expects(:tag)
         stub_push primary_repo, tag, false
         refute service.send(:push_image)
       end
 
       it "fails when pushing to secondary registry fails" do
-        mock_docker_image.expects(:tag).twice
         stub_push primary_repo, tag, true
         stub_push secondary_repo, tag, false
         refute service.send(:push_image)
@@ -378,19 +360,15 @@ describe DockerBuilderService do
 
     describe 'pushing latest' do
       it 'adds the latest tag on top of the one specified' do
-        mock_docker_image.expects(:tag).with(has_entry(tag: tag))
-        mock_docker_image.expects(:tag).with(has_entry(tag: 'latest'))
-
         stub_push(primary_repo, tag, true)
-        stub_push(primary_repo, 'latest', true, force: true)
+        stub_push(primary_repo, 'latest', true)
 
         assert service.send(:push_image, tag_as_latest: true), output
       end
 
       it 'does not add the latest tag on top of the one specified when that tag is latest' do
         build.docker_tag = 'latest'
-        mock_docker_image.expects(:tag).with(has_entry(tag: 'latest'))
-        stub_push(primary_repo, 'latest', true, force: true)
+        stub_push(primary_repo, 'latest', true)
 
         assert service.send(:push_image, tag_as_latest: true), output
       end
