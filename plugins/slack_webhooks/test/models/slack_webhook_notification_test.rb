@@ -120,7 +120,7 @@ describe SlackWebhookNotification do
 
     it "renders a nicely formatted pending notification" do
       deploy.job.status = "pending"
-      render.must_equal <<-TEXT.strip_heredoc.chomp
+      render.must_equal <<~TEXT.chomp
         :stopwatch: *[Foo] Super Admin is about to deploy staging to Staging* (<http://sams.on/url|view the deploy>)
         _<https://github.com/url|3 commits> and 2 pull requests by author1 and author2._
 
@@ -132,7 +132,7 @@ describe SlackWebhookNotification do
     end
 
     it "does not render pull requests for finished deploys" do
-      render.must_equal <<-TEXT.strip_heredoc.chomp
+      render.must_equal <<~TEXT.chomp
         :white_check_mark: *[Foo] Super Admin deployed staging to Staging* (<http://sams.on/url|view the deploy>)
         _<https://github.com/url|3 commits> and 2 pull requests by author1 and author2._
       TEXT
