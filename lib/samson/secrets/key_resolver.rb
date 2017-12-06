@@ -39,8 +39,13 @@ module Samson
         found
       end
 
+      # expand a single key and return full path if present
+      def expand_key(key)
+        expand('unused-param', key).first&.last
+      end
+
       def read(key)
-        return unless full_key = expand('unused-param', key).first&.last
+        return unless full_key = expand_key(key)
         SecretStorage.read_multi([full_key], include_value: true).values.first&.fetch(:value) # read key without raising
       end
 
