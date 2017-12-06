@@ -43,7 +43,7 @@ class JobQueue
     if JobQueue.enabled
       @lock.synchronize do
         if full?(queue)
-          @queue.push(queue: queue, 'job_execution': job_execution)
+          @queue.push(queue: queue, job_execution: job_execution)
           false
         else
           @executing[queue] = job_execution
