@@ -98,7 +98,6 @@ describe JobQueue do
       with_env MAX_CONCURRENT_JOBS: '1' do
         with_job_execution do
           locked do
-
             job_execution.expects(:perform).with { active_lock.synchronize { true } }
             queued_job_execution.expects(:perform).with { queued_lock.synchronize { true } }
 
