@@ -49,8 +49,22 @@ describe JobQueue do
     end
   end
 
+  def with_two_executing_jobs_and_a_queued_job
+    job_execution.expects(:perform).with { active_lock.synchronize { true } }
+    queued_job_execution.expects(:perform).with { queued_lock.synchronize { true } }
+    another_job_execution.expects(:perform).with { another_lock.synchronize { true } }
+    with_job_execution do
+      locked do
+        subject.perform_later(job_execution, queue: queue_name)
+        subject.perform_later(queued_job_execution, queue: queue_name)
+        subject.perform_later(another_job_execution, queue: another_queue_name)
+        yield
+      end
+    end
+  end
+
   def locked
-    locks = [active_lock, queued_lock]
+    locks = [active_lock, queued_lock, another_lock]
     locks.each(&:lock) # stall jobs
 
     yield
@@ -63,9 +77,12 @@ describe JobQueue do
   let(:subject) { JobQueue }
   let(:job_execution) { fake_execution.new(:active) }
   let(:queued_job_execution) { fake_execution.new(:queued) }
+  let(:another_job_execution) { fake_execution.new(:another) }
   let(:active_lock) { Mutex.new }
   let(:queued_lock) { Mutex.new }
+  let(:another_lock) { Mutex.new }
   let(:queue_name) { :my_queue }
+  let(:another_queue_name) { :another_queue }
 
   before do
     JobQueue.stubs(:new).returns(job_execution).returns(queued_job_execution)
@@ -174,6 +191,15 @@ describe JobQueue do
           refute subject.find_by_id(:active)
           assert subject.executing?(:queued)
           refute subject.queued?(:queued)
+        end
+      end
+
+      it 'does not perform a job from an executing queue when another job completes' do
+        with_two_executing_jobs_and_a_queued_job do
+          another_lock.unlock
+          sleep 0.01 while subject.executing?(:another)
+
+          refute subject.executing?(:queued)
         end
       end
 
