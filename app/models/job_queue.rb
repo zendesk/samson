@@ -125,7 +125,7 @@ class JobQueue
         raise "Unexpected executing job found in queue #{queue}: expected #{job_execution&.id} got #{previous&.id}"
       end
 
-      if JobQueue.enabled && @queue.any?
+      if JobQueue.enabled
         @queue.each do |i|
           if @executing[i[:queue]]
             next
