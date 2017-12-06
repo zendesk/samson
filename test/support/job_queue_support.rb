@@ -35,7 +35,7 @@ ActiveSupport::TestCase.class_eval do
   end
 
   def wait_for_jobs_to_finish
-    sleep 0.01 until JobQueue.debug == [{}, []]
+    sleep 0.01 until JobQueue.debug == [{}, {}]
   end
 
   def with_blocked_jobs(count)

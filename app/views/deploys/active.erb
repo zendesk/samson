@@ -12,6 +12,6 @@
     <%= render 'job_executions', job_executions: active %>
 
     <h2>Queued</h2>
-    <%= render 'job_executions', job_executions: JobQueue.grouped_queue %>
+    <%= render 'job_executions', job_executions: queued %>
   </section>
 <% end %>

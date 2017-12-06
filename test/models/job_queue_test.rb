@@ -21,7 +21,7 @@ describe JobQueue do
   end
 
   def wait_for_jobs_to_finish
-    sleep 0.01 until subject.debug == [{}, []]
+    sleep 0.01 until subject.debug == [{}, {}]
   end
 
   def with_executing_job
@@ -205,7 +205,7 @@ describe JobQueue do
           refute subject.find_by_id(:queued)
 
           # make sure we cleaned up nicely
-          subject.debug.must_equal([{}, []])
+          subject.debug.must_equal([{}, {}])
         end
       end
     end
@@ -230,16 +230,15 @@ describe JobQueue do
 
   describe "#debug" do
     it "returns executing and queued" do
-      subject.debug.must_equal([{}, []])
+      subject.debug.must_equal([{}, {}])
     end
   end
 
   describe "#clear" do
     it "clears" do
-      subject.debug[0] = {x: 1}
-      subject.debug[1] = [1]
+      subject.debug.each { |q| q[:x] = 1 }
       subject.clear
-      subject.debug.must_equal [{}, []]
+      subject.debug.must_equal [{}, {}]
     end
   end
 
