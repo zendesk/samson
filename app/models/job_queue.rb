@@ -6,7 +6,7 @@ class JobQueue
   # Whether or not execution is enabled. This allows completely disabling job
   # execution for testing purposes and when restarting samson.
   class << self
-    attr_accessor :enabled, :concurrency
+    attr_accessor :enabled
   end
 
   class << self
@@ -93,7 +93,6 @@ class JobQueue
     @lock = Mutex.new
     @executing = {}
     @threads = {}
-    JobQueue.concurrency = ENV['MAX_CONCURRENT_JOBS'].to_i
   end
 
   # assign the thread first so we do not get into a state where the execution is findable but has no thread
@@ -113,9 +112,13 @@ class JobQueue
   def full?(queue)
     return true if @executing[queue]
 
-    return false if JobQueue.concurrency == 0
+    return false if concurrency == 0
 
-    executing.length >= JobQueue.concurrency
+    executing.length >= concurrency
+  end
+
+  def concurrency
+    ENV['MAX_CONCURRENT_JOBS'].to_i
   end
 
   def delete_and_enqueue_next(job_execution, queue)
