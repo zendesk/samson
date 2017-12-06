@@ -190,7 +190,7 @@ describe JobQueue do
           refute subject.find_by_id(:active)
           refute subject.executing?(:queued)
           assert subject.queued?(:queued)
-          subject.debug.each(&:clear)
+          subject.clear
         end
       end
 
