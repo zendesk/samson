@@ -55,15 +55,22 @@ describe EnvironmentVariableGroupsController do
   end
 
   as_a_viewer do
-    before do
-      env_group
-      env_group.update_column :id, 1 # need static id
-    end
-
     unauthorized :get, :new
     unauthorized :post, :create
-    unauthorized :patch, :update, id: 1
-    unauthorized :delete, :destroy, id: 1
+
+    describe "#update" do
+      it "is unauthorized" do
+        patch :update, params: {id: env_group.id}
+        assert_response :unauthorized
+      end
+    end
+
+    describe "#destroy" do
+      it "is unauthorized" do
+        delete :destroy, params: {id: env_group.id}
+        assert_response :unauthorized
+      end
+    end
 
     describe "#index" do
       it "renders" do
@@ -99,10 +106,14 @@ describe EnvironmentVariableGroupsController do
 
     describe "a json GET to #preview" do
       it "succeeds" do
-        get :preview, params: {format: :json, group_id: env_group.id, project_id: project.id }
+        get :preview, params: {group_id: env_group.id, project_id: project.id }, format: :json
         assert_response :success
         json_response = JSON.parse response.body
-        assert_nil json_response['groups']
+        json_response['groups'].sort.must_equal [
+          [".pod-100", {"X" => "Y", "Y" => "Z"}],
+          [".pod1", {"X" => "Y", "Y" => "Z"}],
+          [".pod2", {"X" => "Y", "Y" => "Z"}]
+        ]
       end
     end
   end
