@@ -41,10 +41,8 @@ class EnvironmentVariable < ActiveRecord::Base
     private
 
     def resolve_dollar_variables(env)
-      env.each_value do |value|
-        value.gsub!(/\$\{(\w+)\}|\$(\w+)/) do |original|
-          env[$1 || $2] || original
-        end
+      env.each do |k, value|
+        env[k] = value.gsub(/\$\{(\w+)\}|\$(\w+)/) { |original| env[$1 || $2] || original }
       end
     end
 
