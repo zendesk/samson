@@ -96,6 +96,15 @@ describe EnvironmentVariableGroupsController do
         assert_response :success
       end
     end
+
+    describe "a json GET to #preview" do
+      it "succeeds" do
+        get :preview, params: {format: :json, group_id: env_group.id, project_id: project.id }
+        assert_response :success
+        json_response = JSON.parse response.body
+        assert_nil json_response['groups']
+      end
+    end
   end
 
   as_a_project_admin do
