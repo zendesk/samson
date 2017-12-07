@@ -96,6 +96,18 @@ describe EnvironmentVariable do
         )
       end
 
+      it "can does not cache resolved references" do
+        project.environment_variables.last.update_column(:value, "PROJECT--$POD_ID")
+        project.environment_variables.create!(name: "POD_ID", value: "1", scope: deploy_groups(:pod1))
+        project.environment_variables.create!(name: "POD_ID", value: "2", scope: deploy_groups(:pod2))
+        EnvironmentVariable.env(project, deploy_groups(:pod1)).must_equal(
+          "PROJECT" => "PROJECT--1", "POD_ID" => "1", "X" => "Y", "Y" => "Z"
+        )
+        EnvironmentVariable.env(project, deploy_groups(:pod2)).must_equal(
+          "PROJECT" => "PROJECT--2", "POD_ID" => "2", "X" => "Y", "Y" => "Z"
+        )
+      end
+
       describe "secrets" do
         before { project.environment_variables.last.update_column(:value, "secret://foobar") }
 
