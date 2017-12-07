@@ -54,7 +54,8 @@ class EnvironmentVariable < ActiveRecord::Base
           found = resolver.read(secret_key)
           resolved =
             if preview
-              found ? "#{value} ✓" : "#{value} X"
+              path = resolver.expand_key(secret_key)
+              path ? "#{TerminalExecutor::SECRET_PREFIX}#{path}" : "#{value} X"
             else
               found.to_s
             end

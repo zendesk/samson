@@ -17,30 +17,29 @@ module Samson
         env_name = env_name.to_s
         return [] unless validate_wildcard(env_name, secret_key)
 
-        # build a list of all possible ids
-        possible_ids = possible_secret_id_parts.map do |id_parts|
-          id_parts = id_parts.merge(key: secret_key)
-          id = SecretStorage.generate_id(id_parts)
-          id if key_granted?(id_parts) && !deprecated?(id)
-        end.compact
-
+        possible_id_list = possible_ids(secret_key)
         found =
           if secret_key.end_with?(WILDCARD)
-            expand_wildcard_keys(env_name, secret_key, possible_ids)
+            expand_wildcard_keys(env_name, secret_key, possible_id_list)
           else
-            expand_simple_key(env_name, possible_ids)
+            expand_simple_key(env_name, possible_id_list)
           end
 
         if found.empty?
-          @errors << "#{secret_key} (tried: #{possible_ids.join(', ')})"
+          @errors << "#{secret_key} (tried: #{possible_id_list.join(', ')})"
           return []
         end
 
         found
       end
 
+      # expand a single key and return full path if present
+      def expand_key(key)
+        expand('unused-param', key).first&.last
+      end
+
       def read(key)
-        return unless full_key = expand('unused-param', key).first&.last
+        return unless full_key = expand_key(key)
         SecretStorage.read_multi([full_key], include_value: true).values.first&.fetch(:value) # read key without raising
       end
 
@@ -55,6 +54,15 @@ module Samson
       end
 
       private
+
+      # get a list of all possible ids for a given secret
+      def possible_ids(secret_key)
+        possible_secret_id_parts.map do |id_parts|
+          id_parts = id_parts.merge(key: secret_key)
+          id = SecretStorage.generate_id(id_parts)
+          id if key_granted?(id_parts) && !deprecated?(id)
+        end.compact
+      end
 
       # local cache so we do not have to re-fetch cache on every resolve
       def deprecated?(id)

@@ -50,6 +50,11 @@ class EnvironmentVariableGroupsController < ApplicationController
         @project = Project.find(params[:project_id])
         SamsonEnv.env_groups(@project, DeployGroup.all, preview: true)
       end
+
+    respond_to do |format|
+      format.html
+      format.json { render json: { groups: @groups || [] } }
+    end
   end
 
   private
