@@ -57,8 +57,7 @@ class EnvironmentVariable < ActiveRecord::Base
           resolved =
             if preview
               path = resolver.expand_key(secret_key)
-              expanded_path = !path.nil? ? path : ""
-              "#{TerminalExecutor::SECRET_PREFIX}#{expanded_path}"
+              path ? "#{TerminalExecutor::SECRET_PREFIX}#{path}" : "#{value} X"
             else
               found.to_s
             end
