@@ -145,7 +145,7 @@ class BinaryBuilder
   end
 
   def docker_api_version
-    @docker_api_version ||= Docker.version['ApiVersion']
+    @docker_api_version ||= Timeout.timeout(2) { Docker.version.fetch('ApiVersion') }
   end
 
   # TODO: not sure what happens when value is shell safe "foo;\n;bar"
