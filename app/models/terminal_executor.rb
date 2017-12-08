@@ -53,8 +53,18 @@ class TerminalExecutor
     system('kill', "-#{signal}", "-#{pgid}") if pgid
   end
 
+  # used when only selected commands should be shown to the user
   def verbose_command(c)
-    "echo » #{c.shellescape}\n#{resolve_secrets(c)}"
+    raise "executor already shows all commands, maybe use `quiet` ?" if @verbose
+    print_and_execute c, resolve: false
+  end
+
+  def quiet
+    old = @verbose
+    @verbose = false
+    yield
+  ensure
+    @verbose = old
   end
 
   private
@@ -88,13 +98,17 @@ class TerminalExecutor
   def script(commands)
     commands.map! do |c|
       if @verbose
-        verbose_command(c)
+        print_and_execute(c)
       else
         resolve_secrets(c)
       end
     end
     commands.unshift("set -e")
     commands.join("\n")
+  end
+
+  def print_and_execute(c, resolve: true)
+    "echo » #{c.shellescape}\n#{resolve ? resolve_secrets(c) : c}"
   end
 
   def resolve_secrets(command)

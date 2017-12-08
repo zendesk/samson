@@ -252,4 +252,30 @@ describe TerminalExecutor do
       refute File.exist?(p)
     end
   end
+
+  describe '#verbose_command' do
+    it "makes a regular command show what it executes" do
+      subject.verbose_command("foo").must_equal "echo » foo\nfoo"
+    end
+
+    it "does not resolve secrets since that will be done at execution time" do
+      subject.verbose_command("secret://foobar").must_equal "echo » secret://foobar\nsecret://foobar"
+    end
+
+    it "fails with verbose executor, users might leak secrets since they assume other commands are not verbose" do
+      subject.instance_variable_set(:@verbose, true)
+      e = assert_raises(RuntimeError) { subject.verbose_command("foo") }
+      e.message.must_include "quiet"
+    end
+  end
+
+  describe '#quiet' do
+    it "changes verbose" do
+      subject.instance_variable_set(:@verbose, true)
+      was = nil
+      subject.quiet { was = subject.instance_variable_get(:@verbose) }
+      was.must_equal false
+      subject.instance_variable_get(:@verbose).must_equal true
+    end
+  end
 end

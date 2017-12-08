@@ -123,11 +123,13 @@ class DockerBuilderService
       ImageBuilder.send(:local_docker_login) do |login_commands|
         full_tag = "#{repo}:#{tag}"
 
-        return nil unless @execution.executor.execute(
-          *login_commands,
-          @execution.executor.verbose_command("docker tag #{build.docker_image.id} #{full_tag.shellescape}"),
-          @execution.executor.verbose_command("docker push #{full_tag.shellescape}")
-        )
+        @execution.executor.quiet do
+          return nil unless @execution.executor.execute(
+            *login_commands,
+            @execution.executor.verbose_command("docker tag #{build.docker_image.id} #{full_tag.shellescape}"),
+            @execution.executor.verbose_command("docker push #{full_tag.shellescape}")
+          )
+        end
 
         if primary
           return nil unless sha = @output.to_s[DIGEST_SHA_REGEX, 1]
