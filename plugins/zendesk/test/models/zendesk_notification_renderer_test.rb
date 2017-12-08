@@ -23,7 +23,7 @@ describe ZendeskNotificationRenderer do
 
     result = ZendeskNotificationRenderer.render(deploy, ticket_id)
 
-    result.must_equal <<-RESULT.strip_heredoc.chomp
+    result.must_equal <<~RESULT.chomp
       A fix to Project for this issue has been deployed to Production. Deploy details: [v2.14] (http://example.org/deploys/20)
 
       **Related Commits:**

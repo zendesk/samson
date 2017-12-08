@@ -96,7 +96,7 @@ describe Integrations::BaseController do
       post :create, params: {test_route: true, token: token, foo: "bar"}
       assert_response :success
       result = WebhookRecorder.read(project)
-      log = <<-LOG.strip_heredoc
+      log = <<~LOG
         INFO: Branch master is release branch: true
         INFO: Deploying to 0 stages
       LOG
