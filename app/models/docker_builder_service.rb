@@ -135,7 +135,8 @@ class DockerBuilderService
         end
 
         if primary
-          return nil unless sha = @output.to_s[DIGEST_SHA_REGEX, 1]
+          # cache-from also produced digest lines, so we need to be careful
+          return nil unless sha = @execution.executor.output.to_s.split("\n").last[DIGEST_SHA_REGEX, 1]
           digest = "#{repo}@#{sha}"
         end
       end

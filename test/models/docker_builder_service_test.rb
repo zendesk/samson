@@ -288,10 +288,10 @@ describe DockerBuilderService do
     let(:push_output) do
       [
         "pushing image to repo...",
+        "Ignore this Digest: #{repo_digest.tr("5", "F")}",
         "completed push.",
         "Frobinating...",
-        "Digest: #{repo_digest}",
-        "Done"
+        "Digest: #{repo_digest}"
       ]
     end
     let(:tag) { 'my-test' }
