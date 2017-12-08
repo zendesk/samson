@@ -100,7 +100,7 @@ task :flay do
     'app/views/admin/secrets/index.html.erb', # search box
     'plugins/slack_webhooks/app/views/samson_slack_webhooks/_fields.html.erb', # cannot reuse form.input
     'plugins/pipelines/app/views/samson_pipelines/_stage_show.html.erb', # super simple html
-    'app/views/shared/_project_tabs.html.erb', # simple html and can be removed once macros are gone
+    'app/views/secrets/index.html.erb', # simple html
     'plugins/kubernetes/app/models/kubernetes/deploy_group_role.rb', # similar but slightly different validations
   ]
   flay = Flay.run([*files, '--mass', '25']) # mass threshold is shown mass / occurrences

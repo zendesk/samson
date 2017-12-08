@@ -22,7 +22,14 @@ class SecretsController < ApplicationController
     end
 
     if value = params.dig(:search, :value).presence
-      matching = SecretStorage.filter_ids_by_value(@secrets.map(&:first), value)
+      matching = filter_secrets_by_value(value)
+      @secrets.select! { |id, _, _| matching.include?(id) }
+    end
+
+    if value_from = params.dig(:search, :value_from).presence
+      value = SecretStorage.read(value_from, include_value: true).fetch(:value)
+      matching = filter_secrets_by_value(value)
+      matching.delete(value_from) # do not show what we already know
       @secrets.select! { |id, _, _| matching.include?(id) }
     end
   rescue Samson::Secrets::BackendError => e
@@ -77,6 +84,10 @@ class SecretsController < ApplicationController
   end
 
   private
+
+  def filter_secrets_by_value(value)
+    SecretStorage.filter_ids_by_value(@secrets.map(&:first), value)
+  end
 
   def secret_params
     @secret_params ||= params.require(:secret).permit(*SecretStorage::ID_PARTS, *UPDATEDABLE_ATTRIBUTES)
