@@ -37,6 +37,13 @@ describe ApplicationHelper do
     end
   end
 
+  describe "#autolink" do
+    it "converts urls with hash to links" do
+      result = autolink("foo http://bar.com#123 baz")
+      result.must_equal "foo <a href=\"http://bar.com#123\">http://bar.com#123</a> baz"
+    end
+  end
+
   describe "#markdown" do
     it "converts markdown to html" do
       result = markdown("**hello**")
