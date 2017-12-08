@@ -73,7 +73,10 @@ class DockerBuilderService
 
     before_docker_build(tmp_dir)
 
-    cache = build.project.builds.where.not(docker_repo_digest: nil).last&.docker_repo_digest
+    cache = build.project.builds.
+      where.not(docker_repo_digest: nil).
+      where(dockerfile: build.dockerfile).
+      last&.docker_repo_digest
 
     if defined?(SamsonGcloud::ImageBuilder) && build.project.build_with_gcb
       # we do not push after this since GCR handles that
