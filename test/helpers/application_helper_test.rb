@@ -42,6 +42,11 @@ describe ApplicationHelper do
       result = autolink("foo http://bar.com#123 baz")
       result.must_equal "foo <a href=\"http://bar.com#123\">http://bar.com#123</a> baz"
     end
+
+    it "converts urls with ?/& to links" do
+      result = autolink("foo http://bar.com?a=123&b=222 baz")
+      result.must_equal "foo <a href=\"http://bar.com?a=123&b=222\">http://bar.com?a=123&b=222</a> baz"
+    end
   end
 
   describe "#markdown" do
