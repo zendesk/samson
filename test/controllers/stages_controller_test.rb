@@ -86,9 +86,13 @@ describe StagesController do
 
         it 'renders kubernetes stages if k8s stage' do
           subject.update_attribute :kubernetes, true
-          get :show, params: {project_id: subject.project.to_param, id: subject.to_param}, format: :json
+          get :show, params: {
+            project_id: subject.project.to_param, id: subject.to_param,
+            include: "kubernetes_matrix"
+          }, format: :json
           assert_response :success
-          json.keys.must_equal ['stage', 'kubernetes']
+          json.keys.must_equal ['stage']
+          json["stage"].keys.must_include 'kubernetes_matrix'
         end
 
         it 'displays a sanitized dashboard' do
