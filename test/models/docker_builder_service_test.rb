@@ -247,6 +247,14 @@ describe DockerBuilderService do
           returns(true)
         service.send(:build_image, tmp_dir, tag_as_latest: false)
       end
+
+      it 'does not use cache when the last build was for a different dockerfile' do
+        Build.update_all dockerfile: 'noop'
+        TerminalExecutor.any_instance.expects(:execute).
+          with { |*args| args.join(" ").wont_include "--cache-from"; true }.
+          returns(true)
+        service.send(:build_image, tmp_dir, tag_as_latest: false)
+      end
     end
 
     describe "build_with_gcb" do
