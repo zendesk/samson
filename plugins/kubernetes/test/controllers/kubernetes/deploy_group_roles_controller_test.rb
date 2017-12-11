@@ -8,6 +8,7 @@ describe Kubernetes::DeployGroupRolesController do
   let(:deploy_group) { deploy_group_role.deploy_group }
   let(:project) { deploy_group_role.project }
   let(:stage) { stages(:test_staging) }
+  let(:json) { JSON.parse(response.body) }
 
   id = ActiveRecord::FixtureSet.identify(:test_pod1_app_server)
   project_id = ActiveRecord::FixtureSet.identify(:test)
@@ -36,6 +37,19 @@ describe Kubernetes::DeployGroupRolesController do
       it "renders" do
         get :show, params: {id: deploy_group_role.id}
         assert_template :show
+      end
+
+      it "renders JSON" do
+        get :show, params: {id: deploy_group_role.id}, format: :json
+        assert_response :success
+        json.keys.must_equal ['deploy_group_role']
+      end
+
+      it "renders JSON" do
+        get :show, params: {id: deploy_group_role.id, include: "template"}, format: :json
+        assert_response :success
+        json.keys.must_equal ['deploy_group_role']
+        json["deploy_group_role"].keys.must_include ['kubernetes_matrix']
       end
     end
 

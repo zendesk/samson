@@ -4,6 +4,8 @@ class Kubernetes::DeployGroupRolesController < ApplicationController
   before_action :find_stage, only: [:seed]
   before_action :authorize_project_admin!, except: [:index, :show, :new]
 
+  DEFAULT_BRANCH = "master"
+
   def new
     attributes = (params[:kubernetes_deploy_group_role] ? deploy_group_role_params : {})
     @deploy_group_role = ::Kubernetes::DeployGroupRole.new(attributes)
@@ -28,9 +30,40 @@ class Kubernetes::DeployGroupRolesController < ApplicationController
     @deploy_group_roles = @deploy_group_roles.
       joins(:project, :kubernetes_role).
       order('projects.name, kubernetes_roles.name')
+
+    respond_to do |format|
+      format.html
+      format.json { render json: {deploy_group_roles: @deploy_group_roles} }
+    end
   end
 
   def show
+    respond_to do |format|
+      format.html
+      format.json do
+        deploy_group_role = @deploy_group_role.as_json
+        if params[:include].present? && params[:include].to_s.split(',').include?("template")
+
+          release = Kubernetes::Release.create(
+            git_sha: params['git_sha'] || DEFAULT_BRANCH,
+            git_ref: params['git_ref'] || DEFAULT_BRANCH,
+            project: Project.find_by_id(@deploy_group_role.project_id),
+            user: current_user,
+            deploy_groups: [DeployGroup.find_by_id(@deploy_group_role.deploy_group)]
+          )
+          release_doc = Kubernetes::ReleaseDoc.new(
+            kubernetes_release: release,
+            kubernetes_role: Kubernetes::Role.find_by_id(@deploy_group_role.kubernetes_role_id),
+            deploy_group: DeployGroup.find_by_id(@deploy_group_role.deploy_group)
+          )
+          deploy_group_role[:template] = release_doc.send(:verification_template)
+        end
+
+        render json: {
+          deploy_group_role: deploy_group_role
+        }
+      end
+    end
   end
 
   def edit
