@@ -2,8 +2,8 @@
 require 'docker'
 
 class DockerBuilderService
-  DIGEST_SHA_REGEX = /Digest:.*(sha256:[0-9a-f]+)/i
-  DOCKER_REPO_REGEX = /^BUILD DIGEST: (.*@sha256:[0-9a-f]+)/i
+  DIGEST_SHA_REGEX = /Digest:.*(sha256:[0-9a-f]{64})/i
+  DOCKER_REPO_REGEX = /^BUILD DIGEST: (.*@sha256:[0-9a-f]{64})/i
   include ::NewRelic::Agent::MethodTracer
 
   attr_reader :build, :execution, :output
@@ -136,7 +136,9 @@ class DockerBuilderService
 
         if primary
           # cache-from also produced digest lines, so we need to be careful
-          return nil unless sha = @execution.executor.output.to_s.split("\n").last[DIGEST_SHA_REGEX, 1]
+          # also sometimes the digest is split by our injected timestamp
+          last = @execution.executor.output.to_s.split("\n").last.to_s.gsub(/\s*\[\d+:\d+:\d+\]\s*/, "")
+          return nil unless sha = last[DIGEST_SHA_REGEX, 1]
           digest = "#{repo}@#{sha}"
         end
       end

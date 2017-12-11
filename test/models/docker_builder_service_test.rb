@@ -291,7 +291,7 @@ describe DockerBuilderService do
         "Ignore this Digest: #{repo_digest.tr("5", "F")}",
         "completed push.",
         "Frobinating...",
-        "Digest: #{repo_digest}"
+        +"Digest: #{repo_digest}"
       ]
     end
     let(:tag) { 'my-test' }
@@ -340,6 +340,14 @@ describe DockerBuilderService do
 
       refute service.send(:push_image)
       output.to_s.must_include "Docker push failed: Unable to get repo digest"
+    end
+
+    it 'can read broken digests' do
+      push_output.last[20...20] = "[11:22:31] "
+      stub_push primary_repo, tag, true
+
+      assert service.send(:push_image), output
+      build.docker_repo_digest.must_equal "#{primary_repo}@#{repo_digest}"
     end
 
     describe "with secondary registry" do
