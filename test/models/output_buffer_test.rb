@@ -22,8 +22,8 @@ describe OutputBuffer do
     buffer.write("world")
     buffer.close
 
-    listener1.value.must_equal ["[04:05:06] hello", "[04:05:06] world"]
-    listener2.value.must_equal ["[04:05:06] hello", "[04:05:06] world"]
+    listener1.value.must_equal ["[04:05:06] hello", "world"]
+    listener2.value.must_equal ["[04:05:06] hello", "world"]
   end
 
   it "writes the previous content to new listeners" do
@@ -48,6 +48,24 @@ describe OutputBuffer do
   describe "#write" do
     it "encodes everything as utf-8 to avoid CompatibilityError" do
       listen { |o| o.write("Ó".dup.force_encoding(Encoding::BINARY)) }.map(&:encoding).must_equal [Encoding::UTF_8]
+    end
+
+    it "does not inject timestamps into chunks" do
+      listen { |o| 3.times { o.write("a") } }.must_equal ["[04:05:06] a", "a", "a"]
+    end
+
+    it "does not inject premature timestamps for future output" do
+      listen { |o| o.write("a\n") }.must_equal ["[04:05:06] a\n"]
+    end
+
+    it "injects timestamps for multiple single-line chunks" do
+      listen { |o| o.write("a"); o.write("b\n"); o.write("a"); o.write("b\n") }.
+        must_equal ["[04:05:06] a", "b\n", "[04:05:06] a", "b\n"]
+    end
+
+    it "ignores empty writes" do
+      listen { |o| o.write("a"); o.write(""); o.write("b") }.
+        must_equal ["[04:05:06] a", "", "b"]
     end
   end
 
@@ -141,10 +159,10 @@ describe OutputBuffer do
 
   describe "#to_s" do
     it "serializes all messages" do
-      buffer.write("hello", :message)
-      buffer.write("hello", :close)
+      buffer.write("hello\n", :message)
+      buffer.write(nil, :close)
       buffer.write("world", :message)
-      buffer.to_s.must_equal "[04:05:06] hello[04:05:06] world"
+      buffer.to_s.must_equal "[04:05:06] hello\n[04:05:06] world"
     end
   end
 

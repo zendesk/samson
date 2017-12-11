@@ -342,14 +342,6 @@ describe DockerBuilderService do
       output.to_s.must_include "Docker push failed: Unable to get repo digest"
     end
 
-    it 'can read broken digests' do
-      push_output.last[20...20] = "[11:22:31] "
-      stub_push primary_repo, tag, true
-
-      assert service.send(:push_image), output
-      build.docker_repo_digest.must_equal "#{primary_repo}@#{repo_digest}"
-    end
-
     describe "with secondary registry" do
       let(:secondary_repo) { project.docker_repo(DockerRegistry.all[1], 'Dockerfile') }
 

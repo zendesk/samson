@@ -30,6 +30,7 @@ class OutputBuffer
     @listeners = ThreadSafe::Array.new
     @previous = ThreadSafe::Array.new
     @closed = false
+    @line_finished = true
   end
 
   def puts(line = "")
@@ -47,6 +48,7 @@ class OutputBuffer
     @listeners.dup.each { |listener| listener.push([event, data]) }
   end
 
+  # TODO: move into binary-builder
   # chunks can be split in half multi-bytes, so we have to sanitize them
   def write_docker_chunk(chunk)
     chunk = chunk.encode(Encoding::UTF_8, chunk.encoding, invalid: :replace, undef: :replace).strip
@@ -93,12 +95,18 @@ class OutputBuffer
 
   private
 
-  def inject_timestamp(data)
-    stamped_data = String.new
-    data.each_line do |line|
-      stamped_data << "[#{Time.now.utc.strftime("%T")}] #{line}"
+  def inject_timestamp(chunk)
+    stamped = String.new
+    lines = chunk.each_line.to_a
+    return stamped if lines.empty?
+
+    append = !@line_finished
+    @line_finished = lines.last.end_with?($/)
+    stamped << lines.shift if append
+    lines.each do |line|
+      stamped << "[#{Time.now.utc.strftime("%T")}] #{line}"
     end
-    stamped_data
+    stamped
   end
 
   def write_docker_chunk_line(line)

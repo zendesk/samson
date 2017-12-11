@@ -136,8 +136,7 @@ class DockerBuilderService
 
         if primary
           # cache-from also produced digest lines, so we need to be careful
-          # also sometimes the digest is split by our injected timestamp
-          last = @execution.executor.output.to_s.split("\n").last.to_s.gsub(/\s*\[\d+:\d+:\d+\]\s*/, "")
+          last = @execution.executor.output.to_s.split("\n").last.to_s
           return nil unless sha = last[DIGEST_SHA_REGEX, 1]
           digest = "#{repo}@#{sha}"
         end
