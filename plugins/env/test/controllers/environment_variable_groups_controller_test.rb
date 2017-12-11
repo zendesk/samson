@@ -115,6 +115,15 @@ describe EnvironmentVariableGroupsController do
           [".pod2", {"X" => "Y", "Y" => "Z"}]
         ]
       end
+
+      it "only shows single deploy_group with filtering on" do
+        get :preview, params: {group_id: env_group.id, project_id: project.id, deploy_group: "pod2" }, format: :json
+        assert_response :success
+        json_response = JSON.parse response.body
+        json_response['groups'].sort.must_equal [
+          [".pod2", {"X" => "Y", "Y" => "Z"}]
+        ]
+      end
     end
   end
 
