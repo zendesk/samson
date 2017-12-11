@@ -43,7 +43,7 @@ class EnvironmentVariableGroupsController < ApplicationController
 
   def preview
     @deploy_group = DeployGroup.all
-    @deploy_group = @deploy_group.where(permalink: params[:scope]) if params[:scope].present?
+    @deploy_group = @deploy_group.where(permalink: params[:deploy_group]) if params[:deploy_group].present?
 
     if params[:group_id]
       @group = EnvironmentVariableGroup.find(params[:group_id])
