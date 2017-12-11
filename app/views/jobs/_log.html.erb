@@ -1,7 +1,3 @@
 <pre id="messages" class="pre-scrollable log">
-  <% unless job.active? %>
-    <% job.output.split("\n").each do |line| %>
-<%= render_log(line) %>
-    <% end %>
-  <% end %>
+  <%= render_log(job.output) unless job.active? %>
 </pre>
