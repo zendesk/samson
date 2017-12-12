@@ -46,15 +46,27 @@ describe Kubernetes::DeployGroupRolesController do
         json.keys.must_equal ['deploy_group_role']
       end
 
-      it "renders JSON with template" do
-        GitRepository.any_instance.stubs(:file_content).with('kubernetes/app_server.yml', commit, anything).
-          returns(read_kubernetes_sample_file('kubernetes_deployment.yml'))
-        Kubernetes::TemplateFiller.any_instance.stubs(:set_image_pull_secrets)
+      describe "rendering verification_template" do
+        before do
+          GitRepository.any_instance.expects(:clone!).never
+          GitRepository.any_instance.stubs(:file_content).with('kubernetes/app_server.yml', commit, anything).
+            returns(read_kubernetes_sample_file('kubernetes_deployment.yml'))
+          Kubernetes::TemplateFiller.any_instance.stubs(:set_image_pull_secrets)
+        end
 
-        get :show, params: {id: deploy_group_role.id, include: "template", git_sha: commit}, format: :json
-        assert_response :success
-        json.keys.must_equal ['deploy_group_role']
-        json["deploy_group_role"].keys.must_include 'template'
+        it "renders JSON with template" do
+          GitRepository.any_instance.stubs(:commit_from_ref).with("master").returns(commit)
+          get :show, params: {id: deploy_group_role.id, include: "verification_template"}, format: :json
+          assert_response :success
+          json.keys.must_equal ['deploy_group_role']
+          json["deploy_group_role"].keys.must_include 'verification_template'
+        end
+
+        it "can request exact ref" do
+          GitRepository.any_instance.stubs(:commit_from_ref).with("foo").returns(commit)
+          get :show, params: {id: deploy_group_role.id, include: "verification_template", git_ref: "foo"}, format: :json
+          assert_response :success
+        end
       end
     end
 

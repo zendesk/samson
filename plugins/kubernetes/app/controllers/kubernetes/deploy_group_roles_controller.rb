@@ -42,8 +42,8 @@ class Kubernetes::DeployGroupRolesController < ApplicationController
       format.html
       format.json do
         deploy_group_role = @deploy_group_role.as_json
-        if params[:include].to_s.split(',').include?("template")
-          deploy_group_role[:template] = generate_template
+        if params[:include].to_s.split(',').include?("verification_template")
+          deploy_group_role[:verification_template] = verification_template
         end
 
         render json: {
@@ -89,7 +89,7 @@ class Kubernetes::DeployGroupRolesController < ApplicationController
 
   private
 
-  def generate_template
+  def verification_template
     project = @deploy_group_role.project
 
     # find ref and sha ... sha takes priority since it's most accurate
