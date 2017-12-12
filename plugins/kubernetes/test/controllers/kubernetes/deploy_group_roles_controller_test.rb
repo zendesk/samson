@@ -9,6 +9,7 @@ describe Kubernetes::DeployGroupRolesController do
   let(:project) { deploy_group_role.project }
   let(:stage) { stages(:test_staging) }
   let(:json) { JSON.parse(response.body) }
+  let(:commit) { '1a6f551a2ffa6d88e15eef5461384da0bfb1c194' }
 
   id = ActiveRecord::FixtureSet.identify(:test_pod1_app_server)
   project_id = ActiveRecord::FixtureSet.identify(:test)
@@ -46,7 +47,11 @@ describe Kubernetes::DeployGroupRolesController do
       end
 
       it "renders JSON with template" do
-        get :show, params: {id: deploy_group_role.id, include: "template"}, format: :json
+        GitRepository.any_instance.stubs(:file_content).with('kubernetes/app_server.yml', commit, anything).
+          returns(read_kubernetes_sample_file('kubernetes_deployment.yml'))
+        Kubernetes::TemplateFiller.any_instance.stubs(:set_image_pull_secrets)
+
+        get :show, params: {id: deploy_group_role.id, include: "template", git_sha: commit}, format: :json
         assert_response :success
         json.keys.must_equal ['deploy_group_role']
         json["deploy_group_role"].keys.must_include 'template'
