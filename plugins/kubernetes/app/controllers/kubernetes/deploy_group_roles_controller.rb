@@ -90,9 +90,10 @@ class Kubernetes::DeployGroupRolesController < ApplicationController
   private
 
   def generate_template
-    project = Project.find_by_id(@deploy_group_role.project_id)
-    deploy_group = DeployGroup.find_by_id(@deploy_group_role.deploy_group)
-    kubernetes_role = Kubernetes::Role.find_by_id(@deploy_group_role.kubernetes_role_id)
+
+    project = Project.find(@deploy_group_role.project_id)
+    deploy_group = DeployGroup.find(@deploy_group_role.deploy_group)
+    kubernetes_role = Kubernetes::Role.find(@deploy_group_role.kubernetes_role_id)
 
     git_ref = params['git_ref'] || DEFAULT_BRANCH
 
