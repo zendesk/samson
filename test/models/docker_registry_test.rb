@@ -95,4 +95,11 @@ describe DockerRegistry do
       DockerRegistry.new('foo.bar').base.must_equal 'foo.bar'
     end
   end
+
+  describe "#password" do
+    it "reads files for json auth like gcr" do
+      DockerRegistry.new("https://_json_key:public%2Frobots.txt@foo.bar").password.
+        must_equal File.read("public/robots.txt")
+    end
+  end
 end
