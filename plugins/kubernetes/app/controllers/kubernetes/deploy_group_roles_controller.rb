@@ -90,26 +90,27 @@ class Kubernetes::DeployGroupRolesController < ApplicationController
   private
 
   def generate_template
+    project = @deploy_group_role.project
 
-    project = Project.find(@deploy_group_role.project_id)
-    kubernetes_role = Kubernetes::Role.find(@deploy_group_role.kubernetes_role_id)
-
-    git_ref = params['git_ref'] || DEFAULT_BRANCH
+    # find ref and sha ... sha takes priority since it's most accurate
+    git_sha = params[:git_sha]
+    git_ref = params[:git_ref] || git_sha || DEFAULT_BRANCH
+    git_sha ||= project.repository.commit_from_ref(git_ref)
 
     release = Kubernetes::Release.new(
       git_ref: git_ref,
-      git_sha: params['git_sha'] || git_ref,
+      git_sha: git_sha,
       project: project,
       user: current_user,
       deploy_groups: [@deploy_group_role.deploy_group]
     )
     release_doc = Kubernetes::ReleaseDoc.new(
       kubernetes_release: release,
-      kubernetes_role: kubernetes_role,
+      kubernetes_role: @deploy_group_role.kubernetes_role,
       deploy_group: @deploy_group_role.deploy_group
     )
 
-    release_doc.send(:verification_template)
+    release_doc.verification_template
   end
 
   def current_project

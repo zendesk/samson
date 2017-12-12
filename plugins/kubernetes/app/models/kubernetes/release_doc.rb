@@ -51,14 +51,14 @@ module Kubernetes
       end
     end
 
-    private
-
     # Temporary template we run validations on ... so can be cheap / not fully fleshed out
     # and only be the primary since services/configmaps are not very interesting anyway
     def verification_template
       primary_config = raw_template.detect { |e| Kubernetes::RoleConfigFile::PRIMARY_KINDS.include?(e.fetch(:kind)) }
       Kubernetes::TemplateFiller.new(self, primary_config, index: 0)
     end
+
+    private
 
     def primary_resource
       resources.detect(&:primary?)
