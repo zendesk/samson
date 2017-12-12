@@ -124,6 +124,12 @@ describe EnvironmentVariableGroupsController do
           [".pod2", {"X" => "Y", "Y" => "Z"}]
         ]
       end
+
+      it "fails when deploy group is unknown" do
+        assert_raises ActiveRecord::RecordNotFound do
+          get :preview, params: {group_id: env_group.id, project_id: project.id, deploy_group: "pod23" }, format: :json
+        end
+      end
     end
   end
 
