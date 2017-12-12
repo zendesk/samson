@@ -90,7 +90,10 @@ class TerminalExecutor
   end
 
   def stream(from:, to:)
-    from.each(256) { |chunk| to.write chunk }
+    from.each(256) do |chunk|
+      chunk = chunk.gsub(/\r\e\[\d+[ABCD]\r\n/, "\r") # ignore cursor movement http://ascii-table.com/ansi-escape-sequences.php
+      to.write chunk
+    end
   rescue Errno::EIO
     nil # output was closed ... only happens on linux
   end
