@@ -22,7 +22,13 @@ class StagesController < ApplicationController
       format.html do
         @deploys = @stage.deploys.page(page)
       end
-      format.json { render json: {stage: @stage} }
+      format.json do
+        stage = @stage.as_json
+        if params[:include].to_s.split(',').include?("kubernetes_matrix")
+          stage[:kubernetes_matrix] = Kubernetes::DeployGroupRole.matrix(@stage)
+        end
+        render json: { stage: stage }
+      end
       format.svg do
         badge =
           if deploy = @stage.last_successful_deploy
