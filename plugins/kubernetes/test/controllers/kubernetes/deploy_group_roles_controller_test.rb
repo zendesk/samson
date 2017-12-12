@@ -45,11 +45,11 @@ describe Kubernetes::DeployGroupRolesController do
         json.keys.must_equal ['deploy_group_role']
       end
 
-      it "renders JSON" do
+      it "renders JSON with template" do
         get :show, params: {id: deploy_group_role.id, include: "template"}, format: :json
         assert_response :success
         json.keys.must_equal ['deploy_group_role']
-        json["deploy_group_role"].keys.must_include ['kubernetes_matrix']
+        json["deploy_group_role"].keys.must_include 'template'
       end
     end
 

@@ -43,6 +43,11 @@ describe Kubernetes::RolesController do
         get :show, params: {project_id: project, id: role.id}
         assert_template :show
       end
+
+      it "renders JSON" do
+        get :show, params: {project_id: project, id: role.id, format: 'json'}
+        JSON.parse(response.body).keys.must_equal ["role"]
+      end
     end
 
     describe "#example" do

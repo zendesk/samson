@@ -42,21 +42,8 @@ class Kubernetes::DeployGroupRolesController < ApplicationController
       format.html
       format.json do
         deploy_group_role = @deploy_group_role.as_json
-        if params[:include].present? && params[:include].to_s.split(',').include?("template")
-
-          release = Kubernetes::Release.create(
-            git_sha: params['git_sha'] || DEFAULT_BRANCH,
-            git_ref: params['git_ref'] || DEFAULT_BRANCH,
-            project: Project.find_by_id(@deploy_group_role.project_id),
-            user: current_user,
-            deploy_groups: [DeployGroup.find_by_id(@deploy_group_role.deploy_group)]
-          )
-          release_doc = Kubernetes::ReleaseDoc.new(
-            kubernetes_release: release,
-            kubernetes_role: Kubernetes::Role.find_by_id(@deploy_group_role.kubernetes_role_id),
-            deploy_group: DeployGroup.find_by_id(@deploy_group_role.deploy_group)
-          )
-          deploy_group_role[:template] = release_doc.send(:verification_template)
+        if params[:include].to_s.split(',').include?("template")
+          deploy_group_role[:template] = generate_template
         end
 
         render json: {
@@ -101,6 +88,29 @@ class Kubernetes::DeployGroupRolesController < ApplicationController
   end
 
   private
+
+  def generate_template
+    project = Project.find_by_id(@deploy_group_role.project_id)
+    deploy_group = DeployGroup.find_by_id(@deploy_group_role.deploy_group)
+    kubernetes_role = Kubernetes::Role.find_by_id(@deploy_group_role.kubernetes_role_id)
+
+    git_ref = params['git_ref'] || DEFAULT_BRANCH
+
+    release = Kubernetes::Release.new(
+      git_ref: git_ref,
+      git_sha: params['git_sha'] || git_ref,
+      project: project,
+      user: current_user,
+      deploy_groups: [deploy_group]
+    )
+    release_doc = Kubernetes::ReleaseDoc.new(
+      kubernetes_release: release,
+      kubernetes_role: kubernetes_role,
+      deploy_group: deploy_group
+    )
+
+    release_doc.send(:verification_template)
+  end
 
   def current_project
     if action_name == 'create'
