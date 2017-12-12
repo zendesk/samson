@@ -171,17 +171,17 @@ class ActiveSupport::TestCase
   end
 
   def self.with_registries(registries)
-    around do |test|
-      begin
-        old = ENV['DOCKER_REGISTRIES']
-        ENV['DOCKER_REGISTRIES'] = registries.join(',').presence
-        DockerRegistry.instance_variable_set :@all, nil
-        test.call
-      ensure
-        DockerRegistry.instance_variable_set :@all, nil
-        ENV['DOCKER_REGISTRIES'] = old
-      end
-    end
+    around { |test| with_registries(registries, &test) }
+  end
+
+  def with_registries(registries)
+    old = ENV['DOCKER_REGISTRIES']
+    ENV['DOCKER_REGISTRIES'] = registries.join(',').presence
+    DockerRegistry.instance_variable_set :@all, nil
+    yield
+  ensure
+    DockerRegistry.instance_variable_set :@all, nil
+    ENV['DOCKER_REGISTRIES'] = old
   end
 end
 

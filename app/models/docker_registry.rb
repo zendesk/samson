@@ -44,6 +44,7 @@ class DockerRegistry
     @uri = URI.parse(url)
     @username = @uri.user
     @password = @uri.password
+    @password = File.read(CGI.unescape(@password)) if @username == "_json_key"
   end
 
   def host

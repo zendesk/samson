@@ -33,6 +33,17 @@ describe ImageBuilder do
       (ImageBuilder.send(:local_docker_login) { 1 }).must_equal 1
     end
 
+    it "reads files for gcr auth with _json_key" do
+      path = File.expand_path("some/file")
+      with_registries ["https://_json_key:#{CGI.escape(path)}@gcr.io/foo"] do
+        Dir.mkdir(File.dirname(path))
+        File.write(path, {foo: "bar"}.to_json)
+        commands = nil
+        (ImageBuilder.send(:local_docker_login) { |c| commands = c })
+        commands.join("\n").must_include "docker login --username _json_key --password \\{\\\"foo\\\":\\\"bar\\\"\\}"
+      end
+    end
+
     describe "login commands" do
       let(:called) do
         all = []
