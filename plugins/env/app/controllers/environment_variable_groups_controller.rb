@@ -42,8 +42,8 @@ class EnvironmentVariableGroupsController < ApplicationController
   end
 
   def preview
-    @deploy_group = DeployGroup.all
-    @deploy_group = @deploy_group.where(permalink: params[:deploy_group]) if params[:deploy_group].present?
+    deploy_groups = DeployGroup.all
+    deploy_groups = @deploy_group.where(permalink: params[:deploy_group]) if params[:deploy_group].present?
 
     if params[:group_id]
       @group = EnvironmentVariableGroup.find(params[:group_id])
@@ -52,7 +52,7 @@ class EnvironmentVariableGroupsController < ApplicationController
       @project = Project.find(params[:project_id])
     end
 
-    @groups = SamsonEnv.env_groups(@project, @deploy_group, preview: true)
+    @groups = SamsonEnv.env_groups(@project, deploy_groups, preview: true)
 
     respond_to do |format|
       format.html
