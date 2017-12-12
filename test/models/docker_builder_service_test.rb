@@ -4,8 +4,6 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe DockerBuilderService do
-  include GitRepoTestHelper
-
   let(:tmp_dir) { Dir.mktmpdir }
   let(:git_tag) { 'v123' }
   let(:project) { projects(:test) }
@@ -18,9 +16,11 @@ describe DockerBuilderService do
   let(:digest) { "foo.com@sha256:#{"a" * 64}" }
 
   with_registries ["docker-registry.example.com"]
-  with_project_on_remote_repo
 
-  before { execute_on_remote_repo "git tag #{git_tag}" }
+  before do
+    GitRepository.any_instance.expects(:clone!).with { raise }.never # nice backtraces
+    Build.any_instance.stubs(:validate_git_reference)
+  end
 
   describe "#run" do
     def call(options = {})
@@ -187,7 +187,6 @@ describe DockerBuilderService do
     before do
       TerminalExecutor.any_instance.expects(:execute).returns(true)
       OutputBuffer.any_instance.expects(:to_s).returns("Ignore me\nSuccessfully built bar\nSuccessfully built foobar")
-      GitRepository.any_instance.expects(:commit_from_ref).returns("commitx")
       Docker::Image.stubs(:get).with("foobar").returns(mock_docker_image)
     end
 
