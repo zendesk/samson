@@ -4,6 +4,8 @@ class Kubernetes::DeployGroupRolesController < ApplicationController
   before_action :find_stage, only: [:seed]
   before_action :authorize_project_admin!, except: [:index, :show, :new]
 
+  DEFAULT_BRANCH = "master"
+
   def new
     attributes = (params[:kubernetes_deploy_group_role] ? deploy_group_role_params : {})
     @deploy_group_role = ::Kubernetes::DeployGroupRole.new(attributes)
@@ -28,9 +30,27 @@ class Kubernetes::DeployGroupRolesController < ApplicationController
     @deploy_group_roles = @deploy_group_roles.
       joins(:project, :kubernetes_role).
       order('projects.name, kubernetes_roles.name')
+
+    respond_to do |format|
+      format.html
+      format.json { render json: {deploy_group_roles: @deploy_group_roles} }
+    end
   end
 
   def show
+    respond_to do |format|
+      format.html
+      format.json do
+        deploy_group_role = @deploy_group_role.as_json
+        if params[:include].to_s.split(',').include?("verification_template")
+          deploy_group_role[:verification_template] = verification_template
+        end
+
+        render json: {
+          deploy_group_role: deploy_group_role
+        }
+      end
+    end
   end
 
   def edit
@@ -68,6 +88,30 @@ class Kubernetes::DeployGroupRolesController < ApplicationController
   end
 
   private
+
+  def verification_template
+    project = @deploy_group_role.project
+
+    # find ref and sha ... sha takes priority since it's most accurate
+    git_sha = params[:git_sha]
+    git_ref = params[:git_ref] || git_sha || DEFAULT_BRANCH
+    git_sha ||= project.repository.commit_from_ref(git_ref)
+
+    release = Kubernetes::Release.new(
+      git_ref: git_ref,
+      git_sha: git_sha,
+      project: project,
+      user: current_user,
+      deploy_groups: [@deploy_group_role.deploy_group]
+    )
+    release_doc = Kubernetes::ReleaseDoc.new(
+      kubernetes_release: release,
+      kubernetes_role: @deploy_group_role.kubernetes_role,
+      deploy_group: @deploy_group_role.deploy_group
+    )
+
+    release_doc.verification_template
+  end
 
   def current_project
     if action_name == 'create'
