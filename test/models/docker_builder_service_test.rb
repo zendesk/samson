@@ -266,6 +266,7 @@ describe DockerBuilderService do
       it "stores docker_repo_digest directly" do
         with_env GCLOUD_PROJECT: 'p-123', GCLOUD_ACCOUNT: 'acc' do
           build.project.build_with_gcb = true
+          service.instance_variable_set(:@execution, stub("Ex", executor: TerminalExecutor.new(OutputBuffer.new)))
           assert service.send(:build_image, tmp_dir, tag_as_latest: false)
           refute build.docker_image_id
           build.docker_repo_digest.sub(/samson\/[^@]+/, "X").must_equal "gcr.io/p-123/X@sha-123:abc"

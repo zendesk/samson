@@ -2,7 +2,7 @@
 module SamsonGcloud
   class ImageBuilder
     class << self
-      def build_image(build, dir, output, tag_as_latest:, cache_from:)
+      def build_image(build, dir, executor, tag_as_latest:, cache_from:)
         prefix = "gcr.io/#{SamsonGcloud.project}/samson"
         fake_registry = OpenStruct.new(base: prefix)
         base = build.project.docker_repo(fake_registry, build.dockerfile)
@@ -20,7 +20,7 @@ module SamsonGcloud
             YAML
             cache_options = ", '--cache-from', '#{cache_from}'"
           else
-            output.puts "Image #{cache_from} not found in gcr, not using cache."
+            executor.output.puts "Image #{cache_from} not found in gcr, not using cache."
           end
         end
 
@@ -38,16 +38,15 @@ module SamsonGcloud
 
         command = [
           "gcloud", *SamsonGcloud.container_in_beta, "container", "builds", "submit", ".",
-          "--config", config, *SamsonGcloud.cli_options
+          "--timeout", executor.timeout, "--config", config, *SamsonGcloud.cli_options
         ]
 
-        executor = TerminalExecutor.new(output)
         return unless executor.execute(
           "cd #{dir.shellescape}",
-          executor.verbose_command(command.join(" "))
+          command.shelljoin
         )
 
-        log = output.to_s
+        log = executor.output.to_s
         build.external_url = log[/Logs are permanently available at \[(.*?)\]/, 1]
         return unless digest = log[/digest: (\S+:\S+)/, 1]
         "#{base}@#{digest}"
@@ -55,6 +54,7 @@ module SamsonGcloud
 
       private
 
+      # NOTE: not using executor since it does not return output
       def image_exists_in_gcloud?(repo_digest)
         image, digest = repo_digest.split('@')
         output = Samson::CommandExecutor.execute(

@@ -109,6 +109,12 @@ describe TerminalExecutor do
       output.string.must_equal("hello\r\nTimeout: execution took longer then 1s and was terminated\n")
     end
 
+    it "can timeout via argument" do
+      refute subject.execute('echo hello; sleep 10', timeout: 1)
+      `ps -ef | grep "[s]leep 10"`.wont_include "sleep 10" # process got killed
+      output.string.must_equal("hello\r\nTimeout: execution took longer then 1s and was terminated\n")
+    end
+
     it "does not log cursor movement ... special output coming from docker builds" do
       assert subject.execute("ruby -e 'puts %{Hello\\r\e[1B\\nWorld\\n}'")
       output.string.must_equal "Hello\rWorld\r\n"
