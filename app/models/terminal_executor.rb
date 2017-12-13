@@ -15,7 +15,7 @@ require 'pty'
 class TerminalExecutor
   SECRET_PREFIX = "secret://"
 
-  attr_reader :pid, :pgid, :output
+  attr_reader :pid, :pgid, :output, :timeout
 
   def initialize(output, verbose: false, deploy: nil, project: nil)
     @output = output
@@ -23,15 +23,16 @@ class TerminalExecutor
     @deploy = deploy
     @project = project
     @cancelled = false
+    @timeout = Integer(ENV["DEPLOY_TIMEOUT"] || 2.hours.to_i)
   end
 
-  def execute(*commands)
+  def execute(*commands, timeout: @timeout)
     return false if @cancelled
     options = {in: '/dev/null', unsetenv_others: true}
     script_as_executable(script(commands)) do |path|
       output, input, pid = PTY.spawn(whitelisted_env, path, options)
       record_pid(pid) do
-        timeout do
+        timeout_execution(timeout) do
           stream from: output, to: @output
 
           begin
@@ -80,12 +81,11 @@ class TerminalExecutor
     f.unlink
   end
 
-  def timeout(&block)
-    timeout = Integer(ENV["DEPLOY_TIMEOUT"] || 2.hours.to_i)
-    Timeout.timeout(timeout, &block)
+  def timeout_execution(time, &block)
+    Timeout.timeout(time, &block)
   rescue Timeout::Error
     cancel 'INT'
-    @output.puts "Timeout: execution took longer then #{timeout}s and was terminated"
+    @output.puts "Timeout: execution took longer then #{time}s and was terminated"
     false
   end
 

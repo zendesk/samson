@@ -81,7 +81,7 @@ class DockerBuilderService
     if defined?(SamsonGcloud::ImageBuilder) && build.project.build_with_gcb
       # we do not push after this since GCR handles that
       build.docker_repo_digest = SamsonGcloud::ImageBuilder.build_image(
-        build, tmp_dir, @output, tag_as_latest: tag_as_latest, cache_from: cache
+        build, tmp_dir, @execution.executor, tag_as_latest: tag_as_latest, cache_from: cache
       )
     else
       build.docker_image = ImageBuilder.build_image(

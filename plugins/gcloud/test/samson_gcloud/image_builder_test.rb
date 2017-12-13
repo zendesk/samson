@@ -8,11 +8,12 @@ describe SamsonGcloud::ImageBuilder do
 
   describe ".build_image" do
     def build_image(tag_as_latest: false, cache_from: nil)
-      SamsonGcloud::ImageBuilder.build_image(build, dir, output, tag_as_latest: tag_as_latest, cache_from: cache_from)
+      SamsonGcloud::ImageBuilder.build_image(build, dir, executor, tag_as_latest: tag_as_latest, cache_from: cache_from)
     end
 
     let(:dir) { "some-dir" }
     let(:output) { OutputBuffer.new }
+    let(:executor) { TerminalExecutor.new(output, verbose: true) }
     let(:repo) { 'gcr.io/p-123/samson/foo' }
 
     with_env GCLOUD_PROJECT: 'p-123', GCLOUD_ACCOUNT: 'acc'
@@ -84,24 +85,24 @@ describe SamsonGcloud::ImageBuilder do
     end
 
     it "returns the docker repo digest" do
-      TerminalExecutor.any_instance.expects(:execute).with { output.write "foo digest: sha-123:abc" }.returns(true)
+      executor.expects(:execute).with { output.write "foo digest: sha-123:abc" }.returns(true)
       build_image.must_equal "#{repo}@sha-123:abc"
       build.external_url.must_be_nil
     end
 
     it "returns nil on failure" do
-      TerminalExecutor.any_instance.expects(:execute).returns(false)
+      executor.expects(:execute).returns(false)
       build_image.must_be_nil
     end
 
     it "returns nil when digest was not found" do
-      TerminalExecutor.any_instance.expects(:execute).returns(true)
+      executor.expects(:execute).returns(true)
       build_image.must_be_nil
     end
 
     it "stores external url" do
       url = "https://console.cloud.google.com/gcr/builds/someid?project=fooo"
-      TerminalExecutor.any_instance.expects(:execute).with do
+      executor.expects(:execute).with do
         output.puts "[23:45:46] Logs are permanently available at [#{url}]."
         output.puts "[23:45:46] foo digest: sha-123:abc"
       end.returns(true)
@@ -109,9 +110,16 @@ describe SamsonGcloud::ImageBuilder do
       build.external_url.must_equal url
     end
 
+    it "uses executor timeout" do
+      executor.expects(:execute).with do |*commands|
+        commands.join.must_include("--timeout 7200")
+      end.returns(true)
+      build_image
+    end
+
     it "builds different Dockerfiles" do
       build.dockerfile = 'Dockerfile.changed'
-      TerminalExecutor.any_instance.expects(:execute).with { output.write "foo digest: sha-123:abc" }.returns(true)
+      executor.expects(:execute).with { output.write "foo digest: sha-123:abc" }.returns(true)
       build_image.must_equal "#{repo}-changed@sha-123:abc"
       build.external_url.must_be_nil
     end
