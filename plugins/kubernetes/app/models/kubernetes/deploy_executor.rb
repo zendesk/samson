@@ -310,7 +310,7 @@ module Kubernetes
             raise(
               Samson::Hooks::UserError,
               "Role #{roles} for #{group.name} is not configured, but in repo at #{@job.commit}. " \
-              "Remove it from the repo or configure via it the stage page."
+              "Remove it from the repo or configure it via the stage page."
             )
           end
 
