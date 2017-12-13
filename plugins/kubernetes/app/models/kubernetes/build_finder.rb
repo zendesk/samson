@@ -131,7 +131,7 @@ module Kubernetes
           dockerfile: dockerfile,
           name: "Autobuild for Deploy ##{@job.deploy.id}"
         )
-        DockerBuilderService.new(build.clone).run(push: true) # clone to not update/reload the same object
+        DockerBuilderService.new(Build.find(build.id)).run(push: true) # .find to not update/reload the same object
         build
       elsif dockerfile == "Dockerfile"
         @output.puts("Not creating #{name} since is is not in the repository.")
