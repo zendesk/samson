@@ -131,7 +131,7 @@ class GitRepository
   add_method_tracer :create_workspace
 
   def update!
-    executor.execute("cd #{repo_cache_dir}", 'git fetch -p')
+    executor.execute("cd #{repo_cache_dir}", 'git fetch -p --depth=50')
   end
   add_method_tracer :update!
 
