@@ -1,8 +1,8 @@
 # frozen_string_literal: true
-# makes sure all builds that are needed for a kubernetes release are successfully built
+# makes sure all builds that are needed for a deploy are successfully built
 # (needed builds are determined by projects `dockerfiles` column)
 #
-# Ideally it would come from what `template_filler.rb` needs, but it wants know about builds to render.
+# FIXME: Ideally it would come from what `template_filler.rb` needs, but it wants know about builds to render.
 #
 # Special cases:
 # - when no Dockerfile is in the repo and it is the only requested dockerfile (column default value), return no builds
@@ -10,7 +10,7 @@
 # - builds can be reused from the previous release if the deployer requested it
 # - if the deploy is cancelled we finish up asap
 # - we find builds accross all projects so multiple projects can share them
-module Kubernetes
+module Samson
   class BuildFinder
     TICK = 2.seconds
 
@@ -35,7 +35,7 @@ module Kubernetes
           # since samson and the image building can be triggered at the same time
           # we check if the image is there every 5 seconds up to a maximum of <max> seconds
           step = 5
-          max = Integer(ENV['KUBERNETES_EXTERNAL_BUILD_WAIT'] || '5')
+          max = Integer(ENV['KUBERNETES_EXTERNAL_BUILD_WAIT'] || ENV['EXTERNAL_BUILD_WAIT'] || '5')
           loop do
             builds = find_build_by_image_name(try: true)
             break builds if builds

@@ -27,7 +27,7 @@ module Kubernetes
       @output = output
       @job = job
       @reference = reference
-      @build_finder = BuildFinder.new(
+      @build_finder = Samson::BuildFinder.new(
         @output,
         @job,
         @reference,

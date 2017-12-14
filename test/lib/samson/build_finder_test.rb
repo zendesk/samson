@@ -3,7 +3,7 @@ require_relative "../../test_helper"
 
 SingleCov.covered!
 
-describe Kubernetes::BuildFinder do
+describe Samson::BuildFinder do
   def setup_using_previous_builds
     previous = deploys(:failed_staging_test)
     previous.update_column(:id, job.deploy.id - 1) # make previous_deploy work
@@ -18,7 +18,7 @@ describe Kubernetes::BuildFinder do
   let(:build) { builds(:docker_build) }
   let(:job) { jobs(:succeeded_test) }
   let(:images) { nil }
-  let(:finder) { Kubernetes::BuildFinder.new(output, job, 'master', images: images) }
+  let(:finder) { Samson::BuildFinder.new(output, job, 'master', images: images) }
 
   before do
     build.update_column(:docker_repo_digest, nil) # build is needed
