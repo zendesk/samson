@@ -92,7 +92,11 @@ Samson::Application.routes.draw do
     end
   end
 
-  resources :secrets, except: [:edit]
+  resources :secrets, except: [:edit] do
+    collection do
+      get :duplicates
+    end
+  end
   resources :secret_sharing_grants, except: [:edit, :update]
 
   resources :users, only: [] do
