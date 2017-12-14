@@ -50,7 +50,7 @@ module Samson
         end
 
       builds.compact.each do |build|
-        wait_for_build(build)
+        wait_for_build_completion(build)
         ensure_build_is_successful(build) unless @cancelled
       end
     end
@@ -58,7 +58,9 @@ module Samson
     def find_or_create_builds_by_dockerfile
       requested = @job.project.dockerfile_list
       requested.map do |dockerfile|
-        find_build(dockerfile) || create_build(dockerfile)
+        find_build(dockerfile) ||
+          (!@job.project.docker_image_building_disabled? && create_build(dockerfile)) ||
+          nil # need nil and not false
       end
     end
 
@@ -89,7 +91,7 @@ module Samson
     private
 
     def find_build(dockerfile)
-      find_build_with_retry(dockerfile) ||
+      wait_for_build_creation { Build.where(git_sha: @job.commit, dockerfile: dockerfile).first } ||
         reused_builds.detect { |b| b.dockerfile == dockerfile }
     end
 
@@ -100,22 +102,31 @@ module Samson
       ) || []
     end
 
-    def find_build_with_retry(dockerfile)
-      build = find_build_without_retry(dockerfile)
-      return build if build || @job.project.docker_release_branch.blank?
-      wait_for_parallel_build_creation
-      find_build_without_retry(dockerfile)
-    end
-
-    def find_build_without_retry(dockerfile)
-      Build.where(git_sha: @job.commit, dockerfile: dockerfile).first
-    end
-
     # we only wait once no matter how many builds are missing since build creation is fast
-    def wait_for_parallel_build_creation
-      return if @waited
-      sleep 5
-      @waited = true
+    def wait_for_build_creation
+      interval = 5
+      @wait_time ||= max_build_wait_time
+
+      loop do
+        build = yield
+
+        return build if build
+
+        break if @wait_time <= 0
+
+        sleep interval
+        @wait_time -= interval
+      end
+    end
+
+    def max_build_wait_time
+      if @job.project.docker_image_building_disabled?
+        Integer(ENV['KUBERNETES_EXTERNAL_BUILD_WAIT'] || ENV['EXTERNAL_BUILD_WAIT'] || '5')
+      elsif @job.project.docker_release_branch.present?
+        5 # wait a little to avoid duplicate builds on release branch callback
+      else
+        0
+      end
     end
 
     def create_build(dockerfile)
@@ -144,7 +155,7 @@ module Samson
       end
     end
 
-    def wait_for_build(build)
+    def wait_for_build_completion(build)
       return unless build.reload.active?
 
       @output.puts("Waiting for Build #{build.url} to finish.")
