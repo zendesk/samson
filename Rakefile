@@ -75,7 +75,7 @@ namespace :test do
   end
 end
 
-desc 'Run brakeman ... use brakewan -I to add new ignores'
+desc "'Run brakeman ... use `bundle exec brakeman --add-engine-path 'plugins/*' -I` to add new ignores'"
 task :brakeman do
   sh "brakeman --no-pager --add-engine-path 'plugins/*' --ensure-latest"
 end
