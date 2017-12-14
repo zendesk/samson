@@ -107,7 +107,12 @@ class Kubernetes::DeployGroupRolesController < ApplicationController
     release_doc = Kubernetes::ReleaseDoc.new(
       kubernetes_release: release,
       kubernetes_role: @deploy_group_role.kubernetes_role,
-      deploy_group: @deploy_group_role.deploy_group
+      deploy_group: @deploy_group_role.deploy_group,
+      requests_cpu: @deploy_group_role.requests_cpu,
+      limits_cpu: @deploy_group_role.limits_cpu,
+      requests_memory: @deploy_group_role.requests_memory,
+      limits_memory: @deploy_group_role.limits_memory,
+      replica_target: @deploy_group_role.replicas
     )
 
     release_doc.verification_template
