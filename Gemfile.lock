@@ -170,7 +170,7 @@ GEM
     bootstrap-sass (3.3.6)
       autoprefixer-rails (>= 5.2.1)
       sass (>= 3.3.4)
-    brakeman (4.0.1)
+    brakeman (4.1.0)
     builder (3.2.3)
     bundler-audit (0.5.0)
       bundler (~> 1.2)
@@ -589,4 +589,4 @@ RUBY VERSION
    ruby 2.4.1p111
 
 BUNDLED WITH
-   1.16.0.pre.2
+   1.16.0
