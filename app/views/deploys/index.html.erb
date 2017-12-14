@@ -9,11 +9,16 @@
   <div class="row">
     <%= search_form do %>
       <div class="col-sm-2">
-        <%= label_tag :deployer %>
-        <%= text_field_tag 'search[deployer]', params.dig(:search, :deployer), placeholder: 'deployer name', class: "form-control" %>
+        <%= label_tag 'Deployer name' %>
+        <%= text_field_tag 'search[deployer]', params.dig(:search, :deployer), class: "form-control" %>
       </div>
 
-      <% unless @project %>
+      <% if @project %>
+        <div class="col-sm-2">
+          <%= label_tag :git_sha %>
+          <%= text_field_tag 'search[git_sha]', params.dig(:search, :git_sha), class: "form-control" %>
+        </div>
+      <% else %>
         <div class="col-sm-2">
           <%= label_tag :project %>
           <%= text_field_tag 'search[project_name]', params.dig(:search, :project_name), placeholder: 'project name', class: "form-control" %>

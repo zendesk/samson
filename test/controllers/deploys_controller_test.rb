@@ -138,6 +138,7 @@ describe DeploysController do
 
     describe "#index" do
       let(:deploy) { Deploy.first }
+      let(:deploys) { JSON.parse(@response.body) }
 
       before do
         Deploy.delete_all
@@ -217,15 +218,20 @@ describe DeploysController do
       it "fitlers results by deployer" do
         get :index, params: {search: {deployer: 'Admin'}}, format: "json"
         assert_response :ok
-        deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 4
       end
 
       it "filters results by status" do
         get :index, params: {search: {status: 'succeeded'}}, format: "json"
         assert_response :ok
-        deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 2
+      end
+
+      it "filters results by git_sha" do
+        Job.last.update_column(:commit, "ababababab")
+        get :index, params: {search: {git_sha: "ababababab"}}, format: "json"
+        assert_response :ok
+        deploys["deploys"].count.must_equal 1
       end
 
       it "ignores empty status" do
@@ -241,7 +247,6 @@ describe DeploysController do
       it "filters by project" do
         get :index, params: {search: {project_name: "Foo"}}, format: "json"
         assert_response :ok
-        deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 4
       end
 
@@ -254,28 +259,24 @@ describe DeploysController do
       it "filters by non-production" do
         get :index, params: {search: {production: "false"}}, format: "json"
         assert_response :ok
-        deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 1
       end
 
       it "filters by production via json" do
         get :index, params: {search: {production: 1}}, format: "json"
         assert_response :ok
-        deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 3
       end
 
       it "filters by production via json boolean" do
         get :index, params: {search: {production: false}}, format: "json"
         assert_response :ok
-        deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 1
       end
 
       it "filters by production" do
         get :index, params: {search: {production: "true"}}, format: "json"
         assert_response :ok
-        deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 3
       end
 
@@ -283,7 +284,6 @@ describe DeploysController do
         Deploy.last.stage.update_column(:no_code_deployed, true)
         get :index, params: {search: {code_deployed: "true"}}, format: "json"
         assert_response :ok
-        deploys = JSON.parse(@response.body)
         deploys["deploys"].count.must_equal 3
       end
 

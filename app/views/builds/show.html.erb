@@ -11,6 +11,9 @@
   <% if can?(:write, :builds) %>
     <div class="admin-actions">
       <div class="pull-right">
+        <% if git_sha = @build.git_sha.presence %>
+          <%= link_to "Deploys", project_deploys_path(search: {git_sha: git_sha}), class: "btn btn-default" %>
+        <% end %>
         <%= link_to "Edit", edit_project_build_path, class: "btn btn-default" %>
       </div>
     </div>

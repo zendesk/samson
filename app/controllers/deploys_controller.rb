@@ -121,6 +121,7 @@ class DeploysController < ApplicationController
   def search
     search = params[:search] || {}
     status = (search[:status] || search[:filter]).presence # :filter is deprecated
+    git_sha = search[:git_sha].presence
 
     if status && !Job.valid_status?(status)
       render_json_error 400, "invalid status given"
@@ -139,10 +140,11 @@ class DeploysController < ApplicationController
       ).pluck(:id)
     end
 
-    if users || status
+    if users || status || git_sha
       jobs = Job
       jobs = jobs.where(user: users) if users
       jobs = jobs.where(status: status) if status
+      jobs = jobs.where(commit: git_sha) if git_sha # previously jobs only stored short shas
     end
 
     production = search[:production].presence
