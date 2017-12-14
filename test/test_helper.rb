@@ -101,14 +101,16 @@ class ActiveSupport::TestCase
     undef :test
   end
 
-  def create_secret(id)
+  def create_secret(id, extra = {})
     SecretStorage.write(
       id,
-      value: 'MY-SECRET',
-      visible: false,
-      comment: 'this is secret',
-      user_id: users(:admin).id,
-      deprecated_at: nil
+      {
+        value: 'MY-SECRET',
+        visible: false,
+        comment: 'this is secret',
+        user_id: users(:admin).id,
+        deprecated_at: nil
+      }.merge(extra)
     )
     SecretStorage::DbBackend::Secret.find(id) # TODO: just return id
   end

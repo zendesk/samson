@@ -30,6 +30,7 @@ describe SecretsController do
     before { create_secret 'production/foo/group/bar' }
 
     unauthorized :get, :index
+    unauthorized :get, :duplicates
     unauthorized :get, :new
     unauthorized :get, :show, id: 'production/foo/group/bar'
     unauthorized :patch, :update, id: 'production/foo/group/bar'
@@ -103,6 +104,21 @@ describe SecretsController do
         SecretStorage.expects(:lookup_cache).raises(Samson::Secrets::BackendError.new('this is my error'))
         get :index
         assert flash[:error]
+      end
+    end
+
+    describe "#duplicates" do
+      it "renders" do
+        a = 'production/global/pod2/foo'
+        create_secret a
+        b = 'production/global/pod2/bar'
+        create_secret b
+        create_secret 'production/global/pod2/baz', value: 'other'
+
+        get :duplicates
+        assert_response :success
+
+        assigns(:groups).map { |_, v| v.map(&:first) }.must_equal [[a, b]]
       end
     end
 

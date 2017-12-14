@@ -37,6 +37,13 @@ class SecretsController < ApplicationController
     render html: "", layout: true
   end
 
+  def duplicates
+    @groups = SecretStorage.lookup_cache.
+      group_by { |_, v| v.fetch(:value_hashed) }.
+      select { |_, v| v.size >= 2 }.
+      sort_by { |_, v| -v.size }
+  end
+
   def new
     render :show
   end
@@ -151,6 +158,6 @@ class SecretsController < ApplicationController
   # @override CurrentUser since we need to allow any user to see new since we do not yet
   # know what project they want to create for
   def resource_action
-    action_name == "new" ? :read : super
+    ["new", "duplicates"].include?(action_name) ? :read : super
   end
 end
