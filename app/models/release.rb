@@ -16,10 +16,6 @@ class Release < ActiveRecord::Base
   # This constant is here for convenience - the value that the database uses is in db/schema.rb.
   DEFAULT_RELEASE_NUMBER = "1"
 
-  def currently_deploying_stages
-    project.stages.where_reference_being_deployed(version)
-  end
-
   def changeset
     @changeset ||= Changeset.new(project.repository_path, previous_release.try(:commit), commit)
   end

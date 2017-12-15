@@ -7,8 +7,6 @@ module StagesHelper
   end
 
   def stage_template_icon
-    content_tag :span, '',
-      class: "glyphicon glyphicon-duplicate",
-      title: "Template stage, this stage will be used when copying to new Deploy Groups"
+    icon_tag "duplicate", title: "Template stage, this stage will be used when copying to new Deploy Groups"
   end
 end

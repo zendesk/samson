@@ -21,11 +21,12 @@
     <thead>
     <tr>
       <th>Name</th>
-      <% unless @project %>
+      <% if @project %>
+        <th>Deployed to</th>
+      <% else %>
         <th>Project</th>
       <% end %>
       <th>Created</th>
-      <th>Created By</th>
       <th>
         Duration
         <%= link_to_chart "Build duration", @builds.map { |b| b.docker_build_job&.duration }.compact %>

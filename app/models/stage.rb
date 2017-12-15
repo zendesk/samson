@@ -83,9 +83,9 @@ class Stage < ActiveRecord::Base
     @last_successful_deploy = deploys.successful.first
   end
 
-  # comparing commits might be better ...
-  def current_release?(release)
-    last_successful_deploy&.reference == release.version
+  # last active or successful deploy
+  def deployed_or_running_deploy
+    deploys.joins(:job).where("jobs.status" => Job::ACTIVE_STATUSES + ["succeeded"]).first
   end
 
   def create_deploy(user, attributes = {})

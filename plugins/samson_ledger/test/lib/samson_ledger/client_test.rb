@@ -30,8 +30,8 @@ describe 'SamsonLedger::Client' do
 
   describe ".post_deployment" do
     before do
-      stub_github_api("repos/bar/foo/compare/abcabc1...staging", "x" => "y")
-      GITHUB.stubs(:compare).with("bar/foo", "abcabc1", "staging").returns(comparison)
+      stub_github_api("repos/bar/foo/compare/abcabcaaabcabcaaabcabcaaabcabcaaabcabca1...staging", "x" => "y")
+      GITHUB.stubs(:compare).with("bar/foo", "abcabcaaabcabcaaabcabcaaabcabcaaabcabca1", "staging").returns(comparison)
       Changeset::PullRequest.stubs(:find).with("bar/foo", 42).returns(pull_request)
 
       request_lambda = ->(request) do

@@ -128,55 +128,6 @@ describe Release do
     end
   end
 
-  describe "#currently_deploying_stages" do
-    let(:stage) { project.stages.create!(name: "One") }
-    before { release.update_column(:number, '42') }
-
-    it "returns stages where the release is pending deploy" do
-      create_deploy!(reference: "v42", status: "pending")
-      assert_equal [stage], release.currently_deploying_stages
-    end
-
-    it "returns stages where the release is currently being deployed" do
-      create_deploy!(reference: "v42", status: "running")
-      assert_equal [stage], release.currently_deploying_stages
-    end
-
-    it "returns stages where a deploy of the release is being cancelled" do
-      create_deploy!(reference: "v42", status: "cancelling")
-      assert_equal [stage], release.currently_deploying_stages
-    end
-
-    it "ignores stages where there are no current deploys" do
-      create_deploy!(reference: "v42", status: "succeeded")
-      assert_equal [], release.currently_deploying_stages
-    end
-
-    it "ignores stages where another release is being deployed" do
-      create_deploy!(reference: "v666", status: "running")
-      assert_equal [], release.currently_deploying_stages
-    end
-
-    it "handles deleted author" do
-      create_deploy!(reference: "v666", status: "succeeded")
-      author.soft_delete!
-      release.reload
-      assert_equal author.name, release.author.name
-    end
-
-    it "handles deleted author" do
-      create_deploy!(reference: "v666", status: "succeeded")
-      author.destroy!
-      release.reload
-      assert_equal NullUser.new(0).name, release.author.name
-    end
-
-    def create_deploy!(options)
-      job = project.jobs.create!(user: author, commit: "x", command: "yes", status: options.fetch(:status))
-      stage.deploys.create!(reference: options.fetch(:reference), job: job, project: project)
-    end
-  end
-
   describe "#changeset" do
     before do
       GitRepository.any_instance.stubs(:exact_tag_from_ref).returns("")

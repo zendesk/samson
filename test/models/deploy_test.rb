@@ -206,7 +206,7 @@ describe Deploy do
 
   describe "#changeset" do
     it "creates a changeset to the previous deploy" do
-      deploy.changeset.commit.must_equal "abcabc1"
+      deploy.changeset.commit.must_equal "abcabcaaabcabcaaabcabcaaabcabcaaabcabca1"
     end
   end
 
@@ -443,6 +443,33 @@ describe Deploy do
     end
   end
 
+  describe "#references?" do
+    before do
+      deploy.reference.wont_equal deploy.job.commit
+      deploy.reload # so sql count assertions are meaningful
+    end
+
+    it "references a matching reference" do
+      assert deploy.references?(deploy.reference)
+    end
+
+    it "references a matching commit" do
+      assert deploy.references?(deploy.job.commit)
+    end
+
+    it "does not reference a non-matching reference" do
+      assert_sql_queries 0 do
+        refute deploy.references?("foo")
+      end
+    end
+
+    it "does not reference a non-matching commit" do
+      assert_sql_queries 1 do
+        refute deploy.references?("a" * 40)
+      end
+    end
+  end
+
   describe "#validate_stage_is_unlocked" do
     def deploy
       create_deploy!(job_attributes: { user: user })
@@ -499,7 +526,8 @@ describe Deploy do
 
   describe "#cache_key" do
     it "includes self and commit" do
-      deploys(:succeeded_test).cache_key.must_equal ["deploys/178003093-20140101201000000000", "abcabc1"]
+      deploys(:succeeded_test).cache_key.
+        must_equal ["deploys/178003093-20140101201000000000", "abcabcaaabcabcaaabcabcaaabcabcaaabcabca1"]
     end
   end
 
