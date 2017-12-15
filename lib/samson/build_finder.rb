@@ -1,8 +1,8 @@
 # frozen_string_literal: true
-# makes sure all builds that are needed for a kubernetes release are successfully built
+# makes sure all builds that are needed for a deploy are successfully built
 # (needed builds are determined by projects `dockerfiles` column)
 #
-# Ideally it would come from what `template_filler.rb` needs, but it wants know about builds to render.
+# FIXME: Ideally it would come from what `template_filler.rb` needs, but it wants know about builds to render.
 #
 # Special cases:
 # - when no Dockerfile is in the repo and it is the only requested dockerfile (column default value), return no builds
@@ -10,7 +10,7 @@
 # - builds can be reused from the previous release if the deployer requested it
 # - if the deploy is cancelled we finish up asap
 # - we find builds accross all projects so multiple projects can share them
-module Kubernetes
+module Samson
   class BuildFinder
     TICK = 2.seconds
 
@@ -35,7 +35,7 @@ module Kubernetes
           # since samson and the image building can be triggered at the same time
           # we check if the image is there every 5 seconds up to a maximum of <max> seconds
           step = 5
-          max = Integer(ENV['KUBERNETES_EXTERNAL_BUILD_WAIT'] || '5')
+          max = Integer(ENV['KUBERNETES_EXTERNAL_BUILD_WAIT'] || ENV['EXTERNAL_BUILD_WAIT'] || '5')
           loop do
             builds = find_build_by_image_name(try: true)
             break builds if builds
@@ -50,7 +50,7 @@ module Kubernetes
         end
 
       builds.compact.each do |build|
-        wait_for_build(build)
+        wait_for_build_completion(build)
         ensure_build_is_successful(build) unless @cancelled
       end
     end
@@ -58,7 +58,9 @@ module Kubernetes
     def find_or_create_builds_by_dockerfile
       requested = @job.project.dockerfile_list
       requested.map do |dockerfile|
-        find_build(dockerfile) || create_build(dockerfile)
+        find_build(dockerfile) ||
+          (!@job.project.docker_image_building_disabled? && create_build(dockerfile)) ||
+          nil # need nil and not false
       end
     end
 
@@ -89,7 +91,7 @@ module Kubernetes
     private
 
     def find_build(dockerfile)
-      find_build_with_retry(dockerfile) ||
+      wait_for_build_creation { Build.where(git_sha: @job.commit, dockerfile: dockerfile).first } ||
         reused_builds.detect { |b| b.dockerfile == dockerfile }
     end
 
@@ -100,22 +102,31 @@ module Kubernetes
       ) || []
     end
 
-    def find_build_with_retry(dockerfile)
-      build = find_build_without_retry(dockerfile)
-      return build if build || @job.project.docker_release_branch.blank?
-      wait_for_parallel_build_creation
-      find_build_without_retry(dockerfile)
-    end
-
-    def find_build_without_retry(dockerfile)
-      Build.where(git_sha: @job.commit, dockerfile: dockerfile).first
-    end
-
     # we only wait once no matter how many builds are missing since build creation is fast
-    def wait_for_parallel_build_creation
-      return if @waited
-      sleep 5
-      @waited = true
+    def wait_for_build_creation
+      interval = 5
+      @wait_time ||= max_build_wait_time
+
+      loop do
+        build = yield
+
+        return build if build
+
+        break if @wait_time <= 0
+
+        sleep interval
+        @wait_time -= interval
+      end
+    end
+
+    def max_build_wait_time
+      if @job.project.docker_image_building_disabled?
+        Integer(ENV['KUBERNETES_EXTERNAL_BUILD_WAIT'] || ENV['EXTERNAL_BUILD_WAIT'] || '5')
+      elsif @job.project.docker_release_branch.present?
+        5 # wait a little to avoid duplicate builds on release branch callback
+      else
+        0
+      end
     end
 
     def create_build(dockerfile)
@@ -144,7 +155,7 @@ module Kubernetes
       end
     end
 
-    def wait_for_build(build)
+    def wait_for_build_completion(build)
       return unless build.reload.active?
 
       @output.puts("Waiting for Build #{build.url} to finish.")

@@ -3,7 +3,7 @@ require_relative "../../test_helper"
 
 SingleCov.covered!
 
-describe Kubernetes::BuildFinder do
+describe Samson::BuildFinder do
   def setup_using_previous_builds
     previous = deploys(:failed_staging_test)
     previous.update_column(:id, job.deploy.id - 1) # make previous_deploy work
@@ -13,21 +13,29 @@ describe Kubernetes::BuildFinder do
     job.deploy.update_column(:kubernetes_reuse_build, true)
   end
 
+  def expect_sleep
+    finder.unstub(:sleep)
+    finder.expects(:sleep)
+  end
+
   let(:output) { StringIO.new }
   let(:out) { output.string }
   let(:build) { builds(:docker_build) }
   let(:job) { jobs(:succeeded_test) }
   let(:images) { nil }
-  let(:finder) { Kubernetes::BuildFinder.new(output, job, 'master', images: images) }
+  let(:finder) { Samson::BuildFinder.new(output, job, 'master', images: images) }
 
   before do
-    build.update_column(:docker_repo_digest, nil) # build is needed
+    expect_sleep.with { raise "Unexpected sleep" }.never
+    build.update_column(:docker_repo_digest, nil) # building needs to happen
     job.update_column(:commit, build.git_sha) # this is normally done by JobExecution
     GitRepository.any_instance.stubs(:file_content).with('Dockerfile', job.commit).returns "FROM all"
   end
 
   describe "#ensure_successful_builds" do
-    let(:execute) { finder.ensure_successful_builds.presence }
+    def execute
+      finder.ensure_successful_builds
+    end
 
     it "fails when the build is not built" do
       e = assert_raises(Samson::Hooks::UserError) { execute }
@@ -40,7 +48,7 @@ describe Kubernetes::BuildFinder do
       GitRepository.any_instance.expects(:file_content).with('Dockerfile', job.commit).returns nil
 
       refute_difference 'Build.count' do
-        refute execute # no build found or created
+        execute.must_equal [] # no build found or created
         out.must_include "Not creating build"
       end
     end
@@ -57,13 +65,14 @@ describe Kubernetes::BuildFinder do
     end
 
     it "waits when build is active" do
+      expect_sleep
       done = false
       build.class.any_instance.expects(:active?).times(2).with do
         build.class.any_instance.stubs(:docker_repo_digest).returns('some-digest') unless done
         done = true
       end.returns(true, false)
 
-      assert execute
+      assert execute.any?
 
       out.must_include "Waiting for Build #{build.url} to finish."
     end
@@ -86,12 +95,12 @@ describe Kubernetes::BuildFinder do
 
       it "retries finding when build is created through parallel execution of build" do
         job.project.docker_release_branch = 'master' # indicates that there will be a build kicked off on merge
-        finder.expects(:wait_for_parallel_build_creation).with do
+        expect_sleep.with do
           build.update_column(:git_sha, job.commit)
           build.update_column(:docker_repo_digest, 'somet-digest') # a bit misleading since it should be running
         end
         DockerBuilderService.any_instance.expects(:run).never
-        assert execute
+        assert execute.any?
         out.must_include "Build #{build.url} is looking good!"
       end
 
@@ -102,7 +111,7 @@ describe Kubernetes::BuildFinder do
           build.expects(:reload).never # instance is not shared with BuildFinder to avoid both modifying the same
           true
         end.returns(stub(run: true))
-        assert execute
+        assert execute.any?
         out.must_include "Creating build for Dockerfile."
         out.must_include "Build #{Build.last.url} is looking good"
       end
@@ -112,7 +121,7 @@ describe Kubernetes::BuildFinder do
 
         DockerBuilderService.any_instance.expects(:run).never
 
-        assert execute
+        assert execute.any?
         out.must_include "Build #{build.url} is looking good"
       end
 
@@ -149,7 +158,7 @@ describe Kubernetes::BuildFinder do
 
       it "does not find for different sha" do
         build.update_column(:git_sha, 'other')
-        finder.expects(:sleep) # waiting for external builds to arrive
+        expect_sleep # waiting for external builds to arrive
         e = assert_raises(Samson::Hooks::UserError) { execute }
         e.message.must_include("Did not find build")
       end
@@ -157,7 +166,7 @@ describe Kubernetes::BuildFinder do
       it "can find build that arrives late" do
         matching_sha = build.git_sha
         build.update_column(:git_sha, 'other')
-        finder.expects(:sleep).with do
+        expect_sleep.with do
           build.update_column(:git_sha, matching_sha)
         end # waiting for external builds to arrive
         execute.must_equal [build]
@@ -174,17 +183,36 @@ describe Kubernetes::BuildFinder do
         execute.must_equal [build]
       end
     end
-  end
 
-  describe "#wait_for_parallel_build_creation" do
-    it "sleeps ... test to get coverage" do
-      finder.expects(:sleep)
-      finder.send(:wait_for_parallel_build_creation)
-    end
+    describe "when using external builds" do
+      with_env EXTERNAL_BUILD_WAIT: '15'
+      let!(:matching_sha) { build.git_sha }
 
-    it "does not sleep when already executed" do
-      finder.expects(:sleep)
-      2.times { finder.send(:wait_for_parallel_build_creation) }
+      before do
+        job.project.update_column(:docker_image_building_disabled, true)
+        build.update_columns(git_sha: 'other')
+      end
+
+      it "waits for builds to arrive" do
+        expect_sleep.with do
+          build.update_columns(git_sha: matching_sha, docker_repo_digest: 'done')
+        end # waiting for external builds to arrive
+
+        execute.must_equal [build]
+      end
+
+      it "fails if a build does not arrive" do
+        expect_sleep.times(3)
+
+        execute.must_equal []
+      end
+
+      it "does not wait multiple times because builds start simultaneously" do
+        expect_sleep.times(3)
+
+        execute.must_equal []
+        execute.must_equal []
+      end
     end
   end
 end
