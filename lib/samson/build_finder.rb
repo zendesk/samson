@@ -14,7 +14,7 @@ module Samson
   class BuildFinder
     TICK = 2.seconds
 
-    def initialize(output, job, reference, images:)
+    def initialize(output, job, reference, images: nil)
       @output = output
       @job = job
       @reference = reference

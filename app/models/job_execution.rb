@@ -57,6 +57,7 @@ class JobExecution
   def cancel
     @cancelled = true
     @job.cancelling!
+    build_finder.cancelled!
     @executor.cancel 'INT'
     unless JobQueue.wait(id, cancel_timeout)
       @executor.cancel 'KILL'
@@ -78,6 +79,7 @@ class JobExecution
     "#{job.project.name} - #{reference}"
   end
 
+  # also used for docker builds
   def base_commands(dir, env = {})
     artifact_cache_dir = File.join(@job.project.repository.repo_cache_dir, "artifacts")
     FileUtils.mkdir_p(artifact_cache_dir)
@@ -99,7 +101,7 @@ class JobExecution
   private
 
   def stage
-    @job.deploy.try(:stage)
+    @job.deploy&.stage
   end
 
   def error!(exception)
@@ -204,6 +206,12 @@ class JobExecution
       TAG: (@job.tag || @job.commit)
     }.merge(@env)
 
+    if stage&.builds_in_environment
+      build_finder.ensure_successful_builds.each do |build|
+        env["BUILD_FROM_#{build.dockerfile}"] = build.docker_repo_digest
+      end
+    end
+
     if deploy = @job.deploy
       env[:COMMIT_RANGE] = deploy.changeset.commit_range
     end
@@ -238,6 +246,10 @@ class JobExecution
 
   def puts_if_present(message)
     @output.puts message if message
+  end
+
+  def build_finder
+    @build_finder ||= Samson::BuildFinder.new(@output, @job, @reference)
   end
 
   def make_tempdir
