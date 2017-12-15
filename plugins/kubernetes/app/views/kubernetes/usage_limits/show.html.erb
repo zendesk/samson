@@ -14,8 +14,11 @@
         <% projects = Project.with_kubernetes_roles.pluck(:name, :id).unshift ["All", nil] %>
         <%= form.select :project_id, projects, {}, Samson::FormBuilder::LIVE_SELECT_OPTIONS %>
       <% end %>
+
       <%= form.input :cpu, required: true %>
       <%= form.input :memory, required: true %>
+
+      <%= form.input :comment, as: :text_area %>
     </fieldset>
 
     <%= form.actions delete: @usage_limit do %>

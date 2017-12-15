@@ -18,6 +18,7 @@ module Samson
       input_html ||= {}
       input_html[:pattern] ||= translate_regex_to_js(pattern) if pattern
       input_html[:required] ||= required
+      input_html[:rows] ||= object.send(attribute).to_s.count("\n") + 2 if as == :text_area
 
       label ||= attribute.to_s.humanize
       label = "* " + label if required
