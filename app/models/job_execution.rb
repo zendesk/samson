@@ -194,6 +194,7 @@ class JobExecution
 
   def commands(dir)
     env = {
+      DEPLOY_ID: @job.deploy&.id || @job.id,
       DEPLOY_URL: @job.url,
       DEPLOYER: @job.user.email,
       DEPLOYER_EMAIL: @job.user.email,
