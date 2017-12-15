@@ -150,6 +150,7 @@ describe JobExecution do
     job.update(command: 'env | sort')
     execute_job 'master', env: {FOO: 'bar'}
     lines = job.output.split "\n"
+    lines.must_include "[04:05:06] DEPLOY_ID=#{deploy.id}"
     lines.must_include "[04:05:06] DEPLOY_URL=#{deploy.url}"
     lines.must_include "[04:05:06] DEPLOYER=jdoe@test.com"
     lines.must_include "[04:05:06] DEPLOYER_EMAIL=jdoe@test.com"
