@@ -12,6 +12,7 @@ class Job < ActiveRecord::Base
   after_update { deploy&.touch }
 
   validate :validate_globally_unlocked
+  validates :git_sha, allow_nil: true, format: SHA1_REGEX
 
   ACTIVE_STATUSES = %w[pending running cancelling].freeze
   VALID_STATUSES = ACTIVE_STATUSES + %w[failed errored succeeded cancelled].freeze
