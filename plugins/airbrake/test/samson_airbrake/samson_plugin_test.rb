@@ -25,7 +25,7 @@ describe SamsonAirbrake::Engine do
             "api_key" => "MY-SECRET",
             "deploy" => {
               "rails_env" => "staging",
-              "scm_revision" => "abcabc1",
+              "scm_revision" => "abcabcaaabcabcaaabcabcaaabcabcaaabcabca1",
               "local_username" => "Super Admin",
               "scm_repository" => "https://example.com/bar/foo",
             }

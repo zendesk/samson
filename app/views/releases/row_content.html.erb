@@ -12,7 +12,6 @@
   <div class="tab-pane" id="info-<%= @release.version %>">
     Commit: <code><%= @release.commit %></code>
     <p>Author: <%= @release.author.name %>
-      <%= render 'deployed_to', release: @release %>
   </div>
 
   <div class="tab-pane" id="pulls-<%= @release.version %>">

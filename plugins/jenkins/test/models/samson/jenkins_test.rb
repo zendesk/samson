@@ -21,7 +21,7 @@ describe Samson::Jenkins do
   def stub_build_with_parameters(update_params)
     stub_request(:post, "http://www.test-url.com/job/test_job/buildWithParameters").
       with(
-        body: {"buildStartedBy": "Super Admin", "originatedFrom": "Foo_Staging_staging", "commit": "abcabc1", "deployUrl": "http://www.test-url.com/projects/foo/deploys/#{deploy.id}", "emails" => "super-admin@example.com", "tag" => nil}.merge(update_params),
+        body: {"buildStartedBy": "Super Admin", "originatedFrom": "Foo_Staging_staging", "commit": "abcabcaaabcabcaaabcabcaaabcabcaaabcabca1", "deployUrl": "http://www.test-url.com/projects/foo/deploys/#{deploy.id}", "emails" => "super-admin@example.com", "tag" => nil}.merge(update_params),
         headers: {Authorization: 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}
       ).
       to_return(status: 200, body: "", headers: {}).to_timeout
@@ -30,7 +30,7 @@ describe Samson::Jenkins do
   def stub_build_with_parameters_when_autoconfig_is_enabled(update_params)
     stub_request(:post, "http://www.test-url.com/job/test_job/buildWithParameters").
       with(
-        body: {"SAMSON_buildStartedBy": "Super Admin", "SAMSON_commit": "abcabc1", "SAMSON_deployUrl": "http://www.test-url.com/projects/foo/deploys/178003093", "SAMSON_emails": "super-admin@example.com", "SAMSON_originatedFrom": "Foo_Staging_staging", "SAMSON_tag": nil}.merge(update_params),
+        body: {"SAMSON_buildStartedBy": "Super Admin", "SAMSON_commit": "abcabcaaabcabcaaabcabcaaabcabcaaabcabca1", "SAMSON_deployUrl": "http://www.test-url.com/projects/foo/deploys/178003093", "SAMSON_emails": "super-admin@example.com", "SAMSON_originatedFrom": "Foo_Staging_staging", "SAMSON_tag": nil}.merge(update_params),
         headers: {
           Authorization: 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'
         }

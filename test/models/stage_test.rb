@@ -134,32 +134,6 @@ describe Stage do
     end
   end
 
-  describe "#current_release?" do
-    let(:project) { projects(:test) }
-    let(:stage) { stages(:test_staging) }
-    let(:author) { users(:deployer) }
-    let(:job) { project.jobs.create!(user: author, commit: "x", command: "echo", status: "succeeded") }
-    let(:releases) { Array.new(3).map { project.releases.create!(author: author, commit: "a" * 40) } }
-
-    before do
-      GitRepository.any_instance.stubs(:fuzzy_tag_from_ref).returns(nil)
-      stage.deploys.create!(reference: "v124", job: job, project: project)
-      stage.deploys.create!(reference: "v125", job: job, project: project)
-    end
-
-    it "returns true if the release was the last thing deployed to the stage" do
-      assert stage.current_release?(releases[1])
-    end
-
-    it "returns false if the release is not the last thing deployed to the stage" do
-      refute stage.current_release?(releases[0])
-    end
-
-    it "returns false if the release has never been deployed to the stage" do
-      refute stage.current_release?(releases[2])
-    end
-  end
-
   describe "#create_deploy" do
     let(:user) { users(:deployer) }
 
@@ -735,6 +709,24 @@ describe Stage do
     it "is not direct when approval is required" do
       stage.stubs(deploy_requires_approval?: true)
       refute stage.direct?
+    end
+  end
+
+  describe "#deployed_or_running_deploy" do
+    let(:deploy) { deploys(:succeeded_test) }
+
+    it "finds succeeded" do
+      stage.deployed_or_running_deploy.must_equal deploy
+    end
+
+    it "finds running" do
+      deploy.job.update_column(:status, 'running')
+      stage.deployed_or_running_deploy.must_equal deploy
+    end
+
+    it "ignores failed" do
+      deploy.job.update_column(:status, 'failed')
+      stage.deployed_or_running_deploy.must_be_nil
     end
   end
 end

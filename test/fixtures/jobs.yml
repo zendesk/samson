@@ -4,7 +4,7 @@ succeeded_test:
   project: test
   status: succeeded
   output: This worked!
-  commit: abcabc1
+  commit: abcabcaaabcabcaaabcabcaaabcabcaaabcabca1
 
 succeeded_production_test:
   command: cap production deploy
@@ -12,7 +12,7 @@ succeeded_production_test:
   project: test
   status: succeeded
   output: This worked!
-  commit: abcabc2
+  commit: abcabcaaabcabcaaabcabcaaabcabcaaabcabca2
 
 running_test:
   command: cap staging deploy
@@ -20,7 +20,7 @@ running_test:
   project: test
   status: running
   output: This worked!
-  commit: abcabc3
+  commit: abcabcaaabcabcaaabcabcaaabcabcaaabcabca3
 
 failed_test:
   command: cap staging deploy
@@ -28,4 +28,4 @@ failed_test:
   project: test
   status: failed
   output: Error
-  commit: staging
+  commit: staging # failed to resulve the reference so not a valid sha

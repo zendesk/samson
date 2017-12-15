@@ -9,7 +9,9 @@
     <%= render 'deploy_to_button', release: @release, stages: @project.stages %>
   </div>
 
-  <%= render 'deployed_to', release: @release %>
+  <% if list = deployed_or_running_list(@project.stages, @release.version).presence %>
+    <p>Deployed to: <%= list %></p>
+  <% end %>
 
   <label>Created</label>
   <%= relative_time(@release.created_at) %>

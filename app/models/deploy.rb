@@ -66,8 +66,13 @@ class Deploy < ActiveRecord::Base
     end
   end
 
+  def references?(ref)
+    reference == ref || (ref =~ Build::SHA1_REGEX && job&.commit == ref)
+  end
+
+  # TODO: remove this an delegate to job directly, a commit is not a reference
   def commit
-    job.try(:commit).presence || reference
+    job&.commit.presence || reference
   end
 
   def short_reference

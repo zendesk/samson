@@ -634,4 +634,51 @@ describe ApplicationHelper do
       link_to_chart("Hello world", [1, 2]).must_equal nil
     end
   end
+
+  describe "#icon_tag" do
+    it "generates simple icons" do
+      html = icon_tag("foo")
+      html.must_equal "<i class=\"glyphicon glyphicon-foo\"></i>"
+      assert html.html_safe?
+    end
+
+    it "generates icons with titles" do
+      html = icon_tag("foo", title: "bar")
+      html.must_equal "<i title=\"bar\" class=\"glyphicon glyphicon-foo\"></i>"
+      assert html.html_safe?
+    end
+  end
+
+  describe "#deployed_or_running_list" do
+    let(:stage_list) { [stages(:test_staging)] }
+
+    it "produces safe output" do
+      html = deployed_or_running_list([], "foo")
+      html.must_equal ""
+      assert html.html_safe?
+    end
+
+    it "renders succeeded deploys" do
+      html = deployed_or_running_list(stage_list, "staging")
+      html.must_equal "<span class=\"label label-success release-stage\">Staging</span> "
+    end
+
+    it "ignores failed deploys" do
+      deploys(:succeeded_test).job.update_column(:status, 'failed')
+      html = deployed_or_running_list(stage_list, "staging")
+      html.must_equal ""
+    end
+
+    it "ignores non-matching deploys" do
+      deploys(:succeeded_test).update_column(:reference, 'nope')
+      html = deployed_or_running_list(stage_list, "staging")
+      html.must_equal ""
+    end
+
+    it "shows active deploys" do
+      deploys(:succeeded_test).job.update_column(:status, 'running')
+      html = deployed_or_running_list(stage_list, "staging")
+      html.must_equal "<span class=\"label label-success release-stage\"><i title=\"running\" class=\"glyphicon glyphicon-cloud-upload\"></i> Staging</span> "
+    end
+  end
 end

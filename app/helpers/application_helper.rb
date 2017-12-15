@@ -138,8 +138,8 @@ module ApplicationHelper
     end
   end
 
-  def icon_tag(type)
-    content_tag :i, '', class: "glyphicon glyphicon-#{type}"
+  def icon_tag(type, options = {})
+    content_tag :i, '', options.merge(class: "glyphicon glyphicon-#{type}")
   end
 
   def link_to_delete(path, options = {})
@@ -295,5 +295,21 @@ module ApplicationHelper
     }
     url = "https://chart.googleapis.com/chart?#{params.to_query}"
     link_to icon_tag('signal'), url, target: :blank
+  end
+
+  # show which stages this reference is deploy(ed+ing) to
+  def deployed_or_running_list(stages, reference)
+    html = "".html_safe
+    stages.each do |stage|
+      next unless deploy = stage.deployed_or_running_deploy
+      next unless deploy.references?(reference)
+
+      text = "".html_safe
+      text << icon_tag("cloud-upload", title: deploy.status) << " " if deploy.active?
+      text << stage.name
+      html << content_tag(:span, text, class: "label label-success release-stage")
+      html << " "
+    end
+    html
   end
 end

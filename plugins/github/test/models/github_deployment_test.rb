@@ -26,7 +26,7 @@ describe GithubDeployment do
         production_environment: false,
         auto_merge: false,
         required_contexts: [],
-        ref: "abcabc1"
+        ref: "abcabcaaabcabcaaabcabcaaabcabcaaabcabca1"
       }
       create = stub_request(:post, endpoint).with(body: body.to_json)
       github_deployment.create
