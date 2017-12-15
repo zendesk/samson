@@ -7,7 +7,7 @@
       "check_name": "PermitAttributes",
       "message": "Potentially dangerous key allowed for mass assignment",
       "file": "plugins/kubernetes/app/controllers/kubernetes/deploy_group_roles_controller.rb",
-      "line": 137,
+      "line": 142,
       "link": "https://brakemanscanner.org/docs/warning_types/mass_assignment/",
       "code": "params.require(:kubernetes_deploy_group_role).permit(:kubernetes_role_id, :requests_memory, :requests_cpu, :limits_memory, :limits_cpu, :replicas, :project_id, :deploy_group_id)",
       "render_path": null,
@@ -27,7 +27,7 @@
       "check_name": "PermitAttributes",
       "message": "Potentially dangerous key allowed for mass assignment",
       "file": "plugins/kubernetes/app/controllers/kubernetes/deploy_group_roles_controller.rb",
-      "line": 136,
+      "line": 141,
       "link": "https://brakemanscanner.org/docs/warning_types/mass_assignment/",
       "code": "params.require(:kubernetes_deploy_group_role).permit(:kubernetes_role_id, :requests_memory, :requests_cpu, :limits_memory, :limits_cpu, :replicas, :project_id, :deploy_group_id)",
       "render_path": null,
@@ -47,7 +47,7 @@
       "check_name": "PermitAttributes",
       "message": "Potentially dangerous key allowed for mass assignment",
       "file": "plugins/kubernetes/app/controllers/kubernetes/deploy_group_roles_controller.rb",
-      "line": 138,
+      "line": 143,
       "link": "https://brakemanscanner.org/docs/warning_types/mass_assignment/",
       "code": "params.require(:kubernetes_deploy_group_role).permit(:kubernetes_role_id, :requests_memory, :requests_cpu, :limits_memory, :limits_cpu, :replicas, :project_id, :deploy_group_id)",
       "render_path": null,
@@ -219,13 +219,13 @@
     {
       "warning_type": "Mass Assignment",
       "warning_code": 105,
-      "fingerprint": "a854b562bbd3eeede5a798c682df9e8e306ea38db0324dcda8663e64b1e1fe10",
+      "fingerprint": "c580d6ead04ca4dd19b71eea8c7d3832197a8b161da950b711064ced1b395ddb",
       "check_name": "PermitAttributes",
       "message": "Potentially dangerous key allowed for mass assignment",
       "file": "plugins/kubernetes/app/controllers/kubernetes/usage_limits_controller.rb",
       "line": 67,
       "link": "https://brakemanscanner.org/docs/warning_types/mass_assignment/",
-      "code": "params.require(:kubernetes_usage_limit).permit(:project_id, :scope_type_and_id, :cpu, :memory)",
+      "code": "params.require(:kubernetes_usage_limit).permit(:project_id, :scope_type_and_id, :cpu, :memory, :comment)",
       "render_path": null,
       "location": {
         "type": "method",
@@ -239,13 +239,13 @@
     {
       "warning_type": "Mass Assignment",
       "warning_code": 105,
-      "fingerprint": "a854b562bbd3eeede5a798c682df9e8e306ea38db0324dcda8663e64b1e1fe10",
+      "fingerprint": "c580d6ead04ca4dd19b71eea8c7d3832197a8b161da950b711064ced1b395ddb",
       "check_name": "PermitAttributes",
       "message": "Potentially dangerous key allowed for mass assignment",
       "file": "plugins/kubernetes/app/controllers/kubernetes/usage_limits_controller.rb",
       "line": 67,
       "link": "https://brakemanscanner.org/docs/warning_types/mass_assignment/",
-      "code": "params.require(:kubernetes_usage_limit).permit(:project_id, :scope_type_and_id, :cpu, :memory)",
+      "code": "params.require(:kubernetes_usage_limit).permit(:project_id, :scope_type_and_id, :cpu, :memory, :comment)",
       "render_path": null,
       "location": {
         "type": "method",
@@ -377,6 +377,6 @@
       "note": ""
     }
   ],
-  "updated": "2017-12-14 10:59:13 -0800",
+  "updated": "2017-12-15 15:02:56 -0800",
   "brakeman_version": "4.1.0"
 }

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171110221726) do
+ActiveRecord::Schema.define(version: 20171215200538) do
 
   create_table "audits", force: :cascade do |t|
     t.integer "auditable_id", null: false
@@ -271,6 +271,7 @@ ActiveRecord::Schema.define(version: 20171110221726) do
     t.decimal "cpu", precision: 4, scale: 2, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "comment", limit: 512
     t.index ["project_id"], name: "index_kubernetes_usage_limits_on_project_id"
     t.index ["scope_type", "scope_id", "project_id"], name: "index_kubernetes_usage_limits_on_scope", unique: true, length: { scope_type: 20 }
   end

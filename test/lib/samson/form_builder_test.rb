@@ -31,7 +31,14 @@ describe Samson::FormBuilder do
     end
 
     it "can change field type" do
-      builder.input(:name, as: :text_area).must_include '<textarea class='
+      builder.input(:name, as: :text_area).must_include '<textarea '
+    end
+
+    it "auto-expands text areas to show full content" do
+      builder.input(:name).wont_include 'rows="'
+      builder.input(:name, as: :text_area).must_include 'rows="2"'
+      builder.object.name = "a\nb\nc\nd\n"
+      builder.input(:name, as: :text_area).must_include 'rows="6"'
     end
 
     it "can show help" do
