@@ -14,7 +14,7 @@
       <% cache [stage, Lock.cache_key] do %>
         <li class="clearfix">
           <%= link_to stage.name, [project, stage], class: 'stage-link' %>
-          <% if deploy = stage.current_deploy %>
+          <% if deploy = stage.active_deploy %>
             <%= link_to 'Deploying', [project, deploy], class: 'label label-primary' %>
           <% end %>
           <%= resource_lock_icon stage %>
