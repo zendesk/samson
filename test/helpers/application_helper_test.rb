@@ -92,7 +92,7 @@ describe ApplicationHelper do
         job: Job.create(user: current_user, command: '', project: project),
         project: project
       )
-      stage.stubs(current_deploy: deploy)
+      stage.stubs(active_deploy: deploy)
       assert_includes link, ">Deploying master...<"
       assert_includes link, %(href="/projects/#{project.to_param}/deploys/#{deploy.id}")
     end
@@ -112,7 +112,7 @@ describe ApplicationHelper do
           job: Job.create(user: current_user, command: '', project: project),
           project: project
         )
-        stage.stubs(current_deploy: deploy)
+        stage.stubs(active_deploy: deploy)
         assert_includes link, ">Deploy<"
         assert_includes link, %(href="/projects/#{project.to_param}/stages/#{stage.to_param}/deploys/new")
       end

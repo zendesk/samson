@@ -162,27 +162,27 @@ describe Stage do
     end
   end
 
-  describe "#current_deploy" do
+  describe "#active_deploy" do
     it "is nil when not deploying" do
-      subject.current_deploy.must_be_nil
+      subject.active_deploy.must_be_nil
     end
 
     it 'caches nil' do
       subject
       ActiveRecord::Relation.any_instance.expects(:first).returns nil
-      subject.current_deploy.must_be_nil
+      subject.active_deploy.must_be_nil
       ActiveRecord::Relation.any_instance.expects(:first).never
-      subject.current_deploy.must_be_nil
+      subject.active_deploy.must_be_nil
     end
 
     it "is there when deploying" do
       subject.deploys.first.job.update_column(:status, 'running')
-      subject.current_deploy.must_equal subject.deploys.first
+      subject.active_deploy.must_equal subject.deploys.first
     end
 
     it "is there when waiting for buddy" do
       subject.deploys.first.job.update_column(:status, 'pending')
-      subject.current_deploy.must_equal subject.deploys.first
+      subject.active_deploy.must_equal subject.deploys.first
     end
   end
 

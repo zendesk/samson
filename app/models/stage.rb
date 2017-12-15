@@ -68,9 +68,9 @@ class Stage < ActiveRecord::Base
     )
   end
 
-  def current_deploy
-    return @current_deploy if defined?(@current_deploy)
-    @current_deploy = deploys.active.first
+  def active_deploy
+    return @active_deploy if defined?(@active_deploy)
+    @active_deploy = deploys.active.first
   end
 
   def last_deploy
