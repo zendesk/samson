@@ -120,6 +120,13 @@ describe TerminalExecutor do
       output.string.must_equal "Hello\rWorld\r\n"
     end
 
+    it "uses script-executor to avoid slowness on osx" do
+      RbConfig::CONFIG.expects(:[]).with("host_os").returns("darwin-foo")
+      PTY.expects(:spawn).with { |_, command, _| command.must_include("script-executor") }
+      TerminalExecutor.any_instance.expects(:record_pid)
+      subject.execute('echo "hi"')
+    end
+
     describe 'in verbose mode' do
       subject { TerminalExecutor.new(output, verbose: true) }
 

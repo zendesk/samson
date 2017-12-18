@@ -1,0 +1,2 @@
+# used by app/models/terminal_executor.rb to avoid osx command startup slowness
+eval "$(cat $FILE)"
