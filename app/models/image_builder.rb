@@ -28,8 +28,6 @@ class ImageBuilder
       end
     end
 
-    private
-
     # store logins in a temp file and make it not accidentally added via `ADD .`
     def local_docker_login
       Dir.mktmpdir 'samson-tmp-docker-config' do |docker_config_folder|
@@ -49,6 +47,8 @@ class ImageBuilder
         yield ["export DOCKER_CONFIG=#{docker_config_folder.shellescape}", *credentials]
       end
     end
+
+    private
 
     # TODO: same as in config/initializers/docker.rb ... dry it up
     def docker_major_version

@@ -123,7 +123,7 @@ class DockerBuilderService
         @output.puts("### Pushing Docker image to #{repo} without tag")
       end
 
-      ImageBuilder.send(:local_docker_login) do |login_commands|
+      ImageBuilder.local_docker_login do |login_commands|
         full_tag = "#{repo}:#{tag}"
 
         @execution.executor.quiet do

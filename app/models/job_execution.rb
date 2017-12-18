@@ -206,11 +206,7 @@ class JobExecution
       TAG: (@job.tag || @job.commit)
     }.merge(@env)
 
-    if stage&.builds_in_environment
-      build_finder.ensure_successful_builds.each do |build|
-        env["BUILD_FROM_#{build.dockerfile}"] = build.docker_repo_digest
-      end
-    end
+    env.merge!(make_builds_available) if stage&.builds_in_environment
 
     if deploy = @job.deploy
       env[:COMMIT_RANGE] = deploy.changeset.commit_range
@@ -219,6 +215,26 @@ class JobExecution
     env.merge!(Hash[*Samson::Hooks.fire(:job_additional_vars, @job)])
 
     base_commands(dir, env) + @job.commands
+  end
+
+  def make_builds_available
+    # wait for builds to finish
+    builds = build_finder.ensure_successful_builds
+
+    # pre-download the necessary images in case they are not public
+    ImageBuilder.local_docker_login do |login_commands|
+      @executor.quiet do
+        @executor.execute(
+          *login_commands,
+          *builds.map { |build| @executor.verbose_command("docker pull #{build.docker_repo_digest.shellescape}") }
+        )
+      end
+    end
+
+    # make repo-digests available to stage commands
+    builds.map do |build|
+      ["BUILD_FROM_#{build.dockerfile}", build.docker_repo_digest]
+    end.to_h
   end
 
   # show full errors if we show exceptions
