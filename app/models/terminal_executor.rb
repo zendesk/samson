@@ -29,8 +29,8 @@ class TerminalExecutor
   def execute(*commands, timeout: @timeout)
     return false if @cancelled
     options = {in: '/dev/null', unsetenv_others: true}
-    script_as_executable(script(commands)) do |path|
-      output, input, pid = PTY.spawn(whitelisted_env, path, options)
+    script_as_executable(script(commands)) do |command|
+      output, input, pid = PTY.spawn(whitelisted_env, command, options)
       record_pid(pid) do
         timeout_execution(timeout) do
           stream from: output, to: @output
@@ -76,7 +76,14 @@ class TerminalExecutor
     File.chmod(0o700, f.path) # making sure nobody can read it before we add content
     f.write script
     f.close
-    yield f.path
+    command = f.path
+
+    # osx has a 4s startup delay for each new executable, so we keep the executable stable
+    if RbConfig::CONFIG['host_os'].include?('darwin')
+      command = "export FILE=#{f.path.shellescape} && #{File.expand_path("bin/script-executor").shellescape}"
+    end
+
+    yield command
   ensure
     f.unlink
   end
