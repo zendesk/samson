@@ -20,6 +20,9 @@
 # Ignore config
 /config/database.yml
 
+# Ignore custom setup files (see bin/setup)
+/custom
+
 /node_modules
 
 /public/assets
