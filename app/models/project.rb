@@ -7,9 +7,12 @@ class Project < ActiveRecord::Base
   include Searchable
 
   before_validation :normalize_repository_url, if: :repository_url_changed?
+
   validates :name, :repository_url, presence: true
   validate :valid_repository_url, if: :repository_url_changed?
   validate :validate_can_release
+  validate :validate_docker_release_and_disabled
+
   before_create :generate_token
   after_save :clone_repository, if: -> { saved_change_to_attribute?(:repository_url) }
   before_update :clean_old_repository, if: :repository_url_changed?
@@ -249,5 +252,11 @@ class Project < ActiveRecord::Base
     uri = URI.parse(repository_url)
     uri.path.slice!(0, 1)
     "git@#{uri.host}:#{uri.path}"
+  end
+
+  def validate_docker_release_and_disabled
+    if docker_release_branch.present? && docker_image_building_disabled?
+      errors.add(:docker_release_branch, "and Docker images built externally cannot both be enabled.")
+    end
   end
 end
