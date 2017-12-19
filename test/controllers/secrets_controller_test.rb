@@ -100,6 +100,14 @@ describe SecretsController do
         assigns[:secrets].map(&:first).must_equal ["#{other.id}-2"]
       end
 
+      it 'can filter by value_hashed' do
+        other = create_secret 'production/global/pod2/baz'
+        SecretStorage.write other.id, value: 'other', user_id: 1, visible: true, comment: nil, deprecated_at: nil
+        get :index, params: {search: {value_hashed: SecretStorage.send(:hash_value, 'other')}}
+        assert_template :index
+        assigns[:secrets].map(&:first).must_equal [other.id]
+      end
+
       it 'raises when vault server is broken' do
         SecretStorage.expects(:lookup_cache).raises(Samson::Secrets::BackendError.new('this is my error'))
         get :index
