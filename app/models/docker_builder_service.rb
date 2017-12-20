@@ -85,7 +85,7 @@ class DockerBuilderService
       )
     else
       build.docker_image = ImageBuilder.build_image(
-        tmp_dir, @output, dockerfile: build.dockerfile, cache_from: cache
+        tmp_dir, @execution.executor, dockerfile: build.dockerfile, cache_from: cache
       )
     end
   end

@@ -24,15 +24,13 @@ describe BinaryBuilder do
     before do
       Docker::Container.stubs(:create).returns(fake_container)
       Docker::Util.stubs(:create_relative_dir_tar).returns(nil)
-      TerminalExecutor.any_instance.expects(:execute).with { |*c| c.to_s.include?("docker build") }.returns(true)
+      executor.expects(:execute).with { |*c| c.to_s.include?("docker build") }.returns(true)
       builder.stubs(:untar).returns(true)
       project.update_attributes(docker_release_branch: 'master')
       builder.stubs(:build_file_exist?).returns(true)
     end
 
     it 'builds the image' do
-      executor.expects(:execute).never
-
       builder.build
       output.string.must_equal [
         "Connecting to Docker host with Api version: 1.19 ...\n",
@@ -54,8 +52,8 @@ describe BinaryBuilder do
     end
 
     it 'does nothing if docker flag is set for project but no dockerfile.build exists' do
-      TerminalExecutor.any_instance.unstub(:execute)
-      TerminalExecutor.any_instance.expects(:execute).never
+      executor.unstub(:execute)
+      executor.expects(:execute).never
       builder.unstub(:build_file_exist?)
       builder.expects(:create_build_image).never
       builder.build
@@ -69,7 +67,7 @@ describe BinaryBuilder do
       end
 
       it 'succeeds when pre build script succeeds' do
-        TerminalExecutor.any_instance.expects(:execute).with { |*c| c.to_s.include?("pre_binary_build") }.returns(true)
+        executor.expects(:execute).with { |*c| c.to_s.include?("pre_binary_build") }.returns(true)
         builder.build
         output.string.gsub(/» .*\n/, '').must_equal [
           "Running pre build script...\n",
@@ -82,7 +80,7 @@ describe BinaryBuilder do
       end
 
       it 'stop build when pre build script fails' do
-        TerminalExecutor.any_instance.unstub(:execute)
+        executor.unstub(:execute)
         File.write(pre_build_script, 'oops')
         assert_raises(Samson::Hooks::UserError) { builder.build }
       end
