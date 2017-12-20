@@ -32,6 +32,10 @@ class SecretsController < ApplicationController
       matching.delete(value_from) # do not show what we already know
       @secrets.select! { |id, _, _| matching.include?(id) }
     end
+
+    if value_hashed = params.dig(:search, :value_hashed).presence
+      @secrets.select! { |_, _, secret_stub| secret_stub[:value_hashed] == value_hashed }
+    end
   rescue Samson::Secrets::BackendError => e
     flash[:error] = e.message
     render html: "", layout: true
