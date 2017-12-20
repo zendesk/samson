@@ -4,25 +4,27 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe ImageBuilder do
+  let(:executor) { TerminalExecutor.new(OutputBuffer.new, verbose: true) }
+
   describe ".build_image" do
     it "builds" do
-      TerminalExecutor.any_instance.expects(:execute).with do |*commands|
+      executor.expects(:execute).with do |*commands|
         commands.to_s.must_include "cd foo"
         commands.to_s.must_include "docker pull cache" # used cache-from
         commands.to_s.must_include "export DOCKER_CONFIG=" # uses local login credentials
         commands.to_s.must_include "docker build -f Dockerfile -t tag . --cache-from cache"
         true
       end.returns(true)
-      ImageBuilder.build_image("foo", StringIO.new, dockerfile: 'Dockerfile', tag: 'tag', cache_from: 'cache')
+      ImageBuilder.build_image("foo", executor, dockerfile: 'Dockerfile', tag: 'tag', cache_from: 'cache')
     end
 
     it "builds without cache" do
-      TerminalExecutor.any_instance.expects(:execute).with do |*commands|
+      executor.expects(:execute).with do |*commands|
         commands.to_s.wont_include "docker pull cache" # used cache-from
         commands.to_s.wont_include "--cache-from"
         true
       end.returns(true)
-      ImageBuilder.build_image("foo", StringIO.new, dockerfile: 'Dockerfile', tag: 'tag')
+      ImageBuilder.build_image("foo", executor, dockerfile: 'Dockerfile', tag: 'tag')
     end
   end
 

@@ -184,9 +184,14 @@ describe DockerBuilderService do
   end
 
   describe "#build_image" do
+    let(:executor) { TerminalExecutor.new(OutputBuffer.new) }
+
     before do
-      TerminalExecutor.any_instance.expects(:execute).returns(true)
-      OutputBuffer.any_instance.expects(:to_s).returns("Ignore me\nSuccessfully built bar\nSuccessfully built foobar")
+      service.instance_variable_set(:@execution, stub("Ex", executor: executor))
+      executor.expects(:execute).with do
+        executor.output.puts "Ignore me\nSuccessfully built bar\nSuccessfully built foobar"
+        true
+      end.returns(true)
       Docker::Image.stubs(:get).with("foobar").returns(mock_docker_image)
     end
 
@@ -215,8 +220,8 @@ describe DockerBuilderService do
     end
 
     it 'catches docker errors' do
-      TerminalExecutor.any_instance.unstub(:execute)
-      TerminalExecutor.any_instance.expects(:execute).returns(false)
+      executor.unstub(:execute)
+      executor.expects(:execute).returns(false)
       OutputBuffer.any_instance.unstub(:to_s)
       OutputBuffer.any_instance.expects(:to_s).never
       service.send(:build_image, tmp_dir, tag_as_latest: false).must_be_nil
@@ -225,12 +230,12 @@ describe DockerBuilderService do
 
     describe "caching from the previous build" do
       before do
-        TerminalExecutor.any_instance.unstub(:execute)
+        executor.unstub(:execute)
         build.update_column(:docker_repo_digest, digest)
       end
 
       it 'uses last build as cache' do
-        TerminalExecutor.any_instance.expects(:execute).
+        executor.expects(:execute).
           with do |*args|
           args.join(" ").must_include " --cache-from #{build.docker_repo_digest}"
           args.join(" ").must_include "docker pull #{build.docker_repo_digest}"
@@ -241,7 +246,7 @@ describe DockerBuilderService do
 
       it 'does not use cache when the last build failed' do
         Build.update_all docker_repo_digest: nil
-        TerminalExecutor.any_instance.expects(:execute).
+        executor.expects(:execute).
           with { |*args| args.join(" ").wont_include "--cache-from"; true }.
           returns(true)
         service.send(:build_image, tmp_dir, tag_as_latest: false)
@@ -249,7 +254,7 @@ describe DockerBuilderService do
 
       it 'does not use cache when the last build was for a different dockerfile' do
         Build.update_all dockerfile: 'noop'
-        TerminalExecutor.any_instance.expects(:execute).
+        executor.expects(:execute).
           with { |*args| args.join(" ").wont_include "--cache-from"; true }.
           returns(true)
         service.send(:build_image, tmp_dir, tag_as_latest: false)
@@ -258,14 +263,16 @@ describe DockerBuilderService do
 
     describe "build_with_gcb" do
       before do
-        OutputBuffer.any_instance.unstub(:to_s)
-        OutputBuffer.any_instance.expects(:to_s).returns("digest: sha-123:abc")
+        executor.unstub(:execute)
+        executor.stubs(:execute).with do |*commands|
+          executor.output.puts "digest: sha-123:abc" if commands.to_s.include?("gcloud container builds submit")
+          true
+        end.returns(true)
       end
 
       it "stores docker_repo_digest directly" do
         with_env GCLOUD_PROJECT: 'p-123', GCLOUD_ACCOUNT: 'acc' do
           build.project.build_with_gcb = true
-          service.instance_variable_set(:@execution, stub("Ex", executor: TerminalExecutor.new(OutputBuffer.new)))
           assert service.send(:build_image, tmp_dir, tag_as_latest: false)
           refute build.docker_image_id
           build.docker_repo_digest.sub(/samson\/[^@]+/, "X").must_equal "gcr.io/p-123/X@sha-123:abc"
