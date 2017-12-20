@@ -9,17 +9,16 @@
 # - if a build is not found, but the project has as `docker_release_branch` we wait a few seconds and retry
 # - builds can be reused from the previous release if the deployer requested it
 # - if the deploy is cancelled we finish up asap
-# - we find builds accross all projects so multiple projects can share them
+# - we find builds across all projects so multiple projects can share them
 module Samson
   class BuildFinder
     TICK = 2.seconds
 
-    def initialize(output, job, reference, images:)
+    def initialize(output, job, reference, images: nil)
       @output = output
       @job = job
       @reference = reference
       @cancelled = false
-      @waited = false
       @images = images
     end
 
@@ -31,19 +30,8 @@ module Samson
     def ensure_successful_builds
       builds =
         if @images
-          # need some sleeping to wait for callbacks to arrive from external builders
-          # since samson and the image building can be triggered at the same time
-          # we check if the image is there every 5 seconds up to a maximum of <max> seconds
-          step = 5
-          max = Integer(ENV['KUBERNETES_EXTERNAL_BUILD_WAIT'] || ENV['EXTERNAL_BUILD_WAIT'] || '5')
-          loop do
-            builds = find_build_by_image_name(try: true)
-            break builds if builds
-
-            sleep step
-            max -= step
-
-            break find_build_by_image_name(try: false) if max <= 0
+          wait_for_build_creation do |last_try|
+            find_build_by_image_name(fail: last_try)
           end
         else
           find_or_create_builds_by_dockerfile
@@ -65,27 +53,24 @@ module Samson
     end
 
     # Finds build by comparing their name (foo.com/bar/baz -> baz) to pre-build images image_name column
-    def find_build_by_image_name(try:)
+    def find_build_by_image_name(fail:)
       possible_builds = reused_builds + Build.where(git_sha: @job.commit)
       @images.map do |image|
-        self.class.detect_build_by_image_name!(possible_builds, image, try: try) ||
-          return # rubocop:disable Lint/NonLocalExitFromIterator
+        self.class.detect_build_by_image_name!(possible_builds, image, fail: fail) || break
       end
     end
 
-    def self.detect_build_by_image_name!(builds, image, try:)
+    def self.detect_build_by_image_name!(builds, image, fail:)
       image_name = image.split('/').last.split(/[:@]/, 2).first
-      builds.detect { |b| b.image_name == image_name } || begin
-        if try
-          nil
-        else
+      builds.detect { |b| b.image_name == image_name } || (
+        if fail
           raise(
             Samson::Hooks::UserError,
             "Did not find build for image_name #{image_name} (from #{image}).\n" \
             "Found image_names #{builds.map(&:image_name).uniq.join(", ")}."
           )
         end
-      end
+      )
     end
 
     private
@@ -97,6 +82,7 @@ module Samson
 
     def reused_builds
       (
+        defined?(SamsonKubernetes) &&
         @job.deploy.kubernetes_reuse_build &&
         @job.deploy.previous_deploy&.kubernetes_release&.builds
       ) || []
@@ -108,14 +94,14 @@ module Samson
       @wait_time ||= max_build_wait_time
 
       loop do
-        build = yield
+        @wait_time -= interval
+        last_try = @wait_time < 0
 
+        build = yield last_try
         return build if build
 
-        break if @wait_time <= 0
-
+        break if last_try || @cancelled
         sleep interval
-        @wait_time -= interval
       end
     end
 

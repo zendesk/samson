@@ -150,6 +150,7 @@ describe Samson::BuildFinder do
 
       before do
         build.update_columns(image_name: 'bar', docker_repo_digest: "some-digest")
+        job.project.update_column(:docker_image_building_disabled, true) # only ever used when builds are external
       end
 
       it "finds the matching build" do
@@ -203,6 +204,12 @@ describe Samson::BuildFinder do
 
       it "fails if a build does not arrive" do
         expect_sleep.times(3)
+
+        execute.must_equal []
+      end
+
+      it "stops when cancelled" do
+        expect_sleep.with { finder.cancelled! }
 
         execute.must_equal []
       end

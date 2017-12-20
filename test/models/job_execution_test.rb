@@ -298,6 +298,13 @@ describe JobExecution do
     assert execute_job("master")
   end
 
+  it "makes dockerfiles available via env" do
+    stage.update_column(:builds_in_environment, true)
+    Samson::BuildFinder.any_instance.expects(:ensure_successful_builds).returns([builds(:docker_build)])
+    JobExecution.new('master', job).send(:run)
+    job.output.must_include "export BUILD_FROM_Dockerfile=docker-registry.example.com"
+  end
+
   describe "kubernetes" do
     before { stage.update_column :kubernetes, true }
 
@@ -438,6 +445,15 @@ describe JobExecution do
       end
       execution.cancel
       called.must_equal [1]
+    end
+
+    it "stops the build-finder" do
+      perform
+      Samson::BuildFinder.any_instance.expects(:cancelled!).with do
+        lock.unlock
+        true
+      end
+      execution.cancel
     end
   end
 

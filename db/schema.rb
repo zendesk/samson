@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171215200538) do
+ActiveRecord::Schema.define(version: 20171215234357) do
 
   create_table "audits", force: :cascade do |t|
     t.integer "auditable_id", null: false
@@ -503,6 +503,7 @@ ActiveRecord::Schema.define(version: 20171215200538) do
     t.boolean "cancel_queued_deploys", default: false, null: false
     t.boolean "no_reference_selection", default: false, null: false
     t.boolean "periodical_deploy", default: false, null: false
+    t.boolean "builds_in_environment", default: false, null: false
     t.index ["project_id", "permalink"], name: "index_stages_on_project_id_and_permalink", unique: true, length: { permalink: 191 }
     t.index ["template_stage_id"], name: "index_stages_on_template_stage_id"
   end

@@ -133,6 +133,7 @@ class StagesController < ApplicationController
       :cancel_queued_deploys,
       :periodical_deploy,
       :no_reference_selection,
+      :builds_in_environment,
       {
         deploy_group_ids: [],
         command_ids: []

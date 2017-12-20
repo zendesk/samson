@@ -57,6 +57,7 @@ class JobExecution
   def cancel
     @cancelled = true
     @job.cancelling!
+    build_finder.cancelled!
     @executor.cancel 'INT'
     unless JobQueue.wait(id, cancel_timeout)
       @executor.cancel 'KILL'
@@ -78,6 +79,7 @@ class JobExecution
     "#{job.project.name} - #{reference}"
   end
 
+  # also used for docker builds
   def base_commands(dir, env = {})
     artifact_cache_dir = File.join(@job.project.repository.repo_cache_dir, "artifacts")
     FileUtils.mkdir_p(artifact_cache_dir)
@@ -99,7 +101,7 @@ class JobExecution
   private
 
   def stage
-    @job.deploy.try(:stage)
+    @job.deploy&.stage
   end
 
   def error!(exception)
@@ -204,6 +206,8 @@ class JobExecution
       TAG: (@job.tag || @job.commit)
     }.merge(@env)
 
+    env.merge!(make_builds_available) if stage&.builds_in_environment
+
     if deploy = @job.deploy
       env[:COMMIT_RANGE] = deploy.changeset.commit_range
     end
@@ -211,6 +215,26 @@ class JobExecution
     env.merge!(Hash[*Samson::Hooks.fire(:job_additional_vars, @job)])
 
     base_commands(dir, env) + @job.commands
+  end
+
+  def make_builds_available
+    # wait for builds to finish
+    builds = build_finder.ensure_successful_builds
+
+    # pre-download the necessary images in case they are not public
+    ImageBuilder.local_docker_login do |login_commands|
+      @executor.quiet do
+        @executor.execute(
+          *login_commands,
+          *builds.map { |build| @executor.verbose_command("docker pull #{build.docker_repo_digest.shellescape}") }
+        )
+      end
+    end
+
+    # make repo-digests available to stage commands
+    builds.map do |build|
+      ["BUILD_FROM_#{build.dockerfile}", build.docker_repo_digest]
+    end.to_h
   end
 
   # show full errors if we show exceptions
@@ -238,6 +262,10 @@ class JobExecution
 
   def puts_if_present(message)
     @output.puts message if message
+  end
+
+  def build_finder
+    @build_finder ||= Samson::BuildFinder.new(@output, @job, @reference)
   end
 
   def make_tempdir

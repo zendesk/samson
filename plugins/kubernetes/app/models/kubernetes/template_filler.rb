@@ -285,7 +285,7 @@ module Kubernetes
       containers.each do |container|
         build =
           if project.docker_image_building_disabled?
-            Samson::BuildFinder.detect_build_by_image_name!(builds, container.fetch(:image), try: false)
+            Samson::BuildFinder.detect_build_by_image_name!(builds, container.fetch(:image), fail: true)
           elsif selected = container[:"samson/dockerfile"]
             builds.detect { |b| b.dockerfile == selected } ||
               raise(Samson::Hooks::UserError, "Build for dockerfile #{selected} not found")
