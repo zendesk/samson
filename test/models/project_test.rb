@@ -56,6 +56,21 @@ describe Project do
     end
   end
 
+  describe "#validate_docker_release_and_disabled" do
+    before { project.stubs(:validate_can_release) }
+
+    it "is valid with just a branch" do
+      project.docker_release_branch = "foo"
+      assert_valid project
+    end
+
+    it "is not valid with a branch and disabled builds" do
+      project.docker_release_branch = "foo"
+      project.docker_image_building_disabled = true
+      refute_valid project
+    end
+  end
+
   describe "#repository_directory" do
     it "has separate repository_directories for same project but different url" do
       project = projects(:test)
