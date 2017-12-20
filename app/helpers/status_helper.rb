@@ -16,6 +16,10 @@ module StatusHelper
     "alert-#{ALERT_STATUS_MAPPING.fetch(key, 'info')}"
   end
 
+  def status_badge(status)
+    content_tag :span, status.titleize, class: "label #{status_label(status)}"
+  end
+
   def status_label(key)
     "label-#{LABEL_STATUS_MAPPING.fetch(key, 'info')}"
   end

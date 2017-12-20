@@ -31,4 +31,37 @@ describe BuildsHelper do
       assert result.html_safe?
     end
   end
+
+  describe "#build_status_badge" do
+    include StatusHelper
+
+    let(:build) { builds(:docker_build) }
+
+    it "renders succeeded" do
+      build_status_badge(build).must_include ">Succeeded<"
+    end
+
+    it "renders a regular build" do
+      build.docker_build_job = jobs(:succeeded_test)
+      build.docker_build_job.status = "running"
+      build_status_badge(build).must_include ">Running<"
+    end
+
+    it "renders not built when digest is missing" do
+      build.docker_repo_digest = nil
+      build_status_badge(build).must_equal "not built"
+    end
+
+    it "renders external status" do
+      build.docker_repo_digest = nil
+      build.external_status = "cancelling"
+      build_status_badge(build).must_include ">Cancelling<"
+    end
+
+    it "does not render unfinished builds that claim to be succeeded" do
+      build.docker_repo_digest = nil
+      build.external_status = "succeeded"
+      build_status_badge(build).must_equal "not built"
+    end
+  end
 end

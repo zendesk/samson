@@ -205,22 +205,6 @@ describe Build do
     end
   end
 
-  describe "#docker_status" do
-    it "is the build status" do
-      build.docker_build_job = Job.new(status: 'foo')
-      build.docker_status.must_equal "foo"
-    end
-
-    it "is not built when there is no build" do
-      build.docker_status.must_equal "not built"
-    end
-
-    it "is built externally when digest exists without job" do
-      build.docker_repo_digest = 'foo'
-      build.docker_status.must_equal "built externally"
-    end
-  end
-
   describe "#create_docker_job" do
     it "creates a job" do
       build.create_docker_job.class.must_equal Job

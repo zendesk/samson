@@ -19,6 +19,12 @@ describe StatusHelper do
     end
   end
 
+  describe '#status_badge' do
+    it 'renders' do
+      status_badge("succeeded").must_include "Succeeded"
+    end
+  end
+
   describe "#status_label" do
     it "renders" do
       status_label("succeeded").must_equal "label-success"

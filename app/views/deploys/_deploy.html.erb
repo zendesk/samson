@@ -11,6 +11,6 @@
     <% unless @stage %>
       <td><%= link_to deploy.stage.name, [deploy.project, deploy.stage] %></td>
     <% end %>
-    <td><%= job_status_badge deploy.job %></td>
+    <td><%= status_badge deploy.job.status %></td>
   </tr>
 <% end %>

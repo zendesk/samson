@@ -24,7 +24,7 @@
               <td><%= render_time(job.created_at) %></td>
               <td><%= link_to "#{job.summary}", [job.project, job] %></td>
               <td></td>
-              <td><%= job_status_badge job %></td>
+              <td><%= status_badge job.status %></td>
             </tr>
           <% end %>
         <% else %>
