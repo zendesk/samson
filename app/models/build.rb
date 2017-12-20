@@ -41,16 +41,6 @@ class Build < ActiveRecord::Base
     "#{project.repository_homepage}/tree/#{git_sha}"
   end
 
-  def docker_status
-    if docker_build_job
-      docker_build_job.status
-    elsif docker_repo_digest
-      'built externally'
-    else
-      'not built'
-    end
-  end
-
   def create_docker_job
     create_docker_build_job(
       project: project,

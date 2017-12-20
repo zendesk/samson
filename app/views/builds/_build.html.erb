@@ -1,4 +1,3 @@
-<% job = build.docker_build_job %>
 <tr>
   <td><%= link_to build.nice_name, project_build_path(build.project, build) %></td>
   <% if @project %>
@@ -7,8 +6,8 @@
     <td><%= link_to build.project.name, build.project %></td>
   <% end %>
   <td><%= relative_time(build.created_at) %></td>
-  <td><%= duration_text job.duration if job %></td>
+  <td><%= duration_text build.docker_build_job.duration if build.docker_build_job %></td>
   <td><%= git_ref_and_sha_for(build) %></td>
   <td><%= build.image_name.presence || build.dockerfile %></td>
-  <td><%= job ? job_status_badge(job) : build.docker_status %></td>
+  <td><%= build_status_badge build %></td>
 </tr>

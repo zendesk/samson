@@ -29,7 +29,7 @@
             </td>
             <td>
               <% if kubernetes_release.deploy %>
-                <%= link_to job_status_badge(kubernetes_release.deploy.job), project_deploy_path(@project, kubernetes_release.deploy) %>
+                <%= link_to status_badge(kubernetes_release.deploy.job.status), project_deploy_path(@project, kubernetes_release.deploy) %>
               <% else %>
                 Not deployed.
               <% end %>
