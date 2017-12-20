@@ -684,6 +684,15 @@ describe Stage do
     end
   end
 
+  describe "#validate_not_auto_deploying_production" do
+    it "shows error when trying to auto-deploy to production" do
+      stage.deploy_on_release = true
+      stage.stubs(:production?).returns(true)
+      refute_valid stage
+      stage.errors[:deploy_on_release].must_equal ["cannot be used for a production stage"]
+    end
+  end
+
   describe "#direct" do
     before do
       stage.confirm = false
