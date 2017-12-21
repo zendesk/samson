@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 module Kubernetes
   class DeployGroupRole < ActiveRecord::Base
+    MAX_LIMITS_TO_REQUESTS_RATIO = 10
+
     self.table_name = 'kubernetes_deploy_group_roles'
 
     audited
@@ -14,6 +16,7 @@ module Kubernetes
     validates :limits_cpu, numericality: { greater_than: 0 }
     validates :requests_memory, :limits_memory, numericality: { greater_than_or_equal_to: 4 }
     validate :requests_below_limits
+    validate :limits_close_to_requests
     validate :requests_below_usage_limits
 
     # The matrix is a list of deploy group and its roles + deploy-group-roles
@@ -91,6 +94,16 @@ module Kubernetes
       end
       if limits_memory && requests_memory > limits_memory
         errors.add :requests_memory, "must be less than or equal to the limit"
+      end
+    end
+
+    def limits_close_to_requests
+      minimum_requested_cpu = [requests_cpu.to_f, 1.0 / MAX_LIMITS_TO_REQUESTS_RATIO].max
+      if limits_cpu && limits_cpu > minimum_requested_cpu * MAX_LIMITS_TO_REQUESTS_RATIO
+        errors.add :limits_cpu, "must be less than #{MAX_LIMITS_TO_REQUESTS_RATIO}x requested cpu"
+      end
+      if limits_memory && limits_memory > requests_memory * MAX_LIMITS_TO_REQUESTS_RATIO
+        errors.add :limits_memory, "must be less than #{MAX_LIMITS_TO_REQUESTS_RATIO}x requested memory"
       end
     end
 

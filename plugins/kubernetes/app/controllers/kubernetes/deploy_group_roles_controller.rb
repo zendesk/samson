@@ -63,6 +63,7 @@ class Kubernetes::DeployGroupRolesController < ApplicationController
     if @deploy_group_role.save
       redirect_back fallback_location: @deploy_group_role
     else
+      puts @deploy_group_role.errors.full_messages
       render :edit, status: 422
     end
   end
