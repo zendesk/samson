@@ -144,11 +144,11 @@ describe Kubernetes::DeployGroupRolesController do
     end
 
     describe "#update" do
-      let(:valid_params) { {id: deploy_group_role.id, kubernetes_deploy_group_role: {limits_cpu: 3.1}} }
+      let(:valid_params) { {id: deploy_group_role.id, kubernetes_deploy_group_role: {limits_cpu: 0.7}} }
 
       it "updates" do
         put :update, params: valid_params
-        deploy_group_role.reload.limits_cpu.must_equal 3.1
+        deploy_group_role.reload.limits_cpu.must_equal 0.7
         assert_redirected_to deploy_group_role
       end
 
