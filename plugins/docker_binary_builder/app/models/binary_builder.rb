@@ -25,7 +25,7 @@ class BinaryBuilder
 
       @output.puts "Connecting to Docker host with Api version: #{docker_api_version} ..."
 
-      @image = create_build_image
+      image_id = create_build_image
       @container = Docker::Container.create(create_container_options)
 
       start_build_script
@@ -35,7 +35,7 @@ class BinaryBuilder
     ensure
       @output.puts 'Cleaning up docker build image and container...'
       @container&.delete(force: true)
-      @image&.remove(force: true)
+      Docker::Image.get(image_id)&.remove(force: true) if image_id
     end
   end
 

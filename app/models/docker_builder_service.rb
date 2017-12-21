@@ -30,7 +30,7 @@ class DockerBuilderService
           ret = push_image(tag_as_latest: tag_as_latest) if push
           unless ENV["DOCKER_KEEP_BUILT_IMGS"] == "1"
             @output.puts("### Deleting local docker image")
-            build.docker_image.remove(force: true)
+            Docker::Image.get(build.docker_image_id).remove(force: true)
           end
         end
         build.save!
@@ -84,7 +84,7 @@ class DockerBuilderService
         build, tmp_dir, @execution.executor, tag_as_latest: tag_as_latest, cache_from: cache
       )
     else
-      build.docker_image = ImageBuilder.build_image(
+      build.docker_image_id = ImageBuilder.build_image(
         tmp_dir, @execution.executor, dockerfile: build.dockerfile, cache_from: cache
       )
     end
@@ -129,8 +129,8 @@ class DockerBuilderService
         @execution.executor.quiet do
           return nil unless @execution.executor.execute(
             *login_commands,
-            @execution.executor.verbose_command("docker tag #{build.docker_image.id} #{full_tag.shellescape}"),
-            @execution.executor.verbose_command("docker push #{full_tag.shellescape}")
+            @execution.executor.verbose_command(["docker", "tag", build.docker_image_id, full_tag].shelljoin),
+            @execution.executor.verbose_command(["docker", "push", full_tag].shelljoin)
           )
         end
 

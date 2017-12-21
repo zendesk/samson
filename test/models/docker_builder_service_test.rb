@@ -10,8 +10,7 @@ describe DockerBuilderService do
   let(:build) { project.builds.create!(git_ref: git_tag, git_sha: 'a' * 40, creator: users(:admin)) }
   let(:service) { DockerBuilderService.new(build) }
   let(:docker_image_id) { '2d2b0b3204b0166435c3d96d0b27d0ad2083e5e040192632c58eeb9491d6bfaa' }
-  let(:docker_image_json) { { 'Id' => docker_image_id } }
-  let(:mock_docker_image) { stub(json: docker_image_json) }
+  let(:docker_image) { Docker::Image.new(Docker.connection, "id" => docker_image_id) }
   let(:primary_repo) { project.docker_repo(DockerRegistry.first, 'Dockerfile') }
   let(:digest) { "foo.com@sha256:#{"a" * 64}" }
 
@@ -20,9 +19,14 @@ describe DockerBuilderService do
   before do
     GitRepository.any_instance.expects(:clone!).with { raise }.never # nice backtraces
     Build.any_instance.stubs(:validate_git_reference)
+    Docker::Image.stubs(:get).with(docker_image_id).returns(docker_image)
   end
 
   describe "#run" do
+    def simulate_working_build
+      service.expects(:build_image).with { build.docker_image_id = docker_image_id }.returns(true)
+    end
+
     def call(options = {})
       JobQueue.expects(:perform_later).capture(perform_laters)
       service.run(options)
@@ -69,13 +73,11 @@ describe DockerBuilderService do
     it "builds, does not push and removes the image" do
       call
 
-      # simulate that build worked
-      service.expects(:build_image).returns(true)
+      simulate_working_build
       service.expects(:push_image).never
 
       # simulate falling removal ... should not change return value
-      build.stubs(docker_image: stub)
-      build.docker_image.expects(:remove).with(force: true).returns(false)
+      docker_image.expects(:remove).with(force: true).returns(false)
 
       assert execute_job
     end
@@ -84,9 +86,7 @@ describe DockerBuilderService do
       with_env DOCKER_KEEP_BUILT_IMGS: "1" do
         call(push: false)
 
-        service.expects(:build_image).returns(true) # simulate that build worked
-        build.expects(:docker_image).never # image will not be removed
-        build.expects(:docker_image).never # image will not be removed
+        simulate_working_build
 
         assert execute_job
       end
@@ -96,8 +96,7 @@ describe DockerBuilderService do
       with_env DOCKER_KEEP_BUILT_IMGS: "1" do
         call(push: true)
 
-        # simulate that build worked
-        service.expects(:build_image).returns(true)
+        simulate_working_build
         service.expects(:push_image).returns(123)
 
         execute_job.must_equal(123)
@@ -107,7 +106,6 @@ describe DockerBuilderService do
     it "fails when image fails to build" do
       call(push: true)
 
-      # simulate that build worked
       service.expects(:build_image).returns(false)
       service.expects(:push_image).never
 
@@ -127,8 +125,7 @@ describe DockerBuilderService do
         build.update_column :docker_repo_digest, "old-#{digest}"
         call(push: true)
 
-        # simulate that build worked
-        service.expects(:build_image).returns(true)
+        simulate_working_build
         service.expects(:push_image).with { build.docker_repo_digest = digest }.returns(123)
 
         assert execute_job
@@ -189,10 +186,10 @@ describe DockerBuilderService do
     before do
       service.instance_variable_set(:@execution, stub("Ex", executor: executor))
       executor.expects(:execute).with do
-        executor.output.puts "Ignore me\nSuccessfully built bar\nSuccessfully built foobar"
+        bad_id = docker_image_id.tr("2", "1")
+        executor.output.puts "Ignore me\nSuccessfully built #{bad_id}\nSuccessfully built #{docker_image_id}"
         true
       end.returns(true)
-      Docker::Image.stubs(:get).with("foobar").returns(mock_docker_image)
     end
 
     it 'calls #before_docker_build' do
@@ -286,7 +283,7 @@ describe DockerBuilderService do
       executor.expects(:execute).with do |*commands|
         service.send(:output).puts push_output.join("\n")
         commands.to_s.include?("export DOCKER_CONFIG") &&
-          commands.to_s.include?("docker tag fake-id #{repo}:#{tag}") &&
+          commands.to_s.include?("docker tag #{docker_image_id} #{repo}:#{tag}") &&
           commands.to_s.include?("docker push #{repo}:#{tag}")
       end.returns(result)
     end
@@ -306,11 +303,10 @@ describe DockerBuilderService do
     let(:executor) { TerminalExecutor.new(service.output) }
 
     before do
-      build.docker_image = mock_docker_image
       build.docker_tag = tag
+      build.docker_image_id = docker_image_id
       execution = stub("Execution", executor: executor)
       service.instance_variable_set(:@execution, execution)
-      mock_docker_image.stubs(:id).returns("fake-id")
     end
 
     it 'stores generated repo digest' do

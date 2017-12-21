@@ -24,8 +24,7 @@ class ImageBuilder
             executor.verbose_command(build)
           )
         end
-        image_id = executor.output.to_s.scan(/Successfully built (\S+)/).last&.first
-        Docker::Image.get(image_id) if image_id
+        executor.output.to_s.scan(/Successfully built ([a-f\d]{12,})/).last&.first
       end
     end
 
