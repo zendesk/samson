@@ -27,9 +27,9 @@ describe DockerBuilderService do
       service.expects(:build_image).with { build.docker_image_id = docker_image_id }.returns(true)
     end
 
-    def call(options = {})
+    def call
       JobQueue.expects(:perform_later).capture(perform_laters)
-      service.run(options)
+      service.run
     end
 
     def execute_job
@@ -70,11 +70,11 @@ describe DockerBuilderService do
       build.docker_tag.must_equal 'latest'
     end
 
-    it "builds, does not push and removes the image" do
+    it "does not fail when build removal fails" do
       call
 
       simulate_working_build
-      service.expects(:push_image).never
+      service.expects(:push_image).returns(123)
 
       # simulate falling removal ... should not change return value
       docker_image.expects(:remove).with(force: true).returns(false)
@@ -82,11 +82,12 @@ describe DockerBuilderService do
       assert execute_job
     end
 
-    it "does not remove when DOCKER_KEEP_BUILT_IMGS is set" do
+    it "does not remove image when DOCKER_KEEP_BUILT_IMGS is set" do
       with_env DOCKER_KEEP_BUILT_IMGS: "1" do
-        call(push: false)
+        call
 
         simulate_working_build
+        service.expects(:push_image).returns(123)
 
         assert execute_job
       end
@@ -94,7 +95,7 @@ describe DockerBuilderService do
 
     it "returns push_image result when it pushes" do
       with_env DOCKER_KEEP_BUILT_IMGS: "1" do
-        call(push: true)
+        call
 
         simulate_working_build
         service.expects(:push_image).returns(123)
@@ -104,7 +105,7 @@ describe DockerBuilderService do
     end
 
     it "fails when image fails to build" do
-      call(push: true)
+      call
 
       service.expects(:build_image).returns(false)
       service.expects(:push_image).never
@@ -123,7 +124,7 @@ describe DockerBuilderService do
     it "updates docker_repo_digest when rebuildng an image" do
       with_env DOCKER_KEEP_BUILT_IMGS: "1" do
         build.update_column :docker_repo_digest, "old-#{digest}"
-        call(push: true)
+        call
 
         simulate_working_build
         service.expects(:push_image).with { build.docker_repo_digest = digest }.returns(123)

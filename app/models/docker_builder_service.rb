@@ -13,7 +13,7 @@ class DockerBuilderService
     @output = OutputBuffer.new
   end
 
-  def run(push: false, tag_as_latest: false)
+  def run(tag_as_latest: false)
     return unless Rails.cache.write("build-service-#{build.id}", true, unless_exist: true, expires_in: 10.seconds)
     build.docker_build_job&.destroy # if there's an old build job, delete it
     build.docker_tag = build.name&.parameterize.presence || 'latest'
@@ -27,7 +27,7 @@ class DockerBuilderService
       if build_image(tmp_dir, tag_as_latest: tag_as_latest)
         ret = true
         unless build.docker_repo_digest
-          ret = push_image(tag_as_latest: tag_as_latest) if push
+          ret = push_image(tag_as_latest: tag_as_latest)
           unless ENV["DOCKER_KEEP_BUILT_IMGS"] == "1"
             @output.puts("### Deleting local docker image")
             Docker::Image.get(build.docker_image_id).remove(force: true)
