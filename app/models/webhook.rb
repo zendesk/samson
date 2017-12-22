@@ -6,6 +6,7 @@ class Webhook < ActiveRecord::Base
     conditions: -> { where("deleted_at IS NULL") },
     message: "one webhook per (stage, branch) combination."
   }
+  validate :validate_not_auto_deploying_without_buddy
 
   belongs_to :project
   belongs_to :stage
@@ -20,5 +21,13 @@ class Webhook < ActiveRecord::Base
 
   def self.source_matches?(release_source, service_type, service_name)
     release_source == 'any' || release_source == "any_#{service_type}" || release_source == service_name
+  end
+
+  private
+
+  def validate_not_auto_deploying_without_buddy
+    if stage&.deploy_requires_approval?
+      errors.add(:stage, "cannot be used for a stage the requires approval")
+    end
   end
 end
