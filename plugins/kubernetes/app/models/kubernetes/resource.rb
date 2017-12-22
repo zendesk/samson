@@ -92,8 +92,13 @@ module Kubernetes
 
       # FYI: do not use result of update call, see https://github.com/abonas/kubeclient/issues/196
       def update
-        request(:update, @template)
+        request(:update, template_for_update)
         expire_cache
+      end
+
+      # hook for subclasses to override
+      def template_for_update
+        @template
       end
 
       def fetch_resource
@@ -152,16 +157,23 @@ module Kubernetes
     end
 
     class Service < Base
-      # ideally we should update, but that is not supported
-      # and delete+create would mean interrupting service
-      # TODO: warn users when a change needs to be made but could not be done
-      def deploy
-        return if running?
-        create
-      end
+      private
 
-      def revert(previous)
-        delete unless previous
+      # updating a service requires re-submitting resourceVersion and clusterIP
+      # we also keep whitelisted fields that are manually changed for load-balancing
+      # (meant for labels, but other fields could work too)
+      def template_for_update
+        copy = @template.deep_dup
+        [
+          "metadata.resourceVersion",
+          "spec.clusterIP",
+          *ENV["KUBERNETES_SERVICE_PERSISTENT_FIELDS"].to_s.split(",")
+        ].each do |keep|
+          path = keep.split(".").map!(&:to_sym)
+          old_value = resource.dig(*path)
+          copy.dig_set path, old_value unless old_value.nil? # boolean fields are kept, but nothing is nil in kubernetes
+        end
+        copy
       end
     end
 
