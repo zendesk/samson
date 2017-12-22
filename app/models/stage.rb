@@ -33,7 +33,7 @@ class Stage < ActiveRecord::Base
   email = '([^\s;]+@[^\s;]+)'
   validates :notify_email_address, format: /\A#{email}((\s*;\s*)?#{email}?)*\z/, allow_blank: true
   validate :validate_deploy_group_selected
-  validate :validate_not_auto_deploying_production
+  validate :validate_not_auto_deploying_without_buddy
 
   before_create :ensure_ordering
   before_save :append_new_command
@@ -241,9 +241,9 @@ class Stage < ActiveRecord::Base
     end
   end
 
-  def validate_not_auto_deploying_production
-    if deploy_on_release? && production?
-      errors.add(:deploy_on_release, "cannot be used for a production stage")
+  def validate_not_auto_deploying_without_buddy
+    if deploy_on_release? && deploy_requires_approval?
+      errors.add(:deploy_on_release, "cannot be used for a stage the requires approval")
     end
   end
 
