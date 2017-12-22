@@ -141,7 +141,7 @@ class BinaryBuilder
   end
 
   def create_build_image
-    ImageBuilder.build_image(@dir, @executor, dockerfile: DOCKER_BUILD_FILE, tag: image_name)
+    ImageBuilder.build_image_locally(@dir, @executor, dockerfile: DOCKER_BUILD_FILE, tag: image_name, cache_from: nil)
   end
 
   def docker_api_version

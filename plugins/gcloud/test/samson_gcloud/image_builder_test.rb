@@ -8,7 +8,7 @@ describe SamsonGcloud::ImageBuilder do
 
   describe ".build_image" do
     def build_image(tag_as_latest: false, cache_from: nil)
-      SamsonGcloud::ImageBuilder.build_image(build, dir, executor, tag_as_latest: tag_as_latest, cache_from: cache_from)
+      SamsonGcloud::ImageBuilder.build_image(dir, build, executor, tag_as_latest: tag_as_latest, cache_from: cache_from)
     end
 
     let(:dir) { "some-dir" }

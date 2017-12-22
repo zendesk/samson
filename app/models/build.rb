@@ -32,8 +32,6 @@ class Build < ActiveRecord::Base
 
   before_create :assign_number
 
-  attr_accessor :docker_image_id
-
   def nice_name
     name.presence || "Build #{id}"
   end
