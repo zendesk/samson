@@ -684,12 +684,12 @@ describe Stage do
     end
   end
 
-  describe "#validate_not_auto_deploying_production" do
-    it "shows error when trying to auto-deploy to production" do
+  describe "#validate_not_auto_deploying_without_buddy" do
+    it "shows error when trying to auto-deploy without buddy" do
       stage.deploy_on_release = true
-      stage.stubs(:production?).returns(true)
+      stage.stubs(:deploy_requires_approval?).returns(true)
       refute_valid stage
-      stage.errors[:deploy_on_release].must_equal ["cannot be used for a production stage"]
+      stage.errors[:deploy_on_release].must_equal ["cannot be used for a stage the requires approval"]
     end
   end
 
