@@ -4,11 +4,12 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe Webhook do
+  let(:stage) { stages(:test_staging) }
   let(:webhook_attributes) do
     {
       branch: 'master',
-      stage: stages(:test_staging),
-      project: projects(:test),
+      stage: stage,
+      project: stage.project,
       source: 'any_ci'
     }
   end
@@ -42,9 +43,7 @@ describe Webhook do
   end
 
   describe '#soft_delete!' do
-    let(:webhook) { Webhook.create!(webhook_attributes) }
-
-    before { webhook }
+    let!(:webhook) { Webhook.create!(webhook_attributes) }
 
     it 'deletes the webhook' do
       assert_difference 'Webhook.count', -1 do
@@ -69,6 +68,15 @@ describe Webhook do
       assert_difference 'Webhook.count', -1 do
         webhook2.soft_delete!
       end
+    end
+  end
+
+  describe '#validate_not_auto_deploying_without_buddy' do
+    it "shows error when trying to setup auto-deploy without buddy" do
+      stage.stubs(:deploy_requires_approval?).returns(true)
+      webhook = Webhook.new(webhook_attributes)
+      refute_valid webhook
+      webhook.errors[:stage].must_equal ["cannot be used for a stage the requires approval"]
     end
   end
 
