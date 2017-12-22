@@ -168,3 +168,7 @@ samson will then override the `project` labels and keep deployments/services uni
  - Set the projects `docker image building disabled` 
  - Create images via the `POST /builds.json` with a `image_name` that matches the `image` attribute of the containers
  - All containers (including init containers) must have a matching build
+
+### Service updates
+
+Too keep fields/labels that are manually managed persistent during updates, use `KUBERNETES_SERVICE_PERSISTENT_FIELDS`, see .env.example

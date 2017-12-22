@@ -448,7 +448,13 @@ describe Kubernetes::DeployExecutor do
       before { worker_is_unstable }
 
       it "rolls back when previous resource existed" do
-        stub_request(:get, service_url).to_return(body: {metadata: {uid: '123'}}.to_json)
+        old = {
+          kind: 'Service',
+          metadata: {uid: '123', name: 'some-project', namespace: 'staging', resourceVersion: 'X'},
+          spec: {clusterIP: "Y"}
+        }
+        stub_request(:get, service_url).to_return(body: old.to_json)
+        stub_request(:put, service_url)
 
         refute execute
 

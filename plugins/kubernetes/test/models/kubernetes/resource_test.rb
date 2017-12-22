@@ -494,6 +494,15 @@ describe Kubernetes::Resource do
 
   describe Kubernetes::Resource::Service do
     describe "#deploy" do
+      let(:old) { {metadata: {resourceVersion: "A", foo: "B"}, spec: {clusterIP: "C"}} }
+      let(:expected_body) do
+        {
+          kind: "Service",
+          metadata: {name: "some-project", namespace: "pod1", resourceVersion: "A"},
+          spec: {replicas: 2, template: {spec: {containers: [{image: "bar"}]}}, clusterIP: "C"}
+        }
+      end
+
       it "creates when missing" do
         stub_request(:get, url).to_return(status: 404)
 
@@ -502,21 +511,37 @@ describe Kubernetes::Resource do
         assert_requested request
       end
 
-      it "does not update existing because that is not supported" do
-        stub_request(:get, url).to_return(body: '{}')
-
+      it "replaces existing while keeping fields that kubernetes demands" do
+        stub_request(:get, url).to_return(body: old.to_json)
+        stub_request(:put, url).with(body: expected_body.to_json)
         resource.deploy
       end
-    end
 
-    describe "#revert" do
-      it "leaves previous version since we cannot update" do
-        resource.revert(foo: :bar)
+      it "keeps whitelisted fields" do
+        with_env KUBERNETES_SERVICE_PERSISTENT_FIELDS: "metadata.foo" do
+          stub_request(:get, url).to_return(body: old.to_json)
+          stub_request(:put, url).with(body: expected_body.deep_merge(metadata: {foo: "B"}).to_json)
+          resource.deploy
+        end
       end
 
-      it "deletes when there was no previous version" do
-        resource.expects(:delete)
-        resource.revert(nil)
+      it "ignores unknown whitelisted fields" do
+        with_env KUBERNETES_SERVICE_PERSISTENT_FIELDS: "metadata.nope" do
+          stub_request(:get, url).to_return(body: old.to_json)
+          stub_request(:put, url).with(body: expected_body.to_json)
+          resource.deploy
+        end
+      end
+
+      it "allows adding whitelisted fields" do
+        with_env KUBERNETES_SERVICE_PERSISTENT_FIELDS: "metadata.nope" do
+          template[:metadata][:nope] = "X"
+          stub_request(:get, url).to_return(body: old.to_json)
+          expected_body[:metadata][:nope] = "X"
+          expected_body[:metadata][:resourceVersion] = expected_body[:metadata].delete(:resourceVersion) # has ordering
+          stub_request(:put, url).with(body: expected_body.to_json)
+          resource.deploy
+        end
       end
     end
   end

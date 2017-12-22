@@ -100,8 +100,8 @@ describe Kubernetes::ReleaseDoc do
 
     it "remembers the previous deploy in case we have to revert" do
       # check service ... do nothing
-      stub_request(:get, service_url).
-        to_return(body: '{"SER":"VICE"}')
+      stub_request(:get, service_url).to_return(body: '{"SER":"VICE"}')
+      stub_request(:put, service_url)
 
       # check and update deployment
       client.expects(:get_deployment).returns({DE: "PLOY"}.to_json)
