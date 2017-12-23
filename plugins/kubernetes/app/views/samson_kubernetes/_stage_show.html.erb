@@ -15,6 +15,7 @@
         <% if missing %>
           <%= link_to 'Seed Missing', seed_kubernetes_deploy_group_roles_path(stage_id: @stage.id), data: {method: :post}, class: 'btn btn-default' %>
         <% end %>
+        <%= link_to "Edit all", edit_many_project_kubernetes_deploy_group_roles_path(@project) if current_user.admin_for?(@project) %>
       </th>
     </thead>
 
