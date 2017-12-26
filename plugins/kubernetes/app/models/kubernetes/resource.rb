@@ -7,9 +7,10 @@ module Kubernetes
   # and see what it does internally ... simple create/update/delete requests or special magic ?
   module Resource
     class Base
-      def initialize(template, deploy_group)
+      def initialize(template, deploy_group, autoscaled:)
         @template = template
         @deploy_group = deploy_group
+        @autoscaled = autoscaled
       end
 
       def name
@@ -35,7 +36,7 @@ module Kubernetes
 
       def revert(previous)
         if previous
-          self.class.new(previous, @deploy_group).deploy
+          self.class.new(previous, @deploy_group, autoscaled: @autoscaled).deploy
         else
           delete
         end
@@ -66,7 +67,16 @@ module Kubernetes
         resource&.dig_fetch(:metadata, :uid)
       end
 
+      def desired_pod_count
+        replica_source.dig_fetch(:spec, :replicas)
+      end
+
       private
+
+      # when autoscaling we expect as many pods as we currently have
+      def replica_source
+        (@autoscaled && resource) || @template
+      end
 
       def backoff_wait(backoff, reason)
         backoff.each do |wait|
@@ -96,9 +106,15 @@ module Kubernetes
         expire_cache
       end
 
-      # hook for subclasses to override
       def template_for_update
-        @template
+        copy = @template.deep_dup
+
+        # when autoscaling on a resource with replicas we should keep replicas constant
+        # (not setting replicas will make it use the default of 1)
+        path = [:spec, :replicas]
+        copy.dig_set(path, replica_source.dig(*path)) if @template.dig(*path)
+
+        copy
       end
 
       def fetch_resource
@@ -163,7 +179,7 @@ module Kubernetes
       # we also keep whitelisted fields that are manually changed for load-balancing
       # (meant for labels, but other fields could work too)
       def template_for_update
-        copy = @template.deep_dup
+        copy = super
         [
           "metadata.resourceVersion",
           "spec.clusterIP",
@@ -178,10 +194,6 @@ module Kubernetes
     end
 
     class Deployment < Base
-      def desired_pod_count
-        @template.dig_fetch :spec, :replicas
-      end
-
       # Avoid "the object has been modified" error by removing internal attributes kubernetes adds
       def revert(previous)
         if previous
@@ -289,10 +301,6 @@ module Kubernetes
         [nil, "OnDelete"].include?(@template.dig(:spec, :updateStrategy)) && running?
       end
 
-      def desired_pod_count
-        @template.dig_fetch :spec, :replicas
-      end
-
       # StatefulSet cannot be updated normally when OnDelete is used or kubernetes <1.7
       # So we patch and then delete all pods to let them re-create
       def deploy
@@ -343,10 +351,6 @@ module Kubernetes
       def deploy
         delete
         create
-      end
-
-      def desired_pod_count
-        @template.dig_fetch :spec, :replicas
       end
 
       def revert(_previous)

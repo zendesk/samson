@@ -69,6 +69,6 @@ class Kubernetes::RolesController < ApplicationController
   end
 
   def role_params
-    params.require(:kubernetes_role).permit(:name, :config_file, :service_name, :resource_name)
+    params.require(:kubernetes_role).permit(:name, :config_file, :service_name, :resource_name, :autoscaled)
   end
 end

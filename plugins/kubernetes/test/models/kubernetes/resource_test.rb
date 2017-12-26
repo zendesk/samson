@@ -23,7 +23,8 @@ describe Kubernetes::Resource do
     }
   end
   let(:deploy_group) { deploy_groups(:pod1) }
-  let(:resource) { Kubernetes::Resource.build(template, deploy_group) }
+  let(:resource) { Kubernetes::Resource.build(template, deploy_group, autoscaled: false) }
+  let(:autoscaled_resource) { Kubernetes::Resource.build(template, deploy_group, autoscaled: true) }
   let(:url) { "http://foobar.server/api/v1/namespaces/pod1/services/some-project" }
   let(:base_url) { File.dirname(url) }
 
@@ -37,7 +38,8 @@ describe Kubernetes::Resource do
 
   describe ".build" do
     it "builds based on kind" do
-      Kubernetes::Resource.build({kind: 'Service'}, deploy_group).class.must_equal Kubernetes::Resource::Service
+      Kubernetes::Resource.build({kind: 'Service'}, deploy_group, autoscaled: false).
+        class.must_equal Kubernetes::Resource::Service
     end
   end
 
@@ -74,7 +76,7 @@ describe Kubernetes::Resource do
     it "updates existing" do
       get = stub_request(:get, url).to_return(body: '{}')
 
-      update = stub_request(:put, url).to_return(body: "{}")
+      update = stub_request(:put, url).with { |x| x.body.must_include '"replicas":2'; true }.to_return(body: "{}")
       resource.deploy
       assert_requested update
 
@@ -82,6 +84,16 @@ describe Kubernetes::Resource do
       assert resource.running?
       assert resource.running?
       assert_requested get, times: 2
+    end
+
+    it "keeps replicase when autoscaled, to not revert autoscaler changes" do
+      get = stub_request(:get, url).to_return(body: {spec: {replicas: 5}}.to_json)
+      update = stub_request(:put, url).with { |x| x.body.must_include '"replicas":5'; true }.to_return(body: "{}")
+
+      autoscaled_resource.deploy
+
+      assert_requested update
+      assert_requested get
     end
 
     it "shows errors to users when resource was invalid" do
@@ -176,6 +188,23 @@ describe Kubernetes::Resource do
     it "is not primary when it is a secondary resource" do
       template[:kind] = "Service"
       refute resource.primary?
+    end
+  end
+
+  describe "#desired_pod_count" do
+    it "reads the value from config" do
+      template[:spec] = {replicas: 3}
+      resource.desired_pod_count.must_equal 3
+    end
+
+    it "expects a constant number of pods when using autoscaling" do
+      stub_request(:get, url).to_return(body: {spec: {replicas: 4}}.to_json)
+      autoscaled_resource.desired_pod_count.must_equal 4
+    end
+
+    it "uses template amount when creating with autoscaling" do
+      stub_request(:get, url).to_return(status: 404)
+      autoscaled_resource.desired_pod_count.must_equal 2
     end
   end
 
@@ -358,13 +387,6 @@ describe Kubernetes::Resource do
         resource.revert(nil)
       end
     end
-
-    describe "#desired_pod_count" do
-      it "reads the value from config" do
-        template[:spec] = {replicas: 3}
-        resource.desired_pod_count.must_equal 3
-      end
-    end
   end
 
   describe Kubernetes::Resource::StatefulSet do
@@ -381,13 +403,6 @@ describe Kubernetes::Resource do
     describe "#client" do
       it "uses the apps client because it is in beta" do
         resource.send(:client).must_equal deploy_group.kubernetes_cluster.apps_client
-      end
-    end
-
-    describe "#desired_pod_count" do
-      it "reads the value from config" do
-        template[:spec] = {replicas: 3}
-        resource.desired_pod_count.must_equal 3
       end
     end
 
@@ -469,13 +484,6 @@ describe Kubernetes::Resource do
         assert_requested get_pods
         assert_requested delete_job
         assert_requested create
-      end
-    end
-
-    describe "#desired_pod_count" do
-      it "reads the value from config" do
-        template[:spec] = {replicas: 3}
-        resource.desired_pod_count.must_equal 3
       end
     end
 

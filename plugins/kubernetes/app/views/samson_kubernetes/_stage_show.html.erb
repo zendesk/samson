@@ -26,7 +26,10 @@
         <tr>
           <td><%= link_to role.name, [@project, role] %></td>
           <% if dg_role %>
-            <td><%= dg_role.replicas %></td>
+            <td>
+              <%= dg_role.replicas %>
+              <%= icon_tag :scale, title: "Replicas managed externally, actual count might not match this" if role.autoscaled? %>
+            </td>
             <td><%= dg_role.requests_cpu %> to <%= dg_role.limits_cpu %></td>
             <td><%= dg_role.requests_memory %> to <%= dg_role.limits_memory %></td>
             <td>
