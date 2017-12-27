@@ -67,13 +67,6 @@ describe Build do
       end
     end
 
-    it 'validates image id' do
-      assert_valid(valid_build(docker_image_id: example_sha))
-      assert_valid(valid_build(docker_image_id: "sha256:#{example_sha}"))
-      refute_valid(valid_build(docker_image_id: 'This is a string of 64 characters...............................'))
-      refute_valid(valid_build(docker_image_id: 'abc'))
-    end
-
     it 'validates git_ref' do
       assert_valid(valid_build(git_ref: 'master'))
       assert_valid(valid_build(git_ref: git_tag))
@@ -156,23 +149,6 @@ describe Build do
       build = project.builds.create!(git_ref: 'master', creator: users(:admin))
       assert_valid(build)
       assert_equal(biggest_build_num + 1, build.number)
-    end
-  end
-
-  describe '#docker_image=' do
-    let(:build) { valid_build }
-    let(:docker_image_id) { '2d2b0b3204b0166435c3d96d0b27d0ad2083e5e040192632c58eeb9491d6bfaa' }
-    let(:docker_image_json) do
-      {
-        'Id' => docker_image_id
-      }
-    end
-    let(:mock_docker_image) { stub(json: docker_image_json) }
-
-    it 'updates the docker_image_id' do
-      build.docker_image = mock_docker_image
-      assert_equal(docker_image_id, build.docker_image_id)
-      assert_equal(mock_docker_image, build.docker_image)
     end
   end
 

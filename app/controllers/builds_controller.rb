@@ -105,7 +105,7 @@ class BuildsController < ApplicationController
   end
 
   def start_docker_build
-    DockerBuilderService.new(@build).run(push: true)
+    DockerBuilderService.new(@build).run
   end
 
   def respond_to_save(saved, status, template)

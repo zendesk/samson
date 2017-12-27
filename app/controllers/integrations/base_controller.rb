@@ -127,7 +127,7 @@ class Integrations::BaseController < ApplicationController
         creator: user,
         name: "Release #{branch}"
       ))
-      DockerBuilderService.new(build).run(push: true, tag_as_latest: true)
+      DockerBuilderService.new(build).run(tag_as_latest: true)
     end
   end
 

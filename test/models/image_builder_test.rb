@@ -4,10 +4,43 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe ImageBuilder do
-  let(:executor) { TerminalExecutor.new(OutputBuffer.new, verbose: true) }
+  let(:output) { executor.output.to_s }
+  let(:executor) { TerminalExecutor.new(OutputBuffer.new, verbose: true) } # the job executor is verbose
+  let(:project) { projects(:test) }
+  let(:build) { project.builds.create!(git_ref: 'v123', git_sha: 'a' * 40, creator: users(:admin)) }
+  let(:image_id) { '2d2b0b3204b0166435c3d96d0b27d0ad2083e5e040192632c58eeb9491d6bfaa' }
+  let(:digest) { 'sha256:5f1d7c7381b2e45ca73216d7b06004fdb0908ed7bb8786b62f2cdfa5035fde2c' }
+
+  before do
+    Build.any_instance.stubs(:validate_git_reference)
+  end
 
   describe ".build_image" do
-    it "builds" do
+    let(:docker_image) { Docker::Image.new(Docker.connection, "id" => image_id) }
+
+    def call(options = {})
+      defaults = {tag_as_latest: false, dockerfile: 'Dockerfile', tag: 'tag', cache_from: 'cache'}
+      ImageBuilder.build_image("foo", build, executor, defaults.merge(options))
+    end
+
+    it "builds and pushes" do
+      executor.expects(:execute).with do |*commands|
+        if commands.to_s.include? "docker pull cache"
+          executor.output.write "Successfully built #{image_id}"
+        elsif commands.to_s.include? "docker push"
+          executor.output.write "Digest: #{digest}"
+        else
+          raise "UNKNOWN: #{commands}"
+        end
+        true
+      end.times(2).returns(true)
+
+      with_env DOCKER_KEEP_BUILT_IMGS: "1" do
+        call.must_equal "docker-registry.example.com/foo@#{digest}"
+      end
+    end
+
+    it "builds with" do
       executor.expects(:execute).with do |*commands|
         commands.to_s.must_include "cd foo"
         commands.to_s.must_include "docker pull cache" # used cache-from
@@ -15,7 +48,7 @@ describe ImageBuilder do
         commands.to_s.must_include "docker build -f Dockerfile -t tag . --cache-from cache"
         true
       end.returns(true)
-      ImageBuilder.build_image("foo", executor, dockerfile: 'Dockerfile', tag: 'tag', cache_from: 'cache')
+      refute call
     end
 
     it "builds without cache" do
@@ -24,7 +57,35 @@ describe ImageBuilder do
         commands.to_s.wont_include "--cache-from"
         true
       end.returns(true)
-      ImageBuilder.build_image("foo", executor, dockerfile: 'Dockerfile', tag: 'tag')
+      refute call(cache_from: nil)
+    end
+
+    describe "when building the image worked" do
+      def expect_removal(result)
+        Docker::Image.expects(:get).with(image_id).returns(docker_image)
+        docker_image.expects(:remove).with(force: true).returns(result)
+      end
+
+      before { ImageBuilder.expects(:build_image_locally).returns(image_id) }
+
+      it "does not fail when build removal fails" do
+        ImageBuilder.expects(:push_image).returns(digest)
+        expect_removal false
+        call.must_equal digest
+      end
+
+      it "does not remove image when DOCKER_KEEP_BUILT_IMGS is set" do
+        ImageBuilder.expects(:push_image).returns(digest)
+        with_env DOCKER_KEEP_BUILT_IMGS: "1" do
+          call.must_equal digest
+        end
+      end
+
+      it "removes build even when pushing failed" do
+        ImageBuilder.expects(:push_image).raises
+        expect_removal true
+        assert_raises { call }
+      end
     end
   end
 
@@ -96,6 +157,108 @@ describe ImageBuilder do
           dir = commands.first[/DOCKER_CONFIG=(.*)/, 1]
           File.read("#{dir}/config.json").must_equal "hello"
         end
+      end
+    end
+  end
+
+  describe ".push_image" do
+    def stub_push(repo, tag, result)
+      executor.expects(:execute).with do |*commands|
+        executor.output.puts push_output.join("\n")
+        commands.to_s.include?("export DOCKER_CONFIG") &&
+          commands.to_s.include?("docker tag #{image_id} #{repo}:#{tag}") &&
+          commands.to_s.include?("docker push #{repo}:#{tag}")
+      end.returns(result)
+    end
+
+    def call(**args)
+      args = {tag_as_latest: false}.merge(args)
+      ImageBuilder.send(:push_image, image_id, build, executor, **args)
+    end
+
+    let(:push_output) do
+      [
+        "pushing image to repo...",
+        "Ignore this Digest: #{digest.tr("5", "F")}",
+        "completed push.",
+        "Frobinating...",
+        +"Digest: #{digest}"
+      ]
+    end
+    let(:tag) { 'my-test' }
+    let(:primary_repo) { project.docker_repo(DockerRegistry.first, 'Dockerfile') }
+
+    before { build.docker_tag = tag }
+
+    it 'stores generated repo digest' do
+      stub_push primary_repo, tag, true
+      call.must_equal "#{primary_repo}@#{digest}", output
+    end
+
+    it 'uses a different repo for a uncommon dockerfile' do
+      build.update_column(:dockerfile, "Dockerfile.secondary")
+      stub_push "#{primary_repo}-secondary", tag, true
+
+      call.must_equal "#{primary_repo}-secondary@#{digest}", output
+    end
+
+    it 'saves docker output to the buffer' do
+      stub_push primary_repo, tag, true
+      assert call
+      output.must_include 'Frobinating...'
+    end
+
+    it 'rescues docker error' do
+      ImageBuilder.expects(:push_image_to_registries).raises(Docker::Error::DockerError)
+      refute call, output
+      output.to_s.must_include "Docker push failed: Docker::Error::DockerError"
+    end
+
+    it 'fails when digest cannot be found' do
+      assert push_output.reject! { |e| e =~ /Digest/ }
+      stub_push primary_repo, tag, true
+
+      refute call, output
+      output.to_s.must_include "Docker push failed: Unable to get repo digest"
+    end
+
+    describe "with secondary registry" do
+      let(:secondary_repo) { project.docker_repo(DockerRegistry.all[1], 'Dockerfile') }
+
+      with_registries ["docker-registry.example.com", 'extra.registry']
+
+      it "pushes to primary and secondary registry" do
+        build.docker_tag.must_equal tag
+        stub_push secondary_repo, tag, true
+        stub_push primary_repo, tag, true
+        assert call, output
+      end
+
+      it "stops and fails when pushing to primary registry fails" do
+        stub_push primary_repo, tag, false
+        refute call, output
+      end
+
+      it "fails when pushing to secondary registry fails" do
+        stub_push primary_repo, tag, true
+        stub_push secondary_repo, tag, false
+        refute call, output
+      end
+    end
+
+    describe 'pushing latest' do
+      it 'adds the latest tag on top of the one specified' do
+        stub_push(primary_repo, tag, true)
+        stub_push(primary_repo, 'latest', true)
+
+        assert call(tag_as_latest: true), output
+      end
+
+      it 'does not add the latest tag on top of the one specified when that tag is latest' do
+        build.docker_tag = 'latest'
+        stub_push(primary_repo, 'latest', true)
+
+        assert call(tag_as_latest: true), output
       end
     end
   end

@@ -26,7 +26,6 @@ class Build < ActiveRecord::Base
       if: attribute
     )
   end
-  validates :docker_image_id, format: SHA256_REGEX, allow_nil: true
   validates :docker_repo_digest, format: DIGEST_REGEX, allow_nil: true
   validates :external_url, format: /\Ahttps?:\/\/\S+\z/, allow_nil: true
   validates :external_status, inclusion: Job::VALID_STATUSES, allow_nil: true
@@ -49,15 +48,6 @@ class Build < ActiveRecord::Base
       commit:  git_sha,
       tag:     git_ref
     )
-  end
-
-  def docker_image
-    @docker_image ||= Docker::Image.get(docker_image_id) if docker_image_id
-  end
-
-  def docker_image=(image)
-    self.docker_image_id = image ? image.json.fetch('Id') : nil
-    @docker_image = image
   end
 
   def url

@@ -4,7 +4,24 @@ require 'shellwords'
 
 class ImageBuilder
   class << self
-    def build_image(dir, executor, dockerfile:, tag: nil, cache_from: nil)
+    DIGEST_SHA_REGEX = /Digest:.*(sha256:[0-9a-f]{64})/i
+
+    include ::NewRelic::Agent::MethodTracer
+
+    def build_image(dir, build, executor, tag_as_latest:, **args)
+      return unless image_id = build_image_locally(
+        dir, executor,
+        tag: build.docker_tag, dockerfile: build.dockerfile, **args
+      )
+      push_image(image_id, build, executor, tag_as_latest: tag_as_latest)
+    ensure
+      if image_id && ENV["DOCKER_KEEP_BUILT_IMGS"] != "1"
+        executor.output.puts("### Deleting local docker image")
+        Docker::Image.get(image_id).remove(force: true)
+      end
+    end
+
+    def build_image_locally(dir, executor, dockerfile:, tag:, cache_from:)
       local_docker_login do |login_commands|
         tag = " -t #{tag.shellescape}" if tag
         file = " -f #{dockerfile.shellescape}"
@@ -15,17 +32,16 @@ class ImageBuilder
             cache_option = " --cache-from #{cache_from.shellescape}"
           end
 
-          build = "docker build#{file}#{tag} .#{cache_option}"
+          build_command = "docker build#{file}#{tag} .#{cache_option}"
 
           return unless executor.execute(
             "cd #{dir.shellescape}",
             *login_commands,
             *pull_cache,
-            executor.verbose_command(build)
+            executor.verbose_command(build_command)
           )
         end
-        image_id = executor.output.to_s.scan(/Successfully built (\S+)/).last&.first
-        Docker::Image.get(image_id) if image_id
+        executor.output.to_s.scan(/Successfully built ([a-f\d]{12,})/).last&.first
       end
     end
 
@@ -50,6 +66,60 @@ class ImageBuilder
     end
 
     private
+
+    def push_image(image_id, build, executor, tag_as_latest:)
+      tag = build.docker_tag
+      tag_is_latest = (tag == 'latest')
+
+      unless repo_digest = push_image_to_registries(image_id, build, executor, tag: tag, override_tag: tag_is_latest)
+        raise Docker::Error::DockerError, "Unable to get repo digest"
+      end
+
+      if tag_as_latest && !tag_is_latest
+        push_image_to_registries image_id, build, executor, tag: 'latest', override_tag: true
+      end
+      repo_digest
+    rescue Docker::Error::DockerError => e
+      executor.output.puts("Docker push failed: #{e.message}\n")
+      nil
+    end
+    add_method_tracer :push_image
+
+    def push_image_to_registries(image_id, build, executor, tag:, override_tag:)
+      digest = nil
+
+      DockerRegistry.all.each_with_index do |registry, i|
+        primary = i.zero?
+        repo = build.project.docker_repo(registry, build.dockerfile)
+
+        if override_tag
+          executor.output.puts("### Tagging and pushing Docker image to #{repo}:#{tag}")
+        else
+          executor.output.puts("### Pushing Docker image to #{repo} without tag")
+        end
+
+        local_docker_login do |login_commands|
+          full_tag = "#{repo}:#{tag}"
+
+          executor.quiet do
+            return nil unless executor.execute(
+              *login_commands,
+              executor.verbose_command(["docker", "tag", image_id, full_tag].shelljoin),
+              executor.verbose_command(["docker", "push", full_tag].shelljoin)
+            )
+          end
+
+          if primary
+            # cache-from also produced digest lines, so we need to be careful
+            last = executor.output.to_s.split("\n").last.to_s
+            return nil unless sha = last[DIGEST_SHA_REGEX, 1]
+            digest = "#{repo}@#{sha}"
+          end
+        end
+      end
+
+      digest
+    end
 
     # TODO: same as in config/initializers/docker.rb ... dry it up
     def docker_major_version

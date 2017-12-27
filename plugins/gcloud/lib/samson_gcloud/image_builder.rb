@@ -2,7 +2,7 @@
 module SamsonGcloud
   class ImageBuilder
     class << self
-      def build_image(build, dir, executor, tag_as_latest:, cache_from:)
+      def build_image(dir, build, executor, tag_as_latest:, cache_from:)
         prefix = "gcr.io/#{SamsonGcloud.project}/samson"
         fake_registry = OpenStruct.new(base: prefix)
         base = build.project.docker_repo(fake_registry, build.dockerfile)
