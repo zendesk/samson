@@ -21,6 +21,17 @@ class Kubernetes::DeployGroupRolesController < ApplicationController
   end
 
   def index
+    if params[:project_id]
+      @deploy_group_roles = current_project.kubernetes_deploy_group_roles
+    else
+      @deploy_group_roles = ::Kubernetes::DeployGroupRole
+      [:project_id, :deploy_group_id].each do |scope|
+        if id = params.dig(:search, scope).presence
+          @deploy_group_roles = @deploy_group_roles.where(scope => id)
+        end
+      end
+    end
+
     @deploy_group_roles = ::Kubernetes::DeployGroupRole
     [:project_id, :deploy_group_id].each do |scope|
       if id = params.dig(:search, scope).presence
@@ -63,7 +74,6 @@ class Kubernetes::DeployGroupRolesController < ApplicationController
     if @deploy_group_role.save
       redirect_back fallback_location: @deploy_group_role
     else
-      puts @deploy_group_role.errors.full_messages
       render :edit, status: 422
     end
   end
@@ -120,13 +130,16 @@ class Kubernetes::DeployGroupRolesController < ApplicationController
   end
 
   def current_project
-    if action_name == 'create'
-      Project.find(deploy_group_role_params.require(:project_id))
-    elsif action_name == 'seed'
-      @stage.project
-    else
-      @deploy_group_role.project
-    end
+    @project ||=
+      if action_name == 'create'
+        Project.find(deploy_group_role_params.require(:project_id))
+      elsif action_name == 'seed'
+        @stage.project
+      elsif action_name == 'index'
+        Project.find_by_param!(params.require(:project_id))
+      else
+        @deploy_group_role.project
+      end
   end
 
   def find_role

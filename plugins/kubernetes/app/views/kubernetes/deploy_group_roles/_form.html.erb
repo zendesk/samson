@@ -1,7 +1,7 @@
 <%= form_for @deploy_group_role, html: { class: "form-horizontal" } do |form| %>
   <%= redirect_to_field %>
   <%= render 'shared/errors', object: @deploy_group_role %>
-  <% defaults = @deploy_group_role.kubernetes_role.try(:defaults) || {} %>
+  <% defaults = @deploy_group_role.kubernetes_role&.defaults || {} %>
 
   <fieldset>
     <%= form.input :deploy_group_id do %>

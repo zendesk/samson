@@ -16,21 +16,30 @@ describe Kubernetes::DeployGroupRolesController do
 
   as_a_viewer do
     describe "#index" do
+      before do
+        kubernetes_deploy_group_roles(:test_pod1_resque_worker).update_column(:project_id, 123) # one different to test filtering
+      end
+
       it "renders" do
         get :index
         assert_template :index
         assigns[:deploy_group_roles].must_include deploy_group_role
       end
 
+      it "renders as project tab" do
+        get :index, params: {project_id: project}
+        assert_template :index
+        assigns[:deploy_group_roles].map(&:project_id).uniq.must_equal [project.id]
+      end
+
       it "can filter by project_id" do
-        deploy_group_role.update_column(:project_id, 123)
-        get :index, params: {search: {project_id: project_id}}
-        assigns[:deploy_group_roles].map(&:project_id).uniq.size.must_equal 1
+        get :index, params: {search: {project_id: project.id}}
+        assigns[:deploy_group_roles].map(&:project_id).uniq.must_equal [project.id]
       end
 
       it "can filter by deploy_group" do
         get :index, params: {search: {deploy_group_id: deploy_groups(:pod100).id}}
-        assigns[:deploy_group_roles].map(&:deploy_group_id).uniq.size.must_equal 1
+        assigns[:deploy_group_roles].map(&:deploy_group_id).uniq.must_equal [deploy_groups(:pod100).id]
       end
     end
 
