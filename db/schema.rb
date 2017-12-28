@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171221213213) do
+ActiveRecord::Schema.define(version: 20171226184349) do
 
   create_table "audits", force: :cascade do |t|
     t.integer "auditable_id", null: false
@@ -257,6 +257,7 @@ ActiveRecord::Schema.define(version: 20171221213213) do
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
     t.string "resource_name", null: false
+    t.boolean "autoscaled", default: false, null: false
     t.index ["project_id"], name: "index_kubernetes_roles_on_project_id"
     t.index ["resource_name", "deleted_at"], name: "index_kubernetes_roles_on_resource_name_and_deleted_at", unique: true, length: { resource_name: 191 }
     t.index ["service_name", "deleted_at"], name: "index_kubernetes_roles_on_service_name_and_deleted_at", unique: true, length: { service_name: 191 }

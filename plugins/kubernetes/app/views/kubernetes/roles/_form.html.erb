@@ -10,6 +10,7 @@
           pattern: Kubernetes::RoleVerifier::VALID_LABEL,
           help: "Name for the resource this role will create (service/job), a-Z 0-9 and -"
     %>
+    <%= form.input :autoscaled, label: "Replicas managed externally", as: :check_box, help: "Deploying will not change replicas count. Use this when autoscaling deployments." %>
 
     <div class="form-group">
       <div class="col-lg-offset-2 col-lg-10">
