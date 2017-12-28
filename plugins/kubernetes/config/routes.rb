@@ -10,6 +10,7 @@ Samson::Application.routes.draw do
         end
       end
       resources :releases, only: [:index, :show]
+      resources :usage_limits, only: [:index]
     end
   end
 
