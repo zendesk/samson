@@ -88,7 +88,7 @@ describe CsvExportsController do
 
         describe "empty type (Deploys)" do
           it "renders deploy form with deleted_projects" do
-            Project.last.update_attribute(:deleted_at, DateTime.now)
+            Project.last.update_attribute(:deleted_at, Time.now)
             get :new
             assert_select "h1", "Request Deploys Report"
             @response.body.must_include ">Foo</option>"
@@ -286,8 +286,8 @@ describe CsvExportsController do
         csv_filter.keys.must_include "stages.production"
         csv_filter.keys.must_include "jobs.status"
         csv_filter.keys.must_include "stages.project_id"
-        start_date = DateTime.parse(filter[:start_date])
-        end_date = DateTime.parse(filter[:end_date] + "T23:59:59Z")
+        start_date = Time.parse(filter[:start_date])
+        end_date = Time.parse(filter[:end_date] + "T23:59:59Z")
         csv_filter["deploys.created_at"].must_equal start_date..end_date
         csv_filter["stages.production"].must_equal true
         csv_filter["jobs.status"].must_equal "succeeded"
@@ -311,7 +311,7 @@ describe CsvExportsController do
       it "with production blank filter does not have stages.production filter" do
         post :create, params: {production: ""}
         csv_filter = CsvExport.last.filters
-        refute csv_filter.keys.include?"stages.production"
+        refute csv_filter.keys.include? "stages.production"
       end
 
       it "raises for invalid params" do

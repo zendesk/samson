@@ -87,7 +87,14 @@ end
 
 desc "Run rubocop"
 task :rubocop do
-  sh "rubocop"
+  sh "rubocop --parallel"
+end
+
+desc "Run rubocop on changed files"
+task "rubocop:changed" do
+  last_merge = `git log --merges -n1 --pretty=format:%h`.strip
+  changed = `git diff #{last_merge} --name-only`.split("\n")
+  sh "rubocop #{changed.shelljoin}" if changed.any?
 end
 
 desc "Analyze for code duplication (large, identical syntax trees) with fuzzy matching."

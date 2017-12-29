@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 # rubocop:disable Metrics/LineLength
-# rubocop:disable Style/IndentHeredoc
+# rubocop:disable Layout/IndentHeredoc
 require_relative '../../test_helper'
 
 SingleCov.covered!
@@ -885,3 +885,5 @@ XML
     end
   end
 end
+# rubocop:enable Metrics/LineLength
+# rubocop:enable Layout/IndentHeredoc

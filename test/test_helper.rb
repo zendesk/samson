@@ -216,7 +216,7 @@ class ActionController::TestCase
             super
           end
 
-          before { login_as(self.user) } # rubocop:disable Style/RedundantSelf
+          before { login_as(self.user) }
           instance_eval(&block)
         end
       end

@@ -9,7 +9,7 @@ describe 'Warden::Strategies::DoorkeeperStrategy Integration' do
     get path, headers: {HTTP_AUTHORIZATION: authorization}
   end
 
-  let(:path) { "/deploys/active_count.json".dup }
+  let(:path) { +"/deploys/active_count.json" }
   let!(:user) { users(:admin) }
   let(:token) { Doorkeeper::AccessToken.create!(resource_owner_id: user.id, scopes: 'deploys') }
   let!(:valid_header) { "Bearer #{token.token}" }

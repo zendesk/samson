@@ -6,7 +6,7 @@ require 'vault'
 Vault::Logical.class_eval do
   def list_recursive(path, root = true)
     keys = list(path).flat_map do |p|
-      full = "#{path}#{p}".dup
+      full = +"#{path}#{p}"
       if full.end_with?("/")
         list_recursive(full, false)
       else

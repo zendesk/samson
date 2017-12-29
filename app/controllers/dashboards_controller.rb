@@ -6,7 +6,7 @@ class DashboardsController < ApplicationController
     @before = Time.parse(params[:before] || Time.now.to_s(:db))
     @deploy_groups = @environment.deploy_groups.sort_by(&:natural_order)
     @projects = Project.all
-    @failed_deploys = params[:failed_deploys] == "true" ? true : false
+    @failed_deploys = (params[:failed_deploys] == "true")
     @versions = project_versions(@before)
   end
 

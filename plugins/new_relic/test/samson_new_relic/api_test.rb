@@ -45,7 +45,7 @@ describe SamsonNewRelic::Api do
       let(:initial) { true }
 
       before do
-        SamsonNewRelic::Api.applications.each do |_, application|
+        SamsonNewRelic::Api.applications.each_value do |application|
           application.stubs(
             historic_response_time: [[1, 2], [3, 4]],
             historic_throughput: [[5, 6], [7, 8]]
@@ -88,7 +88,7 @@ describe SamsonNewRelic::Api do
       let(:initial) { false }
 
       before do
-        SamsonNewRelic::Api.applications.values.each do |application|
+        SamsonNewRelic::Api.applications.each_value do |application|
           application.stubs(
             response_time: 100,
             throughput: 1000,

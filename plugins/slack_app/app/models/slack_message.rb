@@ -76,20 +76,21 @@ class SlackMessage
   end
 
   def title(ended = nil)
-    str = "#{user_string(@deploy.user)} ".dup
+    str = +"#{user_string(@deploy.user)} "
     connector = 'is'
     if @deploy.buddy
       str << "and #{user_string(@deploy.buddy)} "
       connector = 'are'
     end
 
-    str << if ended
-             "#{ended} "
-           elsif @deploy.waiting_for_buddy?
-             'wants to deploy '
-           else
-             "#{connector} deploying "
-           end
+    str <<
+      if ended
+        "#{ended} "
+      elsif @deploy.waiting_for_buddy?
+        'wants to deploy '
+      else
+        "#{connector} deploying "
+      end
 
     stage = @deploy.stage
     str << "<#{@deploy.url}|*#{stage.project.name}* to *#{stage.name}*>."

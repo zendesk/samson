@@ -111,7 +111,7 @@ module Kubernetes
             @client.get_pod_log(name, namespace, container: container)
           else
             # still waiting, stream logs
-            result = "".dup
+            result = +""
             begin
               timeout_logs(wait) do
                 @client.watch_pod_log(name, namespace, container: container).each do |log|

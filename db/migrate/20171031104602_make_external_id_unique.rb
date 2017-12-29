@@ -7,7 +7,7 @@ class MakeExternalIdUnique < ActiveRecord::Migration[5.1]
     # update the external_id of all uses that would violate the new uniqueness
     scope = User.where(deleted_at: nil)
     bad = scope.group(:external_id).count.select { |_, count| count.size >= 2 }
-    bad.each do |id, _|
+    bad.each_key do |id|
       duplicates = scope.where(external_id: id)
       duplicates[1..-1].each_with_index do |u, i|
         write "Updating user #{u.id} external_id"

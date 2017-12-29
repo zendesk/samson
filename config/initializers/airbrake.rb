@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 if defined?(Airbrake) && key = ENV['AIRBRAKE_API_KEY']
   Airbrake.user_information = # replaces <!-- AIRBRAKE ERROR --> on 500 pages
-    "<br/><br/>Error number: <a href='https://airbrake.io/locate/{{error_id}}'>{{error_id}}</a>".dup <<
+    "<br/><br/>Error number: <a href='https://airbrake.io/locate/{{error_id}}'>{{error_id}}</a>" +
     ((link = ENV['HELP_LINK']) ? "<br/><br/>#{link}" : "")
 
   Airbrake.configure do |config|

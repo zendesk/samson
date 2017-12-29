@@ -13,12 +13,12 @@ describe CsvExport do
     end
 
     it "returns old created" do
-      @old_export.update_attributes(created_at: DateTime.now - 1.year, updated_at: DateTime.now)
+      @old_export.update_attributes(created_at: Time.now - 1.year, updated_at: Time.now)
       assert_equal(1, CsvExport.old.size)
     end
 
     it "returns old downloaded" do
-      @old_export.update_attributes(updated_at: DateTime.now - 13.hours, created_at: DateTime.now - 14.hours,
+      @old_export.update_attributes(updated_at: Time.now - 13.hours, created_at: Time.now - 14.hours,
                                     status: 'downloaded')
       assert_equal(1, CsvExport.old.size)
     end
@@ -127,7 +127,7 @@ describe CsvExport do
 
     it "converts date list to range" do
       @csv_export.update_attribute(:filters, 'deploys.created_at': Date.new(1900, 1, 1)..Date.today)
-      expected_range = DateTime.new(1900, 1, 1)..DateTime.parse(Date.today.to_s + "T23:59:59Z")
+      expected_range = Time.new(1900, 1, 1)..Time.parse(Date.today.to_s + "T23:59:59Z")
       @csv_export.filters['deploys.created_at'].class.must_equal((1..2).class)
       @csv_export.filters['deploys.created_at'].must_equal expected_range
     end

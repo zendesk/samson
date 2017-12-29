@@ -31,7 +31,8 @@ module CurrentUser
   end
 
   def unauthorized!
-    Rails.logger.warn "Halted as unauthorized! threw :warden (called from #{caller.first.sub(Rails.root.to_s, '')})"
+    called_from = caller(1..1).first
+    Rails.logger.warn "Halted as unauthorized! threw :warden (called from #{called_from.sub(Rails.root.to_s, '')})"
     throw :warden # Warden::Manager middleware catches this and calls UnauthorizedController
   end
 

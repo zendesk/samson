@@ -62,7 +62,7 @@ class Changeset::PullRequest
       return false if !previous_desc || (previous_desc =~ WEBHOOK_FILTER && data['body'] =~ WEBHOOK_FILTER)
     end
 
-    !!(data['body'] =~ WEBHOOK_FILTER) # rubocop:disable Style/InverseMethods
+    !!(data['body'] =~ WEBHOOK_FILTER)
   end
 
   attr_reader :repo

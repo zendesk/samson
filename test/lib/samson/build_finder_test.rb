@@ -167,9 +167,10 @@ describe Samson::BuildFinder do
       it "can find build that arrives late" do
         matching_sha = build.git_sha
         build.update_column(:git_sha, 'other')
+        # waiting for external builds to arrive
         expect_sleep.with do
           build.update_column(:git_sha, matching_sha)
-        end # waiting for external builds to arrive
+        end
         execute.must_equal [build]
       end
 
@@ -195,9 +196,10 @@ describe Samson::BuildFinder do
       end
 
       it "waits for builds to arrive" do
+        # waiting for external builds to arrive
         expect_sleep.with do
           build.update_columns(git_sha: matching_sha, docker_repo_digest: 'done')
-        end # waiting for external builds to arrive
+        end
 
         execute.must_equal [build]
       end

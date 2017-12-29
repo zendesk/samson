@@ -17,7 +17,7 @@ class CsvExport < ActiveRecord::Base
   }
 
   def status?(state)
-    'ready' == state.to_s ? ['downloaded', 'finished'].include?(status) : status == state.to_s
+    state.to_s == 'ready' ? ['downloaded', 'finished'].include?(status) : status == state.to_s
   end
 
   def download_name
@@ -32,7 +32,7 @@ class CsvExport < ActiveRecord::Base
     filter = super.clone
     if filter['deploys.created_at']
       dates = filter['deploys.created_at'].scan(/-?\d+-\d+-\d+/)
-      filter['deploys.created_at'] = (DateTime.parse(dates[0] + "T00:00:00Z")..DateTime.parse(dates[1] + "T23:59:59Z"))
+      filter['deploys.created_at'] = (Time.parse(dates[0] + "T00:00:00Z")..Time.parse(dates[1] + "T23:59:59Z"))
     end
     filter
   end

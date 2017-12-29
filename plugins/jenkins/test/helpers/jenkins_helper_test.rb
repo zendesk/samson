@@ -84,3 +84,4 @@ describe JenkinsHelper do
     end
   end
 end
+# rubocop:enable Metrics/LineLength

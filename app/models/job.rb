@@ -89,7 +89,7 @@ class Job < ActiveRecord::Base
 
   %w[pending running succeeded cancelling cancelled failed errored].each do |status|
     define_method "#{status}?" do
-      self.status == status # rubocop:disable Style/RedundantSelf
+      self.status == status
     end
 
     define_method "#{status}!" do

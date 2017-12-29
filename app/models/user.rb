@@ -25,7 +25,7 @@ class User < ActiveRecord::Base
   before_create :set_token
   validates :time_format, inclusion: { in: TIME_FORMATS }
   validates :external_id,
-    uniqueness: {scope: :deleted_at}, presence: :true, unless: :integration?, if: :external_id_changed?
+    uniqueness: {scope: :deleted_at}, presence: true, unless: :integration?, if: :external_id_changed?
 
   before_soft_delete :destroy_user_project_roles
 

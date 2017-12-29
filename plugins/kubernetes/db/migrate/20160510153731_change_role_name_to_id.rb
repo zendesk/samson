@@ -1,5 +1,4 @@
 # frozen_string_literal: true
-# rubocop:disable Metrics/LineLength
 class ChangeRoleNameToId < ActiveRecord::Migration[4.2]
   INDEX = "index_kubernetes_deploy_group_roles_on_project_id"
 
@@ -43,7 +42,8 @@ class ChangeRoleNameToId < ActiveRecord::Migration[4.2]
     remove_old_index
     remove_column :kubernetes_deploy_group_roles, :kubernetes_role_id
 
-    add_index :kubernetes_deploy_group_roles, [:project_id, :deploy_group_id, :name], name: INDEX, length: {"name" => 191}
+    add_index :kubernetes_deploy_group_roles, [:project_id, :deploy_group_id, :name],
+      name: INDEX, length: {"name" => 191}
   end
 
   def remove_old_index

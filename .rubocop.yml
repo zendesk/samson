@@ -5,6 +5,7 @@ AllCops:
     - db/schema.rb
     - vendor/**/*
     - tmp/**/*
+    - node_modules/**/*
 
 LineLength:
   Max: 120
@@ -12,7 +13,7 @@ LineLength:
 ClassLength:
   Enabled: false
 
-Style/CommentIndentation:
+Layout/CommentIndentation:
   Enabled: false
 
 Style/StringLiterals:
@@ -24,7 +25,7 @@ HashSyntax:
 Style/SignalException:
   Enabled: false
 
-Style/SpaceInsideHashLiteralBraces:
+Layout/SpaceInsideHashLiteralBraces:
   Enabled: false
 
 Lint/AmbiguousOperator:
@@ -57,16 +58,16 @@ Style/NumericLiterals:
 Style/NumericPredicate:
   Enabled: false
 
-Style/FirstParameterIndentation:
+Layout/FirstParameterIndentation:
   Enabled: false
 
-Style/IndentHash:
+Layout/IndentHash:
   Enabled: false
 
-Style/AlignParameters:
+Layout/AlignParameters:
   EnforcedStyle: with_fixed_indentation
 
-Style/MultilineOperationIndentation:
+Layout/MultilineOperationIndentation:
   Enabled: false
 
 Metrics/ModuleLength:
@@ -90,13 +91,13 @@ Style/Next:
 Metrics/CyclomaticComplexity:
   Enabled: false
 
-Style/MultilineMethodCallIndentation:
+Layout/MultilineMethodCallIndentation:
   Enabled: false
 
 Lint/AmbiguousRegexpLiteral:
   Enabled: false
 
-Style/DotPosition:
+Layout/DotPosition:
   EnforcedStyle: trailing
 
 Style/ClassAndModuleChildren:
@@ -155,7 +156,7 @@ Style/IfUnlessModifier:
 Lint/ShadowingOuterLocalVariable:
   Enabled: false
 
-Style/VariableNumber:
+Naming/VariableNumber:
   Enabled: false
 
 Style/TernaryParentheses:
@@ -170,7 +171,7 @@ Style/SafeNavigation:
 Style/SymbolArray:
   Enabled: false
 
-Style/EmptyLineAfterMagicComment:
+Layout/EmptyLineAfterMagicComment:
   Enabled: false
 
 Style/EmptyMethod:
@@ -180,4 +181,14 @@ Bundler/OrderedGems:
   Enabled: false
 
 Lint/AmbiguousBlockAssociation:
+  Enabled: false
+
+Style/RescueStandardError:
+  Enabled: false
+
+Style/FormatStringToken:
+  Enabled: false
+
+# too many false-positives
+Performance/HashEachMethods:
   Enabled: false

@@ -5,21 +5,21 @@ SingleCov.covered!
 
 describe Changeset::PullRequest do
   def add_risks
-    body.replace(<<~BODY.dup)
+    body.replace(+<<~BODY)
       # Risks
        - Explosions
     BODY
   end
 
   def no_risks
-    body.replace(<<~BODY.dup)
+    body.replace(+<<~BODY)
       Not that risky ...
     BODY
   end
 
   let(:project) { projects(:test) }
   let(:pr) { Changeset::PullRequest.new("xxx", data) }
-  let(:body) { "".dup }
+  let(:body) { +"" }
   let(:sawyer_agent) { Sawyer::Agent.new('') }
   let(:data) { Sawyer::Resource.new(sawyer_agent, user: user, merged_by: merged_by, body: body, number: 5566) }
   let(:user) { Sawyer::Resource.new(sawyer_agent, login: 'foo') }
@@ -166,7 +166,7 @@ describe Changeset::PullRequest do
     let(:jira_url) { "https://jira.zendesk.com/browse/" }
 
     it "returns a list of JIRA issues referenced in the PR body" do
-      body.replace(<<-BODY.dup)
+      body.replace(+<<-BODY)
         Fixes https://foobar.atlassian.net/browse/XY-123 and
         https://foobar.atlassian.net/browse/AB-666
       BODY
@@ -187,7 +187,7 @@ describe Changeset::PullRequest do
 
     it "returns a list of JIRA urls using JIRA_BASE_URL ENV var given JIRA codes" do
       with_env JIRA_BASE_URL: 'https://foo.atlassian.net/browse/' do
-        body.replace(<<-BODY.dup)
+        body.replace(+<<-BODY)
           Fixes XY-123 and AB-666
         BODY
 
@@ -200,7 +200,7 @@ describe Changeset::PullRequest do
 
     it "returns JIRA URLs from both title and body" do
       with_env JIRA_BASE_URL: 'https://foo.atlassian.net/browse/' do
-        body.replace(<<-BODY.dup)
+        body.replace(+<<-BODY)
           Fixes issue in title and AB-666
         BODY
         data.title = "XY-123: Make it bigger!"
@@ -213,7 +213,7 @@ describe Changeset::PullRequest do
     end
 
     it "returns an empty array if JIRA_BASE_URL ENV var is not set when given JIRA codes" do
-      body.replace(<<-BODY.dup)
+      body.replace(+<<-BODY)
         Fixes XY-123 and AB-666
       BODY
 
@@ -221,7 +221,7 @@ describe Changeset::PullRequest do
     end
 
     it "returns an empty array if invalid URLs are given" do
-      body.replace(<<-BODY.dup)
+      body.replace(+<<-BODY)
         Fixes https://foobar.atlassian.net/browse/XY-123k
       BODY
 
@@ -230,7 +230,7 @@ describe Changeset::PullRequest do
 
     it "uses full JIRA urls when given, falling back to JIRA_BASE_URL" do
       with_env JIRA_BASE_URL: 'https://foo.atlassian.net/browse/' do
-        body.replace(<<-BODY.dup)
+        body.replace(+<<-BODY)
           Fixes https://foobar.atlassian.net/browse/XY-123 and AB-666
         BODY
 
@@ -243,7 +243,7 @@ describe Changeset::PullRequest do
 
     it "uses full URL if given and not auto-generate even when JIRA_BASE_URL is set" do
       with_env JIRA_BASE_URL: 'https://foo.atlassian.net/browse/' do
-        body.replace(<<-BODY.dup)
+        body.replace(+<<-BODY)
           Fixes XY-123, see https://foobar.atlassian.net/browse/XY-123
         BODY
 
@@ -386,7 +386,7 @@ describe Changeset::PullRequest do
     end
 
     it "does not find - None" do
-      body.replace(<<~BODY.dup)
+      body.replace(+<<~BODY)
         # Risks
          - None
       BODY
@@ -394,7 +394,7 @@ describe Changeset::PullRequest do
     end
 
     it "does not find None" do
-      body.replace(<<~BODY.dup)
+      body.replace(+<<~BODY)
         # Risks
         None
       BODY
@@ -402,7 +402,7 @@ describe Changeset::PullRequest do
     end
 
     it "finds risks with underline style markdown headers" do
-      body.replace(<<~BODY.dup)
+      body.replace(+<<~BODY)
         Risks
         =====
           - Snakes
@@ -411,7 +411,7 @@ describe Changeset::PullRequest do
     end
 
     it "finds risks with closing hashes in atx style markdown headers" do
-      body.replace(<<~BODY.dup)
+      body.replace(+<<~BODY)
         ## Risks ##
           - Planes
       BODY
@@ -419,7 +419,7 @@ describe Changeset::PullRequest do
     end
 
     it "ends the risks section if there are subsequent sections" do
-      body.replace(<<~BODY.dup)
+      body.replace(+<<~BODY)
         # Risks
           - Planes
 
@@ -430,7 +430,7 @@ describe Changeset::PullRequest do
     end
 
     it "ends the risks section if there are subsequent underline style sections" do
-      body.replace(<<~BODY.dup)
+      body.replace(+<<~BODY)
         Risks
         =====
           - Planes

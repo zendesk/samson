@@ -132,7 +132,7 @@ class Integrations::BaseController < ApplicationController
   end
 
   def record_log(level, message)
-    (@recorded_log ||= "".dup) << "#{level.upcase}: #{message}\n"
+    (@recorded_log ||= +"") << "#{level.upcase}: #{message}\n"
     Rails.logger.public_send(level, message)
   end
 
