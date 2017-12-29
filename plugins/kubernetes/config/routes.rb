@@ -2,6 +2,7 @@
 Samson::Application.routes.draw do
   resources :projects do
     namespace :kubernetes do
+      resources :deploy_group_roles, only: [:index]
       resources :roles, except: :edit do
         collection do
           post :seed
@@ -9,6 +10,7 @@ Samson::Application.routes.draw do
         end
       end
       resources :releases, only: [:index, :show]
+      resources :usage_limits, only: [:index]
     end
   end
 

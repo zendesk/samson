@@ -1,18 +1,25 @@
-<%= page_title "Kubernetes Usage Limits" %>
+<% if @project %>
+  <%= render 'projects/header', project: @project, tab: 'kubernetes' %>
+<% else %>
+  <%= page_title "Kubernetes Limits" %>
 
-<%= search_form do %>
-  <%= search_select :project_id, [['All', '']] + @projects.map { |p| [p.name, p.id] }, live: true, size: 3 %>
-  <%= search_select :scope_type_and_id, @env_deploy_group_array, live: true, size: 3, label: "Scope" %>
+  <%= search_form do %>
+    <%= search_select :project_id, [['All', '']] + @projects.map { |p| [p.name, p.id] }, live: true, size: 3 %>
+    <%= search_select :scope_type_and_id, @env_deploy_group_array, live: true, size: 3, label: "Scope" %>
+  <% end %>
+
+  <br/>
 <% end %>
 
-<br/>
+<section class="tabs kubernetes-section clearfix">
+  <%= render 'samson_kubernetes/role_navigation' if @project %>
 
-<section class="clearfix tabs">
   <div class="table table-hover table-condensed">
-
     <table class="table">
       <tr>
-        <th>Project</th>
+        <% unless @project %>
+          <th>Project</th>
+        <% end %>
         <th>Scope</th>
         <th>CPU</th>
         <th>Memory</th>
@@ -21,7 +28,9 @@
 
       <% @usage_limits.each do |usage_limit| %>
         <tr>
-          <td><%= usage_limit.project ? link_to(usage_limit.project.name, usage_limit.project) : 'All' %></td>
+          <% unless @project %>
+            <td><%= usage_limit.project ? link_to(usage_limit.project.name, usage_limit.project) : 'All' %></td>
+          <% end %>
           <td><%= usage_limit.scope ? usage_limit.scope.name : 'All' %></td>
           <td><%= usage_limit.cpu.to_f %></td>
           <td><%= usage_limit.memory %> Mi</td>

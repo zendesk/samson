@@ -25,6 +25,12 @@ describe Kubernetes::UsageLimitsController do
         assert_template :index
       end
 
+      it "renders as project tab" do
+        get :index, params: {project_id: project}
+        assert_template :index
+        assigns(:usage_limits).map(&:id).must_equal [usage_limit.id]
+      end
+
       it "sorts" do
         get :index
         assigns(:usage_limits).map(&:id).must_equal [other.id, usage_limit.id]

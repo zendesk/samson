@@ -1,21 +1,28 @@
-<%= page_title "Kubernetes Deploy Group Roles" %>
+<% if @project %>
+  <%= render 'projects/header', project: @project, tab: 'kubernetes' %>
+<% else %>
+  <%= page_title "Kubernetes Resources" %>
 
-<%= search_form do %>
-  <% projects = Project.where(id: Kubernetes::DeployGroupRole.pluck('distinct project_id')).order(:name).pluck(:name, :id) %>
-  <%= search_select :project_id, projects, live: true, size: 3 %>
+  <%= search_form do %>
+    <% projects = Project.where(id: Kubernetes::DeployGroupRole.pluck('distinct project_id')).order(:name).pluck(:name, :id) %>
+    <%= search_select :project_id, projects, live: true, size: 3 %>
 
-  <% deploy_groups = DeployGroup.where(id: Kubernetes::DeployGroupRole.pluck('distinct deploy_group_id')).sort_by(&:natural_order).map { |dg| [dg.name, dg.id] } %>
-  <%= search_select :deploy_group_id, deploy_groups, live: true, size: 3 %>
+    <% deploy_groups = DeployGroup.where(id: Kubernetes::DeployGroupRole.pluck('distinct deploy_group_id')).sort_by(&:natural_order).map { |dg| [dg.name, dg.id] } %>
+    <%= search_select :deploy_group_id, deploy_groups, live: true, size: 3 %>
+  <% end %>
+
+  <br/>
 <% end %>
 
-<br/>
+<section class="tabs kubernetes-section clearfix">
+  <%= render 'samson_kubernetes/role_navigation' if @project %>
 
-<section class="clearfix tabs">
   <div class="table table-hover table-condensed">
-
     <table class="table">
       <tr>
-        <th>Project</th>
+        <% unless @project %>
+          <th>Project</th>
+        <% end %>
         <th>Deploy Group</th>
         <th>Role</th>
         <th>CPU<%= additional_info "Requested to Limit" %></th>
@@ -26,7 +33,9 @@
 
       <% @deploy_group_roles.each do |deploy_group_role| %>
         <tr>
-          <td><%= link_to deploy_group_role.project.name, deploy_group_role.project %></td>
+          <% unless @project %>
+            <td><%= link_to deploy_group_role.project.name, deploy_group_role.project %></td>
+          <% end %>
           <td><%= link_to deploy_group_role.deploy_group.name, deploy_group_role.deploy_group %></td>
           <td><%= link_to deploy_group_role.kubernetes_role.name, [deploy_group_role.project, deploy_group_role.kubernetes_role] %></td>
           <td><%= deploy_group_role.requests_cpu %> to <%= deploy_group_role.limits_cpu %></td>
@@ -41,10 +50,11 @@
       <% end %>
 
       <tr>
-        <td colspan="3">Total</td>
+        <td colspan="<%= @project ? 2 : 3 %>">Total</td>
         <td><%= @deploy_group_roles.sum { |d| d.requests_cpu * d.replicas } %> to <%= @deploy_group_roles.sum { |d| d.limits_cpu * d.replicas } %></td>
         <td><%= @deploy_group_roles.sum { |d| d.requests_memory * d.replicas } %> to <%= @deploy_group_roles.sum { |d| d.limits_memory * d.replicas } %></td>
         <td><%= @deploy_group_roles.sum(&:replicas) %></td>
+        <td></td>
       </tr>
     </table>
   </div>

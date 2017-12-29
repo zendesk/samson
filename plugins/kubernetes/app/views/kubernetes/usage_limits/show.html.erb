@@ -1,4 +1,4 @@
-<%= page_title(@usage_limit.new_record? ? "New Kubernetes Usage Limit" : "Edit Kubernetes Usage Limit") %>
+<%= page_title(@usage_limit.new_record? ? "New Kubernetes Limit" : "Edit Kubernetes Limit") %>
 <section>
   <%= form_for @usage_limit, html: { class: "form-horizontal" } do |form| %>
     <%= render 'shared/errors', object: @usage_limit %>
