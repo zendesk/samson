@@ -98,6 +98,8 @@ describe Kubernetes::DeployGroupRolesController do
     unauthorized :get, :update, id: id
     unauthorized :get, :destroy, id: id
     unauthorized :post, :seed, stage_id: ActiveRecord::FixtureSet.identify(:test_staging)
+    unauthorized :get, :edit_many, project_id: 'foo'
+    unauthorized :put, :update_many, project_id: 'foo'
   end
 
   as_a_project_admin do
@@ -144,12 +146,6 @@ describe Kubernetes::DeployGroupRolesController do
       it "renders" do
         get :edit, params: {id: deploy_group_role.id}
         assert_template :edit
-      end
-
-      it "does not render when I am not admin" do
-        user.user_project_roles.delete_all
-        get :edit, params: {id: deploy_group_role.id}
-        assert_response :unauthorized
       end
     end
 
@@ -218,6 +214,56 @@ describe Kubernetes::DeployGroupRolesController do
         error = flash[:alert]
         error.must_equal "<p>Roles failed to seed, fill them in manually.\n<br />app-server for Pod1: foo</p>"
         assert error.html_safe?
+      end
+    end
+
+    describe "#edit_many" do
+      it "renders" do
+        get :edit_many, params: {project_id: 'foo'}
+        assert_template :edit_many
+      end
+    end
+
+    describe "#update_many" do
+      let(:other) { kubernetes_deploy_group_roles(:test_pod1_resque_worker) }
+
+      before do
+        # controller expects all roles to be sent in, so we remove the ones we don't intend to update
+        Kubernetes::DeployGroupRole.where.not(id: [other.id, deploy_group_role.id]).delete_all
+      end
+
+      it "updates" do
+        put :update_many, params: {
+          project_id: 'foo', kubernetes_deploy_group_roles: {
+            deploy_group_role.id.to_s => {replicas: 5},
+            other.id.to_s => {replicas: 1}
+          }
+        }
+        assert_redirected_to project_kubernetes_deploy_group_roles_path(project)
+        deploy_group_role.reload.replicas.must_equal 5
+      end
+
+      it "updates partially and renders errors when some fail" do
+        put :update_many, params: {
+          project_id: 'foo',
+          kubernetes_deploy_group_roles: {
+            deploy_group_role.id.to_s => {replicas: 5},
+            other.id.to_s => {requests_memory: 0}
+          }
+        }
+        assert_template :edit_many
+        deploy_group_role.reload.replicas.must_equal 5
+      end
+
+      it "shows failed updates" do
+        put :update_many, params: {
+          project_id: 'foo',
+          kubernetes_deploy_group_roles: {
+            deploy_group_role.id.to_s => {requests_memory: 0},
+            other.id.to_s => {replicas: 1}
+          }
+        }
+        assert_template :edit_many
       end
     end
   end

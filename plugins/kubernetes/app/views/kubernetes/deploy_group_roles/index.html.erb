@@ -54,7 +54,7 @@
         <td><%= @deploy_group_roles.sum { |d| d.requests_cpu * d.replicas } %> to <%= @deploy_group_roles.sum { |d| d.limits_cpu * d.replicas } %></td>
         <td><%= @deploy_group_roles.sum { |d| d.requests_memory * d.replicas } %> to <%= @deploy_group_roles.sum { |d| d.limits_memory * d.replicas } %></td>
         <td><%= @deploy_group_roles.sum(&:replicas) %></td>
-        <td></td>
+        <td><%= link_to "Edit all", edit_many_project_kubernetes_deploy_group_roles_path(@project) if @project && current_user.admin_for?(@project) %></td>
       </tr>
     </table>
   </div>
