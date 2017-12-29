@@ -5,12 +5,13 @@ SingleCov.covered!
 
 describe Kubernetes::Resource do
   def assert_pod_deletion
-    delete_pod = stub_request(:delete, "http://foobar.server/api/v1/namespaces/name1/pods/pod1").
+    delete_pod = stub_request(:delete, "#{origin}/api/v1/namespaces/name1/pods/pod1").
       to_return(body: '{}')
     yield
     assert_requested delete_pod
   end
 
+  let(:origin) { "http://foobar.server" }
   let(:kind) { 'Service' }
   let(:template) do
     {
@@ -25,7 +26,7 @@ describe Kubernetes::Resource do
   let(:deploy_group) { deploy_groups(:pod1) }
   let(:resource) { Kubernetes::Resource.build(template, deploy_group, autoscaled: false) }
   let(:autoscaled_resource) { Kubernetes::Resource.build(template, deploy_group, autoscaled: true) }
-  let(:url) { "http://foobar.server/api/v1/namespaces/pod1/services/some-project" }
+  let(:url) { "#{origin}/api/v1/namespaces/pod1/services/some-project" }
   let(:base_url) { File.dirname(url) }
 
   before { Kubernetes::Resource::Base.any_instance.expects(:sleep).never }
@@ -57,114 +58,116 @@ describe Kubernetes::Resource do
 
   describe "#deploy" do
     let(:kind) { 'Deployment' }
-    let(:url) { "http://foobar.server/apis/extensions/v1beta1/namespaces/pod1/deployments/some-project" }
+    let(:url) { "#{origin}/apis/extensions/v1beta1/namespaces/pod1/deployments/some-project" }
 
     it "creates when missing" do
-      stub_request(:get, url).to_return(status: 404)
+      assert_request(:get, url, to_return: {status: 404}) do
+        assert_request(:post, base_url, to_return: {body: "{}"}) do
+          resource.deploy
+        end
+      end
 
-      create = stub_request(:post, base_url).to_return(body: "{}")
-      resource.deploy
-      assert_requested create
-
-      # cache was expired
-      get = stub_request(:get, url).to_return(body: "{}")
-      assert resource.running?
-      assert resource.running?
-      assert_requested get, times: 2 # this counts the 404 and the successful request ...
+      # cache was expired (this counts the 404 and the successful request ...)
+      assert_request(:get, url, to_return: {body: "{}"}, times: 2) do
+        assert resource.running?
+        assert resource.running?
+      end
     end
 
     it "updates existing" do
-      get = stub_request(:get, url).to_return(body: '{}')
+      assert_request(:get, url, to_return: {body: "{}"}, times: 2) do
+        assert_request(:put, url, to_return: {body: "{}"}, with: ->(x) { x.body.must_include '"replicas":2'; true }) do
+          resource.deploy
+        end
 
-      update = stub_request(:put, url).with { |x| x.body.must_include '"replicas":2'; true }.to_return(body: "{}")
-      resource.deploy
-      assert_requested update
-
-      # cache was expired
-      assert resource.running?
-      assert resource.running?
-      assert_requested get, times: 2
+        # cache was expired
+        assert resource.running?
+        assert resource.running?
+      end
     end
 
     it "keeps replicase when autoscaled, to not revert autoscaler changes" do
-      get = stub_request(:get, url).to_return(body: {spec: {replicas: 5}}.to_json)
-      update = stub_request(:put, url).with { |x| x.body.must_include '"replicas":5'; true }.to_return(body: "{}")
-
-      autoscaled_resource.deploy
-
-      assert_requested update
-      assert_requested get
+      assert_request(:get, url, to_return: {body: {spec: {replicas: 5}}.to_json}) do
+        assert_request(:put, url, to_return: {body: "{}"}, with: ->(x) { x.body.must_include '"replicas":5'; true }) do
+          autoscaled_resource.deploy
+        end
+      end
     end
 
     it "shows errors to users when resource was invalid" do
-      stub_request(:get, url).to_return(status: 404)
-      stub_request(:post, base_url).to_return(body: '{"message":"Foo.extensions \"app\" is invalid:"}', status: 400)
-      assert_raises(Samson::Hooks::UserError) { resource.deploy }.message.must_include "Kubernetes error: Foo"
+      assert_request(:get, url, to_return: {status: 404}) do
+        error = '{"message":"Foo.extensions \"app\" is invalid:"}'
+        assert_request(:post, base_url, to_return: {body: error, status: 400}) do
+          assert_raises(Samson::Hooks::UserError) { resource.deploy }.message.must_include "Kubernetes error: Foo"
+        end
+      end
     end
   end
 
   describe "#running?" do
     it "is true when running" do
-      stub_request(:get, url).to_return(body: "{}")
-      assert resource.running?
+      assert_request(:get, url, to_return: {body: "{}"}) do
+        assert resource.running?
+      end
     end
 
     it "is false when not running" do
-      stub_request(:get, url).to_return(status: 404)
-      refute resource.running?
+      assert_request(:get, url, to_return: {status: 404}) do
+        refute resource.running?
+      end
     end
 
     it "raises when a non 404 exception is raised" do
-      stub_request(:get, url).to_return(status: 500)
-      assert_raises(KubeException) { resource.running? }
+      assert_request(:get, url, to_return: {status: 500}) do
+        assert_raises(KubeException) { resource.running? }
+      end
     end
 
     it "raises SSL exception is raised" do
-      stub_request(:get, url).to_raise(OpenSSL::SSL::SSLError)
-      assert_raises(OpenSSL::SSL::SSLError) { resource.running? }
+      assert_request(:get, url, to_raise: OpenSSL::SSL::SSLError) do
+        assert_raises(OpenSSL::SSL::SSLError) { resource.running? }
+      end
     end
   end
 
   describe "#delete" do
-    let!(:delete) { stub_request(:delete, url).to_return(body: "{}") }
+    around { |t| assert_request(:delete, url, to_return: {body: "{}"}, &t) }
 
     it "deletes" do
-      stub_request(:get, url).to_return({body: "{}"}, status: 404)
-      resource.delete
-      assert_requested delete
+      assert_request(:get, url, to_return: [{body: "{}"}, {status: 404}]) do
+        resource.delete
+      end
     end
 
     it "fetches after deleting" do
-      get = stub_request(:get, url).to_return({body: "{}"}, status: 404)
-
-      resource.delete
-      refute resource.running?
-
-      assert_requested delete
-      assert_requested get, times: 2
+      assert_request(:get, url, to_return: [{body: "{}"}, {status: 404}]) do
+        resource.delete
+        refute resource.running?
+      end
     end
 
     it "fails when deletion fails" do
       tries = 9
-      get = stub_request(:get, url).to_return(body: "{}")
-      resource.expects(:sleep).times(tries)
+      assert_request(:get, url, to_return: {body: "{}"}, times: tries + 1) do
+        resource.expects(:sleep).times(tries)
 
-      e = assert_raises(RuntimeError) { resource.delete }
-      e.message.must_equal "Unable to delete resource"
-
-      assert_requested delete
-      assert_requested get, times: tries + 1
+        e = assert_raises(RuntimeError) { resource.delete }
+        e.message.must_equal "Unable to delete resource"
+      end
     end
   end
 
   describe "#uid" do
     it "returns the uid of the created resource" do
-      stub_request(:get, url).to_return(body: {metadata: {uid: 123}}.to_json)
-      resource.uid.must_equal 123
+      assert_request(:get, url, to_return: {body: {metadata: {uid: 123}}.to_json}) do
+        resource.uid.must_equal 123
+      end
     end
 
     it "returns nil when resource is missing" do
-      stub_request(:get, url).to_return(status: 404)
+      assert_request(:get, url, to_return: {status: 404}) do
+        resource.uid.must_be_nil
+      end
     end
   end
 
@@ -198,13 +201,15 @@ describe Kubernetes::Resource do
     end
 
     it "expects a constant number of pods when using autoscaling" do
-      stub_request(:get, url).to_return(body: {spec: {replicas: 4}}.to_json)
-      autoscaled_resource.desired_pod_count.must_equal 4
+      assert_request(:get, url, to_return: {body: {spec: {replicas: 4}}.to_json}) do
+        autoscaled_resource.desired_pod_count.must_equal 4
+      end
     end
 
     it "uses template amount when creating with autoscaling" do
-      stub_request(:get, url).to_return(status: 404)
-      autoscaled_resource.desired_pod_count.must_equal 2
+      assert_request(:get, url, to_return: {status: 404}) do
+        autoscaled_resource.desired_pod_count.must_equal 2
+      end
     end
   end
 
@@ -226,7 +231,7 @@ describe Kubernetes::Resource do
     end
 
     let(:kind) { 'DaemonSet' }
-    let(:url) { "http://foobar.server/apis/extensions/v1beta1/namespaces/pod1/daemonsets/some-project" }
+    let(:url) { "#{origin}/apis/extensions/v1beta1/namespaces/pod1/daemonsets/some-project" }
 
     describe "#client" do
       it "uses the extension client because it is in beta" do
@@ -239,11 +244,11 @@ describe Kubernetes::Resource do
       before { template[:spec] = {template: {spec: {}}} }
 
       it "creates when missing" do
-        stub_request(:get, url).to_return(status: 404)
-
-        request = stub_request(:post, base_url).to_return(body: "{}")
-        resource.deploy
-        assert_requested request
+        assert_request(:get, url, to_return: {status: 404}) do
+          assert_request(:post, base_url, to_return: {body: "{}"}) do
+            resource.deploy
+          end
+        end
       end
 
       it "deletes and created when daemonset exists without pods" do
@@ -288,40 +293,43 @@ describe Kubernetes::Resource do
       before { template[:spec] = {replicas: 2 } }
 
       it "reads the value from the server since it is comlicated" do
-        stub_request(:get, url).to_return(body: {status: {desiredNumberScheduled: 5}}.to_json)
-        resource.desired_pod_count.must_equal 5
+        assert_request(:get, url, to_return: {body: {status: {desiredNumberScheduled: 5}}.to_json}) do
+          resource.desired_pod_count.must_equal 5
+        end
       end
 
       it "retries once when initial state has 0 desired pods" do
-        request = stub_request(:get, url).to_return(
-          {body: {status: {desiredNumberScheduled: 0}}.to_json},
-          body: {status: {desiredNumberScheduled: 5}}.to_json
-        )
-        resource.desired_pod_count.must_equal 5
-        assert_requested request, times: 2
+        assert_request(
+          :get,
+          url,
+          to_return: [
+            {body: {status: {desiredNumberScheduled: 0}}.to_json},
+            {body: {status: {desiredNumberScheduled: 5}}.to_json}
+          ]
+        ) { resource.desired_pod_count.must_equal 5 }
       end
 
       it "blows up when desired count cannot be found (bad state or no nodes are available)" do
-        request = stub_request(:get, url).to_return(body: {status: {desiredNumberScheduled: 0}}.to_json)
-        resource.expects(:loop_sleep).once
-        assert_raises Samson::Hooks::UserError do
-          resource.desired_pod_count
+        assert_request(:get, url, to_return: {body: {status: {desiredNumberScheduled: 0}}.to_json}, times: 2) do
+          resource.expects(:loop_sleep).once
+          assert_raises Samson::Hooks::UserError do
+            resource.desired_pod_count
+          end
         end
-        assert_requested request, times: 2
       end
     end
 
     describe "#revert" do
       let(:kind) { 'DaemonSet' }
+      let(:base_url) { "#{origin}/apis/extensions/v1beta1/namespaces/bar/daemonsets" }
 
       it "reverts to previous version" do
         # checks if it exists and then creates the old resource
-        stub_request(:get, "http://foobar.server/apis/extensions/v1beta1/namespaces/bar/daemonsets/foo").
-          to_return(status: 404)
-        stub_request(:post, "http://foobar.server/apis/extensions/v1beta1/namespaces/bar/daemonsets").
-          to_return(body: "{}")
-
-        resource.revert(metadata: {name: 'foo', namespace: 'bar'}, kind: kind)
+        assert_request(:get, "#{base_url}/foo", to_return: {status: 404}) do
+          assert_request(:post, base_url, to_return: {body: "{}"}) do
+            resource.revert(metadata: {name: 'foo', namespace: 'bar'}, kind: kind)
+          end
+        end
       end
 
       it "deletes when there was no previous version" do
@@ -340,7 +348,7 @@ describe Kubernetes::Resource do
     end
 
     let(:kind) { 'Deployment' }
-    let(:url) { "http://foobar.server/apis/extensions/v1beta1/namespaces/pod1/deployments/some-project" }
+    let(:url) { "#{origin}/apis/extensions/v1beta1/namespaces/pod1/deployments/some-project" }
 
     describe "#client" do
       it "uses the extension client because it is in beta" do
@@ -350,9 +358,9 @@ describe Kubernetes::Resource do
 
     describe "#delete" do
       it "does nothing when deployment is deleted" do
-        request = stub_request(:get, url).to_return(status: 404)
-        resource.delete
-        assert_requested request
+        assert_request(:get, url, to_return: {status: 404}) do
+          resource.delete
+        end
       end
 
       it "waits for pods to terminate before deleting" do
@@ -376,10 +384,11 @@ describe Kubernetes::Resource do
         basic = {kind: 'Deployment', metadata: {name: 'some-project', namespace: 'pod1'}}
         previous = basic.deep_merge(metadata: {uid: 'UID'}).freeze
 
-        stub_request(:get, url).to_return(body: "{}")
-        stub_request(:put, url).with { |request| request.body.must_equal basic.to_json }
-
-        resource.revert(previous)
+        assert_request(:get, url, to_return: {body: "{}"}) do
+          assert_request(:put, url, with: ->(request) { request.body.must_equal basic.to_json }) do
+            resource.revert(previous)
+          end
+        end
       end
 
       it "deletes when there was no previous version" do
@@ -398,7 +407,7 @@ describe Kubernetes::Resource do
     end
 
     let(:kind) { 'StatefulSet' }
-    let(:url) { "http://foobar.server/apis/apps/v1beta1/namespaces/pod1/statefulsets/some-project" }
+    let(:url) { "#{origin}/apis/apps/v1beta1/namespaces/pod1/statefulsets/some-project" }
 
     describe "#client" do
       it "uses the apps client because it is in beta" do
@@ -408,20 +417,20 @@ describe Kubernetes::Resource do
 
     describe "#deploy" do
       it "creates when missing" do
-        stub_request(:get, url).to_return(status: 404)
-
-        create = stub_request(:post, base_url).to_return(body: "{}")
-        resource.deploy
-        assert_requested create
+        assert_request(:get, url, to_return: {status: 404}) do
+          assert_request(:post, base_url, to_return: {body: "{}"}) do
+            resource.deploy
+          end
+        end
       end
 
       it "updates when running and using RollingUpdate" do
         template[:spec][:updateStrategy] = "RollingUpdate"
-        stub_request(:get, url).to_return(body: "{}")
-
-        update = stub_request(:put, url).to_return(body: "{}")
-        resource.deploy
-        assert_requested update
+        assert_request(:get, url, to_return: {body: "{}"}) do
+          assert_request(:put, url, to_return: {body: "{}"}) do
+            resource.deploy
+          end
+        end
       end
 
       it "patches and deletes pods when using OnDelete (default)" do
@@ -432,17 +441,21 @@ describe Kubernetes::Resource do
             template: {spec: {containers: []}}
           }
         }
-        stub_request(:get, url).to_return(body: set.to_json)
-        assert_pod_deletion do
-          update = stub_request(:patch, url).
-            with(headers: {"Content-Type" => "application/json-patch+json"}).
-            to_return(body: "{}")
-          resource.expects(:pods).times(2).returns(
-            [{metadata: {creationTimestamp: '1', name: 'pod1', namespace: 'name1'}}],
-            [{metadata: {creationTimestamp: '2'}}]
-          )
-          resource.deploy
-          assert_requested update
+        assert_request(:get, url, to_return: {body: set.to_json}) do
+          assert_pod_deletion do
+            assert_request(
+              :patch,
+              url,
+              with: {headers: {"Content-Type" => "application/json-patch+json"}},
+              to_return: {body: "{}"}
+            ) do
+              resource.expects(:pods).times(2).returns(
+                [{metadata: {creationTimestamp: '1', name: 'pod1', namespace: 'name1'}}],
+                [{metadata: {creationTimestamp: '2'}}]
+              )
+              resource.deploy
+            end
+          end
         end
       end
     end
@@ -450,7 +463,7 @@ describe Kubernetes::Resource do
 
   describe Kubernetes::Resource::Job do
     let(:kind) { 'Job' }
-    let(:url) { "http://foobar.server/apis/batch/v1/namespaces/pod1/jobs/some-project" }
+    let(:url) { "#{origin}/apis/batch/v1/namespaces/pod1/jobs/some-project" }
 
     describe "#client" do
       it "uses the extension client because it is in beta" do
@@ -460,30 +473,30 @@ describe Kubernetes::Resource do
 
     describe "#deploy" do
       it "creates when missing" do
-        stub_request(:get, url).to_return(status: 404)
-
-        request = stub_request(:post, base_url).to_return(body: "{}")
-        resource.deploy
-        assert_requested request
+        assert_request(:get, url, to_return: {status: 404}) do
+          assert_request(:post, base_url, to_return: {body: "{}"}) do
+            resource.deploy
+          end
+        end
       end
 
       it "replaces existing" do
         job = {spec: {template: {metadata: {labels: {release_id: 123, deploy_group_id: 234}}}}}
-        stub_request(:get, url).to_return({body: job.to_json}, status: 404)
-        delete_job = stub_request(:delete, url).to_return(body: '{}')
-        create = nil
-
-        query = "http://foobar.server/api/v1/namespaces/pod1/pods?labelSelector=release_id=123,deploy_group_id=234"
-        get_pods = stub_request(:get, query).
-          to_return(body: '{"items":[{"metadata":{"name":"pod1","namespace":"name1"}}]}')
-        assert_pod_deletion do
-          create = stub_request(:post, base_url).to_return(body: "{}")
-          resource.deploy
+        assert_request(:get, url, to_return: [{body: job.to_json}, {status: 404}]) do
+          assert_request(:delete, url, to_return: {body: '{}'}) do
+            assert_request(
+              :get,
+              "#{origin}/api/v1/namespaces/pod1/pods?labelSelector=release_id=123,deploy_group_id=234",
+              to_return: {body: '{"items":[{"metadata":{"name":"pod1","namespace":"name1"}}]}'}
+            ) do
+              assert_pod_deletion do
+                assert_request(:post, base_url, to_return: {body: "{}"}) do
+                  resource.deploy
+                end
+              end
+            end
+          end
         end
-
-        assert_requested get_pods
-        assert_requested delete_job
-        assert_requested create
       end
     end
 
@@ -512,43 +525,51 @@ describe Kubernetes::Resource do
       end
 
       it "creates when missing" do
-        stub_request(:get, url).to_return(status: 404)
-
-        request = stub_request(:post, base_url).to_return(body: "{}")
-        resource.deploy
-        assert_requested request
+        assert_request(:get, url, to_return: {status: 404}) do
+          assert_request(:post, base_url, to_return: {body: "{}"}) do
+            resource.deploy
+          end
+        end
       end
 
       it "replaces existing while keeping fields that kubernetes demands" do
-        stub_request(:get, url).to_return(body: old.to_json)
-        stub_request(:put, url).with(body: expected_body.to_json)
-        resource.deploy
+        assert_request(:get, url, to_return: {body: old.to_json}) do
+          assert_request(:put, url, with: {body: expected_body.to_json}) do
+            resource.deploy
+          end
+        end
       end
 
       it "keeps whitelisted fields" do
         with_env KUBERNETES_SERVICE_PERSISTENT_FIELDS: "metadata.foo" do
-          stub_request(:get, url).to_return(body: old.to_json)
-          stub_request(:put, url).with(body: expected_body.deep_merge(metadata: {foo: "B"}).to_json)
-          resource.deploy
+          assert_request(:get, url, to_return: {body: old.to_json}) do
+            assert_request(:put, url, with: {body: expected_body.deep_merge(metadata: {foo: "B"}).to_json}) do
+              resource.deploy
+            end
+          end
         end
       end
 
       it "ignores unknown whitelisted fields" do
         with_env KUBERNETES_SERVICE_PERSISTENT_FIELDS: "metadata.nope" do
-          stub_request(:get, url).to_return(body: old.to_json)
-          stub_request(:put, url).with(body: expected_body.to_json)
-          resource.deploy
+          assert_request(:get, url, to_return: {body: old.to_json}) do
+            assert_request(:put, url, with: {body: expected_body.to_json}) do
+              resource.deploy
+            end
+          end
         end
       end
 
       it "allows adding whitelisted fields" do
         with_env KUBERNETES_SERVICE_PERSISTENT_FIELDS: "metadata.nope" do
           template[:metadata][:nope] = "X"
-          stub_request(:get, url).to_return(body: old.to_json)
-          expected_body[:metadata][:nope] = "X"
-          expected_body[:metadata][:resourceVersion] = expected_body[:metadata].delete(:resourceVersion) # has ordering
-          stub_request(:put, url).with(body: expected_body.to_json)
-          resource.deploy
+          assert_request(:get, url, to_return: {body: old.to_json}) do
+            expected_body[:metadata][:nope] = "X"
+            expected_body[:metadata][:resourceVersion] = expected_body[:metadata].delete(:resourceVersion) # keep order
+            assert_request(:put, url, with: {body: expected_body.to_json}) do
+              resource.deploy
+            end
+          end
         end
       end
     end
@@ -558,14 +579,14 @@ describe Kubernetes::Resource do
     # a simple test to make sure basics work
     describe "#deploy" do
       let(:kind) { 'ConfigMap' }
-      let(:url) { "http://foobar.server/api/v1/namespaces/pod1/configmaps/some-project" }
+      let(:url) { "#{origin}/api/v1/namespaces/pod1/configmaps/some-project" }
 
       it "creates when missing" do
-        stub_request(:get, url).to_return(status: 404)
-
-        request = stub_request(:post, base_url).to_return(body: "{}")
-        resource.deploy
-        assert_requested request
+        assert_request(:get, url, to_return: {status: 404}) do
+          assert_request(:post, base_url, to_return: {body: "{}"}) do
+            resource.deploy
+          end
+        end
       end
     end
   end
@@ -574,45 +595,36 @@ describe Kubernetes::Resource do
     let(:kind) { 'Pod' }
 
     describe "#deploy" do
-      let(:url) { "http://foobar.server/api/v1/namespaces/pod1/pods/some-project" }
+      let(:url) { "#{origin}/api/v1/namespaces/pod1/pods/some-project" }
 
       it "creates when missing" do
-        stub_request(:get, url).to_return(status: 404)
-
-        request = stub_request(:post, base_url).to_return(body: "{}")
-        resource.deploy
-        assert_requested request
+        assert_request(:get, url, to_return: {status: 404}) do
+          assert_request(:post, base_url, to_return: {body: "{}"}) do
+            resource.deploy
+          end
+        end
       end
 
       it "replaces when existing" do
-        get = stub_request(:get, url).to_return({body: "{}"}, status: 404)
-        delete = stub_request(:delete, url)
-        create = stub_request(:post, base_url).to_return(body: "{}")
-
-        resource.deploy
-
-        assert_requested get, times: 2
-        assert_requested delete
-        assert_requested create
+        assert_request(:get, url, to_return: [{body: "{}"}, {status: 404}]) do
+          assert_request(:delete, url) do
+            assert_request(:post, base_url, to_return: {body: "{}"}) do
+              resource.deploy
+            end
+          end
+        end
       end
 
       it "waits for deletion to finish before replacing to avoid duplication errors" do
         resource.expects(:sleep).times(2)
 
-        get = stub_request(:get, url).to_return(
-          {body: "{}"},
-          {body: "{}"},
-          {body: "{}"},
-          status: 404
-        )
-        delete = stub_request(:delete, url)
-        create = stub_request(:post, base_url).to_return(body: "{}")
-
-        resource.deploy
-
-        assert_requested get, times: 4
-        assert_requested delete
-        assert_requested create
+        assert_request(:get, url, to_return: [{body: "{}"}, {body: "{}"}, {body: "{}"}, {status: 404}]) do
+          assert_request(:delete, url) do
+            assert_request(:post, base_url, to_return: {body: "{}"}) do
+              resource.deploy
+            end
+          end
+        end
       end
     end
 
