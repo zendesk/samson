@@ -38,14 +38,16 @@ describe Samson::Secrets::VaultServer do
     end
 
     it "is invalid when it cannot connect to vault" do
-      stub_request(:get, "http://vault-land.com/v1/secret/apps/?list=true").to_timeout
-      refute_valid server
+      assert_request(:get, "http://vault-land.com/v1/secret/apps/?list=true", to_timeout: []) do
+        refute_valid server
+      end
     end
 
     it "is invalid when vault connection fails" do
-      stub_request(:get, "http://vault-land.com/v1/secret/apps/?list=true").
-        to_raise(Vault::HTTPError.new("address", stub(code: '200')))
-      refute_valid server
+      assert_request(
+        :get, "http://vault-land.com/v1/secret/apps/?list=true",
+        to_raise: Vault::HTTPError.new("address", stub(code: '200'))
+      ) { refute_valid server }
     end
   end
 

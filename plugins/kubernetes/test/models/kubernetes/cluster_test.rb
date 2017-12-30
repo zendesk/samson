@@ -13,14 +13,16 @@ describe Kubernetes::Cluster do
 
     it "is invalid when api version is wrong" do
       cluster.class.any_instance.unstub(:connection_valid?)
-      stub_request(:get, "http://foobar.server/api").to_return(body: '{}')
-      refute_valid cluster
+      assert_request(:get, "http://foobar.server/api", to_return: {body: '{}'}) do
+        refute_valid cluster
+      end
     end
 
     it "is invalid when api is dead" do
       cluster.class.any_instance.unstub(:connection_valid?)
-      stub_request(:get, "http://foobar.server/api").to_return(status: 404)
-      refute_valid cluster
+      assert_request(:get, "http://foobar.server/api", to_return: {status: 404}) do
+        refute_valid cluster
+      end
     end
 
     it "is invalid when config file does not exist" do
@@ -83,9 +85,9 @@ describe Kubernetes::Cluster do
   describe "#namespaces" do
     it 'ignores kube-system because it is internal and should not be deployed too' do
       items = [{metadata: {name: 'N1'}}, {metadata: {name: 'N2'}}, {metadata: {name: 'kube-system'}}]
-      stub_request(:get, "http://foobar.server/api/v1/namespaces").
-        to_return(body: {items: items, }.to_json)
-      cluster.namespaces.must_equal ['N1', 'N2']
+      assert_request(:get, "http://foobar.server/api/v1/namespaces", to_return: {body: {items: items, }.to_json}) do
+        cluster.namespaces.must_equal ['N1', 'N2']
+      end
     end
   end
 
@@ -101,8 +103,9 @@ describe Kubernetes::Cluster do
     end
 
     it "is false api is unreachable" do
-      stub_request(:get, "http://foobar.server/api/v1/namespaces").to_return(status: 404)
-      refute cluster.namespace_exists?('a')
+      assert_request(:get, "http://foobar.server/api/v1/namespaces", to_return: {status: 404}) do
+        refute cluster.namespace_exists?('a')
+      end
     end
   end
 
@@ -131,8 +134,9 @@ describe Kubernetes::Cluster do
     end
 
     it "does not blow up on connection issues" do
-      stub_request(:get, "http://foobar.server/api/v1/nodes").to_timeout
-      cluster.schedulable_nodes.must_equal []
+      assert_request(:get, "http://foobar.server/api/v1/nodes", to_timeout: []) do
+        cluster.schedulable_nodes.must_equal []
+      end
     end
   end
 

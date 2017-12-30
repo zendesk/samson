@@ -4,13 +4,16 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe DatadogMonitor do
-  def stub_datadog(state)
-    stub_request(:get, monitor_url).
-      to_return(status: 200, body: api_response.merge("overall_state" => state).to_json)
+  def assert_datadog(state, &block)
+    assert_request(
+      :get, monitor_url,
+      to_return: {body: api_response.merge("overall_state" => state).to_json},
+      &block
+    )
   end
 
-  def stub_datadog_timeout
-    stub_request(:get, monitor_url).to_timeout
+  def assert_datadog_timeout(&block)
+    assert_request(:get, monitor_url, to_timeout: [], &block)
   end
 
   let(:monitor) { DatadogMonitor.new(123) }
@@ -19,30 +22,35 @@ describe DatadogMonitor do
 
   describe "#status" do
     it "passes when it passes" do
-      stub_datadog("OK")
-      monitor.status.must_equal :pass
+      assert_datadog("OK") do
+        monitor.status.must_equal :pass
+      end
     end
 
     it "fails when it fails" do
-      stub_datadog("Alert")
-      monitor.status.must_equal :fail
+      assert_datadog("Alert") do
+        monitor.status.must_equal :fail
+      end
     end
 
     it "errors when it times out" do
-      stub_datadog_timeout
-      silence_stderr { monitor.status.must_equal :error }
+      assert_datadog_timeout do
+        silence_stderr { monitor.status.must_equal :error }
+      end
     end
   end
 
   describe "#name" do
     it "is there" do
-      stub_datadog("OK")
-      monitor.name.must_equal "Monitor Slow foo"
+      assert_datadog("OK") do
+        monitor.name.must_equal "Monitor Slow foo"
+      end
     end
 
     it "is error when request times out" do
-      stub_datadog_timeout
-      silence_stderr { monitor.name.must_equal "error" }
+      assert_datadog_timeout do
+        silence_stderr { monitor.name.must_equal "error" }
+      end
     end
   end
 

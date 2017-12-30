@@ -7,19 +7,12 @@ module VaultRequestHelper
     end
   end
 
-  def assert_vault_request(method, path, response = {})
-    with = response.delete(:with)
-    response[:headers] ||= {content_type: 'application/json'} # does not parse json without
-    response[:body] ||= "{}" # errors need a basic response too
-    times = response.delete(:times) || 1
-
-    # make calling code easy to read by not having to encode keys
-    request = stub_request(method, "http://vault-land.com/v1/secret/apps/#{path}")
-    request = request.with(with) if with
-    request = request.to_return(response)
-
-    yield # no ensure, so it does not fail when we already blew up
-
-    assert_requested request, times: times
+  def assert_vault_request(method, path, options = {}, &block)
+    options[:to_return] = {
+      headers: options.delete(:headers) || {content_type: 'application/json'}, # does not parse json without
+      body: options.delete(:body) || "{}", # errors need a basic response too
+      status: options.delete(:status) || 200
+    }
+    assert_request(method, "http://vault-land.com/v1/secret/apps/#{path}", options, &block)
   end
 end
