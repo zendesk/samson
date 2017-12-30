@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-class ActiveSupport::TestCase
+ActiveSupport::TestCase.class_eval do
   def assert_request(method, path, options = {})
     if options[:to_return].is_a?(Array) && !options[:times]
       options = options.merge(times: options[:to_return].size)
@@ -18,5 +18,14 @@ class ActiveSupport::TestCase
     yield
 
     assert_requested request, assertion_options
+  end
+
+  def stub_github_api(url, response = {}, status = 200)
+    url = 'https://api.github.com/' + url
+    stub_request(:get, url).to_return(
+      status: status,
+      body: JSON.dump(response),
+      headers: { 'Content-Type' => 'application/json' }
+    )
   end
 end

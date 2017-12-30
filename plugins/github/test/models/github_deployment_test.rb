@@ -4,8 +4,6 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe GithubDeployment do
-  include StubGithubAPI
-
   let(:user) { users(:deployer) }
   let(:project) { projects(:test) }
   let(:stage) { stages(:test_staging) }
