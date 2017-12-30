@@ -176,6 +176,10 @@ ActiveSupport::TestCase.class_eval do
     DockerRegistry.instance_variable_set :@all, nil
     ENV['DOCKER_REGISTRIES'] = old
   end
+
+  def stub_github_status_check
+    stub_request(:get, "#{Rails.application.config.samson.github.status_url}/api/status.json").to_return(body: "{}")
+  end
 end
 
 # Helpers for controller tests
@@ -256,7 +260,7 @@ ActionController::TestCase.class_eval do
     middleware = Rails.application.config.middleware.detect { |m| m.name == 'Warden::Manager' }
     manager = Warden::Manager.new(nil, &middleware.block)
     request.env['warden'] = Warden::Proxy.new(request.env, manager)
-    stub_request(:get, "#{Rails.application.config.samson.github.status_url}/api/status.json").to_timeout
+    stub_github_status_check
   end
 
   after do
@@ -291,4 +295,10 @@ ActionController::TestCase.class_eval do
       response
     end
   end)
+end
+
+ActionDispatch::IntegrationTest.class_eval do
+  before do
+    stub_github_status_check
+  end
 end

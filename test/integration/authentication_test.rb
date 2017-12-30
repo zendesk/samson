@@ -5,11 +5,6 @@ SingleCov.not_covered!
 
 # needs Integration at the end for minitest-spec-rails
 describe 'Authentication Integration' do
-  before do
-    # UI wants to show github status
-    stub_request(:get, "#{Rails.application.config.samson.github.status_url}/api/status.json").to_timeout
-  end
-
   let(:user) { users(:admin) }
 
   it "lets 401s get out to inform users of real error causes" do

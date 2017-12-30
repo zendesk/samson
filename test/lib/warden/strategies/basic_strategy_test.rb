@@ -9,11 +9,6 @@ describe 'Warden::Strategies::BasicStrategy Integration' do
     get "/", headers: {HTTP_AUTHORIZATION: authorization}
   end
 
-  before do
-    # UI wants to show github status
-    stub_request(:get, "#{Rails.application.config.samson.github.status_url}/api/status.json").to_timeout
-  end
-
   let!(:user) { users(:admin) }
   let(:valid_header) { "Basic #{Base64.encode64(user.email + ':' + user.token).strip}" }
 

@@ -11,7 +11,6 @@ describe 'DoorkeeperBaseController Integration' do
   end
 
   it "can access as super-admin" do
-    stub_request(:get, "https://status.github.com/api/status.json").to_return(body: "{}")
     login_as users(:super_admin)
     get '/oauth/applications'
     assert_response :success
