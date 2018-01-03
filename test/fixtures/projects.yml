@@ -4,3 +4,9 @@ test:
   token: kanyewest
   permalink: foo
   include_new_deploy_groups: true
+
+other:
+  name: Bar
+  repository_url: ssh://git@example.com:bar/bar.git
+  token: othertoken
+  permalink: bar

@@ -325,14 +325,14 @@ describe Project do
     it 'returns unstarred projects in alphabetical order' do
       Project.create!(name: 'A', repository_url: url)
       Project.create!(name: 'Z', repository_url: url)
-      Project.ordered_for_user(author).map(&:name).must_equal ['A', 'Foo', 'Z']
+      Project.ordered_for_user(author).map(&:name).must_equal ['A', 'Bar', 'Foo', 'Z']
     end
 
     it 'returns starred projects in alphabetical order' do
       Project.create!(name: 'A', repository_url: url)
       z = Project.create!(name: 'Z', repository_url: url)
       author.stars.create!(project: z)
-      Project.ordered_for_user(author).map(&:name).must_equal ['Z', 'A', 'Foo']
+      Project.ordered_for_user(author).map(&:name).must_equal ['Z', 'A', 'Bar', 'Foo']
     end
   end
 

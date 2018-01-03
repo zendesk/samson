@@ -48,7 +48,7 @@ describe Permalinkable do
 
     it "behaves like find when not finding" do
       assert_raise ActiveRecord::RecordNotFound do
-        Project.find_by_param!("bar")
+        Project.find_by_param!("baz")
       end
     end
 

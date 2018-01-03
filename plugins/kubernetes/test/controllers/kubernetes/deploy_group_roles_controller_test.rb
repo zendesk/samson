@@ -18,7 +18,7 @@ describe Kubernetes::DeployGroupRolesController do
     describe "#index" do
       before do
         # one different to test filtering
-        kubernetes_deploy_group_roles(:test_pod1_resque_worker).update_column(:project_id, 123)
+        kubernetes_deploy_group_roles(:test_pod1_resque_worker).update_column(:project_id, projects(:other).id)
       end
 
       it "renders" do
