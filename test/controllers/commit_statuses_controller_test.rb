@@ -16,7 +16,7 @@ describe CommitStatusesController do
 
       it "fails with unknown project" do
         assert_raises ActiveRecord::RecordNotFound do
-          get :show, params: valid_params.merge(project_id: 'bar')
+          get :show, params: valid_params.merge(project_id: 'baz')
         end
       end
 

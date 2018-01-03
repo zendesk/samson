@@ -33,7 +33,6 @@ class Kubernetes::DeployGroupRolesController < ApplicationController
       end
     end
 
-    @deploy_group_roles = ::Kubernetes::DeployGroupRole
     [:project_id, :deploy_group_id].each do |scope|
       if id = params.dig(:search, scope).presence
         @deploy_group_roles = @deploy_group_roles.where(scope => id)

@@ -9,6 +9,7 @@ describe ProjectsController do
   before do
     Project.any_instance.stubs(:clone_repository).returns(true)
     Project.any_instance.stubs(:valid_repository_url).returns(true)
+    projects(:other).delete
   end
 
   as_a_viewer do
