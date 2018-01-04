@@ -136,10 +136,11 @@ describe SamsonAwsEcr::Engine do
 
   describe '.ecr_clients' do
     it 'is caches' do
-      stub_request(:get, %r{/latest/meta-data/iam/security-credentials/})
-      Array.new(2).map do
-        SamsonAwsEcr::Engine.send(:ecr_client, DockerRegistry.first).object_id
-      end.uniq.size.must_equal 1
+      assert_request(:get, %r{/latest/meta-data/iam/security-credentials/}, times: 3) do
+        Array.new(2).map do
+          SamsonAwsEcr::Engine.send(:ecr_client, DockerRegistry.first).object_id
+        end.uniq.size.must_equal 1
+      end
     end
   end
 
@@ -150,8 +151,9 @@ describe SamsonAwsEcr::Engine do
     end
 
     it "is active when on ecr" do
-      stub_request(:get, "http://169.254.169.254/latest/meta-data/iam/security-credentials/")
-      assert SamsonAwsEcr::Engine.active?
+      assert_request(:get, "http://169.254.169.254/latest/meta-data/iam/security-credentials/", times: 3) do
+        assert SamsonAwsEcr::Engine.active?
+      end
     end
   end
 end

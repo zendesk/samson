@@ -49,8 +49,6 @@ describe 'Warden::Strategies::DoorkeeperStrategy Integration' do
   describe "when accessing web-ui" do
     let(:path) { "/profile" }
 
-    before { stub_request(:get, "https://status.github.com/api/status.json").to_return(body: "{}") }
-
     it "checks and fails when using restricted token" do
       perform_get(valid_header)
       assert_response :unauthorized

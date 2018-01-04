@@ -4,8 +4,6 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe Project do
-  include StubGithubAPI
-
   let(:project) { projects(:test) }
   let(:author) { users(:deployer) }
   let(:url) { "git://foo.com:hello/world.git" }

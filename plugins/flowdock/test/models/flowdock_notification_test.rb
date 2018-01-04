@@ -15,31 +15,22 @@ describe FlowdockNotification do
   end
 
   it "sends a buddy request for all Flowdock flows configured for the stage" do
-    delivery = stub_request(:post, chat_endpoint)
-    notification.buddy_request('test message')
-
-    assert_requested delivery
+    assert_request(:post, chat_endpoint) do
+      notification.buddy_request('test message')
+    end
   end
 
   it "notifies all Flowdock flows configured for the stage" do
-    delivery = stub_request(:post, endpoint)
-    notification.deliver
-
-    assert_requested delivery
+    assert_request(:post, endpoint) do
+      notification.deliver
+    end
   end
 
   it "renders a nicely formatted notification" do
-    stub_request(:post, endpoint)
-    FlowdockNotificationRenderer.stubs(:render).returns("bar")
-    notification.deliver
-
-    content = nil
-    assert_requested :post, endpoint do |request|
-      body = Rack::Utils.parse_query(request.body)
-      content = body.fetch("content")
+    assert_request(:post, endpoint, with: ->(r) { r.body.must_include "content=bar" }) do
+      FlowdockNotificationRenderer.stubs(:render).returns("bar")
+      notification.deliver
     end
-
-    content.must_equal "bar"
   end
 
   describe "#default_buddy_request_message" do

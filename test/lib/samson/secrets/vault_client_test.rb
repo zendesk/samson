@@ -81,9 +81,12 @@ describe Samson::Secrets::VaultClient do
 
   describe "#renew_token" do
     it "renews the token" do
-      stub_request(:put, "http://vault-land.com/v1/auth/token/renew-self").
-        to_return(body: "{}", headers: {content_type: 'application/json'})
-      client.renew_token
+      assert_request(
+        :put,
+        "http://vault-land.com/v1/auth/token/renew-self",
+        to_return: {body: "{}", headers: {content_type: 'application/json'}},
+        times: 2
+      ) { client.renew_token }
     end
   end
 

@@ -25,45 +25,36 @@ require 'mocha/setup'
 # Use ActiveSupport::TestCase for everything that was not matched before
 MiniTest::Spec::DSL::TYPES[-1] = [//, ActiveSupport::TestCase]
 
-module StubGithubAPI
-  def stub_github_api(url, response = {}, status = 200)
-    url = 'https://api.github.com/' + url
-    stub_request(:get, url).to_return(
-      status: status,
-      body: JSON.dump(response),
-      headers: { 'Content-Type' => 'application/json' }
-    )
+Mocha::Expectation.class_eval do
+  def capture(into)
+    with { |*args| into << args }
   end
 end
 
-module DefaultStubs
-  def create_default_stubs
-    SseRailsEngine.stubs(:send_event).returns(true)
-    Project.any_instance.stubs(:clone_repository).returns(true)
-    Project.any_instance.stubs(:clean_repository).returns(true)
-  end
+ActiveRecord::Migration.check_pending!
 
-  def undo_default_stubs
-    Project.any_instance.unstub(:clone_repository)
-    Project.any_instance.unstub(:clean_repository)
-    SseRailsEngine.unstub(:send_event)
+Samson::Hooks.symlink_plugin_fixtures
+
+# Use AD::IntegrationTest for the base class when describing a controller
+# https://github.com/blowmage/minitest-rails/issues/195
+class ActionController::TestCase
+  register_spec_type(self) do |desc|
+    desc.is_a?(Class) && desc < ActionController::Metal
   end
 end
 
-class ActiveSupport::TestCase
+ActiveRecord::Base.logger.level = 1
+WebMock.disable_net_connect!(allow: 'codeclimate.com')
+
+Dir["test/support/*"].each { |f| require File.expand_path(f) }
+
+# Helpers for all tests
+ActiveSupport::TestCase.class_eval do
   include Warden::Test::Helpers
-  include StubGithubAPI
-  include DefaultStubs
 
-  ActiveRecord::Migration.check_pending!
-
-  Samson::Hooks.symlink_plugin_fixtures
   fixtures :all
 
-  before do
-    Rails.cache.clear
-    create_default_stubs
-  end
+  before { Rails.cache.clear }
 
   def assert_valid(record)
     assert record.valid?, record.errors.full_messages
@@ -185,18 +176,14 @@ class ActiveSupport::TestCase
     DockerRegistry.instance_variable_set :@all, nil
     ENV['DOCKER_REGISTRIES'] = old
   end
-end
 
-Mocha::Expectation.class_eval do
-  def capture(into)
-    with { |*args| into << args }
+  def stub_github_status_check
+    stub_request(:get, "#{Rails.application.config.samson.github.status_url}/api/status.json").to_return(body: "{}")
   end
 end
 
-class ActionController::TestCase
-  include StubGithubAPI
-  include DefaultStubs
-
+# Helpers for controller tests
+ActionController::TestCase.class_eval do
   class << self
     def unauthorized(method, action, params = {})
       it "is unauthorized when doing a #{method} to #{action} with #{params}" do
@@ -221,6 +208,63 @@ class ActionController::TestCase
         end
       end
     end
+
+    def oauth_setup!
+      let(:redirect_uri) { 'urn:ietf:wg:oauth:2.0:oob' }
+      let(:oauth_app) do
+        Doorkeeper::Application.new do |app|
+          app.name = "Test App"
+          app.redirect_uri = redirect_uri
+          app.scopes = :default
+        end
+      end
+      let(:user) { users(:admin) }
+      let(:token) do
+        oauth_app.access_tokens.new do |token|
+          token.resource_owner_id = user.id
+          token.application_id = oauth_app.id
+          token.expires_in = 1000
+          token.scopes = :default
+        end
+      end
+
+      before do
+        token.save!
+        json!
+        auth!("Bearer #{token.token}")
+      end
+    end
+
+    def use_test_routes(controller)
+      controller_name = controller.name.underscore.sub('_controller', '')
+      before do
+        Rails.application.routes.draw do
+          controller.action_methods.each do |action|
+            match(
+              "/test/:test_route/#{action}",
+              via: [:get, :post, :put, :patch, :delete],
+              controller: controller_name,
+              action: action
+            )
+          end
+        end
+      end
+
+      after do
+        Rails.application.reload_routes!
+      end
+    end
+  end
+
+  before do
+    middleware = Rails.application.config.middleware.detect { |m| m.name == 'Warden::Manager' }
+    manager = Warden::Manager.new(nil, &middleware.block)
+    request.env['warden'] = Warden::Proxy.new(request.env, manager)
+    stub_github_status_check
+  end
+
+  after do
+    Warden.test_reset!
   end
 
   # overrides warden/test/helpers.rb which does not work in controller tests
@@ -238,18 +282,6 @@ class ActionController::TestCase
     request.env['HTTP_AUTHORIZATION'] = header
   end
 
-  before do
-    middleware = Rails.application.config.middleware.detect { |m| m.name == 'Warden::Manager' }
-    manager = Warden::Manager.new(nil, &middleware.block)
-    request.env['warden'] = Warden::Proxy.new(request.env, manager)
-    stub_request(:get, "#{Rails.application.config.samson.github.status_url}/api/status.json").to_timeout
-    create_default_stubs
-  end
-
-  after do
-    Warden.test_reset!
-  end
-
   def warden
     request.env['warden']
   end
@@ -263,63 +295,10 @@ class ActionController::TestCase
       response
     end
   end)
-
-  def self.oauth_setup!
-    let(:redirect_uri) { 'urn:ietf:wg:oauth:2.0:oob' }
-    let(:oauth_app) do
-      Doorkeeper::Application.new do |app|
-        app.name = "Test App"
-        app.redirect_uri = redirect_uri
-        app.scopes = :default
-      end
-    end
-    let(:user) { users(:admin) }
-    let(:token) do
-      oauth_app.access_tokens.new do |token|
-        token.resource_owner_id = user.id
-        token.application_id = oauth_app.id
-        token.expires_in = 1000
-        token.scopes = :default
-      end
-    end
-
-    before do
-      token.save!
-      json!
-      auth!("Bearer #{token.token}")
-    end
-  end
-
-  def self.use_test_routes(controller)
-    controller_name = controller.name.underscore.sub('_controller', '')
-    before do
-      Rails.application.routes.draw do
-        controller.action_methods.each do |action|
-          match(
-            "/test/:test_route/#{action}",
-            via: [:get, :post, :put, :patch, :delete],
-            controller: controller_name,
-            action: action
-          )
-        end
-      end
-    end
-
-    after do
-      Rails.application.reload_routes!
-    end
-  end
 end
 
-# https://github.com/blowmage/minitest-rails/issues/195
-class ActionController::TestCase
-  # Use AD::IntegrationTest for the base class when describing a controller
-  register_spec_type(self) do |desc|
-    desc.is_a?(Class) && desc < ActionController::Metal
+ActionDispatch::IntegrationTest.class_eval do
+  before do
+    stub_github_status_check
   end
 end
-
-ActiveRecord::Base.logger.level = 1
-WebMock.disable_net_connect!(allow: 'codeclimate.com')
-
-Dir["test/support/*"].each { |f| require File.expand_path(f) }

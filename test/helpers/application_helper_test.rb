@@ -156,51 +156,29 @@ describe ApplicationHelper do
       refute github_ok?
     end
 
-    describe "with an OK response" do
-      before do
-        stub_request(:get, status_url).to_return(
-          headers: { content_type: 'application/json' },
-          body: JSON.dump(status: 'good')
-        )
-      end
-
-      it 'returns ok and caches' do
+    it "caches good response" do
+      assert_request(:get, status_url, to_return: {body: {status: 'good'}.to_json}) do
         assert github_ok?
         Rails.cache.read(github_status_cache_key).must_equal true
       end
     end
 
-    describe "with a bad response" do
-      before do
-        stub_request(:get, status_url).to_return(
-          headers: { content_type: 'application/json' },
-          body: JSON.dump(status: 'bad')
-        )
-      end
-
-      it 'returns false and does not cache' do
+    it "caches bad response" do
+      assert_request(:get, status_url, to_return: {body: {status: 'bad'}.to_json}) do
         refute github_ok?
         Rails.cache.read(github_status_cache_key).must_equal false
       end
     end
 
-    describe "with an invalid response" do
-      before do
-        stub_request(:get, status_url).to_return(status: 400)
-      end
-
-      it 'returns false and does not cache' do
+    it "caches invalid response" do
+      assert_request(:get, status_url, to_return: {status: 400}) do
         refute github_ok?
         Rails.cache.read(github_status_cache_key).must_equal false
       end
     end
 
-    describe "with a timeout" do
-      before do
-        stub_request(:get, status_url).to_timeout
-      end
-
-      it 'returns false caches' do
+    it "caches timeout" do
+      assert_request(:get, status_url, to_timeout: []) do
         refute github_ok?
         Rails.cache.read(github_status_cache_key).must_equal false
       end

@@ -4,8 +4,6 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe ReleaseService do
-  include StubGithubAPI
-
   let(:project) { projects(:test) }
   let(:service) { ReleaseService.new(project) }
 

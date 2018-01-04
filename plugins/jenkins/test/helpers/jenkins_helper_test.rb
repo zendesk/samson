@@ -13,9 +13,13 @@ describe JenkinsHelper do
     JenkinsJob.create!(name: "test_job", deploy: deploy, jenkins_job_id: 111)
   end
 
-  def stub_build_detail(result, status: 200)
-    stub_request(:get, "http://www.test-url.com/job/test_job/111//api/json").with(headers: {'Authorization' => 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
-      to_return(status: status, body: {result: result, url: job_url}.to_json, headers: {}).to_timeout
+  def assert_build_detail(result, status: 200, &block)
+    assert_request(
+      :get, "http://www.test-url.com/job/test_job/111//api/json",
+      with: {headers: {'Authorization' => 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}},
+      to_return: {status: status, body: {result: result, url: job_url}.to_json, headers: {}},
+      &block
+    )
   end
 
   let(:deploy) { deploys(:succeeded_test) }
@@ -43,16 +47,18 @@ describe JenkinsHelper do
 
     it "shows Passed from jenkins when build starts" do
       jenkins_job = stub_jenkins_job_without_status
-      stub_build_detail("SUCCESS")
-      html = jenkins_status_panel(deploy, jenkins_job)
-      html.must_equal "<a target=\"_blank\" href=\"#{job_url}\"><div class=\"alert alert-success\">Jenkins build test_job for Staging has passed.</div></a>"
+      assert_build_detail("SUCCESS") do
+        html = jenkins_status_panel(deploy, jenkins_job)
+        html.must_equal "<a target=\"_blank\" href=\"#{job_url}\"><div class=\"alert alert-success\">Jenkins build test_job for Staging has passed.</div></a>"
+      end
     end
 
     it "shows Failed status from jenkins when build fails" do
       jenkins_job = stub_jenkins_job_without_status
-      stub_build_detail("FAILURE")
-      html = jenkins_status_panel(deploy, jenkins_job)
-      html.must_equal "<a target=\"_blank\" href=\"#{job_url}\"><div class=\"alert alert-danger\">Jenkins build test_job for Staging has failed.</div></a>"
+      assert_build_detail("FAILURE") do
+        html = jenkins_status_panel(deploy, jenkins_job)
+        html.must_equal "<a target=\"_blank\" href=\"#{job_url}\"><div class=\"alert alert-danger\">Jenkins build test_job for Staging has failed.</div></a>"
+      end
     end
 
     it "shows Unstable message when build status in database is UNSTABLE" do
@@ -63,17 +69,19 @@ describe JenkinsHelper do
 
     it "shows when the jenkins job is missing" do
       jenkins_job = stub_jenkins_job_without_status
-      stub_build_detail("doesnt-matter", status: 404)
-      html = jenkins_status_panel(deploy, jenkins_job)
-      html.must_equal "<a target=\"_blank\" href=\"#\"><div class=\"alert alert-warning\">Jenkins build test_job for Staging Requested component is not found on the Jenkins CI server.</div></a>"
+      assert_build_detail("doesnt-matter", status: 404) do
+        html = jenkins_status_panel(deploy, jenkins_job)
+        html.must_equal "<a target=\"_blank\" href=\"#\"><div class=\"alert alert-warning\">Jenkins build test_job for Staging Requested component is not found on the Jenkins CI server.</div></a>"
+      end
     end
 
     it "does not crash on missing status" do
       jenkins_job = stub_jenkins_job_without_status
-      stub_build_detail(nil, status: 200)
-      jenkins_job.status = nil
-      html = jenkins_status_panel(deploy, jenkins_job)
-      html.must_include "Unable to retrieve status from jenkins"
+      assert_build_detail(nil, status: 200) do
+        jenkins_job.status = nil
+        html = jenkins_status_panel(deploy, jenkins_job)
+        html.must_include "Unable to retrieve status from jenkins"
+      end
     end
 
     it "does not allow xss" do

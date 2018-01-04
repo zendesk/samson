@@ -15,9 +15,9 @@ describe GithubNotification do
     let(:pull_requests) { stub(number: 9) }
 
     it "adds a comment" do
-      comment = stub_request(:post, endpoint)
-      notification.deliver
-      assert_requested comment
+      assert_request(:post, endpoint) do
+        notification.deliver
+      end
     end
   end
 end

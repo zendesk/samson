@@ -19,20 +19,17 @@ describe SamsonAirbrake::Engine do
     end
 
     it "sends a notification" do
-      request = stub_request(:post, "https://api.airbrake.io/deploys.txt").
-        with(
-          body: {
-            "api_key" => "MY-SECRET",
-            "deploy" => {
-              "rails_env" => "staging",
-              "scm_revision" => "abcabcaaabcabcaaabcabcaaabcabcaaabcabca1",
-              "local_username" => "Super Admin",
-              "scm_repository" => "https://example.com/bar/foo",
-            }
+      assert_request(:post, "https://api.airbrake.io/deploys.txt", with: {
+        body: {
+          "api_key" => "MY-SECRET",
+          "deploy" => {
+            "rails_env" => "staging",
+            "scm_revision" => "abcabcaaabcabcaaabcabcaaabcabcaaabcabca1",
+            "local_username" => "Super Admin",
+            "scm_repository" => "https://example.com/bar/foo",
           }
-        )
-      notify
-      assert_requested request
+        }
+      }) { notify }
     end
 
     it "does not send notifications when deploy groups are disabled" do

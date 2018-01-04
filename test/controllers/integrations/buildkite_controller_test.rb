@@ -58,16 +58,16 @@ describe Integrations::BuildkiteController do
       Integrations::BuildkiteController.any_instance.stubs(:project).returns(project)
       project.stubs(:create_release?).returns(true)
       Build.any_instance.stubs(:validate_git_reference).returns(true)
-      stub_request(:post, "https://api.github.com/repos/bar/foo/releases").
-        to_return(status: 200, body: "", headers: {})
     end
 
     it 'creates the release with the buildkite build number' do
-      Samson::Hooks.with_callback(:buildkite_release_params, buildkite_build_number) do |_|
-        post :create, params: payload.merge(token: project.token, test_route: true)
-        assert_response :success
-        project.releases.size.must_equal 1
-        project.releases.first.number.must_equal "9"
+      assert_request(:post, "https://api.github.com/repos/bar/foo/releases") do
+        Samson::Hooks.with_callback(:buildkite_release_params, buildkite_build_number) do |_|
+          post :create, params: payload.merge(token: project.token, test_route: true)
+          assert_response :success
+          project.releases.size.must_equal 1
+          project.releases.first.number.must_equal "9"
+        end
       end
     end
   end

@@ -4,8 +4,6 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe GithubDeployment do
-  include StubGithubAPI
-
   let(:user) { users(:deployer) }
   let(:project) { projects(:test) }
   let(:stage) { stages(:test_staging) }
@@ -28,9 +26,9 @@ describe GithubDeployment do
         required_contexts: [],
         ref: "abcabcaaabcabcaaabcabcaaabcabcaaabcabca1"
       }
-      create = stub_request(:post, endpoint).with(body: body.to_json)
-      github_deployment.create
-      assert_requested create
+      assert_request(:post, endpoint, with: {body: body.to_json}) do
+        github_deployment.create
+      end
     end
   end
 
@@ -42,10 +40,9 @@ describe GithubDeployment do
     it "uses GitHub api" do
       stub_github_api(deployment_endpoint, rels: { statuses: { href: deployment_status_endpoint } })
 
-      deploy = stub_request(:post, deployment_status_endpoint)
-      github_deployment.update(deployment)
-
-      assert_requested deploy
+      assert_request(:post, deployment_status_endpoint) do
+        github_deployment.update(deployment)
+      end
     end
   end
 

@@ -182,7 +182,6 @@ describe DeployService do
       end
 
       it "starts a job execution" do
-        stub_request(:get, "https://api.github.com/repos/bar/foo/compare/staging...staging")
         JobQueue.expects(:perform_later).returns(mock).once
         DeployMailer.expects(:bypass_email).never
         deploy.buddy = other_user
@@ -190,7 +189,6 @@ describe DeployService do
       end
 
       it "reports bypass via mail" do
-        stub_request(:get, "https://api.github.com/repos/bar/foo/compare/staging...staging")
         JobQueue.expects(:perform_later).returns(mock).once
         DeployMailer.expects(bypass_email: stub(deliver_now: true))
         deploy.buddy = user
