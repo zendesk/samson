@@ -72,7 +72,10 @@ class TerminalExecutor
 
   # write script to a file so it cannot be seen via `ps`
   def script_as_executable(script)
-    f = Tempfile.new "samson-terminal-executor"
+    suffix = +""
+    suffix << "-#{@project.permalink}" if @project
+    suffix << "-#{@deploy.id}" if @deploy
+    f = Tempfile.new "samson-terminal-executor#{suffix}-"
     File.chmod(0o700, f.path) # making sure nobody can read it before we add content
     f.write script
     f.close
@@ -123,7 +126,7 @@ class TerminalExecutor
 
   def resolve_secrets(command)
     return command unless command.include?(SECRET_PREFIX)
-    deploy_groups = @deploy&.stage&.deploy_groups || []
+    deploy_groups = (@deploy ? @deploy.stage.deploy_groups : [])
     resolver = Samson::Secrets::KeyResolver.new(@project, deploy_groups)
 
     result = command.gsub(/\b#{SECRET_PREFIX}(#{SecretStorage::SECRET_ID_REGEX})\b/) do

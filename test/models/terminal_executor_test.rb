@@ -258,6 +258,22 @@ describe TerminalExecutor do
       end
     end
 
+    it "makes project findable" do
+      project = projects(:test)
+      subject.instance_variable_set(:@project, project)
+      subject.send(:script_as_executable, "echo 1") do |path|
+        path.must_include "-#{project.permalink}-"
+      end
+    end
+
+    it "makes deploy findable" do
+      deploy = deploys(:succeeded_test)
+      subject.instance_variable_set(:@deploy, deploy)
+      subject.send(:script_as_executable, "echo 1") do |path|
+        path.must_include "-#{deploy.id}-"
+      end
+    end
+
     it "cleans up the script even on error" do
       p = nil
       assert_raises RuntimeError do
