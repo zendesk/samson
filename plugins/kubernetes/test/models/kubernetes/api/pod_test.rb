@@ -273,7 +273,7 @@ describe Kubernetes::Api::Pod do
 
     describe "probe failures" do
       before do
-        event.merge!(type: 'Warning', reason: 'Unhealthy', message: "Readiness probe failed: Get ".dup, count: 1)
+        event.merge!(type: 'Warning', reason: 'Unhealthy', message: +"Readiness probe failed: Get ", count: 1)
       end
 
       it "is false with single Readiness event" do

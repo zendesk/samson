@@ -1,5 +1,4 @@
 # frozen_string_literal: true
-# rubocop:disable Metrics/LineLength
 require_relative '../test_helper'
 
 SingleCov.covered!
@@ -30,7 +29,8 @@ describe ProjectsHelper do
     it 'returns the deployment alert data' do
       job = project.jobs.create!(command: 'cat foo', user: users(:deployer), status: 'failed')
       deploy = stage.deploys.create!(reference: 'master', job: job, project: project)
-      expected_title = "#{deploy.updated_at.strftime('%Y/%m/%d %H:%M:%S')} Last deployment failed! #{deploy.user.name} failed to deploy '#{deploy.reference}'"
+      expected_title = "#{deploy.updated_at.strftime('%Y/%m/%d %H:%M:%S')} Last deployment failed! " \
+        "#{deploy.user.name} failed to deploy '#{deploy.reference}'"
       deployment_alert_title(stage.last_deploy).must_equal(expected_title)
     end
   end

@@ -96,7 +96,7 @@ class OutputBuffer
   private
 
   def inject_timestamp(chunk)
-    stamped = String.new
+    stamped = +""
     lines = chunk.each_line.to_a
     return stamped if lines.empty?
 

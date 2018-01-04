@@ -559,9 +559,9 @@ describe Deploy do
         # next 3 are false soft_deletions: there are dependent destroys that would result in
         # deploy_groups_stages to be cleared which would make this test condition to likely
         # never occur in production but could exist
-        prod_deploy.stage.project.update_attribute(:deleted_at, DateTime.new(2016, 1, 1))
-        prod_deploy.stage.deploy_groups.first.update_attribute(:deleted_at, DateTime.now)
-        prod_deploy.stage.update_attribute(:deleted_at, DateTime.now)
+        prod_deploy.stage.project.update_attribute(:deleted_at, Time.new(2016, 1, 1))
+        prod_deploy.stage.deploy_groups.first.update_attribute(:deleted_at, Time.now)
+        prod_deploy.stage.update_attribute(:deleted_at, Time.now)
         prod_deploy.reload
       end
 

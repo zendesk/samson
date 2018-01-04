@@ -47,7 +47,7 @@ describe OutputBuffer do
 
   describe "#write" do
     it "encodes everything as utf-8 to avoid CompatibilityError" do
-      listen { |o| o.write("Ó".dup.force_encoding(Encoding::BINARY)) }.map(&:encoding).must_equal [Encoding::UTF_8]
+      listen { |o| o.write((+"Ó").force_encoding(Encoding::BINARY)) }.map(&:encoding).must_equal [Encoding::UTF_8]
     end
 
     it "does not inject timestamps into chunks" do
@@ -112,14 +112,14 @@ describe OutputBuffer do
     end
 
     it "coverts dockers ASCII encoding to utf-8 with valid json" do
-      buffer.write_docker_chunk('{"foo": "\255"}'.dup.force_encoding(Encoding::BINARY))
+      buffer.write_docker_chunk((+'{"foo": "\255"}').force_encoding(Encoding::BINARY))
       buffer.write_docker_chunk('{"bar": "meh"}')
       buffer.to_s.must_equal "[04:05:06] foo: 255\n[04:05:06] bar: meh\n"
     end
 
     it "coverts dockers ASCII encoding to utf-8 with invalid json" do
-      buffer.write_docker_chunk('foo"\255"}'.dup.force_encoding(Encoding::BINARY))
-      buffer.write_docker_chunk('---\u003e 6c9a006fd38a\n'.dup.force_encoding(Encoding::BINARY))
+      buffer.write_docker_chunk((+'foo"\255"}').force_encoding(Encoding::BINARY))
+      buffer.write_docker_chunk((+'---\u003e 6c9a006fd38a\n').force_encoding(Encoding::BINARY))
       buffer.write_docker_chunk('foo"\255"}')
       buffer.close
 
@@ -169,7 +169,7 @@ describe OutputBuffer do
   def build_listener
     Thread.new do
       content = []
-      buffer.each { |_event, chunk| content << chunk }
+      buffer.each { |_, chunk| content << chunk }
       content
     end
   end

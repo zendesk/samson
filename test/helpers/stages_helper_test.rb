@@ -29,3 +29,4 @@ describe StagesHelper do
     end
   end
 end
+# rubocop:enable Metrics/LineLength

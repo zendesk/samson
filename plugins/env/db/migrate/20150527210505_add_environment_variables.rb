@@ -24,3 +24,4 @@ class AddEnvironmentVariables < ActiveRecord::Migration[4.2]
     add_index :stage_environment_variable_groups, :environment_variable_group_id, name: "stage_environment_variable_groups_group_id"
   end
 end
+# rubocop:enable Metrics/LineLength

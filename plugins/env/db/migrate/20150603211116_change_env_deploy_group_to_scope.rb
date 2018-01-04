@@ -13,3 +13,4 @@ class ChangeEnvDeployGroupToScope < ActiveRecord::Migration[4.2]
     add_column :environment_variable_groups, :comment, :text
   end
 end
+# rubocop:enable Metrics/LineLength

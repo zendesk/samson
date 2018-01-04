@@ -8,7 +8,7 @@ describe WebhookRecorder do
     request = ActionController::TestRequest.new({
       "FOO" => "bar",
       "rack.foo" => "bar",
-      "RAW_POST_DATA" => "BODY".dup,
+      "RAW_POST_DATA" => +"BODY",
       "rack.input" => {"foo" => "bar"},
       "QUERY_STRING" => "action=good&password=secret",
       "action_dispatch.parameter_filter" => Rails.application.config.filter_parameters
@@ -36,7 +36,7 @@ describe WebhookRecorder do
     end
 
     it "does not blow up when receiving utf8 as ascii-8-bit which is the default" do
-      bad = "EVIL->😈<-EVIL".dup.force_encoding(Encoding::BINARY)
+      bad = (+"EVIL->😈<-EVIL").force_encoding(Encoding::BINARY)
       bad.bytesize.must_equal 16
       request.env["RAW_POST_DATA"] = bad
       WebhookRecorder.record(project, request: request, log: "LOG", response: response)

@@ -682,3 +682,4 @@ describe ApplicationHelper do
     end
   end
 end
+# rubocop:enable Metrics/LineLength
