@@ -23,4 +23,4 @@ en:
   doorkeeper:
     applications:
       help:
-        scopes: "Separate scopes with spaces. Possible: any controller path (for example deploy_groups), default (api/*), web-ui (non api/)"
+        scopes: "Separate scopes with spaces. Possible: any controller path (for example stages deploy_groups ...) or default (everything, avoid using this)"
