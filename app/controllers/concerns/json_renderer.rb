@@ -33,7 +33,7 @@ module JsonRenderer
 
       # add items to the existing collection, but avoid calling as_json multiple times for the same object
       associations.each do |namespace, objects|
-        root[namespace] = objects.uniq.as_json # can remove as_json once serializers are gone
+        root[namespace] = objects.uniq.map(&:as_json)
       end
     end
   end
