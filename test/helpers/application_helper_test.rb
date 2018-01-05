@@ -656,7 +656,7 @@ describe ApplicationHelper do
     it "shows active deploys" do
       deploys(:succeeded_test).job.update_column(:status, 'running')
       html = deployed_or_running_list(stage_list, "staging")
-      html.must_equal "<span class=\"label label-success release-stage\"><i title=\"running\" class=\"glyphicon glyphicon-cloud-upload\"></i> Staging</span> "
+      html.must_equal "<span class=\"label label-warning release-stage\">Staging</span> "
     end
   end
 end
