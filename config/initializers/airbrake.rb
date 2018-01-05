@@ -20,6 +20,7 @@ if defined?(Airbrake) && key = ENV['AIRBRAKE_API_KEY']
     # - add AIRBRAKE_API_KEY to ENV
     # - add AIRBRAKE_PROJECT_ID to ENV
     # - set consider_all_requests_local = false in development.rb
+    # - comment out Rails.application.console filter below
     # - uncomment
     # config.ignore_environments = [:test]
   end
@@ -33,6 +34,13 @@ if defined?(Airbrake) && key = ENV['AIRBRAKE_API_KEY']
   ]
   Airbrake.add_filter do |notice|
     notice.ignore! if notice[:errors].any? { |error| ignored.include?(error[:type]) }
+  end
+
+  Rails.application.console do
+    Airbrake.add_filter do |notice|
+      puts "Not sending errors to airbrake in console"
+      notice.ignore!
+    end
   end
 else
   module Airbrake
