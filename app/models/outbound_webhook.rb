@@ -22,7 +22,7 @@ class OutboundWebhook < ActiveRecord::Base
 
     response = connection.post do |req|
       req.headers['Content-Type'] = 'application/json'
-      req.body = self.class.deploy_as_json(deploy)
+      req.body = self.class.deploy_as_json(deploy).to_json
     end
 
     if response.success?
@@ -47,7 +47,6 @@ class OutboundWebhook < ActiveRecord::Base
   def connection
     Faraday.new(url: url) do |faraday|
       faraday.request  :url_encoded
-      faraday.response :logger
       faraday.adapter  Faraday.default_adapter
       faraday.basic_auth(username, password) if username.present?
     end

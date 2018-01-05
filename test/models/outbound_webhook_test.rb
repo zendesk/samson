@@ -97,33 +97,21 @@ describe OutboundWebhook do
   end
 
   describe "#deliver" do
-    def stub_delivery
-      Faraday.new(url: @webhook.url) do |builder|
-        builder.adapter :test, Faraday::Adapter::Test::Stubs.new do |stub|
-          stub.post('/deploys') { [response, {}, "AOK"] }
-        end
-      end
-    end
+    let(:webhook) { OutboundWebhook.create!(webhook_attributes) }
 
     before do
-      @webhook = OutboundWebhook.create!(webhook_attributes)
-      OutboundWebhook.any_instance.stubs(:connection).returns(stub_delivery)
       OutboundWebhook.stubs(:deploy_as_json).returns({})
     end
 
-    describe "with a successful request" do
-      let(:response) { 200 }
-
-      it "posts to the webhook url and logs" do
-        assert @webhook.deliver(Deploy.new), "Deliver should succeed"
+    it "posts" do
+      assert_request :post, "https://testing.com/deploys", with: {body: "{}"} do
+        assert webhook.deliver(Deploy.new)
       end
     end
 
-    describe "with an invalid request" do
-      let(:response) { 400 }
-
-      it "tries to post to the webhook url" do
-        refute @webhook.deliver(Deploy.new), "Deliver should not succeed"
+    it "fails on bad response" do
+      assert_request :post, "https://testing.com/deploys", to_return: {status: 400} do
+        refute webhook.deliver(Deploy.new)
       end
     end
   end
