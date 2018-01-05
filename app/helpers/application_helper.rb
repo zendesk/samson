@@ -303,11 +303,11 @@ module ApplicationHelper
     stages.each do |stage|
       next unless deploy = stage.deployed_or_running_deploy
       next unless deploy.references?(reference)
+      label = (deploy.active? ? "label-warning" : "label-success")
 
       text = "".html_safe
-      text << icon_tag("cloud-upload", title: deploy.status) << " " if deploy.active?
       text << stage.name
-      html << content_tag(:span, text, class: "label label-success release-stage")
+      html << content_tag(:span, text, class: "label #{label} release-stage")
       html << " "
     end
     html
