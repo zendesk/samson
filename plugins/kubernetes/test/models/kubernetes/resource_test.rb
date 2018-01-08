@@ -4,6 +4,15 @@ require_relative "../../test_helper"
 SingleCov.covered!
 
 describe Kubernetes::Resource do
+  def assert_pods_lookup(&block)
+    assert_request(
+      :get,
+      "#{origin}/api/v1/namespaces/pod1/pods?labelSelector=release_id=123,deploy_group_id=234",
+      to_return: {body: '{"items":[{"metadata":{"name":"pod1","namespace":"name1"}}]}'},
+      &block
+    )
+  end
+
   def assert_pod_deletion
     delete_pod = stub_request(:delete, "#{origin}/api/v1/namespaces/name1/pods/pod1").
       to_return(body: '{}')
@@ -19,7 +28,10 @@ describe Kubernetes::Resource do
       metadata: {name: 'some-project', namespace: 'pod1'},
       spec: {
         replicas: 2,
-        template: {spec: {containers: [{image: "bar"}]}}
+        template: {
+          spec: {containers: [{image: "bar"}]},
+          metadata: {labels: {release_id: 123, deploy_group_id: 234}}
+        }
       }
     }
   end
@@ -459,6 +471,20 @@ describe Kubernetes::Resource do
         end
       end
     end
+
+    describe "#delete" do
+      around { |t| assert_request(:delete, url, to_return: {body: "{}"}, &t) }
+
+      it "deletes set and pods" do
+        assert_request(:get, url, to_return: [{body: template.to_json}, {status: 404}]) do
+          assert_pods_lookup do
+            assert_pod_deletion do
+              resource.delete
+            end
+          end
+        end
+      end
+    end
   end
 
   describe Kubernetes::Resource::Job do
@@ -484,11 +510,7 @@ describe Kubernetes::Resource do
         job = {spec: {template: {metadata: {labels: {release_id: 123, deploy_group_id: 234}}}}}
         assert_request(:get, url, to_return: [{body: job.to_json}, {status: 404}]) do
           assert_request(:delete, url, to_return: {body: '{}'}) do
-            assert_request(
-              :get,
-              "#{origin}/api/v1/namespaces/pod1/pods?labelSelector=release_id=123,deploy_group_id=234",
-              to_return: {body: '{"items":[{"metadata":{"name":"pod1","namespace":"name1"}}]}'}
-            ) do
+            assert_pods_lookup do
               assert_pod_deletion do
                 assert_request(:post, base_url, to_return: {body: "{}"}) do
                   resource.deploy
@@ -516,13 +538,7 @@ describe Kubernetes::Resource do
   describe Kubernetes::Resource::Service do
     describe "#deploy" do
       let(:old) { {metadata: {resourceVersion: "A", foo: "B"}, spec: {clusterIP: "C"}} }
-      let(:expected_body) do
-        {
-          kind: "Service",
-          metadata: {name: "some-project", namespace: "pod1", resourceVersion: "A"},
-          spec: {replicas: 2, template: {spec: {containers: [{image: "bar"}]}}, clusterIP: "C"}
-        }
-      end
+      let(:expected_body) { template.deep_merge(metadata: {resourceVersion: "A"}, spec: {clusterIP: "C"}) }
 
       it "creates when missing" do
         assert_request(:get, url, to_return: {status: 404}) do
