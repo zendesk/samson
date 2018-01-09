@@ -634,4 +634,19 @@ describe Kubernetes::Resource do
       end
     end
   end
+
+  describe Kubernetes::Resource::HorizontalPodAutoscaler do
+    describe "#deploy" do
+      let(:kind) { 'HorizontalPodAutoscaler' }
+      let(:url) { "#{origin}/apis/autoscaling/v1/namespaces/pod1/horizontalpodautoscalers/some-project" }
+
+      it "creates when missing" do
+        assert_request(:get, url, to_return: {body: '{}'}) do
+          assert_request(:put, url) do
+            resource.deploy
+          end
+        end
+      end
+    end
+  end
 end

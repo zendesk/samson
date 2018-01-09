@@ -111,8 +111,6 @@ class ActiveSupport::TestCase
         {"name" => "deployments/rollback", "namespaced" => true, "kind" => "DeploymentRollback"},
         {"name" => "deployments/scale", "namespaced" => true, "kind" => "Scale"},
         {"name" => "deployments/status", "namespaced" => true, "kind" => "Deployment"},
-        {"name" => "horizontalpodautoscalers", "namespaced" => true, "kind" => "HorizontalPodAutoscaler"},
-        {"name" => "horizontalpodautoscalers/status", "namespaced" => true, "kind" => "HorizontalPodAutoscaler"},
         {"name" => "ingresses", "namespaced" => true, "kind" => "Ingress"},
         {"name" => "ingresses/status", "namespaced" => true, "kind" => "Ingress"},
         {"name" => "jobs", "namespaced" => true, "kind" => "Job"},
@@ -145,5 +143,16 @@ class ActiveSupport::TestCase
       ]
     }
     stub_request(:get, "http://foobar.server/apis/apps/v1beta1").to_return(body: apps_v1.to_json)
+
+    # TODO: catch all version requests and show nice error
+    autoscaling = {
+      "kind" => "APIResourceList",
+      "apiVersion" => "autoscaling/v1",
+      "resources" => [
+        {"name" => "horizontalpodautoscalers", "namespaced" => true, "kind" => "HorizontalPodAutoscaler"},
+        {"name" => "horizontalpodautoscalers/status", "namespaced" => true, "kind" => "HorizontalPodAutoscaler"},
+      ]
+    }
+    stub_request(:get, "http://foobar.server/apis/autoscaling/v1").to_return(body: autoscaling.to_json)
   end
 end

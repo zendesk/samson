@@ -173,6 +173,8 @@ module Kubernetes
     end
 
     class HorizontalPodAutoscaler < Base
+      private
+
       def client
         @deploy_group.kubernetes_cluster.autoscaling_client
       end

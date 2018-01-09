@@ -2,7 +2,7 @@
 module Kubernetes
   class RoleVerifier
     VALID_LABEL = /\A[a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?\z/ # also used in js ... cannot use /i
-    IGNORED = ['ConfigMap', 'HorizontalPodAutoscaler']
+    IGNORED = ['ConfigMap', 'HorizontalPodAutoscaler'].freeze
     SUPPORTED_KINDS = [
       ['Deployment'],
       ['DaemonSet'],

@@ -24,7 +24,7 @@ module Kubernetes
     end
 
     def autoscaling_client
-      @autoscaling_client ||= build_client 'autoscaling/v2beta1'
+      @autoscaling_client ||= build_client 'autoscaling/v1'
     end
 
     def extension_client
