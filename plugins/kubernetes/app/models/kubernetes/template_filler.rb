@@ -45,6 +45,8 @@ module Kubernetes
           set_secrets
           set_image_pull_secrets
           set_vault_env
+        when 'HorizontalPodAutoscaler'
+          set_hpa_scale_target_name
         end
 
         hash = template
@@ -236,6 +238,10 @@ module Kubernetes
 
     def set_name
       template.dig_set [:metadata, :name], @doc.kubernetes_role.resource_name
+    end
+
+    def set_hpa_scale_target_name
+      template.dig_set [:spec, :scaleTargetRef, :name], @doc.kubernetes_role.resource_name
     end
 
     # Sets the labels for each new Pod.
