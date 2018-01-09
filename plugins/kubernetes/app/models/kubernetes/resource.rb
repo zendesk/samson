@@ -172,6 +172,12 @@ module Kubernetes
     class ConfigMap < Base
     end
 
+    class HorizontalPodAutoscaler < Base
+      def client
+        @deploy_group.kubernetes_cluster.autoscaling_client
+      end
+    end
+
     class Service < Base
       private
 
