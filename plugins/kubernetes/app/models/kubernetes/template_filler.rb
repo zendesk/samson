@@ -21,6 +21,8 @@ module Kubernetes
         set_project_labels if template.dig(:metadata, :annotations, :"samson/override_project_label")
 
         case kind
+        when 'HorizontalPodAutoscaler'
+          set_hpa_scale_target_name
         when *Kubernetes::RoleConfigFile::SERVICE_KINDS
           set_service_name
           set_service_node_port
@@ -45,8 +47,6 @@ module Kubernetes
           set_secrets
           set_image_pull_secrets
           set_vault_env
-        when 'HorizontalPodAutoscaler'
-          set_hpa_scale_target_name
         end
 
         hash = template

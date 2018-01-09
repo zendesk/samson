@@ -531,7 +531,7 @@ describe Kubernetes::TemplateFiller do
       end
     end
 
-    describe "horzontalpodautoscaler" do
+    describe "HorizontalPodAutoscaler" do
       before do
         raw_template[:kind] = "HorizontalPodAutoscaler"
         raw_template[:spec][:scaleTargetRef] = {}
