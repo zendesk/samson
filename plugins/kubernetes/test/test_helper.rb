@@ -57,10 +57,10 @@ class ActiveSupport::TestCase
   # from kubernetes 1.2
   # this needs to be updated if we want to use a newer version of kubernetes
   # captured by opening kubeclient gem and dumping response inside of kubeclient/common.rb#discover
-  before do
-    discover_v1 = {
+
+  KUBERNETES_VERSION_REPLIES = {
+    "v1" => {
       "kind" => "APIResourceList",
-      "groupVersion" => "v1",
       "resources" => [
         {"name" => "bindings", "namespaced" => true, "kind" => "Binding"},
         {"name" => "componentstatuses", "namespaced" => false, "kind" => "ComponentStatus"},
@@ -98,12 +98,9 @@ class ActiveSupport::TestCase
         {"name" => "services/proxy", "namespaced" => true, "kind" => "Service"},
         {"name" => "services/status", "namespaced" => true, "kind" => "Service"}
       ]
-    }
-    stub_request(:get, "http://foobar.server/api/v1").to_return(body: discover_v1.to_json)
-
-    discover_v1beta1 = {
+    },
+    "extensions/v1beta1" => {
       "kind" => "APIResourceList",
-      "groupVersion" => "extensions/v1beta1",
       "resources" => [
         {"name" => "daemonsets", "namespaced" => true, "kind" => "DaemonSet"},
         {"name" => "daemonsets/status", "namespaced" => true, "kind" => "DaemonSet"},
@@ -111,8 +108,6 @@ class ActiveSupport::TestCase
         {"name" => "deployments/rollback", "namespaced" => true, "kind" => "DeploymentRollback"},
         {"name" => "deployments/scale", "namespaced" => true, "kind" => "Scale"},
         {"name" => "deployments/status", "namespaced" => true, "kind" => "Deployment"},
-        {"name" => "horizontalpodautoscalers", "namespaced" => true, "kind" => "HorizontalPodAutoscaler"},
-        {"name" => "horizontalpodautoscalers/status", "namespaced" => true, "kind" => "HorizontalPodAutoscaler"},
         {"name" => "ingresses", "namespaced" => true, "kind" => "Ingress"},
         {"name" => "ingresses/status", "namespaced" => true, "kind" => "Ingress"},
         {"name" => "jobs", "namespaced" => true, "kind" => "Job"},
@@ -123,27 +118,33 @@ class ActiveSupport::TestCase
         {"name" => "replicationcontrollers", "namespaced" => true, "kind" => "ReplicationControllerDummy"},
         {"name" => "replicationcontrollers/scale", "namespaced" => true, "kind" => "Scale"}
       ]
-    }
-    stub_request(:get, "http://foobar.server/apis/extensions/v1beta1").to_return(body: discover_v1beta1.to_json)
-
-    batch_v1 = {
+    },
+    "batch/v1" => {
       "kind" => "APIResourceList",
-      "apiVersion" => "v1",
-      "groupVersion" => "batch/v1",
       "resources" => [
         {"name" => "jobs", "namespaced" => true, "kind" => "Job"}
       ]
-    }
-    stub_request(:get, "http://foobar.server/apis/batch/v1").to_return(body: batch_v1.to_json)
-
-    apps_v1 = {
+    },
+    "apps/v1beta1" => {
       "kind" => "APIResourceList",
-      "apiVersion" => "v1",
-      "groupVersion" => "apps/v1beta1",
       "resources" => [
         {"name" => "statefulsets", "namespaced" => true, "kind" => "StatefulSet"}
       ]
+    },
+    "autoscaling/v1" => {
+      "kind" => "APIResourceList",
+      "resources" => [
+        {"name" => "horizontalpodautoscalers", "namespaced" => true, "kind" => "HorizontalPodAutoscaler"},
+        {"name" => "horizontalpodautoscalers/status", "namespaced" => true, "kind" => "HorizontalPodAutoscaler"},
+      ]
     }
-    stub_request(:get, "http://foobar.server/apis/apps/v1beta1").to_return(body: apps_v1.to_json)
+  }.freeze
+
+  before do
+    stub_request(:get, %r{http://foobar.server/(api/v1|apis/([a-z]+/[a-z\d]+))$}).to_return do |request|
+      version = request.uri.path.split('/', 3).last
+      body = KUBERNETES_VERSION_REPLIES[version] || raise("Missing version stub for #{version}")
+      {body: body.to_json}
+    end
   end
 end

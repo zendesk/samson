@@ -530,6 +530,17 @@ describe Kubernetes::TemplateFiller do
         )
       end
     end
+
+    describe "HorizontalPodAutoscaler" do
+      before do
+        raw_template[:kind] = "HorizontalPodAutoscaler"
+        raw_template[:spec][:scaleTargetRef] = {}
+      end
+
+      it "matches the resource name" do
+        template.to_hash.dig_fetch(:spec, :scaleTargetRef, :name).must_equal("test-app-server")
+      end
+    end
   end
 
   describe "#verify_env" do

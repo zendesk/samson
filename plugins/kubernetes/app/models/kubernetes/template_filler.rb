@@ -21,6 +21,8 @@ module Kubernetes
         set_project_labels if template.dig(:metadata, :annotations, :"samson/override_project_label")
 
         case kind
+        when 'HorizontalPodAutoscaler'
+          set_hpa_scale_target_name
         when *Kubernetes::RoleConfigFile::SERVICE_KINDS
           set_service_name
           set_service_node_port
@@ -236,6 +238,10 @@ module Kubernetes
 
     def set_name
       template.dig_set [:metadata, :name], @doc.kubernetes_role.resource_name
+    end
+
+    def set_hpa_scale_target_name
+      template.dig_set [:spec, :scaleTargetRef, :name], @doc.kubernetes_role.resource_name
     end
 
     # Sets the labels for each new Pod.
