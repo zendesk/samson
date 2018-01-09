@@ -39,7 +39,7 @@ module Kubernetes
           set_pre_stop if kind == 'Deployment'
 
           set_name
-          set_deployer
+          set_contact_info
           set_spec_template_metadata
           set_docker_image
           set_resource_usage
@@ -169,8 +169,9 @@ module Kubernetes
       template[:kind] == 'Pod' ? template : template.dig_fetch(:spec, :template)
     end
 
-    def set_deployer
+    def set_contact_info
       annotations[:deployer] = @doc.kubernetes_release.user&.email.to_s
+      annotations[:owner] = project.owner.to_s
     end
 
     def secret_annotations
