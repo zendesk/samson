@@ -218,7 +218,7 @@ module Kubernetes
       statuses = Array.new(release_doc.desired_pod_count).each_with_index.map do |_, i|
         pod = pods[i]
 
-        s = if !pod
+        status = if !pod
           {live: false, details: "Missing", pod: pod}
         elsif pod.restarted?
           {live: false, stop: true, details: "Restarted", pod: pod}
@@ -232,8 +232,8 @@ module Kubernetes
           {live: false, details: "Waiting (#{pod.phase}, #{pod.reason})", pod: pod}
         end
 
-        s[:details] += " (autoscaled role, only showing one pod)" if role.autoscaled?
-        s
+        status[:details] += " (autoscaled role, only showing one pod)" if role.autoscaled?
+        status
       end
 
       # If a role is autoscaled, there is a chance pods can be deleted during a deployment.
