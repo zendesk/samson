@@ -442,6 +442,49 @@ describe Kubernetes::DeployExecutor do
       out.must_include "CANCELLED"
     end
 
+    describe "an autoscaled role" do
+      before do
+        worker_role.kubernetes_role.update_column(:autoscaled, true)
+        worker_role.update_column(:replicas, 2)
+      end
+
+      it "only requires one pod to go live when a role is autoscaled" do
+        pod_reply[:items] << pod_reply[:items].first.deep_dup
+
+        worker_is_unstable
+
+        assert execute
+
+        out.scan(/resque-worker: Live/).count.must_equal 1
+        out.must_include "(autoscaled role, only showing one pod)"
+        out.must_include "SUCCESS"
+      end
+
+      it "fails when all pods fail" do
+        extra_pod = pod_reply[:items].first.deep_dup
+        pod_reply[:items] << extra_pod
+
+        worker_is_unstable
+        extra_pod[:status][:containerStatuses].first[:restartCount] = 1
+
+        refute execute
+
+        out.scan(/resque-worker: Restarted/).count.must_equal 2
+        out.must_include "(autoscaled role, only showing one pod)"
+        out.must_include "DONE"
+      end
+
+      it "still waits for a pod" do
+        pod_status[:conditions][0][:status] = "False"
+
+        cancel_after_first_iteration
+        refute execute
+
+        out.must_include "resque-worker: Waiting (Running, Unknown)"
+        out.must_include "CANCELLED"
+      end
+    end
+
     describe "when rollback is needed" do
       let(:rollback_indicator) { "Rolling back" }
 
