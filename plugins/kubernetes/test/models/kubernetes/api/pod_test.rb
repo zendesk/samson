@@ -312,15 +312,21 @@ describe Kubernetes::Api::Pod do
       end
 
       it "ignores failing to get metrics" do
-        event.merge!(reason: 'FailedGetMetrics')
+        event[:reason] = 'FailedGetMetrics'
 
         refute events_indicate_failure?, 'FailedGetMetrics must not be recognized as failures'
       end
 
       it "ingores failures to scale" do
-        event.merge!(reason: 'FailedRescale')
+        event[:reason] = 'FailedRescale'
 
         refute events_indicate_failure?, 'FailedRescale must not be recognized as failures'
+      end
+
+      it "does not ignore an unknown HPA event" do
+        event[:reason] = 'SomeOtherFailure'
+
+        assert events_indicate_failure?, 'Events we dont explicitly ignore must be recognized as failures'
       end
     end
   end
