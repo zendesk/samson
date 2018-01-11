@@ -29,3 +29,8 @@
 //= require underscore_mixins
 //= require jstimezonedetect
 //= require_tree .
+
+// initialize popovers after all of our other javascript is done
+$(function () {
+  $('[data-toggle="popover"]').popover()
+})

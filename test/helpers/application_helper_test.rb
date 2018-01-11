@@ -7,6 +7,7 @@ SingleCov.covered!
 describe ApplicationHelper do
   include LocksHelper
   include StatusHelper
+  include ERB::Util
 
   describe "#render_log" do
     it "removes translates ascii escapes to html colors" do
@@ -400,8 +401,32 @@ describe ApplicationHelper do
   end
 
   describe "#additional_info" do
+    let(:always_attributes) { 'data-toggle="popover" data-placement="right" data-trigger="hover"' }
+
     it "builds a help text" do
-      additional_info("foo").must_equal "<i class=\"glyphicon glyphicon-info-sign\" title=\"foo\"></i>"
+      additional_info("foo").must_equal(
+        %(<i class="glyphicon glyphicon-info-sign" data-content="foo" #{always_attributes}></i>)
+      )
+    end
+
+    it "escapes html in the help text" do
+      additional_info("<em>foo</em>").must_equal(
+        %(<i class="glyphicon glyphicon-info-sign" data-content="&lt;em&gt;foo&lt;/em&gt;" #{always_attributes}></i>)
+      )
+    end
+
+    it "escapes html html_safe strings and sets the 'data-html' attribute" do
+      additional_info("<em>foo</em>".html_safe).must_equal(
+        %(<i class="glyphicon glyphicon-info-sign" data-content="&lt;em&gt;foo&lt;/em&gt;" data-html="true" #{always_attributes}></i>)
+      )
+    end
+
+    it "double escapes html_safe string with appened non-safe html and sets the 'data-html' attribute" do
+      string = "".html_safe << "<em>foo</em>"
+
+      additional_info(string).must_equal(
+        %(<i class="glyphicon glyphicon-info-sign" data-content="&amp;lt;em&amp;gt;foo&amp;lt;/em&amp;gt;" data-html="true" #{always_attributes}></i>)
+      )
     end
   end
 
