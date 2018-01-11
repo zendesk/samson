@@ -1,6 +1,7 @@
 <fieldset>
   <legend>Kubernetes</legend>
   <%= form.input :kubernetes, as: :check_box, label: "Deploy via kubernetes / ignore commands" %>
+  <%= form.input :blue_green, as: :check_box, label: "Blue/Green Deployment" %>
 </fieldset>
 
 <script>

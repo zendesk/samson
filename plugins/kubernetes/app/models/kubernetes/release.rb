@@ -19,6 +19,14 @@ module Kubernetes
     def self.create_release(params)
       Kubernetes::Release.transaction do
         release = create(params.except(:deploy_groups))
+
+        if release.deploy.stage.blue_green
+          previous = release.previous_successful_release
+          color = 'green' if previous && previous.color == 'blue'
+          color ||= 'blue'
+          update(release.id, :color => color)
+        end
+
         release.send :create_release_docs, params if release.persisted?
         release
       end
@@ -58,6 +66,11 @@ module Kubernetes
 
     def builds
       Build.where(git_sha: git_sha)
+    end
+
+    def previous_successful_release
+      previous_successful_deploy = deploy.previous_successful_deploy
+      previous_successful_deploy.kubernetes_release if previous_successful_deploy
     end
 
     private

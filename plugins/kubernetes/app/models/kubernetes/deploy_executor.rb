@@ -343,6 +343,8 @@ module Kubernetes
     end
 
     def deploy_and_watch(release, release_docs)
+      return deploy_and_watch_blue_green(release, release_docs) if @job.deploy.stage.blue_green
+
       deploy(release_docs)
       result = wait_for_resources_to_complete(release, release_docs)
       if result == true
@@ -353,6 +355,54 @@ module Kubernetes
         @output.puts "DONE"
         false
       end
+    end
+
+    def deploy_and_watch_blue_green(release, release_docs)
+      deploy_blue_green_resources(release_docs)
+
+      # wait for resources to be ready
+      result = wait_for_resources_to_complete(release, release_docs)
+      if result == true
+        deploy_blue_green_service(release_docs)
+        delete_previous_blue_green_resources(release)
+        success
+      else
+        show_failure_cause(release, release_docs, result)
+        delete_blue_green_resources(release_docs)
+        @output.puts "DONE"
+        false
+      end
+    end
+
+    def deploy_blue_green_resources(release_docs)
+      release_docs.each do |release_doc|
+        @output.puts "Creating #{release_doc.blue_green_color.upcase} resources for #{release_doc.deploy_group.name} role #{release_doc.kubernetes_role.name}"
+        release_doc.non_service_resources.each(&:deploy)
+      end
+      true
+    end
+
+    def deploy_blue_green_service(release_docs)
+      release_docs.each do |release_doc|
+        if release_doc.service_resource
+          @output.puts "Creating #{release_doc.blue_green_color.upcase} service for #{release_doc.deploy_group.name} role #{release_doc.kubernetes_role.name}"
+          release_doc.service_resource.deploy
+        end
+      end
+      true
+    end
+
+    def delete_blue_green_resources(release_docs)
+      release_docs.each do |release_doc|
+        @output.puts "Deleting #{release_doc.blue_green_color.upcase} resources for #{release_doc.deploy_group.name} role #{release_doc.kubernetes_role.name}"
+        release_doc.non_service_resources.each(&:delete)
+      end
+      true
+    end
+
+    def delete_previous_blue_green_resources(release)
+      previous = release.previous_successful_release
+      previous ? delete_blue_green_resources(previous.release_docs) : true
     end
 
     def success

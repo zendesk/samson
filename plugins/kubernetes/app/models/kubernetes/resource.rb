@@ -173,6 +173,7 @@ module Kubernetes
     end
 
     class Service < Base
+
       private
 
       # updating a service requires re-submitting resourceVersion and clusterIP
@@ -215,7 +216,8 @@ module Kubernetes
         # Wait for there to be zero pods
         loop do
           loop_sleep
-          break if fetch_resource.dig_fetch(:status, :replicas).zero?
+          r = fetch_resource
+          break if !r[:status].key?(:replicas) || r.dig_fetch(:status, :replicas).zero?
         end
 
         # delete the actual deployment

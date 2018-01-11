@@ -32,6 +32,14 @@ module Kubernetes
       end
     end
 
+    def blue_green?
+      kubernetes_release.deploy.stage.blue_green
+    end
+
+    def blue_green_color
+      @blue_green_color ||= kubernetes_release.color if blue_green?
+    end
+
     # run on unsaved mock ReleaseDoc to test template and secrets before we save or create a build
     # this create a bit of duplicated work, but fails the deploy fast
     def verify_template
@@ -43,6 +51,16 @@ module Kubernetes
     # kubeclient needs pure symbol hash ... not indifferent access
     def resource_template
       @resource_template ||= Array.wrap(super).map(&:deep_symbolize_keys)
+    end
+
+    def non_service_resources
+      @non_service_resources ||= resources.select { |r| r != service_resource}
+    end
+
+    def service_resource
+      @service_resource ||= resources.detect do |r|
+        r.is_a?(Kubernetes::Resource::Service) && r.name == kubernetes_role.service_name
+      end
     end
 
     def resources

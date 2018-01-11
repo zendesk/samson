@@ -23,6 +23,7 @@ module Kubernetes
         case kind
         when *Kubernetes::RoleConfigFile::SERVICE_KINDS
           set_service_name
+          set_service_selector
           set_service_node_port
           prefix_service_cluster_ip
         when *Kubernetes::RoleConfigFile::PRIMARY_KINDS
@@ -39,6 +40,7 @@ module Kubernetes
           set_name
           set_deployer
           set_spec_template_metadata
+          set_spec_match_labels
           set_docker_image
           set_resource_usage
           set_env
@@ -81,14 +83,23 @@ module Kubernetes
       kind = template.fetch(:kind)
       if kind == "Service"
         template.dig_set([:spec, :selector, :project], project_label)
+        template.dig_set([:spec, :selector, :blue_green], blue_green_color) if blue_green_color
       elsif kind != "Pod"
         template.dig_set([:spec, :selector, :matchLabels, :project], project_label)
         template.dig_set([:spec, :template, :metadata, :labels, :project], project_label)
+        if blue_green_color
+          template.dig_set([:spec, :selector, :matchLabels, :blue_green], blue_green_color)
+          template.dig_set([:spec, :template, :metadata, :labels, :blue_green], blue_green_color)
+        end
       end
     end
 
     def set_service_name
       template[:metadata][:name] = generate_service_name(template[:metadata][:name])
+    end
+
+    def set_service_selector
+      template.dig_set([:spec, :selector, :blue_green], blue_green_color) if blue_green_color
     end
 
     # For now, create a NodePort for each service, so we can expose any
@@ -235,7 +246,9 @@ module Kubernetes
     end
 
     def set_name
-      template.dig_set [:metadata, :name], @doc.kubernetes_role.resource_name
+      name = @doc.kubernetes_role.resource_name
+      name += "-#{blue_green_color}" if blue_green_color
+      template.dig_set [:metadata, :name], name
     end
 
     # Sets the labels for each new Pod.
@@ -252,7 +265,7 @@ module Kubernetes
         role = @doc.kubernetes_role
         deploy_group = @doc.deploy_group
 
-        Kubernetes::Release.pod_selector(release.id, deploy_group.id, query: false).merge(
+        meta = Kubernetes::Release.pod_selector(release.id, deploy_group.id, query: false).merge(
           deploy_id: release.deploy_id,
           project_id: release.project_id,
           role_id: role.id,
@@ -260,7 +273,14 @@ module Kubernetes
           revision: release.git_sha,
           tag: release.git_ref.parameterize.tr('_', '-')
         )
+
+        meta[:blue_green] = blue_green_color if blue_green_color
+        meta
       end
+    end
+
+    def set_spec_match_labels
+      template.dig_set([:spec, :selector, :matchLabels, :blue_green], blue_green_color)
     end
 
     def set_resource_usage
@@ -326,6 +346,8 @@ module Kubernetes
         }
       end
 
+      env << {name: 'BLUE_GREEN', value: blue_green_color} if blue_green_color
+
       # unique, but keep last elements
       env.reverse!
       env.uniq! { |h| h[:name] }
@@ -350,6 +372,10 @@ module Kubernetes
 
       # env from plugins
       env.merge!(Samson::Hooks.fire(:deploy_group_env, project, @doc.deploy_group).inject({}, :merge!))
+    end
+
+    def blue_green_color
+      @blue_green_color ||= @doc.kubernetes_release.color if @doc.kubernetes_release.deploy.stage.blue_green
     end
 
     def set_vault_env

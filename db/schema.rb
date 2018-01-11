@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171226184349) do
+ActiveRecord::Schema.define(version: 20180110142314) do
 
   create_table "audits", force: :cascade do |t|
     t.integer "auditable_id", null: false
@@ -21,7 +21,7 @@ ActiveRecord::Schema.define(version: 20171226184349) do
     t.string "user_type"
     t.string "username"
     t.string "action", null: false
-    t.text "audited_changes", limit: 1073741823
+    t.text "audited_changes", limit: 4294967295
     t.integer "version", default: 0, null: false
     t.string "comment"
     t.string "remote_address"
@@ -246,6 +246,7 @@ ActiveRecord::Schema.define(version: 20171226184349) do
     t.integer "deploy_id"
     t.string "git_sha", limit: 40, null: false
     t.string "git_ref"
+    t.string "color", limit: 8
   end
 
   create_table "kubernetes_roles", id: :integer, force: :cascade do |t|
@@ -504,6 +505,7 @@ ActiveRecord::Schema.define(version: 20171226184349) do
     t.boolean "no_reference_selection", default: false, null: false
     t.boolean "periodical_deploy", default: false, null: false
     t.boolean "builds_in_environment", default: false, null: false
+    t.boolean "blue_green", default: false, null: false
     t.index ["project_id", "permalink"], name: "index_stages_on_project_id_and_permalink", unique: true, length: { permalink: 191 }
     t.index ["template_stage_id"], name: "index_stages_on_template_stage_id"
   end
