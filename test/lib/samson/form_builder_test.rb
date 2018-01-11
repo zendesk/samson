@@ -42,11 +42,13 @@ describe Samson::FormBuilder do
     end
 
     it "can show help" do
-      builder.input(:name, help: "Hello!").must_include "title=\"Hello!\"></i>"
+      builder.input(:name, help: "Hello!").must_include "data-content=\"Hello!\""
+      builder.input(:name, help: "Hello!").must_include "</i>"
     end
 
     it "can show help for check box" do
-      builder.input(:name, as: :check_box, help: "Hello!").must_include "title=\"Hello!\"></i>"
+      builder.input(:name, as: :check_box, help: "Hello!").must_include "data-content=\"Hello!\""
+      builder.input(:name, as: :check_box, help: "Hello!").must_include "</i>"
     end
 
     it "can show size" do
