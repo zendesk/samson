@@ -330,6 +330,12 @@ module Kubernetes
         wait_for_pods_to_restart
       end
 
+      def delete
+        old_pods = pods
+        super
+        delete_pods(old_pods)
+      end
+
       private
 
       def wait_for_pods_to_restart
