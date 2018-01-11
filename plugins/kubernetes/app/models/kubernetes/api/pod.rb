@@ -3,6 +3,7 @@ module Kubernetes
   module Api
     class Pod
       INIT_CONTAINER_KEY = :'pod.beta.kubernetes.io/init-containers'
+      INGORED_AUTOSCALE_EVENT_REASONS = %w[FailedGetMetrics FailedRescale].freeze
 
       def initialize(api_pod, client: nil)
         @pod = api_pod
@@ -70,7 +71,7 @@ module Kubernetes
       end
 
       def events_indicate_failure?
-        bad = events.reject { |e| e.type == 'Normal' }
+        bad = events.reject { |e| e.type == 'Normal' || ignorable_hpa_event?(e) }
         readiness_failures, other_failures = bad.partition do |e|
           e.reason == "Unhealthy" && e.message =~ /\A\S+ness probe failed/
         end
@@ -90,6 +91,10 @@ module Kubernetes
       end
 
       private
+
+      def ignorable_hpa_event?(event)
+        event.kind == 'HorizontalPodAutoscaler' && INGORED_AUTOSCALE_EVENT_REASONS.include?(event.reason)
+      end
 
       def raw_events
         SamsonKubernetes.retry_on_connection_errors do
