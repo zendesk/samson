@@ -4,7 +4,7 @@ require 'github/markdown'
 
 module ApplicationHelper
   BOOTSTRAP_FLASH_MAPPINGS = { notice: :info, error: :danger, authorization_error: :danger, success: :success }.freeze
-  BOOTSTRAP_TOOLTIP_PROPS = { 'data-toggle': 'popover', 'data-placement': 'right', 'data-trigger': 'hover' }.freeze
+  BOOTSTRAP_TOOLTIP_PROPS = { toggle: 'popover', placement: 'right', trigger: 'hover' }.freeze
 
   include Ansible
   include DateTimeHelper
@@ -217,13 +217,13 @@ module ApplicationHelper
   end
 
   def additional_info(text)
-    html_attrs = if text.html_safe?
-      { 'data-content': h(h(text).to_str), 'data-html': true }
+    data_attrs = if text.html_safe?
+      { content: h(h(text).to_str), html: true }
     else
-      { 'data-content': text }
+      { content: text }
     end.merge(BOOTSTRAP_TOOLTIP_PROPS)
 
-    content_tag :i, '', class: "glyphicon glyphicon-info-sign", **html_attrs
+    content_tag :i, '', class: "glyphicon glyphicon-info-sign", data: data_attrs
   end
 
   def page_title(content = nil, in_tab: false, &block)
