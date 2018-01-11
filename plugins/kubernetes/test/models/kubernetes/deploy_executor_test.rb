@@ -545,11 +545,14 @@ describe Kubernetes::DeployExecutor do
     end
 
     describe "events and logs" do
-      it "displays events and logs when deploy failed" do
+      before do
         # worker restarted -> we request the previous logs
-        stub_request(:get, "#{log_url}&previous=true").
-          to_return(body: "LOG-1")
+        stub_request(:get, "#{log_url}&previous=true").to_return(body: "LOG-1")
 
+        worker_is_unstable
+      end
+
+      it "displays events and logs when deploy failed" do
         stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/events}).
           to_return(
             body: {
@@ -570,8 +573,6 @@ describe Kubernetes::DeployExecutor do
             }.to_json
           )
 
-        worker_is_unstable
-
         refute execute
 
         # failed
@@ -581,10 +582,34 @@ describe Kubernetes::DeployExecutor do
         # correct debugging output
         out.scan(/Pod 100 pod pod-(\S+)/).flatten.uniq.must_equal ["resque-worker:"] # logs and events only for bad pod
         out.must_match(
-          /EVENTS:\s+FailedScheduling: fit failure on node \(ip-1-2-3-4\)\s+fit failure on node \(ip-2-3-4-5\) x4\n\n/
+          /EVENTS:\s+FailedScheduling: fit failure on node \(ip-1-2-3-4\)\s+fit failure on node \(ip-2-3-4-5\) x5\n\n/
         ) # no repeated events
         out.must_match /LOGS:\s+LOG-1/
         out.must_include "RESOURCE EVENTS staging.some-project:\n  FailedScheduling:"
+      end
+
+      it "displays events without message" do
+        stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/events}).
+          to_return(
+            body: {
+              items: [
+                {
+                  reason: 'Foobar',
+                  count: 1,
+                  metadata: {creationTimestamp: "2017-03-31T22:56:20Z"}
+                },
+                {
+                  reason: 'Foobar',
+                  count: 1,
+                  metadata: {creationTimestamp: "2017-03-31T22:56:20Z"}
+                }
+              ]
+            }.to_json
+          )
+
+        refute execute
+
+        out.must_include "Foobar:  x2"
       end
     end
   end
