@@ -187,9 +187,11 @@ module Kubernetes
     end
 
     def print_events(events)
-      events.uniq! { |e| e.message.split("\n").sort }
-      events.each do |e|
-        counter = " x#{e.count}" if e.count != 1
+      groups = events.group_by { |e| [e.reason, (e.message || "").split("\n").sort] }
+      groups.each do |_, event_group|
+        count = event_group.sum(&:count)
+        counter = " x#{count}" if count != 1
+        e = event_group.first
         @output.puts "  #{e.reason}: #{e.message}#{counter}"
       end
     end
