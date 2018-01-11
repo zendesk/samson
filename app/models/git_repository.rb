@@ -48,7 +48,7 @@ class GitRepository
   end
 
   def tags
-    return unless ensure_mirror_current
+    return [] unless ensure_mirror_current
     command = ["git", "for-each-ref", "refs/tags", "--sort=-authordate", "--format=%(refname)", "--count=600"]
     return [] unless output = capture_stdout(*command)
     output = output.gsub 'refs/tags/', ''
@@ -56,7 +56,7 @@ class GitRepository
   end
 
   def branches
-    return unless ensure_mirror_current
+    return [] unless ensure_mirror_current
     return [] unless output = capture_stdout('git', 'branch', '--list', '--no-column')
     output.delete!('* ')
     output.split("\n")

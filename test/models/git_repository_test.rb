@@ -194,12 +194,36 @@ describe GitRepository do
       create_repo_without_tags
       repository.tags.must_equal []
     end
+
+    it 'fails when repo is not updateable' do
+      create_repo_with_an_additional_branch
+      repository.expects(:ensure_mirror_current).returns(false)
+      repository.tags.to_a.must_equal []
+    end
+
+    it 'fails when execution fails' do
+      create_repo_with_an_additional_branch
+      repository.expects(:capture_stdout).returns(false)
+      repository.tags.to_a.must_equal []
+    end
   end
 
   describe "#branches" do
     it 'returns the branches of the repository' do
       create_repo_with_an_additional_branch
       repository.branches.to_a.must_equal %w[master test_user/test_branch]
+    end
+
+    it 'fails when repo is not updateable' do
+      create_repo_with_an_additional_branch
+      repository.expects(:ensure_mirror_current).returns(false)
+      repository.branches.to_a.must_equal []
+    end
+
+    it 'fails when execution fails' do
+      create_repo_with_an_additional_branch
+      repository.expects(:capture_stdout).returns(false)
+      repository.branches.to_a.must_equal []
     end
   end
 
