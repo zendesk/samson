@@ -233,7 +233,7 @@ class JobExecution
 
     # make repo-digests available to stage commands
     builds.map do |build|
-      ["BUILD_FROM_#{build.dockerfile}", build.docker_repo_digest]
+      ["BUILD_FROM_#{build.dockerfile || build.image_name}", build.docker_repo_digest]
     end.to_h
   end
 

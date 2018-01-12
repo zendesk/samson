@@ -298,11 +298,24 @@ describe JobExecution do
     assert execute_job("master")
   end
 
-  it "makes dockerfiles available via env" do
-    stage.update_column(:builds_in_environment, true)
-    Samson::BuildFinder.any_instance.expects(:ensure_successful_builds).returns([builds(:docker_build)])
-    JobExecution.new('master', job).send(:run)
-    job.output.must_include "export BUILD_FROM_Dockerfile=docker-registry.example.com"
+  describe "builds_in_environment" do
+    let(:build) { builds(:docker_build) }
+
+    before do
+      stage.update_column(:builds_in_environment, true)
+      Samson::BuildFinder.any_instance.expects(:ensure_successful_builds).returns([build])
+    end
+
+    it "makes builds available via env" do
+      JobExecution.new('master', job).send(:run)
+      job.output.must_include "export BUILD_FROM_Dockerfile=docker-registry.example.com"
+    end
+
+    it "makes builds without dockerfile available via env" do
+      build.update_columns(dockerfile: nil, image_name: 'foo')
+      JobExecution.new('master', job).send(:run)
+      job.output.must_include "export BUILD_FROM_foo=docker-registry.example.com"
+    end
   end
 
   describe "kubernetes" do
