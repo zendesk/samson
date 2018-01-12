@@ -23,9 +23,9 @@ module Kubernetes
         case kind
         when *Kubernetes::RoleConfigFile::SERVICE_KINDS
           set_service_name
-          set_service_selector
           set_service_node_port
           prefix_service_cluster_ip
+          set_service_blue_green if blue_green_color
         when *Kubernetes::RoleConfigFile::PRIMARY_KINDS
           if kind != 'Pod'
             set_rc_unique_label_key
@@ -40,13 +40,13 @@ module Kubernetes
           set_name
           set_deployer
           set_spec_template_metadata
-          set_spec_match_labels
           set_docker_image
           set_resource_usage
           set_env
           set_secrets
           set_image_pull_secrets
           set_vault_env
+          set_blue_green if blue_green_color
         end
 
         hash = template
@@ -76,6 +76,16 @@ module Kubernetes
 
     private
 
+    def set_service_blue_green
+      template.dig_set([:spec, :selector, :blue_green], blue_green_color)
+    end
+
+    def set_blue_green
+      template.dig_set([:metadata, :labels, :blue_green], blue_green_color)
+      template.dig_set([:spec, :selector, :matchLabels, :blue_green], blue_green_color)
+      template.dig_set([:spec, :template, :metadata, :labels, :blue_green], blue_green_color)
+    end
+
     def set_project_labels
       project_label = project.permalink
       template.dig_set([:metadata, :labels, :project], project_label)
@@ -83,23 +93,13 @@ module Kubernetes
       kind = template.fetch(:kind)
       if kind == "Service"
         template.dig_set([:spec, :selector, :project], project_label)
-        template.dig_set([:spec, :selector, :blue_green], blue_green_color) if blue_green_color
       elsif kind != "Pod"
         template.dig_set([:spec, :selector, :matchLabels, :project], project_label)
-        template.dig_set([:spec, :template, :metadata, :labels, :project], project_label)
-        if blue_green_color
-          template.dig_set([:spec, :selector, :matchLabels, :blue_green], blue_green_color)
-          template.dig_set([:spec, :template, :metadata, :labels, :blue_green], blue_green_color)
-        end
       end
     end
 
     def set_service_name
       template[:metadata][:name] = generate_service_name(template[:metadata][:name])
-    end
-
-    def set_service_selector
-      template.dig_set([:spec, :selector, :blue_green], blue_green_color) if blue_green_color
     end
 
     # For now, create a NodePort for each service, so we can expose any
@@ -265,7 +265,7 @@ module Kubernetes
         role = @doc.kubernetes_role
         deploy_group = @doc.deploy_group
 
-        meta = Kubernetes::Release.pod_selector(release.id, deploy_group.id, query: false).merge(
+        Kubernetes::Release.pod_selector(release.id, deploy_group.id, query: false).merge(
           deploy_id: release.deploy_id,
           project_id: release.project_id,
           role_id: role.id,
@@ -273,14 +273,7 @@ module Kubernetes
           revision: release.git_sha,
           tag: release.git_ref.parameterize.tr('_', '-')
         )
-
-        meta[:blue_green] = blue_green_color if blue_green_color
-        meta
       end
-    end
-
-    def set_spec_match_labels
-      template.dig_set([:spec, :selector, :matchLabels, :blue_green], blue_green_color)
     end
 
     def set_resource_usage
@@ -375,7 +368,7 @@ module Kubernetes
     end
 
     def blue_green_color
-      @blue_green_color ||= @doc.kubernetes_release.color if @doc.kubernetes_release.deploy.stage.blue_green
+      @blue_green_color ||= @doc.blue_green_color
     end
 
     def set_vault_env

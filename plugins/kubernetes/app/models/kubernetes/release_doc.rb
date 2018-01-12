@@ -33,11 +33,11 @@ module Kubernetes
     end
 
     def blue_green?
-      kubernetes_release.deploy.stage.blue_green
+      kubernetes_release.blue_green?
     end
 
     def blue_green_color
-      @blue_green_color ||= kubernetes_release.color if blue_green?
+      @blue_green_color ||= kubernetes_release.blue_green_color
     end
 
     # run on unsaved mock ReleaseDoc to test template and secrets before we save or create a build

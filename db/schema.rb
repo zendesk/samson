@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180110142314) do
+ActiveRecord::Schema.define(version: 20180112113400) do
 
   create_table "audits", force: :cascade do |t|
     t.integer "auditable_id", null: false
@@ -246,7 +246,7 @@ ActiveRecord::Schema.define(version: 20180110142314) do
     t.integer "deploy_id"
     t.string "git_sha", limit: 40, null: false
     t.string "git_ref"
-    t.string "color", limit: 8
+    t.boolean "blue_phase", default: false, null: false
   end
 
   create_table "kubernetes_roles", id: :integer, force: :cascade do |t|

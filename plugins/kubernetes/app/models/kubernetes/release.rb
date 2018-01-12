@@ -20,15 +20,21 @@ module Kubernetes
       Kubernetes::Release.transaction do
         release = create(params.except(:deploy_groups))
 
-        if release.deploy.stage.blue_green
-          previous = release.previous_successful_release
-          color = 'green' if previous && previous.color == 'blue'
-          color ||= 'blue'
-          update(release.id, :color => color)
-        end
+        update(release.id, blue_phase: !release.previous_successful_release&.blue_phase) if release.blue_green?
 
         release.send :create_release_docs, params if release.persisted?
         release
+      end
+    end
+
+    def blue_green?
+      deploy.stage.blue_green
+    end
+
+    def blue_green_color
+      @blue_green_color ||= begin
+        return unless blue_green?
+        blue_phase ? 'green' : 'blue'
       end
     end
 
@@ -69,8 +75,7 @@ module Kubernetes
     end
 
     def previous_successful_release
-      previous_successful_deploy = deploy.previous_successful_deploy
-      previous_successful_deploy.kubernetes_release if previous_successful_deploy
+      deploy.previous_successful_deploy&.kubernetes_release
     end
 
     private

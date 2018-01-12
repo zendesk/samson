@@ -217,6 +217,11 @@ module Kubernetes
         loop do
           loop_sleep
           r = fetch_resource
+          # prevent cases when status.replicas are missing
+          # e.g. running locally on Minikube, after scale replicas to zero
+          # $ kubectl scale deployment {DEPLOYMENT_NAME} --replicas 0
+          # "replicas" key is actually removed from "status" map
+          # $ {"status":{"conditions":[...],"observedGeneration":2}}
           break if !r[:status].key?(:replicas) || r.dig_fetch(:status, :replicas).zero?
         end
 
