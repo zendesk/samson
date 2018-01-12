@@ -57,11 +57,15 @@ class Project < ActiveRecord::Base
   }
 
   def docker_repo(registry, dockerfile)
-    repo = File.join(registry.base, permalink_base)
+    File.join(registry.base, docker_image(dockerfile))
+  end
+
+  def docker_image(dockerfile)
+    name = permalink_base
     if suffix = dockerfile.gsub(/^Dockerfile\.?|\/Dockerfile\.?/, '').presence
-      repo << "-#{suffix.parameterize}"
+      name << "-#{suffix.parameterize}"
     end
-    repo
+    name
   end
 
   def dockerfile_list
