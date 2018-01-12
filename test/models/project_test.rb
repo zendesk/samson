@@ -374,6 +374,14 @@ describe Project do
     end
   end
 
+  describe "#docker_image" do
+    with_registries ["docker-registry.example.com/bar"]
+
+    it "builds nonstandard" do
+      project.docker_image("Dockerfile.baz").must_equal "foo-baz"
+    end
+  end
+
   describe '#soft_delete' do
     before { undo_default_stubs }
 
