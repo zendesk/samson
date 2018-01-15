@@ -45,7 +45,7 @@ gem 'concurrent-ruby'
 gem 'vault'
 gem 'docker-api'
 gem 'newrelic_rpm'
-gem 'ddtrace' # datadog APM
+gem 'ddtrace', git: 'https://github.com/DataDog/dd-trace-rb.git', tag: '0.9.0-RC2' # datadog APM
 gem 'lograge'
 gem 'logstash-event'
 gem 'diffy'

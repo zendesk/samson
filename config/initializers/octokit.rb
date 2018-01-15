@@ -19,6 +19,7 @@ class Octokit::RedirectAsError < Faraday::Response::Middleware
 end
 
 Octokit.middleware = Faraday::RackBuilder.new do |builder|
+  builder.use(:ddtrace, split_by_domain: true) if DatadogAPM.enabled?
   builder.use Faraday::HttpCache, shared_cache: false, store: Rails.cache, serializer: Marshal
   builder.response :logger, Rails.logger
   builder.use Octokit::Response::RaiseError

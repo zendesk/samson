@@ -25,6 +25,7 @@ module SamsonLedger
       private
 
       def post_event(deploy)
+        Rails.logger.debug("Posting result of deploy #{deploy.id} to #{ledger_url}")
         results = post(build_event(deploy))
         if results.status.to_i != 200
           Rails.logger.error("Ledger Client got a #{results.status} from #{ENV.fetch("LEDGER_BASE_URL")}")
@@ -71,8 +72,16 @@ module SamsonLedger
         "<ul>#{results.join}</ul>" if results.any?
       end
 
+      def ledger_url
+        ENV.fetch("LEDGER_BASE_URL") + LEDGER_PATH
+      end
+
       def post(data)
-        connection = Faraday.new(url: ENV.fetch("LEDGER_BASE_URL") + LEDGER_PATH)
+        connection = Faraday.new(url: ledger_url) do |builder|
+          builder.use(:ddtrace, distributed_tracing: true) if DatadogAPM.enabled?
+          builder.adapter Faraday.default_adapter
+        end
+
         connection.post do |request|
           request.headers['Content-Type'] = "application/json"
           request.headers['Authorization'] = "Token token=#{ENV.fetch("LEDGER_TOKEN")}"
