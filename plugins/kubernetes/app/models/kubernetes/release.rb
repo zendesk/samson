@@ -19,9 +19,7 @@ module Kubernetes
     def self.create_release(params)
       Kubernetes::Release.transaction do
         release = create(params.except(:deploy_groups))
-
-        update(release.id, blue_phase: !release.previous_successful_release&.blue_phase) if release.blue_green?
-
+        release.flip_blue_green!
         release.send :create_release_docs, params if release.persisted?
         release
       end
@@ -76,6 +74,10 @@ module Kubernetes
 
     def previous_successful_release
       deploy.previous_successful_deploy&.kubernetes_release
+    end
+
+    def flip_blue_green!
+      update_column(:blue_phase, !previous_successful_release&.blue_phase) if blue_green?
     end
 
     private

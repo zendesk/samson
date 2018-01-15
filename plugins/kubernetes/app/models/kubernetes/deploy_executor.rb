@@ -23,11 +23,6 @@ module Kubernetes
       end
     end
 
-    def self.build(output, job:, reference:)
-      clazz = job.deploy.stage.blue_green ? Kubernetes::BlueGreenDeployExecutor : Kubernetes::DeployExecutor
-      clazz.new(output, job: job, reference: reference)
-    end
-
     def initialize(output, job:, reference:)
       @output = output
       @job = job

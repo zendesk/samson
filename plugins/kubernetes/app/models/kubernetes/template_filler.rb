@@ -46,7 +46,7 @@ module Kubernetes
           set_secrets
           set_image_pull_secrets
           set_vault_env
-          set_blue_green if blue_green_color
+          set_resource_blue_green if blue_green_color
         end
 
         hash = template
@@ -80,7 +80,7 @@ module Kubernetes
       template.dig_set([:spec, :selector, :blue_green], blue_green_color)
     end
 
-    def set_blue_green
+    def set_resource_blue_green
       template.dig_set([:metadata, :labels, :blue_green], blue_green_color)
       template.dig_set([:spec, :selector, :matchLabels, :blue_green], blue_green_color)
       template.dig_set([:spec, :template, :metadata, :labels, :blue_green], blue_green_color)
@@ -95,6 +95,7 @@ module Kubernetes
         template.dig_set([:spec, :selector, :project], project_label)
       elsif kind != "Pod"
         template.dig_set([:spec, :selector, :matchLabels, :project], project_label)
+        template.dig_set([:spec, :template, :metadata, :labels, :project], project_label)
       end
     end
 

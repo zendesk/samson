@@ -164,7 +164,8 @@ class JobExecution
     ActiveSupport::Notifications.instrument("execute_job.samson", payload) do
       payload[:success] =
         if stage&.kubernetes
-          @executor = Kubernetes::DeployExecutor.build(@output, job: @job, reference: @reference)
+          executor_cls = stage&.blue_green ? Kubernetes::BlueGreenDeployExecutor : Kubernetes::DeployExecutor
+          @executor = executor_cls.new(@output, job: @job, reference: @reference)
           @executor.execute
         else
           @executor.execute(*cmds)

@@ -10,6 +10,7 @@ module Kubernetes
     serialize :resource_template, JSON
     delegate :desired_pod_count, :prerequisite?, to: :primary_resource
     delegate :images, to: :verification_template
+    delegate :blue_green?, :blue_green_color, to: :kubernetes_release
 
     validates :deploy_group, presence: true
     validates :kubernetes_role, presence: true
@@ -32,14 +33,6 @@ module Kubernetes
       end
     end
 
-    def blue_green?
-      kubernetes_release.blue_green?
-    end
-
-    def blue_green_color
-      @blue_green_color ||= kubernetes_release.blue_green_color
-    end
-
     # run on unsaved mock ReleaseDoc to test template and secrets before we save or create a build
     # this create a bit of duplicated work, but fails the deploy fast
     def verify_template
@@ -54,11 +47,12 @@ module Kubernetes
     end
 
     def non_service_resources
-      @non_service_resources ||= resources.select { |r| r != service_resource}
+      @non_service_resources ||= resources.reject { |r| r == service_resource}
     end
 
     def service_resource
-      @service_resource ||= resources.detect do |r|
+      return @service_resource if defined?(@service_resource)
+      @service_resource = resources.detect do |r|
         r.is_a?(Kubernetes::Resource::Service) && r.name == kubernetes_role.service_name
       end
     end
