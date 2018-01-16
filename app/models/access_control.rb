@@ -50,7 +50,11 @@ class AccessControl
         else raise ArgumentError, "Unsupported action #{action}"
         end
       else
-        raise ArgumentError, "Unsupported resource_namespace #{resource_namespace}"
+        if block = (@@plugin_namespaces ||= Samson::Hooks.fire(:can).to_h)[resource_namespace]
+          block.call(user, action, scope)
+        else
+          raise ArgumentError, "Unsupported resource_namespace #{resource_namespace}"
+        end
       end
     end
 

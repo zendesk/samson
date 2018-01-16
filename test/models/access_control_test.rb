@@ -212,4 +212,10 @@ describe AccessControl do
       end
     end
   end
+
+  describe "plugins" do
+    it "can resolve plugin access" do
+      assert AccessControl.can?(admin, :write, :environment_variable_groups)
+    end
+  end
 end

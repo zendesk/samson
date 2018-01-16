@@ -79,3 +79,22 @@ Samson::Hooks.callback(:link_parts_for_resource) do
     end
   ]
 end
+
+Samson::Hooks.callback(:can) do
+  [
+    :environment_variable_groups,
+    ->(user, action, group) do
+      case action
+      when :write
+        return true if user.admin?
+
+        administrated = user.administrated_projects.pluck(:id)
+        return true if administrated.any? && group.projects.pluck(:id).all? { |id| administrated.include?(id) }
+
+        false
+      else
+        raise ArgumentError, "Unsupported action #{action}"
+      end
+    end
+  ]
+end

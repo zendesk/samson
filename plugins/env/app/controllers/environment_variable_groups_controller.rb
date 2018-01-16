@@ -3,16 +3,6 @@ class EnvironmentVariableGroupsController < ApplicationController
   before_action :authorize_user!, except: [:index, :show, :preview]
   before_action :group, only: [:show]
 
-  # poor mans access_control.rb `can?` replacement
-  def self.write?(user, group)
-    return true if user.admin?
-
-    administrated = user.administrated_projects.pluck(:id)
-    return true if administrated.any? && group.projects.pluck(:id).all? { |id| administrated.include?(id) }
-
-    false
-  end
-
   def index
     @groups = EnvironmentVariableGroup.all
   end
@@ -83,6 +73,6 @@ class EnvironmentVariableGroupsController < ApplicationController
   end
 
   def authorize_user!
-    unauthorized! unless self.class.write?(current_user, group)
+    unauthorized! unless can? :write, :environment_variable_groups, group
   end
 end

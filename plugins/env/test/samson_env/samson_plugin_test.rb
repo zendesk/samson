@@ -110,4 +110,39 @@ describe SamsonEnv do
       proc.call(var).must_equal ["WORLD3 for Production on Bar", EnvironmentVariable]
     end
   end
+
+  describe :can do
+    def call(user, action, group)
+      proc = Samson::Hooks.fire(:can).to_h.fetch(:environment_variable_groups)
+      proc.call(user, action, group)
+    end
+
+    let(:group) { EnvironmentVariableGroup.create!(name: "Bar", projects: [projects(:test)]) }
+
+    it "cannot read" do
+      assert_raises(ArgumentError) { call(users(:admin), :read, group) }
+    end
+
+    it "can write as admin" do
+      assert call(users(:admin), :write, group)
+    end
+
+    it "can write as project-admin" do
+      assert call(users(:project_admin), :write, group)
+    end
+
+    it "cannot write as deployer" do
+      refute call(users(:deployer), :write, group)
+    end
+
+    it "cannot write as other project-admin" do
+      user_project_roles(:project_admin).update_column(:project_id, projects(:other).id)
+      refute call(users(:project_admin), :write, group)
+    end
+
+    it "can write groups not used by any projet" do
+      group.update_attributes!(projects: [])
+      assert call(users(:project_admin), :write, group)
+    end
+  end
 end
