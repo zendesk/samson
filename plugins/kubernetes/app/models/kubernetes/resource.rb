@@ -181,7 +181,6 @@ module Kubernetes
     end
 
     class Service < Base
-
       private
 
       # updating a service requires re-submitting resourceVersion and clusterIP

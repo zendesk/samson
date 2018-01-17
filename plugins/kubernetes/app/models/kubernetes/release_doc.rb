@@ -47,7 +47,7 @@ module Kubernetes
     end
 
     def non_service_resources
-      @non_service_resources ||= resources.reject { |r| r == service_resource}
+      @non_service_resources ||= resources.reject { |r| r == service_resource }
     end
 
     def service_resource

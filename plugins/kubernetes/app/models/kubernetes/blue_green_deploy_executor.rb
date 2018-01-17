@@ -1,6 +1,7 @@
+# frozen_string_literal: true
+
 module Kubernetes
   class BlueGreenDeployExecutor < DeployExecutor
-
     def deploy_and_watch(release, release_docs)
       deploy_resources(release_docs)
 
@@ -22,7 +23,8 @@ module Kubernetes
 
     def deploy_resources(release_docs)
       release_docs.each do |release_doc|
-        @output.puts "Creating #{release_doc.blue_green_color.upcase} resources for #{release_doc.deploy_group.name} role #{release_doc.kubernetes_role.name}"
+        @output.puts "Creating #{release_doc.blue_green_color.upcase}" \
+                         "resources for #{release_doc.deploy_group.name} role #{release_doc.kubernetes_role.name}"
         release_doc.non_service_resources.each(&:deploy)
       end
       true
@@ -31,7 +33,8 @@ module Kubernetes
     def switch_service(release_docs)
       release_docs.each do |release_doc|
         if release_doc.service_resource
-          @output.puts "Switching service for #{release_doc.deploy_group.name} role #{release_doc.kubernetes_role.name} to #{release_doc.blue_green_color.upcase}"
+          @output.puts "Switching service for #{release_doc.deploy_group.name}" \
+                           "role #{release_doc.kubernetes_role.name} to #{release_doc.blue_green_color.upcase}"
           release_doc.service_resource.deploy
         end
       end
@@ -45,7 +48,8 @@ module Kubernetes
     def delete_resources(release_docs)
       if release_docs
         release_docs.each do |release_doc|
-          @output.puts "Deleting #{release_doc.blue_green_color.upcase} resources for #{release_doc.deploy_group.name} role #{release_doc.kubernetes_role.name}"
+          @output.puts "Deleting #{release_doc.blue_green_color.upcase} resources" \
+                           "for #{release_doc.deploy_group.name} role #{release_doc.kubernetes_role.name}"
           release_doc.non_service_resources.each(&:delete)
         end
       end
