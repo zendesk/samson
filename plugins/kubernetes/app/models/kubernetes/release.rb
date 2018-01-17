@@ -26,10 +26,11 @@ module Kubernetes
     end
 
     def blue_green?
-      deploy.stage.blue_green
+      deploy&.stage&.blue_green
     end
 
     def blue_green_color
+      return @blue_green_color if defined?(@blue_green_color)
       @blue_green_color ||= begin
         return unless blue_green?
         blue_phase ? 'green' : 'blue'
