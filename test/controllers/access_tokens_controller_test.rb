@@ -6,11 +6,12 @@ SingleCov.covered!
 describe AccessTokensController do
   def create(attributes = {})
     post :create, params: {
-      doorkeeper_access_token: attributes.merge(
+      doorkeeper_access_token: {
         description: 'D',
         scopes: 'locks, projects',
-        application_id: application.id
-      )
+        application_id: application.id,
+        resource_owner_id: user.id
+      }.merge(attributes)
     }
   end
 

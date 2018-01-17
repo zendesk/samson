@@ -76,8 +76,10 @@ module Samson
     private
 
     def find_build(dockerfile)
-      wait_for_build_creation { Build.where(git_sha: @job.commit, dockerfile: dockerfile).first } ||
-        reused_builds.detect { |b| b.dockerfile == dockerfile }
+      wait_for_build_creation do
+        image_name = @job.project.docker_image(dockerfile)
+        Build.where(git_sha: @job.commit).where("dockerfile = ? OR image_name = ?", dockerfile, image_name).first
+      end || reused_builds.detect { |b| b.dockerfile == dockerfile }
     end
 
     def reused_builds

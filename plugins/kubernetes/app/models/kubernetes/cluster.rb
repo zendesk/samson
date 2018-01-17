@@ -23,6 +23,10 @@ module Kubernetes
       @client ||= build_client :default
     end
 
+    def autoscaling_client
+      @autoscaling_client ||= build_client 'autoscaling/v1'
+    end
+
     def extension_client
       @extension_client ||= build_client 'extensions/v1beta1'
     end

@@ -138,13 +138,29 @@ describe Kubernetes::TemplateFiller do
     end
 
     describe "deployer" do
+      let(:result) { template.to_hash.dig_fetch(:spec, :template, :metadata, :annotations, :deployer) }
+
       it "sets deployer" do
-        template.to_hash[:spec][:template][:metadata][:annotations].must_equal(deployer: "deployer@example.com")
+        result.must_equal "deployer@example.com"
       end
 
       it "does not set nil deployer which breaks kubernetes api" do
         doc.kubernetes_release.user.email = nil
-        template.to_hash[:spec][:template][:metadata][:annotations].must_equal(deployer: "")
+        result.must_equal ""
+      end
+    end
+
+    describe "owner" do
+      let(:result) { template.to_hash.dig_fetch(:spec, :template, :metadata, :annotations, :owner) }
+
+      it "sets owner" do
+        doc.kubernetes_release.project.owner = "foo@bar.com"
+        result.must_equal "foo@bar.com"
+      end
+
+      it "does not set nil owner which breaks kubernetes api" do
+        doc.kubernetes_release.project.owner = nil
+        result.must_equal ""
       end
     end
 
@@ -416,8 +432,7 @@ describe Kubernetes::TemplateFiller do
 
         # secrets got resolved?
         template.to_hash[:spec][:template][:metadata][:annotations].
-          except(init_container_key).must_equal(
-            deployer: "deployer@example.com",
+          except(init_container_key, :deployer, :owner).must_equal(
             "secret/FOO" => "global/global/global/bar"
           )
       end
@@ -528,6 +543,17 @@ describe Kubernetes::TemplateFiller do
         template.to_hash.dig_fetch(:spec, :template, :spec, :containers, 0, :lifecycle).must_equal(
           preStop: "OLD"
         )
+      end
+    end
+
+    describe "HorizontalPodAutoscaler" do
+      before do
+        raw_template[:kind] = "HorizontalPodAutoscaler"
+        raw_template[:spec][:scaleTargetRef] = {}
+      end
+
+      it "matches the resource name" do
+        template.to_hash.dig_fetch(:spec, :scaleTargetRef, :name).must_equal("test-app-server")
       end
     end
   end

@@ -172,6 +172,14 @@ module Kubernetes
     class ConfigMap < Base
     end
 
+    class HorizontalPodAutoscaler < Base
+      private
+
+      def client
+        @deploy_group.kubernetes_cluster.autoscaling_client
+      end
+    end
+
     class Service < Base
 
       private
@@ -326,6 +334,12 @@ module Kubernetes
         # pods will restart with updated settings
         # need to wait here or deploy_executor.rb will instantly finish since everything is running
         wait_for_pods_to_restart
+      end
+
+      def delete
+        old_pods = pods
+        super
+        delete_pods(old_pods)
       end
 
       private

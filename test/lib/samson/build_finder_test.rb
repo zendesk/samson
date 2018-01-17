@@ -222,6 +222,14 @@ describe Samson::BuildFinder do
         execute.must_equal []
         execute.must_equal []
       end
+
+      it "waits for builds with just image_name" do
+        expect_sleep.with do
+          build.update_columns(git_sha: matching_sha, docker_repo_digest: 'done', dockerfile: nil, image_name: 'foo')
+        end
+
+        execute.must_equal [build]
+      end
     end
   end
 end

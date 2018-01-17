@@ -2,7 +2,7 @@
 module Kubernetes
   class RoleVerifier
     VALID_LABEL = /\A[a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?\z/ # also used in js ... cannot use /i
-
+    IGNORED = ['ConfigMap', 'HorizontalPodAutoscaler'].freeze
     SUPPORTED_KINDS = [
       ['Deployment'],
       ['DaemonSet'],
@@ -64,14 +64,14 @@ module Kubernetes
 
     def verify_kinds
       kinds = map_attributes([:kind])
-      kinds.delete 'ConfigMap' # ignore config maps
+      IGNORED.each { |k| kinds.delete k }
       uniq_element!(kinds, 'Service') # ignore multiple services
       kinds.sort_by!(&:to_s)
 
       return if SUPPORTED_KINDS.include?(kinds)
       supported = SUPPORTED_KINDS.map { |c| c.join(' + ') }.join(', ')
       @errors << "Unsupported combination of kinds: #{kinds.join(' + ')}" \
-        ", supported combinations are: #{supported} and ConfigMap"
+        ", supported combinations are: #{supported} and #{IGNORED.join(", ")}"
     end
 
     # [1,2,3,1,4] -> [2,3,4,1]

@@ -187,9 +187,11 @@ module Kubernetes
     end
 
     def print_events(events)
-      events.uniq! { |e| e.message.split("\n").sort }
-      events.each do |e|
-        counter = " x#{e.count}" if e.count != 1
+      groups = events.group_by { |e| [e.reason, (e.message || "").split("\n").sort] }
+      groups.each do |_, event_group|
+        count = event_group.sum(&:count)
+        counter = " x#{count}" if count != 1
+        e = event_group.first
         @output.puts "  #{e.reason}: #{e.message}#{counter}"
       end
     end
@@ -218,7 +220,7 @@ module Kubernetes
       statuses = Array.new(release_doc.desired_pod_count).each_with_index.map do |_, i|
         pod = pods[i]
 
-        if !pod
+        status = if !pod
           {live: false, details: "Missing", pod: pod}
         elsif pod.restarted?
           {live: false, stop: true, details: "Restarted", pod: pod}
@@ -231,10 +233,27 @@ module Kubernetes
         else
           {live: false, details: "Waiting (#{pod.phase}, #{pod.reason})", pod: pod}
         end
+
+        status[:details] += " (autoscaled role, only showing one pod)" if role.autoscaled?
+        status
       end
+
+      # If a role is autoscaled, there is a chance pods can be deleted during a deployment.
+      # Sort them by "most alive" and use the first one, so we ensure at least one pods works.
+      statuses.sort_by!(&method(:pod_liveliness)).slice!(1..-1) if role.autoscaled?
 
       statuses.map do |status|
         ReleaseStatus.new(status.merge(role: role.name, group: group.name))
+      end
+    end
+
+    def pod_liveliness(status_hash)
+      if status_hash[:live]
+        -1
+      elsif status_hash[:stop]
+        1
+      else
+        0
       end
     end
 

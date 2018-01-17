@@ -305,6 +305,30 @@ describe Kubernetes::Api::Pod do
         assert events_indicate_failure?
       end
     end
+
+    describe "HorizontalPodAutoscaler with failures we don't care about" do
+      before do
+        event.merge!(kind: 'HorizontalPodAutoscaler', type: 'Warning')
+      end
+
+      it "ignores failing to get metrics" do
+        event[:reason] = 'FailedGetMetrics'
+
+        refute events_indicate_failure?, 'FailedGetMetrics must not be recognized as failures'
+      end
+
+      it "ingores failures to scale" do
+        event[:reason] = 'FailedRescale'
+
+        refute events_indicate_failure?, 'FailedRescale must not be recognized as failures'
+      end
+
+      it "does not ignore an unknown HPA event" do
+        event[:reason] = 'SomeOtherFailure'
+
+        assert events_indicate_failure?, 'Events we dont explicitly ignore must be recognized as failures'
+      end
+    end
   end
 
   describe "#init_containers" do

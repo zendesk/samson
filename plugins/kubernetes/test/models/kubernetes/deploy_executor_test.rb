@@ -442,6 +442,49 @@ describe Kubernetes::DeployExecutor do
       out.must_include "CANCELLED"
     end
 
+    describe "an autoscaled role" do
+      before do
+        worker_role.kubernetes_role.update_column(:autoscaled, true)
+        worker_role.update_column(:replicas, 2)
+      end
+
+      it "only requires one pod to go live when a role is autoscaled" do
+        pod_reply[:items] << pod_reply[:items].first.deep_dup
+
+        worker_is_unstable
+
+        assert execute
+
+        out.scan(/resque-worker: Live/).count.must_equal 1
+        out.must_include "(autoscaled role, only showing one pod)"
+        out.must_include "SUCCESS"
+      end
+
+      it "fails when all pods fail" do
+        extra_pod = pod_reply[:items].first.deep_dup
+        pod_reply[:items] << extra_pod
+
+        worker_is_unstable
+        extra_pod[:status][:containerStatuses].first[:restartCount] = 1
+
+        refute execute
+
+        out.scan(/resque-worker: Restarted/).count.must_equal 2
+        out.must_include "(autoscaled role, only showing one pod)"
+        out.must_include "DONE"
+      end
+
+      it "still waits for a pod" do
+        pod_status[:conditions][0][:status] = "False"
+
+        cancel_after_first_iteration
+        refute execute
+
+        out.must_include "resque-worker: Waiting (Running, Unknown)"
+        out.must_include "CANCELLED"
+      end
+    end
+
     describe "when rollback is needed" do
       let(:rollback_indicator) { "Rolling back" }
 
@@ -502,11 +545,14 @@ describe Kubernetes::DeployExecutor do
     end
 
     describe "events and logs" do
-      it "displays events and logs when deploy failed" do
+      before do
         # worker restarted -> we request the previous logs
-        stub_request(:get, "#{log_url}&previous=true").
-          to_return(body: "LOG-1")
+        stub_request(:get, "#{log_url}&previous=true").to_return(body: "LOG-1")
 
+        worker_is_unstable
+      end
+
+      it "displays events and logs when deploy failed" do
         stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/events}).
           to_return(
             body: {
@@ -527,8 +573,6 @@ describe Kubernetes::DeployExecutor do
             }.to_json
           )
 
-        worker_is_unstable
-
         refute execute
 
         # failed
@@ -538,10 +582,34 @@ describe Kubernetes::DeployExecutor do
         # correct debugging output
         out.scan(/Pod 100 pod pod-(\S+)/).flatten.uniq.must_equal ["resque-worker:"] # logs and events only for bad pod
         out.must_match(
-          /EVENTS:\s+FailedScheduling: fit failure on node \(ip-1-2-3-4\)\s+fit failure on node \(ip-2-3-4-5\) x4\n\n/
+          /EVENTS:\s+FailedScheduling: fit failure on node \(ip-1-2-3-4\)\s+fit failure on node \(ip-2-3-4-5\) x5\n\n/
         ) # no repeated events
         out.must_match /LOGS:\s+LOG-1/
         out.must_include "RESOURCE EVENTS staging.some-project:\n  FailedScheduling:"
+      end
+
+      it "displays events without message" do
+        stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/events}).
+          to_return(
+            body: {
+              items: [
+                {
+                  reason: 'Foobar',
+                  count: 1,
+                  metadata: {creationTimestamp: "2017-03-31T22:56:20Z"}
+                },
+                {
+                  reason: 'Foobar',
+                  count: 1,
+                  metadata: {creationTimestamp: "2017-03-31T22:56:20Z"}
+                }
+              ]
+            }.to_json
+          )
+
+        refute execute
+
+        out.must_include "Foobar:  x2"
       end
     end
   end

@@ -21,6 +21,8 @@ module Kubernetes
         set_project_labels if template.dig(:metadata, :annotations, :"samson/override_project_label")
 
         case kind
+        when 'HorizontalPodAutoscaler'
+          set_hpa_scale_target_name
         when *Kubernetes::RoleConfigFile::SERVICE_KINDS
           set_service_name
           set_service_node_port
@@ -38,7 +40,7 @@ module Kubernetes
           set_pre_stop if kind == 'Deployment'
 
           set_name
-          set_deployer
+          set_contact_info
           set_spec_template_metadata
           set_docker_image
           set_resource_usage
@@ -179,8 +181,9 @@ module Kubernetes
       template[:kind] == 'Pod' ? template : template.dig_fetch(:spec, :template)
     end
 
-    def set_deployer
+    def set_contact_info
       annotations[:deployer] = @doc.kubernetes_release.user&.email.to_s
+      annotations[:owner] = project.owner.to_s
     end
 
     def secret_annotations
@@ -250,6 +253,10 @@ module Kubernetes
       name = @doc.kubernetes_role.resource_name
       name += "-#{blue_green_color}" if blue_green_color
       template.dig_set [:metadata, :name], name
+    end
+
+    def set_hpa_scale_target_name
+      template.dig_set [:spec, :scaleTargetRef, :name], @doc.kubernetes_role.resource_name
     end
 
     # Sets the labels for each new Pod.

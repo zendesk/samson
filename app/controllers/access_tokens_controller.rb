@@ -48,14 +48,12 @@ class AccessTokensController < ApplicationController
 
   def owner
     @owner ||= begin
-      if id = params[:doorkeeper_access_token]&.delete(:resource_owner_id).presence
-        if can? :write, :access_tokens
-          User.find(id)
-        else
-          unauthorized!
-        end
+      id = params[:doorkeeper_access_token]&.delete(:resource_owner_id).presence || current_user.id
+      token = current_user.access_tokens.new(resource_owner_id: id)
+      if can? :write, :access_tokens, token
+        User.find(id)
       else
-        current_user
+        unauthorized!
       end
     end
   end
