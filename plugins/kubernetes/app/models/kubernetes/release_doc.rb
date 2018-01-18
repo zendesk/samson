@@ -10,7 +10,7 @@ module Kubernetes
     serialize :resource_template, JSON
     delegate :desired_pod_count, :prerequisite?, to: :primary_resource
     delegate :images, to: :verification_template
-    delegate :blue_green?, :blue_green_color, to: :kubernetes_release
+    delegate :blue_green_color, to: :kubernetes_release
 
     validates :deploy_group, presence: true
     validates :kubernetes_role, presence: true

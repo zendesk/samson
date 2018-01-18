@@ -18,23 +18,16 @@ module Kubernetes
     # Creates a new Kubernetes Release and corresponding ReleaseDocs
     def self.create_release(params)
       Kubernetes::Release.transaction do
-        release = create(params.except(:deploy_groups))
-        release.flip_blue_green!
+        release = create(params.except(:deploy_groups)) do |release|
+          release.blue_phase = !release.previous_successful_release&.blue_phase if release.blue_green_color
+        end
         release.send :create_release_docs, params if release.persisted?
         release
       end
     end
 
-    def blue_green?
-      deploy&.stage&.blue_green
-    end
-
     def blue_green_color
-      return @blue_green_color if defined?(@blue_green_color)
-      @blue_green_color ||= begin
-        return unless blue_green?
-        blue_phase ? 'green' : 'blue'
-      end
+      deploy.stage.blue_green? && (blue_phase ? 'blue' : 'green')
     end
 
     # simple method to tie all selector logic together
@@ -75,10 +68,6 @@ module Kubernetes
 
     def previous_successful_release
       deploy.previous_successful_deploy&.kubernetes_release
-    end
-
-    def flip_blue_green!
-      update_column(:blue_phase, !previous_successful_release&.blue_phase) if blue_green?
     end
 
     private
