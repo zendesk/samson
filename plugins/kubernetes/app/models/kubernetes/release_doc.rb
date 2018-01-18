@@ -17,7 +17,7 @@ module Kubernetes
     validates :kubernetes_release, presence: true
     validate :validate_config_file, on: :create
 
-    before_save :store_resource_template, on: :create
+    before_create :store_resource_template
 
     attr_reader :previous_resources
 
@@ -44,14 +44,6 @@ module Kubernetes
     # kubeclient needs pure symbol hash ... not indifferent access
     def resource_template
       @resource_template ||= Array.wrap(super).map(&:deep_symbolize_keys)
-    end
-
-    def non_service_resources
-      @non_service_resources ||= resources.reject { |r| r == service_resource }
-    end
-
-    def service_resource
-      resources.detect { |r| r.is_a?(Kubernetes::Resource::Service) }
     end
 
     def resources

@@ -15,9 +15,20 @@ ActiveSupport::TestCase.class_eval do
       end
     end
 
-    yield
+    assert_args = [request, assertion_options]
 
-    assert_requested request, assertion_options
+    if block_given?
+      yield
+      assert_requested(*assert_args)
+    else
+      raise "use assert_requests in the describe block" unless @assert_requests
+      @assert_requests << assert_args
+    end
+  end
+
+  def self.assert_requests
+    before { @assert_requests = [] } # set here so we can check that users did not forget to set the block
+    after { @assert_requests.each { |assert_args| assert_requested(*assert_args) } }
   end
 
   def stub_github_api(url, response = {}, status = 200)
