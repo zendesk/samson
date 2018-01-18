@@ -376,7 +376,8 @@ module Kubernetes
     end
 
     def blue_green_color
-      @blue_green_color ||= @doc.blue_green_color
+      return @blue_green_color if defined?(@blue_green_color)
+      @blue_green_color = @doc.blue_green_color
     end
 
     def set_vault_env

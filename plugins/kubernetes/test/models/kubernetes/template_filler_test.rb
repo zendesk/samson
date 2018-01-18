@@ -23,7 +23,6 @@ describe Kubernetes::TemplateFiller do
 
   before do
     doc.send(:resource_template=, YAML.load_stream(read_kubernetes_sample_file('kubernetes_deployment.yml')))
-    doc.kubernetes_release.deploy_id = 123
     stub_request(:get, %r{http://foobar.server/api/v1/namespaces/\S+/secrets}).to_return(body: "{}")
     Samson::Secrets::VaultClient.any_instance.stubs(:client).
       returns(stub(options: {address: 'https://test.hvault.server', ssl_verify: false}))
@@ -47,7 +46,7 @@ describe Kubernetes::TemplateFiller do
         role: "some-role",
         deploy_group: 'pod1',
         deploy_group_id: doc.deploy_group_id.to_s,
-        deploy_id: "123"
+        deploy_id: doc.kubernetes_release.deploy_id.to_s
       )
 
       metadata = result.fetch(:metadata)
@@ -554,6 +553,24 @@ describe Kubernetes::TemplateFiller do
 
       it "matches the resource name" do
         template.to_hash.dig_fetch(:spec, :scaleTargetRef, :name).must_equal("test-app-server")
+      end
+    end
+
+    describe "blue-green" do
+      before { doc.kubernetes_release.deploy.stage.blue_green = true }
+
+      it "modifies the service" do
+        raw_template[:kind] = 'Service'
+        template.to_hash.dig_fetch(:spec, :selector, :blue_green).must_equal 'green'
+      end
+
+      it "modifies the resource" do
+        hash = template.to_hash
+        hash.dig_fetch(:metadata, :name).must_equal 'test-app-server-green'
+        hash.dig_fetch(:spec, :template, :spec, :containers, 0, :env).must_include(name: "BLUE_GREEN", value: "green")
+        hash.dig_fetch(:metadata, :labels, :blue_green).must_equal 'green'
+        hash.dig_fetch(:spec, :selector, :matchLabels, :blue_green).must_equal 'green'
+        hash.dig_fetch(:spec, :template, :metadata, :labels, :blue_green).must_equal 'green'
       end
     end
   end
