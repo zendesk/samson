@@ -20,7 +20,7 @@ describe DeploysController do
   let(:command) { job.command }
   let(:job) { jobs(:succeeded_test) }
   let(:deploy) { deploys(:succeeded_test) }
-  let(:switch_service) { stub(deploy: nil, cancel: nil) }
+  let(:deploy_service) { stub(deploy: nil, cancel: nil) }
   let(:deploy_called) { [] }
   let(:changeset) { stub_everything(commits: [], files: [], pull_requests: [], jira_issues: []) }
   let(:json) { JSON.parse(@response.body) }
@@ -328,8 +328,8 @@ describe DeploysController do
 
   as_a_project_deployer do
     before do
-      DeployService.stubs(:new).with(user).returns(switch_service)
-      switch_service.stubs(:deploy).capture(deploy_called).returns(deploy)
+      DeployService.stubs(:new).with(user).returns(deploy_service)
+      deploy_service.stubs(:deploy).capture(deploy_called).returns(deploy)
 
       Deploy.any_instance.stubs(:changeset).returns(changeset)
     end
@@ -409,8 +409,8 @@ describe DeploysController do
       before { deploy.job.update_column(:status, 'pending') }
 
       it "confirms and redirects to the deploy" do
-        DeployService.stubs(:new).with(deploy.user).returns(switch_service)
-        switch_service.expects(:confirm_deploy)
+        DeployService.stubs(:new).with(deploy.user).returns(deploy_service)
+        deploy_service.expects(:confirm_deploy)
         refute deploy.buddy
 
         post :buddy_check, params: {project_id: project.to_param, id: deploy.id}
@@ -423,7 +423,7 @@ describe DeploysController do
     describe "#destroy" do
       describe "with a deploy owned by the user" do
         before do
-          DeployService.stubs(:new).with(user).returns(switch_service)
+          DeployService.stubs(:new).with(user).returns(deploy_service)
           Job.any_instance.stubs(:started_by?).returns(true)
           Deploy.any_instance.expects(:cancel).once
 
@@ -437,7 +437,7 @@ describe DeploysController do
 
       describe "with a deploy not owned by the user" do
         before do
-          switch_service.expects(:cancel).never
+          deploy_service.expects(:cancel).never
           Deploy.any_instance.stubs(:started_by?).returns(false)
           User.any_instance.stubs(:admin?).returns(false)
 
@@ -453,7 +453,7 @@ describe DeploysController do
 
   as_a_project_admin do
     before do
-      DeployService.stubs(:new).with(user).returns(switch_service)
+      DeployService.stubs(:new).with(user).returns(deploy_service)
     end
 
     describe "#destroy" do
