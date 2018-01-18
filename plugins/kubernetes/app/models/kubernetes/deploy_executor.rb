@@ -272,13 +272,22 @@ module Kubernetes
     def rollback(release_docs)
       release_docs.each do |release_doc|
         begin
-          action = (release_doc.previous_resources.any? ? 'Rolling back' : 'Deleting')
-          @output.puts "#{action} #{release_doc.deploy_group.name} role #{release_doc.kubernetes_role.name}"
-          release_doc.revert
+          if release_doc.blue_green_color
+            # NOTE: service is not rolled back since it was not changed during deploy
+            delete_blue_green_resources(release_doc)
+          else
+            puts_action(release_doc.previous_resources.any? ? 'Rolling back' : 'Deleting', release_doc)
+            release_doc.revert
+          end
         rescue # ... still show events and logs if somehow the rollback fails
           @output.puts "FAILED: #{$!.message}"
         end
       end
+    end
+
+    def puts_action(action, release_doc)
+      blue_green = " #{release_doc.blue_green_color.upcase} resources for" if release_doc.blue_green_color
+      @output.puts "#{action}#{blue_green} #{release_doc.deploy_group.name} role #{release_doc.kubernetes_role.name}"
     end
 
     # create a release, storing all the configuration
@@ -356,8 +365,12 @@ module Kubernetes
     # updates resources via kubernetes api
     def deploy(release_docs)
       release_docs.each do |release_doc|
-        @output.puts "Creating for #{release_doc.deploy_group.name} role #{release_doc.kubernetes_role.name}"
-        release_doc.deploy
+        puts_action "Creating", release_doc
+        if release_doc.blue_green_color
+          non_service_resources(release_doc).each(&:deploy)
+        else
+          release_doc.deploy
+        end
       end
     end
 
@@ -365,6 +378,9 @@ module Kubernetes
       deploy(release_docs)
       result = wait_for_resources_to_complete(release, release_docs)
       if result == true
+        if blue_green = release_docs.select(&:blue_green_color).presence
+          finish_blue_green_deployment(release, blue_green)
+        end
         true
       else
         show_failure_cause(release, release_docs, result)
@@ -414,12 +430,7 @@ module Kubernetes
 
     def temp_release_docs
       @temp_release_docs ||= begin
-        release = Kubernetes::Release.new(
-          project: @job.project,
-          git_sha: @job.commit,
-          git_ref: 'master',
-          deploy: @job.deploy
-        )
+        release = Kubernetes::Release.new(project: @job.project, git_sha: @job.commit, git_ref: 'master')
         deploy_group_configs.flat_map do |config|
           config.fetch(:roles).map do |role|
             Kubernetes::ReleaseDoc.new(
@@ -430,6 +441,38 @@ module Kubernetes
           end
         end
       end
+    end
+
+    def finish_blue_green_deployment(release, release_docs)
+      switch_blue_green_service(release_docs)
+      previous = release.previous_successful_release
+      if previous && previous.blue_green_color != release.blue_green_color
+        previous.release_docs.each { |d| delete_blue_green_resources(d) }
+      end
+    end
+
+    def switch_blue_green_service(release_docs)
+      release_docs.each do |release_doc|
+        next unless service = service_resource(release_doc)
+        @output.puts "Switching service for #{release_doc.deploy_group.name} " \
+          "role #{release_doc.kubernetes_role.name} to #{release_doc.blue_green_color.upcase}"
+        service.deploy
+      end
+    end
+
+    def delete_blue_green_resources(release_doc)
+      puts_action "Deleting", release_doc
+      non_service_resources(release_doc).each(&:delete)
+    end
+
+    # used for blue_green deployment
+    def non_service_resources(release_doc)
+      release_doc.resources - Array(service_resource(release_doc))
+    end
+
+    # used for blue_green deployment
+    def service_resource(release_doc)
+      release_doc.resources.detect { |r| r.is_a?(Kubernetes::Resource::Service) }
     end
   end
 end

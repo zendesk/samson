@@ -104,18 +104,24 @@ describe Kubernetes::Release do
     end
 
     describe "blue green" do
-      before { release.deploy.stage.blue_green = true }
+      before { app_server.blue_green = true }
+
+      it 'does not set when not using blue_green' do
+        app_server.blue_green = false
+        expect_file_contents_from_repo
+        assert_create_succeeds(release_params).blue_green_color.must_be_nil
+      end
 
       it 'creates first as blue' do
         expect_file_contents_from_repo
-        assert_create_succeeds(release_params).blue_phase.must_equal true
+        assert_create_succeeds(release_params).blue_green_color.must_equal "blue"
       end
 
       it 'creates followup as green' do
         expect_file_contents_from_repo
-        release.blue_phase = true
+        release.blue_green_color = "blue"
         Kubernetes::Release.any_instance.expects(:previous_successful_release).returns(release)
-        assert_create_succeeds(release_params).blue_phase.must_equal false
+        assert_create_succeeds(release_params).blue_green_color.must_equal "green"
       end
     end
   end
@@ -198,26 +204,6 @@ describe Kubernetes::Release do
     it "is ignores failed releases" do
       deploys(:succeeded_test).job.update_column(:status, 'failed')
       release.previous_successful_release.must_be_nil
-    end
-  end
-
-  describe "#blue_green_color" do
-    it "is false when not using blue_green" do
-      refute release.blue_green_color
-    end
-
-    describe "when using blue_green" do
-      before { release.deploy.stage.blue_green = true }
-
-      it "is blue when in blue phase" do
-        release.blue_phase = true
-        release.blue_green_color.must_equal 'blue'
-      end
-
-      it "is green when not in blue phase" do
-        release.blue_phase = false
-        release.blue_green_color.must_equal 'green'
-      end
     end
   end
 

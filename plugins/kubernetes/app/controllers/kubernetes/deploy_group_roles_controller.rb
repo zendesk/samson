@@ -134,7 +134,6 @@ class Kubernetes::DeployGroupRolesController < ApplicationController
       git_sha: git_sha,
       project: project,
       user: current_user,
-      deploy: Deploy.new(stage: Stage.new),
       deploy_groups: [@deploy_group_role.deploy_group]
     )
     release_doc = Kubernetes::ReleaseDoc.new(

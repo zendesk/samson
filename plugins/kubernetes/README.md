@@ -172,3 +172,9 @@ samson will then override the `project` labels and keep deployments/services uni
 ### Service updates
 
 Too keep fields/labels that are manually managed persistent during updates, use `KUBERNETES_SERVICE_PERSISTENT_FIELDS`, see .env.example
+
+### Blue/Green Deployment
+
+Can be enabled per role, it then starts a new isolated deployment shifting between blue and green sufixes, 
+switching service selectors if successfully deployed and deleting previous resources.
+All active resources must be deleted manually when switching this.

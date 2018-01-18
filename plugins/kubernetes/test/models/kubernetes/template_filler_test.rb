@@ -557,7 +557,7 @@ describe Kubernetes::TemplateFiller do
     end
 
     describe "blue-green" do
-      before { doc.kubernetes_release.deploy.stage.blue_green = true }
+      before { doc.kubernetes_release.blue_green_color = 'green' }
 
       it "modifies the service" do
         raw_template[:kind] = 'Service'

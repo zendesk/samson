@@ -7,9 +7,7 @@ SingleCov.covered!
 describe SamsonKubernetes do
   describe :stage_permitted_params do
     it "adds ours" do
-      params = Samson::Hooks.fire(:stage_permitted_params).flatten
-      params.must_include :kubernetes
-      params.must_include :blue_green
+      Samson::Hooks.fire(:stage_permitted_params).must_include :kubernetes
     end
   end
 

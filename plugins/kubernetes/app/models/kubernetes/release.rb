@@ -19,15 +19,13 @@ module Kubernetes
     def self.create_release(params)
       Kubernetes::Release.transaction do
         release = create(params.except(:deploy_groups)) do |release|
-          release.blue_phase = !release.previous_successful_release&.blue_phase if release.blue_green_color
+          if params.fetch(:deploy_groups).any? { |dg| dg.fetch(:roles).any? { |role| role.fetch(:role).blue_green? } }
+            release.blue_green_color = (release.previous_successful_release&.blue_green_color == "blue" ? "green" : "blue")
+          end
         end
         release.send :create_release_docs, params if release.persisted?
         release
       end
-    end
-
-    def blue_green_color
-      deploy.stage.blue_green? && (blue_phase ? 'blue' : 'green')
     end
 
     # simple method to tie all selector logic together

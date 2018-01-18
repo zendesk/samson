@@ -246,7 +246,7 @@ ActiveRecord::Schema.define(version: 20180112113400) do
     t.integer "deploy_id"
     t.string "git_sha", limit: 40, null: false
     t.string "git_ref"
-    t.boolean "blue_phase", default: false, null: false
+    t.string "blue_green_color"
   end
 
   create_table "kubernetes_roles", id: :integer, force: :cascade do |t|
@@ -259,6 +259,7 @@ ActiveRecord::Schema.define(version: 20180112113400) do
     t.datetime "deleted_at"
     t.string "resource_name", null: false
     t.boolean "autoscaled", default: false, null: false
+    t.boolean "blue_green", default: false, null: false
     t.index ["project_id"], name: "index_kubernetes_roles_on_project_id"
     t.index ["resource_name", "deleted_at"], name: "index_kubernetes_roles_on_resource_name_and_deleted_at", unique: true, length: { resource_name: 191 }
     t.index ["service_name", "deleted_at"], name: "index_kubernetes_roles_on_service_name_and_deleted_at", unique: true, length: { service_name: 191 }
@@ -505,7 +506,6 @@ ActiveRecord::Schema.define(version: 20180112113400) do
     t.boolean "no_reference_selection", default: false, null: false
     t.boolean "periodical_deploy", default: false, null: false
     t.boolean "builds_in_environment", default: false, null: false
-    t.boolean "blue_green", default: false, null: false
     t.index ["project_id", "permalink"], name: "index_stages_on_project_id_and_permalink", unique: true, length: { permalink: 191 }
     t.index ["template_stage_id"], name: "index_stages_on_template_stage_id"
   end
