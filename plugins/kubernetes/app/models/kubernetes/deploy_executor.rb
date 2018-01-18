@@ -414,7 +414,12 @@ module Kubernetes
 
     def temp_release_docs
       @temp_release_docs ||= begin
-        release = Kubernetes::Release.new(project: @job.project, git_sha: @job.commit, git_ref: 'master')
+        release = Kubernetes::Release.new(
+          project: @job.project,
+          git_sha: @job.commit,
+          git_ref: 'master',
+          deploy: @job.deploy
+        )
         deploy_group_configs.flat_map do |config|
           config.fetch(:roles).map do |role|
             Kubernetes::ReleaseDoc.new(
