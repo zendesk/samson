@@ -51,10 +51,7 @@ module Kubernetes
     end
 
     def service_resource
-      return @service_resource if defined?(@service_resource)
-      @service_resource = resources.detect do |r|
-        r.is_a?(Kubernetes::Resource::Service) && r.name == kubernetes_role.service_name
-      end
+      resources.detect { |r| r.is_a?(Kubernetes::Resource::Service) }
     end
 
     def resources

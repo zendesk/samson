@@ -168,4 +168,15 @@ describe Kubernetes::ReleaseDoc do
       doc.verify_template
     end
   end
+
+  describe "#service_resource" do
+    it "finds the service" do
+      doc.service_resource.class.must_equal Kubernetes::Resource::Service
+    end
+
+    it "is nil when no service was used" do
+      doc.resources.pop
+      doc.service_resource.must_be_nil
+    end
+  end
 end
