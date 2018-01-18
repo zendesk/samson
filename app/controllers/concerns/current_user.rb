@@ -66,7 +66,11 @@ module CurrentUser
   end
 
   def can?(action, resource_namespace, scope = nil)
-    scope ||= current_project if respond_to?(:current_project)
+    scope ||= if resource_namespace == :locks
+      try(:current_stage)
+    else
+      try(:current_project)
+    end
     AccessControl.can?(current_user, action, resource_namespace, scope)
   end
 end

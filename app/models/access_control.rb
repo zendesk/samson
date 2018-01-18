@@ -18,11 +18,15 @@ class AccessControl
         case action
         when :read then true
         when :write
-          if scope
-            user.deployer_for?(scope) # stage locks
+
+          if scope.nil? # global locks
+            user.admin?
+          elsif ENV['PRODUCTION_STAGE_LOCK_REQUIRES_ADMIN'] && scope.production
+            user.admin_for?(scope.project) # stage locks
           else
-            user.admin? # global locks
+            user.deployer_for?(scope.project) # stage locks
           end
+
         else raise ArgumentError, "Unsupported action #{action}"
         end
       when :projects, :build_commands, :stages, :user_project_roles
