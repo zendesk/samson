@@ -16,7 +16,7 @@ module Kubernetes
     validates :kubernetes_release, presence: true
     validate :validate_config_file, on: :create
 
-    before_save :store_resource_template, on: :create
+    before_create :store_resource_template
 
     attr_reader :previous_resources
 
@@ -56,6 +56,10 @@ module Kubernetes
     def verification_template
       primary_config = raw_template.detect { |e| Kubernetes::RoleConfigFile::PRIMARY_KINDS.include?(e.fetch(:kind)) }
       Kubernetes::TemplateFiller.new(self, primary_config, index: 0)
+    end
+
+    def blue_green_color
+      kubernetes_release.blue_green_color if kubernetes_role.blue_green?
     end
 
     private

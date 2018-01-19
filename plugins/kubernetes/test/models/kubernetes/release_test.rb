@@ -102,6 +102,28 @@ describe Kubernetes::Release do
         Kubernetes::Release.create_release(params)
       end
     end
+
+    describe "blue green" do
+      before { app_server.blue_green = true }
+
+      it 'does not set when not using blue_green' do
+        app_server.blue_green = false
+        expect_file_contents_from_repo
+        assert_create_succeeds(release_params).blue_green_color.must_be_nil
+      end
+
+      it 'creates first as blue' do
+        expect_file_contents_from_repo
+        assert_create_succeeds(release_params).blue_green_color.must_equal "blue"
+      end
+
+      it 'creates followup as green' do
+        expect_file_contents_from_repo
+        release.blue_green_color = "blue"
+        Kubernetes::Release.any_instance.expects(:previous_successful_release).returns(release)
+        assert_create_succeeds(release_params).blue_green_color.must_equal "green"
+      end
+    end
   end
 
   describe "#clients" do
@@ -164,6 +186,24 @@ describe Kubernetes::Release do
     it "finds builds accross projects" do
       release.project = nil
       release.builds.must_equal [build]
+    end
+  end
+
+  describe "#previous_successful_release" do
+    before { release.deploy = deploys(:failed_staging_test) }
+
+    it "finds successful release" do
+      release.previous_successful_release.must_equal kubernetes_releases(:test_release)
+    end
+
+    it "is nil when non was found" do
+      deploys(:succeeded_test).delete
+      release.previous_successful_release.must_be_nil
+    end
+
+    it "is ignores failed releases" do
+      deploys(:succeeded_test).job.update_column(:status, 'failed')
+      release.previous_successful_release.must_be_nil
     end
   end
 

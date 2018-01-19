@@ -25,7 +25,7 @@
         <% @kubernetes_releases.each do |kubernetes_release| %>
           <tr>
             <td>
-              <%= link_to kubernetes_release.id, project_kubernetes_release_path(@project, kubernetes_release) %>
+              <%= link_to "#{kubernetes_release.id}#{" - #{kubernetes_release.blue_green_color}" if kubernetes_release.blue_green_color}", project_kubernetes_release_path(@project, kubernetes_release) %>
             </td>
             <td>
               <% if kubernetes_release.deploy %>

@@ -18,7 +18,13 @@ module Kubernetes
     # Creates a new Kubernetes Release and corresponding ReleaseDocs
     def self.create_release(params)
       Kubernetes::Release.transaction do
-        release = create(params.except(:deploy_groups))
+        release = create(params.except(:deploy_groups)) do |release|
+          if params.fetch(:deploy_groups).any? { |dg| dg.fetch(:roles).any? { |role| role.fetch(:role).blue_green? } }
+            release.blue_green_color = begin
+              release.previous_successful_release&.blue_green_color == "blue" ? "green" : "blue"
+            end
+          end
+        end
         release.send :create_release_docs, params if release.persisted?
         release
       end
@@ -58,6 +64,10 @@ module Kubernetes
 
     def builds
       Build.where(git_sha: git_sha)
+    end
+
+    def previous_successful_release
+      deploy.previous_successful_deploy&.kubernetes_release
     end
 
     private

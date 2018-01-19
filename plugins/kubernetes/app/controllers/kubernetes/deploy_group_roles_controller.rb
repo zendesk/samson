@@ -55,7 +55,7 @@ class Kubernetes::DeployGroupRolesController < ApplicationController
       format.json do
         deploy_group_role = @deploy_group_role.as_json
         if params[:include].to_s.split(',').include?("verification_template")
-          deploy_group_role[:verification_template] = verification_template
+          deploy_group_role[:verification_template] = verification_template.to_hash
         end
 
         render json: {

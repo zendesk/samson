@@ -223,7 +223,12 @@ module Kubernetes
         # Wait for there to be zero pods
         loop do
           loop_sleep
-          break if fetch_resource.dig_fetch(:status, :replicas).zero?
+          # prevent cases when status.replicas are missing
+          # e.g. running locally on Minikube, after scale replicas to zero
+          # $ kubectl scale deployment {DEPLOYMENT_NAME} --replicas 0
+          # "replicas" key is actually removed from "status" map
+          # $ {"status":{"conditions":[...],"observedGeneration":2}}
+          break if fetch_resource.dig(:status, :replicas).to_i.zero?
         end
 
         # delete the actual deployment

@@ -389,6 +389,15 @@ describe Kubernetes::Resource do
         client.expects(:delete_deployment)
         resource.delete
       end
+
+      it "does not fail on unset replicas" do
+        client = resource.send(:client)
+        client.expects(:update_deployment)
+        client.expects(:get_deployment).raises(KubeException.new(404, 'Not Found', {}))
+        client.expects(:get_deployment).times(2).returns(deployment_stub(nil))
+        client.expects(:delete_deployment)
+        resource.delete
+      end
     end
 
     describe "#revert" do

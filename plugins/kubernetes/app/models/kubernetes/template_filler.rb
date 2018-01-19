@@ -27,6 +27,7 @@ module Kubernetes
           set_service_name
           set_service_node_port
           prefix_service_cluster_ip
+          set_service_blue_green if blue_green_color
         when *Kubernetes::RoleConfigFile::PRIMARY_KINDS
           if kind != 'Pod'
             set_rc_unique_label_key
@@ -47,6 +48,7 @@ module Kubernetes
           set_secrets
           set_image_pull_secrets
           set_vault_env
+          set_resource_blue_green if blue_green_color
         end
 
         hash = template
@@ -75,6 +77,16 @@ module Kubernetes
     end
 
     private
+
+    def set_service_blue_green
+      template.dig_set([:spec, :selector, :blue_green], blue_green_color)
+    end
+
+    def set_resource_blue_green
+      template.dig_set([:metadata, :labels, :blue_green], blue_green_color)
+      template.dig_set([:spec, :selector, :matchLabels, :blue_green], blue_green_color)
+      template.dig_set([:spec, :template, :metadata, :labels, :blue_green], blue_green_color)
+    end
 
     def set_project_labels
       project_label = project.permalink
@@ -238,7 +250,9 @@ module Kubernetes
     end
 
     def set_name
-      template.dig_set [:metadata, :name], @doc.kubernetes_role.resource_name
+      name = @doc.kubernetes_role.resource_name
+      name += "-#{blue_green_color}" if blue_green_color
+      template.dig_set [:metadata, :name], name
     end
 
     def set_hpa_scale_target_name
@@ -333,6 +347,8 @@ module Kubernetes
         }
       end
 
+      env << {name: 'BLUE_GREEN', value: blue_green_color} if blue_green_color
+
       # unique, but keep last elements
       env.reverse!
       env.uniq! { |h| h[:name] }
@@ -357,6 +373,11 @@ module Kubernetes
 
       # env from plugins
       env.merge!(Samson::Hooks.fire(:deploy_group_env, project, @doc.deploy_group).inject({}, :merge!))
+    end
+
+    def blue_green_color
+      return @blue_green_color if defined?(@blue_green_color)
+      @blue_green_color = @doc.blue_green_color
     end
 
     def set_vault_env
