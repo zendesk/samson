@@ -168,4 +168,17 @@ describe Kubernetes::ReleaseDoc do
       doc.verify_template
     end
   end
+
+  describe "#blue_green_color" do
+    before { doc.kubernetes_release.blue_green_color = "green" }
+
+    it "is releases color when blue-green" do
+      doc.kubernetes_role.blue_green = true
+      assert doc.blue_green_color.must_equal "green"
+    end
+
+    it "is nil when not blue-green" do
+      refute doc.blue_green_color
+    end
+  end
 end

@@ -453,10 +453,10 @@ module Kubernetes
 
     def switch_blue_green_service(release_docs)
       release_docs.each do |release_doc|
-        next unless service = service_resource(release_doc)
+        next unless services = service_resources(release_doc).presence
         @output.puts "Switching service for #{release_doc.deploy_group.name} " \
           "role #{release_doc.kubernetes_role.name} to #{release_doc.blue_green_color.upcase}"
-        service.deploy
+        services.each(&:deploy)
       end
     end
 
@@ -467,12 +467,12 @@ module Kubernetes
 
     # used for blue_green deployment
     def non_service_resources(release_doc)
-      release_doc.resources - Array(service_resource(release_doc))
+      release_doc.resources - service_resources(release_doc)
     end
 
     # used for blue_green deployment
-    def service_resource(release_doc)
-      release_doc.resources.detect { |r| r.is_a?(Kubernetes::Resource::Service) }
+    def service_resources(release_doc)
+      release_doc.resources.select { |r| r.is_a?(Kubernetes::Resource::Service) }
     end
   end
 end

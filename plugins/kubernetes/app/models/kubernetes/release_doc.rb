@@ -10,7 +10,6 @@ module Kubernetes
     serialize :resource_template, JSON
     delegate :desired_pod_count, :prerequisite?, to: :primary_resource
     delegate :images, to: :verification_template
-    delegate :blue_green_color, to: :kubernetes_release
 
     validates :deploy_group, presence: true
     validates :kubernetes_role, presence: true
@@ -57,6 +56,10 @@ module Kubernetes
     def verification_template
       primary_config = raw_template.detect { |e| Kubernetes::RoleConfigFile::PRIMARY_KINDS.include?(e.fetch(:kind)) }
       Kubernetes::TemplateFiller.new(self, primary_config, index: 0)
+    end
+
+    def blue_green_color
+      kubernetes_release.blue_green_color if kubernetes_role.blue_green?
     end
 
     private
