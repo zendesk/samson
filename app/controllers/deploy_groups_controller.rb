@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 class DeployGroupsController < ApplicationController
-  before_action :authorize_super_admin!, except: [:index, :show]
-  before_action :deploy_group, only: [:show, :edit, :update, :destroy]
+  before_action :authorize_super_admin!, except: [:index, :show, :missing_config]
+  before_action :deploy_group, except: [:index, :create, :new]
 
   def index
     @deploy_groups =
@@ -71,7 +71,37 @@ class DeployGroupsController < ApplicationController
     end
   end
 
+  def missing_config
+    return unless compare = params[:compare].presence
+    compare = DeployGroup.find_by_permalink!(compare)
+
+    @diff = Samson::Hooks.fire(:missing_config, deploy_group, compare).compact
+
+    compare = custom_secrets(compare)
+    other = custom_secrets(deploy_group)
+
+    if missing_secrets = (compare.keys - other.keys).presence
+      @diff << [
+        "Secrets",
+        compare.values_at(*missing_secrets).map do |id|
+          {
+            item: [id, secret_path(id)],
+            value: "-SECRET-"
+          }
+        end
+      ]
+    end
+  end
+
   private
+
+  def custom_secrets(deploy_group)
+    SecretStorage.lookup_cache.each_with_object({}) do |(id, secret), h|
+      parts = SecretStorage.parse_id(id)
+      next unless parts.fetch(:deploy_group_permalink) == deploy_group.permalink
+      h[parts.except(:deploy_group_permalink)] = id
+    end
+  end
 
   def deploy_group_params
     params.require(:deploy_group).permit(*allowed_deploy_group_params)

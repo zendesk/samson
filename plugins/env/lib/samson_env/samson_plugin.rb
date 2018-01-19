@@ -98,3 +98,22 @@ Samson::Hooks.callback(:can) do
     end
   ]
 end
+
+Samson::Hooks.callback(:missing_config) do |deploy_group, compare|
+  configured = ->(deploy_group) do
+    EnvironmentVariable.where(scope: deploy_group).each_with_object({}) do |e, h|
+      h[[e.name, e.parent.class, e.parent.permalink]] = e
+    end
+  end
+  compare = configured.call(compare)
+  other = configured.call(deploy_group)
+  missing = compare.keys - other.keys
+  if missing.any?
+    [
+      "Environment",
+      compare.values_at(*missing).map do |e|
+        {item: ["#{e.name} for #{e.parent.name}", e.parent], value: e.value}
+      end
+    ]
+  end
+end

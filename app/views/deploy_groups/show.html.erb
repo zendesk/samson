@@ -120,6 +120,7 @@
       | <%= link_to_history @deploy_group %>
       | <%= link_to "Deploys", deploys_path(search: {group: "DeployGroup-#{@deploy_group.id}"}) %>
       | <%= link_to "Mass rollout", "#", data: {target: "#mass_rollout"}, class: 'toggle' if DeployGroup.enabled? %>
+      | <%= link_to "Missing config", missing_config_deploy_group_path(@deploy_group) %>
     </div>
   </div>
 </section>
