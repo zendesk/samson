@@ -20,7 +20,9 @@ module Kubernetes
       Kubernetes::Release.transaction do
         release = create(params.except(:deploy_groups)) do |release|
           if params.fetch(:deploy_groups).any? { |dg| dg.fetch(:roles).any? { |role| role.fetch(:role).blue_green? } }
-            release.blue_green_color = (release.previous_successful_release&.blue_green_color == "blue" ? "green" : "blue")
+            release.blue_green_color = begin
+              release.previous_successful_release&.blue_green_color == "blue" ? "green" : "blue"
+            end
           end
         end
         release.send :create_release_docs, params if release.persisted?
