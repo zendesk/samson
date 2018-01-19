@@ -74,11 +74,11 @@
     <% if DeployGroup.enabled? %>
       <div class="col-lg-offset-2 col-lg-10" style="display: none" id="mass_rollout">
         <%= link_to "Create Stages ...",
-            create_all_stages_preview_deploy_group_path(@deploy_group),
+            new_deploy_group_mass_rollouts_path(@deploy_group),
             class: "btn btn-default"
         %>
         <%= link_to "Deploy All Projects",
-            deploy_all_deploy_group_path(@deploy_group),
+            deploy_deploy_group_mass_rollouts_path(@deploy_group),
             class: "btn btn-default",
             data: {
               method: "post",
@@ -86,7 +86,7 @@
             }
         %>
         <%= link_to "Deploy Missing Projects",
-            deploy_all_deploy_group_path(@deploy_group, missing_only: "true"),
+            deploy_deploy_group_mass_rollouts_path(@deploy_group, missing_only: "true"),
             class: "btn btn-default",
             data: {
               method: "post",
@@ -95,7 +95,7 @@
         %>
         <% cloned_stage_count = @deploy_group.stages.cloned.count %>
         <%= link_to "Merge #{cloned_stage_count} Cloned Stages",
-            merge_all_stages_deploy_group_path(@deploy_group),
+            merge_deploy_group_mass_rollouts_path(@deploy_group),
             class: "btn btn-default #{ 'disabled' if cloned_stage_count.zero? }",
             data: {
               method: "post",
@@ -104,10 +104,10 @@
             }
         %>
         <%= link_to "Delete #{cloned_stage_count} Cloned Stages",
-            delete_all_stages_deploy_group_path(@deploy_group),
+            deploy_group_mass_rollouts_path(@deploy_group),
             class: "btn btn-default #{ 'disabled' if cloned_stage_count.zero? }",
             data: {
-              method: "post",
+              method: "delete",
               confirm: "Cloned stages will be deleted. No stages will be merged into their templates. You will need to create a new stage to deploy the project to this deploy group."
             }
         %>

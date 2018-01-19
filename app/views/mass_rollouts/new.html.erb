@@ -2,6 +2,9 @@
 
 <h2>Creating Stages</h2>
 
+Stages appear here if the project has selected "Include in New Deploy Groups" and one of it's stages is a "Template Stage".
+<br/><br/>
+
 <% if @missing_stages.empty? %>
   <p>There are no missing stages to create for this Deploy Group.</p>
 <% else %>
@@ -31,10 +34,12 @@
 
     <div class="admin-actions">
       <div class="pull-right">
-        <%= link_to "Create #{@missing_stages.length} Stages",
-                    create_all_stages_deploy_group_path(@deploy_group),
-                    class: "btn btn-primary",
-                    data: { method: "post" }
+        <%= link_to(
+            "Create #{@missing_stages.length} Stages",
+            deploy_group_mass_rollouts_path(@deploy_group),
+            class: "btn btn-primary",
+            data: { method: "post" }
+          )
         %>
 
         <%= link_to "Cancel", @deploy_group, class: "btn btn-default"%>
