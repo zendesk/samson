@@ -17,7 +17,7 @@ describe "db" do
     Stage.delete_all
     Release.delete_all
     Project.any_instance.expects(:clone_repository)
-    assert_difference 'Project.count', +1 do
+    assert_difference 'Project.count', +2 do
       tasks["db:seed"].execute
     end
   end
