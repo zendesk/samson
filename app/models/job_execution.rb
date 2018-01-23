@@ -163,7 +163,7 @@ class JobExecution
 
     ActiveSupport::Notifications.instrument("execute_job.samson", payload) do
       payload[:success] =
-        if defined?(Kubernetes::DeployExecutor) && stage&.kubernetes
+        if kubernetes?
           @executor = Kubernetes::DeployExecutor.new(@output, job: @job, reference: @reference)
           @executor.execute
         else
@@ -176,9 +176,13 @@ class JobExecution
     payload[:success]
   end
 
+  def kubernetes?
+    defined?(SamsonKubernetes::Engine) && stage&.kubernetes
+  end
+
   def setup(dir)
     return unless resolve_ref_to_commit
-    stage.try(:kubernetes) || @repository.checkout_workspace(dir, @reference)
+    kubernetes? || @repository.checkout_workspace(dir, @reference)
   end
 
   def resolve_ref_to_commit
