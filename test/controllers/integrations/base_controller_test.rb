@@ -145,6 +145,11 @@ describe Integrations::BaseController do
       project.builds.count.must_equal 1
     end
 
+    it "hides token from airbrake" do
+      post :create, params: {test_route: true, token: "true/create", foo: "bar"}
+      @controller.request.env["PATH_INFO"].must_equal "/test/hidden-project-not-found-token"
+    end
+
     describe "when deploy hooks are setup" do
       before do
         project.webhooks.create!(branch: 'master', stage: stage, source: 'any')
