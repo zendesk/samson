@@ -86,7 +86,7 @@ module Kubernetes
         if @testing_for_stability
           if not_ready.any?
             print_statuses(statuses)
-            unstable!('one or more pods are not live', not_ready)
+            unstable!(release, 'one or more pods are not live', not_ready)
             return statuses
           else
             @testing_for_stability += 1
@@ -97,7 +97,7 @@ module Kubernetes
           print_statuses(statuses)
           if not_ready.any?
             if stopped = not_ready.select(&:stop).presence
-              unstable!('one or more pods stopped', stopped)
+              unstable!(release, 'one or more pods stopped', stopped)
               return statuses
             elsif seconds_waiting > WAIT_FOR_LIVE
               @output.puts "TIMEOUT, pods took too long to get live"
@@ -135,13 +135,16 @@ module Kubernetes
 
       statuses.reject(&:live).select(&:pod).each do |status|
         pod = status.pod
-        deploy_group = deploy_group_for_pod(pod, release)
-        @output.puts "\n#{deploy_group.name} pod #{pod.name}:"
+        @output.puts "\n#{pod_identifier(release, pod)}:"
         print_pod_events(pod)
         @output.puts
         print_pod_logs(pod, log_end_time)
         @output.puts "\n------------------------------------------\n"
       end
+    end
+
+    def pod_identifier(release, pod)
+      "#{deploy_group_for_pod(pod, release).name} pod #{pod.name}"
     end
 
     # show why container failed to boot
@@ -196,10 +199,10 @@ module Kubernetes
       end
     end
 
-    def unstable!(reason, release_statuses)
+    def unstable!(release, reason, bad_release_statuses)
       @output.puts "UNSTABLE: #{reason}"
-      release_statuses.select(&:pod).each do |status|
-        @output.puts "  #{status.pod.namespace}.#{status.pod.name}: #{status.details}"
+      bad_release_statuses.select(&:pod).each do |status|
+        @output.puts "  #{pod_identifier(release, status.pod)}: #{status.details}"
       end
     end
 
