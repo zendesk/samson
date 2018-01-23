@@ -54,16 +54,16 @@ module Kubernetes
       verify_kubernetes_templates!
       @build_finder.ensure_successful_builds
       return false if cancelled?
-      release = create_release
+      @release = create_release
 
-      prerequisites, deploys = release.release_docs.partition(&:prerequisite?)
+      prerequisites, deploys = @release.release_docs.partition(&:prerequisite?)
       if prerequisites.any?
         @output.puts "First deploying prerequisite ..." if deploys.any?
-        return false unless deploy_and_watch(release, prerequisites)
+        return false unless deploy_and_watch(prerequisites)
         @output.puts "Now deploying other roles ..." if deploys.any?
       end
       if deploys.any?
-        return false unless deploy_and_watch(release, deploys)
+        return false unless deploy_and_watch(deploys)
       end
       true
     end
@@ -72,21 +72,21 @@ module Kubernetes
 
     # check all pods and see if they are running
     # once they are running check if they are stable (for apps only, since jobs are finished and will not change)
-    def wait_for_resources_to_complete(release, release_docs)
+    def wait_for_resources_to_complete(release_docs)
       raise "prerequisites should not check for stability" if @testing_for_stability
       @wait_start_time = Time.now
       stable_ticks = CHECK_STABLE / TICK
       @output.puts "Waiting for pods to be created"
 
       loop do
-        statuses = pod_statuses(release, release_docs)
+        statuses = pod_statuses(release_docs)
         return success if statuses.none?
         not_ready = statuses.reject(&:live)
 
         if @testing_for_stability
           if not_ready.any?
             print_statuses(statuses)
-            unstable!(release, 'one or more pods are not live', not_ready)
+            unstable!('one or more pods are not live', not_ready)
             return statuses
           else
             @testing_for_stability += 1
@@ -97,7 +97,7 @@ module Kubernetes
           print_statuses(statuses)
           if not_ready.any?
             if stopped = not_ready.select(&:stop).presence
-              unstable!(release, 'one or more pods stopped', stopped)
+              unstable!('one or more pods stopped', stopped)
               return statuses
             elsif seconds_waiting > WAIT_FOR_LIVE
               @output.puts "TIMEOUT, pods took too long to get live"
@@ -116,26 +116,26 @@ module Kubernetes
       end
     end
 
-    def pod_statuses(release, release_docs)
-      pods = fetch_pods(release)
+    def pod_statuses(release_docs)
+      pods = fetch_pods
       release_docs.flat_map { |release_doc| release_statuses(pods, release_doc) }
     end
 
     # efficient pod fetching by querying once per cluster instead of once per deploy group
-    def fetch_pods(release)
-      release.clients.flat_map do |client, query|
+    def fetch_pods
+      @release.clients.flat_map do |client, query|
         pods = SamsonKubernetes.retry_on_connection_errors { client.get_pods(query) }
         pods.map! { |p| Kubernetes::Api::Pod.new(p, client: client) }
       end
     end
 
-    def show_failure_cause(release, release_docs, statuses)
+    def show_failure_cause(release_docs, statuses)
       release_docs.each { |doc| print_resource_events(doc) }
       log_end_time = Integer(ENV['KUBERNETES_LOG_TIMEOUT'] || '20').seconds.from_now
 
       statuses.reject(&:live).select(&:pod).each do |status|
         pod = status.pod
-        @output.puts "\n#{pod_identifier(release, pod)}:"
+        @output.puts "\n#{pod_identifier(pod)}:"
         print_pod_events(pod)
         @output.puts
         print_pod_logs(pod, log_end_time)
@@ -143,8 +143,8 @@ module Kubernetes
       end
     end
 
-    def pod_identifier(release, pod)
-      "#{deploy_group_for_pod(pod, release).name} pod #{pod.name}"
+    def pod_identifier(pod)
+      "#{deploy_group_for_pod(pod).name} pod #{pod.name}"
     end
 
     # show why container failed to boot
@@ -199,10 +199,10 @@ module Kubernetes
       end
     end
 
-    def unstable!(release, reason, bad_release_statuses)
+    def unstable!(reason, bad_release_statuses)
       @output.puts "UNSTABLE: #{reason}"
       bad_release_statuses.select(&:pod).each do |status|
-        @output.puts "  #{pod_identifier(release, status.pod)}: #{status.details}"
+        @output.puts "  #{pod_identifier(status.pod)}: #{status.details}"
       end
     end
 
@@ -377,16 +377,16 @@ module Kubernetes
       end
     end
 
-    def deploy_and_watch(release, release_docs)
+    def deploy_and_watch(release_docs)
       deploy(release_docs)
-      result = wait_for_resources_to_complete(release, release_docs)
+      result = wait_for_resources_to_complete(release_docs)
       if result == true
         if blue_green = release_docs.select(&:blue_green_color).presence
-          finish_blue_green_deployment(release, blue_green)
+          finish_blue_green_deployment(blue_green)
         end
         true
       else
-        show_failure_cause(release, release_docs, result)
+        show_failure_cause(release_docs, result)
         rollback(release_docs) if @job.deploy.kubernetes_rollback
         @output.puts "DONE"
         false
@@ -403,8 +403,8 @@ module Kubernetes
     end
 
     # find deploy group without extra sql queries
-    def deploy_group_for_pod(pod, release)
-      release.release_docs.detect { |rd| break rd.deploy_group if rd.deploy_group_id == pod.deploy_group_id }
+    def deploy_group_for_pod(pod)
+      @release.release_docs.detect { |rd| break rd.deploy_group if rd.deploy_group_id == pod.deploy_group_id }
     end
 
     # all images used ... they vary by role and not by deploy-group
@@ -446,10 +446,10 @@ module Kubernetes
       end
     end
 
-    def finish_blue_green_deployment(release, release_docs)
+    def finish_blue_green_deployment(release_docs)
       switch_blue_green_service(release_docs)
-      previous = release.previous_successful_release
-      if previous && previous.blue_green_color != release.blue_green_color
+      previous = @release.previous_successful_release
+      if previous && previous.blue_green_color != @release.blue_green_color
         previous.release_docs.each { |d| delete_blue_green_resources(d) }
       end
     end
