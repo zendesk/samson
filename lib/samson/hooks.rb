@@ -46,7 +46,6 @@ module Samson
       :deploy_group_env,
       :link_parts_for_resource,
       :can,
-      :missing_config,
     ].freeze
 
     INTERNAL_HOOKS = [:class_defined].freeze

@@ -75,31 +75,42 @@ class DeployGroupsController < ApplicationController
     return unless compare = params[:compare].presence
     compare = DeployGroup.find_by_permalink!(compare)
 
-    @diff = Samson::Hooks.fire(:missing_config, deploy_group, compare).compact
+    @diff = Hash.new { |h, k| h[k] = Hash.new { |h, k| h[k] = [] } }
 
-    compare = custom_secrets(compare)
-    other = custom_secrets(deploy_group)
+    if missing_secrets = compare_values(compare, deploy_group) { |dg| custom_secrets(dg) }
+      missing_secrets.each do |id, s|
+        @diff[s.fetch(:project_permalink)]["Secrets"] << id
+      end
+    end
 
-    if missing_secrets = (compare.keys - other.keys).presence
-      @diff << [
-        "Secrets",
-        compare.values_at(*missing_secrets).map do |id|
-          {
-            item: [id, secret_path(id)],
-            value: "-SECRET-"
-          }
-        end
-      ]
+    if missing_env = compare_values(compare, deploy_group) { |dg| custom_env(dg) }
+      missing_env.each do |e|
+        project_permalink = (e.parent_type == "Project" ? e.parent.permalink : "global")
+        @diff[project_permalink]["Environment"] << e
+      end
     end
   end
 
   private
 
+  def compare_values(a, b)
+    a = yield(a)
+    b = yield(b)
+    return unless missing_keys = (a.keys - b.keys).presence
+    a.values_at(*missing_keys)
+  end
+
+  def custom_env(deploy_group)
+    EnvironmentVariable.where(scope: deploy_group).each_with_object({}) do |e, h|
+      h[[e.name, e.parent_type, e.parent_id]] = e
+    end
+  end
+
   def custom_secrets(deploy_group)
-    SecretStorage.lookup_cache.each_with_object({}) do |(id, secret), h|
+    SecretStorage.lookup_cache.each_with_object({}) do |(id, _), h|
       parts = SecretStorage.parse_id(id)
       next unless parts.fetch(:deploy_group_permalink) == deploy_group.permalink
-      h[parts.except(:deploy_group_permalink)] = id
+      h[parts.except(:deploy_group_permalink)] = [id, parts]
     end
   end
 

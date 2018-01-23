@@ -111,19 +111,6 @@ describe SamsonEnv do
     end
   end
 
-  describe :missing_config do
-    let(:missing_config) { Samson::Hooks.fire(:missing_config, deploy_groups(:pod1), deploy_groups(:pod2)) }
-
-    it "is nil when not found" do
-      missing_config.must_equal [nil]
-    end
-
-    it "is nil when not found" do
-      project.environment_variables.create!(name: "WORLD3", value: "hello", scope: deploy_groups(:pod2))
-      missing_config.must_equal [["Environment", ["Missing WORLD3 for Project foo"]]]
-    end
-  end
-
   describe :can do
     def call(user, action, group)
       proc = Samson::Hooks.fire(:can).to_h.fetch(:environment_variable_groups)

@@ -17,15 +17,33 @@
       <% if @diff.empty? %>
         No diff found!
       <% else %>
-        <% @diff.each do |section, diff| %>
-          <h2><%= section %></h2>
-          <table class="table">
-            <tr><th>Item</th><th>Value</th></tr>
-            <% diff.each do |data| %>
-              <td><%= link_to *data.fetch(:item) %></td>
-              <td><%= data.fetch(:value) %></td>
-            <% end %>
-          </table>
+        <% @diff.each do |project_permalink, sections| %>
+          <h2>Project <%= link_to project_permalink, project_path(project_permalink) %></h2>
+
+          <% sections.each do |section, diff| %>
+            <h3><%= section %></h3>
+
+            <table class="table">
+              <% if section == "Environment" %>
+                <tr><th>Item</th><th>History</th><th>Value</th></tr>
+              <% end %>
+              <% diff.each do |item| %>
+                <% case item %>
+                <% when EnvironmentVariable %>
+                  <tr>
+                    <td><%= item.name %></td>
+                    <td><%= link_to_history(item, counter: false) %></td>
+                    <td><%= item.value %></td>
+                  </tr>
+                <% when String %>
+                  <tr>
+                    <td><%= link_to item, secret_path(item) %></td>
+                  </tr>
+                <% else raise("WUT #{item.class}") %>
+                <% end %>
+              <% end %>
+            </table>
+          <% end %>
         <% end %>
       <% end %>
     <% end %>

@@ -69,23 +69,16 @@ describe DeployGroupsController do
         assert_template :missing_config
         assert_response :success
         assigns(:diff).must_equal(
-          [[
-            "Secrets",
-            [{item: ["production/bar/pod2/foo", "/secrets/production%2Fbar%2Fpod2%2Ffoo"], value: "-SECRET-"}]
-          ]]
+          "bar" => {"Secrets" => ["production/bar/pod2/foo"]}
         )
       end
 
       it "compares environment" do
-        EnvironmentVariable.create!(scope: deploy_groups(:pod2), parent: stage.project, name: "Foo", value: "bar")
+        var = EnvironmentVariable.create!(scope: deploy_groups(:pod2), parent: stage.project, name: "Foo", value: "bar")
         get :missing_config, params: {id: deploy_group, compare: deploy_groups(:pod2).permalink}
         assert_template :missing_config
         assert_response :success
-        diff = assigns(:diff)
-        diff.size.must_equal 1
-        diff[0][0].must_equal "Environment"
-        diff[0][1].size.must_equal 1
-        diff[0][1][0].keys.must_equal [:item, :value]
+        assigns(:diff).must_equal("foo" => {"Environment" => [var]})
       end
     end
   end
