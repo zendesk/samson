@@ -123,5 +123,23 @@ describe SamsonGcloud::ImageBuilder do
       build_image.must_equal "#{repo}-changed@sha-123:abc"
       build.external_url.must_be_nil
     end
+
+    it "ignores files that are in dockerignore since we only build" do
+      File.write("some-dir/.dockerignore", "foo")
+      File.write("some-dir/.gitignore", "foo")
+      build_image
+      File.read("some-dir/.gcloudignore").must_equal "#!include:.gitignore\n#!include:.dockerignore"
+    end
+
+    it "does not include missing files and ignores .git by default" do
+      build_image
+      File.read("some-dir/.gcloudignore").must_equal ".git"
+    end
+
+    it "keeps ignores files if they are configured" do
+      File.write("some-dir/.gcloudignore", "X")
+      build_image
+      File.read("some-dir/.gcloudignore").must_equal "X"
+    end
   end
 end
