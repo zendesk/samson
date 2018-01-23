@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 class DeployGroupsController < ApplicationController
-  before_action :authorize_super_admin!, except: [:index, :show]
-  before_action :deploy_group, only: [:show, :edit, :update, :destroy]
+  before_action :authorize_super_admin!, except: [:index, :show, :missing_config]
+  before_action :deploy_group, except: [:index, :create, :new]
 
   def index
     @deploy_groups =
@@ -71,7 +71,48 @@ class DeployGroupsController < ApplicationController
     end
   end
 
+  def missing_config
+    return unless compare = params[:compare].presence
+    compare = DeployGroup.find_by_permalink!(compare)
+
+    @diff = Hash.new { |h, k| h[k] = Hash.new { |h, k| h[k] = [] } }
+
+    if missing_secrets = compare_values(compare, deploy_group) { |dg| custom_secrets(dg) }
+      missing_secrets.each do |id, s|
+        @diff[s.fetch(:project_permalink)]["Secrets"] << id
+      end
+    end
+
+    if missing_env = compare_values(compare, deploy_group) { |dg| custom_env(dg) }
+      missing_env.each do |e|
+        project_permalink = (e.parent_type == "Project" ? e.parent.permalink : "global")
+        @diff[project_permalink]["Environment"] << e
+      end
+    end
+  end
+
   private
+
+  def compare_values(a, b)
+    a = yield(a)
+    b = yield(b)
+    return unless missing_keys = (a.keys - b.keys).presence
+    a.values_at(*missing_keys)
+  end
+
+  def custom_env(deploy_group)
+    EnvironmentVariable.where(scope: deploy_group).each_with_object({}) do |e, h|
+      h[[e.name, e.parent_type, e.parent_id]] = e
+    end
+  end
+
+  def custom_secrets(deploy_group)
+    SecretStorage.lookup_cache.each_with_object({}) do |(id, _), h|
+      parts = SecretStorage.parse_id(id)
+      next unless parts.fetch(:deploy_group_permalink) == deploy_group.permalink
+      h[parts.except(:deploy_group_permalink)] = [id, parts]
+    end
+  end
 
   def deploy_group_params
     params.require(:deploy_group).permit(*allowed_deploy_group_params)

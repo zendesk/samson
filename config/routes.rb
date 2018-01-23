@@ -83,6 +83,10 @@ Samson::Application.routes.draw do
   resources :commands, except: [:edit]
 
   resources :deploy_groups do
+    member do
+      get :missing_config
+    end
+
     resource :mass_rollouts, only: [:new, :create, :destroy] do
       collection do
         post :merge

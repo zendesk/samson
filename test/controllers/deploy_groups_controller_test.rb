@@ -56,6 +56,34 @@ describe DeployGroupsController do
       end
     end
 
+    describe "#missing_config" do
+      it "renders" do
+        get :missing_config, params: {id: deploy_group}
+        assert_template :missing_config
+        assert_response :success
+      end
+
+      it "compares secrets" do
+        create_secret 'production/bar/pod2/foo'
+        get :missing_config, params: {id: deploy_group, compare: deploy_groups(:pod2).permalink}
+        assert_template :missing_config
+        assert_response :success
+        assigns(:diff).must_equal(
+          "bar" => {"Secrets" => ["production/bar/pod2/foo"]}
+        )
+      end
+
+      it "compares environment" do
+        var = EnvironmentVariable.create!(scope: deploy_groups(:pod2), parent: stage.project, name: "Foo", value: "bar")
+        get :missing_config, params: {id: deploy_group, compare: deploy_groups(:pod2).permalink}
+        assert_template :missing_config
+        assert_response :success
+        assigns(:diff).must_equal("foo" => {"Environment" => [var]})
+      end
+    end
+  end
+
+  as_a_project_admin do
     unauthorized :post, :create
     unauthorized :get, :new
     unauthorized :get, :edit, id: 1
