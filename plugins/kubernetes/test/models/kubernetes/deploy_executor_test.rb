@@ -618,16 +618,14 @@ describe Kubernetes::DeployExecutor do
   describe "#fetch_pods" do
     it "retries on failure" do
       Kubeclient::Client.any_instance.expects(:get_pods).times(4).raises(KubeException.new(1, 2, 3))
-      assert_raises KubeException do
-        executor.send(:fetch_pods, kubernetes_releases(:test_release))
-      end
+      executor.instance_variable_set(:@release, kubernetes_releases(:test_release))
+      assert_raises(KubeException) { executor.send(:fetch_pods) }
     end
 
     it "retries on ssl failure" do
       Kubeclient::Client.any_instance.expects(:get_pods).times(4).raises(OpenSSL::SSL::SSLError.new)
-      assert_raises OpenSSL::SSL::SSLError do
-        executor.send(:fetch_pods, kubernetes_releases(:test_release))
-      end
+      executor.instance_variable_set(:@release, kubernetes_releases(:test_release))
+      assert_raises(OpenSSL::SSL::SSLError) { executor.send(:fetch_pods) }
     end
   end
 
@@ -682,7 +680,8 @@ describe Kubernetes::DeployExecutor do
       assert_request(:post, services_url, to_return: {body: "{}"}) # blue was created
 
       executor.expects(:wait_for_resources_to_complete).returns(true)
-      assert executor.send(:deploy_and_watch, release, release.release_docs)
+      executor.instance_variable_set(:@release, release)
+      assert executor.send(:deploy_and_watch, release.release_docs)
 
       out.must_equal <<~OUT
         Creating BLUE resources for Pod1 role app-server
@@ -710,7 +709,8 @@ describe Kubernetes::DeployExecutor do
       assert_request(:delete, "#{deployments_url}/test-app-server-green", to_return: {body: "{}"}) # delete green
 
       executor.expects(:wait_for_resources_to_complete).returns(true)
-      assert executor.send(:deploy_and_watch, release, release.release_docs)
+      executor.instance_variable_set(:@release, release)
+      assert executor.send(:deploy_and_watch, release.release_docs)
 
       out.must_equal <<~OUT
         Creating BLUE resources for Pod1 role app-server
@@ -733,7 +733,8 @@ describe Kubernetes::DeployExecutor do
 
       executor.expects(:wait_for_resources_to_complete).returns([])
       executor.expects(:print_resource_events)
-      refute executor.send(:deploy_and_watch, release, release.release_docs)
+      executor.instance_variable_set(:@release, release)
+      refute executor.send(:deploy_and_watch, release.release_docs)
 
       out.must_equal <<~OUT
         Creating BLUE resources for Pod1 role app-server
