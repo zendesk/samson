@@ -17,6 +17,8 @@
       <%= form.select :kubernetes_role_id, [['Loading ...', @deploy_group_role.kubernetes_role_id]], {}, class: "form-control", disabled: @deploy_group_role.persisted? %>
     <% end %>
 
+    <%= form.input :delete_resource, as: :check_box, help: "Delete all resources on next deploy. Always set replicas to 0 too." %>
+
     <% [
          [:replicas, "Replicas"],
          [:requests_cpu, 'Requests CPU Cores'],

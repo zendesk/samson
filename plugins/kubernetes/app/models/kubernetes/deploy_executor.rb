@@ -347,13 +347,15 @@ module Kubernetes
 
           roles = roles_present_in_repo.map do |role|
             role_config = group_role_configs.detect { |dgr| dgr.kubernetes_role_id == role.id } || raise
+            # TODO: send in deploy_group_role to avoid translation logic
             {
               role: role,
               replicas: role_config.replicas,
               requests_cpu: role_config.requests_cpu,
               requests_memory: role_config.requests_memory,
               limits_cpu: role_config.limits_cpu,
-              limits_memory: role_config.limits_memory
+              limits_memory: role_config.limits_memory,
+              delete_resource: role_config.delete_resource
             }
           end
 
@@ -368,7 +370,7 @@ module Kubernetes
     # updates resources via kubernetes api
     def deploy(release_docs)
       release_docs.each do |release_doc|
-        puts_action "Creating", release_doc
+        puts_action "Deploying", release_doc
         if release_doc.blue_green_color
           non_service_resources(release_doc).each(&:deploy)
         else

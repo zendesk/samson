@@ -94,7 +94,8 @@ module Kubernetes
             requests_cpu: role.fetch(:requests_cpu),
             requests_memory: role.fetch(:requests_memory),
             limits_cpu: role.fetch(:limits_cpu),
-            limits_memory: role.fetch(:limits_memory)
+            limits_memory: role.fetch(:limits_memory),
+            delete_resource: role.fetch(:delete_resource)
           )
         end
       end

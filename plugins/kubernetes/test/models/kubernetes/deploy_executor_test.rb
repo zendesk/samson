@@ -684,7 +684,7 @@ describe Kubernetes::DeployExecutor do
       assert executor.send(:deploy_and_watch, release.release_docs)
 
       out.must_equal <<~OUT
-        Creating BLUE resources for Pod1 role app-server
+        Deploying BLUE resources for Pod1 role app-server
         Switching service for Pod1 role app-server to BLUE
       OUT
     end
@@ -713,7 +713,7 @@ describe Kubernetes::DeployExecutor do
       assert executor.send(:deploy_and_watch, release.release_docs)
 
       out.must_equal <<~OUT
-        Creating BLUE resources for Pod1 role app-server
+        Deploying BLUE resources for Pod1 role app-server
         Switching service for Pod1 role app-server to BLUE
         Deleting GREEN resources for Pod1 role app-server
       OUT
@@ -737,7 +737,7 @@ describe Kubernetes::DeployExecutor do
       refute executor.send(:deploy_and_watch, release.release_docs)
 
       out.must_equal <<~OUT
-        Creating BLUE resources for Pod1 role app-server
+        Deploying BLUE resources for Pod1 role app-server
         Deleting BLUE resources for Pod1 role app-server
         DONE
       OUT

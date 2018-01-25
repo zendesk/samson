@@ -18,6 +18,7 @@ module Kubernetes
     validate :requests_below_limits
     validate :limits_close_to_requests
     validate :requests_below_usage_limits
+    validate :delete_on_0_replicas
 
     # The matrix is a list of deploy group and its roles + deploy-group-roles
     def self.matrix(stage)
@@ -124,6 +125,10 @@ module Kubernetes
           "(#{requests_memory} * #{replicas}) #{message} #{limit.memory} (##{limit.id})#{usage_limit_warning}"
         )
       end
+    end
+
+    def delete_on_0_replicas
+      errors.add(:replicas, "must be 0 to delete") if delete_resource && replicas != 0
     end
   end
 end
