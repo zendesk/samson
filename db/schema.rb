@@ -53,6 +53,7 @@ ActiveRecord::Schema.define(version: 20180126004937) do
     t.string "dockerfile", default: "Dockerfile"
     t.string "external_status"
     t.string "image_name"
+    t.integer "gcr_vulnerabilities_status_id", default: 0, null: false
     t.index ["created_by"], name: "index_builds_on_created_by"
     t.index ["git_sha", "dockerfile"], name: "index_builds_on_git_sha_and_dockerfile", unique: true
     t.index ["git_sha", "image_name"], name: "index_builds_on_git_sha_and_image_name", unique: true, length: { git_sha: 80, image_name: 80 }
@@ -378,6 +379,7 @@ ActiveRecord::Schema.define(version: 20180126004937) do
     t.boolean "docker_image_building_disabled", default: false, null: false
     t.string "dockerfiles"
     t.boolean "build_with_gcb", default: false, null: false
+    t.boolean "show_gcr_vulnerabilities", default: false, null: false
     t.index ["build_command_id"], name: "index_projects_on_build_command_id"
     t.index ["permalink"], name: "index_projects_on_permalink", unique: true, length: { permalink: 191 }
     t.index ["token"], name: "index_projects_on_token", unique: true, length: { token: 191 }
@@ -506,6 +508,7 @@ ActiveRecord::Schema.define(version: 20180126004937) do
     t.boolean "no_reference_selection", default: false, null: false
     t.boolean "periodical_deploy", default: false, null: false
     t.boolean "builds_in_environment", default: false, null: false
+    t.boolean "block_on_gcr_vulnerabilities", default: false, null: false
     t.index ["project_id", "permalink"], name: "index_stages_on_project_id_and_permalink", unique: true, length: { permalink: 191 }
     t.index ["template_stage_id"], name: "index_stages_on_template_stage_id"
   end
