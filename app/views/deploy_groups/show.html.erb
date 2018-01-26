@@ -55,7 +55,7 @@
     </div>
   </div>
 
-  <% if SecretStorage.backend == Samson::Secrets::HashicorpVaultBackend %>
+  <% if Samson::Secrets::Manager.backend == Samson::Secrets::HashicorpVaultBackend %>
     <div class="form-group">
       <label class="col-lg-2 control-label">Vault Server</label>
       <div class="col-lg-4">

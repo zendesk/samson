@@ -72,7 +72,7 @@
             <li class="divider"></li>
           <% end %>
           <li><%= link_to "Secrets", secrets_path %></li>
-          <% if SecretStorage.backend == Samson::Secrets::HashicorpVaultBackend %>
+          <% if Samson::Secrets::Manager.backend == Samson::Secrets::HashicorpVaultBackend %>
             <li><%= link_to "Vault Servers", vault_servers_path %></li>
           <% end %>
           <li><%= link_to "Reports", csv_exports_path %></li>

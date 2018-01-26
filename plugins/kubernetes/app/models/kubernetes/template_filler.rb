@@ -381,7 +381,7 @@ module Kubernetes
     end
 
     def set_vault_env
-      if ENV["SECRET_STORAGE_BACKEND"] == "SecretStorage::HashicorpVault"
+      if ENV["SECRET_STORAGE_BACKEND"] == "Samson::Secrets::Manager::HashicorpVault"
         containers.each do |container|
           (container[:env] ||= []).concat vault_env
         end

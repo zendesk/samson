@@ -93,7 +93,7 @@ ActiveSupport::TestCase.class_eval do
   end
 
   def create_secret(id, extra = {})
-    SecretStorage.write(
+    Samson::Secrets::Manager.write(
       id,
       {
         value: 'MY-SECRET',
@@ -103,7 +103,7 @@ ActiveSupport::TestCase.class_eval do
         deprecated_at: nil
       }.merge(extra)
     )
-    SecretStorage::DbBackend::Secret.find(id) # TODO: just return id
+    Samson::Secrets::Manager::DbBackend::Secret.find(id) # TODO: just return id
   end
 
   def create_vault_server(overrides = {})

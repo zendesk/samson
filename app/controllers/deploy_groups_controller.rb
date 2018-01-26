@@ -107,8 +107,8 @@ class DeployGroupsController < ApplicationController
   end
 
   def custom_secrets(deploy_group)
-    SecretStorage.lookup_cache.each_with_object({}) do |(id, _), h|
-      parts = SecretStorage.parse_id(id)
+    Samson::Secrets::Manager.lookup_cache.each_with_object({}) do |(id, _), h|
+      parts = Samson::Secrets::Manager.parse_id(id)
       next unless parts.fetch(:deploy_group_permalink) == deploy_group.permalink
       h[parts.except(:deploy_group_permalink)] = [id, parts]
     end
