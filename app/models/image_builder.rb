@@ -15,7 +15,7 @@ class ImageBuilder
       )
       push_image(image_id, build, executor, tag_as_latest: tag_as_latest)
     ensure
-      if image_id && ENV["DOCKER_KEEP_BUILT_IMGS"] != "1"
+      if image_id && !['1', 'true'].include?(ENV["DOCKER_KEEP_BUILT_IMGS"])
         executor.output.puts("### Deleting local docker image")
         Docker::Image.get(image_id).remove(force: true)
       end
