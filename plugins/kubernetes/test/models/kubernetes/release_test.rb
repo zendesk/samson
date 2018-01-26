@@ -228,7 +228,8 @@ describe Kubernetes::Release do
               requests_cpu: 0.5,
               requests_memory: 20,
               limits_cpu: 1,
-              limits_memory: 50
+              limits_memory: 50,
+              delete_resource: false
             }
           ]
         }
@@ -245,7 +246,8 @@ describe Kubernetes::Release do
           limits_cpu: 2,
           limits_memory: 100,
           requests_cpu: 1,
-          requests_memory: 50
+          requests_memory: 50,
+          delete_resource: false
         )
       end
     end

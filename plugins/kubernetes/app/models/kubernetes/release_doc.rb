@@ -47,7 +47,11 @@ module Kubernetes
 
     def resources
       @resources ||= resource_template.map do |t|
-        Kubernetes::Resource.build(t, deploy_group, autoscaled: kubernetes_role.autoscaled)
+        Kubernetes::Resource.build(
+          t, deploy_group,
+          autoscaled: kubernetes_role.autoscaled,
+          delete_resource: delete_resource
+        )
       end
     end
 

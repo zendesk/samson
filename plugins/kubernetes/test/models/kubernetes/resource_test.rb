@@ -20,6 +20,14 @@ describe Kubernetes::Resource do
     assert_requested delete_pod
   end
 
+  def autoscaled!
+    resource.instance_variable_set(:@autoscaled, true)
+  end
+
+  def delete_resource!
+    resource.instance_variable_set(:@delete_resource, true)
+  end
+
   let(:origin) { "http://foobar.server" }
   let(:kind) { 'Service' }
   let(:template) do
@@ -36,8 +44,9 @@ describe Kubernetes::Resource do
     }
   end
   let(:deploy_group) { deploy_groups(:pod1) }
-  let(:resource) { Kubernetes::Resource.build(template, deploy_group, autoscaled: false) }
-  let(:autoscaled_resource) { Kubernetes::Resource.build(template, deploy_group, autoscaled: true) }
+  let(:resource) do
+    Kubernetes::Resource.build(template, deploy_group, autoscaled: false, delete_resource: false)
+  end
   let(:url) { "#{origin}/api/v1/namespaces/pod1/services/some-project" }
   let(:base_url) { File.dirname(url) }
 
@@ -51,7 +60,7 @@ describe Kubernetes::Resource do
 
   describe ".build" do
     it "builds based on kind" do
-      Kubernetes::Resource.build({kind: 'Service'}, deploy_group, autoscaled: false).
+      Kubernetes::Resource.build({kind: 'Service'}, deploy_group, autoscaled: false, delete_resource: false).
         class.must_equal Kubernetes::Resource::Service
     end
   end
@@ -101,7 +110,8 @@ describe Kubernetes::Resource do
     it "keeps replicase when autoscaled, to not revert autoscaler changes" do
       assert_request(:get, url, to_return: {body: {spec: {replicas: 5}}.to_json}) do
         assert_request(:put, url, to_return: {body: "{}"}, with: ->(x) { x.body.must_include '"replicas":5'; true }) do
-          autoscaled_resource.deploy
+          autoscaled!
+          resource.deploy
         end
       end
     end
@@ -111,6 +121,23 @@ describe Kubernetes::Resource do
         error = '{"message":"Foo.extensions \"app\" is invalid:"}'
         assert_request(:post, base_url, to_return: {body: error, status: 400}) do
           assert_raises(Samson::Hooks::UserError) { resource.deploy }.message.must_include "Kubernetes error: Foo"
+        end
+      end
+    end
+
+    describe "delete_resource" do
+      before { delete_resource! }
+
+      it "deletes when delete was requested" do
+        assert_request(:get, url, to_return: {body: "{}"}) do
+          resource.expects(:delete)
+          resource.deploy
+        end
+      end
+
+      it "does nothing when delete was requested but was not running" do
+        assert_request(:get, url, to_return: {status: 404}) do
+          resource.deploy
         end
       end
     end
@@ -214,13 +241,15 @@ describe Kubernetes::Resource do
 
     it "expects a constant number of pods when using autoscaling" do
       assert_request(:get, url, to_return: {body: {spec: {replicas: 4}}.to_json}) do
-        autoscaled_resource.desired_pod_count.must_equal 4
+        autoscaled!
+        resource.desired_pod_count.must_equal 4
       end
     end
 
     it "uses template amount when creating with autoscaling" do
       assert_request(:get, url, to_return: {status: 404}) do
-        autoscaled_resource.desired_pod_count.must_equal 2
+        autoscaled!
+        resource.desired_pod_count.must_equal 2
       end
     end
   end

@@ -3,6 +3,7 @@
 <section>
   <%= form_tag update_many_project_kubernetes_deploy_group_roles_path(@project), method: :put, class: "form-horizontal" do %>
     <% rows = [
+        [:delete_resource, "Delete resource", :boolean],
         [:replicas, "Replicas"],
         [:requests_cpu, 'Requests CPU Cores'],
         [:requests_memory, 'Requests Memory in MB'],
@@ -29,8 +30,16 @@
         <tr>
           <td><%= deploy_group_role.deploy_group.name %></td>
           <td><%= deploy_group_role.kubernetes_role.name %></td>
-          <% rows.each do |attribute, _| %>
-            <td><%= text_field_tag "kubernetes_deploy_group_roles[#{deploy_group_role.id}][#{attribute}]", deploy_group_role.public_send(attribute), size: 10 %></td>
+          <%= fields_for "kubernetes_deploy_group_roles[#{deploy_group_role.id}]", deploy_group_role do |field| %>
+            <% rows.each do |attribute, _, type| %>
+              <td>
+                <% if type == :boolean %>
+                  <%= field.check_box attribute %>
+                <% else %>
+                  <%= field.text_field attribute, size: 10 %>
+                <% end %>
+              </td>
+            <% end %>
           <% end %>
         </tr>
       <% end %>

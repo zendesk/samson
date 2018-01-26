@@ -254,4 +254,11 @@ describe Kubernetes::DeployGroupRole do
       end
     end
   end
+
+  describe "#delete_on_0_replicas" do
+    it "is valid without usage_limit" do
+      deploy_group_role.delete_resource = true
+      refute_valid deploy_group_role
+    end
+  end
 end
