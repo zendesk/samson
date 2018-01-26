@@ -1,5 +1,8 @@
 # frozen_string_literal: true
+
 require 'digest/sha2'
+require 'large_object_store'
+
 module Samson
   module Secrets
     module Manager
@@ -89,7 +92,7 @@ module Samson
 
         def lookup_cache
           SECRET_LOOKUP_CACHE_MUTEX.synchronize do
-            Rails.cache.fetch(SECRET_LOOKUP_CACHE) do
+            cache.fetch(SECRET_LOOKUP_CACHE) do
               backend.ids.each_slice(1000).each_with_object({}) do |slice, all|
                 read_multi(slice, include_value: true).each do |id, secret|
                   all[id] = lookup_cache_value(secret)
@@ -100,6 +103,10 @@ module Samson
         end
 
         private
+
+        def cache
+          @cache ||= LargeObjectStore.wrap(Rails.cache)
+        end
 
         def lookup_cache_value(secret)
           {
@@ -115,9 +122,9 @@ module Samson
 
         def modify_lookup_cache
           SECRET_LOOKUP_CACHE_MUTEX.synchronize do
-            cache = Rails.cache.read(SECRET_LOOKUP_CACHE) || {}
-            yield cache
-            Rails.cache.write(SECRET_LOOKUP_CACHE, cache)
+            content = cache.read(SECRET_LOOKUP_CACHE) || {}
+            yield content
+            cache.write(SECRET_LOOKUP_CACHE, content)
           end
         end
       end

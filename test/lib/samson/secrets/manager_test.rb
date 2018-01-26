@@ -179,7 +179,7 @@ describe Samson::Secrets::Manager do
     it "caches when cache did not exist" do
       Samson::Secrets::Manager.backend.expects(:ids).never # block call
       Samson::Secrets::Manager.delete(secret.id)
-      Rails.cache.read(Samson::Secrets::Manager::SECRET_LOOKUP_CACHE).must_equal({})
+      Samson::Secrets::Manager.send(:cache).read(Samson::Secrets::Manager::SECRET_LOOKUP_CACHE).must_equal({})
     end
   end
 
@@ -205,6 +205,13 @@ describe Samson::Secrets::Manager do
       Samson::Secrets::Manager.ids
       secret # trigger creation
       Samson::Secrets::Manager.ids.must_equal []
+    end
+
+    it "can cache things that are too big for memcache" do
+      secret # trigger creation
+      Samson::Secrets::Manager.expects(:lookup_cache_value).returns('a' * 10_000_000)
+      Samson::Secrets::Manager.ids.size.must_equal 1
+      Rails.cache.instance_variable_get(:@data).values.last.value.to_s.size.must_be :<, 1_000_000
     end
   end
 
