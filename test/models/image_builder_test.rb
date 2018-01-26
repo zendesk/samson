@@ -60,6 +60,14 @@ describe ImageBuilder do
       refute call(cache_from: nil)
     end
 
+    it "tells the user that building without at least one docker registry wont work" do
+      with_registries [] do
+        assert_raises Samson::Hooks::UserError do
+          call
+        end
+      end
+    end
+
     describe "when building the image worked" do
       def expect_removal(result)
         Docker::Image.expects(:get).with(image_id).returns(docker_image)
