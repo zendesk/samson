@@ -9,6 +9,9 @@ class ImageBuilder
     include ::NewRelic::Agent::MethodTracer
 
     def build_image(dir, build, executor, tag_as_latest:, **args)
+      if DockerRegistry.all.empty?
+        raise Samson::Hooks::UserError, "Need at least one DOCKER_REGISTRIES to push images"
+      end
       return unless image_id = build_image_locally(
         dir, executor,
         tag: build.docker_tag, dockerfile: build.dockerfile, **args
