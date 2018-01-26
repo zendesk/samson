@@ -49,7 +49,7 @@ echo
 bold "Copying example files"
 try "Creating .env" "test -e .env || (test -e custom/.env.bootstrap && cp custom/.env.bootstrap .env) || cp .env.bootstrap .env"
 try "Creating config/database.yml" "test -e config/database.yml || (test -e custom/database.yml && cp custom/database.yml config/database.yml) || cp config/database.mysql.yml.example config/database.yml"
-try "Creating databases" "(test -e custom/seeds.rb && cp -f custom/seeds.rb db/seeds.rb) && false || bundle exec rake db:setup > /dev/null"
+try "Creating databases" "(test -e custom/seeds.rb && cp -f custom/seeds.rb db/seeds.rb) && false || (echo 'no pass' | bundle exec rake db:setup)"
 
 echo
 bold "Success!"
