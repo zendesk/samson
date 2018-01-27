@@ -257,7 +257,7 @@ GEM
       http (= 0.9.8)
       recursive-open-struct (= 1.0.0)
       rest-client
-    large_object_store (1.3.3)
+    large_object_store (1.3.4)
     lograge (0.5.0)
       actionpack (>= 4, <= 5.1.0)
       activesupport (>= 4, <= 5.1.0)
