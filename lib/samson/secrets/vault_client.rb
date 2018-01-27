@@ -84,7 +84,7 @@ module Samson
       # - servers in environment for environment specific id
       # - all for global id
       def responsible_clients(id)
-        parts = SecretStorage.parse_id(id)
+        parts = Samson::Secrets::Manager.parse_id(id)
         deploy_group_permalink = parts.fetch(:deploy_group_permalink)
         environment_permalink = parts.fetch(:environment_permalink)
 

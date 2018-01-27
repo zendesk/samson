@@ -47,7 +47,7 @@ describe Samson::Secrets::KeyResolver do
     end
 
     it "does not find deprecated" do
-      SecretStorage.write(
+      Samson::Secrets::Manager.write(
         "global/global/global/bar",
         value: 'dsffd',
         comment: '',
@@ -105,7 +105,7 @@ describe Samson::Secrets::KeyResolver do
       with_env SECRET_STORAGE_SHARING_GRANTS: 'true'
 
       it "does not include global by default" do
-        assert SecretStorage.sharing_grants?
+        assert Samson::Secrets::Manager.sharing_grants?
         resolver.expand('ABC', 'bar').must_equal []
         resolver.instance_variable_get(:@errors).first.must_equal(
           "bar (tried: production/foo/pod1/bar, global/foo/pod1/bar, production/foo/global/bar, global/foo/global/bar)"
@@ -134,7 +134,7 @@ describe Samson::Secrets::KeyResolver do
     end
 
     it "returns nil when it fails to read secrets" do
-      SecretStorage.expects(:read_multi).never
+      Samson::Secrets::Manager.expects(:read_multi).never
       resolver.read("foobar").must_be_nil
       errors.first.must_include "foobar (tried"
     end

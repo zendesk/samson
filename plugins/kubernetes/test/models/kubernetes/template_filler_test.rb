@@ -442,7 +442,7 @@ describe Kubernetes::TemplateFiller do
       end
 
       it "fails when vault is not configured" do
-        with_env('SECRET_STORAGE_BACKEND': "SecretStorage::HashicorpVault") do
+        with_env('SECRET_STORAGE_BACKEND': "Samson::Secrets::Manager::HashicorpVault") do
           Samson::Secrets::VaultClient.client.expects(:client).raises("Could not find Vault config for pod1")
           e = assert_raises { template.to_hash }
           e.message.must_equal "Could not find Vault config for pod1"
@@ -450,7 +450,7 @@ describe Kubernetes::TemplateFiller do
       end
 
       it "adds the vault server address to the cotainers env" do
-        with_env(SECRET_STORAGE_BACKEND: "SecretStorage::HashicorpVault") do
+        with_env(SECRET_STORAGE_BACKEND: "Samson::Secrets::Manager::HashicorpVault") do
           assert template_env.any? { |env| env.any? { |_k, v| v == "VAULT_ADDR" } }
         end
       end
@@ -487,7 +487,7 @@ describe Kubernetes::TemplateFiller do
 
       it "fails when it cannot find secrets needed by the puller" do
         raw_template[:spec][:template][:metadata][:annotations].replace('secret/FOO': 'bar', 'secret/BAR': 'baz')
-        SecretStorage.delete(secret_key)
+        Samson::Secrets::Manager.delete(secret_key)
         e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
         e.message.must_include "bar (tried: production/foo/pod1/bar"
         e.message.must_include "baz (tried: production/foo/pod1/baz" # shows all at once for easier debugging
