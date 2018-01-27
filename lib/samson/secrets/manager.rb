@@ -91,18 +91,20 @@ module Samson
         end
 
         def lookup_cache
-          SECRET_LOOKUP_CACHE_MUTEX.synchronize do
-            cache.fetch(SECRET_LOOKUP_CACHE) do
-              backend.ids.each_slice(1000).each_with_object({}) do |slice, all|
-                read_multi(slice, include_value: true).each do |id, secret|
-                  all[id] = lookup_cache_value(secret)
-                end
+          SECRET_LOOKUP_CACHE_MUTEX.synchronize { fetch_lookup_cache }
+        end
+
+        private
+
+        def fetch_lookup_cache
+          cache.fetch(SECRET_LOOKUP_CACHE) do
+            backend.ids.each_slice(1000).each_with_object({}) do |slice, all|
+              read_multi(slice, include_value: true).each do |id, secret|
+                all[id] = lookup_cache_value(secret)
               end
             end
           end
         end
-
-        private
 
         def cache
           @cache ||= LargeObjectStore.wrap(Rails.cache)
@@ -122,7 +124,7 @@ module Samson
 
         def modify_lookup_cache
           SECRET_LOOKUP_CACHE_MUTEX.synchronize do
-            content = cache.read(SECRET_LOOKUP_CACHE) || {}
+            content = fetch_lookup_cache
             yield content
             cache.write(SECRET_LOOKUP_CACHE, content)
           end

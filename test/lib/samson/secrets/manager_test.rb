@@ -41,6 +41,15 @@ describe Samson::Secrets::Manager do
       Samson::Secrets::Manager.ids.sort.must_equal [secret.id, id]
     end
 
+    it "writes to cache when cache is empty" do
+      secret # create
+      Rails.cache.clear
+
+      id = 'production/foo/pod2/world'
+      Samson::Secrets::Manager.write(id, attributes).must_equal true
+      Samson::Secrets::Manager.ids.sort.must_equal [secret.id, id]
+    end
+
     it "does not add known id to ids cache" do
       secret # create
       Samson::Secrets::Manager.ids.must_equal([secret.id]) # fill and check cache
