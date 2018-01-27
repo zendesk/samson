@@ -68,13 +68,13 @@ describe BuildsController do
         end
 
         it "can search for external YES" do
-          build.update_column(:external_id, 123)
+          build.update_column(:external_status, "succeeded")
           get :index, params: {search: {external: true}}
           assigns(:builds).must_equal [build]
         end
 
         it "can search for external NO" do
-          Build.where.not(id: build.id).all.each { |b| b.update_column :external_id, b.id }
+          Build.where.not(id: build.id).update(external_status: "succeeded")
           get :index, params: {search: {external: false}}
           assigns(:builds).must_equal [build]
         end
@@ -169,7 +169,7 @@ describe BuildsController do
       end
 
       it 'can use deprecated source_url' do
-        create source_url: 'http://foo.com'
+        create source_url: 'http://foo.com', git_sha: git_sha, dockerfile: 'foo'
         Build.last.external_url.must_equal 'http://foo.com'
       end
 
@@ -180,17 +180,44 @@ describe BuildsController do
         build.image_name.must_equal 'foo'
       end
 
-      it 'updates a build via external_id' do
-        build = Build.last
-        build.update_columns(external_id: 'foo', external_status: 'running', docker_repo_digest: nil)
+      it 'can create external build' do
+        create external_url: 'http://foo.com', git_sha: git_sha, image_name: 'foo'
+        Build.last.external_url.must_equal 'http://foo.com'
+      end
 
-        digest = 'foo.com/test@sha256:5f1d7c7381b2e45ca73216d7b06004fdb0908ed7bb8786b62f2cdfa5035fde2c'
-        create external_id: 'foo', external_status: 'succeeded', docker_repo_digest: digest, format: :json
-        assert_response :success
+      describe "updates external builds" do
+        let(:digest) { 'foo.com/test@sha256:5f1d7c7381b2e45ca73216d7b06004fdb0908ed7bb8786b62f2cdfa5035fde2c' }
 
-        build.reload
-        build.external_status.must_equal 'succeeded'
-        build.docker_repo_digest.must_equal digest
+        before do
+          build.update_columns(external_status: 'running', docker_repo_digest: nil)
+        end
+
+        it 'updates a failed external build' do
+          create(
+            git_sha: build.git_sha,
+            external_status: 'failed',
+            external_url: "https://blob.com",
+            docker_repo_digest: digest,
+            dockerfile: build.dockerfile,
+            format: :json
+          )
+          assert_response :success
+
+          build.reload
+          build.external_status.must_equal 'failed'
+          build.docker_repo_digest.must_equal digest
+          build.external_url.must_equal "https://blob.com"
+        end
+
+        it 'does not all updating a successful build to prevent tampering' do
+          build.update_columns docker_repo_digest: digest
+
+          create external_url: "https://blob.com", git_sha: build.git_sha, dockerfile: build.dockerfile, format: :json
+          assert_response 422
+
+          build.reload
+          build.external_url.must_be_nil
+        end
       end
 
       it 'starts the build' do
@@ -206,13 +233,13 @@ describe BuildsController do
 
       it "does not start the build when build is external" do
         DockerBuilderService.any_instance.expects(:run).never
-        create external_id: "123"
+        create external_status: "succeeded", git_sha: "a" * 40, dockerfile: 'foo'
       end
 
       describe "when building is disabled" do
         before { project.update_column :docker_image_building_disabled, true }
 
-        it "does not create to build" do
+        it "does not create build" do
           refute_difference 'Build.count' do
             create
             assert_redirected_to project_builds_path(project)
@@ -220,17 +247,17 @@ describe BuildsController do
           end
         end
 
-        it "creates when digest was given" do
+        it "creates finished external build" do
           assert_difference 'Build.count', +1 do
-            create git_sha: 'a' * 40, docker_repo_digest: builds(:docker_build).docker_repo_digest
+            create git_sha: 'a' * 40, docker_repo_digest: builds(:docker_build).docker_repo_digest, dockerfile: 'foo'
             assert_redirected_to project_build_path(project, Build.last)
             refute flash[:alert]
           end
         end
 
-        it "creates when external_id was given" do
+        it "creates for in-progress external build" do
           assert_difference 'Build.count', +1 do
-            create git_sha: 'a' * 40, external_id: 'foobar'
+            create git_sha: 'a' * 40, external_status: "pending", dockerfile: 'foo'
             assert_redirected_to project_build_path(project, Build.last)
             refute flash[:alert]
           end

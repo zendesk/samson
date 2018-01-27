@@ -49,7 +49,7 @@ describe Build do
         refute_valid(valid_build(git_ref: nil, git_sha: current_commit)) # not unique
         refute_valid(valid_build) # not unique since ref resolves to sha
         assert_valid(valid_build(git_ref: nil, git_sha: current_commit, dockerfile: 'Other'))
-        assert_valid(valid_build(git_ref: nil, git_sha: current_commit, dockerfile: nil, external_id: '123'))
+        assert_valid(valid_build(git_ref: nil, git_sha: current_commit, dockerfile: nil, external_status: 'pending'))
       end
     end
 
@@ -59,7 +59,7 @@ describe Build do
         build.update_columns(git_sha: current_commit, image_name: 'hello', dockerfile: 'Other')
         builds(:v1_tag).update_columns(git_sha: current_commit, image_name: nil)
 
-        base = {git_ref: nil, git_sha: current_commit, external_id: '123'}
+        base = {git_ref: nil, git_sha: current_commit, external_status: 'pending'}
         assert_valid(valid_build(base))
         refute_valid(valid_build(base.merge(image_name: 'hello'))) # not unique
         assert_valid(valid_build(base.merge(image_name: 'world'))) # unique
@@ -104,7 +104,7 @@ describe Build do
     it 'validates dockerfile exists when build needs to be done by samson' do
       assert_valid(valid_build(dockerfile: 'Dockerfile'))
       refute_valid(valid_build(dockerfile: nil))
-      assert_valid(valid_build(dockerfile: nil, external_id: '123'))
+      assert_valid(valid_build(dockerfile: nil, external_status: 'pending'))
     end
 
     describe 'external_status' do
@@ -114,20 +114,14 @@ describe Build do
         build.external_status.must_be_nil
       end
 
-      it 'backfills missing' do
-        build = valid_build(external_id: '123')
-        assert_valid build
-        build.external_status.must_equal 'succeeded'
-      end
-
       it 'is valid with valid status' do
-        build = valid_build(external_id: '123', external_status: 'running')
+        build = valid_build(external_status: 'running')
         assert_valid build
         build.external_status.must_equal 'running'
       end
 
       it 'is invalid with invalid status' do
-        refute_valid valid_build(external_id: '123', external_status: 'sdfsfsfdf')
+        refute_valid valid_build(external_status: 'sdfsfsfdf')
       end
 
       it 'is invalid with invalid status on non-external' do
@@ -197,7 +191,7 @@ describe Build do
   describe "#make_dockerfile_and_image_name_not_collide" do
     it "stores nil dockerfile so index does not collide when using image_name for uniqueness" do
       GitRepository.any_instance.expects(:commit_from_ref).returns('a' * 40)
-      build = valid_build(image_name: 'foobar', external_id: '123')
+      build = valid_build(image_name: 'foobar', external_status: 'pending')
       build.save!
       build.dockerfile.must_be_nil
       build.image_name.must_equal 'foobar'
@@ -216,7 +210,7 @@ describe Build do
     end
 
     describe "when external" do
-      before { build.external_id = '123' }
+      before { build.external_status = 'pending' }
 
       it "is active when not finished" do
         assert build.active?
