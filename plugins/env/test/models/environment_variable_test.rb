@@ -147,7 +147,7 @@ describe EnvironmentVariable do
         end
 
         it "does not raise on missing secret values in preview mode" do
-          Samson::Secrets::Manager::DbBackend::Secret.delete_all
+          Samson::Secrets::DbBackend::Secret.delete_all
           EnvironmentVariable.env(project, nil, preview: true).must_equal(
             "PROJECT" => "secret://foobar X", "X" => "Y", "Y" => "Z"
           )

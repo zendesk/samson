@@ -222,7 +222,7 @@ describe SecretsController do
         post :create, params: {secret: attributes.merge(visible: 'false')}
         assert flash[:notice]
         assert_redirected_to secrets_path
-        secret = Samson::Secrets::Manager::DbBackend::Secret.find('production/foo/pod2/hi')
+        secret = Samson::Secrets::DbBackend::Secret.find('production/foo/pod2/hi')
         secret.updater_id.must_equal user.id
         secret.creator_id.must_equal user.id
         secret.visible.must_equal false
@@ -356,7 +356,7 @@ describe SecretsController do
       it "deletes project secret" do
         delete :destroy, params: {id: secret}
         assert_redirected_to "/secrets"
-        Samson::Secrets::Manager::DbBackend::Secret.exists?(secret.id).must_equal(false)
+        Samson::Secrets::DbBackend::Secret.exists?(secret.id).must_equal(false)
       end
 
       it "deletes secret that already was deleted so we can cleanup after a partial deletetion failure" do
@@ -367,7 +367,7 @@ describe SecretsController do
       it "responds ok to xhr" do
         delete :destroy, params: {id: secret}, xhr: true
         assert_response :success
-        Samson::Secrets::Manager::DbBackend::Secret.exists?(secret.id).must_equal(false)
+        Samson::Secrets::DbBackend::Secret.exists?(secret.id).must_equal(false)
       end
 
       it "is unauthorized for global" do
@@ -415,14 +415,14 @@ describe SecretsController do
       it 'deletes global secret' do
         delete :destroy, params: {id: secret.id}
         assert_redirected_to "/secrets"
-        Samson::Secrets::Manager::DbBackend::Secret.exists?(secret.id).must_equal(false)
+        Samson::Secrets::DbBackend::Secret.exists?(secret.id).must_equal(false)
       end
 
       it "works with unknown project" do
         secret.update_column(:id, 'oops/bar')
         delete :destroy, params: {id: secret.id}
         assert_redirected_to "/secrets"
-        Samson::Secrets::Manager::DbBackend::Secret.exists?(secret.id).must_equal(false)
+        Samson::Secrets::DbBackend::Secret.exists?(secret.id).must_equal(false)
       end
     end
   end

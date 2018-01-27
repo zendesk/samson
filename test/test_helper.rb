@@ -103,7 +103,7 @@ ActiveSupport::TestCase.class_eval do
         deprecated_at: nil
       }.merge(extra)
     )
-    Samson::Secrets::Manager::DbBackend::Secret.find(id) # TODO: just return id
+    Samson::Secrets::DbBackend::Secret.find(id) # TODO: just return id
   end
 
   def create_vault_server(overrides = {})
