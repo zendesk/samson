@@ -79,27 +79,15 @@ describe Kubernetes::Release do
 
     it "fails to save with missing deploy groups" do
       assert_create_fails do
-        Kubernetes::Release.create_release(release_params.except(:deploy_groups))
+        release_params.delete :grouped_deploy_group_roles
+        Kubernetes::Release.create_release(release_params)
       end
     end
 
     it "fails to save with empty deploy groups" do
       assert_create_fails do
-        Kubernetes::Release.create_release(release_params.tap { |params| params[:deploy_groups].clear })
-      end
-    end
-
-    it "fails to save with missing roles" do
-      assert_create_fails do
-        params = release_params.tap { |params| params[:deploy_groups].each { |dg| dg.delete(:roles) } }
-        Kubernetes::Release.create_release(params)
-      end
-    end
-
-    it "fails to save with empty roles" do
-      assert_create_fails do
-        params = release_params.tap { |params| params[:deploy_groups].each { |dg| dg[:roles].clear } }
-        Kubernetes::Release.create_release(params)
+        release_params[:grouped_deploy_group_roles].first.clear
+        Kubernetes::Release.create_release(release_params)
       end
     end
 
@@ -212,43 +200,43 @@ describe Kubernetes::Release do
   end
 
   def release_params
-    {
+    @release_params ||= {
       git_sha: build.git_sha,
       git_ref: build.git_ref,
       project: project,
       user: user,
       deploy: deploys(:succeeded_test),
-      deploy_groups: [
-        {
-          deploy_group: deploy_group,
-          roles: [
-            {
-              role: app_server,
-              replicas: 1,
-              requests_cpu: 0.5,
-              requests_memory: 20,
-              limits_cpu: 1,
-              limits_memory: 50,
-              delete_resource: false
-            }
-          ]
-        }
+      grouped_deploy_group_roles: [
+        [
+          Kubernetes::DeployGroupRole.new(
+            deploy_group: deploy_group,
+            kubernetes_role: app_server,
+            replicas: 1,
+            requests_cpu: 0.5,
+            requests_memory: 20,
+            limits_cpu: 1,
+            limits_memory: 50,
+            delete_resource: false
+          )
+        ]
       ]
     }
   end
 
   def multiple_roles_release_params
     release_params.tap do |params|
-      params[:deploy_groups].each do |dg|
-        dg[:roles].push(
-          role: resque_worker,
+      params[:grouped_deploy_group_roles].each do |dgrs|
+        copy = dgrs.first.dup
+        copy.attributes = {
+          kubernetes_role: resque_worker,
           replicas: 2,
           limits_cpu: 2,
           limits_memory: 100,
           requests_cpu: 1,
           requests_memory: 50,
           delete_resource: false
-        )
+        }
+        dgrs.push(copy)
       end
     end
   end
