@@ -10,6 +10,7 @@
 // Read Sprockets README (https://github.com/sstephenson/sprockets#sprockets-directives) for details
 // about supported directives.
 //
+//= require jsSHA
 //= require instant_errors
 //= require jquery
 //= require jquery-ujs
