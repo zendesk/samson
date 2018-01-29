@@ -9,8 +9,9 @@ module Samson
       ID_PARTS = [:environment_permalink, :project_permalink, :deploy_group_permalink, :key].freeze
       ID_PART_SEPARATOR = "/"
       SECRET_ID_REGEX = %r{[\w\/-]+}
-      SECRET_LOOKUP_CACHE = 'secret_lookup_cache_v2'
+      SECRET_LOOKUP_CACHE = 'secret_lookup_cache_v3'
       SECRET_LOOKUP_CACHE_MUTEX = Mutex.new
+      VALUE_HASHED_BASE = Digest::SHA2.hexdigest("#{Samson::Application.config.secret_key_base}usedforhashing")
 
       def self.allowed_project_prefixes(user)
         allowed = user.administrated_projects.pluck(:permalink).sort
@@ -119,7 +120,7 @@ module Samson
         end
 
         def hash_value(value)
-          Digest::SHA2.hexdigest("#{Samson::Application.config.secret_key_base}#{value}").first(10)
+          Digest::SHA2.hexdigest("#{VALUE_HASHED_BASE}#{value}").first(10)
         end
 
         def modify_lookup_cache

@@ -24,20 +24,15 @@ class SecretsController < ApplicationController
       end
     end
 
-    if value = params.dig(:search, :value).presence
-      matching = filter_secrets_by_value(value)
-      @secrets.select! { |id, _, _| matching.include?(id) }
+    if value_hashed = params.dig(:search, :value).presence
+      @secrets.select! { |_, _, secret_stub| secret_stub[:value_hashed] == value_hashed }
     end
 
     if value_from = params.dig(:search, :value_from).presence
       value = Samson::Secrets::Manager.read(value_from, include_value: true).fetch(:value)
-      matching = filter_secrets_by_value(value)
+      matching = Samson::Secrets::Manager.filter_ids_by_value(@secrets.map(&:first), value)
       matching.delete(value_from) # do not show what we already know
       @secrets.select! { |id, _, _| matching.include?(id) }
-    end
-
-    if value_hashed = params.dig(:search, :value_hashed).presence
-      @secrets.select! { |_, _, secret_stub| secret_stub[:value_hashed] == value_hashed }
     end
   rescue Samson::Secrets::BackendError => e
     flash[:error] = e.message
@@ -98,10 +93,6 @@ class SecretsController < ApplicationController
   end
 
   private
-
-  def filter_secrets_by_value(value)
-    Samson::Secrets::Manager.filter_ids_by_value(@secrets.map(&:first), value)
-  end
 
   def secret_params
     @secret_params ||= params.require(:secret).permit(*Samson::Secrets::Manager::ID_PARTS, *UPDATEDABLE_ATTRIBUTES)

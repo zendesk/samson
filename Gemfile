@@ -92,6 +92,7 @@ group :assets do
     gem 'rails-assets-x-editable'
     gem 'rails-assets-jstimezonedetect'
     gem 'rails-assets-jquery-cookie'
+    gem 'rails-assets-jsSHA'
   end
 end
 
