@@ -39,11 +39,6 @@
       <dd><%= link_to_url url %></dd>
     <% end %>
 
-    <% if external_id = @build.external_id.presence %>
-      <dt>External id</dt>
-      <dd><%= external_id %></dd>
-    <% end %>
-
     <% if status = @build.external_status.presence %>
       <dt>External status</dt>
       <dd><%= status %></dd>
