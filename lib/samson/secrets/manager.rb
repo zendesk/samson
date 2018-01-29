@@ -19,10 +19,6 @@ module Samson
         allowed
       end
 
-      # keeps older lookups working
-      DbBackend = Samson::Secrets::DbBackend
-      HashicorpVault = Samson::Secrets::HashicorpVaultBackend
-
       BACKEND = ENV.fetch('SECRET_STORAGE_BACKEND', 'Samson::Secrets::DbBackend').constantize
 
       class << self

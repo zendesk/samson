@@ -25,7 +25,7 @@ describe Samson::Secrets::Manager do
     it "writes" do
       id = 'production/foo/pod2/hello'
       Samson::Secrets::Manager.write(id, attributes).must_equal true
-      secret = Samson::Secrets::Manager::DbBackend::Secret.find(id)
+      secret = Samson::Secrets::DbBackend::Secret.find(id)
       secret.value.must_equal '111'
       secret.creator_id.must_equal users(:admin).id
       secret.updater_id.must_equal users(:admin).id
@@ -174,7 +174,7 @@ describe Samson::Secrets::Manager do
 
     it "deletes" do
       Samson::Secrets::Manager.delete(secret.id)
-      refute Samson::Secrets::Manager::DbBackend::Secret.exists?(secret.id)
+      refute Samson::Secrets::DbBackend::Secret.exists?(secret.id)
     end
 
     it "updates ids cache" do
@@ -195,7 +195,7 @@ describe Samson::Secrets::Manager do
   describe ".ids" do
     # raw insert to bypass cache
     let(:secret) do
-      Samson::Secrets::Manager::DbBackend::Secret.create!(
+      Samson::Secrets::DbBackend::Secret.create!(
         id: 'production/foo/pod2/hello',
         value: 'MY-SECRET',
         visible: false,
