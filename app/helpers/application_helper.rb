@@ -100,7 +100,7 @@ module ApplicationHelper
     when Stage then
       name = resource.name
       name = (resource.lock.warning? ? warning_icon : lock_icon) + " " + name if resource.lock
-      [name, project_stage_path(resource.project, resource)]
+      [name, [resource.project, resource]]
     when SecretSharingGrant then [resource.key, resource]
     else
       @@link_parts_for_resource ||= Samson::Hooks.fire(:link_parts_for_resource).to_h
@@ -111,7 +111,12 @@ module ApplicationHelper
   end
 
   def link_to_resource(resource)
-    link_to(*link_parts_for_resource(resource))
+    name, path = link_parts_for_resource(resource)
+    if Array(path).any?(&:nil?)
+      name
+    else
+      link_to(name, path)
+    end
   end
 
   def manual_breadcrumb(items)

@@ -359,6 +359,12 @@ describe ApplicationHelper do
         link_to_resource(model)
       end
     end
+
+    it "does not try to build path for deleted resources since that would blow up" do
+      projects(:test).soft_delete!
+      stage = stages(:test_staging)
+      link_to_resource(stage).must_equal "Staging"
+    end
   end
 
   describe "#render_nested_errors" do
