@@ -7,7 +7,7 @@
 
 $(function () {
   var needsHashing = false;
-  var secretValue = $('#search_value');
+  var secretValue = $('#search_value_hashed');
   var secretForm = secretValue.parents('form');
   var secretBase = secretForm.data('secret-base');
 
