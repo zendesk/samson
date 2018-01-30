@@ -117,32 +117,28 @@ describe LocksController do
         assert_response :success
         JSON.parse(response.body).fetch("lock").fetch("id").must_equal Lock.last.id
       end
-    end
 
-    describe '#create with PRODUCTION_STAGE_LOCK_REQUIRES_ADMIN' do
-      with_env 'PRODUCTION_STAGE_LOCK_REQUIRES_ADMIN' => 'true'
-      before { travel_to Time.now }
-      after { travel_back }
+      describe 'with PRODUCTION_STAGE_LOCK_REQUIRES_ADMIN' do
+        with_env 'PRODUCTION_STAGE_LOCK_REQUIRES_ADMIN' => 'true'
 
-      it 'cannot create a stage lock for a production stage' do
-        create_lock prod_stage, delete_in: 3600
+        it 'cannot create a stage lock for a production stage' do
+          create_lock prod_stage
 
-        assert_response :unauthorized
-        stage.reload
-        assert_nil(stage.lock)
-      end
+          assert_response :unauthorized
+        end
 
-      it 'creates a stage lock' do
-        create_lock stage, delete_in: 3600
-        assert_redirected_to '/back'
-        assert flash[:notice]
+        it 'creates a stage lock' do
+          create_lock stage, delete_in: 3600
+          assert_redirected_to '/back'
+          assert flash[:notice]
 
-        stage.reload
+          stage.reload
 
-        lock = stage.lock
-        lock.warning?.must_equal(false)
-        lock.description.must_equal 'DESC'
-        lock.delete_at.must_equal(Time.now + 3600)
+          lock = stage.lock
+          lock.warning?.must_equal(false)
+          lock.description.must_equal 'DESC'
+          lock.delete_at.must_equal(Time.now + 3600)
+        end
       end
     end
 
@@ -178,15 +174,10 @@ describe LocksController do
       end
 
       it 'cannot destroy a stage production lock' do
-        stage.production = true
-        stage.save
+        stage.update_column(:production, true)
         delete :destroy, params: {id: lock.id}
 
         assert_response :unauthorized
-        stage.reload
-        Lock.count.must_equal 1
-        stage.production = false
-        stage.save
       end
     end
   end
@@ -212,62 +203,7 @@ describe LocksController do
       end
     end
 
-    describe '#create with PRODUCTION_STAGE_LOCK_REQUIRES_ADMIN' do
-      with_env 'PRODUCTION_STAGE_LOCK_REQUIRES_ADMIN' => 'true'
-      before { travel_to Time.now }
-      after { travel_back }
-
-      it 'creates a stage lock for a production stage' do
-        stage.production = true
-        stage.save
-        create_lock stage, delete_in: 3600
-
-        assert_redirected_to '/back'
-        assert flash[:notice]
-
-        stage.reload
-
-        lock = stage.lock
-        lock.warning?.must_equal(false)
-        lock.description.must_equal 'DESC'
-        lock.delete_at.must_equal(Time.now + 3600)
-        stage.production = false
-        stage.save
-      end
-
-      it 'creates a global lock' do
-        create_lock
-        assert_redirected_to '/back'
-        assert flash[:notice]
-
-        lock = Lock.global.first
-        lock.description.must_equal 'DESC'
-      end
-
-      it 'creates an environment lock' do
-        create_lock environment
-        assert_redirected_to '/back'
-        assert flash[:notice]
-
-        lock = environment.lock
-        lock.description.must_equal 'DESC'
-      end
-    end
-
     describe '#destroy' do
-      it 'destroys a global lock' do
-        delete :destroy, params: {id: global_lock.id}
-
-        assert_redirected_to '/back'
-        assert flash[:notice]
-
-        Lock.count.must_equal 0
-      end
-    end
-
-    describe '#destroy with PRODUCTION_STAGE_LOCK_REQUIRES_ADMIN' do
-      with_env 'PRODUCTION_STAGE_LOCK_REQUIRES_ADMIN' => 'true'
-
       it 'destroys a global lock' do
         delete :destroy, params: {id: global_lock.id}
 

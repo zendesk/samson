@@ -14,10 +14,8 @@ module CurrentStage
   protected
 
   def require_stage
-    if current_project
-      query = Stage.where(project_id: current_project.id)
-      stage_param = params[:stage_id] || params[:id]
-      @stage = query.find_by_param!(stage_param) if stage_param
-    end
+    return unless current_project
+    return unless stage_param = params[:stage_id] || params[:id]
+    @stage = Stage.where(project_id: current_project.id).find_by_param!(stage_param)
   end
 end
