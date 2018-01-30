@@ -218,6 +218,20 @@ describe BuildsController do
           build.reload
           build.external_url.must_be_nil
         end
+
+        it 'retries when 2 requests come in at the exact same time and cause uniqueness error' do
+          Build.any_instance.expects(:save).returns(true)
+          Build.any_instance.expects(:save).raises(ActiveRecord::RecordNotUnique)
+          create(
+            git_sha: build.git_sha,
+            external_status: 'failed',
+            external_url: "https://blob.com",
+            docker_repo_digest: digest,
+            dockerfile: build.dockerfile,
+            format: :json
+          )
+          assert_response :success
+        end
       end
 
       it 'starts the build' do

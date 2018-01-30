@@ -14,13 +14,8 @@ module SamsonKubernetes
     [OpenSSL::SSL::SSLError, KubeException, Errno::ECONNREFUSED].freeze
   end
 
-  def self.retry_on_connection_errors
-    yield
-  rescue *connection_errors
-    retries ||= 3
-    retries -= 1
-    raise if retries < 0
-    retry
+  def self.retry_on_connection_errors(&block)
+    Samson::Retry.with_retries connection_errors, 3, &block
   end
 end
 
