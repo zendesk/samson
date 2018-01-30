@@ -73,6 +73,17 @@ class SecretsController < ApplicationController
       else
         attributes[:value] = old.fetch(:value)
       end
+    elsif secret_params[:allow_duplicates] != '1'
+      duplicates = Samson::Secrets::Manager.filter_ids_by_value(
+        Samson::Secrets::Manager.lookup_cache.keys - [id],
+        attributes.fetch(:value)
+      )
+
+      if duplicates.any?
+        @duplicate_secret_error = true
+        failure_response "Secret #{duplicates.join(', ')} already use the same value, reuse them as global secrets"
+        return
+      end
     end
 
     attributes[:user_id] = current_user.id
@@ -95,7 +106,11 @@ class SecretsController < ApplicationController
   private
 
   def secret_params
-    @secret_params ||= params.require(:secret).permit(*Samson::Secrets::Manager::ID_PARTS, *UPDATEDABLE_ATTRIBUTES)
+    @secret_params ||= params.require(:secret).permit(
+      *Samson::Secrets::Manager::ID_PARTS,
+      *UPDATEDABLE_ATTRIBUTES,
+      :allow_duplicates
+    )
   end
 
   def id

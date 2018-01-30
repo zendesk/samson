@@ -323,6 +323,43 @@ describe SecretsController do
         secret.reload.id.must_equal 'production/foo/pod2/some_key'
       end
 
+      describe 'duplicate secret key values' do
+        def do_update(extras = {})
+          secret
+          create_secret 'production/foo/pod2/other_key', value: 'do-not-duplicate'
+          put :update, params: { id: secret, secret: attributes.merge(value: 'do-not-duplicate').merge(extras) }
+        end
+
+        it 'shows validation error on duplicate secret' do
+          do_update
+
+          assert_response :success
+          assert flash[:error]
+        end
+
+        it 'allows duplicate secret if allow_duplicates is true' do
+          do_update(allow_duplicates: '1')
+
+          assert_redirected_to secrets_path
+        end
+
+        it 'shows validation error when not checking allow_duplicates' do
+          do_update(allow_duplicates: '0')
+
+          assert_response :success
+          assert flash[:error]
+        end
+
+        it 'allows editing of an already existing duplicate value' do
+          secret
+          create_secret 'production/foo/pod2/other_key', value: secret.value
+
+          put :update, params: { id: secret, secret: { comment: 'hello', visible: '0' } }
+
+          assert_redirected_to secrets_path
+        end
+      end
+
       describe 'showing a not owned project' do
         let(:secret) { create_secret "production/#{other_project.permalink}/foo/xxx" }
 
