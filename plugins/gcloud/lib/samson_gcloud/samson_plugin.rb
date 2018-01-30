@@ -32,6 +32,7 @@ module SamsonGcloud
 end
 
 Samson::Hooks.view :project_form_checkbox, "samson_gcloud/project_form_checkbox"
+Samson::Hooks.view :build_button, "samson_gcloud/build_button"
 
 Samson::Hooks.callback :after_deploy do |deploy, _|
   SamsonGcloud::ImageTagger.tag(deploy) if ENV['GCLOUD_IMAGE_TAGGER'] == 'true'
