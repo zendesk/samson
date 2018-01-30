@@ -24,7 +24,7 @@ class SecretsController < ApplicationController
       end
     end
 
-    if value_hashed = params.dig(:search, :value).presence
+    if value_hashed = params.dig(:search, :value_hashed).presence
       @secrets.select! { |_, _, secret_stub| secret_stub[:value_hashed] == value_hashed }
     end
 
