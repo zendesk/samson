@@ -297,7 +297,7 @@ module Kubernetes
     def create_release
       release = Kubernetes::Release.create_release(
         deploy_id: @job.deploy.id,
-        deploy_groups: deploy_group_configs,
+        grouped_deploy_group_roles: grouped_deploy_group_roles,
         git_sha: @job.commit,
         git_ref: @reference,
         user: @job.user,
@@ -312,10 +312,9 @@ module Kubernetes
       release
     end
 
-    def deploy_group_configs
+    def grouped_deploy_group_roles
       @deploy_group_configs ||= begin
-        # load all role configs to avoid N+1s
-        roles_configs = Kubernetes::DeployGroupRole.where(
+        deploy_group_roles = Kubernetes::DeployGroupRole.where(
           project_id: @job.project_id,
           deploy_group: @job.deploy.stage.deploy_groups.map(&:id)
         )
@@ -323,47 +322,41 @@ module Kubernetes
         # roles that exist in the repo for this sha
         roles_present_in_repo = Kubernetes::Role.configured_for_project(@job.project, @job.commit)
 
-        # build config for every cluster and role we want to deploy to
+        # check that all roles have a matching deploy_group_role
+        # and all roles are configured
         errors = []
-        group_configs = @job.deploy.stage.deploy_groups.map do |group|
-          group_role_configs = roles_configs.select { |dgr| dgr.deploy_group_id == group.id }
+        groups = @job.deploy.stage.deploy_groups.map do |deploy_group|
+          group_roles = deploy_group_roles.select { |dgr| dgr.deploy_group_id == deploy_group.id }
 
-          if missing = (group_role_configs.map(&:kubernetes_role) - roles_present_in_repo).presence
+          # safe some sql queries during release creation
+          group_roles.each do |dgr|
+            dgr.deploy_group = deploy_group
+            found = roles_present_in_repo.detect { |r| r.id == dgr.kubernetes_role_id }
+            dgr.kubernetes_role = found if found
+          end
+
+          if missing = (group_roles.map(&:kubernetes_role) - roles_present_in_repo).presence
             files = missing.map(&:config_file).sort
             raise(
               Samson::Hooks::UserError,
-              "Could not find config files for #{group.name} #{files.join(", ")} at #{@job.commit}"
+              "Could not find config files for #{deploy_group.name} #{files.join(", ")} at #{@job.commit}"
             )
           end
 
-          if extra = (roles_present_in_repo - group_role_configs.map(&:kubernetes_role)).presence
+          if extra = (roles_present_in_repo - group_roles.map(&:kubernetes_role)).presence
             roles = extra.map(&:name).join(', ')
             raise(
               Samson::Hooks::UserError,
-              "Role #{roles} for #{group.name} is not configured, but in repo at #{@job.commit}. " \
+              "Role #{roles} for #{deploy_group.name} is not configured, but in repo at #{@job.commit}. " \
               "Remove it from the repo or configure it via the stage page."
             )
           end
 
-          roles = roles_present_in_repo.map do |role|
-            role_config = group_role_configs.detect { |dgr| dgr.kubernetes_role_id == role.id } || raise
-            # TODO: send in deploy_group_role to avoid translation logic
-            {
-              role: role,
-              replicas: role_config.replicas,
-              requests_cpu: role_config.requests_cpu,
-              requests_memory: role_config.requests_memory,
-              limits_cpu: role_config.limits_cpu,
-              limits_memory: role_config.limits_memory,
-              delete_resource: role_config.delete_resource
-            }
-          end
-
-          {deploy_group: group, roles: roles}
+          group_roles
         end
 
         raise Samson::Hooks::UserError, errors.join("\n") if errors.any?
-        group_configs
+        groups
       end
     end
 
@@ -419,9 +412,9 @@ module Kubernetes
     def verify_kubernetes_templates!
       # - make sure each file exists
       # - make sure each deploy group has consistent labels
-      deploy_group_configs.each do |config|
-        primary_resources = config.fetch(:roles).map do |role_config|
-          role = role_config.fetch(:role)
+      grouped_deploy_group_roles.each do |deploy_group_roles|
+        primary_resources = deploy_group_roles.map do |deploy_group_role|
+          role = deploy_group_role.kubernetes_role
           config = role.role_config_file(@job.commit)
           raise Samson::Hooks::UserError, "Error parsing #{role.config_file}" unless config
           config.primary
@@ -436,14 +429,12 @@ module Kubernetes
     def temp_release_docs
       @temp_release_docs ||= begin
         release = Kubernetes::Release.new(project: @job.project, git_sha: @job.commit, git_ref: 'master')
-        deploy_group_configs.flat_map do |config|
-          config.fetch(:roles).map do |role|
-            Kubernetes::ReleaseDoc.new(
-              kubernetes_release: release,
-              deploy_group: config.fetch(:deploy_group),
-              kubernetes_role: role.fetch(:role)
-            )
-          end
+        grouped_deploy_group_roles.flatten.map do |deploy_group_role|
+          Kubernetes::ReleaseDoc.new(
+            kubernetes_release: release,
+            deploy_group: deploy_group_role.deploy_group,
+            kubernetes_role: deploy_group_role.kubernetes_role
+          )
         end
       end
     end

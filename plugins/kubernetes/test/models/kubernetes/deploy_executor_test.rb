@@ -161,6 +161,12 @@ describe Kubernetes::DeployExecutor do
       out.wont_include "Deploy status after"
     end
 
+    it "does limited amounts of queries" do
+      assert_sql_queries(37) do
+        assert execute
+      end
+    end
+
     describe "invalid configs" do
       before { build.delete } # build needs to be created -> assertion fails
       around { |test| refute_difference('Build.count') { refute_difference('Release.count', &test) } }
