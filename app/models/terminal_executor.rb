@@ -167,7 +167,7 @@ class TerminalExecutor
       'DOCKER_HOST', 'DOCKER_URL', 'DOCKER_REGISTRY' # docker
     ] + ENV['ENV_WHITELIST'].to_s.split(/, ?/)
     env = ENV.to_h.slice(*whitelist)
-    env['DOCKER_REGISTRY'] ||= DockerRegistry.first&.host # backwards compatibility
+    env['DOCKER_REGISTRY'] ||= DockerRegistry.first&.host
     env
   end
 end
