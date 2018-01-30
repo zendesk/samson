@@ -34,15 +34,20 @@ class BuildsController < ApplicationController
   end
 
   def create
-    if registering_external_build? && @build = find_external_build
-      return head :unprocessable_entity if @build.docker_repo_digest
-      @build.attributes = edit_build_params(validate: false)
-    else
-      @build = scope.new(new_build_params.merge(creator: current_user))
-    end
+    new = false
+    saved = false
 
-    new = @build.new_record?
-    saved = @build.save
+    Samson::Retry.retry_when_not_unique do
+      if registering_external_build? && @build = find_external_build
+        return head :unprocessable_entity if @build.docker_repo_digest
+        @build.attributes = edit_build_params(validate: false)
+      else
+        @build = scope.new(new_build_params.merge(creator: current_user))
+      end
+
+      new = @build.new_record?
+      saved = @build.save
+    end
 
     start_docker_build if saved && !registering_external_build?
     respond_to_save saved, (new ? :created : :ok), :new
