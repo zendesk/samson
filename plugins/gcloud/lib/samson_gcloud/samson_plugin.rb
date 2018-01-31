@@ -8,14 +8,6 @@ module SamsonGcloud
   end
 
   class << self
-    def container_in_beta
-      @@container_in_beta ||= begin
-        beta = Samson::CommandExecutor.execute("gcloud", "--version", timeout: 10).
-          last.match?(/Google Cloud SDK 14\d\./)
-        beta ? ["beta"] : []
-      end
-    end
-
     def cli_options
       Shellwords.split(ENV.fetch('GCLOUD_OPTIONS', '')) +
         ["--account", account, "--project", project]

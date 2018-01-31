@@ -20,10 +20,7 @@ describe SamsonGcloud::ImageBuilder do
 
     around { |test| Dir.mktmpdir { |dir| Dir.chdir(dir) { test.call } } }
 
-    before do
-      Dir.mkdir 'some-dir'
-      SamsonGcloud.stubs(container_in_beta: [])
-    end
+    before { Dir.mkdir 'some-dir' }
 
     it "builds using a custom cloudbuild.yml" do
       build_image

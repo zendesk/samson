@@ -22,7 +22,6 @@ describe SamsonGcloud::ImageTagger do
         project_id: deploy.project_id,
         docker_repo_digest: 'gcr.io/sdfsfsdf@some-sha'
       )
-      SamsonGcloud.stubs(container_in_beta: [])
     end
 
     it "tags" do
@@ -56,14 +55,6 @@ describe SamsonGcloud::ImageTagger do
       Samson::CommandExecutor.expects(:execute).returns([false, "NOPE"])
       tag
       deploy.job.output.must_include "NOPE"
-    end
-
-    it "tags with beta when containers are in beta" do
-      SamsonGcloud.stubs(container_in_beta: ['beta'])
-      Samson::CommandExecutor.expects(:execute).with(
-        'gcloud', 'beta', 'container', 'images', 'add-tag', anything, anything, '--quiet', *auth_options, anything
-      ).returns([true, "OUT"])
-      tag
     end
 
     it "includes options from ENV var" do
