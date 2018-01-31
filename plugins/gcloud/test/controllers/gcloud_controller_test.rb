@@ -15,7 +15,12 @@ describe GcloudController do
 
       let(:build) { builds(:docker_build) }
       let(:gcr_id) { "ee5316fa-5569-aaaa-bbbb-09e0e5b1319a" }
-      let(:result) { {results: {images: [{name: "nope", digest: "bar"}, {name: image_name, digest: sha}]}} }
+      let(:result) do
+        {
+          results: {images: [{name: "nope", digest: "bar"}, {name: image_name, digest: sha}]},
+          status: "SUCCESS"
+        }
+      end
       let(:repo_digest) { "#{image_name}@#{sha}" }
       let(:image_name) { "gcr.io/foo/#{build.image_name}" }
       let(:sha) { "sha256:#{"a" * 64}" }
@@ -42,8 +47,24 @@ describe GcloudController do
       it "fails when image is not found" do
         result[:results][:images].last[:name] = "gcr.io/other"
         Samson::CommandExecutor.expects(:execute).returns([true, result.to_json])
+
         do_sync
-        assert flash[:alert]
+
+        assert flash[:notice]
+        build.reload.docker_repo_digest.wont_equal repo_digest
+      end
+
+      it "can store failures" do
+        result[:status] = "QUEUED"
+        result.delete(:results)
+        Samson::CommandExecutor.expects(:execute).returns([true, result.to_json])
+
+        do_sync
+
+        assert flash[:notice]
+        build.reload
+        build.docker_repo_digest.wont_equal repo_digest
+        build.external_status.must_equal "pending"
       end
     end
   end
