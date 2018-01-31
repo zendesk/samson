@@ -18,7 +18,7 @@
         No diff found!
       <% else %>
         <% @diff.each do |project_permalink, sections| %>
-          <h2>Project <%= link_to project_permalink, project_path(project_permalink) %></h2>
+          <h2>Project <%= link_to_if project_permalink != "global", project_permalink, project_path(project_permalink) %></h2>
 
           <% sections.each do |section, diff| %>
             <h3><%= section %></h3>
