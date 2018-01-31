@@ -39,7 +39,7 @@ module SamsonGcloud
         prevent_upload_of_ignored_files(dir)
 
         command = [
-          "gcloud", *SamsonGcloud.container_in_beta, "container", "builds", "submit", ".",
+          "gcloud", "container", "builds", "submit", ".",
           "--timeout", executor.timeout, "--config", config, *SamsonGcloud.cli_options
         ]
 

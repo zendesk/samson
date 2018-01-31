@@ -21,7 +21,6 @@ describe GcloudController do
       let(:sha) { "sha256:#{"a" * 64}" }
 
       before do
-        SamsonGcloud.expects(:container_in_beta)
         build.update_column(:external_url, "https://console.cloud.google.com/gcr/builds/#{gcr_id}?project=foobar")
       end
 

@@ -15,8 +15,7 @@ class GcloudController < ApplicationController
 
   def update_build(build)
     command = [
-      "gcloud", *SamsonGcloud.container_in_beta, "container", "builds", "describe", build.gcr_id, "--format", "json",
-      *SamsonGcloud.cli_options
+      "gcloud", "container", "builds", "describe", build.gcr_id, "--format", "json", *SamsonGcloud.cli_options
     ]
     success, output = Samson::CommandExecutor.execute(*command, timeout: 10, whitelist_env: ["PATH"])
     return "Failed to execute gcloud command: #{output}" unless success

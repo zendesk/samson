@@ -21,24 +21,6 @@ describe SamsonGcloud do
     end
   end
 
-  describe ".container_in_beta" do
-    def expect_version_check(version)
-      Samson::CommandExecutor.expects(:execute).with("gcloud", "--version", anything).returns([true, version])
-    end
-
-    before { SamsonGcloud.class_variable_set(:@@container_in_beta, nil) }
-
-    it "is nil when not in beta" do
-      expect_version_check("Google Cloud SDK 151")
-      SamsonGcloud.container_in_beta.must_equal []
-    end
-
-    it "is beta when in beta" do
-      expect_version_check("Google Cloud SDK 145.12")
-      SamsonGcloud.container_in_beta.must_equal ["beta"]
-    end
-  end
-
   describe ".cli_options" do
     it "includes options from ENV var" do
       with_env(GCLOUD_ACCOUNT: 'acc', GCLOUD_PROJECT: 'proj', GCLOUD_OPTIONS: '--foo "bar baz"') do
