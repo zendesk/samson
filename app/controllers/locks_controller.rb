@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 class LocksController < ApplicationController
   include CurrentProject
+  include CurrentStage
 
-  before_action :require_project, if: :for_stage_lock?
+  before_action :require_stage, if: :for_stage_lock?
   before_action :authorize_resource!
 
   def index
@@ -56,13 +57,13 @@ class LocksController < ApplicationController
     @lock ||= Lock.find(params[:id])
   end
 
-  # Overrides CurrentProject#require_project
-  def require_project
+  # Overrides CurrentStage#require_stage
+  def require_stage
     case action_name
     when 'create' then
-      @project = Stage.find(params[:lock][:resource_id]).project
+      @stage = Stage.find(params[:lock][:resource_id])
     when 'destroy' then
-      @project = lock.resource.project
+      @stage = lock.resource
     else
       raise 'Unsupported action'
     end

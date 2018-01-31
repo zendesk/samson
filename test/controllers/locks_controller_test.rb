@@ -12,6 +12,7 @@ describe LocksController do
   end
 
   let(:stage) { stages(:test_staging) }
+  let(:prod_stage) { stages(:test_production) }
   let(:environment) { environments(:production) }
   let(:lock) { stage.create_lock! user: users(:deployer) }
   let(:global_lock) { Lock.create! user: users(:deployer) }
@@ -27,11 +28,11 @@ describe LocksController do
     end
   end
 
-  describe "#require_project" do
+  describe "#require_stage" do
     it "raises on unsupported action" do
       @controller.stubs(action_name: 'show')
       assert_raises RuntimeError do
-        @controller.send(:require_project)
+        @controller.send(:require_stage)
       end
     end
   end
@@ -116,6 +117,29 @@ describe LocksController do
         assert_response :success
         JSON.parse(response.body).fetch("lock").fetch("id").must_equal Lock.last.id
       end
+
+      describe 'with PRODUCTION_STAGE_LOCK_REQUIRES_ADMIN' do
+        with_env 'PRODUCTION_STAGE_LOCK_REQUIRES_ADMIN' => 'true'
+
+        it 'cannot create a stage lock for a production stage' do
+          create_lock prod_stage
+
+          assert_response :unauthorized
+        end
+
+        it 'creates a stage lock' do
+          create_lock stage, delete_in: 3600
+          assert_redirected_to '/back'
+          assert flash[:notice]
+
+          stage.reload
+
+          lock = stage.lock
+          lock.warning?.must_equal(false)
+          lock.description.must_equal 'DESC'
+          lock.delete_at.must_equal(Time.now + 3600)
+        end
+      end
     end
 
     describe '#destroy' do
@@ -134,6 +158,26 @@ describe LocksController do
         delete :destroy, params: {id: lock.id}, format: :json
         assert_response :success
         Lock.count.must_equal 0
+      end
+    end
+
+    describe '#destroy with PRODUCTION_STAGE_LOCK_REQUIRES_ADMIN' do
+      with_env 'PRODUCTION_STAGE_LOCK_REQUIRES_ADMIN' => 'true'
+
+      it 'no change in default behavior for non-production stage lock' do
+        delete :destroy, params: {id: lock.id}
+
+        assert_redirected_to '/back'
+        assert flash[:notice]
+
+        Lock.count.must_equal 0
+      end
+
+      it 'cannot destroy a stage production lock' do
+        stage.update_column(:production, true)
+        delete :destroy, params: {id: lock.id}
+
+        assert_response :unauthorized
       end
     end
   end
