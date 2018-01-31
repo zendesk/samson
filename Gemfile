@@ -45,7 +45,6 @@ gem 'concurrent-ruby'
 gem 'vault'
 gem 'docker-api'
 gem 'newrelic_rpm'
-gem 'ddtrace' # datadog APM
 gem 'lograge'
 gem 'logstash-event'
 gem 'diffy'
