@@ -65,6 +65,8 @@
 
     <dt>Docker Digest</dt>
     <dd><%= @build.docker_repo_digest %></dd>
+
+    <%= Samson::Hooks.render_views(:build_show, self) %>
   </dl>
 
   <hr/>
