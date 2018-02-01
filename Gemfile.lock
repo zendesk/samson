@@ -436,7 +436,7 @@ GEM
     single_cov (0.5.9)
     slop (3.6.0)
     socksify (1.7.1)
-    soft_deletion (1.1.0)
+    soft_deletion (1.3.0)
       activerecord (>= 3.2.0, < 5.2.0)
     sprockets (3.7.1)
       concurrent-ruby (~> 1.0)
