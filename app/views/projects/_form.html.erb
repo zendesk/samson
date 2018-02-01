@@ -5,7 +5,7 @@
 
   <%= render 'shared/errors', object: @project %>
 
-  <fieldset>
+  <fieldset <%= can?(:write, :projects, @project) ? '' : 'disabled' %>>
     <%= form.input :name, required: true %>
     <%= form.input :description, as: :text_area, help: 'How would you explain the project to someone new?' %>
     <%= form.input :owner, help: 'An email or group to contact with questions.' %>

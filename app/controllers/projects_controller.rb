@@ -6,7 +6,7 @@ class ProjectsController < ApplicationController
 
   skip_before_action :require_project, only: [:index, :new, :create]
 
-  before_action :authorize_resource!, except: [:deploy_group_versions]
+  before_action :authorize_resource!, except: [:deploy_group_versions, :edit]
 
   def index
     respond_to do |format|
