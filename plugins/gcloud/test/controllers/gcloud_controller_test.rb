@@ -38,6 +38,13 @@ describe GcloudController do
         build.external_status.must_equal "succeeded"
       end
 
+      it "can sync images with a tag" do
+        result[:results][:images][1][:name] += ":foo"
+        Samson::CommandExecutor.expects(:execute).returns([true, result.to_json])
+        do_sync
+        build.reload.docker_repo_digest.must_equal repo_digest
+      end
+
       it "fails when gcloud cli fails" do
         Samson::CommandExecutor.expects(:execute).returns([false, result.to_json])
         do_sync

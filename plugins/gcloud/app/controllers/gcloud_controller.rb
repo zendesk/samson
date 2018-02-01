@@ -33,7 +33,7 @@ class GcloudController < ApplicationController
 
     if build.external_status == "succeeded"
       response.dig_fetch("results", "images").each do |image|
-        name = image.fetch("name")
+        name = image.fetch("name").split(":", 2).first
         if name.end_with?("/#{build.image_name}")
           digest = image.fetch("digest")
           build.docker_repo_digest = "#{name}@#{digest}"
