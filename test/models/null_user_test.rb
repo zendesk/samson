@@ -11,7 +11,7 @@ describe NullUser do
 
     it "shows the name of a deleted user" do
       user = users(:viewer)
-      user.soft_delete!
+      user.soft_delete!(validate: false)
       NullUser.new(user.id).name.must_equal 'Viewer'
     end
 
@@ -26,7 +26,7 @@ describe NullUser do
 
     it "caches deleted user" do
       user = users(:viewer)
-      user.soft_delete!
+      user.soft_delete!(validate: false)
       null = NullUser.new(user.id)
 
       User.expects(:find_by_sql).returns [user]

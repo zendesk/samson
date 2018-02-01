@@ -33,7 +33,7 @@ describe Webhook do
       webhook = Webhook.create!(webhook_attributes)
 
       assert_difference 'Webhook.count', -1 do
-        webhook.soft_delete!
+        webhook.soft_delete!(validate: false)
       end
 
       assert_difference 'Webhook.count', +1 do
@@ -47,13 +47,13 @@ describe Webhook do
 
     it 'deletes the webhook' do
       assert_difference 'Webhook.count', -1 do
-        webhook.soft_delete!
+        webhook.soft_delete!(validate: false)
       end
     end
 
     it 'soft deletes the webhook' do
       assert_difference  'Webhook.with_deleted { Webhook.count} ', 0 do
-        webhook.soft_delete!
+        webhook.soft_delete!(validate: false)
       end
     end
 
@@ -61,12 +61,12 @@ describe Webhook do
     # lets ensure that same validation doesn't stop us from having multiple of the same webhook soft-deleted.
     it 'can soft delete duplicate webhooks' do
       assert_difference 'Webhook.count', -1 do
-        webhook.soft_delete!
+        webhook.soft_delete!(validate: false)
       end
 
       webhook2 = Webhook.create!(webhook_attributes)
       assert_difference 'Webhook.count', -1 do
-        webhook2.soft_delete!
+        webhook2.soft_delete!(validate: false)
       end
     end
   end

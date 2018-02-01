@@ -18,7 +18,7 @@ describe Deploy do
     end
 
     it "shows soft delete user" do
-      deploy.user.soft_delete!
+      deploy.user.soft_delete!(validate: false)
       deploy.reload
       deploy.summary.must_equal "Deployer deployed baz to Staging"
     end
@@ -30,7 +30,7 @@ describe Deploy do
     end
 
     it "shows soft delete stage when INCLUDE_DELETED" do
-      deploy.stage.soft_delete!
+      deploy.stage.soft_delete!(validate: false)
       deploy.reload
       Stage.with_deleted { deploy.summary.must_equal "Deployer deployed baz to Staging" }
     end
@@ -71,7 +71,7 @@ describe Deploy do
         end
 
         it "shows soft delete buddy" do
-          deploy.buddy.soft_delete!
+          deploy.buddy.soft_delete!(validate: false)
           deploy.reload
           deploy.summary.must_equal "Deployer (with Admin) deployed baz to Staging"
         end
@@ -553,9 +553,9 @@ describe Deploy do
       before do
         # replicate worse case scenario where any referenced associations are soft deleted
         prod_deploy.update_attributes(buddy_id: other_user.id)
-        prod_deploy.job.user.soft_delete!
-        prod_deploy.buddy.soft_delete!
-        prod_deploy.stage.deploy_groups.first.environment.soft_delete!
+        prod_deploy.job.user.soft_delete!(validate: false)
+        prod_deploy.buddy.soft_delete!(validate: false)
+        prod_deploy.stage.deploy_groups.first.environment.soft_delete!(validate: false)
         # next 3 are false soft_deletions: there are dependent destroys that would result in
         # deploy_groups_stages to be cleared which would make this test condition to likely
         # never occur in production but could exist

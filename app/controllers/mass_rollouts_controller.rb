@@ -89,7 +89,7 @@ class MassRolloutsController < ApplicationController
     end
 
     stage.project.stages.reload # need to reload to make verify_not_part_of_pipeline have current data and not fail
-    stage.soft_delete!
+    stage.soft_delete!(validate: false)
 
     nil
   end
@@ -100,7 +100,7 @@ class MassRolloutsController < ApplicationController
     return "has more than one deploy group" if stage.deploy_groups.count > 1
     return "commands in template stage differ" if stage.script != stage.template_stage.script
 
-    stage.soft_delete!
+    stage.soft_delete!(validate: false)
 
     nil
   end

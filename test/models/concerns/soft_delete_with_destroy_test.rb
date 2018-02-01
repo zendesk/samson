@@ -10,7 +10,7 @@ describe SoftDeleteWithDestroy do
       project = projects(:test)
 
       assert_difference 'StageCommand.count', -2 do
-        project.soft_delete!
+        project.soft_delete!(validate: false)
       end
     end
   end

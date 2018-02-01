@@ -50,7 +50,7 @@ class UsersController < ApplicationController
   end
 
   def destroy
-    user.soft_delete!
+    user.soft_delete!(validate: false)
 
     respond_to do |format|
       format.html { redirect_to users_path }

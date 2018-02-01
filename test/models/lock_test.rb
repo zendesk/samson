@@ -91,7 +91,7 @@ describe Lock do
       end
 
       it "does not find deleted" do
-        lock.soft_delete!
+        lock.soft_delete!(validate: false)
         Lock.global.must_be_empty
       end
     end
@@ -309,7 +309,7 @@ describe Lock do
     it "expires when lock is soft deleted" do
       lock # trigger create
       Lock.send(:all_cached).must_equal [lock]
-      lock.soft_delete!
+      lock.soft_delete!(validate: false)
       assert_sql_queries 1 do
         Lock.send(:all_cached).must_equal []
       end

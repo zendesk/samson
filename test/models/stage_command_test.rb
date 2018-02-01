@@ -9,7 +9,7 @@ describe StageCommand do
   describe 'validations' do
     it 'cleans up stage commands when deleting a stage' do
       assert_difference 'StageCommand.count', -2 do
-        projects(:test).soft_delete!
+        projects(:test).soft_delete!(validate: false)
       end
     end
   end

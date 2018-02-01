@@ -62,7 +62,7 @@ class DeployGroupsController < ApplicationController
 
   def destroy
     if deploy_group.deploy_groups_stages.empty?
-      deploy_group.soft_delete!
+      deploy_group.soft_delete!(validate: false)
       flash[:notice] = "Successfully deleted deploy group: #{deploy_group.name}"
       redirect_to action: :index
     else

@@ -158,7 +158,7 @@ describe Project do
       project.expects(:clone_repository).once
       project.expects(:clean_repository).once
       project.save!
-      project.soft_delete!
+      project.soft_delete!(validate: false)
     end
 
     it 'removes the old repository and sets up the new repository if the repository_url is updated' do
@@ -309,7 +309,7 @@ describe Project do
     end
 
     it "ignores deleted stages" do
-      deploys(:succeeded_test).stage.soft_delete!
+      deploys(:succeeded_test).stage.soft_delete!(validate: false)
       project.last_deploy_by_stage.must_equal([deploys(:succeeded_production_test)])
     end
 
@@ -387,11 +387,11 @@ describe Project do
 
     it "clears the repository" do
       project.repository.expects(:clean!)
-      assert project.soft_delete!
+      assert project.soft_delete!(validate: false)
     end
 
     it "creates an audit" do
-      assert project.soft_delete!
+      assert project.soft_delete!(validate: false)
       project.audits.last.audited_changes.keys.must_equal ["permalink", "deleted_at"]
     end
   end
@@ -485,7 +485,7 @@ describe Project do
     it "deletes them on deletion and audits as user change" do
       assert_difference 'Audited::Audit.where(auditable_type: "User").count', +2 do
         assert_difference 'UserProjectRole.count', -2 do
-          project.soft_delete!
+          project.soft_delete!(validate: false)
         end
       end
     end

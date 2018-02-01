@@ -250,7 +250,7 @@ describe Job do
     end
 
     it "returns deleted user when user was soft deleted" do
-      job.user.soft_delete!
+      job.user.soft_delete!(validate: false)
       job.reload.user.must_equal user
     end
 

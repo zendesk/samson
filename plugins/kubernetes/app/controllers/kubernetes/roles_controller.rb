@@ -58,7 +58,7 @@ class Kubernetes::RolesController < ApplicationController
   end
 
   def destroy
-    @role.soft_delete!
+    @role.soft_delete!(validate: false)
     redirect_to action: :index
   end
 

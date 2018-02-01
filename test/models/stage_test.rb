@@ -83,7 +83,7 @@ describe Stage do
     end
 
     it 'succeeds even if a stages points to a deleted stage' do
-      stage3.soft_delete!
+      stage3.soft_delete!(validate: false)
       stage1.update! next_stage_ids: [stage3.id]
 
       Stage.reset_order [stage2.id, stage1.id]
@@ -393,7 +393,7 @@ describe Stage do
     it "soft deletes all it's StageCommand" do
       Stage.with_deleted do
         assert_difference "StageCommand.count", -1 do
-          stage.soft_delete!
+          stage.soft_delete!(validate: false)
         end
 
         assert_difference "StageCommand.count", +1 do
@@ -405,7 +405,7 @@ describe Stage do
     it "removes the stage from the pipeline of other stages" do
       other_stage = Stage.create!(project: stage.project, name: 'stage1', next_stage_ids: [stage.id])
       assert other_stage.next_stage_ids.include?(stage.id)
-      stage.soft_delete!
+      stage.soft_delete!(validate: false)
       refute other_stage.reload.next_stage_ids.include?(stage.id)
     end
   end

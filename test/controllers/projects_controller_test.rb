@@ -91,7 +91,7 @@ describe ProjectsController do
         end
 
         it "does not find soft deleted" do
-          project.soft_delete!
+          project.soft_delete!(validate: false)
           assert_raises ActiveRecord::RecordNotFound do
             get :show, params: {id: project.to_param}
           end
@@ -155,7 +155,7 @@ describe ProjectsController do
       end
 
       it "does not find soft deleted" do
-        project.soft_delete!
+        project.soft_delete!(validate: false)
         assert_raises ActiveRecord::RecordNotFound do
           get :edit, params: {id: project.to_param}
         end
@@ -179,7 +179,7 @@ describe ProjectsController do
       end
 
       it "does not find soft deleted" do
-        project.soft_delete!
+        project.soft_delete!(validate: false)
         assert_raises ActiveRecord::RecordNotFound do
           put :update, params: params
         end
