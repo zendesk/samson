@@ -69,7 +69,9 @@ class RestartSignalHandler
       # dup-ing to avoid racing with other threads
       executing = JobQueue.executing.dup
       locks = MultiLock.locks.dup
-      break if executing.empty? && locks.empty?
+      running_task_count = Samson::Periodical.running_task_count
+
+      break if executing.empty? && locks.empty? && running_task_count == 0
 
       info = {
         jobs: executing.map do |job_exec|
@@ -80,7 +82,8 @@ class RestartSignalHandler
             descriptor: job_exec.descriptor
           }
         end,
-        locks: locks
+        locks: locks,
+        periodical: running_task_count
       }
 
       output 'waiting for jobs to complete', info
