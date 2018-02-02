@@ -49,6 +49,17 @@ describe Kubernetes::DeployGroupRole do
       deploy_group_role.limits_memory = 0
       refute_valid deploy_group_role
     end
+
+    it "is invalid if a duplicate of it already exists" do
+      dgr = deploy_group_role
+      new_dgr = Kubernetes::DeployGroupRole.new(
+        project_id: dgr.project_id,
+        deploy_group_id: dgr.deploy_group_id,
+        kubernetes_role_id: dgr.kubernetes_role_id
+      )
+
+      refute_valid new_dgr
+    end
   end
 
   describe ".matrix" do

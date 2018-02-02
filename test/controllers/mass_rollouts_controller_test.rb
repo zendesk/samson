@@ -174,6 +174,35 @@ describe MassRolloutsController do
         stage = deploy_group.stages.last
         template_stage.next_stage_ids.must_equal([stage.id])
       end
+
+      it 'creates deploy group roles for new kubernetes stages' do
+        Kubernetes::ClusterDeployGroup.any_instance.stubs(:validate_namespace_exists)
+        Kubernetes::Role.stubs(:seed!)
+
+        ([deploy_group] + template_stage.deploy_groups).each do |dg|
+          Kubernetes::ClusterDeployGroup.create!(
+            deploy_group: dg,
+            namespace: 'foo',
+            cluster: kubernetes_clusters(:test_cluster)
+          )
+        end
+
+        Kubernetes::DeployGroupRole.where(deploy_group: template_stage.deploy_groups.first).destroy_all
+
+        template_stage.update_column(:kubernetes, true)
+        template_dgr = kubernetes_deploy_group_roles(:test_pod1_app_server)
+        template_dgr.update_attributes!(deploy_group_id: template_stage.deploy_groups.first.id)
+
+        assert_difference 'Stage.count', 1 do
+          post :create, params: { deploy_group_id: deploy_group }
+        end
+
+        stage = Stage.last
+        stage.kubernetes.must_equal true
+        copied_dgr = Kubernetes::DeployGroupRole.where(project: stage.project, deploy_group: deploy_group).first
+        ignore = ["id", "created_at", "updated_at", "deploy_group_id"]
+        copied_dgr.attributes.except(*ignore).must_equal template_dgr.attributes.except(*ignore)
+      end
     end
 
     describe "#merge" do

@@ -127,10 +127,13 @@ class MassRolloutsController < ApplicationController
   end
 
   def create_stage_with_group(template_stage)
-    stage = Stage.build_clone(template_stage)
-    stage.deploy_groups << deploy_group
-    stage.name = deploy_group.name
-    stage.is_template = false
+    stage = Stage.build_clone(
+      template_stage,
+      deploy_groups: [deploy_group],
+      name: deploy_group.name,
+      is_template: false
+    )
+
     stage.save!
 
     if template_stage.respond_to?(:next_stage_ids) # pipeline plugin was installed
