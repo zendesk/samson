@@ -189,7 +189,7 @@ describe Kubernetes::DeployExecutor do
         e = assert_raises Samson::Hooks::UserError do
           refute execute
         end
-        e.message.must_equal "metadata.labels.role must set and unique"
+        e.message.must_equal "metadata.labels.role must be set and unique"
       end
 
       it "fails before building when secrets are not configured in the backend" do

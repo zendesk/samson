@@ -44,7 +44,7 @@ module Kubernetes
       errors = []
 
       roles = elements.map { |r| r.dig(:metadata, :labels, :role) }.compact
-      errors << "metadata.labels.role must set and unique" if roles.uniq.size != elements.size
+      errors << "metadata.labels.role must be set and unique" if roles.uniq.size != elements.size
 
       projects = elements.map { |r| r.dig(:metadata, :labels, :project) }.uniq
       errors << "metadata.labels.project must be consistent" if projects.size != 1
