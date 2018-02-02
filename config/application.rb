@@ -32,6 +32,7 @@ end
 ###
 
 require_relative "../lib/samson/env_check"
+require_relative "../lib/samson/initializer_logging"
 
 module Samson
   class Application < Rails::Application
