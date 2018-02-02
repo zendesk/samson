@@ -58,8 +58,10 @@ module Kubernetes
     end
 
     def schedulable_nodes
-      client.get_nodes.reject { |n| n.dig(:spec, :unschedulable) }
+      nodes = JSON.parse(client.get_nodes(as: :raw), symbolize_names: true).fetch(:items)
+      nodes.reject { |n| n.dig(:spec, :unschedulable) }
     rescue
+      Rails.logger.error("Error loading nodes from cluster #{id}: #{$!}")
       []
     end
 
@@ -83,7 +85,8 @@ module Kubernetes
         endpoint,
         type,
         ssl_options: context.ssl_options,
-        auth_options: context.auth_options
+        auth_options: context.auth_options,
+        timeouts: {open: 2, read: 10}
       )
     end
 

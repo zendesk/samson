@@ -22,6 +22,11 @@ class Kubernetes::ClustersController < ApplicationController
 
   def index
     @clusters = ::Kubernetes::Cluster.all.sort_by { |c| Samson::NaturalOrder.convert(c.name) }
+    if params[:capacity]
+      @cluster_nodes = Samson::Parallelizer.map(@clusters) do |cluster|
+        [cluster.id, cluster.schedulable_nodes]
+      end.to_h
+    end
   end
 
   def show
