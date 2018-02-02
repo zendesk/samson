@@ -9,7 +9,11 @@ if !Rails.env.test? && !ENV['PRECOMPILE'] && ENV['DOCKER_FEATURE']
     Docker.url = url
   end
 
-  Docker.options = { read_timeout: Integer(ENV['DOCKER_READ_TIMEOUT'] || '10'), connect_timeout: 2 }
+  Docker.options = {
+    read_timeout: Integer(ENV['DOCKER_READ_TIMEOUT'] || '10'),
+    connect_timeout: 2,
+    nonblock: true
+  }
 
   begin
     Docker.validate_version! # Confirm the Docker daemon is a recent enough version
@@ -21,12 +25,12 @@ if !Rails.env.test? && !ENV['PRECOMPILE'] && ENV['DOCKER_FEATURE']
   # ensure that --cache-from is supported (v13+)
   min_version = 13
   begin
-    Timeout.timeout(1) do
-      local = Integer(`docker -v`[/Docker version (\d+)/, 1])
-      server = Integer(Docker.version.fetch("Version")[/\d+/, 0])
-      if local < min_version || server < min_version
-        raise Docker::Error::VersionError, "Expected docker version to be >= #{min_version}"
-      end
+    local = Timeout.timeout(1) do
+      Integer(`docker -v`[/Docker version (\d+)/, 1])
+    end
+    server = Integer(Docker.version.fetch("Version")[/\d+/, 0])
+    if local < min_version || server < min_version
+      raise Docker::Error::VersionError, "Expected docker version to be >= #{min_version}"
     end
   rescue
     warn "Unable to verify local docker!"
