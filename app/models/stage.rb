@@ -51,7 +51,7 @@ class Stage < ActiveRecord::Base
   end
 
   def self.build_clone(old_stage, attributes = {})
-    new(old_stage.attributes.except("id").merge(attributes)).tap do |new_stage|
+    new(old_stage.attributes.except("id", "next_stage_ids")).tap do |new_stage|
       Samson::Hooks.fire(:stage_clone, old_stage, new_stage)
       new_stage.command_ids = old_stage.command_ids
       new_stage.template_stage = old_stage

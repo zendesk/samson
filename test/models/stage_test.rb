@@ -280,6 +280,7 @@ describe Stage do
     before do
       subject.notify_email_address = "test@test.ttt"
       subject.flowdock_flows = [FlowdockFlow.new(name: "test", token: "abcxyz", stage_id: subject.id)]
+      subject.next_stage_ids = [1,2]
       subject.save
 
       @clone = Stage.build_clone(subject)
@@ -289,6 +290,10 @@ describe Stage do
       @clone.attributes.except("id").except("template_stage_id").
           must_equal subject.attributes.except("id").except("template_stage_id")
       @clone.id.wont_equal subject.id
+    end
+
+    it "doesn't clone the deploy pipeline" do
+      @clone.next_stage_ids.wont_equal subject.next_stage_ids
     end
   end
 
