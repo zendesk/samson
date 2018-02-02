@@ -361,7 +361,7 @@ describe Kubernetes::RoleVerifier do
       e = assert_raises Samson::Hooks::UserError do
         Kubernetes::RoleVerifier.verify_group([role.first, role.first])
       end
-      e.message.must_equal "metadata.labels.role must set and unique"
+      e.message.must_equal "metadata.labels.role must be set and unique"
     end
 
     it "is invalid with different projects" do
