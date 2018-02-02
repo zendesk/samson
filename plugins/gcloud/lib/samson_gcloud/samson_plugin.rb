@@ -50,6 +50,10 @@ Samson::Hooks.callback :after_deploy do |deploy, _|
   SamsonGcloud::ImageTagger.tag(deploy) if ENV['GCLOUD_IMAGE_TAGGER'] == 'true'
 end
 
+Samson::Hooks.callback(:docker_build_style) do
+  "build locally with gcloud"
+end
+
 Samson::Hooks.callback :project_permitted_params do
   [:build_with_gcb, :show_gcr_vulnerabilities]
 end
