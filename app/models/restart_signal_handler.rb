@@ -50,7 +50,8 @@ class RestartSignalHandler
     output 'preparing restart'
 
     JobQueue.enabled = false # Disable new job execution
-    wait_for_active_jobs_to_finish
+    Samson::Periodical.enabled = false
+    wait_for_active_jobs_to_stop
 
     output "Passing #{PASSED_SIGNAL} on."
     Process.kill(PASSED_SIGNAL, Process.pid) # shut down underlying server
@@ -64,12 +65,14 @@ class RestartSignalHandler
     IO.select([@read])
   end
 
-  def wait_for_active_jobs_to_finish
+  def wait_for_active_jobs_to_stop
     loop do
       # dup-ing to avoid racing with other threads
       executing = JobQueue.executing.dup
       locks = MultiLock.locks.dup
-      break if executing.empty? && locks.empty?
+      running_task_count = Samson::Periodical.running_task_count
+
+      break if executing.empty? && locks.empty? && running_task_count == 0
 
       info = {
         jobs: executing.map do |job_exec|
@@ -80,7 +83,8 @@ class RestartSignalHandler
             descriptor: job_exec.descriptor
           }
         end,
-        locks: locks
+        locks: locks,
+        periodical: running_task_count
       }
 
       output 'waiting for jobs to complete', info
