@@ -18,6 +18,15 @@ describe Samson::Periodical do
 
   around do |test|
     begin
+      Samson::Periodical.enabled = true
+      test.call
+    ensure
+      Samson::Periodical.enabled = false
+    end
+  end
+
+  around do |test|
+    begin
       old_registered = Samson::Periodical.instance_variable_get(:@registered).deep_dup
       Samson::Periodical.instance_variable_set(:@env_settings, nil)
       test.call
@@ -90,6 +99,13 @@ describe Samson::Periodical do
     end
 
     it "does not run inactive tasks" do
+      Samson::Periodical.register(:bar, 'bar') {}
+      Samson::Periodical.run.must_equal []
+    end
+
+    it 'does not run tasks when disabled' do
+      Samson::Periodical.enabled = false
+
       Samson::Periodical.register(:bar, 'bar') {}
       Samson::Periodical.run.must_equal []
     end

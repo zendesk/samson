@@ -34,5 +34,8 @@ Samson::Periodical.register :periodical_deploy, "Deploy periodical stages", cons
 end
 
 if ENV['SERVER_MODE']
-  Rails.application.config.after_initialize { Samson::Periodical.run }
+  Rails.application.config.after_initialize do
+    Samson::Periodical.enabled = true
+    Samson::Periodical.run
+  end
 end

@@ -28,6 +28,8 @@ module Samson
     end
 
     class << self
+      attr_accessor :enabled
+
       def register(name, description, options = {}, &block)
         registered[name] = TASK_DEFAULTS.
           merge(env_settings(name)).
@@ -48,7 +50,7 @@ module Samson
             Concurrent::TimerTask.new(config) do
               track_running_count do
                 ActiveRecord::Base.connection_pool.with_connection do
-                  execute_block(config)
+                  execute_block(config) if enabled
                 end
               end
             end.with_observer(ExceptionReporter.new(name)).execute

@@ -59,7 +59,7 @@ describe RestartSignalHandler do
     end
 
     it "notifies airbrake when an exception happens and keeps samson running" do
-      RestartSignalHandler.any_instance.expects(:wait_for_active_jobs_to_finish).raises("Whoops")
+      RestartSignalHandler.any_instance.expects(:wait_for_active_jobs_to_stop).raises("Whoops")
       Airbrake.expects(:notify)
       assert_raises(RuntimeError) { handle }.message.must_equal "Whoops"
 
