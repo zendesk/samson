@@ -18,7 +18,7 @@ Samson::Periodical.register :report_system_stats, "Report system stats" do
     if Rails.env.test?
       1
     else
-      Rails.cache.instance_variable_get(:@data).instance_variable_get(:@available).length
+      Rails.cache.instance_variable_get(:@data).send(:ring).servers.count(&:alive?)
     end
 
   ActiveSupport::Notifications.instrument(
