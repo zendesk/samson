@@ -60,7 +60,7 @@ describe Kubernetes::Role do
       end
 
       it "is valid with a already used service name that was deleted" do
-        other.soft_delete!
+        other.soft_delete!(validate: false)
         assert_valid role
       end
     end
@@ -271,7 +271,7 @@ describe Kubernetes::Role do
         config_file: 'foobar/foo.yml', name: 'xasdasd', resource_name: 'dsfsfsdf'
       )
       write_config other.config_file, config_content_yml
-      other.soft_delete!
+      other.soft_delete!(validate: false)
 
       Kubernetes::Role.configured_for_project(project, 'HEAD').must_equal [role]
     end
@@ -383,7 +383,7 @@ describe Kubernetes::Role do
         deploy_group: deploy_groups(:pod2)
       )
       role.kubernetes_deploy_group_roles.wont_equal []
-      role.soft_delete!
+      role.soft_delete!(validate: false)
       role.reload.kubernetes_deploy_group_roles.must_equal []
     end
   end

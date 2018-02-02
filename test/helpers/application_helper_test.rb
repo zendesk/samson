@@ -361,7 +361,7 @@ describe ApplicationHelper do
     end
 
     it "does not try to build path for deleted resources since that would blow up" do
-      projects(:test).soft_delete!
+      projects(:test).soft_delete!(validate: false)
       stage = stages(:test_staging)
       link_to_resource(stage).must_equal "Staging"
     end

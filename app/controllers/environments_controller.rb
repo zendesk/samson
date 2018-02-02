@@ -38,7 +38,7 @@ class EnvironmentsController < ApplicationController
   end
 
   def destroy
-    environment.soft_delete!
+    environment.soft_delete!(validate: false)
     flash[:notice] = "Successfully deleted environment: #{environment.name}"
     redirect_to action: 'index'
   end

@@ -21,7 +21,7 @@ describe WebhooksController do
       end
 
       it "does not blow up with deleted stages" do
-        stage.soft_delete!
+        stage.soft_delete!(validate: false)
         get :index, params: {project_id: project}
         assert_template :index
       end

@@ -78,7 +78,7 @@ describe Kubernetes::DeployGroupRole do
     end
 
     it "ignores soft deleted roles" do
-      kubernetes_roles(:app_server).soft_delete!
+      kubernetes_roles(:app_server).soft_delete!(validate: false)
       Kubernetes::DeployGroupRole.matrix(stage).must_equal(
         [[
           stage.deploy_groups.first,

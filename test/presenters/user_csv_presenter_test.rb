@@ -91,7 +91,7 @@ describe UserCsvPresenter do
     end
 
     it "returns system line with no project and deleted user" do
-      user.soft_delete!
+      user.soft_delete!(validate: false)
       UserCsvPresenter.csv_line(user, nil, nil).must_equal(
         [user.id, user.name, user.email, "", "SYSTEM", Role::VIEWER.name, user.deleted_at]
       )

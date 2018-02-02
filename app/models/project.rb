@@ -5,6 +5,7 @@ class Project < ActiveRecord::Base
 
   include Permalinkable
   include Searchable
+  include SoftDeleteWithDestroy
 
   before_validation :normalize_repository_url, if: :repository_url_changed?
 
@@ -17,7 +18,6 @@ class Project < ActiveRecord::Base
   after_save :clone_repository, if: -> { saved_change_to_attribute?(:repository_url) }
   before_update :clean_old_repository, if: :repository_url_changed?
   after_soft_delete :clean_repository
-  before_soft_delete :destroy_user_project_roles
 
   has_many :builds, dependent: :destroy
   has_many :releases, dependent: :destroy
@@ -245,10 +245,6 @@ class Project < ActiveRecord::Base
       :release_branch,
       "could not be set. Samson's github user needs 'Write' permission to push new tags to #{repository_path}."
     )
-  end
-
-  def destroy_user_project_roles
-    user_project_roles.each(&:destroy)
   end
 
   # https://foo.com/bar/baz.git -> git@foo.com:bar/baz.git

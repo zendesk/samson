@@ -34,7 +34,7 @@ class LocksController < ApplicationController
     Lock.where(
       resource_id: params.fetch(:resource_id).presence,
       resource_type: params.fetch(:resource_type).presence
-    ).first!.soft_delete!
+    ).first!.soft_delete!(validate: false)
     head :ok
   end
 

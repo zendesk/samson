@@ -31,7 +31,7 @@ describe OutboundWebhook do
       webhook = OutboundWebhook.create!(webhook_attributes)
 
       assert_difference 'OutboundWebhook.count', -1 do
-        webhook.soft_delete!
+        webhook.soft_delete!(validate: false)
       end
 
       assert_difference 'OutboundWebhook.count', +1 do
@@ -47,13 +47,13 @@ describe OutboundWebhook do
 
     it 'deletes the webhook' do
       assert_difference 'OutboundWebhook.count', -1 do
-        webhook.soft_delete!
+        webhook.soft_delete!(validate: false)
       end
     end
 
     it 'soft deletes the webhook' do
       assert_difference  'OutboundWebhook.with_deleted { OutboundWebhook.count} ', 0 do
-        webhook.soft_delete!
+        webhook.soft_delete!(validate: false)
       end
     end
 
@@ -61,12 +61,12 @@ describe OutboundWebhook do
     # lets ensure that same validation doesn't stop us from having multiple of the same webhook soft-deleted.
     it 'can soft delete duplicate webhooks' do
       assert_difference 'OutboundWebhook.count', -1 do
-        webhook.soft_delete!
+        webhook.soft_delete!(validate: false)
       end
 
       webhook2 = OutboundWebhook.create!(webhook_attributes)
       assert_difference 'OutboundWebhook.count', -1 do
-        webhook2.soft_delete!
+        webhook2.soft_delete!(validate: false)
       end
     end
   end

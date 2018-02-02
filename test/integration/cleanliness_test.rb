@@ -110,6 +110,14 @@ describe "cleanliness" do
     end
   end
 
+  it 'discourages use of soft_delete without validate: false' do
+    assert_content all_code do |content|
+      if content =~ /soft_delete\!?$/
+        'prefer soft_delete(validate: false)'
+      end
+    end
+  end
+
   it "uses active test case wording" do
     assert_content all_tests do |content|
       if content =~ /\s+it ['"]should /
