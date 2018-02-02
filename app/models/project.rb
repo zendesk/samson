@@ -149,6 +149,18 @@ class Project < ActiveRecord::Base
     super(except: [:token, :deleted_at], methods: [:repository_path])
   end
 
+  def self.docker_build_style
+    ["build locally", "wait for external build to arrive"] + Samson::Hooks.fire(:docker_build_style)
+  end
+
+  def docker_build_style_id=(value)
+    self.docker_image_building_disabled = (value == 1)
+  end
+
+  def docker_build_style_id
+    self.docker_image_building_disabled ? 1 : 0
+  end
+
   private
 
   def repository_homepage_github
