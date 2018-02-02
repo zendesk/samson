@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 # makes sure all builds that are needed for a deploy are successfully built
-# (needed builds are determined by projects `dockerfiles` column)
-#
-# FIXME: Ideally it would come from what `template_filler.rb` needs, but it wants know about builds to render.
+# (needed builds are determined by projects `dockerfiles` column or passed in image list)
 #
 # Special cases:
 # - when no Dockerfile is in the repo and it is the only requested dockerfile (column default value), return no builds
@@ -29,34 +27,15 @@ module Samson
 
     def ensure_successful_builds
       builds =
-        if @images
-          wait_for_build_creation do |last_try|
-            find_build_by_image_name(fail: last_try)
-          end
+        if @images # using external builds
+          find_builds_by_image_names
         else
-          find_or_create_builds_by_dockerfile
+          find_or_create_builds_by_dockerfile_list
         end
 
       builds.compact.each do |build|
         wait_for_build_completion(build)
         ensure_build_is_successful(build) unless @cancelled
-      end
-    end
-
-    def find_or_create_builds_by_dockerfile
-      requested = @job.project.dockerfile_list
-      requested.map do |dockerfile|
-        find_build(dockerfile) ||
-          (!@job.project.docker_image_building_disabled? && create_build(dockerfile)) ||
-          nil # need nil and not false
-      end
-    end
-
-    # Finds build by comparing their name (foo.com/bar/baz -> baz) to pre-build images image_name column
-    def find_build_by_image_name(fail:)
-      possible_builds = reused_builds + Build.where(git_sha: @job.commit)
-      @images.map do |image|
-        self.class.detect_build_by_image_name!(possible_builds, image, fail: fail) || break
       end
     end
 
@@ -75,11 +54,42 @@ module Samson
 
     private
 
-    def find_build(dockerfile)
-      wait_for_build_creation do
-        image_name = @job.project.docker_image(dockerfile)
-        Build.where(git_sha: @job.commit).where("dockerfile = ? OR image_name = ?", dockerfile, image_name).first
-      end || reused_builds.detect { |b| b.dockerfile == dockerfile }
+    def find_or_create_builds_by_dockerfile_list
+      requested = @job.project.dockerfile_list
+      requested.map { |dockerfile| find_or_create_build_by_dockerfile!(dockerfile) }
+    end
+
+    # Finds build by comparing their name (foo.com/bar/baz -> baz) to pre-build images image_name column
+    def find_builds_by_image_names
+      wait_for_build_creation do |last_try|
+        builds = possible_builds
+        @images.map do |image|
+          self.class.detect_build_by_image_name!(builds, image, fail: last_try) || break
+        end
+      end
+    end
+
+    def possible_builds
+      reused_builds + Build.where(git_sha: @job.commit)
+    end
+
+    def find_or_create_build_by_dockerfile!(dockerfile)
+      image_name = @job.project.docker_image(dockerfile)
+
+      wait_for_build_creation do |last_try|
+        builds = possible_builds
+        found = builds.detect { |b| b.dockerfile == dockerfile || b.image_name == image_name }
+
+        return found if found
+        next unless last_try
+        return create_build(dockerfile) unless @job.project.docker_image_building_disabled?
+
+        raise(
+          Samson::Hooks::UserError,
+          "Did not find build for dockerfile #{dockerfile.inspect} or image_name #{image_name.inspect}.\n" \
+          "Found builds: #{builds.map { |b| [b.dockerfile, b.image_name] }.uniq.inspect}."
+        )
+      end
     end
 
     def reused_builds
@@ -132,7 +142,7 @@ module Samson
         )
         DockerBuilderService.new(Build.find(build.id)).run # .find to not update/reload the same object
         build
-      elsif dockerfile == "Dockerfile"
+      elsif dockerfile == "Dockerfile" # allowing us to deploy kubernetes without Dockerfile
         @output.puts("Not creating #{name} since is is not in the repository.")
         nil
       else
