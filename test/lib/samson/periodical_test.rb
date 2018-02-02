@@ -149,6 +149,36 @@ describe Samson::Periodical do
     end
   end
 
+  describe '.running_task_count' do
+    it 'counts running tasks, starting at 0' do
+      Samson::Periodical.instance_variable_set(:@running_tasks_count, nil)
+      Samson::Periodical.running_task_count.must_equal 0
+    end
+
+    it 'counts running tasks' do
+      mutex = Mutex.new.lock
+      Samson::Periodical.register(:foo, 'bar', active: true) { mutex.lock }
+      tasks = Samson::Periodical.run
+      sleep 0.01 # Allow task to start
+
+      Samson::Periodical.running_task_count.must_equal 1
+      mutex.unlock
+      sleep 0.01 # Allow task to finish
+
+      Samson::Periodical.running_task_count.must_equal 0
+      tasks.first.shutdown
+    end
+
+    it 'counts raising tasks' do
+      Samson::Periodical.register(:foo, 'bar', active: true) { raise }
+      tasks = Samson::Periodical.run
+      sleep 0.01 # Allow task to finish
+
+      Samson::Periodical.running_task_count.must_equal 0
+      tasks.first.shutdown
+    end
+  end
+
   it "lists all example periodical tasks in the .env.example" do
     configureable = File.read('config/initializers/periodical.rb').scan(/\.register.*?:([a-z\d_]+)/)
     mentioned = File.read('.env.example')[/## Periodical tasks .*^PERIODICAL=/m].scan(/# ([a-z\d_]+):\d+/)
