@@ -218,7 +218,21 @@ describe Samson::BuildFinder do
       it "fails if a build does not arrive" do
         expect_sleep.times(3)
 
-        execute.must_equal []
+        e = assert_raises(Samson::Hooks::UserError) { execute }
+        e.message.must_equal(
+          "Did not find build for dockerfile \"Dockerfile\" or image_name \"foo\".\nFound builds: []."
+        )
+      end
+
+      it "shows found non-match builds when nothing was matching" do
+        expect_sleep.times(3).with do
+          build.update_columns(git_sha: matching_sha, docker_repo_digest: 'done', dockerfile: "Mooo")
+        end
+
+        e = assert_raises(Samson::Hooks::UserError) { execute }
+        e.message.must_equal(
+          "Did not find build for dockerfile \"Dockerfile\" or image_name \"foo\".\nFound builds: [[\"Mooo\", nil]]."
+        )
       end
 
       it "stops when cancelled" do
@@ -230,8 +244,8 @@ describe Samson::BuildFinder do
       it "does not wait multiple times because builds start simultaneously" do
         expect_sleep.times(3)
 
-        execute.must_equal []
-        execute.must_equal []
+        assert_raises(Samson::Hooks::UserError) { execute }
+        assert_raises(Samson::Hooks::UserError) { execute }
       end
 
       it "waits for builds with just image_name" do
