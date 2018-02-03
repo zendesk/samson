@@ -59,9 +59,10 @@ describe SamsonGcloud::ImageScanner do
 
   describe ".status" do
     it "produces valid stati" do
-      [0, 1, 2, 3].each do |status_id|
-        assert SamsonGcloud::ImageScanner.status(status_id)
-      end
+      SamsonGcloud::ImageScanner.status(0).must_equal "Must wait 10min before scanning build"
+      SamsonGcloud::ImageScanner.status(1).must_equal "No vulnerabilities found"
+      SamsonGcloud::ImageScanner.status(2).must_equal "Vulnerabilities found"
+      SamsonGcloud::ImageScanner.status(3).must_equal "Error retriving vulnerabilities"
     end
 
     it "raises on invalid status" do
