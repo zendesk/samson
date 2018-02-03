@@ -93,7 +93,7 @@ describe Samson::BuildFinder do
         e = assert_raises Samson::Hooks::UserError do
           execute
         end
-        e.message.must_equal "Plugin build checks for #{build.url} failed, investigate why."
+        e.message.must_equal "Plugin build checks for #{build.url} failed."
         out.wont_include "Creating Build"
       end
     end

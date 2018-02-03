@@ -50,13 +50,13 @@ module SamsonGcloud
       def status(id)
         case id
         when WAITING
-          "Waiting for scan"
+          "Must wait #{GRACE_PERIOD / 1.minute}min before scanning build"
+        when SUCCESS
+          "No vulnerabilities found"
         when FOUND
           "Vulnerabilities found"
         when ERROR
-          "Vulnerabilities found"
-        when SUCCESS
-          "No vulnerabilities found"
+          "Error retriving vulnerabilities"
         else raise
         end
       end
