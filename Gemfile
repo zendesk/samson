@@ -50,6 +50,7 @@ gem 'logstash-event'
 gem 'diffy'
 gem 'validates_lengths_from_database'
 gem 'large_object_store'
+gem 'parallel'
 
 # treat included plugins like gems
 Dir[File.join(Bundler.root, 'plugins/*/')].each { |f| gemspec path: f }
