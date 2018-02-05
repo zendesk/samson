@@ -17,6 +17,13 @@ rails s
 open http://localhost:3000
 ```
 
+### Zdi
+
+1. zdi samson bootstrap # to create the database volume
+2. `bin/setup` # to setup the config files and seed the db
+3. zdi services restart # always a good idea
+4. zdi samson -d restart
+
 ### Setup
  - Add a new project http://localhost:3000/projects/new
  - name: example-project url: git@github.com:samson-test-org/example-project.git
