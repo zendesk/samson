@@ -20,6 +20,7 @@ ActiveSupport::TestCase.class_eval do
     if block_given?
       yield
       assert_requested(*assert_args)
+      remove_request_stub(request)
     else
       raise "use assert_requests in the describe block" unless @assert_requests
       @assert_requests << assert_args
