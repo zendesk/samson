@@ -30,7 +30,7 @@ Octokit.connection_options[:request] = { open_timeout: 2 }
 
 token = ENV['GITHUB_TOKEN']
 
-unless Rails.env.test? || ENV['PRECOMPILE']
+unless Rails.env.test? || ENV['PRECOMPILE'] || ( defined?(Rake) && Rake.application.top_level_tasks.include?("db:migrate") )
   raise "No GitHub token available" if token.blank?
 end
 
