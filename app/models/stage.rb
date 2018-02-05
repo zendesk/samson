@@ -196,6 +196,11 @@ class Stage < ActiveRecord::Base
     !confirm? && no_reference_selection? && !deploy_requires_approval?
   end
 
+  # A unique name to identify this stage in the whole system. useful for log files.
+  def unique_name
+    project.name + "::" + name
+  end
+
   private
 
   def audited_changes
