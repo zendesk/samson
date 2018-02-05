@@ -10,7 +10,7 @@ require "rake/testtask"
 
 Samson::Application.load_tasks
 
-Rake::Task["default"].clear
+Rake::Task[:default].clear
 task default: :test
 
 Rake::Task['test'].clear
@@ -46,6 +46,16 @@ task "db:schema:dump" do
 end
 
 namespace :test do
+  task migrate_without_plugins: :environment do
+    raise unless ENV.fetch('PLUGINS') == ''
+    begin
+      Rake::Task['db:migrate'].execute
+    rescue
+      puts "\nFailed to execute migrations without plugins, move latest migration to a plugin folder?\n"
+      raise
+    end
+  end
+
   task :prepare_js do
     sh "npm install"
     sh "npm run-script jshint"
