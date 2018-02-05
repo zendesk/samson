@@ -9,6 +9,8 @@ module Kubernetes
     has_many :release_docs, class_name: 'Kubernetes::ReleaseDoc', foreign_key: 'kubernetes_release_id'
     has_many :deploy_groups, through: :release_docs
 
+    attr_accessor :builds
+
     validates :project, :git_sha, :git_ref, presence: true
 
     def user
@@ -63,10 +65,6 @@ module Kubernetes
       Rails.application.routes.url_helpers.project_kubernetes_release_url(project, self)
     end
 
-    def builds
-      Build.where(git_sha: git_sha)
-    end
-
     def previous_successful_release
       deploy.previous_successful_deploy&.kubernetes_release
     end
@@ -90,6 +88,7 @@ module Kubernetes
         dgrs.each do |dgr|
           release_docs.create!(
             deploy_group: dgr.deploy_group,
+            kubernetes_release: self,
             kubernetes_role: dgr.kubernetes_role,
             replica_target: dgr.replicas,
             requests_cpu: dgr.requests_cpu,

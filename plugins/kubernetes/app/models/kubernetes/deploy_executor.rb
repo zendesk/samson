@@ -52,7 +52,7 @@ module Kubernetes
 
     def execute(*)
       verify_kubernetes_templates!
-      @build_finder.ensure_successful_builds
+      @builds = @build_finder.ensure_successful_builds
       return false if cancelled?
       @release = create_release
 
@@ -296,6 +296,7 @@ module Kubernetes
     # create a release, storing all the configuration
     def create_release
       release = Kubernetes::Release.create_release(
+        builds: @builds,
         deploy_id: @job.deploy.id,
         grouped_deploy_group_roles: grouped_deploy_group_roles,
         git_sha: @job.commit,

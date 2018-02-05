@@ -170,13 +170,6 @@ describe Kubernetes::Release do
     end
   end
 
-  describe "#builds" do
-    it "finds builds accross projects" do
-      release.project = nil
-      release.builds.must_equal [build]
-    end
-  end
-
   describe "#previous_successful_release" do
     before { release.deploy = deploys(:failed_staging_test) }
 
@@ -201,6 +194,7 @@ describe Kubernetes::Release do
 
   def release_params
     @release_params ||= {
+      builds: [build],
       git_sha: build.git_sha,
       git_ref: build.git_ref,
       project: project,

@@ -23,6 +23,8 @@ describe Kubernetes::TemplateFiller do
 
   before do
     doc.send(:resource_template=, YAML.load_stream(read_kubernetes_sample_file('kubernetes_deployment.yml')))
+    doc.kubernetes_release.builds = [builds(:docker_build)]
+
     stub_request(:get, %r{http://foobar.server/api/v1/namespaces/\S+/secrets}).to_return(body: "{}")
     Samson::Secrets::VaultClient.any_instance.stubs(:client).
       returns(stub(options: {address: 'https://test.hvault.server', ssl_verify: false}))
@@ -288,7 +290,7 @@ describe Kubernetes::TemplateFiller do
         end
 
         it "does not override image when no build was made" do
-          doc.kubernetes_release.builds.delete_all
+          doc.kubernetes_release.builds = []
           container.fetch(:image).must_equal(
             "docker-registry.zende.sk/truth_service:latest"
           )
@@ -299,7 +301,8 @@ describe Kubernetes::TemplateFiller do
 
           it "finds special build" do
             digest = "docker-registry.example.com/new@sha256:#{"a" * 64}"
-            builds(:v1_tag).update_columns(
+            doc.kubernetes_release.builds << builds(:v1_tag)
+            doc.kubernetes_release.builds.last.update_columns(
               git_sha: doc.kubernetes_release.git_sha,
               docker_repo_digest: digest,
               dockerfile: 'Dockerfile.new'

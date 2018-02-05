@@ -28,4 +28,4 @@ failed_test:
   project: test
   status: failed
   output: Error
-  commit: staging # failed to resulve the reference so not a valid sha
+  commit: staging # failed to resolve the reference so not a valid sha
