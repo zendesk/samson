@@ -3,6 +3,6 @@
   <dd>
     <% url = SamsonGcloud::ImageScanner.result_url(@build) %>
     <%= link_to_if url, SamsonGcloud::ImageScanner.status(@build.gcr_vulnerabilities_status_id), url %>
-    <%= additional_info "Images are scanned before deploy, vulnerability information can only be retried #{SamsonGcloud::ImageScanner::GRACE_PERIOD / 1.minute}min after the build was finished." %>
+    <%= additional_info "Images scan results are updated when deploying." %>
   </dd>
 <% end %>
