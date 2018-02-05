@@ -20,6 +20,8 @@ module Kubernetes
     validate :requests_below_usage_limits
     validate :delete_on_0_replicas
 
+    validates :project_id, uniqueness: { scope: [:deploy_group_id, :kubernetes_role_id] }
+
     # The matrix is a list of deploy group and its roles + deploy-group-roles
     def self.matrix(stage)
       project_dg_roles = Kubernetes::DeployGroupRole.where(

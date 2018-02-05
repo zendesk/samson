@@ -52,6 +52,38 @@ describe SamsonKubernetes do
     end
   end
 
+  describe :stage_clone do
+    def stage_clone(old_stage, new_stage)
+      Samson::Hooks.fire(:stage_clone, old_stage, new_stage)
+    end
+
+    before do
+      @old_stage = stages(:test_staging)
+      @new_stage = stages(:test_production)
+
+      # only go to pod2 which has no roles
+      @new_stage.deploy_groups_stages.detect { |dgs| dgs.deploy_group == deploy_groups(:pod1) }.destroy
+      @new_stage.reload
+    end
+
+    it 'does not create duplicate deploy group roles' do
+      assert_difference 'Kubernetes::DeployGroupRole.count', 2 do
+        2.times { stage_clone(@old_stage, @new_stage) }
+      end
+    end
+
+    it 'copies old stage deploy groups to new stage' do
+      stage_clone(@old_stage, @new_stage)
+
+      old_stage_dgr = kubernetes_deploy_group_roles(:test_pod100_app_server)
+      new_stage_dgr = Kubernetes::DeployGroupRole.where(kubernetes_role: old_stage_dgr.kubernetes_role).last
+      old_stage_dgr.wont_equal new_stage_dgr
+
+      ignore = ['id', 'created_at', 'updated_at', 'deploy_group_id']
+      new_stage_dgr.attributes.except(*ignore).must_equal old_stage_dgr.attributes.except(*ignore)
+    end
+  end
+
   describe ".connection_errors" do
     it "works" do
       SamsonKubernetes.connection_errors

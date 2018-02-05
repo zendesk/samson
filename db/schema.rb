@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180126004937) do
+ActiveRecord::Schema.define(version: 20180202000103) do
 
   create_table "audits", force: :cascade do |t|
     t.integer "auditable_id", null: false
@@ -219,7 +219,7 @@ ActiveRecord::Schema.define(version: 20180126004937) do
     t.integer "requests_memory", null: false
     t.boolean "delete_resource", default: false, null: false
     t.index ["deploy_group_id"], name: "index_kubernetes_deploy_group_roles_on_deploy_group_id"
-    t.index ["project_id", "deploy_group_id", "kubernetes_role_id"], name: "index_kubernetes_deploy_group_roles_on_project_id"
+    t.index ["project_id", "deploy_group_id", "kubernetes_role_id"], name: "index_kubernetes_deploy_group_roles_on_project_dg_kr", unique: true
   end
 
   create_table "kubernetes_release_docs", id: :integer, force: :cascade do |t|

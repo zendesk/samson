@@ -120,11 +120,13 @@ describe Kubernetes::DeployGroupRolesController do
       end
 
       it "can create for projects I am admin of" do
+        deploy_group_role.destroy!
         post :create, params: params
         assert_redirected_to Kubernetes::DeployGroupRole.last
       end
 
       it "redirects to param" do
+        deploy_group_role.destroy!
         post :create, params: params.merge(redirect_to: '/bar')
         assert_redirected_to '/bar'
       end
