@@ -33,6 +33,7 @@ end
 
 require_relative "../lib/samson/env_check"
 require_relative "../lib/samson/initializer_logging"
+require_relative "../app/models/job_queue.rb" # need to load early or dev reload will lose the .enabled
 
 module Samson
   class Application < Rails::Application
