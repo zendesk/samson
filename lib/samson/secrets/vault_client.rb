@@ -54,7 +54,13 @@ module Samson
 
       # called via cron job to renew the current token
       def renew_token
-        clients.each_value { |c| with_retries { c.auth_token.renew_self } }
+        clients.each do |id, client|
+          begin
+            with_retries { client.auth_token.renew_self }
+          rescue
+            Airbrake.notify($!, vault_server_id: id)
+          end
+        end
       end
 
       def client(deploy_group_permalink)
