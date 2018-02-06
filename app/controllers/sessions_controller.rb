@@ -91,7 +91,7 @@ class SessionsController < ApplicationController
 
   def login(options = {})
     uid = auth_hash.uid
-    if ENV['USE_LDAP_UID_AS_EXTERNAL_ID']
+    if ENV['AUTH_LDAP'] && ENV['USE_LDAP_UID_AS_EXTERNAL_ID']
       uid_field = Rails.application.config.samson.ldap.uid
       uid = auth_hash.extra.raw_info.send(uid_field).presence || auth_hash.uid
       uid = uid.is_a?(Array) ? uid.first : uid
