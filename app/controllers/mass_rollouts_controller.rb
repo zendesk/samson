@@ -131,7 +131,8 @@ class MassRolloutsController < ApplicationController
       template_stage,
       deploy_groups: [deploy_group],
       name: deploy_group.name,
-      is_template: false
+      is_template: false,
+      next_stage_ids: []
     )
 
     stage.save!
