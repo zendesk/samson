@@ -206,21 +206,21 @@ describe MassRolloutsController do
 
       describe "multiple stages" do
         let(:url) { "git://foo.com:hello/world.git" }
-        let(:project2) { 
+        let(:project2) do
           Project.any_instance.stubs(:valid_repository_url).returns(true)
           Project.create!(
-            name: 'blah', 
+            name: 'blah',
             repository_url: url,
             include_new_deploy_groups: true
           )
-        }
-        let(:template_stage2) { 
+        end
+        let(:template_stage2) do
           project2.stages.create!(
-            name: 'stage blah', 
-            deploy_groups: [ template_stage.deploy_groups.first ], 
+            name: 'stage blah',
+            deploy_groups: [template_stage.deploy_groups.first],
             is_template: true
-          ) 
-        }
+          )
+        end
 
         before do
           template_stage
