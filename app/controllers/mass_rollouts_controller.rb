@@ -134,6 +134,7 @@ class MassRolloutsController < ApplicationController
       is_template: false,
       next_stage_ids: []
     )
+
     stage.save!
 
     if template_stage.respond_to?(:next_stage_ids) # pipeline plugin was installed
