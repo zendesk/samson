@@ -48,6 +48,11 @@ describe ApplicationHelper do
       result = autolink("foo http://bar.com?a=123&b=222 baz")
       result.must_equal "foo <a href=\"http://bar.com?a=123&b=222\">http://bar.com?a=123&b=222</a> baz"
     end
+
+    it "converts gcloud vulnerability urls with @ to links" do
+      result = autolink("foo http://bar.com?a=123&b=2@2 baz")
+      result.must_equal "foo <a href=\"http://bar.com?a=123&b=2@2\">http://bar.com?a=123&b=2@2</a> baz"
+    end
   end
 
   describe "#markdown" do
