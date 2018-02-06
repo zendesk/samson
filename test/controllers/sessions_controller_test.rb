@@ -236,6 +236,11 @@ describe SessionsController do
         info: Hashie::Mash.new(
           name: user.name,
           email: user.email
+        ),
+        extra: Hashie::Mash.new(
+          raw_info: Hashie::Mash.new(
+            sAMAccountName: [user.name]
+          )
         )
       )
     end
@@ -255,6 +260,15 @@ describe SessionsController do
 
       it 'logs the user in' do
         @controller.send(:current_user).must_equal(user)
+      end
+
+      it 'logs the user in with USE_LDAP_UID_AS_EXTERNAL_ID' do
+        Rails.application.config.samson.ldap.stub(:uid, 'sAMAccountName') do
+          with_env 'USE_LDAP_UID_AS_EXTERNAL_ID' => 'true' do
+            post :ldap
+            @controller.send(:current_user).must_equal(user)
+          end
+        end
       end
 
       it 'redirects to the root path' do

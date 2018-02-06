@@ -90,8 +90,15 @@ class SessionsController < ApplicationController
   end
 
   def login(options = {})
+    uid = auth_hash.uid
+    if ENV['USE_LDAP_UID_AS_EXTERNAL_ID']
+      uid_field = Rails.application.config.samson.ldap.uid
+      uid = auth_hash.extra.raw_info.send(uid_field).presence || auth_hash.uid
+      uid = uid.is_a?(Array) ? uid.first : uid
+    end
+
     user = User.create_or_update_from_hash(options.merge(
-      external_id: "#{strategy.name}-#{auth_hash.uid}",
+      external_id: "#{strategy.name}-#{uid}",
       name: auth_hash.info.name,
       email: auth_hash.info.email
     ))
