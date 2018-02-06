@@ -17,7 +17,7 @@ env:
     - TASK='rubocop'
     - TASK='flay'
     - TASK='bundle_audit'
-    - BUNDLE_WITHOUT=postgres:mysql DATABASE_URL=sqlite3://null$PWD/db/test.sqlite3 VERBOSE=0 TASK='db:create db:migrate' PLUGINS=''
+    - PLUGINS='' BUNDLE_WITHOUT=postgres:mysql DATABASE_URL=sqlite3://null$PWD/db/test.sqlite3 VERBOSE=0 TASK='db:create test:migrate_without_plugins'
     - BUNDLE_WITHOUT=postgres:sqlite DATABASE_URL=mysql2://travis@127.0.0.1/samson_test USE_UTF8MB4=1 VERBOSE=0 TASK='db:create db:migrate default'
     - BUNDLE_WITHOUT=mysql:sqlite DATABASE_URL=postgresql://postgres@127.0.0.1/samson_test VERBOSE=0 TASK='db:create db:migrate default'
     - BUNDLE_WITHOUT=postgres:mysql DATABASE_URL=sqlite3://null$PWD/db/test.sqlite3 VERBOSE=0 TASK='db:create db:migrate default'
