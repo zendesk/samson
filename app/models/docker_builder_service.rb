@@ -10,7 +10,8 @@ class DockerBuilderService
   end
 
   def run(tag_as_latest: false)
-    return unless Rails.cache.write("build-service-#{@build.id}", true, unless_exist: true, expires_in: 10.seconds)
+    return if same_build_in_progress?
+
     @build.docker_build_job&.destroy # if there's an old build job, delete it
     @build.docker_tag = @build.name&.parameterize.presence || 'latest'
     @build.started_at = Time.now
@@ -40,6 +41,12 @@ class DockerBuilderService
   end
 
   private
+
+  # In development, memcache can be down and we don't want that to stop builds
+  def same_build_in_progress?
+    !Rails.env.development? &&
+      !Rails.cache.write("build-service-#{@build.id}", true, unless_exist: true, expires_in: 10.seconds)
+  end
 
   def execute_build_command(tmp_dir, command)
     return unless command
