@@ -70,7 +70,14 @@ module Samson
     end
 
     def possible_builds
-      reused_builds + Build.where(git_sha: @job.commit)
+      commits = [@job.commit]
+
+      if defined?(SamsonKubernetes) && @job.deploy.kubernetes_reuse_build
+        previous = @job.deploy.previous_deploy&.job&.commit
+        commits << previous if previous
+      end
+
+      Build.where(git_sha: commits).sort_by { |build| commits.index(build.git_sha) }
     end
 
     def find_or_create_build_by_dockerfile!(dockerfile)
@@ -90,14 +97,6 @@ module Samson
           "Found builds: #{builds.map { |b| [b.dockerfile, b.image_name] }.uniq.inspect}."
         )
       end
-    end
-
-    def reused_builds
-      (
-        defined?(SamsonKubernetes) &&
-        @job.deploy.kubernetes_reuse_build &&
-        @job.deploy.previous_deploy&.kubernetes_release&.builds
-      ) || []
     end
 
     # we only wait once no matter how many builds are missing since build creation is fast

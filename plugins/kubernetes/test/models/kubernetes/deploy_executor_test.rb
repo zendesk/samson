@@ -162,7 +162,7 @@ describe Kubernetes::DeployExecutor do
     end
 
     it "does limited amounts of queries" do
-      assert_sql_queries(37) do
+      assert_sql_queries(27) do
         assert execute
       end
     end
@@ -640,6 +640,7 @@ describe Kubernetes::DeployExecutor do
       kubernetes_fake_raw_template
       Kubernetes::TemplateFiller.any_instance.stubs(:set_image_pull_secrets)
       doc = release.release_docs.first
+      doc.kubernetes_release.builds = [build]
       doc.send(:store_resource_template)
       doc.save!(validate: false)
     end

@@ -55,7 +55,10 @@ describe Kubernetes::ReleaseDoc do
 
   describe "#store_resource_template" do
     def create!
-      Kubernetes::ReleaseDoc.create!(doc.attributes.except('id', 'resource_template'))
+      doc.kubernetes_release.builds = [builds(:docker_build)]
+      Kubernetes::ReleaseDoc.create!(
+        doc.attributes.except('id', 'resource_template').merge(kubernetes_release: doc.kubernetes_release)
+      )
     end
 
     before do
@@ -152,12 +155,6 @@ describe Kubernetes::ReleaseDoc do
   describe "#prerequisite?" do
     it "delegates to primary resource" do
       refute doc.prerequisite?
-    end
-  end
-
-  describe "#build" do
-    it "fetches the build" do
-      doc.kubernetes_release.builds.must_equal [builds(:docker_build)]
     end
   end
 

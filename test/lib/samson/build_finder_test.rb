@@ -8,6 +8,7 @@ describe Samson::BuildFinder do
     previous = deploys(:failed_staging_test)
     previous.update_column(:id, job.deploy.id - 1) # make previous_deploy work
     previous_sha = 'something-else'
+    previous.job.update_column(:commit, previous_sha)
     kubernetes_releases(:test_release).update_columns(deploy_id: previous.id, git_sha: previous_sha) # previous deploy
     build.update_columns(docker_repo_digest: 'ababababab', git_sha: previous_sha) # make build succeeded
     job.deploy.update_column(:kubernetes_reuse_build, true)
