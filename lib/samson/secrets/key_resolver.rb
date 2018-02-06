@@ -17,16 +17,13 @@ module Samson
         env_name = env_name.to_s
         return [] unless validate_wildcard(env_name, secret_key)
 
-        possible_id_list = possible_ids(secret_key)
-        found =
-          if secret_key.end_with?(WILDCARD)
-            expand_wildcard_keys(env_name, secret_key, possible_id_list)
-          else
-            expand_simple_key(env_name, possible_id_list)
-          end
+        possible_ids, forbidden_ids = partition_possible_ids(secret_key)
+
+        found = find_keys(secret_key, env_name, possible_ids)
+        found_but_forbidden = find_keys(secret_key, env_name, forbidden_ids).map(&:last)
 
         if found.empty?
-          @errors << "#{secret_key} (tried: #{possible_id_list.join(', ')})"
+          @errors << error_message(secret_key, possible_ids, found_but_forbidden)
           return []
         end
 
@@ -56,13 +53,35 @@ module Samson
 
       private
 
-      # get a list of all possible ids for a given secret
-      def possible_ids(secret_key)
-        possible_secret_id_parts.map do |id_parts|
+      def find_keys(secret_key, env_name, id_list)
+        if secret_key.end_with?(WILDCARD)
+          expand_wildcard_keys(env_name, secret_key, id_list)
+        else
+          expand_simple_key(env_name, id_list)
+        end
+      end
+
+      # sorts possible ids for a secret into allowed and forbidden lists based on secret sharing grants
+      def partition_possible_ids(secret_key)
+        possible_secret_id_parts.each_with_object([[], []]) do |id_parts, (possible, forbidden)|
           id_parts = id_parts.merge(key: secret_key)
           id = Samson::Secrets::Manager.generate_id(id_parts)
-          id if key_granted?(id_parts) && !deprecated?(id)
-        end.compact
+          unless deprecated?(id)
+            (key_granted?(id_parts) ? possible : forbidden) << id
+          end
+        end
+      end
+
+      def error_message(secret_key, possible_ids, forbidden_ids)
+        if forbidden_ids.any?
+          ignored_error = "(ignored: global secrets #{forbidden_ids.join(', ')} add a secret sharing grant to use them)"
+        end
+
+        <<~TEXT.strip
+          #{secret_key}
+            (tried: #{possible_ids.join(', ')})
+            #{ignored_error}
+        TEXT
       end
 
       # local cache so we do not have to re-fetch cache on every resolve

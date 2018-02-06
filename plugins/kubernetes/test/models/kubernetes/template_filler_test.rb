@@ -492,8 +492,8 @@ describe Kubernetes::TemplateFiller do
         raw_template[:spec][:template][:metadata][:annotations].replace('secret/FOO': 'bar', 'secret/BAR': 'baz')
         Samson::Secrets::Manager.delete(secret_key)
         e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
-        e.message.must_include "bar (tried: production/foo/pod1/bar"
-        e.message.must_include "baz (tried: production/foo/pod1/baz" # shows all at once for easier debugging
+        e.message.must_include "bar\n  (tried: production/foo/pod1/bar"
+        e.message.must_include "baz\n  (tried: production/foo/pod1/baz" # shows all at once for easier debugging
       end
     end
 
