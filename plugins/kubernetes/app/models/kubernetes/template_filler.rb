@@ -47,7 +47,6 @@ module Kubernetes
           set_env
           set_secrets
           set_image_pull_secrets
-          set_vault_env
           set_resource_blue_green if blue_green_color
         end
 
@@ -285,7 +284,7 @@ module Kubernetes
     end
 
     def set_resource_usage
-      container[:resources] = {
+      containers.first[:resources] = {
         requests: { cpu: @doc.requests_cpu.to_f, memory: "#{@doc.requests_memory}M" },
         limits: { cpu: @doc.limits_cpu.to_f, memory: "#{@doc.limits_memory}M" }
       }
@@ -321,19 +320,18 @@ module Kubernetes
       @project ||= @doc.kubernetes_release.project
     end
 
-    def env
-      (container[:env] ||= [])
-    end
-
     # custom annotation we support here and in kucodiff
     def missing_env
       required = ((annotations || {})[:"samson/required_env"] || "").strip.split(/[\s,]/)
-      (required - env.map { |e| e.fetch(:name) }).presence
+      test_env = (containers.first[:env] || [])
+      (required - test_env.map { |e| e.fetch(:name) }).presence
     end
 
     # helpful env vars, also useful for log tagging
     def set_env
-      static_env.each { |k, v| env << {name: k.to_s, value: v.to_s} }
+      all = []
+
+      static_env.each { |k, v| all << {name: k.to_s, value: v.to_s} }
 
       # dynamic lookups for unknown things during deploy
       {
@@ -341,18 +339,23 @@ module Kubernetes
         POD_NAMESPACE: 'metadata.namespace',
         POD_IP: 'status.podIP'
       }.each do |k, v|
-        env << {
+        all << {
           name: k.to_s,
           valueFrom: {fieldRef: {fieldPath: v}}
         }
       end
 
-      env << {name: 'BLUE_GREEN', value: blue_green_color} if blue_green_color
+      all.concat vault_env if ENV["SECRET_STORAGE_BACKEND"] == "Samson::Secrets::HashicorpVaultBackend"
 
-      # unique, but keep last elements
-      env.reverse!
-      env.uniq! { |h| h[:name] }
-      env.reverse!
+      containers.each do |c|
+        env = (c[:env] ||= [])
+        env.concat all
+
+        # unique, but keep last elements
+        env.reverse!
+        env.uniq! { |h| h[:name] }
+        env.reverse!
+      end
     end
 
     def static_env
@@ -371,6 +374,9 @@ module Kubernetes
       kube_cluster_name = DeployGroup.find(metadata[:deploy_group_id]).kubernetes_cluster.name.to_s
       env[:KUBERNETES_CLUSTER_NAME] = kube_cluster_name
 
+      # blue-green phase
+      env[:BLUE_GREEN] = blue_green_color if blue_green_color
+
       # env from plugins
       env.merge!(Samson::Hooks.fire(:deploy_group_env, project, @doc.deploy_group).inject({}, :merge!))
     end
@@ -378,14 +384,6 @@ module Kubernetes
     def blue_green_color
       return @blue_green_color if defined?(@blue_green_color)
       @blue_green_color = @doc.blue_green_color
-    end
-
-    def set_vault_env
-      if ENV["SECRET_STORAGE_BACKEND"] == "Samson::Secrets::HashicorpVaultBackend"
-        containers.each do |container|
-          (container[:env] ||= []).concat vault_env
-        end
-      end
     end
 
     def vault_env
@@ -422,10 +420,6 @@ module Kubernetes
 
     def containers
       pod_template.dig_fetch(:spec, :containers)
-    end
-
-    def container
-      containers.first
     end
   end
 end
