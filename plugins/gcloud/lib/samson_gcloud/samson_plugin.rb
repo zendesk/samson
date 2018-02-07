@@ -5,6 +5,9 @@ require 'samson_gcloud/image_builder'
 require 'samson_gcloud/image_scanner'
 
 module SamsonGcloud
+  SCAN_WAIT_PERIOD = 5.minutes
+  SCAN_SLEEP_PERIOD = 5.seconds
+
   class Engine < Rails::Engine
   end
 
@@ -13,8 +16,15 @@ module SamsonGcloud
       return true unless ENV['GCLOUD_IMAGE_SCANNER'] && job.project.show_gcr_vulnerabilities
 
       status = build.gcr_vulnerabilities_status_id
+      scan_optional = !job.deploy.stage.block_on_gcr_vulnerabilities
+
       unless SamsonGcloud::ImageScanner::FINISHED.include?(status)
-        status = SamsonGcloud::ImageScanner.scan(build)
+        output.puts 'Waiting for GCR scan to finish...'
+        (SCAN_WAIT_PERIOD / SCAN_SLEEP_PERIOD).times do
+          status = SamsonGcloud::ImageScanner.scan(build)
+          break if SamsonGcloud::ImageScanner::FINISHED.include?(status) || scan_optional
+          sleep(SCAN_SLEEP_PERIOD)
+        end
         build.update_attributes!(gcr_vulnerabilities_status_id: status)
       end
 
@@ -23,7 +33,7 @@ module SamsonGcloud
       message += ", see #{SamsonGcloud::ImageScanner.result_url(build)}" unless success
       output.puts message
 
-      success || !job.deploy.stage.block_on_gcr_vulnerabilities
+      success || scan_optional
     end
 
     def cli_options
