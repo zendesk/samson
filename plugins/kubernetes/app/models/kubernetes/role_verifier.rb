@@ -12,9 +12,10 @@ module Kubernetes
       ['Pod'],
     ].freeze
 
-    def initialize(elements)
+    def initialize(elements, project)
       @errors = []
       @elements = elements.compact
+      @project = project
     end
 
     def verify
@@ -34,6 +35,7 @@ module Kubernetes
       verify_annotations || verify_prerequisites
       verify_env_values
       verify_host_volume_paths
+      verify_readonly
       @errors.presence
     end
 
@@ -85,8 +87,8 @@ module Kubernetes
     # spec actually allows this, but blows up when used
     def verify_numeric_limits
       [:requests, :limits].each do |scope|
-        base = [:spec, :template, :spec, :containers, :resources, scope, :cpu]
-        types = map_attributes(base).flatten(1).map(&:class)
+        base = [:spec, :containers, :resources, scope, :cpu]
+        types = map_attributes(base, elements: templates).flatten(1).map(&:class)
         next if (types - [NilClass, String]).none?
         @errors << "Numeric cpu resources are not supported"
       end
@@ -223,6 +225,13 @@ module Kubernetes
         flatten(1).compact.map { |d| File.join(d, '') }
       bad = used.select { |u| allowed.none? { |a| u.start_with?(a) } }
       @errors << "Only volume host paths #{allowed.join(", ")} are allowed, not #{bad.join(", ")}." if bad.any?
+    end
+
+    def verify_readonly
+      path = [:spec, :containers, :securityContext, :readOnlyRootFilesystem]
+      return if map_attributes(path, elements: templates).all? || @project.allow_writing_to_root_filesystem
+      @errors << "Set `securityContext: readOnlyRootFilesystem: true` for all containers or " \
+        "enable `Allow writing to root filesystem` in project settings."
     end
 
     # helpers below
