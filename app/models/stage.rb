@@ -198,7 +198,7 @@ class Stage < ActiveRecord::Base
 
   # A unique name to identify this stage in the whole system. useful for log files.
   def unique_name
-    project.name + "::" + name
+    "#{project.name} / #{name}"
   end
 
   private

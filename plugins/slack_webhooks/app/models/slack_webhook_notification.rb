@@ -26,7 +26,7 @@ class SlackWebhookNotification
     project = @deploy.project
     ":pray: <!here> _#{@deploy.user.name}_ is requesting approval to deploy " \
       "<#{Rails.application.routes.url_helpers.project_deploy_url(project, @deploy)}|" \
-      "#{project.name} *#{@deploy.reference}* to #{@deploy.stage.name}>."
+      "*#{@deploy.reference}* to #{@deploy.stage.unique_name}>."
   end
 
   private

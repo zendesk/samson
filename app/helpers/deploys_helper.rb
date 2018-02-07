@@ -32,7 +32,7 @@ module DeploysHelper
   end
 
   def deploy_notification
-    "Samson deploy finished:\n#{@project.name} / #{@deploy.stage.name} #{@deploy.status}"
+    "Samson deploy finished:\n#{@deploy.stage.unique_name} #{@deploy.status}"
   end
 
   def file_status_label(status)
