@@ -7,6 +7,10 @@ describe Stage do
   subject { stages(:test_staging) }
   let(:stage) { subject }
 
+  it "#unique_name" do
+    assert_equal "Foo / Staging", stage.unique_name
+  end
+
   describe "validations" do
     it "is valid" do
       assert_valid stage

@@ -203,6 +203,56 @@ describe MassRolloutsController do
         ignore = ["id", "created_at", "updated_at", "deploy_group_id"]
         copied_dgr.attributes.except(*ignore).must_equal template_dgr.attributes.except(*ignore)
       end
+
+      describe "multiple stages" do
+        let(:url) { "git://foo.com:hello/world.git" }
+        let(:project2) do
+          Project.any_instance.stubs(:valid_repository_url).returns(true)
+          Project.create!(
+            name: 'blah',
+            repository_url: url,
+            include_new_deploy_groups: true
+          )
+        end
+        let(:template_stage2) do
+          project2.stages.create!(
+            name: 'stage blah',
+            deploy_groups: [template_stage.deploy_groups.first],
+            is_template: true
+          )
+        end
+
+        before do
+          template_stage
+          template_stage2
+        end
+
+        it "creates multiple stages" do
+          assert_difference 'Stage.count', 2 do
+            post :create, params: {deploy_group_id: deploy_group}
+          end
+        end
+
+        it "reports number of stages created" do
+          post :create, params: {deploy_group_id: deploy_group}
+          assert_equal("Created 2 Stages", flash[:notice])
+        end
+
+        it "ignores errors" do
+          @controller.stubs(:create_stage_with_group).raises(StandardError)
+          assert_difference 'Stage.count', 0 do
+            post :create, params: {deploy_group_id: deploy_group}
+          end
+          assert_redirected_to deploy_group_path(deploy_group)
+        end
+
+        it "reports only the number of stages actually created" do
+          @controller.stubs(:create_stage_with_group).raises(StandardError).then.returns("something")
+
+          post :create, params: {deploy_group_id: deploy_group}
+          assert_equal("Created 1 Stages", flash[:notice])
+        end
+      end
     end
 
     describe "#merge" do
