@@ -97,7 +97,11 @@ module Kubernetes
       @raw_template ||= begin
         file = kubernetes_role.config_file
         content = kubernetes_release.project.repository.file_content(file, kubernetes_release.git_sha)
-        RoleConfigFile.new(content, file).elements
+        elements = RoleConfigFile.new(content, file).elements
+        if errors = Kubernetes::RoleVerifier.new(elements, kubernetes_release.project).verify
+          raise Samson::Hooks::UserError, "Error found when parsing #{file}\n#{errors.join("\n")}"
+        end
+        elements
       end
     end
   end

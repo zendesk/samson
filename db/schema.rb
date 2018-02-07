@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180202000103) do
+ActiveRecord::Schema.define(version: 20180207013051) do
 
   create_table "audits", force: :cascade do |t|
     t.integer "auditable_id", null: false
@@ -380,6 +380,7 @@ ActiveRecord::Schema.define(version: 20180202000103) do
     t.string "dockerfiles"
     t.boolean "build_with_gcb", default: false, null: false
     t.boolean "show_gcr_vulnerabilities", default: false, null: false
+    t.boolean "kubernetes_allow_writing_to_root_filesystem", default: false, null: false
     t.index ["build_command_id"], name: "index_projects_on_build_command_id"
     t.index ["permalink"], name: "index_projects_on_permalink", unique: true, length: { permalink: 191 }
     t.index ["token"], name: "index_projects_on_token", unique: true, length: { token: 191 }
