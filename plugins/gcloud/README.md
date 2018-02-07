@@ -33,3 +33,4 @@ Note: because of a bug in gcloud api vulnerability scans results are only availa
   - `GCLOUD_OPTIONS` - additional commandline options
   - `GCLOUD_IMAGE_TAGGER` - set to `true` to enable tagging on deploy
   - `GCLOUD_IMAGE_SCANNER` - set to `true` to enable build scanning 
+  - `GCLOUD_GKE_CLUSTERS_FOLDER` - set to folder where gke clusters config should be stored to enable gke cluster UI

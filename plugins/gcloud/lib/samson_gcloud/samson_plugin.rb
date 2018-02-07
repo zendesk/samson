@@ -26,9 +26,9 @@ module SamsonGcloud
       success || !job.deploy.stage.block_on_gcr_vulnerabilities
     end
 
-    def cli_options
+    def cli_options(project: nil)
       Shellwords.split(ENV.fetch('GCLOUD_OPTIONS', '')) +
-        ["--account", account, "--project", project]
+        ["--account", account, "--project", project || self.project]
     end
 
     def project
