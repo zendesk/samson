@@ -239,7 +239,7 @@ describe SessionsController do
         ),
         extra: Hashie::Mash.new(
           raw_info: Hashie::Mash.new(
-            sAMAccountName: [user.name]
+            sAMAccountName: [user.email]
           )
         )
       )
@@ -260,15 +260,6 @@ describe SessionsController do
 
       it 'logs the user in' do
         @controller.send(:current_user).must_equal(user)
-      end
-
-      it 'logs the user in with USE_LDAP_UID_AS_EXTERNAL_ID' do
-        Rails.application.config.samson.ldap.stub(:uid, 'sAMAccountName') do
-          with_env 'USE_LDAP_UID_AS_EXTERNAL_ID' => 'true' do
-            post :ldap
-            @controller.send(:current_user).must_equal(user)
-          end
-        end
       end
 
       it 'redirects to the root path' do
@@ -300,6 +291,21 @@ describe SessionsController do
 
       it "sets a flash error" do
         request.flash[:error].wont_be_nil
+      end
+    end
+
+    describe 'with LDAP_UID as external_id' do
+      it 'logs the user in' do
+        Rails.application.config.samson.ldap.stub(:uid, 'sAMAccountName') do
+          with_env 'AUTH_LDAP': 'true' do
+            with_env 'USE_LDAP_UID_AS_EXTERNAL_ID': 'true' do
+              post :ldap
+              @controller.send(:current_user).external_id.must_equal(
+                "#{strategy.name}-#{auth_hash.extra.raw_info.sAMAccountName.first}"
+              )
+            end
+          end
+        end
       end
     end
   end
