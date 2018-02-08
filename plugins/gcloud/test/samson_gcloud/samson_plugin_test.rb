@@ -52,14 +52,22 @@ describe SamsonGcloud do
     end
 
     describe "with GCLOUD_IMAGE_SCANNER" do
+      def expects_sleep(times)
+        SamsonGcloud.unstub(:sleep)
+        SamsonGcloud.expects(:sleep).times(times)
+      end
+
       with_env GCLOUD_IMAGE_SCANNER: "true", GCLOUD_ACCOUNT: 'acc', GCLOUD_PROJECT: 'proj'
 
-      before { job.project.show_gcr_vulnerabilities = true }
+      before do
+        job.project.show_gcr_vulnerabilities = true
+        SamsonGcloud.expects(:sleep).with { raise }.never
+      end
 
       it "shows success" do
-        SamsonGcloud::ImageScanner.expects(:scan).returns 1
+        SamsonGcloud::ImageScanner.expects(:scan).returns SamsonGcloud::ImageScanner::SUCCESS
         fire.must_equal [true]
-        output.string.must_equal "No vulnerabilities found\n"
+        output.string.must_equal "Waiting for GCR scan to finish...\nNo vulnerabilities found\n"
         build.gcr_vulnerabilities_status_id.must_equal SamsonGcloud::ImageScanner::SUCCESS
       end
 
@@ -72,17 +80,41 @@ describe SamsonGcloud do
       end
 
       it "shows failures" do
-        SamsonGcloud::ImageScanner.expects(:scan).returns 2
+        SamsonGcloud::ImageScanner.expects(:scan).returns SamsonGcloud::ImageScanner::FOUND
         fire.must_equal [true]
         output.string.must_include "Vulnerabilities found, see https://"
         build.gcr_vulnerabilities_status_id.must_equal SamsonGcloud::ImageScanner::FOUND
       end
 
-      it "stops the deploy when stage enforces scans" do
-        job.deploy.stage.block_on_gcr_vulnerabilities = true
-        SamsonGcloud::ImageScanner.expects(:scan).returns 2
-        fire.must_equal [false]
-        build.gcr_vulnerabilities_status_id.must_equal SamsonGcloud::ImageScanner::FOUND
+      it "does not wait when a scan is not required" do
+        SamsonGcloud::ImageScanner.expects(:scan).returns SamsonGcloud::ImageScanner::WAITING
+        fire.must_equal [true]
+      end
+
+      describe "when scan is required" do
+        before { job.deploy.stage.block_on_gcr_vulnerabilities = true }
+
+        it "waits until the scan is finished" do
+          SamsonGcloud::ImageScanner.expects(:scan).times(3).returns(
+            SamsonGcloud::ImageScanner::WAITING,
+            SamsonGcloud::ImageScanner::WAITING,
+            SamsonGcloud::ImageScanner::FOUND
+          )
+          expects_sleep 2
+          fire.must_equal [false]
+        end
+
+        it "fails if waiting did not help" do
+          SamsonGcloud::ImageScanner.expects(:scan).times(60).returns(SamsonGcloud::ImageScanner::WAITING)
+          expects_sleep 60
+          fire.must_equal [false]
+        end
+
+        it "stops the deploy when stage enforces scans" do
+          SamsonGcloud::ImageScanner.expects(:scan).returns 2
+          fire.must_equal [false]
+          build.gcr_vulnerabilities_status_id.must_equal SamsonGcloud::ImageScanner::FOUND
+        end
       end
     end
   end
