@@ -1,4 +1,4 @@
-<% if ENV['GCLOUD_IMAGE_SCANNER'] && @project.show_gcr_vulnerabilities %>
+<% if ENV['GCLOUD_IMAGE_SCANNER'] && @project.show_gcr_vulnerabilities && @build.docker_repo_digest %>
   <dt>Vulnerabilities</dt>
   <dd>
     <% url = SamsonGcloud::ImageScanner.result_url(@build) %>

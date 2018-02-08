@@ -19,7 +19,7 @@ module SamsonGcloud
       scan_optional = !job.deploy.stage.block_on_gcr_vulnerabilities
 
       unless SamsonGcloud::ImageScanner::FINISHED.include?(status)
-        output.puts 'Waiting for GCR scan to finish...'
+        output.puts 'Waiting for GCR scan to finish ...'
         (SCAN_WAIT_PERIOD / SCAN_SLEEP_PERIOD).times do
           status = SamsonGcloud::ImageScanner.scan(build)
           break if SamsonGcloud::ImageScanner::FINISHED.include?(status) || scan_optional
