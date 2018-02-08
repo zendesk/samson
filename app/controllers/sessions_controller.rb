@@ -90,11 +90,12 @@ class SessionsController < ApplicationController
   end
 
   def login(options = {})
-    uid = auth_hash.uid
-    if ENV['AUTH_LDAP'] && ENV['USE_LDAP_UID_AS_EXTERNAL_ID']
+    if auth_hash.provider == 'ldap' && ENV['AUTH_LDAP'] && ENV['USE_LDAP_UID_AS_EXTERNAL_ID']
       uid_field = Rails.application.config.samson.ldap.uid
       uid = auth_hash.extra.raw_info.send(uid_field).presence || raise
       uid = Array(uid).first
+    else
+      uid = auth_hash.uid
     end
 
     user = User.create_or_update_from_hash(options.merge(

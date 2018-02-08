@@ -232,6 +232,7 @@ describe SessionsController do
     let(:strategy) { stub(name: 'ldap') }
     let(:auth_hash) do
       Hashie::Mash.new(
+        provider: 'ldap',
         uid: '4',
         info: Hashie::Mash.new(
           name: user.name,
@@ -297,13 +298,11 @@ describe SessionsController do
     describe 'with LDAP_UID as external_id' do
       it 'logs the user in' do
         Rails.application.config.samson.ldap.stub(:uid, 'sAMAccountName') do
-          with_env 'AUTH_LDAP': 'true' do
-            with_env 'USE_LDAP_UID_AS_EXTERNAL_ID': 'true' do
-              post :ldap
-              @controller.send(:current_user).external_id.must_equal(
-                "#{strategy.name}-#{auth_hash.extra.raw_info.sAMAccountName.first}"
-              )
-            end
+          with_env AUTH_LDAP: 'true', USE_LDAP_UID_AS_EXTERNAL_ID: 'true' do
+            post :ldap
+            @controller.send(:current_user).external_id.must_equal(
+              "#{strategy.name}-#{auth_hash.extra.raw_info.sAMAccountName.first}"
+            )
           end
         end
       end
