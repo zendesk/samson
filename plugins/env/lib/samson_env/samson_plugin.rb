@@ -27,6 +27,12 @@ module SamsonEnv
       return groups if groups.any? { |_, data| data.present? }
     end
 
+    # https://github.com/bkeepers/dotenv/pull/188
+    # shellescape does not work ... we only get strings, so inspect works pretty well
+    def generate_dotenv(data)
+      data.map { |k, v| "#{k}=#{v.inspect.gsub("$", "\\$")}" }.join("\n") << "\n"
+    end
+
     private
 
     # writes .env file for each deploy group
@@ -37,12 +43,6 @@ module SamsonEnv
         generated_file = "#{base_file}#{suffix}"
         File.write(generated_file, generate_dotenv(data), 0, perm: 0o640)
       end
-    end
-
-    # https://github.com/bkeepers/dotenv/pull/188
-    # shellescape does not work ... we only get strings, so inspect works pretty well
-    def generate_dotenv(data)
-      data.map { |k, v| "#{k}=#{v.inspect.gsub("$", "\\$")}" }.join("\n") << "\n"
     end
   end
 end
