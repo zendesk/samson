@@ -70,7 +70,7 @@ module Kubernetes
     end
 
     def images
-      all = containers
+      all = containers.reject { |c| c[:'samson/dockerfile'] == 'none' }
       modify_init_container { |containers| all += containers }
       all.map { |c| c.fetch(:image) }.uniq
     end
@@ -306,6 +306,7 @@ module Kubernetes
             Samson::BuildFinder.detect_build_by_image_name!(builds, container.fetch(:image), fail: true)
           else
             selected = container[:"samson/dockerfile"] || 'Dockerfile'
+            next if selected == 'none'
             builds.detect { |b| b.dockerfile == selected } ||
               raise(
                 Samson::Hooks::UserError,

@@ -290,6 +290,14 @@ describe Kubernetes::TemplateFiller do
           container.fetch(:image).must_equal image
         end
 
+        it "does not override image when 'none' is passed as dockerfile" do
+          raw_template[:spec][:template][:spec][:containers][0][:'samson/dockerfile'] = 'none'
+          raw_template[:spec][:template][:spec][:containers][0][:image] = 'foo'
+
+          result # trigger set_docker_image_for_containers
+          container.fetch(:image).must_equal 'foo'
+        end
+
         it "raises when build was not found" do
           doc.kubernetes_release.builds = []
 
@@ -616,6 +624,13 @@ describe Kubernetes::TemplateFiller do
     it "finds images from init-containers" do
       add_init_container image: 'init-container'
       template.images.must_equal ["docker-registry.zende.sk/truth_service:latest", "init-container"]
+    end
+
+    it "does not include images that should not be built" do
+      raw_template[:spec][:template][:spec][:containers][0][:'samson/dockerfile'] = 'none'
+      raw_template[:spec][:template][:spec][:containers] << { 'samson/dockerfile': 'bar', image: 'baz' }
+
+      template.images.must_equal ['baz']
     end
   end
 end
