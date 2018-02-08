@@ -279,7 +279,8 @@ describe Kubernetes::TemplateFiller do
 
     describe "containers" do
       let(:result) { template.to_hash }
-      let(:container) { result.fetch(:spec).fetch(:template).fetch(:spec).fetch(:containers).first }
+      let(:containers) { result.dig_fetch(:spec, :template, :spec, :containers) }
+      let(:container) { containers.first }
 
       describe "image manipulation" do
         let(:build) { builds(:docker_build) }
@@ -376,12 +377,6 @@ describe Kubernetes::TemplateFiller do
         env.map { |x| x[:value] }.map(&:class).map(&:name).sort.uniq.must_equal(["NilClass", "String"])
       end
 
-      # https://github.com/zendesk/samson/issues/966
-      it "allows multiple containers, even though they will not be properly replaced" do
-        raw_template[:spec][:template][:metadata][:containers] = [{}, {}]
-        template.to_hash
-      end
-
       it "merges existing env settings" do
         template.send(:template)[:spec][:template][:spec][:containers][0][:env] = [{name: 'Foo', value: 'Bar'}]
         keys = container.fetch(:env).map { |x| x.fetch(:name) }
@@ -403,6 +398,19 @@ describe Kubernetes::TemplateFiller do
           container.fetch(:env).select { |e| e[:name] == 'FromEnv' }.must_equal(
             [{name: 'FromEnv', value: 'THIS-IS-GOOD'}]
           )
+        end
+      end
+
+      describe "with multiple containers" do
+        before { raw_template[:spec][:template][:spec][:containers] = [{}, {}] }
+
+        it "allows multiple containers, even though they will not be properly replaced" do
+          template.to_hash
+        end
+
+        it "fills all container envs" do
+          template.to_hash
+          containers[0][:env].must_equal containers[1][:env]
         end
       end
     end
@@ -452,13 +460,13 @@ describe Kubernetes::TemplateFiller do
         end
       end
 
-      it "adds the vault server address to the cotainers env" do
+      it "adds the vault server address to the containers env when using vault" do
         with_env(SECRET_STORAGE_BACKEND: "Samson::Secrets::HashicorpVaultBackend") do
           assert template_env.any? { |env| env.any? { |_k, v| v == "VAULT_ADDR" } }
         end
       end
 
-      it "does not add the vault server address to the cotainers env" do
+      it "does not add the vault server when not using vault" do
         with_env(SECRET_STORAGE_BACKEND: "foobar") do
           refute template_env.any? { |env| env.any? { |_k, v| v == "VAULT_ADDR" } }
         end
