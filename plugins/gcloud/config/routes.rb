@@ -5,4 +5,5 @@ Samson::Application.routes.draw do
       post :sync_build
     end
   end
+  resources :gke_clusters, only: [:new, :create]
 end

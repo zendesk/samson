@@ -36,9 +36,9 @@ module SamsonGcloud
       success || scan_optional
     end
 
-    def cli_options
+    def cli_options(project: nil)
       Shellwords.split(ENV.fetch('GCLOUD_OPTIONS', '')) +
-        ["--account", account, "--project", project]
+        ["--account", account, "--project", project || self.project]
     end
 
     def project
