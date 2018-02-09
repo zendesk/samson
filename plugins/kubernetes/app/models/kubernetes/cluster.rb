@@ -47,12 +47,6 @@ module Kubernetes
       client.get_namespaces.map { |ns| ns.metadata.name } - %w[kube-system]
     end
 
-    def namespace_exists?(namespace)
-      connection_valid? && namespaces.include?(namespace)
-    rescue *SamsonKubernetes.connection_errors
-      false
-    end
-
     def kubeconfig
       @kubeconfig ||= Kubeclient::Config.read(config_filepath)
     end
