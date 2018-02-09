@@ -1,0 +1,52 @@
+# frozen_string_literal: true
+
+module SamsonAssertible
+  class Engine < Rails::Engine
+  end
+
+  class Notification
+    class << self
+      def deliver(deploy)
+        return unless service_key.present?
+        return unless deploy_token.present?
+        return unless deploy.stage.notify_assertible?
+        return unless deploy.succeeded?
+
+        conn = Faraday.new(url: 'https://assertible.com')
+        conn.basic_auth(deploy_token, '')
+        conn.post(
+          '/deployments',
+          {
+            service: service_key,
+            environmentName: deploy.stage.name,
+            version: 'v1',
+            url: url_helpers.project_deploy_url(
+              id: deploy.id,
+              project_id: deploy.project.id
+            )
+          }.to_json
+        )
+      end
+
+      private
+
+      def service_key
+        ENV['ASSERTIBLE_SERVICE_KEY']
+      end
+
+      def deploy_token
+        ENV['ASSERTIBLE_DEPLOY_TOKEN']
+      end
+
+      def url_helpers
+        Rails.application.routes.url_helpers
+      end
+    end
+  end
+end
+
+Samson::Hooks.view :stage_form_checkbox, 'samson_assertible/stage_form_checkbox'
+
+Samson::Hooks.callback :after_deploy do |deploy, _buddy|
+  SamsonAssertible::Notification.deliver(deploy)
+end
