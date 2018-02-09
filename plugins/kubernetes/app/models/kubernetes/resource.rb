@@ -92,7 +92,7 @@ module Kubernetes
           yield
           sleep wait
         end
-        raise "Unable to #{reason}"
+        raise "Unable to #{reason} (#{name} #{namespace})"
       end
 
       def request_delete

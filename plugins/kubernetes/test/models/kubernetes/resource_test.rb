@@ -191,7 +191,7 @@ describe Kubernetes::Resource do
         resource.expects(:sleep).times(tries)
 
         e = assert_raises(RuntimeError) { resource.delete }
-        e.message.must_equal "Unable to delete resource"
+        e.message.must_equal "Unable to delete resource (some-project pod1)"
       end
     end
   end
