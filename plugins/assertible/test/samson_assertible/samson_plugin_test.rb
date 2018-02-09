@@ -39,13 +39,13 @@ describe SamsonAssertible::Notification do
 
     it "does not send notifications without service key" do
       with_env(ASSERTIBLE_SERVICE_KEY: nil) do
-        assert_raises(ArgumentError) { subject }
+        assert_raises(KeyError) { subject }
       end
     end
 
     it "does not send notifications without service key" do
       with_env(ASSERTIBLE_DEPLOY_TOKEN: nil) do
-        assert_raises(ArgumentError) { subject }
+        assert_raises(KeyError) { subject }
       end
     end
 

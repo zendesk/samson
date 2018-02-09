@@ -9,10 +9,6 @@ module SamsonAssertible
       def deliver(deploy)
         return unless deploy.stage.notify_assertible? && deploy.succeeded?
 
-        unless service_key.present? && deploy_token.present?
-          raise ArgumentError, 'Assertible service key and deploy token must be set.'
-        end
-
         conn = Faraday.new(url: 'https://assertible.com')
         conn.basic_auth(deploy_token, '')
         conn.post(
@@ -32,11 +28,11 @@ module SamsonAssertible
       private
 
       def service_key
-        ENV['ASSERTIBLE_SERVICE_KEY']
+        ENV.fetch('ASSERTIBLE_SERVICE_KEY')
       end
 
       def deploy_token
-        ENV['ASSERTIBLE_DEPLOY_TOKEN']
+        ENV.fetch('ASSERTIBLE_DEPLOY_TOKEN')
       end
 
       def url_helpers
