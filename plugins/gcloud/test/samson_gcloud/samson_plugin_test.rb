@@ -67,7 +67,7 @@ describe SamsonGcloud do
       it "shows success" do
         SamsonGcloud::ImageScanner.expects(:scan).returns SamsonGcloud::ImageScanner::SUCCESS
         fire.must_equal [true]
-        output.string.must_equal "Waiting for GCR scan to finish...\nNo vulnerabilities found\n"
+        output.string.must_equal "Waiting for GCR scan to finish ...\nNo vulnerabilities found\n"
         build.gcr_vulnerabilities_status_id.must_equal SamsonGcloud::ImageScanner::SUCCESS
       end
 
