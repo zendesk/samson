@@ -127,11 +127,10 @@ module Kubernetes
       end
 
       def fetch_resource
-        reply = request(:get, name, namespace, as: :raw)
-        JSON.parse(reply, symbolize_names: true)
-      rescue *SamsonKubernetes.connection_errors => e
-        raise e unless e.respond_to?(:error_code) && e.error_code == 404
-        nil
+        ignore_404 do
+          reply = request(:get, name, namespace, as: :raw)
+          JSON.parse(reply, symbolize_names: true)
+        end
       end
 
       def pods
@@ -142,7 +141,9 @@ module Kubernetes
 
       def delete_pods(pods)
         pods.each do |pod|
-          pod_client.delete_pod pod.dig_fetch(:metadata, :name), pod.dig_fetch(:metadata, :namespace)
+          ignore_404 do
+            pod_client.delete_pod pod.dig_fetch(:metadata, :name), pod.dig_fetch(:metadata, :namespace)
+          end
         end
       end
 
@@ -175,6 +176,13 @@ module Kubernetes
         yield
       ensure
         @template = original
+      end
+
+      def ignore_404
+        yield
+      rescue KubeException => e
+        raise e unless e.respond_to?(:error_code) && e.error_code == 404
+        nil
       end
     end
 
