@@ -153,9 +153,13 @@ module Samson
     end
 
     def wait_for_build_completion(build)
-      return unless build.reload.active?
+      if build.reload.active?
+        @output.puts("Waiting for Build #{build.url} to finish.")
+      else
+        @output.puts("Build #{build.url} is finish.")
+        return
+      end
 
-      @output.puts("Waiting for Build #{build.url} to finish.")
       loop do
         break if @cancelled
         sleep TICK
