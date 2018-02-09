@@ -74,7 +74,7 @@ describe :after_deploy do
 
   let(:deploy) { deploys(:succeeded_test) }
 
-  it 'Triggers delivery' do
+  it 'triggers delivery' do
     SamsonAssertible::Notification.expects(:deliver).once
     subject
   end
