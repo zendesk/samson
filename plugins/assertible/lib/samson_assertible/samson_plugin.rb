@@ -7,10 +7,11 @@ module SamsonAssertible
   class Notification
     class << self
       def deliver(deploy)
-        return unless service_key.present?
-        return unless deploy_token.present?
-        return unless deploy.stage.notify_assertible?
-        return unless deploy.succeeded?
+        return unless deploy.stage.notify_assertible? && deploy.succeeded?
+
+        unless service_key.present? && deploy_token.present?
+          raise ArgumentError, 'Assertible service key and deploy token must be set.'
+        end
 
         conn = Faraday.new(url: 'https://assertible.com')
         conn.basic_auth(deploy_token, '')

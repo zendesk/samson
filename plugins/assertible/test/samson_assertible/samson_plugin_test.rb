@@ -14,8 +14,10 @@ describe SamsonAssertible::Notification do
       deploy.stage.update_column(:notify_assertible, true)
     end
 
-    with_env(ASSERTIBLE_SERVICE_KEY: 'test_token')
-    with_env(ASSERTIBLE_DEPLOY_TOKEN: 'test_deploy')
+    with_env(
+      ASSERTIBLE_SERVICE_KEY: 'test_token',
+      ASSERTIBLE_DEPLOY_TOKEN: 'test_deploy'
+    )
 
     it "sends a notification" do
       assert_request(
@@ -35,40 +37,32 @@ describe SamsonAssertible::Notification do
       ) { subject }
     end
 
-    context 'When no service key' do
-      with_env(ASSERTIBLE_SERVICE_KEY: nil)
-
-      it 'Does not send notification' do
-        Faraday.expects(:post).never
-        subject
+    it "does not send notifications without service key" do
+      with_env(ASSERTIBLE_SERVICE_KEY: nil) do
+        assert_raises(ArgumentError) { subject }
       end
     end
 
-    context 'When no deploy token' do
-      with_env(ASSERTIBLE_DEPLOY_TOKEN: nil)
-
-      it 'Does not send notification' do
-        Faraday.expects(:post).never
-        subject
+    it "does not send notifications without service key" do
+      with_env(ASSERTIBLE_DEPLOY_TOKEN: nil) do
+        assert_raises(ArgumentError) { subject }
       end
     end
 
-    context 'When deploy fails' do
+    context 'when deploy fails' do
       let(:deploy) { deploys(:failed_staging_test) }
 
-      it 'Does not send notification' do
-        Faraday.expects(:post).never
+      it 'does not send notification' do
         subject
       end
     end
 
-    context 'When notifications are not enabled' do
+    context 'when notifications are not enabled' do
       before do
         deploy.stage.update_column(:notify_assertible, false)
       end
 
-      it 'Does not send notification' do
-        Faraday.expects(:post).never
+      it 'does not send notification' do
         subject
       end
     end
