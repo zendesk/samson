@@ -16,7 +16,7 @@ module SamsonGcloud
       def scan(build)
         return ERROR unless result = request(build, "occurrences", "kind=\"DISCOVERY\"")
         return WAITING unless result.dig("occurrences", 0, "discovered", "operation", "done")
-        return ERROR unless result = request(build, "vulnzsummary")
+        return ERROR unless result = request(build, "occurrences", "kind=\"PACKAGE_VULNERABILITY\"")
         result.empty? ? SUCCESS : FOUND
       end
 
@@ -52,7 +52,7 @@ module SamsonGcloud
           begin
             response = Faraday.get(
               "https://containeranalysis.googleapis.com/v1alpha1/projects/#{SamsonGcloud.project}/#{path}",
-              {filter: filter},
+              {filter: filter, pageSize: 1},
               authorization: "Bearer #{token}"
             )
           rescue
