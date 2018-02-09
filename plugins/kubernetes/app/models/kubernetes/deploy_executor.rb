@@ -31,7 +31,7 @@ module Kubernetes
         @output,
         @job,
         @reference,
-        images: @job.project.docker_image_building_disabled? && used_images
+        images: used_images
       )
     end
 

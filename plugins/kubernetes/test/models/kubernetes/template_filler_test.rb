@@ -290,11 +290,20 @@ describe Kubernetes::TemplateFiller do
           container.fetch(:image).must_equal image
         end
 
-        it "does not override image when no build was made" do
+        it "does not override image when 'none' is passed as dockerfile" do
+          raw_template[:spec][:template][:spec][:containers][0][:'samson/dockerfile'] = 'none'
+          raw_template[:spec][:template][:spec][:containers][0][:image] = 'foo'
+
+          result # trigger set_docker_image_for_containers
+          container.fetch(:image).must_equal 'foo'
+        end
+
+        it "raises when build was not found" do
           doc.kubernetes_release.builds = []
-          container.fetch(:image).must_equal(
-            "docker-registry.zende.sk/truth_service:latest"
-          )
+
+          assert_raises Samson::Hooks::UserError do
+            container.fetch(:image)
+          end
         end
 
         describe "when dockerfile was selected" do
@@ -313,7 +322,7 @@ describe Kubernetes::TemplateFiller do
 
           it "complains when build was not found" do
             e = assert_raises(Samson::Hooks::UserError) { container }
-            e.message.must_equal "Build for dockerfile Dockerfile.new not found"
+            e.message.must_equal "Build for dockerfile Dockerfile.new not found, found: Dockerfile"
           end
         end
 
@@ -322,9 +331,10 @@ describe Kubernetes::TemplateFiller do
           init_containers[0].must_equal("samson/dockerfile" => "Dockerfile", "image" => image)
         end
 
-        it "does not auto-set dockerfile for init containers since they are mostly special" do
-          add_init_container a: 1
-          init_containers[0].must_equal('a' => 1)
+        it "raises if an init container does not specify a dockerfile" do
+          add_init_container a: 1, "samson/dockerfile": 'Foo'
+          e = assert_raises(Samson::Hooks::UserError) { init_containers[0] }
+          e.message.must_equal "Build for dockerfile Foo not found, found: Dockerfile"
         end
 
         describe "when project does not build images" do
@@ -445,11 +455,6 @@ describe Kubernetes::TemplateFiller do
           except(init_container_key, :deployer, :owner).must_equal(
             "secret/FOO" => "global/global/global/bar"
           )
-      end
-
-      it "keeps existing init containers" do
-        add_init_container a: 1
-        init_containers[1].must_equal('a' => 1)
       end
 
       it "fails when vault is not configured" do
@@ -619,6 +624,13 @@ describe Kubernetes::TemplateFiller do
     it "finds images from init-containers" do
       add_init_container image: 'init-container'
       template.images.must_equal ["docker-registry.zende.sk/truth_service:latest", "init-container"]
+    end
+
+    it "does not include images that should not be built" do
+      raw_template[:spec][:template][:spec][:containers][0][:'samson/dockerfile'] = 'none'
+      raw_template[:spec][:template][:spec][:containers] << { 'samson/dockerfile': 'bar', image: 'baz' }
+
+      template.images.must_equal ['baz']
     end
   end
 end

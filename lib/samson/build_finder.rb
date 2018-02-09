@@ -27,7 +27,7 @@ module Samson
 
     def ensure_successful_builds
       builds =
-        if @images # using external builds
+        if @job.project.docker_image_building_disabled? && @images
           find_builds_by_image_names
         else
           find_or_create_builds_by_dockerfile_list
@@ -56,6 +56,8 @@ module Samson
 
     def find_or_create_builds_by_dockerfile_list
       requested = @job.project.dockerfile_list
+
+      return [] if requested == ['Dockerfile'] && @images == []
       requested.map { |dockerfile| find_or_create_build_by_dockerfile!(dockerfile) }
     end
 
@@ -82,7 +84,6 @@ module Samson
 
     def find_or_create_build_by_dockerfile!(dockerfile)
       image_name = @job.project.docker_image(dockerfile)
-
       wait_for_build_creation do |last_try|
         builds = possible_builds
         found = builds.detect { |b| b.dockerfile == dockerfile || b.image_name == image_name }
@@ -141,9 +142,6 @@ module Samson
         )
         DockerBuilderService.new(Build.find(build.id)).run # .find to not update/reload the same object
         build
-      elsif dockerfile == "Dockerfile" # allowing us to deploy kubernetes without Dockerfile
-        @output.puts("Not creating #{name} since is is not in the repository.")
-        nil
       else
         raise(
           Samson::Hooks::UserError,

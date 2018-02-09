@@ -13,7 +13,7 @@ module Kubernetes
       @index = index
     end
 
-    def to_hash
+    def to_hash(verification: false)
       @to_hash ||= begin
         kind = template[:kind]
 
@@ -42,7 +42,7 @@ module Kubernetes
           set_name
           set_contact_info
           set_spec_template_metadata
-          set_docker_image
+          set_docker_image unless verification
           set_resource_usage
           set_env
           set_secrets
@@ -70,7 +70,7 @@ module Kubernetes
     end
 
     def images
-      all = containers
+      all = containers.reject { |c| c[:'samson/dockerfile'] == 'none' }
       modify_init_container { |containers| all += containers }
       all.map { |c| c.fetch(:image) }.uniq
     end
@@ -293,26 +293,27 @@ module Kubernetes
     # To not break previous workflows for sidecars we do not pick the default Dockerfile
     def set_docker_image
       builds = @doc.kubernetes_release.builds
-      set_docker_image_for_containers(builds, containers, default: true)
+      set_docker_image_for_containers(builds, containers)
       modify_init_container do |containers|
-        set_docker_image_for_containers(builds, containers, default: false)
+        set_docker_image_for_containers(builds, containers)
       end
     end
 
-    # NOTE: the whole inner loop might make sense to pull out and unify in BuildFinder
-    # so that needed dockerfiles are also detected there instead of via project `dockerfiles` column
-    def set_docker_image_for_containers(builds, containers, default:)
+    def set_docker_image_for_containers(builds, containers)
       containers.each do |container|
         build =
           if project.docker_image_building_disabled?
             Samson::BuildFinder.detect_build_by_image_name!(builds, container.fetch(:image), fail: true)
-          elsif selected = container[:"samson/dockerfile"]
+          else
+            selected = container[:"samson/dockerfile"] || 'Dockerfile'
+            next if selected == 'none'
             builds.detect { |b| b.dockerfile == selected } ||
-              raise(Samson::Hooks::UserError, "Build for dockerfile #{selected} not found")
-          elsif default
-            builds.detect { |b| b.dockerfile == "Dockerfile" }
+              raise(
+                Samson::Hooks::UserError,
+                "Build for dockerfile #{selected} not found, found: #{builds.map(&:dockerfile).join(', ')}"
+              )
           end
-        container[:image] = build.docker_repo_digest if build
+        container[:image] = build.docker_repo_digest
       end
     end
 

@@ -24,12 +24,14 @@ describe Kubernetes::DeployExecutor do
 
   describe "#pid" do
     it "returns a fake pid" do
+      Kubernetes::DeployExecutor.any_instance.stubs(:used_images).returns([])
       executor.pid.must_include "Kubernetes"
     end
   end
 
   describe "#pgid" do
     it "returns a fake pid" do
+      Kubernetes::DeployExecutor.any_instance.stubs(:used_images).returns([])
       executor.pgid.must_include "Kubernetes"
     end
   end
@@ -172,6 +174,7 @@ describe Kubernetes::DeployExecutor do
       around { |test| refute_difference('Build.count') { refute_difference('Release.count', &test) } }
 
       it "fails before building when a role are invalid" do
+        Kubernetes::DeployExecutor.any_instance.stubs(:used_images).returns([])
         Kubernetes::ReleaseDoc.any_instance.unstub(:raw_template)
         GitRepository.any_instance.expects(:file_content).with { |file| file =~ /^kubernetes\// }.returns("oops: bad")
 
@@ -267,7 +270,7 @@ describe Kubernetes::DeployExecutor do
             'template' => {
               'metadata' => {'labels' => {'project' => 'foobar', 'role' => 'migrate'}},
               'spec' => {
-                'containers' => [{'name' => 'job'}],
+                'containers' => [{'name' => 'job', 'image' => 'docker-registry.zende.sk/truth_service:latest'}],
                 'restartPolicy' => 'Never'
               }
             }
@@ -622,6 +625,9 @@ describe Kubernetes::DeployExecutor do
   end
 
   describe "#fetch_pods" do
+    before do
+      Kubernetes::DeployExecutor.any_instance.stubs(:used_images).returns([])
+    end
     it "retries on failure" do
       Kubeclient::Client.any_instance.expects(:get_pods).times(4).raises(KubeException.new(1, 2, 3))
       executor.instance_variable_set(:@release, kubernetes_releases(:test_release))
@@ -675,6 +681,7 @@ describe Kubernetes::DeployExecutor do
       kubernetes_roles(:app_server).update_columns blue_green: true
       release.update_columns blue_green_color: "blue"
       add_service_to_release_doc
+      Kubernetes::DeployExecutor.any_instance.stubs(:used_images).returns([])
     end
 
     it "deploys new resources" do
