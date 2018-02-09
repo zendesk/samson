@@ -2,6 +2,8 @@
 require 'validates_lengths_from_database'
 
 class EnvironmentVariable < ActiveRecord::Base
+  FAILED_LOOKUP_MARK = ' X' # SpaceX
+
   include GroupScope
   audited
 
@@ -55,7 +57,7 @@ class EnvironmentVariable < ActiveRecord::Base
           resolved =
             if preview
               path = resolver.expand_key(secret_key)
-              path ? "#{TerminalExecutor::SECRET_PREFIX}#{path}" : "#{value} X"
+              path ? "#{TerminalExecutor::SECRET_PREFIX}#{path}" : "#{value}#{FAILED_LOOKUP_MARK}"
             else
               found.to_s
             end

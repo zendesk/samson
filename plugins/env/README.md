@@ -1,3 +1,4 @@
 Plugin to manage ENV settings for projects and write .env files during deploy.
 
-If the project comes with a checked in .env file then only the keys in it will be set by samson.
+Includes `/projects/:permalink/environment?deploy_group=permalink` endpoint that returns the .env content
+for a project and deploy_group.
