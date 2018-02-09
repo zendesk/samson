@@ -32,8 +32,7 @@ end
 ###
 
 require_relative "../lib/samson/env_check"
-require_relative "../lib/samson/initializer_logging"
-require_relative "../app/models/job_queue.rb" # need to load early or dev reload will lose the .enabled
+# other requires should live at the bottom of the file
 
 module Samson
   class Application < Rails::Application
@@ -161,6 +160,8 @@ module Samson
 
     unless ENV['PRECOMPILE']
       config.after_initialize do
+        require_relative "../lib/samson/mapped_database_exceptions"
+
         # Token used to request badges
         config.samson.badge_token = \
           Digest::MD5.hexdigest('badge_token' + Samson::Application.config.secret_key_base)
@@ -177,4 +178,7 @@ module Samson
 end
 
 require 'samson/hooks'
-require "#{Rails.root}/lib/samson/logging"
+
+require_relative "../lib/samson/logging"
+require_relative "../lib/samson/initializer_logging"
+require_relative "../app/models/job_queue" # need to load early or dev reload will lose the .enabled
