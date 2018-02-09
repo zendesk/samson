@@ -13,11 +13,8 @@ describe Kubernetes::Resource do
     )
   end
 
-  def assert_pod_deletion
-    delete_pod = stub_request(:delete, "#{origin}/api/v1/namespaces/name1/pods/pod1").
-      to_return(body: '{}')
-    yield
-    assert_requested delete_pod
+  def assert_pod_deletion(&block)
+    assert_request(:delete, "#{origin}/api/v1/namespaces/name1/pods/pod1", to_return: {body: '{}'}, &block)
   end
 
   def autoscaled!
@@ -492,13 +489,39 @@ describe Kubernetes::Resource do
           }
         }
         assert_request(:get, url, to_return: {body: set.to_json}) do
-          assert_pod_deletion do
-            assert_request(
-              :patch,
-              url,
-              with: {headers: {"Content-Type" => "application/json-patch+json"}},
-              to_return: {body: "{}"}
-            ) do
+          assert_request(
+            :patch,
+            url,
+            with: {headers: {"Content-Type" => "application/json-patch+json"}},
+            to_return: {body: "{}"}
+          ) do
+            assert_pod_deletion do
+              resource.expects(:pods).times(2).returns(
+                [{metadata: {creationTimestamp: '1', name: 'pod1', namespace: 'name1'}}],
+                [{metadata: {creationTimestamp: '2'}}]
+              )
+              resource.deploy
+            end
+          end
+        end
+      end
+
+      it "does not fail when scaling down and previous generation pods have been removed already" do
+        set = {
+          spec: {
+            replicas: 2,
+            selector: {matchLabels: {project: "foo", release: "bar"}},
+            template: {spec: {containers: []}}
+          }
+        }
+        assert_request(:get, url, to_return: {body: set.to_json}) do
+          assert_request(
+            :patch,
+            url,
+            with: {headers: {"Content-Type" => "application/json-patch+json"}},
+            to_return: {body: "{}"}
+          ) do
+            assert_request(:delete, "#{origin}/api/v1/namespaces/name1/pods/pod1", to_return: {status: 404}) do
               resource.expects(:pods).times(2).returns(
                 [{metadata: {creationTimestamp: '1', name: 'pod1', namespace: 'name1'}}],
                 [{metadata: {creationTimestamp: '2'}}]
