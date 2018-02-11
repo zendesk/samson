@@ -10,9 +10,9 @@
   <li class="active"><a href="#output" data-toggle="tab">Output</a></li>
   <li><a href="#files" data-type="github" data-toggle="tab">Files</a></li>
   <li><a href="#commits" data-type="github" data-toggle="tab">Commits</a></li>
-  <li><a href="#pulls" data-type="github" data-toggle="tab">Pull Requests</a></li>
+  <li><a href="#pull_requests" data-type="github" data-toggle="tab">Pull Requests</a></li>
   <li><a href="#risks" data-type="github" data-toggle="tab">Risks</a></li>
-  <li><a href="#jira-issues" data-type="github" data-toggle="tab">JIRA Issues</a></li>
+  <li><a href="#jira_issues" data-type="github" data-toggle="tab">JIRA Issues</a></li>
   <li><a href="#viewers" data-toggle="tab" id="viewers-link">Viewers <span class="badge">0</span></a></li>
   <%= Samson::Hooks.render_views(:deploy_tab_nav, self) %>
 </ul>
@@ -23,11 +23,7 @@
       <%= deploy_output %>
     </div>
 
-    <% %w(files commits pulls risks jira-issues).each do |pane| %>
-      <div class="tab-pane changeset-placeholder" id="<%= pane %>">
-        <p>Loading...</p>
-      </div>
-    <% end %>
+    <%= render 'changeset/pane_placeholders' %>
 
     <div class="tab-pane" id="viewers">
       No other viewers.
