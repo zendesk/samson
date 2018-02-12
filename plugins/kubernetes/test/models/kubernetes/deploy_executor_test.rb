@@ -708,11 +708,11 @@ describe Kubernetes::DeployExecutor do
       assert_request(:put, "#{services_url}/some-project", to_return: {body: "{}"}) # update to point to blue
 
       # delete old deployment
+      Kubernetes::Resource::Deployment.any_instance.expects(:pods).returns([])
       assert_request(
         :get, "#{deployments_url}/test-app-server-green",
         to_return: [{body: "{}"}, {body: "{}"}, {status: 404}] # green did exist and gets deleted
       )
-      assert_request(:put, "#{deployments_url}/test-app-server-green", to_return: {body: "{}"}) # set green to 0
       assert_request(:delete, "#{deployments_url}/test-app-server-green", to_return: {body: "{}"}) # delete green
 
       executor.expects(:wait_for_resources_to_complete).returns(true)
@@ -728,14 +728,14 @@ describe Kubernetes::DeployExecutor do
 
     it "reverts new resources when they fail" do
       # deployment
+      Kubernetes::Resource::Deployment.any_instance.expects(:pods).returns([])
       assert_request(
         :get, "#{deployments_url}/test-app-server-blue", to_return:
         [
-          {status: 404}, {body: "{}"}, {body: "{}"}, {status: 404} # blue did not exist + 3 replies for deletion
+          {status: 404}, {body: "{}"}, {status: 404} # blue did not exist + 3 replies for deletion
         ]
       )
       assert_request(:post, deployments_url, to_return: {body: "{}"}) # blue was created
-      assert_request(:put, "#{deployments_url}/test-app-server-blue", to_return: {body: "{}"}) # set blue to 0
       assert_request(:delete, "#{deployments_url}/test-app-server-blue", to_return: {body: "{}"}) # delete blue
 
       executor.expects(:wait_for_resources_to_complete).returns([])
