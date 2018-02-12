@@ -180,6 +180,24 @@ h3 {
 .label {
   padding: .3em 0.65em .35em;
   border-radius: .2em;
+
+  &.additions {
+    color: green;
+
+    &::before {
+      content: "+";
+      padding: 0 2px;
+    }
+  }
+
+  &.deletions {
+    color: red;
+
+    &::before {
+      content: "-";
+      padding: 0 2px;
+    }
+  }
 }
 
 .label-success {
