@@ -27,6 +27,7 @@ Available plugins:
  - [Slack notifications](https://github.com/zendesk/samson/tree/master/plugins/slack_webhooks)
  - [Zendesk notifications](https://github.com/zendesk/samson/tree/master/plugins/zendesk)
  - [Rollbar notifications on deploy](https://github.com/zendesk/samson/tree/master/plugins/rollbar)
+ - [Assertible notifications on deploy](https://github.com/zendesk/samson/tree/master/plugins/assertible)
  - Add yours here!
 
 To create your own plugin run:

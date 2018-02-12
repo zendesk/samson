@@ -5,6 +5,11 @@ PATH
       airbrake
 
 PATH
+  remote: plugins/assertible
+  specs:
+    samson_assertible (0.0.0)
+
+PATH
   remote: plugins/aws_ecr
   specs:
     samson_aws_ecr (0.0.0)
@@ -567,6 +572,7 @@ DEPENDENCIES
   rails-controller-testing
   rubocop
   samson_airbrake!
+  samson_assertible!
   samson_aws_ecr!
   samson_datadog!
   samson_docker_binary_builder!
