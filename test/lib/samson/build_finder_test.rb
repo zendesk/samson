@@ -147,7 +147,7 @@ describe Samson::BuildFinder do
         finder.cancelled!
         DockerBuilderService.any_instance.expects(:run).returns(true)
         execute
-        out.scan(/.*build.*/).must_equal ["Creating build for Dockerfile."] # not waiting for build
+        out.scan(/.*build for.*/).must_equal(["Creating build for Dockerfile."])
       end
     end
 
@@ -180,9 +180,8 @@ describe Samson::BuildFinder do
         execute.must_equal [build]
       end
 
-      it "finds accross projects" do
-        Build.any_instance.expects(:url).returns("foo") # bogus project not found so url building fails
-        build.update_column(:project_id, 123)
+      it "finds across projects" do
+        build.update_column(:project_id, projects(:other).id)
         execute.must_equal [build]
       end
 
