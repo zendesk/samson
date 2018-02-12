@@ -7,6 +7,10 @@ describe SamsonGcloud::ImageBuilder do
   let(:build) { builds(:docker_build) }
 
   describe ".build_image" do
+    def expect_successful_build
+      executor.expects(:execute).with { output.write "foo digest: sha-123:abc" }.returns(true)
+    end
+
     def build_image(tag_as_latest: false, cache_from: nil)
       SamsonGcloud::ImageBuilder.build_image(dir, build, executor, tag_as_latest: tag_as_latest, cache_from: cache_from)
     end
@@ -82,7 +86,7 @@ describe SamsonGcloud::ImageBuilder do
     end
 
     it "returns the docker repo digest" do
-      executor.expects(:execute).with { output.write "foo digest: sha-123:abc" }.returns(true)
+      expect_successful_build
       build_image.must_equal "#{repo}@sha-123:abc"
       build.external_url.must_be_nil
     end
@@ -90,6 +94,12 @@ describe SamsonGcloud::ImageBuilder do
     it "returns nil on failure" do
       executor.expects(:execute).returns(false)
       build_image.must_be_nil
+    end
+
+    it "fails when cloudbuild.yml already exists since that is not supported" do
+      File.write("some-dir/cloudbuild.yml", "foo")
+      e = assert_raises(Samson::Hooks::UserError) { build_image }
+      e.message.must_equal "cloudbuild.yml already exists, use external builds"
     end
 
     it "returns nil when digest was not found" do
@@ -116,7 +126,7 @@ describe SamsonGcloud::ImageBuilder do
 
     it "builds different Dockerfiles" do
       build.dockerfile = 'Dockerfile.changed'
-      executor.expects(:execute).with { output.write "foo digest: sha-123:abc" }.returns(true)
+      expect_successful_build
       build_image.must_equal "#{repo}-changed@sha-123:abc"
       build.external_url.must_be_nil
     end
