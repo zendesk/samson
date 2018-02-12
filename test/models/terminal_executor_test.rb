@@ -102,7 +102,7 @@ describe TerminalExecutor do
     end
 
     it "can timeout" do
-      with_env DEPLOY_TIMEOUT: '1' do
+      with_config :deploy_timeout, 1 do
         refute subject.execute('echo hello; sleep 10')
       end
       `ps -ef | grep "[s]leep 10"`.wont_include "sleep 10" # process got killed

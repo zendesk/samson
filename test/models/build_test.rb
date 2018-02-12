@@ -222,4 +222,42 @@ describe Build do
       end
     end
   end
+
+  describe ".cancel_stalled_builds" do
+    before do
+      build.update_columns(created_at: 3.hours.ago, external_status: 'running')
+    end
+
+    it 'cancels builds that have been running for too long' do
+      puts build.created_at
+
+      Build.cancel_stalled_builds
+
+      build.reload.external_status.must_equal 'cancelled'
+    end
+
+    it 'does not cancel internal builds' do
+      build.update_column(:external_status, nil)
+
+      Build.cancel_stalled_builds
+
+      build.external_status.must_be_nil
+    end
+
+    it 'does not cancel finished builds' do
+      build.update_column(:external_status, 'succeeded')
+
+      Build.cancel_stalled_builds
+
+      build.external_status.must_equal 'succeeded'
+    end
+
+    it 'does not cancel builds that are not stalled' do
+      build.update_column(:created_at, 1.hour.ago)
+
+      Build.cancel_stalled_builds
+
+      build.external_status.must_equal 'running'
+    end
+  end
 end
