@@ -68,6 +68,11 @@ ActiveSupport::TestCase.class_eval do
     end
   end
 
+  def refute_valid_on(model, attribute, message)
+    assert_predicate model, :invalid?
+    assert_equal message, model.errors.full_messages_for(attribute)
+  end
+
   def freeze_time
     Time.stubs(:now).returns(Time.new(2001, 2, 3, 4, 5, 6))
   end

@@ -7,25 +7,33 @@ class AccessRequestsController < ApplicationController
   end
 
   def new
-    @projects = Project.all.order(:name)
-    @roles = Role.all
+    @access_request = AccessRequest.new
   end
 
   def create
-    options = {
-      host: request.base_url,
-      user: current_user,
-    }
-    [:manager_email, :reason, :project_ids, :role_id].each { |p| options[p] = params.require(p) }
+    @access_request = AccessRequest.new(access_request_params)
 
-    AccessRequestMailer.access_request_email(options).deliver_now
-    current_user.update!(access_request_pending: true)
+    if @access_request.valid?
+      options = {
+        host: request.base_url,
+        user: current_user,
+      }.merge(access_request_params).with_indifferent_access
 
-    flash[:notice] = 'Access request email sent.'
-    redirect_back fallback_location: root_path
+      AccessRequestMailer.access_request_email(options).deliver_now
+      current_user.update!(access_request_pending: true)
+
+      flash[:notice] = 'Access request email sent.'
+      redirect_back fallback_location: root_path
+    else
+      render :new, status: :unprocessable_entity
+    end
   end
 
   private
+
+  def access_request_params
+    params.require(:access_request).permit(:manager_email, :reason, :role_id, project_ids: [])
+  end
 
   def ensure_enabled
     raise ActionController::RoutingError, 'Not Found' unless self.class.feature_enabled?
