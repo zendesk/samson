@@ -25,6 +25,9 @@ module SamsonGcloud
         end
 
         config = "#{dir}/cloudbuild.yml" # inside of the directory or we get 'Could not parse into a message'
+        if File.exist?(config)
+          raise Samson::Hooks::UserError, "cloudbuild.yml already exists, use external builds"
+        end
 
         File.write(config, <<~YAML)
           steps:#{cache_pull}
