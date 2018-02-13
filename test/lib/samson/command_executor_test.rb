@@ -17,6 +17,12 @@ describe Samson::CommandExecutor do
       Samson::CommandExecutor.execute("sh", "-c", "echo hello 1>&2", err: '/dev/null', timeout: 1).must_equal [true, ""]
     end
 
+    it "runs in specified directory" do
+      Dir.mktmpdir("foobar") do |dir|
+        Samson::CommandExecutor.execute("pwd", timeout: 1, dir: dir).second.must_include dir
+      end
+    end
+
     it "fails nicely on missing exectable" do
       Samson::CommandExecutor.execute("foo", "bar", timeout: 1).must_equal [false, "No such file or directory - foo"]
     end
