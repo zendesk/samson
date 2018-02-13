@@ -69,13 +69,27 @@ module Kubernetes
       expand_secret_annotations
     end
 
-    def images
-      all = containers.reject { |c| c[:'samson/dockerfile'] == 'none' }
+    def build_selectors
+      all = containers
       modify_init_container { |containers| all += containers }
-      all.map { |c| c.fetch(:image) }.uniq
+      all.map { |c| build_selector_for_container(c) }.compact
     end
 
     private
+
+    def build_selector_for_container(container)
+      dockerfile = container[:"samson/dockerfile"] || 'Dockerfile'
+      return if dockerfile == 'none'
+
+      if project.docker_image_building_disabled?
+        # also supporting dockerfile would make sense if external builds did not have image_name,
+        # maybe even Dockerfile.foo -> <permalink>-foo translation
+        # but for now keeping old behavior
+        [nil, container.fetch(:image)]
+      else
+        [dockerfile, nil]
+      end
+    end
 
     def set_service_blue_green
       template.dig_set([:spec, :selector, :blue_green], blue_green_color)
@@ -301,18 +315,8 @@ module Kubernetes
 
     def set_docker_image_for_containers(builds, containers)
       containers.each do |container|
-        build =
-          if project.docker_image_building_disabled?
-            Samson::BuildFinder.detect_build_by_image_name!(builds, container.fetch(:image), fail: true)
-          else
-            selected = container[:"samson/dockerfile"] || 'Dockerfile'
-            next if selected == 'none'
-            builds.detect { |b| b.dockerfile == selected } ||
-              raise(
-                Samson::Hooks::UserError,
-                "Build for dockerfile #{selected} not found, found: #{builds.map(&:dockerfile).join(', ')}"
-              )
-          end
+        next unless build_selector = build_selector_for_container(container)
+        build = Samson::BuildFinder.detect_build_by_selector!(builds, *build_selector, fail: true)
         container[:image] = build.docker_repo_digest
       end
     end

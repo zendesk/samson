@@ -31,7 +31,7 @@ module Kubernetes
         @output,
         @job,
         @reference,
-        images: used_images
+        build_selectors: build_selectors
       )
     end
 
@@ -403,9 +403,9 @@ module Kubernetes
       @release.release_docs.detect { |rd| break rd.deploy_group if rd.deploy_group_id == pod.deploy_group_id }
     end
 
-    # all images used ... they vary by role and not by deploy-group
-    def used_images
-      temp_release_docs.uniq(&:kubernetes_role_id).flat_map(&:images).uniq
+    # vary by role and not by deploy-group
+    def build_selectors
+      temp_release_docs.uniq(&:kubernetes_role_id).flat_map(&:build_selectors).uniq
     end
 
     # verify with a temp release so we can verify everything before creating a real release

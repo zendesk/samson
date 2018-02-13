@@ -20,6 +20,7 @@ describe Kubernetes::TemplateFiller do
   let(:init_containers) do
     JSON.parse(template.to_hash[:spec][:template][:metadata][:annotations][init_container_key])
   end
+  let(:project) { doc.kubernetes_release.project }
 
   before do
     doc.send(:resource_template=, YAML.load_stream(read_kubernetes_sample_file('kubernetes_deployment.yml')))
@@ -43,7 +44,7 @@ describe Kubernetes::TemplateFiller do
         tag: "master",
         release_id: doc.kubernetes_release_id.to_s,
         project: "some-project",
-        project_id: doc.kubernetes_release.project_id.to_s,
+        project_id: project.id.to_s,
         role_id: doc.kubernetes_role_id.to_s,
         role: "some-role",
         deploy_group: 'pod1',
@@ -155,12 +156,12 @@ describe Kubernetes::TemplateFiller do
       let(:result) { template.to_hash.dig_fetch(:spec, :template, :metadata, :annotations, :owner) }
 
       it "sets owner" do
-        doc.kubernetes_release.project.owner = "foo@bar.com"
+        project.owner = "foo@bar.com"
         result.must_equal "foo@bar.com"
       end
 
       it "does not set nil owner which breaks kubernetes api" do
-        doc.kubernetes_release.project.owner = nil
+        project.owner = nil
         result.must_equal ""
       end
     end
@@ -322,7 +323,10 @@ describe Kubernetes::TemplateFiller do
 
           it "complains when build was not found" do
             e = assert_raises(Samson::Hooks::UserError) { container }
-            e.message.must_equal "Build for dockerfile Dockerfile.new not found, found: Dockerfile"
+            e.message.must_equal(
+              "Did not find build for dockerfile \"Dockerfile.new\" or image_name nil.\n" \
+              "Found builds: [[\"Dockerfile\", nil]]."
+            )
           end
         end
 
@@ -334,12 +338,14 @@ describe Kubernetes::TemplateFiller do
         it "raises if an init container does not specify a dockerfile" do
           add_init_container a: 1, "samson/dockerfile": 'Foo'
           e = assert_raises(Samson::Hooks::UserError) { init_containers[0] }
-          e.message.must_equal "Build for dockerfile Foo not found, found: Dockerfile"
+          e.message.must_equal(
+            "Did not find build for dockerfile \"Foo\" or image_name nil.\nFound builds: [[\"Dockerfile\", nil]]."
+          )
         end
 
         describe "when project does not build images" do
           before do
-            doc.kubernetes_release.project.docker_image_building_disabled = true
+            project.docker_image_building_disabled = true
             build.update_column(:image_name, 'truth_service')
           end
 
@@ -350,7 +356,7 @@ describe Kubernetes::TemplateFiller do
           it "fails when build is not found" do
             build.update_column(:image_name, 'nope')
             e = assert_raises(Samson::Hooks::UserError) { container.fetch(:image).must_equal image }
-            e.message.must_include "Did not find build for image_name truth_service"
+            e.message.must_include "Did not find build for dockerfile nil or image_name \"truth_service\""
           end
         end
       end
@@ -627,21 +633,41 @@ describe Kubernetes::TemplateFiller do
     end
   end
 
-  describe "#images" do
-    it "finds images from containers" do
-      template.images.must_equal ["docker-registry.zende.sk/truth_service:latest"]
+  describe "#build_selectors" do
+    it "returns Dockerfile by default" do
+      template.build_selectors.must_equal [["Dockerfile", nil]]
     end
 
-    it "finds images from init-containers" do
-      add_init_container image: 'init-container'
-      template.images.must_equal ["docker-registry.zende.sk/truth_service:latest", "init-container"]
+    it "allows selecting a dockerfile" do
+      raw_template[:spec][:template][:spec][:containers][0][:'samson/dockerfile'] = 'Bar'
+      template.build_selectors.must_equal [["Bar", nil]]
     end
 
-    it "does not include images that should not be built" do
+    it "ignores images that should not be built" do
       raw_template[:spec][:template][:spec][:containers][0][:'samson/dockerfile'] = 'none'
-      raw_template[:spec][:template][:spec][:containers] << { 'samson/dockerfile': 'bar', image: 'baz' }
+      template.build_selectors.must_equal []
+    end
 
-      template.images.must_equal ['baz']
+    describe "when only images are supported" do
+      before { project.docker_image_building_disabled = true }
+
+      it "finds images from containers" do
+        template.build_selectors.must_equal [[nil, "docker-registry.zende.sk/truth_service:latest"]]
+      end
+
+      it "finds images from init-containers" do
+        add_init_container image: 'init-container'
+        template.build_selectors.must_equal(
+          [[nil, "docker-registry.zende.sk/truth_service:latest"], [nil, "init-container"]]
+        )
+      end
+
+      it "does not include images that should not be built" do
+        raw_template[:spec][:template][:spec][:containers][0][:'samson/dockerfile'] = 'none'
+        raw_template[:spec][:template][:spec][:containers] << { 'samson/dockerfile': 'bar', image: 'baz' }
+
+        template.build_selectors.must_equal [[nil, 'baz']]
+      end
     end
   end
 end
