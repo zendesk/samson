@@ -118,6 +118,14 @@ describe "cleanliness" do
     end
   end
 
+  it 'checks for usages of Dir.chdir' do
+    assert_content all_code do |content|
+      if content =~ /Dir\.chdir/
+        'Avoid using Dir.chdir as it causes warnings and potentially some threading issues'
+      end
+    end
+  end
+
   it "uses active test case wording" do
     assert_content all_tests do |content|
       if content =~ /\s+it ['"]should /
