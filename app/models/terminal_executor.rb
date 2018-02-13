@@ -23,7 +23,7 @@ class TerminalExecutor
     @deploy = deploy
     @project = project
     @cancelled = false
-    @timeout = Integer(ENV["DEPLOY_TIMEOUT"] || 2.hours.to_i)
+    @timeout = Rails.application.config.samson.deploy_timeout
   end
 
   def execute(*commands, timeout: @timeout)

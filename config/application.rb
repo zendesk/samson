@@ -135,6 +135,8 @@ module Samson
     config.samson.stream_origin = ENV['STREAM_ORIGIN'].presence || config.samson.uri.to_s
     config.samson.deploy_origin = ENV['DEPLOY_ORIGIN'].presence || config.samson.uri.to_s
 
+    config.samson.deploy_timeout = Integer(ENV["DEPLOY_TIMEOUT"] || 2.hours.to_i)
+
     self.default_url_options = {
       host: config.samson.uri.host,
       protocol: config.samson.uri.scheme

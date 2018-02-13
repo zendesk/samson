@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 require 'samson/periodical' # avoid auto-load since we setup global state
 
+Samson::Periodical.register :cancel_stalled_builds, "Cancel stalled builds" do
+  Build.cancel_stalled_builds
+end
+
 Samson::Periodical.register :stop_expired_deploys, "Cancel deploys when buddy approval request timed out" do
   Deploy.expired.each { |d| d.cancel(nil) }
 end

@@ -135,6 +135,20 @@ ActiveSupport::TestCase.class_eval do
     around { |test| with_env(env, &test) }
   end
 
+  def with_config(key, value)
+    config = Rails.application.config.samson
+    old = config.send(key)
+
+    config.send("#{key}=", value)
+    yield
+  ensure
+    config.send("#{key}=", old)
+  end
+
+  def self.with_config(*args)
+    around { |test| with_config(*args, &test) }
+  end
+
   def self.run_inside_of_temp_directory
     around { |test| Dir.mktmpdir { |dir| Dir.chdir(dir) { test.call } } }
   end
