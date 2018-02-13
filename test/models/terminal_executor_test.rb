@@ -254,7 +254,7 @@ describe TerminalExecutor do
   describe '#script_as_executable' do
     it "makes a unreadable script" do
       subject.send(:script_as_executable, "echo 1") do |path|
-        File.stat(path).mode.must_equal 0o100700
+        File.stat(path[/\/\S+/]).mode.must_equal 0o100700
       end
     end
 
@@ -278,8 +278,8 @@ describe TerminalExecutor do
       p = nil
       assert_raises RuntimeError do
         subject.send(:script_as_executable, "echo 1") do |path|
-          assert File.exist?(path)
-          p = path
+          p = path[/\/\S+/]
+          assert File.exist?(p)
           raise
         end
       end
