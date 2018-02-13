@@ -1,7 +1,7 @@
-<% if changeset.jira_issues.any? %>
+<% if jira_issues = changeset.jira_issues.presence %>
   <p>The following JIRA issues were mentioned in the pull request bodies in this deploy:</p>
   <ul>
-    <% changeset.jira_issues.each do |issue| %>
+    <% jira_issues.each do |issue| %>
       <li><%= link_to issue.reference, issue.url %></li>
     <% end %>
   </ul>
