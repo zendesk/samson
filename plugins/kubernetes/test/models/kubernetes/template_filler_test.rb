@@ -425,7 +425,7 @@ describe Kubernetes::TemplateFiller do
       end
     end
 
-    describe "secret-puler-containers" do
+    describe "secret-puller-containers" do
       let(:secret_key) { "global/global/global/bar" }
       let(:template_env) { template.to_hash[:spec][:template][:spec][:containers].first[:env] }
 
@@ -465,15 +465,26 @@ describe Kubernetes::TemplateFiller do
         end
       end
 
-      it "adds the vault server address to the containers env when using vault" do
-        with_env(SECRET_STORAGE_BACKEND: "Samson::Secrets::HashicorpVaultBackend") do
-          assert template_env.any? { |env| env.any? { |_k, v| v == "VAULT_ADDR" } }
-        end
-      end
+      describe 'when using vault' do
+        let(:vault_env) { template_env.detect { |h| break h.fetch(:value) if h.fetch(:name) == "VAULT_ADDR" } }
 
-      it "does not add the vault server when not using vault" do
-        with_env(SECRET_STORAGE_BACKEND: "foobar") do
-          refute template_env.any? { |env| env.any? { |_k, v| v == "VAULT_ADDR" } }
+        with_env(SECRET_STORAGE_BACKEND: "Samson::Secrets::HashicorpVaultBackend")
+
+        it "does not add the vault server if VAULT_ADDR is not required" do
+          refute vault_env
+        end
+
+        describe 'when vault address is required' do
+          before { raw_template[:spec][:template][:metadata][:annotations] = {"samson/required_env": 'VAULT_ADDR'} }
+
+          it "adds the vault server address to the containers env" do
+            vault_env.must_equal "https://test.hvault.server"
+          end
+
+          it "does not overwrite user defined value" do
+            EnvironmentVariable.create!(parent: projects(:test), name: 'VAULT_ADDR', value: 'hello')
+            vault_env.must_equal 'hello'
+          end
         end
       end
 
