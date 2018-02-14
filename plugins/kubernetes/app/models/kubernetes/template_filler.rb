@@ -323,14 +323,19 @@ module Kubernetes
 
     # custom annotation we support here and in kucodiff
     def missing_env
-      required = ((annotations || {})[:"samson/required_env"] || "").strip.split(/[\s,]/)
       test_env = (containers.first[:env] || [])
-      (required - test_env.map { |e| e.fetch(:name) }).presence
+      (required_env - test_env.map { |e| e.fetch(:name) }).presence
+    end
+
+    def required_env
+      ((annotations || {})[:"samson/required_env"] || "").strip.split(/[\s,]/)
     end
 
     # helpful env vars, also useful for log tagging
     def set_env
       all = []
+
+      all.concat vault_env if vault_env_required?
 
       static_env.each { |k, v| all << {name: k.to_s, value: v.to_s} }
 
@@ -345,8 +350,6 @@ module Kubernetes
           valueFrom: {fieldRef: {fieldPath: v}}
         }
       end
-
-      all.concat vault_env if ENV["SECRET_STORAGE_BACKEND"] == "Samson::Secrets::HashicorpVaultBackend"
 
       containers.each do |c|
         env = (c[:env] ||= [])
@@ -385,6 +388,10 @@ module Kubernetes
     def blue_green_color
       return @blue_green_color if defined?(@blue_green_color)
       @blue_green_color = @doc.blue_green_color
+    end
+
+    def vault_env_required?
+      required_env.include?('VAULT_ADDR') && ENV["SECRET_STORAGE_BACKEND"] == "Samson::Secrets::HashicorpVaultBackend"
     end
 
     def vault_env
