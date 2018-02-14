@@ -23,8 +23,8 @@ describe Samson::BuildFinder do
   let(:out) { output.string }
   let(:build) { builds(:docker_build) }
   let(:job) { jobs(:succeeded_test) }
-  let(:images) { nil }
-  let(:finder) { Samson::BuildFinder.new(output, job, 'master', images: images) }
+  let(:build_selectors) { nil }
+  let(:finder) { Samson::BuildFinder.new(output, job, 'master', build_selectors: build_selectors) }
   let(:project) { build.project }
 
   before do
@@ -152,7 +152,7 @@ describe Samson::BuildFinder do
     end
 
     describe "when finding builds via image_name" do
-      let(:images) { ["foo.com/foo/bar:latest"] }
+      let(:build_selectors) { [[nil, "foo.com/foo/bar:latest"]] }
 
       before do
         build.update_columns(image_name: 'bar', docker_repo_digest: "some-digest")

@@ -12,12 +12,12 @@ module Samson
   class BuildFinder
     TICK = 2.seconds
 
-    def initialize(output, job, reference, images: nil)
+    def initialize(output, job, reference, build_selectors: nil)
       @output = output
       @job = job
       @reference = reference
       @cancelled = false
-      @images = images
+      @build_selectors = build_selectors
     end
 
     # deploy was cancelled, so finish up as fast as possible
@@ -26,50 +26,58 @@ module Samson
     end
 
     def ensure_successful_builds
-      builds =
-        if @job.project.docker_image_building_disabled? && @images
-          find_builds_by_image_names
-        else
-          find_or_create_builds_by_dockerfile_list
-        end
-
+      builds = find_or_create_builds
       builds.compact.each do |build|
         wait_for_build_completion(build)
         ensure_build_is_successful(build) unless @cancelled
       end
     end
 
-    def self.detect_build_by_image_name!(builds, image, fail:)
-      image_name = image.split('/').last.split(/[:@]/, 2).first
-      builds.detect { |b| b.image_name == image_name } || (
-        if fail
-          raise(
-            Samson::Hooks::UserError,
-            "Did not find build for image_name #{image_name} (from #{image}).\n" \
-            "Found image_names #{builds.map(&:image_name).uniq.join(", ")}."
-          )
+    def find_or_create_builds
+      needed =
+        if @build_selectors
+          @build_selectors.dup
+        else
+          @job.project.dockerfile_list.map { |d| [d, @job.project.docker_image(d)] }
         end
+
+      build_disabled = @job.project.docker_image_building_disabled?
+      all = []
+
+      wait_for_build_creation do |last_try|
+        needed.delete_if do |dockerfile, image|
+          found = self.class.detect_build_by_selector!(
+            possible_builds, dockerfile, image, fail: (last_try && build_disabled)
+          )
+          if found
+            all << found
+          elsif last_try
+            raise unless dockerfile # should never get here
+            raise if build_disabled # should never get here
+            all << create_build(dockerfile)
+          end
+        end
+        needed.empty? # stop the waiting when we got everything
+      end
+
+      all
+    end
+
+    def self.detect_build_by_selector!(builds, dockerfile, image, fail:)
+      image_name = image.split('/').last.split(/[:@]/, 2).first if image
+      found = builds.detect do |b|
+        (image_name && b.image_name == image_name) || (dockerfile && b.dockerfile == dockerfile)
+      end
+      return found if found || !fail
+
+      raise(
+        Samson::Hooks::UserError,
+        "Did not find build for dockerfile #{dockerfile.inspect} or image_name #{image_name.inspect}.\n" \
+        "Found builds: #{builds.map { |b| [b.dockerfile, b.image_name] }.uniq.inspect}."
       )
     end
 
     private
-
-    def find_or_create_builds_by_dockerfile_list
-      requested = @job.project.dockerfile_list
-
-      return [] if requested == ['Dockerfile'] && @images == []
-      requested.map { |dockerfile| find_or_create_build_by_dockerfile!(dockerfile) }
-    end
-
-    # Finds build by comparing their name (foo.com/bar/baz -> baz) to pre-build images image_name column
-    def find_builds_by_image_names
-      wait_for_build_creation do |last_try|
-        builds = possible_builds
-        @images.map do |image|
-          self.class.detect_build_by_image_name!(builds, image, fail: last_try) || break
-        end
-      end
-    end
 
     def possible_builds
       commits = [@job.commit]
@@ -80,24 +88,6 @@ module Samson
       end
 
       Build.where(git_sha: commits).sort_by { |build| commits.index(build.git_sha) }
-    end
-
-    def find_or_create_build_by_dockerfile!(dockerfile)
-      image_name = @job.project.docker_image(dockerfile)
-      wait_for_build_creation do |last_try|
-        builds = possible_builds
-        found = builds.detect { |b| b.dockerfile == dockerfile || b.image_name == image_name }
-
-        return found if found
-        next unless last_try
-        return create_build(dockerfile) unless @job.project.docker_image_building_disabled?
-
-        raise(
-          Samson::Hooks::UserError,
-          "Did not find build for dockerfile #{dockerfile.inspect} or image_name #{image_name.inspect}.\n" \
-          "Found builds: #{builds.map { |b| [b.dockerfile, b.image_name] }.uniq.inspect}."
-        )
-      end
     end
 
     # we only wait once no matter how many builds are missing since build creation is fast
