@@ -47,3 +47,7 @@ Samson::Hooks.view :stage_form_checkbox, 'samson_assertible/stage_form_checkbox'
 Samson::Hooks.callback :after_deploy do |deploy, _buddy|
   SamsonAssertible::Notification.deliver(deploy)
 end
+
+Samson::Hooks.callback :stage_permitted_params do
+  :notify_assertible
+end
