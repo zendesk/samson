@@ -378,6 +378,13 @@ describe Kubernetes::Resource do
   end
 
   describe Kubernetes::Resource::Deployment do
+    def deployment_stub(replica_count)
+      {
+        spec: {},
+        status: {replicas: replica_count}
+      }.to_json
+    end
+
     let(:kind) { 'Deployment' }
     let(:url) { "#{origin}/apis/extensions/v1beta1/namespaces/pod1/deployments/some-project" }
 
@@ -394,17 +401,29 @@ describe Kubernetes::Resource do
         end
       end
 
-      it "deletes pods too" do
-        deployment = {spec: {template: {metadata: {labels: {release_id: 123, deploy_group_id: 234}}}}}
-        assert_request(:get, url, to_return: [{body: deployment.to_json}, {status: 404}]) do
-          assert_pods_lookup do
-            assert_pod_deletion do
-              assert_request(:delete, url, to_return: {body: '{}'}) do
-                resource.delete
-              end
-            end
-          end
+      it "waits for pods to terminate before deleting" do
+        client = resource.send(:client)
+        client.expects(:update_deployment).with do |template|
+          template[:spec][:replicas].must_equal 0
         end
+        client.expects(:get_deployment).raises(KubeException.new(404, 'Not Found', {}))
+        client.expects(:get_deployment).times(3).returns(
+          deployment_stub(3),
+          deployment_stub(3),
+          deployment_stub(0)
+        )
+
+        client.expects(:delete_deployment)
+        resource.delete
+      end
+
+      it "does not fail on unset replicas" do
+        client = resource.send(:client)
+        client.expects(:update_deployment)
+        client.expects(:get_deployment).raises(KubeException.new(404, 'Not Found', {}))
+        client.expects(:get_deployment).times(2).returns(deployment_stub(nil))
+        client.expects(:delete_deployment)
+        resource.delete
       end
     end
 
