@@ -5,7 +5,7 @@ require 'samson_gcloud/image_builder'
 require 'samson_gcloud/image_scanner'
 
 module SamsonGcloud
-  SCAN_WAIT_PERIOD = 5.minutes
+  SCAN_WAIT_PERIOD = 10.minutes
   SCAN_SLEEP_PERIOD = 5.seconds
 
   class Engine < Rails::Engine
