@@ -105,8 +105,8 @@ describe SamsonGcloud do
         end
 
         it "fails if waiting did not help" do
-          SamsonGcloud::ImageScanner.expects(:scan).times(60).returns(SamsonGcloud::ImageScanner::WAITING)
-          expects_sleep 60
+          SamsonGcloud::ImageScanner.expects(:scan).times(120).returns(SamsonGcloud::ImageScanner::WAITING)
+          expects_sleep 120
           fire.must_equal [false]
         end
 
