@@ -1,7 +1,7 @@
 <%= page_title "New GKE Cluster" %>
 
 <section>
-  <%= form_for OpenStruct.new(params[:gke_cluster] || {}), as: :gke_cluster, url: gke_clusters_path, html: { class: "form-horizontal" } do |form| %>
+  <%= form_for @gke_cluster, html: { class: "form-horizontal" } do |form| %>
     <%= form.input :gcp_project, label: 'GCP Project', required: true %>
     <%= form.input :cluster_name, label: 'GKE Cluster Name', required: true %>
     <%= form.input :zone, label: 'Zone', required: true %>

@@ -20,8 +20,8 @@ describe GkeClustersController do
     end
 
     describe "#create" do
-      def do_create
-        post :create, params: {gke_cluster: {gcp_project: "pp", cluster_name: "cc", zone: "zz"}}
+      def do_create(gcp_project: 'pp', cluster_name: 'cc', zone: 'zz')
+        post :create, params: { gke_cluster: { gcp_project: gcp_project, cluster_name: cluster_name, zone: zone } }
       end
 
       let(:expected_file) { "#{ENV["GCLOUD_GKE_CLUSTERS_FOLDER"]}/pp-cc.yml" }
@@ -62,6 +62,12 @@ describe GkeClustersController do
         do_create
         assert_response :success
         flash[:error].must_equal "File #{expected_file} already exists and cannot be overwritten automatically."
+      end
+
+      it 're-renders new if invalid gke cluster is submitted' do
+        do_create(gcp_project: nil)
+        assert_response :unprocessable_entity
+        assert_select 'h1', text: 'New GKE Cluster'
       end
     end
   end
