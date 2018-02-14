@@ -3,12 +3,20 @@ class GkeClustersController < ApplicationController
   before_action :authorize_super_admin!
 
   def new
+    @gke_cluster = GkeCluster.new
   end
 
   def create
-    project = params.require(:gke_cluster).require(:gcp_project)
-    cluster = params.require(:gke_cluster).require(:cluster_name)
-    zone = params.require(:gke_cluster).require(:zone)
+    @gke_cluster = GkeCluster.new(gke_cluster_params)
+
+    if @gke_cluster.invalid?
+      render :new, status: :unprocessable_entity
+      return
+    end
+
+    project = @gke_cluster.gcp_project
+    cluster = @gke_cluster.cluster_name
+    zone = @gke_cluster.zone
 
     # prepare the file gcloud will write into
     folder = ENV.fetch("GCLOUD_GKE_CLUSTERS_FOLDER")
@@ -47,5 +55,11 @@ class GkeClustersController < ApplicationController
       new_kubernetes_cluster_path(kubernetes_cluster: {config_filepath: path}),
       notice: "Clustr config #{path} created!"
     )
+  end
+
+  private
+
+  def gke_cluster_params
+    params.require(:gke_cluster).permit(:gcp_project, :cluster_name, :zone)
   end
 end
