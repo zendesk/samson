@@ -79,3 +79,9 @@ describe :after_deploy do
     subject
   end
 end
+
+describe :stage_permitted_params do
+  it "adds notify_assertible" do
+    Samson::Hooks.fire(:stage_permitted_params).must_include :notify_assertible
+  end
+end
