@@ -23,7 +23,7 @@
           <div class="pull-right">
             <% if (deploy = stage.last_deploy) && deploy.failed? %>
               <%= link_to [project, deploy], class: 'no-hover' do %>
-                <%= content_tag :i, '', class: 'fa fa-exclamation-triangle deployment-alert', title: deployment_alert_title(deploy) %>
+                <%= content_tag :i, '', class: 'glyphicon glyphicon-alert deployment-alert', title: deployment_alert_title(deploy) %>
               <% end %>
             <% end %>
 
