@@ -84,7 +84,7 @@ Samson allows limiting how many resources each project can use per Deploy Group,
 Each deploy selects a Git SHA and N deploy groups to deploy to. For this Git SHA Samson finds or creates all builds that 
 were requested in the [Kubernetes role config files](#configuration-files).
 
-### Under the Hood
+### Record Keeping
 
 For each deploy, a `Kubernetes::Release` is created, which tracks which `Build` was deployed and
 who executed it.
@@ -100,11 +100,24 @@ Kubernetes::Release
       -> Kubernetes Pods (how ever many replicas specified)
 ```
 
+### Docker Images
+
+(To opt out of this feature set `samson/dockerfile: none`)
+
+For each container (including init containers) Samson finds or creates a matching Docker image for the Git SHA that is being deployed. 
+Samson always sets the Docker digest, and not a tag, to make deployments immutable.
+
+Samson matches builds to containers by looking at the `samson/dockerfile` attribute or the 
+base image name (part after the last `/`), if the project has enabled `Docker images built externally`.
+
+Images can be built locally via `docker build`, or via `gcloud` CLI (see Gcloud plugin), or externally and then sent to Samson via the
+API (`POST /builds.json`).
+
 ### Injected config
 
 Via [Template filler](/plugins/kubernetes/app/models/kubernetes/template_filler.rb)
 
- - Docker image (opt out by setting `samson/dockerfile: none`)
+ - Docker image
  - Limits + replicas
  - Environment variables: POD_NAME, POD_NAMESPACE, POD_IP, REVISION, TAG, DEPLOY_ID, DEPLOY_GROUP, PROJECT, ROLE,
    KUBERNETES_CLUSTER_NAME, and environment variables defined via [env](/plugins/env) plugin.
@@ -125,16 +138,6 @@ Prefer `RollingUpdate` if possible instead.
 
 To deploy the same repository multiple times, create separate projects and then set `metadata.annotations.samson/override_project_label: "true"`,
 samson will then override the `project` labels and keep deployments/services unique.  
-
-### Building multiple Dockerfiles
-
- - Add `samson/dockerfile: Dockerfile.foobar` to the container configuration (same level as `image`) to use a different Dockerfile
- 
-### Using multiple external images
-
- - Set the projects `Docker images built externally` 
- - Create images via the `POST /builds.json` with a `image_name` that matches the  base name of the `image` attribute of the containers
- - All containers (including init containers) must have a matching build
 
 ### Service updates
 
