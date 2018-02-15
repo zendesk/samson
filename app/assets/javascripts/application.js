@@ -12,20 +12,20 @@
 //
 //= require jsSHA
 //= require instant_errors
-//= require jquery
+
+//= require jquery3
+//= require popper
+//= require bootstrap
+
 //= require jquery-ujs
 //= require jquery-cookie
 //= require jquery-ui
 //= require angular
 //= require underscore
 //= require moment
-//= require bootstrap/alert
-//= require bootstrap/dropdown
-//= require bootstrap/tab
-//= require bootstrap/tooltip
-//= require bootstrap/popover
 //= require bootstrap-select
-//= require x-editable/dist/bootstrap3-editable/js/bootstrap-editable
+
+
 //= require app
 //= require underscore_mixins
 //= require jstimezonedetect

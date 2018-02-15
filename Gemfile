@@ -75,7 +75,8 @@ group :assets do
   gem 'ngannotate-rails'
   gem 'sass-rails'
   gem 'uglifier'
-  gem 'bootstrap-sass'
+  gem 'bootstrap', '~> 4.0.0'
+  gem 'jquery-rails'
 
   source 'https://rails-assets.org' do
     gem 'rails-assets-angular'
