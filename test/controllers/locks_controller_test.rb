@@ -100,6 +100,12 @@ describe LocksController do
         lock.delete_at.must_equal(Time.now + 3600)
       end
 
+      it 'redirects and shows error if stage lock is invalid' do
+        create_lock(stage, delete_at: 1.hour.ago)
+        assert_redirected_to '/back'
+        assert flash[:error]
+      end
+
       it 'creates a stage warning' do
         create_lock stage, warning: true
         assert_redirected_to '/back'

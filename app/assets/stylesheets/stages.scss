@@ -89,31 +89,22 @@
   }
 }
 
-.before-lock {
-  display: none;
-  vertical-align: bottom;
-
-  &.active {
-    display: inline-block;
-  }
+.datetimepicker-container {
+  position: relative;
 }
 
-.lock-description {
+.lock-dropdown-menu {
+  margin-top: 1em;
+}
+
+.lock-input {
   border-radius: 4px;
   border: 1px solid #ccc;
   height: 34px;
   padding: 6px;
   vertical-align: bottom;
   width: 200px;
-}
-
-.lock-delete-in {
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  height: 34px;
-  padding: 6px;
-  vertical-align: bottom;
-  width: 200px;
+  margin: .5em;
 }
 
 .deploy-groups {
