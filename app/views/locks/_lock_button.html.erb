@@ -6,10 +6,15 @@
         <%= f.hidden_field :resource_type %>
         <%= f.hidden_field :warning %>
         <%= f.text_field :description, class: "lock-input", placeholder: "Description", required: warning %>
+        <div class="btn-group lock-times" role="group">
+          <% delete_lock_options.each do |(label, num, unit)| %>
+            <%= button_tag(label, type: 'button', class: 'btn btn-default', data: { num: num, unit: unit }) %>
+          <% end %>
+        </div>
         <span class="datetimepicker-container">
           <%= f.text_field :delete_at, placeholder: "Expiration date", class: 'datetimepicker lock-input' %>
         </span>
-      <%= f.submit text, class: "do-lock btn btn-warning lock-input" %>
+      <%= f.submit text, class: "lock-submit btn btn-warning lock-input" %>
     <% end %>
   </div>
 </span>
