@@ -257,10 +257,21 @@ h1 {
 /* Footer */
 
 .footer {
-  background: #f5f5f5;
-  color: #999;
+  background: white;
+  color: $accentGrey;
   height: 60px;
-  margin-bottom: 0px;
+  padding: 20px 0;
+
+  p {
+    display: inline-block;
+    float: right;
+    padding-left: 5px;
+
+    &.built-by {
+      float: left;
+      padding: 0;
+    }
+  }
 }
 
 /* Forms */

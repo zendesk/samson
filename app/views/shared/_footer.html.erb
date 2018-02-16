@@ -1,23 +1,15 @@
-<div class="footer navbar">
+<div class="footer">
   <div class="container">
-    <ul class="nav navbar-nav">
-      <li>
-        <p class="navbar-text">Built by Zendesk</p>
-      </li>
-    </ul>
+    <p class="built-by">Built by Zendesk</p>
+    <% if revision = Rails.application.config.samson.revision.presence %>
+      <p>
+        <%= link_to revision[0..7], "https://github.com/zendesk/samson/commit/#{revision}",
+            title: "Currently deployed samson version since #{Rails.application.config.samson.start_time.to_s(:db)}", class: "sha" %>
+      </p>
+    <% end %>
 
-    <ul class="nav navbar-nav pull-right">
-      <% if link = ENV['HELP_LINK'] %>
-        <li><%= link.html_safe %></li>
-      <% end %>
-
-      <% if revision = Rails.application.config.samson.revision.presence %>
-        <li>
-          <%= link_to revision[0..7], "https://github.com/zendesk/samson/commit/#{revision}",
-              title: "Currently deployed samson version since #{Rails.application.config.samson.start_time.to_s(:db)}", class: "sha" %>
-        </li>
-      <% end %>
-
-    </div>
+    <% if link = ENV['HELP_LINK'] %>
+      <p><%= link.html_safe %></p>
+    <% end %>
   </div>
 </div>
