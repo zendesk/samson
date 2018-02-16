@@ -747,4 +747,10 @@ describe Stage do
       stage.deployed_or_running_deploy.must_be_nil
     end
   end
+
+  describe "#url" do
+    it "builds" do
+      stage.url.must_equal "http://www.test-url.com/projects/foo/stages/staging"
+    end
+  end
 end
