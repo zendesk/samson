@@ -1,6 +1,5 @@
 AllCops:
   DisplayCopNames: true
-  TargetRubyVersion: 2.3
   Exclude:
     - db/schema.rb
     - vendor/**/*
@@ -191,4 +190,12 @@ Style/FormatStringToken:
 
 # too many false-positives
 Performance/HashEachMethods:
+  Enabled: false
+
+# we cannot enable this until breakman does not barf on ruby 2.5 blocks with rescue
+Style/RedundantBegin:
+  Enabled: false
+
+# TODO: enable
+Performance/RegexpMatch:
   Enabled: false
