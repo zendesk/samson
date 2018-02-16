@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 Samson::Application.routes.draw do
-  root to: 'projects#index'
+  root to: 'home#index'
 
   resources :projects do
     resources :jobs, only: [:index, :show, :destroy]

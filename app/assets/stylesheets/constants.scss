@@ -1,3 +1,4 @@
+$background: #F4F4F4;
 $samsonDark: #333;
 $samsonGrey: lighten($samsonDark, 70%);
 $samsonLight: lighten($samsonDark, 75%);
@@ -12,3 +13,5 @@ $lightSuccess: lighten(#5cb85c, $lightScale);
 $lightWarning: lighten(#f0ad4e, $lightScale);
 $lightDanger: lighten(#d9534f, $lightScale);
 $lightInfo: lighten(#5bc0de, $lightScale);
+
+$accentGrey: #797979;

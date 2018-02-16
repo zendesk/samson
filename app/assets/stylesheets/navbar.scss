@@ -1,0 +1,15 @@
+.navbar {
+  background: white;
+
+  .logo {
+    margin: 0 auto;
+
+    img {
+      height: 80px;
+    }
+  }
+
+  a {
+    color: $accentGrey;
+  }
+}

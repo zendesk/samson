@@ -17,7 +17,7 @@ module StatusHelper
   end
 
   def status_badge(status)
-    content_tag :span, status.titleize, class: "label #{status_label(status)}"
+    content_tag :span, status, class: "label #{status_label(status)}"
   end
 
   def status_label(key)

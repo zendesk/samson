@@ -46,3 +46,4 @@
 # .bak files
 *.bak
 /vendor/cache/**/
+.DS_Store

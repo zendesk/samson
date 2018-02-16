@@ -77,6 +77,7 @@ group :assets do
   gem 'uglifier'
   gem 'bootstrap', '~> 4.0.0'
   gem 'jquery-rails'
+  gem "font-awesome-rails"
 
   source 'https://rails-assets.org' do
     gem 'rails-assets-angular'
