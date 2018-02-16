@@ -49,13 +49,6 @@ $(function() {
     });
   }
 
-  $(".want-lock").not(":disabled").click(function() {
-    var $form = $(this).next();
-    $(this).toggleClass("active");
-    $form.toggleClass("active");
-    $form.find(".lock-description").select();
-  });
-
   $(".env-toggle-all").each(function() {
     var envCheckbox = $(this);
     var deploygroupCheckboxes = $("." + envCheckbox.data('target'));

@@ -32,6 +32,11 @@ describe Lock do
         lock.description = "X"
         assert_valid lock
       end
+
+      it "is invalid with a delete_at in the past" do
+        lock.delete_at = 1.day.ago
+        refute_valid_on lock, :delete_at, "Delete at Date must be in the future"
+      end
     end
 
     describe "#unique_global_lock" do

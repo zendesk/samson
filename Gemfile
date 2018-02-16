@@ -76,6 +76,8 @@ group :assets do
   gem 'sass-rails'
   gem 'uglifier'
   gem 'bootstrap-sass'
+  gem 'momentjs-rails'
+  gem 'bootstrap3-datetimepicker-rails'
 
   source 'https://rails-assets.org' do
     gem 'rails-assets-angular'
@@ -85,7 +87,6 @@ group :assets do
     gem 'rails-assets-jquery'
     gem 'rails-assets-jquery-ui'
     gem 'rails-assets-jquery-ujs'
-    gem 'rails-assets-moment'
     gem 'rails-assets-typeahead.js'
     gem 'rails-assets-underscore'
     gem 'rails-assets-x-editable'

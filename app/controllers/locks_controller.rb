@@ -11,14 +11,17 @@ class LocksController < ApplicationController
   end
 
   def create
-    lock = Lock.create!(
-      params.require(:lock).
-        permit(:description, :resource_id, :resource_type, :warning, :delete_in).
-        merge(user: current_user)
-    )
-    respond_to do |format|
-      format.html { redirect_back notice: 'Locked', fallback_location: root_path }
-      format.json { render json: {lock: lock} }
+    new_lock = Lock.new(lock_params)
+    if new_lock.save
+      respond_to do |format|
+        format.html { redirect_back notice: 'Locked', fallback_location: root_path }
+        format.json { render json: {lock: new_lock} }
+      end
+    else
+      respond_to do |format|
+        format.html { redirect_back flash: { error: format_errors(new_lock) }, fallback_location: root_path }
+        format.json { render_json_error 422, new_lock.errors }
+      end
     end
   end
 
@@ -38,7 +41,22 @@ class LocksController < ApplicationController
     head :ok
   end
 
-  protected
+  private
+
+  def lock_params
+    params.require(:lock).permit(
+      :description,
+      :resource_id,
+      :resource_type,
+      :warning,
+      :delete_in,
+      :delete_at
+    ).merge(user: current_user)
+  end
+
+  def format_errors(object)
+    object.errors.messages.values.flatten.join("\n")
+  end
 
   def for_stage_lock?
     case action_name

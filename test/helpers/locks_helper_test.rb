@@ -9,12 +9,12 @@ describe LocksHelper do
   describe "#delete_lock_options" do
     it "returns the correct options" do
       choices = [
-        ['Expire in 1 hour', 3600],
-        ['Expire in 2 hours', 7200],
-        ['Expire in 4 hours', 14400],
-        ['Expire in 8 hours', 28800],
-        ['Expire in 1 day', 86400],
-        ['Never', nil]
+        ['1 hour', 1, 'hours'],
+        ['2 hours', 2, 'hours'],
+        ['4 hours', 4, 'hours'],
+        ['8 hours', 8, 'hours'],
+        ['1 day', 1, 'days'],
+        ['Never', 0, '']
       ]
       assert_equal choices, delete_lock_options
     end

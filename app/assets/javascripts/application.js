@@ -25,6 +25,7 @@
 //= require bootstrap/tooltip
 //= require bootstrap/popover
 //= require bootstrap-select
+//= require bootstrap-datetimepicker
 //= require x-editable/dist/bootstrap3-editable/js/bootstrap-editable
 //= require app
 //= require underscore_mixins

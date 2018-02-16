@@ -70,7 +70,7 @@ ActiveSupport::TestCase.class_eval do
 
   def refute_valid_on(model, attribute, message)
     assert_predicate model, :invalid?
-    assert_equal message, model.errors.full_messages_for(attribute)
+    assert_includes model.errors.full_messages_for(attribute), message
   end
 
   def freeze_time
