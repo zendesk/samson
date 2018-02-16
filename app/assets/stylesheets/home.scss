@@ -5,5 +5,13 @@
 .latest-deploys {
   background: white;
   margin-top: 20px;
+  margin-bottom: 20px;
+  padding: 40px;
+}
+
+.starred, .ra-status {
+  background: white;
   @include gutter20;
 }
+
+

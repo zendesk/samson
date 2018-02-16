@@ -14,6 +14,7 @@
 
 @mixin center {
   margin: 0 auto;
+  text-align: center;
 }
 
 /* Common styles */
@@ -41,7 +42,8 @@ h1,
 h2,
 h3,
 h4,
-h5 {
+h5,
+h6 {
   @include Lato;
   font-weight: 700;
   color: #4A4A4A;
@@ -51,6 +53,22 @@ h1 {
   font-size: 1.5em;
 }
 
+/* Buttons */
+
+.button {
+  font-size: 0.8em;
+  padding: 5px 10px;
+  border-radius: 3px;
+
+  &.info {
+    background: $background;
+    color: $accentGrey;
+  }
+}
+
+.alert {
+  margin-top: 1rem;
+}
 
 /* Containers */
 
@@ -259,8 +277,8 @@ h1 {
 .footer {
   background: white;
   color: $accentGrey;
-  height: 60px;
-  padding: 20px 0;
+  height: 96px;
+  padding: 40px 0;
 
   p {
     display: inline-block;
