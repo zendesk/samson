@@ -160,6 +160,10 @@ describe "cleanliness" do
     File.read('Gemfile.lock').must_include File.read('.ruby-version').strip
   end
 
+  it "has same version in .ruby-version and Dockerfile to make builds work" do
+    File.read('Dockerfile').must_include File.read('.ruby-version').strip
+  end
+
   it "has page title for all views" do
     views = Dir['{,plugins/*/}app/views/**/*.html.erb'].
       reject { |v| File.basename(v).start_with?('_') }.
