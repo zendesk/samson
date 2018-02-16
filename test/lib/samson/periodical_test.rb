@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../../test_helper'
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 1
 
 describe Samson::Periodical do
   def with_registered

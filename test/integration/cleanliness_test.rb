@@ -187,7 +187,9 @@ describe "cleanliness" do
   # tests multi_thread_db_detector.rb
   it "blows up when using database from a different thread" do
     e = assert_raises RuntimeError do
-      Thread.new { User.first }.join
+      silence_thread_exceptions do
+        Thread.new { User.first }.join
+      end
     end
     e.message.must_include "Using AR outside the main thread"
   end

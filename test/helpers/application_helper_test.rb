@@ -2,7 +2,7 @@
 # rubocop:disable Metrics/LineLength
 require_relative '../test_helper'
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 2
 
 describe ApplicationHelper do
   include LocksHelper

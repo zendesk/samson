@@ -6,7 +6,7 @@ require 'bundler/setup'
 # anything loaded before coverage will be uncovered
 require 'single_cov'
 SingleCov::APP_FOLDERS << 'decorators' << 'presenters'
-SingleCov.setup :minitest unless defined?(Spring)
+SingleCov.setup :minitest, branches: true unless defined?(Spring)
 
 # rake adds these, but we don't need them / want to be consistent with using `ruby x_test.rb`
 $LOAD_PATH.delete 'lib'
@@ -198,6 +198,14 @@ ActiveSupport::TestCase.class_eval do
 
   def stub_github_status_check
     stub_request(:get, "#{Rails.application.config.samson.github.status_url}/api/status.json").to_return(body: "{}")
+  end
+
+  def silence_thread_exceptions
+    old = Thread.report_on_exception
+    Thread.report_on_exception = false
+    yield
+  ensure
+    Thread.report_on_exception = old
   end
 end
 
