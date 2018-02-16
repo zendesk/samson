@@ -79,7 +79,7 @@ class GitRepository
   def file_content(file, sha, pull: true)
     if !pull
       return unless mirrored?
-    elsif sha =~ Build::SHA1_REGEX
+    elsif sha.match?(Build::SHA1_REGEX)
       (mirrored? && sha_exist?(sha)) || ensure_mirror_current
     else
       ensure_mirror_current
