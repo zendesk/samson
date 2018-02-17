@@ -60,7 +60,11 @@ class Build < ActiveRecord::Base
   end
 
   def active?
-    external_status? ? !docker_repo_digest? : docker_build_job&.active?
+    if external?
+      !docker_repo_digest? && (!external_status || Job::ACTIVE_STATUSES.include?(external_status))
+    else
+      docker_build_job&.active?
+    end
   end
 
   private
