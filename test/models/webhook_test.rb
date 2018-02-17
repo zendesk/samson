@@ -72,6 +72,12 @@ describe Webhook do
   end
 
   describe '#validate_not_auto_deploying_without_buddy' do
+    it "is valid without a stage" do
+      webhook = Webhook.new(webhook_attributes.except(:stage))
+      refute_valid webhook
+      webhook.errors[:stage].must_equal ["must exist"]
+    end
+
     it "shows error when trying to setup auto-deploy without buddy" do
       stage.stubs(:deploy_requires_approval?).returns(true)
       webhook = Webhook.new(webhook_attributes)

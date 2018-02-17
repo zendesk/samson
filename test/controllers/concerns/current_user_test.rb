@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../../test_helper'
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 1
 
 class CurrentUserConcernTest < ActionController::TestCase
   class CurrentUserTestController < ApplicationController

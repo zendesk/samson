@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 1
 
 # each test is written as a pair of the lowest level that allows access and the one below that forbids access
 describe AccessControl do

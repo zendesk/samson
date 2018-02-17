@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 3
 
 describe SlackAppController do
   let(:deployer) { users(:deployer) }

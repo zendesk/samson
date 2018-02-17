@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../../../test_helper'
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 1
 
 # needs Integration at the end for minitest-spec-rails
 describe 'Warden::Strategies::BasicStrategy Integration' do

@@ -4,7 +4,7 @@ require_relative '../../test_helper'
 
 if defined?(ActiveRecord::ConnectionAdapters::Mysql2Adapter) # Only used when using mysql
 
-  SingleCov.covered!
+  SingleCov.covered! uncovered: 1
 
   describe Samson::MappedDatabaseExceptions do
     describe '#execute' do

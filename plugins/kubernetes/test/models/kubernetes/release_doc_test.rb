@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative "../../test_helper"
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 2
 
 describe Kubernetes::ReleaseDoc do
   def deployment_stub(replica_count)

@@ -2,7 +2,7 @@
 require_relative '../test_helper'
 require 'ar_multi_threaded_transactional_tests'
 
-SingleCov.covered! uncovered: 8 # randomly says it only has 7 ... keep at 8
+SingleCov.covered! uncovered: 11 # randomly says it only has 10 ... keep at 11
 
 describe JobExecution do
   include GitRepoTestHelper

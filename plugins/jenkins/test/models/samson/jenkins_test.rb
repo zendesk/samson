@@ -3,7 +3,7 @@
 # rubocop:disable Layout/IndentHeredoc
 require_relative '../../test_helper'
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 2
 
 describe Samson::Jenkins do
   def stub_crumb
