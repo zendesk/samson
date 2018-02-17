@@ -15,7 +15,7 @@ module SamsonAirbrake
 
         deploy.stage.deploy_groups.group_by(&:environment).each do |environment, deploy_groups|
           rails_env = environment.name.downcase
-          next unless rails_env =~ VALID_RAILS_ENV
+          next unless rails_env.match?(VALID_RAILS_ENV)
 
           next unless project_api_key = read_secret(deploy.project, deploy_groups, SECRET_KEY)
 

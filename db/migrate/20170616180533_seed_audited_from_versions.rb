@@ -65,7 +65,7 @@ class SeedAuditedFromVersions < ActiveRecord::Migration[5.1]
 
     return if diff == {} && version.event == "update"
 
-    if version.whodunnit =~ /^\d+$/
+    if version.whodunnit.match?(/^\d+$/)
       user_id = version.whodunnit
       username = nil
     else

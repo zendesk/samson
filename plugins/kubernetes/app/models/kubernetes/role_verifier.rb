@@ -131,7 +131,7 @@ module Kubernetes
           # make sure we get sane values for labels or deploy will blow up
           labels.each do |k, v|
             if v.is_a?(String)
-              @errors << "#{kind} #{path.join('.')}.#{k} must match #{VALID_LABEL.inspect}" unless v =~ VALID_LABEL
+              @errors << "#{kind} #{path.join('.')}.#{k} must match #{VALID_LABEL.inspect}" unless v.match?(VALID_LABEL)
             else
               @errors << "#{kind} #{path.join('.')}.#{k} must be a String"
             end

@@ -23,7 +23,7 @@ module Samson
 
       class << self
         def write(id, data)
-          return false unless id =~ /\A#{SECRET_ID_REGEX}\z/
+          return false unless id.match?(/\A#{SECRET_ID_REGEX}\z/)
           return false if data.blank? || data[:value].blank?
           result = backend.write(id, data)
           modify_lookup_cache { |c| c[id] = lookup_cache_value(data) }

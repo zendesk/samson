@@ -195,7 +195,3 @@ Performance/HashEachMethods:
 # we cannot enable this until breakman does not barf on ruby 2.5 blocks with rescue
 Style/RedundantBegin:
   Enabled: false
-
-# TODO: enable
-Performance/RegexpMatch:
-  Enabled: false
