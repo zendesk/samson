@@ -220,6 +220,11 @@ describe Build do
         build.docker_repo_digest = 'some-digest'
         refute build.active?
       end
+
+      it "is not active when finished by status" do
+        build.external_status = 'failed'
+        refute build.active?
+      end
     end
   end
 
@@ -229,8 +234,6 @@ describe Build do
     end
 
     it 'cancels builds that have been running for too long' do
-      puts build.created_at
-
       Build.cancel_stalled_builds
 
       build.reload.external_status.must_equal 'cancelled'
