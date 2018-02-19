@@ -23,11 +23,12 @@ class StagesController < ApplicationController
         @deploys = @stage.deploys.page(page)
       end
       format.json do
-        stage = @stage.as_json
-        if params[:include].to_s.split(',').include?("kubernetes_matrix")
-          stage[:kubernetes_matrix] = Kubernetes::DeployGroupRole.matrix(@stage)
+        render_as_json :stage, @stage do |reply|
+          # deprecated way of inclusion, do not add more
+          if params[:include] == "kubernetes_matrix"
+            reply[:stage][:kubernetes_matrix] = Kubernetes::DeployGroupRole.matrix(@stage)
+          end
         end
-        render json: { stage: stage }
       end
       format.svg do
         badge =
