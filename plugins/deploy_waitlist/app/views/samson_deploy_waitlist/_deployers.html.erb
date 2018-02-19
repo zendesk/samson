@@ -3,7 +3,13 @@
   metadata = Rails.cache.read("deploy_waitlist.metadata") || {}
 %>
 <div style="margin-bottom: 20px; margin-top: 20px;">
-  <h2>Deployment Waitlist <span style="font-size:10px; font-style: italic;">Active since: <%= metadata[:head_since].in_time_zone('America/Los_Angeles').strftime('%b %d, %Y %H:%M %Z') %></span></h2>
+  <h2>Deployment Waitlist
+    <% if metadata[:head_since].present? %>
+      <span style="font-size:10px; font-style: italic;">
+        Active since: <%= metadata[:head_since].in_time_zone('America/Los_Angeles').strftime('%b %d, %Y %H:%M %Z') %>
+      </span>
+    <% end %>
+  </h2>
   <form method="post" action="/deploy_waitlist/add" id="waitlist_form">
     <% if waitlist.present? %>
       <ol style="width: 60%">
