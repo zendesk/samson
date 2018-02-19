@@ -1,6 +1,6 @@
 <%
-  waitlist = Rails.cache.read("deploy_waitlist")
-  metadata = Rails.cache.read("deploy_waitlist.metadata")
+  waitlist = Rails.cache.read("deploy_waitlist") || []
+  metadata = Rails.cache.read("deploy_waitlist.metadata") || {}
 %>
 <div style="margin-bottom: 20px; margin-top: 20px;">
   <h2>Deployment Waitlist <span style="font-size:10px; font-style: italic;">Active since: <%= metadata[:head_since].in_time_zone('America/Los_Angeles').strftime('%b %d, %Y %H:%M %Z') %></span></h2>
@@ -10,7 +10,7 @@
         <% waitlist.each_with_index do |deployer, index| %>
         <li>
           <%= deployer[:email] %>
-          <% if index == 0 %>
+          <% if index == 0 && metadata[:head_since].present?%>
             <span style="font-weight: 600; font-size: 10px;">Head of queue for <%= time_ago_in_words(metadata[:head_since].to_datetime) %></span>
           <% else %>
             <span style="font-size: 10px">In queue for <%= time_ago_in_words(deployer[:added].to_datetime) %></span>
