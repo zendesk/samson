@@ -150,7 +150,7 @@ module Samson
     config.samson.export_job.max_age = Integer(ENV['EXPORT_JOB_MAX_AGE'] || 1.day)
     config.samson.start_time = Time.now
 
-    # flowdock uses routes: run after the routes are loaded which happens after after_initialize
+    # flowdock and deploy_waitlist use routes: run after the routes are loaded which happens after after_initialize
     # config.ru sets SERVER_MODE after application.rb is loaded when using `rails s`
     initializer :execute_job, after: :set_routes_reloader_hook do
       if !Rails.env.test? && ENV['SERVER_MODE'] && !ENV['PRECOMPILE']

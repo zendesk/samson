@@ -1,0 +1,45 @@
+<%
+  waitlist = Rails.cache.read("deploy_waitlist")
+  metadata = Rails.cache.read("deploy_waitlist.metadata")
+%>
+<div style="margin-bottom: 20px; margin-top: 20px;">
+  <h2>Deployment Waitlist <span style="font-size:10px; font-style: italic;">Active since: <%= metadata[:head_since].in_time_zone('America/Los_Angeles').strftime('%b %d, %Y %H:%M %Z') %></span></h2>
+  <form method="post" action="/deploy_waitlist/add" id="waitlist_form">
+    <% if waitlist.present? %>
+      <ol style="width: 60%">
+        <% waitlist.each_with_index do |deployer, index| %>
+        <li>
+          <%= deployer[:email] %>
+          <% if index == 0 %>
+            <span style="font-weight: 600; font-size: 10px;">Head of queue for <%= time_ago_in_words(metadata[:head_since].to_datetime) %></span>
+          <% else %>
+            <span style="font-size: 10px">In queue for <%= time_ago_in_words(deployer[:added].to_datetime) %></span>
+          <% end %>
+          <a href="#" onclick="removeUser('<%= index %>');" style="color: red; position: relative; float: right;">
+            <span class="glyphicon glyphicon-remove"></span>
+          </a>
+        </li>
+        <% end %>
+      </ol>
+    <% else %>
+      <div>
+        (Queue is empty)
+      </div>
+    <% end %>
+    <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+    <input type="hidden" name="stage" value="<%= @stage.name.downcase %>">
+    <input type="hidden" name="project" value="<%= @project.name.downcase %>">
+    <input type="hidden" name="deployer" value="<%= current_user.email %>"/>
+    <button onclick="submit();"><span class="glyphicon glyphicon-plus"></span> Add Me</button>
+  </form>
+
+</div>
+
+<script>
+  function removeUser(user) {
+    document.getElementById("waitlist_form").action = '/deploy_waitlist/remove';
+    document.getElementById("waitlist_form").deployer.value = user;
+    document.getElementById("waitlist_form").submit();
+    return true;
+  }
+</script>
