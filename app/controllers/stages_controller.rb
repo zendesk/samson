@@ -23,7 +23,9 @@ class StagesController < ApplicationController
         @deploys = @stage.deploys.page(page)
       end
       format.json do
-        render_as_json :stage, @stage do |reply|
+        render_as_json :stage, @stage, allowed_includes: [
+          :last_deploy, :last_successful_deploy, :active_deploy
+        ] do |reply|
           # deprecated way of inclusion, do not add more
           if params[:include] == "kubernetes_matrix"
             reply[:stage][:kubernetes_matrix] = Kubernetes::DeployGroupRole.matrix(@stage)
