@@ -1,7 +1,7 @@
 class DeployWaitlistController < ApplicationController
 
   def add
-    Rails.logger.warn("current_waitlist: #{current_waitlist.deployers}")
+    Rails.logger.warn("current_waitlist: #{current_waitlist.list}")
     current_waitlist.add({ email: deployer, added: now })
     redirect_to project_stage_path(project, stage)
   end
