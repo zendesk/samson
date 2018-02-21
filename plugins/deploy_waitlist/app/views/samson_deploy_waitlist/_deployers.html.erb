@@ -10,13 +10,13 @@
     <% end %>
   </h2>
   <form method="post" action="/deploy_waitlist/add" id="waitlist_form">
-    <% if waitlist.deployers.present? %>
+    <% if waitlist.list.present? %>
       <ol style="width: 60%">
-        <% waitlist.deployers.each_with_index do |deployer, index| %>
+        <% waitlist.list.each_with_index do |deployer, index| %>
         <li>
           <%= deployer[:email] %>
-          <% if index == 0 && waitlist.head_since.present? %>
-            <span style="font-weight: 600; font-size: 10px;">Head of queue for <%= time_ago_in_words(waitlist.head_since.to_datetime) %></span>
+          <% if index == 0 && waitlist.head_updated_at.present? %>
+            <span style="font-weight: 600; font-size: 10px;">Head of queue for <%= time_ago_in_words(waitlist.head_updated_at.to_datetime) %></span>
           <% else %>
             <span style="font-size: 10px">In queue for <%= time_ago_in_words(deployer[:added].to_datetime) %></span>
           <% end %>
@@ -32,8 +32,8 @@
       </div>
     <% end %>
     <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
-    <input type="hidden" name="stage" value="<%= @stage.name.downcase %>">
-    <input type="hidden" name="project" value="<%= @project.name.downcase %>">
+    <input type="hidden" name="stage" value="<%= @stage.id %>">
+    <input type="hidden" name="project" value="<%= @project.id %>">
     <input type="hidden" name="deployer" value="<%= current_user.email %>"/>
     <button onclick="submit();"><span class="glyphicon glyphicon-plus"></span> Add Me</button>
   </form>

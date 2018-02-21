@@ -1,78 +1,54 @@
 class Waitlist
-  attr_reader :project_id, :stage_id
+  attr_reader :project_id, :stage_id, :list, :metadata
 
   WAITLIST_KEY = 'deploy_waitlist'.freeze
 
   def initialize(project_id, stage_id)
     @project_id = project_id
     @stage_id = stage_id
+    @list = Rails.cache.read(key) || []
+    @metadata = get_metadata || {}
   end
 
-  # [{deployer: [email], added: [utc]}, ...]
-  def deployers
-    @deployers ||= Rails.cache.read(key) || []
+  def add(deployer_hash = {})
+    @list << deployer_hash
+    @metadata[:last_updated] = Time.now
+    set
   end
 
   def remove(index)
-    current_list = deployers
-    self.deployers = current_list unless current_list.delete_at(index).nil?
-    self.head_since = Time.now.utc if (index == 0)
+    @list = @list.delete_at(index) || []
+    @metadata[:last_updated] = Time.now
+    @metadata[:head_updated_at] = Time.now if (index == 0)
+    set
   end
 
-  def deployers=(list_of_deployers)
-    Rails.cache.write(key, list_of_deployers)
-  end
-
-  def head_since
-    fetch :head_since
-  end
-
-  def head_since=(utc_date)
-    update(head_since: utc_date)
-  end
-
+  # accessors for the view
   def created_at
-    fetch :created_at
+    @metadata[:created_at]
   end
 
-  def def created_at=(utc_date)
-    update(created_at: utc_date)
+  def head_updated_at
+    @metadata[:head_updated_at]
   end
 
   private
 
-  def fetch(field)
-    return nil unless metadata.present?
-    metadata[field]
-  end
-
-  def update(args_hash)
-    m = metadata
-    self.metadata = m.merge(args_hash).merge(last_updated: Time.now.utc)
-  end
-
-  def metadata
-    Rails.cache.read(metadata_key) || { created_at: Time.now.utc }
-  end
-
-  def metadata=(metadata_hash)
-    return unless metadata_hash.present?
-    Rails.cache.write(metadata_key, metadata_hash)
+  def set
+    Rails.cache.write(key, @list)
+    @metadata[:created_at] = Time.now unless @metadata[:created_at]
+    Rails.cache.write(metadata_key, @metadata)
   end
 
   def key
-    WAITLIST_KEY + queue_key_part
+    WAITLIST_KEY + stage_key
   end
 
   def metadata_key
-    metadata_key_part + queue_key_part
+    WAITLIST_KEY + '.metadata' + stage_key
   end
 
-  def metadata_key_part
-    WAITLIST_KEY + '.metadata'
-  end
-
-  def queue_key_part
+  def stage_key
     ".project-#{project_id}.stage-#{stage_id}"
   end
 end
