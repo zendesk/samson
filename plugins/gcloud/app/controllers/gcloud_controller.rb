@@ -5,7 +5,8 @@ class GcloudController < ApplicationController
     "QUEUED" => "pending",
     "WORKING" => "running",
     "FAILURE" => "failed",
-    "ERRORED" => "failed"
+    "ERRORED" => "failed",
+    "CANCELLED" => "cancelled"
   }.freeze
 
   def sync_build
