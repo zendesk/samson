@@ -1,5 +1,20 @@
 # frozen_string_literal: true
 class Project < ActiveRecord::Base
+  # Used as part of temporary abstract attribute for docker build radio buttons
+  DEFAULT_DOCKER_BUILD_METHOD = 'samson'
+  DOCKER_BUILD_METHODS = [
+    {
+      label: 'Docker images build externally',
+      method: 'docker_image_building_disabled',
+      help_text: 'Disable local building of docker images, they must be added via api.'
+    },
+    {
+      label: 'Samson manages docker images',
+      method: DEFAULT_DOCKER_BUILD_METHOD,
+      help_text: ''
+    }
+  ] + Samson::Hooks.fire(:project_docker_build_method_options).flatten(1)
+
   has_soft_deletion default_scope: true unless self < SoftDeletion::Core
   audited
 
@@ -55,6 +70,22 @@ class Project < ActiveRecord::Base
     end
     scope
   }
+
+  # Forms use abstract "docker_build_method " attribute
+  def docker_build_method
+    active = DOCKER_BUILD_METHODS.map { |h| h.fetch(:method) }.detect do |build_method|
+      build_method != DEFAULT_DOCKER_BUILD_METHOD && send("#{build_method}?")
+    end
+
+    active || DEFAULT_DOCKER_BUILD_METHOD
+  end
+
+  def docker_build_method=(selected_method)
+    DOCKER_BUILD_METHODS.each do |method|
+      send("#{method[:method]}=", false) unless method[:method] == DEFAULT_DOCKER_BUILD_METHOD
+    end
+    send("#{selected_method}=", true) unless selected_method == DEFAULT_DOCKER_BUILD_METHOD
+  end
 
   def docker_repo(registry, dockerfile)
     File.join(registry.base, docker_image(dockerfile))
