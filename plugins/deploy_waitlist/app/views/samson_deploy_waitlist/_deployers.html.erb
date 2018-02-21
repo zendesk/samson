@@ -1,27 +1,26 @@
 <%
-  waitlist = Rails.cache.read("deploy_waitlist") || []
-  metadata = Rails.cache.read("deploy_waitlist.metadata") || {}
+  waitlist = Waitlist.new(@project.id, @stage.id)
 %>
 <div style="margin-bottom: 20px; margin-top: 20px;">
   <h2>Deployment Waitlist
-    <% if metadata[:head_since].present? %>
+    <% if waitlist.head_since.present? %>
       <span style="font-size:10px; font-style: italic;">
-        Active since: <%= metadata[:head_since].in_time_zone('America/Los_Angeles').strftime('%b %d, %Y %H:%M %Z') %>
+        Active since: <%= waitlist.created_at.in_time_zone('America/Los_Angeles').strftime('%b %d, %Y %H:%M %Z') %>
       </span>
     <% end %>
   </h2>
   <form method="post" action="/deploy_waitlist/add" id="waitlist_form">
-    <% if waitlist.present? %>
+    <% if waitlist.deployers.present? %>
       <ol style="width: 60%">
-        <% waitlist.each_with_index do |deployer, index| %>
+        <% waitlist.deployers.each_with_index do |deployer, index| %>
         <li>
           <%= deployer[:email] %>
-          <% if index == 0 && metadata[:head_since].present?%>
-            <span style="font-weight: 600; font-size: 10px;">Head of queue for <%= time_ago_in_words(metadata[:head_since].to_datetime) %></span>
+          <% if index == 0 && waitlist.head_since.present? %>
+            <span style="font-weight: 600; font-size: 10px;">Head of queue for <%= time_ago_in_words(waitlist.head_since.to_datetime) %></span>
           <% else %>
             <span style="font-size: 10px">In queue for <%= time_ago_in_words(deployer[:added].to_datetime) %></span>
           <% end %>
-          <a href="#" onclick="removeUser('<%= index %>');" style="color: red; position: relative; float: right;">
+          <a href="#" onclick="removeUser('<%= index %>');" style="color: red; position: relative; float: right; margin-right: 5px;">
             <span class="glyphicon glyphicon-remove"></span>
           </a>
         </li>
