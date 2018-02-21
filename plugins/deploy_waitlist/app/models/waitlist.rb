@@ -1,6 +1,5 @@
 class Waitlist
   attr_reader :project_id, :stage_id
-  attr_accessor :deployers, :head_since, :created_at
 
   WAITLIST_KEY = 'deploy_waitlist'.freeze
 
