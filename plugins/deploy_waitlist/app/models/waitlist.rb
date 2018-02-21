@@ -20,7 +20,6 @@ class Waitlist
   end
 
   def deployers=(list_of_deployers)
-    return unless list_of_deployers.present?
     Rails.cache.write(key, list_of_deployers)
   end
 
@@ -49,7 +48,7 @@ class Waitlist
 
   def update(args_hash)
     m = metadata
-    metadata = m.merge(args_hash).merge(last_updated: Time.now.utc)
+    self.metadata = m.merge(args_hash).merge(last_updated: Time.now.utc)
   end
 
   def metadata
