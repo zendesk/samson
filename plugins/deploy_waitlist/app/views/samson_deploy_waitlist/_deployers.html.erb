@@ -3,7 +3,7 @@
 %>
 <div style="margin-bottom: 20px; margin-top: 20px;">
   <h2>Deployment Waitlist
-    <% if waitlist.head_since.present? %>
+    <% if waitlist.created_at.present? %>
       <span style="font-size:10px; font-style: italic;">
         Active since: <%= waitlist.created_at.in_time_zone('America/Los_Angeles').strftime('%b %d, %Y %H:%M %Z') %>
       </span>

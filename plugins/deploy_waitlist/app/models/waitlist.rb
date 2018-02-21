@@ -1,5 +1,6 @@
 class Waitlist
-  attr_reader :project_id, :stage_id, :deployers
+  attr_reader :project_id, :stage_id
+  attr_accessor :deployers, :head_since, :created_at
 
   WAITLIST_KEY = 'deploy_waitlist'.freeze
 
@@ -15,8 +16,8 @@ class Waitlist
 
   def remove(index)
     current_list = deployers
-    deployers = current_list unless current_list.delete_at(index).nil?
-    head_since = now if (index == 0)
+    self.deployers = current_list unless current_list.delete_at(index).nil?
+    self.head_since = Time.now.utc if (index == 0)
   end
 
   def deployers=(list_of_deployers)
@@ -25,7 +26,7 @@ class Waitlist
   end
 
   def head_since
-    @head_since ||= fetch :head_since
+    fetch :head_since
   end
 
   def head_since=(utc_date)
@@ -33,7 +34,7 @@ class Waitlist
   end
 
   def created_at
-    @created_at ||= fetch :created_at
+    fetch :created_at
   end
 
   def def created_at=(utc_date)
@@ -47,12 +48,13 @@ class Waitlist
     metadata[field]
   end
 
-  def update(args_harsh)
-    metadata = metadata.merge(args_harsh).merge(last_updated: Time.now.utc)
+  def update(args_hash)
+    m = metadata
+    metadata = m.merge(args_hash).merge(last_updated: Time.now.utc)
   end
 
   def metadata
-    @metadata ||= Rails.cache.read(metadata_key) || { created_at: Time.now.utc }
+    Rails.cache.read(metadata_key) || { created_at: Time.now.utc }
   end
 
   def metadata=(metadata_hash)
