@@ -61,7 +61,20 @@ Samson::Hooks.callback :after_deploy do |deploy, _|
 end
 
 Samson::Hooks.callback :project_permitted_params do
-  [:build_with_gcb, :show_gcr_vulnerabilities]
+  [:show_gcr_vulnerabilities]
+end
+
+Samson::Hooks.callback :project_docker_build_method_options do
+  help_text = 'Build docker images locally using Google cloud builder, disables pushing to any other registry,' \
+    ' disables pulling from other registries.'
+
+  [
+    {
+      label: 'Build docker with GCB CLI',
+      method: 'build_with_gcb',
+      help_text: help_text
+    }
+  ]
 end
 
 Samson::Hooks.callback :stage_permitted_params do

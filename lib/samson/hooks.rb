@@ -32,6 +32,7 @@ module Samson
       :stage_permitted_params,
       :deploy_permitted_params,
       :project_permitted_params,
+      :project_docker_build_method_options,
       :deploy_group_permitted_params,
       :build_permitted_params,
       :deploy_group_includes,

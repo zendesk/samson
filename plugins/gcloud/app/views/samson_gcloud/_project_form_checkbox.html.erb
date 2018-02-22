@@ -1,4 +1,3 @@
-<%= form.input :build_with_gcb, label: 'Build docker with GCB CLI', as: :check_box, help: 'Build docker images locally using Google cloud builder, disables pushing to any other registry, disables pulling from other registries.' %>
 <% if ENV['GCLOUD_IMAGE_SCANNER'] %>
   <%= form.input :show_gcr_vulnerabilities, as: :check_box %>
 <% end %>

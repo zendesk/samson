@@ -358,6 +358,48 @@ describe Project do
     end
   end
 
+  describe '#docker_build_method' do
+    it 'is samson when no other build method is being used' do
+      project.docker_build_method.must_equal 'samson'
+    end
+
+    it 'is docker_image_building_disabled when attribute is set' do
+      project.update_column(:docker_image_building_disabled, true)
+      project.docker_build_method.must_equal 'docker_image_building_disabled'
+    end
+
+    it 'is build_with_gcb when attribute is set' do
+      project.update_columns(docker_image_building_disabled: false, build_with_gcb: true)
+      project.docker_build_method.must_equal 'build_with_gcb'
+    end
+  end
+
+  describe '#docker_build_method=' do
+    it 'updates attributes based on docker_build_method' do
+      project.docker_build_method = 'samson'
+      refute project.docker_image_building_disabled
+      refute project.build_with_gcb
+    end
+
+    it 'is disabled when external is selected' do
+      project.docker_build_method = 'docker_image_building_disabled'
+      assert project.docker_image_building_disabled
+      refute project.build_with_gcb
+    end
+
+    it 'is gcb when gcb building is selected' do
+      project.docker_build_method = 'build_with_gcb'
+      refute project.docker_image_building_disabled
+      assert project.build_with_gcb
+    end
+
+    it 'clears other build methods when a different one is set' do
+      project.update_column(:build_with_gcb, true)
+      project.docker_build_method = 'samson'
+      refute project.build_with_gcb
+    end
+  end
+
   describe '#docker_repo' do
     with_registries ["docker-registry.example.com/bar"]
 

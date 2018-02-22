@@ -18,7 +18,6 @@ describe SamsonGcloud do
   describe :project_permitted_params do
     it "adds build_with_gcb" do
       params = Samson::Hooks.fire(:project_permitted_params).flatten
-      params.must_include :build_with_gcb
       params.must_include :show_gcr_vulnerabilities
     end
   end
