@@ -24,7 +24,10 @@ module Samson
           begin
             with_retries { vault.logical.list_recursive(path) }
           rescue
-            Airbrake.notify($!, error_message: "Error talking to vault server #{vault.address} during list_recursive")
+            ErrorNotifier.notify(
+              $!,
+              error_message: "Error talking to vault server #{vault.address} during list_recursive"
+            )
             []
           end
         end.flatten(1)
@@ -58,7 +61,7 @@ module Samson
           begin
             with_retries { client.auth_token.renew_self }
           rescue
-            Airbrake.notify($!, vault_server_id: id)
+            ErrorNotifier.notify($!, vault_server_id: id)
           end
         end
       end

@@ -76,6 +76,13 @@ PATH
     samson_rollbar (0.0.0)
 
 PATH
+  remote: plugins/samson_airbrake
+  specs:
+    samson_airbrake (0.0.0)
+      airbrake
+      airbrake-user_informer
+
+PATH
   remote: plugins/samson_ledger
   specs:
     samson_ledger (0.0.1)
@@ -142,9 +149,9 @@ GEM
       minitest (~> 5.1)
       tzinfo (~> 1.1)
     addressable (2.3.8)
-    airbrake (6.1.2)
-      airbrake-ruby (~> 2.2, >= 2.2.5)
-    airbrake-ruby (2.2.6)
+    airbrake (6.3.0)
+      airbrake-ruby (~> 2.4)
+    airbrake-ruby (2.8.1)
     airbrake-user_informer (0.3.0)
       airbrake (~> 6.0)
       airbrake-ruby (~> 2.0)
@@ -493,8 +500,6 @@ PLATFORMS
 
 DEPENDENCIES
   active_hash
-  airbrake
-  airbrake-user_informer
   ansible
   ar_multi_threaded_transactional_tests
   attr_encrypted
@@ -566,6 +571,7 @@ DEPENDENCIES
   rails-assets-x-editable!
   rails-controller-testing
   rubocop
+  samson_airbrake!
   samson_airbrake_hook!
   samson_assertible!
   samson_aws_ecr!

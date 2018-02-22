@@ -31,7 +31,7 @@ class JobExecution
     on_finish do
       # weird issue we are seeing with docker builds never finishing
       if !Rails.env.test? && !JobQueue.find_by_id(@job.id) && @job.active?
-        Airbrake.notify("Active but not running job found", job: @job.id)
+        ErrorNotifier.notify("Active but not running job found", job: @job.id)
         @output.write("Active but not running job found")
         @job.failed!
       end
@@ -105,7 +105,7 @@ class JobExecution
   end
 
   def error!(exception)
-    puts_if_present report_to_airbrake(exception)
+    puts_if_present report_error(exception)
     puts_if_present "JobExecution failed: #{exception.message}"
     puts_if_present render_backtrace(exception)
     @job.errored! if @job.active?
@@ -249,19 +249,15 @@ class JobExecution
     backtrace.join("\n")
   end
 
-  def report_to_airbrake(exception)
+  def report_error(exception)
     return if exception.is_a?(Samson::Hooks::UserError) # do not spam us with users issues
 
-    return unless notice = Airbrake.notify_sync(
+    ErrorNotifier.notify(
       exception,
       error_message: exception.message,
-      parameters: {job_id: @job.id}
+      parameters: {job_id: @job.id},
+      sync: true
     )
-
-    return 'Airbrake did not return an error id' unless id = notice['id']
-    return 'Unable to find Airbrake url' unless url = Airbrake.user_information[/['"](http.*?)['"]/, 1]
-    return 'Unable to find error_id placeholder' unless url.sub!('{{error_id}}', id)
-    "Error #{url}"
   end
 
   def puts_if_present(message)
@@ -278,7 +274,7 @@ class JobExecution
       result = yield dir
     end
   rescue Errno::ENOTEMPTY, Errno::ENOENT
-    Airbrake.notify("Notify: make_tempdir error #{$!.message.split('@').first}")
+    ErrorNotifier.notify("Notify: make_tempdir error #{$!.message.split('@').first}")
     result # tempdir ensure sometimes fails ... not sure why ... return normally
   end
 end

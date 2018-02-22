@@ -11,4 +11,12 @@ describe PingController do
       response.status.must_equal(200)
     end
   end
+
+  describe 'GET to #error' do
+    it 'raises when hit' do
+      assert_raises RuntimeError, 'ping#error' do
+        get :error
+      end
+    end
+  end
 end

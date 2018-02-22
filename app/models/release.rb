@@ -59,7 +59,7 @@ class Release < ActiveRecord::Base
   rescue Octokit::NotFound
     false
   rescue Octokit::Error => e
-    Airbrake.notify(e, parameters: {
+    ErrorNotifier.notify(e, parameters: {
       repository_path: project.repository_path, commit: commit, other_commit: other_commit
     })
     false # Err on side of caution and cause a new release to be created.

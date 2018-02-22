@@ -4,8 +4,8 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe JobExecutionSubscriber do
-  it 'sends exceptions to airbrake so other subscribers can continue' do
-    Airbrake.expects(:notify)
+  it 'sends exceptions to error notifier so other subscribers can continue' do
+    ErrorNotifier.expects(:notify)
     execution = JobExecutionSubscriber.new(stub(url: 1)) { raise 'Test' }
     execution.call
   end
