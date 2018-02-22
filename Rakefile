@@ -10,7 +10,7 @@ require "rake/testtask"
 
 Samson::Application.load_tasks
 
-Rake::Task["default"].clear
+Rake::Task[:default].clear
 task default: :test
 
 Rake::Task['test'].clear
@@ -34,16 +34,28 @@ end
 Rake::Task['assets:precompile'].prerequisites.unshift :asset_compilation_environment
 
 # normalize schema after dumping so we do not have a diff
+# tested via test/integration/tasks_test.rb
 task "db:schema:dump" do
   file = "db/schema.rb"
   schema = File.read(file)
   schema.gsub!(/, options: .* do/, " do")
   schema.gsub!('t.text "output", limit: 4294967295', 't.text "output", limit: 268435455')
+  schema.gsub!('t.text "audited_changes", limit: 4294967295', 't.text "audited_changes", limit: 1073741823')
   schema.gsub!('t.text "object", limit: 4294967295', 't.text "object", limit: 1073741823')
   File.write(file, schema)
 end
 
 namespace :test do
+  task migrate_without_plugins: :environment do
+    raise unless ENV.fetch('PLUGINS') == ''
+    begin
+      Rake::Task['db:migrate'].execute
+    rescue
+      puts "\nFailed to execute migrations without plugins, move latest migration to a plugin folder?\n"
+      raise
+    end
+  end
+
   task :prepare_js do
     sh "npm install"
     sh "npm run-script jshint"
@@ -75,7 +87,7 @@ namespace :test do
   end
 end
 
-desc "'Run brakeman ... use `bundle exec brakeman --add-engine-path 'plugins/*' -I` to add new ignores'"
+desc "'Run brakeman, use `bundle exec brakeman --add-engine-path 'plugins/*' -I` to add or remove obsolete ignores"
 task :brakeman do
   sh "brakeman --no-pager --add-engine-path 'plugins/*' --ensure-latest"
 end

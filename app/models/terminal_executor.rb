@@ -23,7 +23,7 @@ class TerminalExecutor
     @deploy = deploy
     @project = project
     @cancelled = false
-    @timeout = Integer(ENV["DEPLOY_TIMEOUT"] || 2.hours.to_i)
+    @timeout = Rails.application.config.samson.deploy_timeout
   end
 
   def execute(*commands, timeout: @timeout)
@@ -129,11 +129,11 @@ class TerminalExecutor
     deploy_groups = (@deploy ? @deploy.stage.deploy_groups : [])
     resolver = Samson::Secrets::KeyResolver.new(@project, deploy_groups)
 
-    result = command.gsub(/\b#{SECRET_PREFIX}(#{SecretStorage::SECRET_ID_REGEX})\b/) do
+    result = command.gsub(/\b#{SECRET_PREFIX}(#{Samson::Secrets::Manager::SECRET_ID_REGEX})\b/) do
       key = $1
       if expanded = resolver.expand('unused', key).first&.last
         key.replace(expanded)
-        SecretStorage.read(key, include_value: true).fetch(:value)
+        Samson::Secrets::Manager.read(key, include_value: true).fetch(:value)
       end
     end
 
@@ -167,7 +167,7 @@ class TerminalExecutor
       'DOCKER_HOST', 'DOCKER_URL', 'DOCKER_REGISTRY' # docker
     ] + ENV['ENV_WHITELIST'].to_s.split(/, ?/)
     env = ENV.to_h.slice(*whitelist)
-    env['DOCKER_REGISTRY'] ||= DockerRegistry.first&.host # backwards compatibility
+    env['DOCKER_REGISTRY'] ||= DockerRegistry.first&.host
     env
   end
 end

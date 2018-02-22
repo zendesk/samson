@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 3
 
 describe ImageBuilder do
   let(:output) { executor.output.to_s }
@@ -58,6 +58,14 @@ describe ImageBuilder do
         true
       end.returns(true)
       refute call(cache_from: nil)
+    end
+
+    it "tells the user that building without at least one docker registry wont work" do
+      with_registries [] do
+        assert_raises Samson::Hooks::UserError do
+          call
+        end
+      end
     end
 
     describe "when building the image worked" do

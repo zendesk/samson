@@ -11,8 +11,9 @@ describe DockerRegistry do
       DockerRegistry.check_config!
     end
 
-    it "passes with only DOCKER_REGISTRY" do
+    it "fails with only DOCKER_REGISTRY" do
       with_env DOCKER_REGISTRIES: nil, DOCKER_REGISTRY: 'ssdsdfd' do
+        DockerRegistry.expects(:abort)
         DockerRegistry.check_config!
       end
     end
@@ -31,31 +32,6 @@ describe DockerRegistry do
 
       it "has none if empty" do
         DockerRegistry.all.must_equal []
-      end
-
-      it "warns when using single deprecated registry var" do
-        DockerRegistry.expects(:warn)
-        with_env DOCKER_REGISTRY: 'xxx' do
-          registry = DockerRegistry.all.first
-          registry.base.must_equal 'xxx'
-          registry.username.must_equal nil
-          registry.password.must_equal nil
-        end
-      end
-
-      it "warns when using multiple deprecated registry vars" do
-        DockerRegistry.expects(:warn)
-        with_env(
-          DOCKER_REGISTRY: 'xxx',
-          DOCKER_REGISTRY_USER: 'usr',
-          DOCKER_REGISTRY_PASS: 'pas',
-          DOCKER_REPO_NAMESPACE: 'name'
-        ) do
-          registry = DockerRegistry.all.first
-          registry.base.must_equal 'xxx/name'
-          registry.username.must_equal 'usr'
-          registry.password.must_equal 'pas'
-        end
       end
     end
 

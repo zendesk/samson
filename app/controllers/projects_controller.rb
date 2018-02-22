@@ -6,7 +6,7 @@ class ProjectsController < ApplicationController
 
   skip_before_action :require_project, only: [:index, :new, :create]
 
-  before_action :authorize_resource!, except: [:deploy_group_versions]
+  before_action :authorize_resource!, except: [:deploy_group_versions, :edit]
 
   def index
     respond_to do |format|
@@ -96,7 +96,7 @@ class ProjectsController < ApplicationController
         :release_source,
         :docker_release_branch,
         :dockerfiles,
-        :docker_image_building_disabled,
+        :docker_build_method,
         :include_new_deploy_groups,
         :dashboard,
       ] + Samson::Hooks.fire(:project_permitted_params)

@@ -9,14 +9,14 @@ module Kubernetes
 
     serialize :resource_template, JSON
     delegate :desired_pod_count, :prerequisite?, to: :primary_resource
-    delegate :images, to: :verification_template
+    delegate :build_selectors, to: :verification_template
 
     validates :deploy_group, presence: true
     validates :kubernetes_role, presence: true
     validates :kubernetes_release, presence: true
     validate :validate_config_file, on: :create
 
-    before_save :store_resource_template, on: :create
+    before_create :store_resource_template
 
     attr_reader :previous_resources
 
@@ -47,7 +47,11 @@ module Kubernetes
 
     def resources
       @resources ||= resource_template.map do |t|
-        Kubernetes::Resource.build(t, deploy_group, autoscaled: kubernetes_role.autoscaled)
+        Kubernetes::Resource.build(
+          t, deploy_group,
+          autoscaled: kubernetes_role.autoscaled,
+          delete_resource: delete_resource
+        )
       end
     end
 
@@ -56,6 +60,10 @@ module Kubernetes
     def verification_template
       primary_config = raw_template.detect { |e| Kubernetes::RoleConfigFile::PRIMARY_KINDS.include?(e.fetch(:kind)) }
       Kubernetes::TemplateFiller.new(self, primary_config, index: 0)
+    end
+
+    def blue_green_color
+      kubernetes_release.blue_green_color if kubernetes_role.blue_green?
     end
 
     private

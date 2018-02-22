@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../../test_helper'
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 1
 
 describe Samson::Periodical do
   def with_registered
@@ -15,6 +15,15 @@ describe Samson::Periodical do
   let(:custom_error) { Class.new(StandardError) }
 
   after { kill_extra_threads } # concurrent leaves a bunch of threads running
+
+  around do |test|
+    begin
+      Samson::Periodical.enabled = true
+      test.call
+    ensure
+      Samson::Periodical.enabled = false
+    end
+  end
 
   around do |test|
     begin
@@ -94,6 +103,13 @@ describe Samson::Periodical do
       Samson::Periodical.run.must_equal []
     end
 
+    it 'does not run tasks when disabled' do
+      Samson::Periodical.enabled = false
+
+      Samson::Periodical.register(:bar, 'bar') {}
+      Samson::Periodical.run.must_equal []
+    end
+
     it "sends errors to airbrake XXXX" do
       Airbrake.expects(:notify).with(instance_of(custom_error), error_message: "Samson::Periodical foo failed")
       Samson::Periodical.register(:foo, 'bar') { raise custom_error }
@@ -146,6 +162,36 @@ describe Samson::Periodical do
 
     it "is disabled when a flag is not set" do
       refute Samson::Periodical.interval(:periodical_deploy)
+    end
+  end
+
+  describe '.running_task_count' do
+    it 'counts running tasks, starting at 0' do
+      Samson::Periodical.instance_variable_set(:@running_tasks_count, nil)
+      Samson::Periodical.running_task_count.must_equal 0
+    end
+
+    it 'counts running tasks' do
+      mutex = Mutex.new.lock
+      Samson::Periodical.register(:foo, 'bar', active: true) { mutex.lock }
+      tasks = Samson::Periodical.run
+      sleep 0.01 # Allow task to start
+
+      Samson::Periodical.running_task_count.must_equal 1
+      mutex.unlock
+      sleep 0.01 # Allow task to finish
+
+      Samson::Periodical.running_task_count.must_equal 0
+      tasks.first.shutdown
+    end
+
+    it 'counts raising tasks' do
+      Samson::Periodical.register(:foo, 'bar', active: true) { raise }
+      tasks = Samson::Periodical.run
+      sleep 0.01 # Allow task to finish
+
+      Samson::Periodical.running_task_count.must_equal 0
+      tasks.first.shutdown
     end
   end
 

@@ -3,37 +3,25 @@
 class DockerRegistry
   class << self
     def check_config!
-      if ENV['DOCKER_REGISTRIES'].blank? && ENV['DOCKER_REGISTRY'].blank?
+      return if ENV['DOCKER_REGISTRIES'].present?
+      if ENV['DOCKER_REGISTRY']
+        abort <<~DOC
+          DOCKER_REGISTRY is deprecated!
+          Build this url 'DOCKER_REGISTRY_USER:DOCKER_REGISTRY_PASS@DOCKER_REGISTRY/DOCKER_REPO_NAMESPACE'
+          and set it as DOCKER_REGISTRIES env var
+        DOC
+      else
         abort '*** DOCKER_REGISTRIES environment variable must be configured when DOCKER_FEATURE is enabled ***'
       end
     end
 
+    # TODO: might be best to use .fetch here and fail when it is an empty string to prevent weird usecases
     def all
-      @all ||= begin
-        registries = ENV['DOCKER_REGISTRIES'] || deprecated_registry
-        registries.to_s.split(',').map { |url| new(url) }
-      end
+      @all ||= ENV['DOCKER_REGISTRIES'].to_s.split(',').map { |url| new(url) }
     end
 
     def first
       all.first
-    end
-
-    private
-
-    def deprecated_registry
-      return unless registry = ENV['DOCKER_REGISTRY']
-      warn "Using deprecated DOCKER_REGISTRY, prefer DOCKER_REGISTRIES"
-
-      if user = ENV['DOCKER_REGISTRY_USER']
-        login = "#{user}:#{ENV['DOCKER_REGISTRY_PASS']}@"
-      end
-
-      if namespace = ENV["DOCKER_REPO_NAMESPACE"]
-        namespace = "/#{namespace}"
-      end
-
-      "https://#{login}#{registry}#{namespace}"
     end
   end
 

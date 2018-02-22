@@ -5,7 +5,7 @@ ruby File.read('.ruby-version').strip
 
 # gems that have rails engines are are always needed
 group :preload do
-  gem 'rails', '5.1.0'
+  gem 'rails', '5.1.4'
   gem 'dotenv'
   gem 'sse-rails-engine'
   gem 'connection_pool'
@@ -43,13 +43,13 @@ gem 'coderay'
 gem 'net-http-persistent'
 gem 'concurrent-ruby'
 gem 'vault'
-gem 'docker-api'
 gem 'newrelic_rpm'
-gem 'ddtrace' # datadog APM
 gem 'lograge'
 gem 'logstash-event'
 gem 'diffy'
 gem 'validates_lengths_from_database'
+gem 'large_object_store'
+gem 'parallel'
 
 # treat included plugins like gems
 Dir[File.join(Bundler.root, 'plugins/*/')].each { |f| gemspec path: f }
@@ -76,6 +76,8 @@ group :assets do
   gem 'sass-rails'
   gem 'uglifier'
   gem 'bootstrap-sass'
+  gem 'momentjs-rails'
+  gem 'bootstrap3-datetimepicker-rails'
 
   source 'https://rails-assets.org' do
     gem 'rails-assets-angular'
@@ -85,12 +87,12 @@ group :assets do
     gem 'rails-assets-jquery'
     gem 'rails-assets-jquery-ui'
     gem 'rails-assets-jquery-ujs'
-    gem 'rails-assets-moment'
     gem 'rails-assets-typeahead.js'
     gem 'rails-assets-underscore'
     gem 'rails-assets-x-editable'
     gem 'rails-assets-jstimezonedetect'
     gem 'rails-assets-jquery-cookie'
+    gem 'rails-assets-jsSHA'
   end
 end
 

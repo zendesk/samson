@@ -13,13 +13,7 @@ describe Kubernetes::ClustersController do
   unauthorized :get, :index
   unauthorized :get, :show, id: 1
 
-  as_a_deployer do
-    unauthorized :get, :new
-    unauthorized :post, :create
-    unauthorized :get, :edit, id: 1
-    unauthorized :patch, :update, id: 1
-    unauthorized :post, :seed_ecr, id: 1
-
+  as_a_viewer do
     describe "#index" do
       it "renders" do
         get :index
@@ -41,6 +35,14 @@ describe Kubernetes::ClustersController do
         assert_template :show
       end
     end
+  end
+
+  as_a_deployer do
+    unauthorized :get, :new
+    unauthorized :post, :create
+    unauthorized :get, :edit, id: 1
+    unauthorized :patch, :update, id: 1
+    unauthorized :post, :seed_ecr, id: 1
   end
 
   as_an_admin do
@@ -91,6 +93,12 @@ describe Kubernetes::ClustersController do
         SamsonAwsEcr::Engine.expects(:active?).returns(true)
         get :new
         assert_template :edit
+      end
+
+      it "can prefill config_filepath" do
+        Kubernetes::Cluster.any_instance.expects(:kubeconfig).returns(stub(contexts: []))
+        get :new, params: {kubernetes_cluster: {config_filepath: "foo"}}
+        assigns(:cluster).config_filepath.must_equal "foo"
       end
 
       describe "when config file env is not set" do

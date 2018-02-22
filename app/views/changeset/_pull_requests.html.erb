@@ -7,8 +7,8 @@
         <td><strong>#<%= pr.number %></strong></td>
         <td><%= link_to pr.title, pr.url %></td>
         <td align="right">
-          <%= file_changes_label pr.additions, "success" %>
-          <%= file_changes_label pr.deletions, "danger" %>
+          <%= file_changes_label pr.additions, "additions" %>
+          <%= file_changes_label pr.deletions, "deletions" %>
         </td>
       </tr>
     <% end %>

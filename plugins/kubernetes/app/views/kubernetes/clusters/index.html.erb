@@ -29,6 +29,9 @@
     <div class="pull-right">
       <%= link_to "Capacity", "?capacity=1" unless params[:capacity] %>
       <%= link_to "New", new_kubernetes_cluster_path, class: "btn btn-default" %>
+      <% if ENV["GCLOUD_GKE_CLUSTERS_FOLDER"] %>
+        <%= link_to "New GKE", new_gke_cluster_path, class: "btn btn-default" %>
+      <% end %>
     </div>
   </div>
 </section>

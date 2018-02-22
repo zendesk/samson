@@ -2,7 +2,7 @@
 require_relative '../test_helper'
 require 'ar_multi_threaded_transactional_tests'
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 3
 
 describe Job do
   include GitRepoTestHelper
@@ -250,7 +250,7 @@ describe Job do
     end
 
     it "returns deleted user when user was soft deleted" do
-      job.user.soft_delete!
+      job.user.soft_delete!(validate: false)
       job.reload.user.must_equal user
     end
 

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 1
 
 describe OutputAggregator do
   it "aggregates the output into a single string" do

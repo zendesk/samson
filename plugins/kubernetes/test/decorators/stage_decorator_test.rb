@@ -22,7 +22,7 @@ describe Stage do
       end
 
       it "is not valid when on kubernetes but deploy groups do not know their cluster" do
-        Kubernetes::Cluster.any_instance.stubs(connection_valid?: true, namespace_exists?: true)
+        Kubernetes::Cluster.any_instance.stubs(connection_valid?: true, namespaces: ['staging'])
         stage.deploy_groups.each do |dg|
           dg.create_cluster_deploy_group cluster: kubernetes_clusters(:test_cluster), namespace: 'staging'
         end

@@ -31,7 +31,7 @@
       <%= render "samson_env/environment_variables", form: form %> |
       <%= link_to "Preview", preview_environment_variable_groups_path(group_id: @group.id) %>
 
-      <% if EnvironmentVariableGroupsController.write?(current_user, @group) %>
+      <% if can? :write, :environment_variable_groups, @group %>
         <hr>
 
         <%= form.actions delete: (@group.projects.length > 0 ? false : @group) %>

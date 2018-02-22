@@ -1,10 +1,26 @@
 # frozen_string_literal: true
 class Project < ActiveRecord::Base
+  # Used as part of temporary abstract attribute for docker build radio buttons
+  DEFAULT_DOCKER_BUILD_METHOD = 'samson'
+  DOCKER_BUILD_METHODS = [
+    {
+      label: 'Docker images build externally',
+      method: 'docker_image_building_disabled',
+      help_text: 'Disable local building of docker images, they must be added via api.'
+    },
+    {
+      label: 'Samson manages docker images',
+      method: DEFAULT_DOCKER_BUILD_METHOD,
+      help_text: ''
+    }
+  ] + Samson::Hooks.fire(:project_docker_build_method_options).flatten(1)
+
   has_soft_deletion default_scope: true unless self < SoftDeletion::Core
   audited
 
   include Permalinkable
   include Searchable
+  include SoftDeleteWithDestroy
 
   before_validation :normalize_repository_url, if: :repository_url_changed?
 
@@ -17,7 +33,6 @@ class Project < ActiveRecord::Base
   after_save :clone_repository, if: -> { saved_change_to_attribute?(:repository_url) }
   before_update :clean_old_repository, if: :repository_url_changed?
   after_soft_delete :clean_repository
-  before_soft_delete :destroy_user_project_roles
 
   has_many :builds, dependent: :destroy
   has_many :releases, dependent: :destroy
@@ -56,12 +71,32 @@ class Project < ActiveRecord::Base
     scope
   }
 
-  def docker_repo(registry, dockerfile)
-    repo = File.join(registry.base, permalink_base)
-    if suffix = dockerfile.gsub(/^Dockerfile\.?|\/Dockerfile\.?/, '').presence
-      repo << "-#{suffix.parameterize}"
+  # Forms use abstract "docker_build_method " attribute
+  def docker_build_method
+    active = DOCKER_BUILD_METHODS.map { |h| h.fetch(:method) }.detect do |build_method|
+      build_method != DEFAULT_DOCKER_BUILD_METHOD && send("#{build_method}?")
     end
-    repo
+
+    active || DEFAULT_DOCKER_BUILD_METHOD
+  end
+
+  def docker_build_method=(selected_method)
+    DOCKER_BUILD_METHODS.each do |method|
+      send("#{method[:method]}=", false) unless method[:method] == DEFAULT_DOCKER_BUILD_METHOD
+    end
+    send("#{selected_method}=", true) unless selected_method == DEFAULT_DOCKER_BUILD_METHOD
+  end
+
+  def docker_repo(registry, dockerfile)
+    File.join(registry.base, docker_image(dockerfile))
+  end
+
+  def docker_image(dockerfile)
+    name = permalink_base
+    if suffix = dockerfile.gsub(/^Dockerfile\.?|\/Dockerfile\.?/, '').presence
+      name << "-#{suffix.parameterize}"
+    end
+    name
   end
 
   def dockerfile_list
@@ -241,10 +276,6 @@ class Project < ActiveRecord::Base
       :release_branch,
       "could not be set. Samson's github user needs 'Write' permission to push new tags to #{repository_path}."
     )
-  end
-
-  def destroy_user_project_roles
-    user_project_roles.each(&:destroy)
   end
 
   # https://foo.com/bar/baz.git -> git@foo.com:bar/baz.git

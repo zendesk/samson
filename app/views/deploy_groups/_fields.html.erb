@@ -6,7 +6,7 @@
     <%= form.collection_select :environment_id, Environment.all, :id, :name, {}, { class: 'form-control' } %>
   <% end %>
 
-  <% if SecretStorage.backend == Samson::Secrets::HashicorpVaultBackend %>
+  <% if Samson::Secrets::Manager.backend == Samson::Secrets::HashicorpVaultBackend %>
     <%= form.input :vault_server_id do %>
       <%= form.collection_select(
             :vault_server_id,

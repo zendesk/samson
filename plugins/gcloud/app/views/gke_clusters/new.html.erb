@@ -1,0 +1,10 @@
+<%= page_title "New GKE Cluster" %>
+
+<section>
+  <%= form_for @gke_cluster, html: { class: "form-horizontal" } do |form| %>
+    <%= form.input :gcp_project, label: 'GCP Project', required: true %>
+    <%= form.input :cluster_name, label: 'GKE Cluster Name', required: true %>
+    <%= form.input :zone, label: 'Zone', required: true %>
+    <%= form.actions %>
+  <% end %>
+</section>

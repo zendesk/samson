@@ -1,0 +1,3 @@
+<% if !@build.docker_repo_digest && @build.gcr_id %>
+  <%= link_to "Sync with GCB", sync_build_gcloud_path(@build), data: {method: :post}, class: "btn btn-default" %>
+<% end %>

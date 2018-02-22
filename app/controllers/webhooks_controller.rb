@@ -22,7 +22,7 @@ class WebhooksController < ApplicationController
 
   def destroy
     webhook = current_project.webhooks.find(params[:id])
-    webhook.soft_delete!
+    webhook.soft_delete!(validate: false)
 
     redirect_to project_webhooks_path(current_project)
   end

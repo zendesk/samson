@@ -8,16 +8,17 @@
 
 <section class="clearfix tabs">
 
-  <% if can?(:write, :builds) %>
-    <div class="admin-actions">
-      <div class="pull-right">
-        <% if git_sha = @build.git_sha.presence %>
-          <%= link_to "Deploys", project_deploys_path(search: {git_sha: git_sha}), class: "btn btn-default" %>
-        <% end %>
+  <div class="admin-actions">
+    <div class="pull-right">
+      <% if git_sha = @build.git_sha.presence %>
+        <%= link_to "Deploys", project_deploys_path(search: {git_sha: git_sha}), class: "btn btn-default" %>
+      <% end %>
+      <%= Samson::Hooks.render_views(:build_button, self) %>
+      <% if can?(:write, :builds) %>
         <%= link_to "Edit", edit_project_build_path, class: "btn btn-default" %>
-      </div>
+      <% end %>
     </div>
-  <% end %>
+  </div>
 
   <dl class="dl-horizontal">
     <dt>Id</dt>
@@ -37,11 +38,6 @@
     <% if url = @build.external_url %>
       <dt>Created Via</dt>
       <dd><%= link_to_url url %></dd>
-    <% end %>
-
-    <% if external_id = @build.external_id.presence %>
-      <dt>External id</dt>
-      <dd><%= external_id %></dd>
     <% end %>
 
     <% if status = @build.external_status.presence %>
@@ -69,6 +65,8 @@
 
     <dt>Docker Digest</dt>
     <dd><%= @build.docker_repo_digest %></dd>
+
+    <%= Samson::Hooks.render_views(:build_show, self) %>
   </dl>
 
   <hr/>

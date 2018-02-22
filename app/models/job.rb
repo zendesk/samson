@@ -68,7 +68,7 @@ class Job < ActiveRecord::Base
     commands = []
     raw = command.split(/\r?\n|\r/)
     while c = raw.shift
-      c << "\n" << raw.shift if c =~ /\\ *\z/ # join multiline commands
+      c << "\n" << raw.shift if c.match?(/\\ *\z/) # join multiline commands
       commands << c
     end
     commands
@@ -159,7 +159,7 @@ class Job < ActiveRecord::Base
   end
 
   def short_reference
-    if commit =~ Build::SHA1_REGEX
+    if commit&.match?(Build::SHA1_REGEX)
       commit.slice(0, 7)
     else
       commit

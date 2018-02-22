@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative "../../test_helper"
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 2
 
 describe Kubernetes::ReleaseDoc do
   def deployment_stub(replica_count)
@@ -55,7 +55,10 @@ describe Kubernetes::ReleaseDoc do
 
   describe "#store_resource_template" do
     def create!
-      Kubernetes::ReleaseDoc.create!(doc.attributes.except('id', 'resource_template'))
+      doc.kubernetes_release.builds = [builds(:docker_build)]
+      Kubernetes::ReleaseDoc.create!(
+        doc.attributes.except('id', 'resource_template').merge(kubernetes_release: doc.kubernetes_release)
+      )
     end
 
     before do
@@ -155,17 +158,24 @@ describe Kubernetes::ReleaseDoc do
     end
   end
 
-  describe "#build" do
-    it "fetches the build" do
-      doc.kubernetes_release.builds.must_equal [builds(:docker_build)]
-    end
-  end
-
   # tested in depth from deploy_executor.rb since it has to work when called with it's local ReleaseDoc setup
   describe "#verify_template" do
     it "can run with a new release doc" do
       kubernetes_fake_raw_template
       doc.verify_template
+    end
+  end
+
+  describe "#blue_green_color" do
+    before { doc.kubernetes_release.blue_green_color = "green" }
+
+    it "is releases color when blue-green" do
+      doc.kubernetes_role.blue_green = true
+      assert doc.blue_green_color.must_equal "green"
+    end
+
+    it "is nil when not blue-green" do
+      refute doc.blue_green_color
     end
   end
 end

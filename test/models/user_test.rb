@@ -313,6 +313,10 @@ describe User do
       User.search_by_criteria(search: "", email: user.email).map(&:name).must_equal [user.name]
     end
 
+    it "ignores empty integration" do
+      User.search_by_criteria(search: "", integration: "").map(&:name).sort.must_equal User.all.map(&:name).sort
+    end
+
     it "can filter by integration" do
       user = users(:admin)
       user.update_column :integration, true
@@ -388,7 +392,7 @@ describe User do
     end
 
     it 'soft deletes all the user locks when the user is soft deleted' do
-      user.soft_delete!
+      user.soft_delete!(validate: false)
       locks.each { |lock| lock.reload.deleted_at.wont_be_nil }
     end
   end
@@ -528,7 +532,7 @@ describe User do
     it "deletes them on deletion and audits as user change" do
       assert_difference 'Audited::Audit.where(auditable_type: "User").count', +2 do
         assert_difference 'UserProjectRole.count', -1 do
-          user.soft_delete!
+          user.soft_delete!(validate: false)
         end
       end
     end

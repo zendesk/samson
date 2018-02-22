@@ -12,29 +12,27 @@ class SecretsController < ApplicationController
   before_action :authorize_resource!
 
   def index
-    @secrets = SecretStorage.lookup_cache.map { |id, secret_stub| [id, SecretStorage.parse_id(id), secret_stub] }
+    @secrets = Samson::Secrets::Manager.lookup_cache.map do |id, secret_stub|
+      [id, Samson::Secrets::Manager.parse_id(id), secret_stub]
+    end
+
     @keys = @secrets.map { |_, parts, _| parts.fetch(:key) }.uniq.sort
 
-    SecretStorage::ID_PARTS.each do |part|
+    Samson::Secrets::Manager::ID_PARTS.each do |part|
       if value = params.dig(:search, part).presence
         @secrets.select! { |_, parts, _| parts.fetch(part) == value }
       end
     end
 
-    if value = params.dig(:search, :value).presence
-      matching = filter_secrets_by_value(value)
-      @secrets.select! { |id, _, _| matching.include?(id) }
+    if value_hashed = params.dig(:search, :value_hashed).presence
+      @secrets.select! { |_, _, secret_stub| secret_stub[:value_hashed] == value_hashed }
     end
 
     if value_from = params.dig(:search, :value_from).presence
-      value = SecretStorage.read(value_from, include_value: true).fetch(:value)
-      matching = filter_secrets_by_value(value)
+      value = Samson::Secrets::Manager.read(value_from, include_value: true).fetch(:value)
+      matching = Samson::Secrets::Manager.filter_ids_by_value(@secrets.map(&:first), value)
       matching.delete(value_from) # do not show what we already know
       @secrets.select! { |id, _, _| matching.include?(id) }
-    end
-
-    if value_hashed = params.dig(:search, :value_hashed).presence
-      @secrets.select! { |_, _, secret_stub| secret_stub[:value_hashed] == value_hashed }
     end
   rescue Samson::Secrets::BackendError => e
     flash[:error] = e.message
@@ -42,7 +40,7 @@ class SecretsController < ApplicationController
   end
 
   def duplicates
-    @groups = SecretStorage.lookup_cache.
+    @groups = Samson::Secrets::Manager.lookup_cache.
       group_by { |_, v| v.fetch(:value_hashed) }.
       select { |_, v| v.size >= 2 }.
       sort_by { |_, v| -v.size }
@@ -53,7 +51,7 @@ class SecretsController < ApplicationController
   end
 
   def create
-    if SecretStorage.exist?(id)
+    if Samson::Secrets::Manager.exist?(id)
       failure_response "The secret #{id} already exists."
     else
       update
@@ -68,17 +66,28 @@ class SecretsController < ApplicationController
 
     # allow updating comments by backfilling value ... but not making visible
     if attributes[:value].blank?
-      old = SecretStorage.read(id, include_value: true)
+      old = Samson::Secrets::Manager.read(id, include_value: true)
       if old[:visible] || attributes[:visible]
         failure_response 'Cannot update visibility without value.'
         return
       else
         attributes[:value] = old.fetch(:value)
       end
+    elsif secret_params[:allow_duplicates] != '1'
+      duplicates = Samson::Secrets::Manager.filter_ids_by_value(
+        Samson::Secrets::Manager.lookup_cache.keys - [id],
+        attributes.fetch(:value)
+      )
+
+      if duplicates.any?
+        @duplicate_secret_error = true
+        failure_response "Secret #{duplicates.join(', ')} already use the same value, reuse them as global secrets"
+        return
+      end
     end
 
     attributes[:user_id] = current_user.id
-    if SecretStorage.write(id, attributes)
+    if Samson::Secrets::Manager.write(id, attributes)
       successful_response "Secret #{id} saved."
     else
       failure_response 'Failed to save.'
@@ -86,7 +95,7 @@ class SecretsController < ApplicationController
   end
 
   def destroy
-    SecretStorage.delete(id)
+    Samson::Secrets::Manager.delete(id)
     if request.xhr?
       head :ok
     else
@@ -96,21 +105,22 @@ class SecretsController < ApplicationController
 
   private
 
-  def filter_secrets_by_value(value)
-    SecretStorage.filter_ids_by_value(@secrets.map(&:first), value)
-  end
-
   def secret_params
-    @secret_params ||= params.require(:secret).permit(*SecretStorage::ID_PARTS, *UPDATEDABLE_ATTRIBUTES)
+    @secret_params ||= params.require(:secret).permit(
+      *Samson::Secrets::Manager::ID_PARTS,
+      *UPDATEDABLE_ATTRIBUTES,
+      :allow_duplicates
+    )
   end
 
   def id
-    @id ||= (params[:id] || SecretStorage.generate_id(secret_params.slice(*SecretStorage::ID_PARTS)))
+    @id ||= params[:id] ||
+      Samson::Secrets::Manager.generate_id(secret_params.slice(*Samson::Secrets::Manager::ID_PARTS))
   end
 
   def project_permalink
     if params[:id].present?
-      SecretStorage.parse_id(params[:id]).fetch(:project_permalink)
+      Samson::Secrets::Manager.parse_id(params[:id]).fetch(:project_permalink)
     else
       (params[:secret] && params[:secret][:project_permalink]) || 'global'
     end
@@ -131,12 +141,12 @@ class SecretsController < ApplicationController
   end
 
   def find_secret
-    @secret = SecretStorage.read(id, include_value: true)
+    @secret = Samson::Secrets::Manager.read(id, include_value: true)
     @secret[:value] = nil unless @secret.fetch(:visible)
   end
 
   def find_project_permalinks
-    @project_permalinks = SecretStorage.allowed_project_prefixes(current_user)
+    @project_permalinks = Samson::Secrets::Manager.allowed_project_prefixes(current_user)
   end
 
   def require_project

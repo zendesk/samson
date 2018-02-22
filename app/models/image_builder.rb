@@ -9,13 +9,16 @@ class ImageBuilder
     include ::NewRelic::Agent::MethodTracer
 
     def build_image(dir, build, executor, tag_as_latest:, **args)
+      if DockerRegistry.all.empty?
+        raise Samson::Hooks::UserError, "Need at least one DOCKER_REGISTRIES to push images"
+      end
       return unless image_id = build_image_locally(
         dir, executor,
         tag: build.docker_tag, dockerfile: build.dockerfile, **args
       )
       push_image(image_id, build, executor, tag_as_latest: tag_as_latest)
     ensure
-      if image_id && ENV["DOCKER_KEEP_BUILT_IMGS"] != "1"
+      if image_id && !['1', 'true'].include?(ENV["DOCKER_KEEP_BUILT_IMGS"])
         executor.output.puts("### Deleting local docker image")
         Docker::Image.get(image_id).remove(force: true)
       end

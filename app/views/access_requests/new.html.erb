@@ -1,47 +1,21 @@
 <%= page_title "Request access" %>
-
+<%
+  @projects = Project.all.order(:name)
+  @roles = Role.all
+%>
 <section>
-  <%= form_tag access_requests_path, class: 'form-horizontal' do %>
+  <%= form_for @access_request, html: { class: "form-horizontal" } do |form| %>
     <%= redirect_to_field %>
-    <fieldset>
-      <div class="form-group">
-        <label class="col-lg-2 control-label">Manager's email</label>
-        <div class="col-lg-3">
-          <%= email_field_tag :manager_email, nil, class: 'form-control',
-            placeholder: 'name@example.com', required: true %>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="col-lg-2 control-label">Reason</label>
-        <div class="col-lg-6">
-          <%= text_area_tag :reason, nil, class: 'form-control', rows: 4, required: 'required' %>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="col-lg-2 control-label">Projects</label>
-        <div class="col-lg-4">
-          <%= live_select_tag :project_ids, options_from_collection_for_select(@projects, :id, :name),
-            multiple: true, required: true %>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="col-lg-2 control-label">Role</label>
-        <div class="col-lg-4">
-          <%= select_tag :role_id, options_from_collection_for_select(@roles, :id, :display_name),
-            class: 'form-control', required: true %>
-        </div>
-      </div>
-    </fieldset>
-
-    <fieldset>
-      <div class="form-group">
-        <div class="col-lg-offset-2 col-lg-10">
-          <button type="submit" class="btn btn-default">Send</button>
-        </div>
-      </div>
-    </fieldset>
+    <%= form.input :manager_email, as: :email_field, required: true %>
+    <%= form.input :reason, as: :text_area, required: true %>
+    <%= form.input :project_ids, label: 'Projects', required: true do %>
+      <%= live_select_tag 'access_request[project_ids]', options_from_collection_for_select(@projects, :id, :name),
+          multiple: true %>
+    <% end %>
+    <%= form.input :role_id, required: true do %>
+      <%= select_tag 'access_request[role_id]', options_from_collection_for_select(@roles, :id, :display_name),
+          class: 'form-control' %>
+    <% end %>
+    <%= form.actions %>
   <% end %>
 </section>

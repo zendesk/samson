@@ -88,6 +88,16 @@ describe Samson::Secrets::VaultClient do
         times: 2
       ) { client.renew_token }
     end
+
+    it "does not prevent renewing all tokens when a single renew fails" do
+      Airbrake.expects(:notify).times(2)
+      assert_request(
+        :put,
+        "http://vault-land.com/v1/auth/token/renew-self",
+        to_timeout: [],
+        times: 8 # 2 servers with 1 initial try and 3 re-tries
+      ) { client.renew_token }
+    end
   end
 
   describe "#clients" do

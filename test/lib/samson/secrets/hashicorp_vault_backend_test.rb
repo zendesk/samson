@@ -9,7 +9,7 @@ describe Samson::Secrets::HashicorpVaultBackend do
   let(:backend) { Samson::Secrets::HashicorpVaultBackend }
 
   it "keeps segments in sync with storage" do
-    Samson::Secrets::HashicorpVaultBackend::ID_SEGMENTS.must_equal SecretStorage::ID_PARTS.size
+    Samson::Secrets::HashicorpVaultBackend::ID_SEGMENTS.must_equal Samson::Secrets::Manager::ID_PARTS.size
   end
 
   describe ".read" do

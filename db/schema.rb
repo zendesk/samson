@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171226184349) do
+ActiveRecord::Schema.define(version: 20180209012126) do
 
   create_table "audits", force: :cascade do |t|
     t.integer "auditable_id", null: false
@@ -51,11 +51,10 @@ ActiveRecord::Schema.define(version: 20171226184349) do
     t.datetime "finished_at"
     t.string "external_url"
     t.string "dockerfile", default: "Dockerfile"
-    t.string "external_id"
     t.string "external_status"
     t.string "image_name"
+    t.integer "gcr_vulnerabilities_status_id", default: 0, null: false
     t.index ["created_by"], name: "index_builds_on_created_by"
-    t.index ["external_id"], name: "index_builds_on_external_id", unique: true, length: { external_id: 191 }
     t.index ["git_sha", "dockerfile"], name: "index_builds_on_git_sha_and_dockerfile", unique: true
     t.index ["git_sha", "image_name"], name: "index_builds_on_git_sha_and_image_name", unique: true, length: { git_sha: 80, image_name: 80 }
     t.index ["project_id"], name: "index_builds_on_project_id"
@@ -218,8 +217,9 @@ ActiveRecord::Schema.define(version: 20171226184349) do
     t.integer "kubernetes_role_id", null: false
     t.decimal "requests_cpu", precision: 4, scale: 2, null: false
     t.integer "requests_memory", null: false
+    t.boolean "delete_resource", default: false, null: false
     t.index ["deploy_group_id"], name: "index_kubernetes_deploy_group_roles_on_deploy_group_id"
-    t.index ["project_id", "deploy_group_id", "kubernetes_role_id"], name: "index_kubernetes_deploy_group_roles_on_project_id"
+    t.index ["project_id", "deploy_group_id", "kubernetes_role_id"], name: "index_kubernetes_deploy_group_roles_on_project_dg_kr", unique: true
   end
 
   create_table "kubernetes_release_docs", id: :integer, force: :cascade do |t|
@@ -234,6 +234,7 @@ ActiveRecord::Schema.define(version: 20171226184349) do
     t.text "resource_template"
     t.decimal "requests_cpu", precision: 4, scale: 2, null: false
     t.integer "requests_memory", null: false
+    t.boolean "delete_resource", default: false, null: false
     t.index ["kubernetes_release_id"], name: "index_kubernetes_release_docs_on_kubernetes_release_id"
     t.index ["kubernetes_role_id"], name: "index_kubernetes_release_docs_on_kubernetes_role_id"
   end
@@ -246,6 +247,7 @@ ActiveRecord::Schema.define(version: 20171226184349) do
     t.integer "deploy_id"
     t.string "git_sha", limit: 40, null: false
     t.string "git_ref"
+    t.string "blue_green_color"
   end
 
   create_table "kubernetes_roles", id: :integer, force: :cascade do |t|
@@ -258,6 +260,7 @@ ActiveRecord::Schema.define(version: 20171226184349) do
     t.datetime "deleted_at"
     t.string "resource_name", null: false
     t.boolean "autoscaled", default: false, null: false
+    t.boolean "blue_green", default: false, null: false
     t.index ["project_id"], name: "index_kubernetes_roles_on_project_id"
     t.index ["resource_name", "deleted_at"], name: "index_kubernetes_roles_on_resource_name_and_deleted_at", unique: true, length: { resource_name: 191 }
     t.index ["service_name", "deleted_at"], name: "index_kubernetes_roles_on_service_name_and_deleted_at", unique: true, length: { service_name: 191 }
@@ -376,6 +379,7 @@ ActiveRecord::Schema.define(version: 20171226184349) do
     t.boolean "docker_image_building_disabled", default: false, null: false
     t.string "dockerfiles"
     t.boolean "build_with_gcb", default: false, null: false
+    t.boolean "show_gcr_vulnerabilities", default: false, null: false
     t.index ["build_command_id"], name: "index_projects_on_build_command_id"
     t.index ["permalink"], name: "index_projects_on_permalink", unique: true, length: { permalink: 191 }
     t.index ["token"], name: "index_projects_on_token", unique: true, length: { token: 191 }
@@ -504,6 +508,8 @@ ActiveRecord::Schema.define(version: 20171226184349) do
     t.boolean "no_reference_selection", default: false, null: false
     t.boolean "periodical_deploy", default: false, null: false
     t.boolean "builds_in_environment", default: false, null: false
+    t.boolean "block_on_gcr_vulnerabilities", default: false, null: false
+    t.boolean "notify_assertible", default: false, null: false
     t.index ["project_id", "permalink"], name: "index_stages_on_project_id_and_permalink", unique: true, length: { permalink: 191 }
     t.index ["template_stage_id"], name: "index_stages_on_template_stage_id"
   end

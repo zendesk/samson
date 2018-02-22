@@ -44,7 +44,7 @@ module Kubernetes
       errors = []
 
       roles = elements.map { |r| r.dig(:metadata, :labels, :role) }.compact
-      errors << "metadata.labels.role must set and unique" if roles.uniq.size != elements.size
+      errors << "metadata.labels.role must be set and unique" if roles.uniq.size != elements.size
 
       projects = elements.map { |r| r.dig(:metadata, :labels, :project) }.uniq
       errors << "metadata.labels.project must be consistent" if projects.size != 1
@@ -131,7 +131,7 @@ module Kubernetes
           # make sure we get sane values for labels or deploy will blow up
           labels.each do |k, v|
             if v.is_a?(String)
-              @errors << "#{kind} #{path.join('.')}.#{k} must match #{VALID_LABEL.inspect}" unless v =~ VALID_LABEL
+              @errors << "#{kind} #{path.join('.')}.#{k} must match #{VALID_LABEL.inspect}" unless v.match?(VALID_LABEL)
             else
               @errors << "#{kind} #{path.join('.')}.#{k} must be a String"
             end

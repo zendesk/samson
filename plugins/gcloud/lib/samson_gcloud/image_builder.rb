@@ -25,6 +25,9 @@ module SamsonGcloud
         end
 
         config = "#{dir}/cloudbuild.yml" # inside of the directory or we get 'Could not parse into a message'
+        if File.exist?(config)
+          raise Samson::Hooks::UserError, "cloudbuild.yml already exists, use external builds"
+        end
 
         File.write(config, <<~YAML)
           steps:#{cache_pull}
@@ -36,8 +39,10 @@ module SamsonGcloud
           #{tag_list}
         YAML
 
+        prevent_upload_of_ignored_files(dir)
+
         command = [
-          "gcloud", *SamsonGcloud.container_in_beta, "container", "builds", "submit", ".",
+          "gcloud", "container", "builds", "submit", ".",
           "--timeout", executor.timeout, "--config", config, *SamsonGcloud.cli_options
         ]
 
@@ -53,6 +58,19 @@ module SamsonGcloud
       end
 
       private
+
+      def prevent_upload_of_ignored_files(dir)
+        ignore = "#{dir}/.gcloudignore"
+        unless File.exist?(ignore)
+          File.write(
+            ignore,
+            [
+              ("#!include:.gitignore" if File.exist?("#{dir}/.gitignore")),
+              (File.exist?("#{dir}/.dockerignore") ? "#!include:.dockerignore" : ".git")
+            ].compact.join("\n")
+          )
+        end
+      end
 
       # NOTE: not using executor since it does not return output
       def image_exists_in_gcloud?(repo_digest)

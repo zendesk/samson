@@ -12,7 +12,7 @@ describe CommitStatusesController do
     describe '#show' do
       let(:stage) { stages(:test_staging) }
       let(:project) { projects(:test) }
-      let(:valid_params) { {project_id: project.to_param, stage_id: stage.to_param, id: 'test/test'} }
+      let(:valid_params) { {project_id: project.to_param, stage_id: stage.to_param, id: 'test/test', ref: 'bar'} }
 
       it "fails with unknown project" do
         assert_raises ActiveRecord::RecordNotFound do
@@ -23,6 +23,12 @@ describe CommitStatusesController do
       it "fails with unknown stage" do
         stage.update_column(:project_id, 3)
         assert_raises(ActiveRecord::RecordNotFound) { get :show, params: valid_params }
+      end
+
+      it "fails without ref" do
+        assert_raises ActionController::ParameterMissing do
+          get :show, params: valid_params.merge(ref: nil)
+        end
       end
 
       describe 'valid' do

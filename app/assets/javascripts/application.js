@@ -10,6 +10,7 @@
 // Read Sprockets README (https://github.com/sstephenson/sprockets#sprockets-directives) for details
 // about supported directives.
 //
+//= require jsSHA
 //= require instant_errors
 //= require jquery
 //= require jquery-ujs
@@ -24,6 +25,7 @@
 //= require bootstrap/tooltip
 //= require bootstrap/popover
 //= require bootstrap-select
+//= require bootstrap-datetimepicker
 //= require x-editable/dist/bootstrap3-editable/js/bootstrap-editable
 //= require app
 //= require underscore_mixins

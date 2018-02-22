@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 # makes sure all builds that are needed for a deploy are successfully built
-# (needed builds are determined by projects `dockerfiles` column)
-#
-# FIXME: Ideally it would come from what `template_filler.rb` needs, but it wants know about builds to render.
+# (needed builds are determined by projects `dockerfiles` column or passed in image list)
 #
 # Special cases:
 # - when no Dockerfile is in the repo and it is the only requested dockerfile (column default value), return no builds
@@ -14,12 +12,12 @@ module Samson
   class BuildFinder
     TICK = 2.seconds
 
-    def initialize(output, job, reference, images: nil)
+    def initialize(output, job, reference, build_selectors: nil)
       @output = output
       @job = job
       @reference = reference
       @cancelled = false
-      @images = images
+      @build_selectors = build_selectors
     end
 
     # deploy was cancelled, so finish up as fast as possible
@@ -28,64 +26,68 @@ module Samson
     end
 
     def ensure_successful_builds
-      builds =
-        if @images
-          wait_for_build_creation do |last_try|
-            find_build_by_image_name(fail: last_try)
-          end
-        else
-          find_or_create_builds_by_dockerfile
-        end
-
+      builds = find_or_create_builds
       builds.compact.each do |build|
         wait_for_build_completion(build)
         ensure_build_is_successful(build) unless @cancelled
       end
     end
 
-    def find_or_create_builds_by_dockerfile
-      requested = @job.project.dockerfile_list
-      requested.map do |dockerfile|
-        find_build(dockerfile) ||
-          (!@job.project.docker_image_building_disabled? && create_build(dockerfile)) ||
-          nil # need nil and not false
-      end
-    end
-
-    # Finds build by comparing their name (foo.com/bar/baz -> baz) to pre-build images image_name column
-    def find_build_by_image_name(fail:)
-      possible_builds = reused_builds + Build.where(git_sha: @job.commit)
-      @images.map do |image|
-        self.class.detect_build_by_image_name!(possible_builds, image, fail: fail) || break
-      end
-    end
-
-    def self.detect_build_by_image_name!(builds, image, fail:)
-      image_name = image.split('/').last.split(/[:@]/, 2).first
-      builds.detect { |b| b.image_name == image_name } || (
-        if fail
-          raise(
-            Samson::Hooks::UserError,
-            "Did not find build for image_name #{image_name} (from #{image}).\n" \
-            "Found image_names #{builds.map(&:image_name).uniq.join(", ")}."
-          )
+    def find_or_create_builds
+      needed =
+        if @build_selectors
+          @build_selectors.dup
+        else
+          @job.project.dockerfile_list.map { |d| [d, @job.project.docker_image(d)] }
         end
+
+      build_disabled = @job.project.docker_image_building_disabled?
+      all = []
+
+      wait_for_build_creation do |last_try|
+        needed.delete_if do |dockerfile, image|
+          found = self.class.detect_build_by_selector!(
+            possible_builds, dockerfile, image, fail: (last_try && build_disabled)
+          )
+          if found
+            all << found
+          elsif last_try
+            raise unless dockerfile # should never get here
+            raise if build_disabled # should never get here
+            all << create_build(dockerfile)
+          end
+        end
+        needed.empty? # stop the waiting when we got everything
+      end
+
+      all
+    end
+
+    def self.detect_build_by_selector!(builds, dockerfile, image, fail:)
+      image_name = image.split('/').last.split(/[:@]/, 2).first if image
+      found = builds.detect do |b|
+        (image_name && b.image_name == image_name) || (dockerfile && b.dockerfile == dockerfile)
+      end
+      return found if found || !fail
+
+      raise(
+        Samson::Hooks::UserError,
+        "Did not find build for dockerfile #{dockerfile.inspect} or image_name #{image_name.inspect}.\n" \
+        "Found builds: #{builds.map { |b| [b.dockerfile, b.image_name] }.uniq.inspect}."
       )
     end
 
     private
 
-    def find_build(dockerfile)
-      wait_for_build_creation { Build.where(git_sha: @job.commit, dockerfile: dockerfile).first } ||
-        reused_builds.detect { |b| b.dockerfile == dockerfile }
-    end
+    def possible_builds
+      commits = [@job.commit]
 
-    def reused_builds
-      (
-        defined?(SamsonKubernetes) &&
-        @job.deploy.kubernetes_reuse_build &&
-        @job.deploy.previous_deploy&.kubernetes_release&.builds
-      ) || []
+      if defined?(SamsonKubernetes) && @job.deploy.kubernetes_reuse_build
+        previous = @job.deploy.previous_deploy&.job&.commit
+        commits << previous if previous
+      end
+
+      Build.where(git_sha: commits).sort_by { |build| commits.index(build.git_sha) }
     end
 
     # we only wait once no matter how many builds are missing since build creation is fast
@@ -130,9 +132,6 @@ module Samson
         )
         DockerBuilderService.new(Build.find(build.id)).run # .find to not update/reload the same object
         build
-      elsif dockerfile == "Dockerfile"
-        @output.puts("Not creating #{name} since is is not in the repository.")
-        nil
       else
         raise(
           Samson::Hooks::UserError,
@@ -142,9 +141,13 @@ module Samson
     end
 
     def wait_for_build_completion(build)
-      return unless build.reload.active?
+      if build.reload.active?
+        @output.puts("Waiting for Build #{build.url} to finish.")
+      else
+        @output.puts("Build #{build.url} is finished.")
+        return
+      end
 
-      @output.puts("Waiting for Build #{build.url} to finish.")
       loop do
         break if @cancelled
         sleep TICK
@@ -154,7 +157,10 @@ module Samson
 
     def ensure_build_is_successful(build)
       if build.docker_repo_digest
-        @output.puts("Build #{build.url} is looking good!")
+        unless Samson::Hooks.fire(:ensure_build_is_successful, build, @job, @output).all?
+          raise Samson::Hooks::UserError, "Plugin build checks for #{build.url} failed."
+        end
+        @output.puts "Build #{build.url} is looking good!"
       elsif build_job = build.docker_build_job
         raise Samson::Hooks::UserError, "Build #{build.url} is #{build_job.status}, rerun it."
       else

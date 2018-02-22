@@ -14,13 +14,8 @@ module SamsonKubernetes
     [OpenSSL::SSL::SSLError, KubeException, Errno::ECONNREFUSED].freeze
   end
 
-  def self.retry_on_connection_errors
-    yield
-  rescue *connection_errors
-    retries ||= 3
-    retries -= 1
-    raise if retries < 0
-    retry
+  def self.retry_on_connection_errors(&block)
+    Samson::Retry.with_retries connection_errors, 3, &block
   end
 end
 
@@ -68,3 +63,20 @@ Samson::Hooks.callback(:link_parts_for_resource) do
 end
 
 Samson::Hooks.callback(:deploy_group_includes) { :kubernetes_cluster }
+
+Samson::Hooks.callback(:stage_clone) do |old_stage, new_stage|
+  roles_to_copy = Kubernetes::DeployGroupRole.where(
+    project: old_stage.project,
+    deploy_group: old_stage.deploy_groups.last
+  )
+
+  new_stage.deploy_groups.each do |deploy_group|
+    roles_to_copy.each do |dgr|
+      Kubernetes::DeployGroupRole.create(
+        dgr.attributes.
+          except('id', 'created_at', 'updated_at').
+          merge('deploy_group_id' => deploy_group.id)
+      )
+    end
+  end
+end

@@ -43,4 +43,13 @@ module ProjectsHelper
       ""
     end
   end
+
+  def docker_build_methods_help_text
+    help_texts = Project::DOCKER_BUILD_METHODS.map do |method|
+      if method[:help_text].present?
+        content_tag(:b, "#{method[:label]}: ") << method[:help_text]
+      end
+    end.compact
+    safe_join(help_texts, "<br/><br/>".html_safe)
+  end
 end

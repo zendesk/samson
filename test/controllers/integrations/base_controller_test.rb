@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../../test_helper'
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 1
 
 describe Integrations::BaseController do
   class BaseTestController < Integrations::BaseController
@@ -143,6 +143,11 @@ describe Integrations::BaseController do
       project.reload
       project.releases.count.must_equal 0
       project.builds.count.must_equal 1
+    end
+
+    it "hides token from airbrake" do
+      post :create, params: {test_route: true, token: "true/create", foo: "bar"}
+      @controller.request.env["PATH_INFO"].must_equal "/test/hidden-project-not-found-token"
     end
 
     describe "when deploy hooks are setup" do

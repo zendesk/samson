@@ -13,7 +13,7 @@ module Kubernetes
       @index = index
     end
 
-    def to_hash
+    def to_hash(verification: false)
       @to_hash ||= begin
         kind = template[:kind]
 
@@ -27,6 +27,7 @@ module Kubernetes
           set_service_name
           set_service_node_port
           prefix_service_cluster_ip
+          set_service_blue_green if blue_green_color
         when *Kubernetes::RoleConfigFile::PRIMARY_KINDS
           if kind != 'Pod'
             set_rc_unique_label_key
@@ -41,12 +42,12 @@ module Kubernetes
           set_name
           set_contact_info
           set_spec_template_metadata
-          set_docker_image
+          set_docker_image unless verification
           set_resource_usage
           set_env
           set_secrets
           set_image_pull_secrets
-          set_vault_env
+          set_resource_blue_green if blue_green_color
         end
 
         hash = template
@@ -68,13 +69,37 @@ module Kubernetes
       expand_secret_annotations
     end
 
-    def images
+    def build_selectors
       all = containers
       modify_init_container { |containers| all += containers }
-      all.map { |c| c.fetch(:image) }.uniq
+      all.map { |c| build_selector_for_container(c) }.compact
     end
 
     private
+
+    def build_selector_for_container(container)
+      dockerfile = container[:"samson/dockerfile"] || 'Dockerfile'
+      return if dockerfile == 'none'
+
+      if project.docker_image_building_disabled?
+        # also supporting dockerfile would make sense if external builds did not have image_name,
+        # maybe even Dockerfile.foo -> <permalink>-foo translation
+        # but for now keeping old behavior
+        [nil, container.fetch(:image)]
+      else
+        [dockerfile, nil]
+      end
+    end
+
+    def set_service_blue_green
+      template.dig_set([:spec, :selector, :blue_green], blue_green_color)
+    end
+
+    def set_resource_blue_green
+      template.dig_set([:metadata, :labels, :blue_green], blue_green_color)
+      template.dig_set([:spec, :selector, :matchLabels, :blue_green], blue_green_color)
+      template.dig_set([:spec, :template, :metadata, :labels, :blue_green], blue_green_color)
+    end
 
     def set_project_labels
       project_label = project.permalink
@@ -238,7 +263,9 @@ module Kubernetes
     end
 
     def set_name
-      template.dig_set [:metadata, :name], @doc.kubernetes_role.resource_name
+      name = @doc.kubernetes_role.resource_name
+      name += "-#{blue_green_color}" if blue_green_color
+      template.dig_set [:metadata, :name], name
     end
 
     def set_hpa_scale_target_name
@@ -271,7 +298,7 @@ module Kubernetes
     end
 
     def set_resource_usage
-      container[:resources] = {
+      containers.first[:resources] = {
         requests: { cpu: @doc.requests_cpu.to_f, memory: "#{@doc.requests_memory}M" },
         limits: { cpu: @doc.limits_cpu.to_f, memory: "#{@doc.limits_memory}M" }
       }
@@ -280,26 +307,17 @@ module Kubernetes
     # To not break previous workflows for sidecars we do not pick the default Dockerfile
     def set_docker_image
       builds = @doc.kubernetes_release.builds
-      set_docker_image_for_containers(builds, containers, default: true)
+      set_docker_image_for_containers(builds, containers)
       modify_init_container do |containers|
-        set_docker_image_for_containers(builds, containers, default: false)
+        set_docker_image_for_containers(builds, containers)
       end
     end
 
-    # NOTE: the whole inner loop might make sense to pull out and unify in BuildFinder
-    # so that needed dockerfiles are also detected there instead of via project `dockerfiles` column
-    def set_docker_image_for_containers(builds, containers, default:)
+    def set_docker_image_for_containers(builds, containers)
       containers.each do |container|
-        build =
-          if project.docker_image_building_disabled?
-            Samson::BuildFinder.detect_build_by_image_name!(builds, container.fetch(:image), fail: true)
-          elsif selected = container[:"samson/dockerfile"]
-            builds.detect { |b| b.dockerfile == selected } ||
-              raise(Samson::Hooks::UserError, "Build for dockerfile #{selected} not found")
-          elsif default
-            builds.detect { |b| b.dockerfile == "Dockerfile" }
-          end
-        container[:image] = build.docker_repo_digest if build
+        next unless build_selector = build_selector_for_container(container)
+        build = Samson::BuildFinder.detect_build_by_selector!(builds, *build_selector, fail: true)
+        container[:image] = build.docker_repo_digest
       end
     end
 
@@ -307,19 +325,23 @@ module Kubernetes
       @project ||= @doc.kubernetes_release.project
     end
 
-    def env
-      (container[:env] ||= [])
-    end
-
     # custom annotation we support here and in kucodiff
     def missing_env
-      required = ((annotations || {})[:"samson/required_env"] || "").strip.split(/[\s,]/)
-      (required - env.map { |e| e.fetch(:name) }).presence
+      test_env = (containers.first[:env] || [])
+      (required_env - test_env.map { |e| e.fetch(:name) }).presence
+    end
+
+    def required_env
+      ((annotations || {})[:"samson/required_env"] || "").strip.split(/[\s,]/)
     end
 
     # helpful env vars, also useful for log tagging
     def set_env
-      static_env.each { |k, v| env << {name: k.to_s, value: v.to_s} }
+      all = []
+
+      all.concat vault_env if vault_env_required?
+
+      static_env.each { |k, v| all << {name: k.to_s, value: v.to_s} }
 
       # dynamic lookups for unknown things during deploy
       {
@@ -327,16 +349,21 @@ module Kubernetes
         POD_NAMESPACE: 'metadata.namespace',
         POD_IP: 'status.podIP'
       }.each do |k, v|
-        env << {
+        all << {
           name: k.to_s,
           valueFrom: {fieldRef: {fieldPath: v}}
         }
       end
 
-      # unique, but keep last elements
-      env.reverse!
-      env.uniq! { |h| h[:name] }
-      env.reverse!
+      containers.each do |c|
+        env = (c[:env] ||= [])
+        env.concat all
+
+        # unique, but keep last elements
+        env.reverse!
+        env.uniq! { |h| h[:name] }
+        env.reverse!
+      end
     end
 
     def static_env
@@ -355,16 +382,20 @@ module Kubernetes
       kube_cluster_name = DeployGroup.find(metadata[:deploy_group_id]).kubernetes_cluster.name.to_s
       env[:KUBERNETES_CLUSTER_NAME] = kube_cluster_name
 
+      # blue-green phase
+      env[:BLUE_GREEN] = blue_green_color if blue_green_color
+
       # env from plugins
       env.merge!(Samson::Hooks.fire(:deploy_group_env, project, @doc.deploy_group).inject({}, :merge!))
     end
 
-    def set_vault_env
-      if ENV["SECRET_STORAGE_BACKEND"] == "SecretStorage::HashicorpVault"
-        containers.each do |container|
-          (container[:env] ||= []).concat vault_env
-        end
-      end
+    def blue_green_color
+      return @blue_green_color if defined?(@blue_green_color)
+      @blue_green_color = @doc.blue_green_color
+    end
+
+    def vault_env_required?
+      required_env.include?('VAULT_ADDR') && ENV["SECRET_STORAGE_BACKEND"] == "Samson::Secrets::HashicorpVaultBackend"
     end
 
     def vault_env
@@ -401,10 +432,6 @@ module Kubernetes
 
     def containers
       pod_template.dig_fetch(:spec, :containers)
-    end
-
-    def container
-      containers.first
     end
   end
 end

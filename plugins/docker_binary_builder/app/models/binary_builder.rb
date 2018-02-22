@@ -1,4 +1,6 @@
 # frozen_string_literal: true
+require 'docker'
+
 class BinaryBuilder
   DOCKER_BUILD_FILE = 'Dockerfile.build'
   BUILD_SCRIPT = '/app/build.sh'

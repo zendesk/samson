@@ -7,7 +7,8 @@ class Kubernetes::ClustersController < ApplicationController
   before_action :find_cluster, only: [:show, :edit, :update, :destroy, :seed_ecr]
 
   def new
-    @cluster = ::Kubernetes::Cluster.new(config_filepath: new_config_file_path)
+    config_filepath = params.dig(:kubernetes_cluster, :config_filepath) || new_config_file_path
+    @cluster = ::Kubernetes::Cluster.new(config_filepath: config_filepath)
     render :edit
   end
 
@@ -22,6 +23,11 @@ class Kubernetes::ClustersController < ApplicationController
 
   def index
     @clusters = ::Kubernetes::Cluster.all.sort_by { |c| Samson::NaturalOrder.convert(c.name) }
+    if params[:capacity]
+      @cluster_nodes = Samson::Parallelizer.map(@clusters) do |cluster|
+        [cluster.id, cluster.schedulable_nodes]
+      end.to_h
+    end
   end
 
   def show

@@ -18,7 +18,7 @@ module ApplicationHelper
 
   # turn exact urls into links so we can follow build urls ... only super simple to stay safe
   def autolink(text)
-    text.gsub(%r{https?://[\w:./\d#?&=-]+}, %(<a href="\\0">\\0</a>))
+    text.gsub(%r{https?://[\w:@./\d#?&=-]+}, %(<a href="\\0">\\0</a>))
   end
 
   # https://github.com/showdownjs/showdown/wiki/Markdown's-XSS-Vulnerability-(and-how-to-mitigate-it)
@@ -100,7 +100,7 @@ module ApplicationHelper
     when Stage then
       name = resource.name
       name = (resource.lock.warning? ? warning_icon : lock_icon) + " " + name if resource.lock
-      [name, project_stage_path(resource.project, resource)]
+      [name, [resource.project, resource]]
     when SecretSharingGrant then [resource.key, resource]
     else
       @@link_parts_for_resource ||= Samson::Hooks.fire(:link_parts_for_resource).to_h
@@ -111,7 +111,12 @@ module ApplicationHelper
   end
 
   def link_to_resource(resource)
-    link_to(*link_parts_for_resource(resource))
+    name, path = link_parts_for_resource(resource)
+    if Array(path).any?(&:nil?)
+      name
+    else
+      link_to(name, path)
+    end
   end
 
   def manual_breadcrumb(items)
@@ -249,8 +254,8 @@ module ApplicationHelper
     end
   end
 
-  def search_form(&block)
-    form_tag '?', method: :get, class: 'clearfix' do
+  def search_form(options = {}, &block)
+    form_tag '?', options.merge(method: :get, class: "clearfix") do
       button = submit_tag("Search", class: "btn btn-default form-control", style: "margin-top: 25px")
       capture(&block) << content_tag(:div, button, class: "col-md-1 clearfix")
     end

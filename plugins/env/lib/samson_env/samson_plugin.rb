@@ -27,6 +27,12 @@ module SamsonEnv
       return groups if groups.any? { |_, data| data.present? }
     end
 
+    # https://github.com/bkeepers/dotenv/pull/188
+    # shellescape does not work ... we only get strings, so inspect works pretty well
+    def generate_dotenv(data)
+      data.map { |k, v| "#{k}=#{v.inspect.gsub("$", "\\$")}" }.join("\n") << "\n"
+    end
+
     private
 
     # writes .env file for each deploy group
@@ -37,12 +43,6 @@ module SamsonEnv
         generated_file = "#{base_file}#{suffix}"
         File.write(generated_file, generate_dotenv(data), 0, perm: 0o640)
       end
-    end
-
-    # https://github.com/bkeepers/dotenv/pull/188
-    # shellescape does not work ... we only get strings, so inspect works pretty well
-    def generate_dotenv(data)
-      data.map { |k, v| "#{k}=#{v.inspect.gsub("$", "\\$")}" }.join("\n") << "\n"
     end
   end
 end
@@ -76,6 +76,25 @@ Samson::Hooks.callback(:link_parts_for_resource) do
       scope = " for #{env.scope.name}" if env.scope
       parent = " on #{env.parent.name}" if env.parent
       ["#{env.name}#{scope}#{parent}", EnvironmentVariable]
+    end
+  ]
+end
+
+Samson::Hooks.callback(:can) do
+  [
+    :environment_variable_groups,
+    ->(user, action, group) do
+      case action
+      when :write
+        return true if user.admin?
+
+        administrated = user.administrated_projects.pluck(:id)
+        return true if administrated.any? && group.projects.pluck(:id).all? { |id| administrated.include?(id) }
+
+        false
+      else
+        raise ArgumentError, "Unsupported action #{action}"
+      end
     end
   ]
 end

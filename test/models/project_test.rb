@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 3
 
 describe Project do
   let(:project) { projects(:test) }
@@ -158,7 +158,7 @@ describe Project do
       project.expects(:clone_repository).once
       project.expects(:clean_repository).once
       project.save!
-      project.soft_delete!
+      project.soft_delete!(validate: false)
     end
 
     it 'removes the old repository and sets up the new repository if the repository_url is updated' do
@@ -309,7 +309,7 @@ describe Project do
     end
 
     it "ignores deleted stages" do
-      deploys(:succeeded_test).stage.soft_delete!
+      deploys(:succeeded_test).stage.soft_delete!(validate: false)
       project.last_deploy_by_stage.must_equal([deploys(:succeeded_production_test)])
     end
 
@@ -358,6 +358,48 @@ describe Project do
     end
   end
 
+  describe '#docker_build_method' do
+    it 'is samson when no other build method is being used' do
+      project.docker_build_method.must_equal 'samson'
+    end
+
+    it 'is docker_image_building_disabled when attribute is set' do
+      project.update_column(:docker_image_building_disabled, true)
+      project.docker_build_method.must_equal 'docker_image_building_disabled'
+    end
+
+    it 'is build_with_gcb when attribute is set' do
+      project.update_columns(docker_image_building_disabled: false, build_with_gcb: true)
+      project.docker_build_method.must_equal 'build_with_gcb'
+    end
+  end
+
+  describe '#docker_build_method=' do
+    it 'updates attributes based on docker_build_method' do
+      project.docker_build_method = 'samson'
+      refute project.docker_image_building_disabled
+      refute project.build_with_gcb
+    end
+
+    it 'is disabled when external is selected' do
+      project.docker_build_method = 'docker_image_building_disabled'
+      assert project.docker_image_building_disabled
+      refute project.build_with_gcb
+    end
+
+    it 'is gcb when gcb building is selected' do
+      project.docker_build_method = 'build_with_gcb'
+      refute project.docker_image_building_disabled
+      assert project.build_with_gcb
+    end
+
+    it 'clears other build methods when a different one is set' do
+      project.update_column(:build_with_gcb, true)
+      project.docker_build_method = 'samson'
+      refute project.build_with_gcb
+    end
+  end
+
   describe '#docker_repo' do
     with_registries ["docker-registry.example.com/bar"]
 
@@ -374,16 +416,24 @@ describe Project do
     end
   end
 
+  describe "#docker_image" do
+    with_registries ["docker-registry.example.com/bar"]
+
+    it "builds nonstandard" do
+      project.docker_image("Dockerfile.baz").must_equal "foo-baz"
+    end
+  end
+
   describe '#soft_delete' do
     before { undo_default_stubs }
 
     it "clears the repository" do
       project.repository.expects(:clean!)
-      assert project.soft_delete!
+      assert project.soft_delete!(validate: false)
     end
 
     it "creates an audit" do
-      assert project.soft_delete!
+      assert project.soft_delete!(validate: false)
       project.audits.last.audited_changes.keys.must_equal ["permalink", "deleted_at"]
     end
   end
@@ -477,7 +527,7 @@ describe Project do
     it "deletes them on deletion and audits as user change" do
       assert_difference 'Audited::Audit.where(auditable_type: "User").count', +2 do
         assert_difference 'UserProjectRole.count', -2 do
-          project.soft_delete!
+          project.soft_delete!(validate: false)
         end
       end
     end

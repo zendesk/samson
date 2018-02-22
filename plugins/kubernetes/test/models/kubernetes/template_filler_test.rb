@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative "../../test_helper"
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 3
 
 describe Kubernetes::TemplateFiller do
   def add_init_container(container)
@@ -20,10 +20,12 @@ describe Kubernetes::TemplateFiller do
   let(:init_containers) do
     JSON.parse(template.to_hash[:spec][:template][:metadata][:annotations][init_container_key])
   end
+  let(:project) { doc.kubernetes_release.project }
 
   before do
     doc.send(:resource_template=, YAML.load_stream(read_kubernetes_sample_file('kubernetes_deployment.yml')))
-    doc.kubernetes_release.deploy_id = 123
+    doc.kubernetes_release.builds = [builds(:docker_build)]
+
     stub_request(:get, %r{http://foobar.server/api/v1/namespaces/\S+/secrets}).to_return(body: "{}")
     Samson::Secrets::VaultClient.any_instance.stubs(:client).
       returns(stub(options: {address: 'https://test.hvault.server', ssl_verify: false}))
@@ -42,12 +44,12 @@ describe Kubernetes::TemplateFiller do
         tag: "master",
         release_id: doc.kubernetes_release_id.to_s,
         project: "some-project",
-        project_id: doc.kubernetes_release.project_id.to_s,
+        project_id: project.id.to_s,
         role_id: doc.kubernetes_role_id.to_s,
         role: "some-role",
         deploy_group: 'pod1',
         deploy_group_id: doc.deploy_group_id.to_s,
-        deploy_id: "123"
+        deploy_id: doc.kubernetes_release.deploy_id.to_s
       )
 
       metadata = result.fetch(:metadata)
@@ -154,12 +156,12 @@ describe Kubernetes::TemplateFiller do
       let(:result) { template.to_hash.dig_fetch(:spec, :template, :metadata, :annotations, :owner) }
 
       it "sets owner" do
-        doc.kubernetes_release.project.owner = "foo@bar.com"
+        project.owner = "foo@bar.com"
         result.must_equal "foo@bar.com"
       end
 
       it "does not set nil owner which breaks kubernetes api" do
-        doc.kubernetes_release.project.owner = nil
+        project.owner = nil
         result.must_equal ""
       end
     end
@@ -278,7 +280,8 @@ describe Kubernetes::TemplateFiller do
 
     describe "containers" do
       let(:result) { template.to_hash }
-      let(:container) { result.fetch(:spec).fetch(:template).fetch(:spec).fetch(:containers).first }
+      let(:containers) { result.dig_fetch(:spec, :template, :spec, :containers) }
+      let(:container) { containers.first }
 
       describe "image manipulation" do
         let(:build) { builds(:docker_build) }
@@ -288,11 +291,20 @@ describe Kubernetes::TemplateFiller do
           container.fetch(:image).must_equal image
         end
 
-        it "does not override image when no build was made" do
-          doc.kubernetes_release.builds.delete_all
-          container.fetch(:image).must_equal(
-            "docker-registry.zende.sk/truth_service:latest"
-          )
+        it "does not override image when 'none' is passed as dockerfile" do
+          raw_template[:spec][:template][:spec][:containers][0][:'samson/dockerfile'] = 'none'
+          raw_template[:spec][:template][:spec][:containers][0][:image] = 'foo'
+
+          result # trigger set_docker_image_for_containers
+          container.fetch(:image).must_equal 'foo'
+        end
+
+        it "raises when build was not found" do
+          doc.kubernetes_release.builds = []
+
+          assert_raises Samson::Hooks::UserError do
+            container.fetch(:image)
+          end
         end
 
         describe "when dockerfile was selected" do
@@ -300,7 +312,8 @@ describe Kubernetes::TemplateFiller do
 
           it "finds special build" do
             digest = "docker-registry.example.com/new@sha256:#{"a" * 64}"
-            builds(:v1_tag).update_columns(
+            doc.kubernetes_release.builds << builds(:v1_tag)
+            doc.kubernetes_release.builds.last.update_columns(
               git_sha: doc.kubernetes_release.git_sha,
               docker_repo_digest: digest,
               dockerfile: 'Dockerfile.new'
@@ -310,7 +323,10 @@ describe Kubernetes::TemplateFiller do
 
           it "complains when build was not found" do
             e = assert_raises(Samson::Hooks::UserError) { container }
-            e.message.must_equal "Build for dockerfile Dockerfile.new not found"
+            e.message.must_equal(
+              "Did not find build for dockerfile \"Dockerfile.new\" or image_name nil.\n" \
+              "Found builds: [[\"Dockerfile\", nil]]."
+            )
           end
         end
 
@@ -319,14 +335,17 @@ describe Kubernetes::TemplateFiller do
           init_containers[0].must_equal("samson/dockerfile" => "Dockerfile", "image" => image)
         end
 
-        it "does not auto-set dockerfile for init containers since they are mostly special" do
-          add_init_container a: 1
-          init_containers[0].must_equal('a' => 1)
+        it "raises if an init container does not specify a dockerfile" do
+          add_init_container a: 1, "samson/dockerfile": 'Foo'
+          e = assert_raises(Samson::Hooks::UserError) { init_containers[0] }
+          e.message.must_equal(
+            "Did not find build for dockerfile \"Foo\" or image_name nil.\nFound builds: [[\"Dockerfile\", nil]]."
+          )
         end
 
         describe "when project does not build images" do
           before do
-            doc.kubernetes_release.project.docker_image_building_disabled = true
+            project.docker_image_building_disabled = true
             build.update_column(:image_name, 'truth_service')
           end
 
@@ -337,7 +356,7 @@ describe Kubernetes::TemplateFiller do
           it "fails when build is not found" do
             build.update_column(:image_name, 'nope')
             e = assert_raises(Samson::Hooks::UserError) { container.fetch(:image).must_equal image }
-            e.message.must_include "Did not find build for image_name truth_service"
+            e.message.must_include "Did not find build for dockerfile nil or image_name \"truth_service\""
           end
         end
       end
@@ -374,12 +393,6 @@ describe Kubernetes::TemplateFiller do
         env.map { |x| x[:value] }.map(&:class).map(&:name).sort.uniq.must_equal(["NilClass", "String"])
       end
 
-      # https://github.com/zendesk/samson/issues/966
-      it "allows multiple containers, even though they will not be properly replaced" do
-        raw_template[:spec][:template][:metadata][:containers] = [{}, {}]
-        template.to_hash
-      end
-
       it "merges existing env settings" do
         template.send(:template)[:spec][:template][:spec][:containers][0][:env] = [{name: 'Foo', value: 'Bar'}]
         keys = container.fetch(:env).map { |x| x.fetch(:name) }
@@ -403,9 +416,22 @@ describe Kubernetes::TemplateFiller do
           )
         end
       end
+
+      describe "with multiple containers" do
+        before { raw_template[:spec][:template][:spec][:containers] = [{}, {}] }
+
+        it "allows multiple containers, even though they will not be properly replaced" do
+          template.to_hash
+        end
+
+        it "fills all container envs" do
+          template.to_hash
+          containers[0][:env].must_equal containers[1][:env]
+        end
+      end
     end
 
-    describe "secret-puler-containers" do
+    describe "secret-puller-containers" do
       let(:secret_key) { "global/global/global/bar" }
       let(:template_env) { template.to_hash[:spec][:template][:spec][:containers].first[:env] }
 
@@ -437,28 +463,34 @@ describe Kubernetes::TemplateFiller do
           )
       end
 
-      it "keeps existing init containers" do
-        add_init_container a: 1
-        init_containers[1].must_equal('a' => 1)
-      end
-
       it "fails when vault is not configured" do
-        with_env('SECRET_STORAGE_BACKEND': "SecretStorage::HashicorpVault") do
+        with_env('SECRET_STORAGE_BACKEND': "Samson::Secrets::HashicorpVaultBackend") do
           Samson::Secrets::VaultClient.client.expects(:client).raises("Could not find Vault config for pod1")
           e = assert_raises { template.to_hash }
           e.message.must_equal "Could not find Vault config for pod1"
         end
       end
 
-      it "adds the vault server address to the cotainers env" do
-        with_env(SECRET_STORAGE_BACKEND: "SecretStorage::HashicorpVault") do
-          assert template_env.any? { |env| env.any? { |_k, v| v == "VAULT_ADDR" } }
-        end
-      end
+      describe 'when using vault' do
+        let(:vault_env) { template_env.detect { |h| break h.fetch(:value) if h.fetch(:name) == "VAULT_ADDR" } }
 
-      it "does not add the vault server address to the cotainers env" do
-        with_env(SECRET_STORAGE_BACKEND: "foobar") do
-          refute template_env.any? { |env| env.any? { |_k, v| v == "VAULT_ADDR" } }
+        with_env(SECRET_STORAGE_BACKEND: "Samson::Secrets::HashicorpVaultBackend")
+
+        it "does not add the vault server if VAULT_ADDR is not required" do
+          refute vault_env
+        end
+
+        describe 'when vault address is required' do
+          before { raw_template[:spec][:template][:metadata][:annotations] = {"samson/required_env": 'VAULT_ADDR'} }
+
+          it "adds the vault server address to the containers env" do
+            vault_env.must_equal "https://test.hvault.server"
+          end
+
+          it "does not overwrite user defined value" do
+            EnvironmentVariable.create!(parent: projects(:test), name: 'VAULT_ADDR', value: 'hello')
+            vault_env.must_equal 'hello'
+          end
         end
       end
 
@@ -488,10 +520,10 @@ describe Kubernetes::TemplateFiller do
 
       it "fails when it cannot find secrets needed by the puller" do
         raw_template[:spec][:template][:metadata][:annotations].replace('secret/FOO': 'bar', 'secret/BAR': 'baz')
-        SecretStorage.delete(secret_key)
+        Samson::Secrets::Manager.delete(secret_key)
         e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
-        e.message.must_include "bar (tried: production/foo/pod1/bar"
-        e.message.must_include "baz (tried: production/foo/pod1/baz" # shows all at once for easier debugging
+        e.message.must_include "bar\n  (tried: production/foo/pod1/bar"
+        e.message.must_include "baz\n  (tried: production/foo/pod1/baz" # shows all at once for easier debugging
       end
     end
 
@@ -556,6 +588,27 @@ describe Kubernetes::TemplateFiller do
         template.to_hash.dig_fetch(:spec, :scaleTargetRef, :name).must_equal("test-app-server")
       end
     end
+
+    describe "blue-green" do
+      before do
+        doc.kubernetes_role.blue_green = true
+        doc.kubernetes_release.blue_green_color = 'green'
+      end
+
+      it "modifies the service" do
+        raw_template[:kind] = 'Service'
+        template.to_hash.dig_fetch(:spec, :selector, :blue_green).must_equal 'green'
+      end
+
+      it "modifies the resource" do
+        hash = template.to_hash
+        hash.dig_fetch(:metadata, :name).must_equal 'test-app-server-green'
+        hash.dig_fetch(:spec, :template, :spec, :containers, 0, :env).must_include(name: "BLUE_GREEN", value: "green")
+        hash.dig_fetch(:metadata, :labels, :blue_green).must_equal 'green'
+        hash.dig_fetch(:spec, :selector, :matchLabels, :blue_green).must_equal 'green'
+        hash.dig_fetch(:spec, :template, :metadata, :labels, :blue_green).must_equal 'green'
+      end
+    end
   end
 
   describe "#verify_env" do
@@ -580,14 +633,41 @@ describe Kubernetes::TemplateFiller do
     end
   end
 
-  describe "#images" do
-    it "finds images from containers" do
-      template.images.must_equal ["docker-registry.zende.sk/truth_service:latest"]
+  describe "#build_selectors" do
+    it "returns Dockerfile by default" do
+      template.build_selectors.must_equal [["Dockerfile", nil]]
     end
 
-    it "finds images from init-containers" do
-      add_init_container image: 'init-container'
-      template.images.must_equal ["docker-registry.zende.sk/truth_service:latest", "init-container"]
+    it "allows selecting a dockerfile" do
+      raw_template[:spec][:template][:spec][:containers][0][:'samson/dockerfile'] = 'Bar'
+      template.build_selectors.must_equal [["Bar", nil]]
+    end
+
+    it "ignores images that should not be built" do
+      raw_template[:spec][:template][:spec][:containers][0][:'samson/dockerfile'] = 'none'
+      template.build_selectors.must_equal []
+    end
+
+    describe "when only images are supported" do
+      before { project.docker_image_building_disabled = true }
+
+      it "finds images from containers" do
+        template.build_selectors.must_equal [[nil, "docker-registry.zende.sk/truth_service:latest"]]
+      end
+
+      it "finds images from init-containers" do
+        add_init_container image: 'init-container'
+        template.build_selectors.must_equal(
+          [[nil, "docker-registry.zende.sk/truth_service:latest"], [nil, "init-container"]]
+        )
+      end
+
+      it "does not include images that should not be built" do
+        raw_template[:spec][:template][:spec][:containers][0][:'samson/dockerfile'] = 'none'
+        raw_template[:spec][:template][:spec][:containers] << { 'samson/dockerfile': 'bar', image: 'baz' }
+
+        template.build_selectors.must_equal [[nil, 'baz']]
+      end
     end
   end
 end

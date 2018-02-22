@@ -1,13 +1,10 @@
 # frozen_string_literal: true
-prod_env = Environment.create!(
-  name: 'Production',
-  production: true
-)
+prod_env = Environment.create!(name: 'Production', production: true)
 Environment.create!(name: 'Staging')
 Environment.create!(name: 'Master')
 
-prod = DeployGroup.create!(
-  name: 'Production',
+group1 = DeployGroup.create!(
+  name: 'Group1',
   environment: prod_env
 )
 
@@ -18,7 +15,7 @@ project = Project.create!(
 
 project.stages.create!(
   name: "Production",
-  deploy_groups: [prod]
+  deploy_groups: [group1]
 )
 
 user = User.create!(
@@ -31,3 +28,5 @@ project.releases.create!(
   commit: "1234" * 10,
   author: user
 )
+
+Samson::Hooks.plugins.each { |p| p.engine.load_seed }

@@ -12,7 +12,6 @@ Available plugins:
  - [AWS ECR credential refresher](https://github.com/zendesk/samson/tree/master/plugins/aws_ecr)
  - [Datadog monitoring and deploy tracking](https://github.com/zendesk/samson/tree/master/plugins/datadog)
  - [Docker binary builder](https://github.com/zendesk/samson/tree/master/plugins/docker_binary_builder)
- - [Dockerfile.erb](https://github.com/zendesk/samson/tree/master/plugins/dockerb)
  - [ENV var management](https://github.com/zendesk/samson/tree/master/plugins/env)
  - [Flowdock notification](https://github.com/zendesk/samson/tree/master/plugins/flowdock)
  - [Github](https://github.com/zendesk/samson/tree/master/plugins/github)
@@ -27,6 +26,7 @@ Available plugins:
  - [Slack notifications](https://github.com/zendesk/samson/tree/master/plugins/slack_webhooks)
  - [Zendesk notifications](https://github.com/zendesk/samson/tree/master/plugins/zendesk)
  - [Rollbar notifications on deploy](https://github.com/zendesk/samson/tree/master/plugins/rollbar)
+ - [Assertible notifications on deploy](https://github.com/zendesk/samson/tree/master/plugins/assertible)
  - Add yours here!
 
 To create your own plugin run:

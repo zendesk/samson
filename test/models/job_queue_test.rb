@@ -3,7 +3,7 @@ require_relative '../test_helper'
 
 JobQueue.clear
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 3
 
 describe JobQueue do
   # JobExecution is slow/complicated ... so we stub it out

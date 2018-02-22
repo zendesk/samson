@@ -2,7 +2,7 @@
 # rubocop:disable Metrics/LineLength
 require_relative '../test_helper'
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 2
 
 describe ApplicationHelper do
   include LocksHelper
@@ -47,6 +47,11 @@ describe ApplicationHelper do
     it "converts urls with ?/& to links" do
       result = autolink("foo http://bar.com?a=123&b=222 baz")
       result.must_equal "foo <a href=\"http://bar.com?a=123&b=222\">http://bar.com?a=123&b=222</a> baz"
+    end
+
+    it "converts gcloud vulnerability urls with @ to links" do
+      result = autolink("foo http://bar.com?a=123&b=2@2 baz")
+      result.must_equal "foo <a href=\"http://bar.com?a=123&b=2@2\">http://bar.com?a=123&b=2@2</a> baz"
     end
   end
 
@@ -358,6 +363,12 @@ describe ApplicationHelper do
         model = klass.first || klass.new
         link_to_resource(model)
       end
+    end
+
+    it "does not try to build path for deleted resources since that would blow up" do
+      projects(:test).soft_delete!(validate: false)
+      stage = stages(:test_staging)
+      link_to_resource(stage).must_equal "Staging"
     end
   end
 

@@ -82,7 +82,7 @@ describe "cleanliness" do
     File.read('Gemfile.lock').wont_include 'rails-assets-bootstrap '
   end
 
-  if ENV['USE_UTF8MB4'] && ActiveRecord::Base.connection.adapter_name == "Mysql2"
+  if ENV['USE_UTF8MB4'] && ActiveRecord::Base.connection.adapter_name =~ /mysql/i
     it "uses the right row format in mysql" do
       status = ActiveRecord::Base.connection.execute('show table status').to_a
       refute_empty status
@@ -104,15 +104,31 @@ describe "cleanliness" do
 
   it "does not use setup/teardown" do
     assert_content all_tests do |content|
-      if content =~ /^\s+(setup|teardown)[\s\{]/
+      if content.match?(/^\s+(setup|teardown)[\s\{]/)
         "uses setup or teardown, but should use before or after"
+      end
+    end
+  end
+
+  it 'discourages use of soft_delete without validate: false' do
+    assert_content all_code do |content|
+      if content.match?(/soft_delete\!?$/)
+        'prefer soft_delete(validate: false)'
+      end
+    end
+  end
+
+  it 'checks for usages of Dir.chdir' do
+    assert_content all_code do |content|
+      if content.match?(/Dir\.chdir/)
+        'Avoid using Dir.chdir as it causes warnings and potentially some threading issues'
       end
     end
   end
 
   it "uses active test case wording" do
     assert_content all_tests do |content|
-      if content =~ /\s+it ['"]should /
+      if content.match?(/\s+it ['"]should /)
         "uses `it should` working, please use active working `it should activate` -> `it activates`"
       end
     end
@@ -120,7 +136,7 @@ describe "cleanliness" do
 
   it "does not have trailing whitespace" do
     assert_content Dir["{app,lib,plugins,test}/**/*.rb"] do |content|
-      "has trailing whitespace" if content =~ / $/
+      "has trailing whitespace" if content.match?(/ $/)
     end
   end
 
@@ -144,6 +160,10 @@ describe "cleanliness" do
     File.read('Gemfile.lock').must_include File.read('.ruby-version').strip
   end
 
+  it "has same version in .ruby-version and Dockerfile to make builds work" do
+    File.read('Dockerfile').must_include File.read('.ruby-version').strip
+  end
+
   it "has page title for all views" do
     views = Dir['{,plugins/*/}app/views/**/*.html.erb'].
       reject { |v| File.basename(v).start_with?('_') }.
@@ -158,7 +178,7 @@ describe "cleanliness" do
 
   it "does not modify the ENV without resetting state" do
     assert_content all_tests do |content|
-      if content =~ /ENV\[.*=/
+      if content.match?(/ENV\[.*=/)
         "use with_env to setup ENV variables during test"
       end
     end
@@ -167,7 +187,9 @@ describe "cleanliness" do
   # tests multi_thread_db_detector.rb
   it "blows up when using database from a different thread" do
     e = assert_raises RuntimeError do
-      Thread.new { User.first }.join
+      silence_thread_exceptions do
+        Thread.new { User.first }.join
+      end
     end
     e.message.must_include "Using AR outside the main thread"
   end
@@ -190,7 +212,7 @@ describe "cleanliness" do
 
   it "uses whitelists for authorization so new actions ar restricted by default" do
     assert_content controllers do |content|
-      if content =~ /before_action\s+:authorize_.*only:/
+      if content.match?(/before_action\s+:authorize_.*only:/)
         "do not use authorization filters with :only, use :except"
       end
     end
@@ -239,7 +261,7 @@ describe "cleanliness" do
 
   it "prevents the users from printing outputs when migrations are silenced" do
     assert_content Dir["{,plugins/*/}db/migrate/*.rb"] do |content|
-      if content =~ /^\s*puts\b/
+      if content.match?(/^\s*puts\b/)
         "use `write` instead of `puts` to avoid printing outputs when migrations are silenced"
       end
     end
@@ -247,7 +269,7 @@ describe "cleanliness" do
 
   it "does not use like since that is different on different dbs" do
     assert_content all_code do |content|
-      if content =~ /\slike\s+\?/i
+      if content.match?(/\slike\s+\?/i)
         "use Arel#matches instead of like since like behaves differently on different dbs"
       end
     end

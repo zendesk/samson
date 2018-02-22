@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 1
 
 # each test is written as a pair of the lowest level that allows access and the one below that forbids access
 describe AccessControl do
@@ -15,6 +15,8 @@ describe AccessControl do
   end
 
   let(:project) { projects(:test) }
+  let(:stage) { stages(:test_staging) }
+  let(:prod_stage) { stages(:test_production) }
   let(:viewer) { users(:viewer) }
   let(:project_deployer) { users(:project_deployer) }
   let(:deployer) { users(:deployer) }
@@ -136,17 +138,35 @@ describe AccessControl do
     describe :write do
       describe "stage" do
         it "allows deployers to update" do
-          assert can?(project_deployer, :write, project)
+          assert can?(project_deployer, :write, stage)
         end
 
         it "forbids viewers to update" do
-          refute can?(viewer, :write, project)
+          refute can?(viewer, :write, stage)
+        end
+
+        it "allows admins to update with PRODUCTION_STAGE_LOCK_REQUIRES_ADMIN" do
+          with_env 'PRODUCTION_STAGE_LOCK_REQUIRES_ADMIN' => 'true' do
+            assert can?(admin, :write, stage)
+          end
+        end
+
+        it "forbids deployers to update with PRODUCTION_STAGE_LOCK_REQUIRES_ADMIN and prod stage" do
+          with_env 'PRODUCTION_STAGE_LOCK_REQUIRES_ADMIN' => 'true' do
+            refute can?(deployer, :write, prod_stage)
+          end
         end
       end
 
       describe "global" do
         it "allows admins to update" do
           assert can?(admin, :write)
+        end
+
+        it "allows admins to update with PRODUCTION_STAGE_LOCK_REQUIRES_ADMIN" do
+          with_env 'PRODUCTION_STAGE_LOCK_REQUIRES_ADMIN' => 'true' do
+            assert can?(admin, :write)
+          end
         end
 
         it "forbids deployers to update" do
@@ -210,6 +230,12 @@ describe AccessControl do
       it "forbids admins to update users roles" do
         refute can?(admin, :write)
       end
+    end
+  end
+
+  describe "plugins" do
+    it "can resolve plugin access" do
+      assert AccessControl.can?(admin, :write, :environment_variable_groups)
     end
   end
 end

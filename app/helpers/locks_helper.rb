@@ -2,12 +2,12 @@
 module LocksHelper
   def delete_lock_options
     [
-      ['Expire in 1 hour', 1.hour],
-      ['Expire in 2 hours', 2.hours],
-      ['Expire in 4 hours', 4.hours],
-      ['Expire in 8 hours', 8.hours],
-      ['Expire in 1 day', 1.day],
-      ['Never', nil]
+      ['1 hour', 1, 'hours'],
+      ['2 hours', 2, 'hours'],
+      ['4 hours', 4, 'hours'],
+      ['8 hours', 8, 'hours'],
+      ['1 day', 1, 'days'],
+      ['Never', 0, '']
     ]
   end
 

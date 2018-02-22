@@ -30,6 +30,7 @@ if defined?(Airbrake) && key = ENV['AIRBRAKE_API_KEY']
     'ActionController::UnknownFormat',
     'ActionController::UnknownHttpMethod',
     'ActionController::UnpermittedParameters',
+    'ActionController::ParameterMissing',
     'ActiveRecord::RecordNotFound',
   ]
   Airbrake.add_filter do |notice|

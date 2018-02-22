@@ -7,10 +7,11 @@ module Kubernetes
   # and see what it does internally ... simple create/update/delete requests or special magic ?
   module Resource
     class Base
-      def initialize(template, deploy_group, autoscaled:)
+      def initialize(template, deploy_group, autoscaled:, delete_resource:)
         @template = template
         @deploy_group = deploy_group
         @autoscaled = autoscaled
+        @delete_resource = delete_resource
       end
 
       def name
@@ -31,12 +32,20 @@ module Kubernetes
       end
 
       def deploy
-        running? ? update : create
+        if running?
+          if @delete_resource
+            delete
+          else
+            update
+          end
+        else
+          create unless @delete_resource
+        end
       end
 
       def revert(previous)
         if previous
-          self.class.new(previous, @deploy_group, autoscaled: @autoscaled).deploy
+          self.class.new(previous, @deploy_group, autoscaled: @autoscaled, delete_resource: false).deploy
         else
           delete
         end
@@ -83,7 +92,7 @@ module Kubernetes
           yield
           sleep wait
         end
-        raise "Unable to #{reason}"
+        raise "Unable to #{reason} (#{name} #{namespace})"
       end
 
       def request_delete
@@ -118,11 +127,10 @@ module Kubernetes
       end
 
       def fetch_resource
-        reply = request(:get, name, namespace, as: :raw)
-        JSON.parse(reply, symbolize_names: true)
-      rescue *SamsonKubernetes.connection_errors => e
-        raise e unless e.respond_to?(:error_code) && e.error_code == 404
-        nil
+        ignore_404 do
+          reply = request(:get, name, namespace, as: :raw)
+          JSON.parse(reply, symbolize_names: true)
+        end
       end
 
       def pods
@@ -131,9 +139,13 @@ module Kubernetes
         pod_client.get_pods(label_selector: selector, namespace: namespace).map(&:to_hash)
       end
 
-      def delete_pods(pods)
-        pods.each do |pod|
-          pod_client.delete_pod pod.dig_fetch(:metadata, :name), pod.dig_fetch(:metadata, :namespace)
+      def delete_pods
+        old_pods = pods
+        yield if block_given?
+        old_pods.each do |pod|
+          ignore_404 do
+            pod_client.delete_pod pod.dig_fetch(:metadata, :name), pod.dig_fetch(:metadata, :namespace)
+          end
         end
       end
 
@@ -166,6 +178,13 @@ module Kubernetes
         yield
       ensure
         @template = original
+      end
+
+      def ignore_404
+        yield
+      rescue KubeException => e
+        raise e unless e.respond_to?(:error_code) && e.error_code == 404
+        nil
       end
     end
 
@@ -223,7 +242,12 @@ module Kubernetes
         # Wait for there to be zero pods
         loop do
           loop_sleep
-          break if fetch_resource.dig_fetch(:status, :replicas).zero?
+          # prevent cases when status.replicas are missing
+          # e.g. running locally on Minikube, after scale replicas to zero
+          # $ kubectl scale deployment {DEPLOYMENT_NAME} --replicas 0
+          # "replicas" key is actually removed from "status" map
+          # $ {"status":{"conditions":[...],"observedGeneration":2}}
+          break if fetch_resource.dig(:status, :replicas).to_i.zero?
         end
 
         # delete the actual deployment
@@ -331,16 +355,13 @@ module Kubernetes
       end
 
       def delete
-        old_pods = pods
-        super
-        delete_pods(old_pods)
+        delete_pods { super }
       end
 
       private
 
       def wait_for_pods_to_restart
-        old_pods = pods
-        delete_pods(old_pods)
+        old_pods = delete_pods
         old_created = old_pods.map { |pod| pod.dig_fetch(:metadata, :creationTimestamp) }
         backoff_wait(Array.new(60) { 2 }, "restart pods") do
           return if pods.none? { |pod| old_created.include?(pod.dig_fetch(:metadata, :creationTimestamp)) }
@@ -376,9 +397,7 @@ module Kubernetes
       # deleting the job leaves the pods running, so we have to delete them manually
       # kubernetes is a little more careful with running pods, but we just want to get rid of them
       def request_delete
-        old_pods = pods
-        super # delete the job
-        delete_pods(old_pods)
+        delete_pods { super }
       end
 
       # FYI per docs it is supposed to use batch api, but extension api works

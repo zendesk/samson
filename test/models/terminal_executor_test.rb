@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 1
 
 describe TerminalExecutor do
   let(:output) { StringIO.new }
@@ -102,7 +102,7 @@ describe TerminalExecutor do
     end
 
     it "can timeout" do
-      with_env DEPLOY_TIMEOUT: '1' do
+      with_config :deploy_timeout, 1 do
         refute subject.execute('echo hello; sleep 10')
       end
       `ps -ef | grep "[s]leep 10"`.wont_include "sleep 10" # process got killed
@@ -254,7 +254,7 @@ describe TerminalExecutor do
   describe '#script_as_executable' do
     it "makes a unreadable script" do
       subject.send(:script_as_executable, "echo 1") do |path|
-        File.stat(path).mode.must_equal 0o100700
+        File.stat(path[/\/\S+/]).mode.must_equal 0o100700
       end
     end
 
@@ -278,8 +278,8 @@ describe TerminalExecutor do
       p = nil
       assert_raises RuntimeError do
         subject.send(:script_as_executable, "echo 1") do |path|
-          assert File.exist?(path)
-          p = path
+          p = path[/\/\S+/]
+          assert File.exist?(p)
           raise
         end
       end
