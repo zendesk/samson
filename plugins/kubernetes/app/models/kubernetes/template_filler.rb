@@ -25,7 +25,6 @@ module Kubernetes
           set_hpa_scale_target_name
         when *Kubernetes::RoleConfigFile::SERVICE_KINDS
           set_service_name
-          set_service_node_port
           prefix_service_cluster_ip
           set_service_blue_green if blue_green_color
         when *Kubernetes::RoleConfigFile::PRIMARY_KINDS
@@ -116,12 +115,6 @@ module Kubernetes
 
     def set_service_name
       template[:metadata][:name] = generate_service_name(template[:metadata][:name])
-    end
-
-    # For now, create a NodePort for each service, so we can expose any
-    # apps running in the Kubernetes cluster to traffic outside the cluster.
-    def set_service_node_port
-      template[:spec][:type] = 'NodePort'
     end
 
     def generate_service_name(config_name)
