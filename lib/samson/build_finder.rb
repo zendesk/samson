@@ -144,7 +144,7 @@ module Samson
       if build.reload.active?
         @output.puts("Waiting for Build #{build.url} to finish.")
       else
-        @output.puts("Build #{build.url} is finish.")
+        @output.puts("Build #{build.url} is finished.")
         return
       end
 
