@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../../test_helper'
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 1
 
 describe Samson::CommandExecutor do
   describe "#execute" do
@@ -15,6 +15,12 @@ describe Samson::CommandExecutor do
 
     it "can redirect stderr" do
       Samson::CommandExecutor.execute("sh", "-c", "echo hello 1>&2", err: '/dev/null', timeout: 1).must_equal [true, ""]
+    end
+
+    it "runs in specified directory" do
+      Dir.mktmpdir("foobar") do |dir|
+        Samson::CommandExecutor.execute("pwd", timeout: 1, dir: dir).second.must_include dir
+      end
     end
 
     it "fails nicely on missing exectable" do

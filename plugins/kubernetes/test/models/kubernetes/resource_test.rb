@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative "../../test_helper"
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 2
 
 describe Kubernetes::Resource do
   def assert_pods_lookup(&block)
@@ -13,11 +13,16 @@ describe Kubernetes::Resource do
     )
   end
 
-  def assert_pod_deletion
-    delete_pod = stub_request(:delete, "#{origin}/api/v1/namespaces/name1/pods/pod1").
-      to_return(body: '{}')
-    yield
-    assert_requested delete_pod
+  def assert_pod_deletion(&block)
+    assert_request(:delete, "#{origin}/api/v1/namespaces/name1/pods/pod1", to_return: {body: '{}'}, &block)
+  end
+
+  def autoscaled!
+    resource.instance_variable_set(:@autoscaled, true)
+  end
+
+  def delete_resource!
+    resource.instance_variable_set(:@delete_resource, true)
   end
 
   let(:origin) { "http://foobar.server" }
@@ -36,12 +41,13 @@ describe Kubernetes::Resource do
     }
   end
   let(:deploy_group) { deploy_groups(:pod1) }
-  let(:resource) { Kubernetes::Resource.build(template, deploy_group, autoscaled: false) }
-  let(:autoscaled_resource) { Kubernetes::Resource.build(template, deploy_group, autoscaled: true) }
+  let(:resource) do
+    Kubernetes::Resource.build(template, deploy_group, autoscaled: false, delete_resource: false)
+  end
   let(:url) { "#{origin}/api/v1/namespaces/pod1/services/some-project" }
   let(:base_url) { File.dirname(url) }
 
-  before { Kubernetes::Resource::Base.any_instance.expects(:sleep).never }
+  before { Kubernetes::Resource::Base.any_instance.expects(:sleep).with { raise }.never }
 
   it "does modify passed in template" do
     content = File.read(File.expand_path("../../../app/models/kubernetes/resource.rb", __dir__))
@@ -51,7 +57,7 @@ describe Kubernetes::Resource do
 
   describe ".build" do
     it "builds based on kind" do
-      Kubernetes::Resource.build({kind: 'Service'}, deploy_group, autoscaled: false).
+      Kubernetes::Resource.build({kind: 'Service'}, deploy_group, autoscaled: false, delete_resource: false).
         class.must_equal Kubernetes::Resource::Service
     end
   end
@@ -101,7 +107,8 @@ describe Kubernetes::Resource do
     it "keeps replicase when autoscaled, to not revert autoscaler changes" do
       assert_request(:get, url, to_return: {body: {spec: {replicas: 5}}.to_json}) do
         assert_request(:put, url, to_return: {body: "{}"}, with: ->(x) { x.body.must_include '"replicas":5'; true }) do
-          autoscaled_resource.deploy
+          autoscaled!
+          resource.deploy
         end
       end
     end
@@ -111,6 +118,23 @@ describe Kubernetes::Resource do
         error = '{"message":"Foo.extensions \"app\" is invalid:"}'
         assert_request(:post, base_url, to_return: {body: error, status: 400}) do
           assert_raises(Samson::Hooks::UserError) { resource.deploy }.message.must_include "Kubernetes error: Foo"
+        end
+      end
+    end
+
+    describe "delete_resource" do
+      before { delete_resource! }
+
+      it "deletes when delete was requested" do
+        assert_request(:get, url, to_return: {body: "{}"}) do
+          resource.expects(:delete)
+          resource.deploy
+        end
+      end
+
+      it "does nothing when delete was requested but was not running" do
+        assert_request(:get, url, to_return: {status: 404}) do
+          resource.deploy
         end
       end
     end
@@ -164,7 +188,7 @@ describe Kubernetes::Resource do
         resource.expects(:sleep).times(tries)
 
         e = assert_raises(RuntimeError) { resource.delete }
-        e.message.must_equal "Unable to delete resource"
+        e.message.must_equal "Unable to delete resource (some-project pod1)"
       end
     end
   end
@@ -214,13 +238,15 @@ describe Kubernetes::Resource do
 
     it "expects a constant number of pods when using autoscaling" do
       assert_request(:get, url, to_return: {body: {spec: {replicas: 4}}.to_json}) do
-        autoscaled_resource.desired_pod_count.must_equal 4
+        autoscaled!
+        resource.desired_pod_count.must_equal 4
       end
     end
 
     it "uses template amount when creating with autoscaling" do
       assert_request(:get, url, to_return: {status: 404}) do
-        autoscaled_resource.desired_pod_count.must_equal 2
+        autoscaled!
+        resource.desired_pod_count.must_equal 2
       end
     end
   end
@@ -386,6 +412,16 @@ describe Kubernetes::Resource do
           deployment_stub(3),
           deployment_stub(0)
         )
+
+        client.expects(:delete_deployment)
+        resource.delete
+      end
+
+      it "does not fail on unset replicas" do
+        client = resource.send(:client)
+        client.expects(:update_deployment)
+        client.expects(:get_deployment).raises(KubeException.new(404, 'Not Found', {}))
+        client.expects(:get_deployment).times(2).returns(deployment_stub(nil))
         client.expects(:delete_deployment)
         resource.delete
       end
@@ -454,13 +490,39 @@ describe Kubernetes::Resource do
           }
         }
         assert_request(:get, url, to_return: {body: set.to_json}) do
-          assert_pod_deletion do
-            assert_request(
-              :patch,
-              url,
-              with: {headers: {"Content-Type" => "application/json-patch+json"}},
-              to_return: {body: "{}"}
-            ) do
+          assert_request(
+            :patch,
+            url,
+            with: {headers: {"Content-Type" => "application/json-patch+json"}},
+            to_return: {body: "{}"}
+          ) do
+            assert_pod_deletion do
+              resource.expects(:pods).times(2).returns(
+                [{metadata: {creationTimestamp: '1', name: 'pod1', namespace: 'name1'}}],
+                [{metadata: {creationTimestamp: '2'}}]
+              )
+              resource.deploy
+            end
+          end
+        end
+      end
+
+      it "does not fail when scaling down and previous generation pods have been removed already" do
+        set = {
+          spec: {
+            replicas: 2,
+            selector: {matchLabels: {project: "foo", release: "bar"}},
+            template: {spec: {containers: []}}
+          }
+        }
+        assert_request(:get, url, to_return: {body: set.to_json}) do
+          assert_request(
+            :patch,
+            url,
+            with: {headers: {"Content-Type" => "application/json-patch+json"}},
+            to_return: {body: "{}"}
+          ) do
+            assert_request(:delete, "#{origin}/api/v1/namespaces/name1/pods/pod1", to_return: {status: 404}) do
               resource.expects(:pods).times(2).returns(
                 [{metadata: {creationTimestamp: '1', name: 'pod1', namespace: 'name1'}}],
                 [{metadata: {creationTimestamp: '2'}}]

@@ -57,6 +57,14 @@ describe "JsonRenderer Integration" do
       json['deploy_groups'].first.keys.must_include "kubernetes_cluster_id"
     end
 
+    it "can add custom things via yield" do
+      project = projects(:test)
+      stage = stages(:test_staging)
+      get "/projects/#{project.to_param}/stages/#{stage.to_param}.json?include=kubernetes_matrix"
+      json.keys.must_equal ['stage']
+      assert json['stage'].key?('kubernetes_matrix')
+    end
+
     it "shows a descriptive error to users that use unsupported includes" do
       get '/deploys.json', params: {includes: "nope"}
       assert_response :bad_request

@@ -14,8 +14,8 @@
           <%= file.filename %>
         </td>
         <td align="right">
-          <%= file_changes_label file.additions, "success" %>
-          <%= file_changes_label file.deletions, "danger" %>
+          <%= file_changes_label file.additions, "additions" %>
+          <%= file_changes_label file.deletions, "deletions" %>
         </td>
       </tr>
       <tr class="file-diff" style="display:none">

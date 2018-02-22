@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative "../../test_helper"
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 7
 
 describe Kubernetes::DeployExecutor do
   let(:output) { StringIO.new }
@@ -15,6 +15,7 @@ describe Kubernetes::DeployExecutor do
   let(:executor) { Kubernetes::DeployExecutor.new(output, job: job, reference: 'master') }
   let(:log_url) { "http://foobar.server/api/v1/namespaces/staging/pods/pod-resque-worker/log?container=container1" }
   let(:commit) { '1a6f551a2ffa6d88e15eef5461384da0bfb1c194' }
+  let(:origin) { "http://foobar.server" }
 
   before do
     stage.update_column :kubernetes, true
@@ -23,12 +24,14 @@ describe Kubernetes::DeployExecutor do
 
   describe "#pid" do
     it "returns a fake pid" do
+      Kubernetes::DeployExecutor.any_instance.stubs(:build_selectors).returns([])
       executor.pid.must_include "Kubernetes"
     end
   end
 
   describe "#pgid" do
     it "returns a fake pid" do
+      Kubernetes::DeployExecutor.any_instance.stubs(:build_selectors).returns([])
       executor.pgid.must_include "Kubernetes"
     end
   end
@@ -90,7 +93,7 @@ describe Kubernetes::DeployExecutor do
       job.update_column(:commit, build.git_sha) # this is normally done by JobExecution
       Kubernetes::Role.stubs(:configured_for_project).returns(project.kubernetes_roles)
       kubernetes_fake_raw_template
-      Kubernetes::Cluster.any_instance.stubs(connection_valid?: true, namespace_exists?: true)
+      Kubernetes::Cluster.any_instance.stubs(connection_valid?: true, namespaces: ['staging'])
       deploy_group.create_cluster_deploy_group!(
         cluster: kubernetes_clusters(:test_cluster),
         namespace: 'staging',
@@ -160,11 +163,18 @@ describe Kubernetes::DeployExecutor do
       out.wont_include "Deploy status after"
     end
 
+    it "does limited amounts of queries" do
+      assert_sql_queries(27) do
+        assert execute
+      end
+    end
+
     describe "invalid configs" do
       before { build.delete } # build needs to be created -> assertion fails
       around { |test| refute_difference('Build.count') { refute_difference('Release.count', &test) } }
 
       it "fails before building when a role are invalid" do
+        Kubernetes::DeployExecutor.any_instance.stubs(:build_selectors).returns([])
         Kubernetes::ReleaseDoc.any_instance.unstub(:raw_template)
         GitRepository.any_instance.expects(:file_content).with { |file| file =~ /^kubernetes\// }.returns("oops: bad")
 
@@ -182,7 +192,7 @@ describe Kubernetes::DeployExecutor do
         e = assert_raises Samson::Hooks::UserError do
           refute execute
         end
-        e.message.must_equal "metadata.labels.role must set and unique"
+        e.message.must_equal "metadata.labels.role must be set and unique"
       end
 
       it "fails before building when secrets are not configured in the backend" do
@@ -260,7 +270,7 @@ describe Kubernetes::DeployExecutor do
             'template' => {
               'metadata' => {'labels' => {'project' => 'foobar', 'role' => 'migrate'}},
               'spec' => {
-                'containers' => [{'name' => 'job'}],
+                'containers' => [{'name' => 'job', 'image' => 'docker-registry.zende.sk/truth_service:latest'}],
                 'restartPolicy' => 'Never'
               }
             }
@@ -615,18 +625,136 @@ describe Kubernetes::DeployExecutor do
   end
 
   describe "#fetch_pods" do
+    before do
+      Kubernetes::DeployExecutor.any_instance.stubs(:build_selectors).returns([])
+    end
     it "retries on failure" do
       Kubeclient::Client.any_instance.expects(:get_pods).times(4).raises(KubeException.new(1, 2, 3))
-      assert_raises KubeException do
-        executor.send(:fetch_pods, kubernetes_releases(:test_release))
-      end
+      executor.instance_variable_set(:@release, kubernetes_releases(:test_release))
+      assert_raises(KubeException) { executor.send(:fetch_pods) }
     end
 
     it "retries on ssl failure" do
       Kubeclient::Client.any_instance.expects(:get_pods).times(4).raises(OpenSSL::SSL::SSLError.new)
-      assert_raises OpenSSL::SSL::SSLError do
-        executor.send(:fetch_pods, kubernetes_releases(:test_release))
+      executor.instance_variable_set(:@release, kubernetes_releases(:test_release))
+      assert_raises(OpenSSL::SSL::SSLError) { executor.send(:fetch_pods) }
+    end
+  end
+
+  describe "blue green" do
+    def add_service_to_release_doc
+      kubernetes_fake_raw_template
+      Kubernetes::TemplateFiller.any_instance.stubs(:set_image_pull_secrets)
+      doc = release.release_docs.first
+      doc.kubernetes_release.builds = [build]
+      doc.send(:store_resource_template)
+      doc.save!(validate: false)
+    end
+
+    def create_previous_successful_release
+      other = Kubernetes::Release.new(
+        user: release.user,
+        project: release.project,
+        git_sha: release.git_sha,
+        git_ref: "master",
+        deploy: release.deploy,
+        blue_green_color: "green"
+      )
+      other.release_docs = release.release_docs.map do |doc|
+        copy = Kubernetes::ReleaseDoc.new(doc.attributes.except('resource_template'))
+        copy.send(:resource_template=, doc.resource_template.map do |t|
+          t.deep_merge(metadata: {name: t.dig(:metadata, :name).sub("-blue", "-green")})
+        end)
+        copy.kubernetes_release = other
+        copy
       end
+      Kubernetes::Release.any_instance.stubs(:previous_successful_release).returns(other)
+    end
+
+    let(:deployments_url) { "#{origin}/apis/extensions/v1beta1/namespaces/pod1/deployments" }
+    let(:services_url) { "#{origin}/api/v1/namespaces/pod1/services" }
+    let(:release) { kubernetes_releases(:test_release) }
+
+    assert_requests
+
+    before do
+      kubernetes_roles(:app_server).update_columns blue_green: true
+      release.update_columns blue_green_color: "blue"
+      add_service_to_release_doc
+      Kubernetes::DeployExecutor.any_instance.stubs(:build_selectors).returns([])
+    end
+
+    it "deploys new resources" do
+      # deployment
+      assert_request(:get, "#{deployments_url}/test-app-server-blue", to_return: {status: 404}) # blue did not exist
+      assert_request(:post, deployments_url, to_return: {body: "{}"}) # blue was created
+
+      # service
+      assert_request(:get, "#{services_url}/some-project", to_return: {status: 404}) # did not exist
+      assert_request(:post, services_url, to_return: {body: "{}"}) # blue was created
+
+      executor.expects(:wait_for_resources_to_complete).returns(true)
+      executor.instance_variable_set(:@release, release)
+      assert executor.send(:deploy_and_watch, release.release_docs)
+
+      out.must_equal <<~OUT
+        Deploying BLUE resources for Pod1 role app-server
+        Switching service for Pod1 role app-server to BLUE
+      OUT
+    end
+
+    it "updates existing resources" do
+      create_previous_successful_release
+
+      # deployment
+      assert_request(:get, "#{deployments_url}/test-app-server-blue", to_return: {status: 404}) # blue did not exist
+      assert_request(:post, deployments_url, to_return: {body: "{}"}) # blue was created
+
+      # service
+      assert_request(:get, "#{services_url}/some-project", to_return: {body: "{}"}) # existed
+      assert_request(:put, "#{services_url}/some-project", to_return: {body: "{}"}) # update to point to blue
+
+      # delete old deployment
+      assert_request(
+        :get, "#{deployments_url}/test-app-server-green",
+        to_return: [{body: "{}"}, {body: "{}"}, {status: 404}] # green did exist and gets deleted
+      )
+      assert_request(:put, "#{deployments_url}/test-app-server-green", to_return: {body: "{}"}) # set green to 0
+      assert_request(:delete, "#{deployments_url}/test-app-server-green", to_return: {body: "{}"}) # delete green
+
+      executor.expects(:wait_for_resources_to_complete).returns(true)
+      executor.instance_variable_set(:@release, release)
+      assert executor.send(:deploy_and_watch, release.release_docs)
+
+      out.must_equal <<~OUT
+        Deploying BLUE resources for Pod1 role app-server
+        Switching service for Pod1 role app-server to BLUE
+        Deleting GREEN resources for Pod1 role app-server
+      OUT
+    end
+
+    it "reverts new resources when they fail" do
+      # deployment
+      assert_request(
+        :get, "#{deployments_url}/test-app-server-blue", to_return:
+        [
+          {status: 404}, {body: "{}"}, {body: "{}"}, {status: 404} # blue did not exist + 3 replies for deletion
+        ]
+      )
+      assert_request(:post, deployments_url, to_return: {body: "{}"}) # blue was created
+      assert_request(:put, "#{deployments_url}/test-app-server-blue", to_return: {body: "{}"}) # set blue to 0
+      assert_request(:delete, "#{deployments_url}/test-app-server-blue", to_return: {body: "{}"}) # delete blue
+
+      executor.expects(:wait_for_resources_to_complete).returns([])
+      executor.expects(:print_resource_events)
+      executor.instance_variable_set(:@release, release)
+      refute executor.send(:deploy_and_watch, release.release_docs)
+
+      out.must_equal <<~OUT
+        Deploying BLUE resources for Pod1 role app-server
+        Deleting BLUE resources for Pod1 role app-server
+        DONE
+      OUT
     end
   end
 end

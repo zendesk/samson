@@ -1,13 +1,14 @@
 # frozen_string_literal: true
 require_relative "../../test_helper"
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 8
 
 describe Samson::BuildFinder do
   def setup_using_previous_builds
     previous = deploys(:failed_staging_test)
     previous.update_column(:id, job.deploy.id - 1) # make previous_deploy work
     previous_sha = 'something-else'
+    previous.job.update_column(:commit, previous_sha)
     kubernetes_releases(:test_release).update_columns(deploy_id: previous.id, git_sha: previous_sha) # previous deploy
     build.update_columns(docker_repo_digest: 'ababababab', git_sha: previous_sha) # make build succeeded
     job.deploy.update_column(:kubernetes_reuse_build, true)
@@ -22,8 +23,9 @@ describe Samson::BuildFinder do
   let(:out) { output.string }
   let(:build) { builds(:docker_build) }
   let(:job) { jobs(:succeeded_test) }
-  let(:images) { nil }
-  let(:finder) { Samson::BuildFinder.new(output, job, 'master', images: images) }
+  let(:build_selectors) { nil }
+  let(:finder) { Samson::BuildFinder.new(output, job, 'master', build_selectors: build_selectors) }
+  let(:project) { build.project }
 
   before do
     expect_sleep.with { raise "Unexpected sleep" }.never
@@ -43,24 +45,14 @@ describe Samson::BuildFinder do
       out.wont_include "Creating Build"
     end
 
-    it "succeeds without a build when there is no Dockerfile" do
+    it "fails to build when dockerfile is missing" do
       Build.delete_all
+      job.project.update_column :dockerfiles, 'Dockerfile'
       GitRepository.any_instance.expects(:file_content).with('Dockerfile', job.commit).returns nil
 
       refute_difference 'Build.count' do
-        execute.must_equal [] # no build found or created
-        out.must_include "Not creating build"
-      end
-    end
-
-    it "fails to build when custom dockerfile is missing" do
-      Build.delete_all
-      job.project.update_column :dockerfiles, 'Foobarfile'
-      GitRepository.any_instance.expects(:file_content).with('Foobarfile', job.commit).returns nil
-
-      refute_difference 'Build.count' do
         e = assert_raises(Samson::Hooks::UserError) { execute }
-        e.message.must_include "Could not create build for Foobarfile"
+        e.message.must_include "Could not create build for Dockerfile"
       end
     end
 
@@ -87,6 +79,17 @@ describe Samson::BuildFinder do
       out.wont_include "Creating Build"
     end
 
+    it "fails when plugin checks fail" do
+      build.update_column :docker_repo_digest, 'foo'
+      Samson::Hooks.with_callback(:ensure_build_is_successful, ->(*) { false }) do
+        e = assert_raises Samson::Hooks::UserError do
+          execute
+        end
+        e.message.must_equal "Plugin build checks for #{build.url} failed."
+        out.wont_include "Creating Build"
+      end
+    end
+
     describe "when build needs to be created" do
       before do
         build.update_column(:git_sha, 'something-else')
@@ -105,6 +108,7 @@ describe Samson::BuildFinder do
       end
 
       it "succeeds when the build works" do
+        job.project.update_column(:dockerfiles, 'Dockerfile')
         DockerBuilderService.expects(:new).with do |build|
           build.create_docker_job.update_column(:status, 'succeeded')
           build.update_column(:docker_repo_digest, 'some-sha')
@@ -126,6 +130,7 @@ describe Samson::BuildFinder do
       end
 
       it "fails when the build fails" do
+        job.project.update_column :dockerfiles, 'Dockerfile'
         DockerBuilderService.any_instance.expects(:run).with do
           Build.any_instance.expects(:docker_build_job).at_least_once.returns Job.new(status: 'cancelled')
           true
@@ -138,15 +143,16 @@ describe Samson::BuildFinder do
       end
 
       it "stops when deploy is cancelled by user" do
+        job.project.update_column :dockerfiles, 'Dockerfile'
         finder.cancelled!
         DockerBuilderService.any_instance.expects(:run).returns(true)
         execute
-        out.scan(/.*build.*/).must_equal ["Creating build for Dockerfile."] # not waiting for build
+        out.scan(/.*build for.*/).must_equal(["Creating build for Dockerfile."])
       end
     end
 
     describe "when finding builds via image_name" do
-      let(:images) { ["foo.com/foo/bar:latest"] }
+      let(:build_selectors) { [[nil, "foo.com/foo/bar:latest"]] }
 
       before do
         build.update_columns(image_name: 'bar', docker_repo_digest: "some-digest")
@@ -174,9 +180,8 @@ describe Samson::BuildFinder do
         execute.must_equal [build]
       end
 
-      it "finds accross projects" do
-        Build.any_instance.expects(:url).returns("foo") # bogus project not found so url building fails
-        build.update_column(:project_id, 123)
+      it "finds across projects" do
+        build.update_column(:project_id, projects(:other).id)
         execute.must_equal [build]
       end
 
@@ -205,9 +210,24 @@ describe Samson::BuildFinder do
       end
 
       it "fails if a build does not arrive" do
+        job.project.update_column :dockerfiles, 'foobar'
         expect_sleep.times(3)
 
-        execute.must_equal []
+        e = assert_raises(Samson::Hooks::UserError) { execute }
+        e.message.must_equal(
+          "Did not find build for dockerfile \"foobar\" or image_name \"foo-foobar\".\nFound builds: []."
+        )
+      end
+
+      it "shows found non-match builds when nothing was matching" do
+        expect_sleep.times(3).with do
+          build.update_columns(git_sha: matching_sha, docker_repo_digest: 'done', dockerfile: "Mooo")
+        end
+
+        e = assert_raises(Samson::Hooks::UserError) { execute }
+        e.message.must_equal(
+          "Did not find build for dockerfile \"Dockerfile\" or image_name \"foo\".\nFound builds: [[\"Mooo\", nil]]."
+        )
       end
 
       it "stops when cancelled" do
@@ -219,8 +239,21 @@ describe Samson::BuildFinder do
       it "does not wait multiple times because builds start simultaneously" do
         expect_sleep.times(3)
 
-        execute.must_equal []
-        execute.must_equal []
+        assert_raises(Samson::Hooks::UserError) { execute }
+        assert_raises(Samson::Hooks::UserError) { execute }
+      end
+
+      it "waits for builds with just image_name" do
+        expect_sleep.with do
+          build.update_columns(
+            git_sha: matching_sha,
+            docker_repo_digest: 'done',
+            dockerfile: nil,
+            image_name: project.permalink
+          )
+        end
+
+        execute.must_equal [build]
       end
     end
   end

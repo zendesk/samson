@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 class LocksController < ApplicationController
   include CurrentProject
+  include CurrentStage
 
-  before_action :require_project, if: :for_stage_lock?
+  before_action :require_stage, if: :for_stage_lock?
   before_action :authorize_resource!
 
   def index
@@ -10,14 +11,17 @@ class LocksController < ApplicationController
   end
 
   def create
-    lock = Lock.create!(
-      params.require(:lock).
-        permit(:description, :resource_id, :resource_type, :warning, :delete_in).
-        merge(user: current_user)
-    )
-    respond_to do |format|
-      format.html { redirect_back notice: 'Locked', fallback_location: root_path }
-      format.json { render json: {lock: lock} }
+    new_lock = Lock.new(lock_params)
+    if new_lock.save
+      respond_to do |format|
+        format.html { redirect_back notice: 'Locked', fallback_location: root_path }
+        format.json { render json: {lock: new_lock} }
+      end
+    else
+      respond_to do |format|
+        format.html { redirect_back flash: { error: format_errors(new_lock) }, fallback_location: root_path }
+        format.json { render_json_error 422, new_lock.errors }
+      end
     end
   end
 
@@ -33,11 +37,26 @@ class LocksController < ApplicationController
     Lock.where(
       resource_id: params.fetch(:resource_id).presence,
       resource_type: params.fetch(:resource_type).presence
-    ).first!.soft_delete!
+    ).first!.soft_delete!(validate: false)
     head :ok
   end
 
-  protected
+  private
+
+  def lock_params
+    params.require(:lock).permit(
+      :description,
+      :resource_id,
+      :resource_type,
+      :warning,
+      :delete_in,
+      :delete_at
+    ).merge(user: current_user)
+  end
+
+  def format_errors(object)
+    object.errors.messages.values.flatten.join("\n")
+  end
 
   def for_stage_lock?
     case action_name
@@ -56,13 +75,13 @@ class LocksController < ApplicationController
     @lock ||= Lock.find(params[:id])
   end
 
-  # Overrides CurrentProject#require_project
-  def require_project
+  # Overrides CurrentStage#require_stage
+  def require_stage
     case action_name
     when 'create' then
-      @project = Stage.find(params[:lock][:resource_id]).project
+      @stage = Stage.find(params[:lock][:resource_id])
     when 'destroy' then
-      @project = lock.resource.project
+      @stage = lock.resource
     else
       raise 'Unsupported action'
     end

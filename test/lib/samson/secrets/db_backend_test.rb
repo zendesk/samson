@@ -88,7 +88,7 @@ describe Samson::Secrets::DbBackend do
       end
 
       it "can decrypt existing" do
-        SecretStorage::DbBackend::Secret.find(secret.id).value.must_equal "MY-SECRET"
+        Samson::Secrets::DbBackend::Secret.find(secret.id).value.must_equal "MY-SECRET"
       end
     end
 

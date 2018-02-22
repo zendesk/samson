@@ -9,6 +9,8 @@ module Kubernetes
     has_many :release_docs, class_name: 'Kubernetes::ReleaseDoc', foreign_key: 'kubernetes_release_id'
     has_many :deploy_groups, through: :release_docs
 
+    attr_accessor :builds
+
     validates :project, :git_sha, :git_ref, presence: true
 
     def user
@@ -18,8 +20,15 @@ module Kubernetes
     # Creates a new Kubernetes Release and corresponding ReleaseDocs
     def self.create_release(params)
       Kubernetes::Release.transaction do
-        release = create(params.except(:deploy_groups))
-        release.send :create_release_docs, params if release.persisted?
+        roles = params.delete(:grouped_deploy_group_roles).to_a
+        release = create(params) do |release|
+          if roles.flatten(1).any? { |dgr| dgr.kubernetes_role.blue_green? }
+            release.blue_green_color = begin
+              release.previous_successful_release&.blue_green_color == "blue" ? "green" : "blue"
+            end
+          end
+        end
+        release.send :create_release_docs, roles if release.persisted?
         release
       end
     end
@@ -56,8 +65,8 @@ module Kubernetes
       Rails.application.routes.url_helpers.project_kubernetes_release_url(project, self)
     end
 
-    def builds
-      Build.where(git_sha: git_sha)
+    def previous_successful_release
+      deploy.previous_successful_deploy&.kubernetes_release
     end
 
     private
@@ -73,18 +82,20 @@ module Kubernetes
         raise(KeyError, "Unable to find previous release_id")
     end
 
-    # Creates a ReleaseDoc per each DeployGroup and Role combination.
-    def create_release_docs(params)
-      params.fetch(:deploy_groups).each do |dg|
-        dg.fetch(:roles).to_a.each do |role|
+    # Creates a ReleaseDoc per DeployGroupRole
+    def create_release_docs(grouped_deploy_group_roles)
+      grouped_deploy_group_roles.each do |dgrs|
+        dgrs.each do |dgr|
           release_docs.create!(
-            deploy_group: dg.fetch(:deploy_group),
-            kubernetes_role: role.fetch(:role),
-            replica_target: role.fetch(:replicas),
-            requests_cpu: role.fetch(:requests_cpu),
-            requests_memory: role.fetch(:requests_memory),
-            limits_cpu: role.fetch(:limits_cpu),
-            limits_memory: role.fetch(:limits_memory)
+            deploy_group: dgr.deploy_group,
+            kubernetes_release: self,
+            kubernetes_role: dgr.kubernetes_role,
+            replica_target: dgr.replicas,
+            requests_cpu: dgr.requests_cpu,
+            requests_memory: dgr.requests_memory,
+            limits_cpu: dgr.limits_cpu,
+            limits_memory: dgr.limits_memory,
+            delete_resource: dgr.delete_resource
           )
         end
       end

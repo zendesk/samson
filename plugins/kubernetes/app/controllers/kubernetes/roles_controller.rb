@@ -58,7 +58,7 @@ class Kubernetes::RolesController < ApplicationController
   end
 
   def destroy
-    @role.soft_delete!
+    @role.soft_delete!(validate: false)
     redirect_to action: :index
   end
 
@@ -69,6 +69,7 @@ class Kubernetes::RolesController < ApplicationController
   end
 
   def role_params
-    params.require(:kubernetes_role).permit(:name, :config_file, :service_name, :resource_name, :autoscaled)
+    params.require(:kubernetes_role).
+      permit(:name, :config_file, :service_name, :resource_name, :autoscaled, :blue_green)
   end
 end

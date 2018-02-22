@@ -1,9 +1,15 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 7
 
 describe ProjectsController do
+  def fields_disabled?
+    assert_select 'fieldset' do |fs|
+      return fs.attr('disabled').present?
+    end
+  end
+
   let(:project) { projects(:test) }
 
   before do
@@ -91,7 +97,7 @@ describe ProjectsController do
         end
 
         it "does not find soft deleted" do
-          project.soft_delete!
+          project.soft_delete!(validate: false)
           assert_raises ActiveRecord::RecordNotFound do
             get :show, params: {id: project.to_param}
           end
@@ -108,6 +114,14 @@ describe ProjectsController do
           refute project.key?('deleted_at')
           refute project.key?('token')
         end
+      end
+    end
+
+    describe '#edit' do
+      it 'renders with disabled fields' do
+        get :edit, params: {id: project.to_param}
+        assert_template :edit
+        assert fields_disabled?
       end
     end
 
@@ -139,7 +153,6 @@ describe ProjectsController do
   end
 
   as_a_deployer do
-    unauthorized :get, :edit, id: :foo
     unauthorized :put, :update, id: :foo
     unauthorized :delete, :destroy, id: :foo
   end
@@ -152,10 +165,11 @@ describe ProjectsController do
       it "renders" do
         get :edit, params: {id: project.to_param}
         assert_template :edit
+        refute fields_disabled?
       end
 
       it "does not find soft deleted" do
-        project.soft_delete!
+        project.soft_delete!(validate: false)
         assert_raises ActiveRecord::RecordNotFound do
           get :edit, params: {id: project.to_param}
         end
@@ -179,7 +193,7 @@ describe ProjectsController do
       end
 
       it "does not find soft deleted" do
-        project.soft_delete!
+        project.soft_delete!(validate: false)
         assert_raises ActiveRecord::RecordNotFound do
           put :update, params: params
         end

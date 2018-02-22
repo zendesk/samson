@@ -7,9 +7,12 @@ module Samson
     VIEW_HOOKS = [
       :stage_form,
       :stage_show,
+      :stage_form_checkbox,
       :project_form,
       :project_form_checkbox,
+      :build_button,
       :build_new,
+      :build_show,
       :deploy_group_show,
       :deploy_group_form,
       :deploy_group_table_header,
@@ -29,6 +32,7 @@ module Samson
       :stage_permitted_params,
       :deploy_permitted_params,
       :project_permitted_params,
+      :project_docker_build_method_options,
       :deploy_group_permitted_params,
       :build_permitted_params,
       :deploy_group_includes,
@@ -39,12 +43,14 @@ module Samson
       :before_docker_repository_usage,
       :before_docker_build,
       :after_docker_build,
+      :ensure_build_is_successful,
       :after_job_execution,
       :job_additional_vars,
       :buildkite_release_params,
       :release_deploy_conditions,
       :deploy_group_env,
       :link_parts_for_resource,
+      :can,
     ].freeze
 
     INTERNAL_HOOKS = [:class_defined].freeze

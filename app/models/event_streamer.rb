@@ -8,7 +8,7 @@
 #   data: { "msg": "hello" }
 #
 #   event: replace
-#   data: { "msg" {"world\n" }
+#   data: { "msg": {"world\n" }
 #
 # The `append` event is meant to insert a new line at the end of some client
 # buffer while the `replace` event is meant to replace the last line of the
@@ -37,9 +37,6 @@ class EventStreamer
   end
 
   def start(output)
-    # Heartbeat thread until puma/puma#389 is solved
-    start_heartbeat!
-
     @scanner = TerminalOutputScanner.new(output)
     @scanner.each { |event, data| emit_event(event, @handler.call(event, data)) }
   rescue IOError, ActionController::Live::ClientDisconnected
@@ -68,18 +65,5 @@ class EventStreamer
   def emit_event(name, data = "")
     Rails.logger.debug("#{name}: #{data.inspect}")
     @stream.write("event: #{name}\ndata: #{data}\n\n")
-  end
-
-  def start_heartbeat!
-    Thread.new do
-      begin
-        loop do
-          @stream.write("data: \n\n")
-          sleep(5) # Timeout of 5 seconds
-        end
-      rescue IOError, ActionController::Live::ClientDisconnected
-        finish
-      end
-    end
   end
 end

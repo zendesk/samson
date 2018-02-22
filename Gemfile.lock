@@ -5,6 +5,11 @@ PATH
       airbrake
 
 PATH
+  remote: plugins/assertible
+  specs:
+    samson_assertible (0.0.0)
+
+PATH
   remote: plugins/aws_ecr
   specs:
     samson_aws_ecr (0.0.0)
@@ -20,12 +25,7 @@ PATH
   remote: plugins/docker_binary_builder
   specs:
     samson_docker_binary_builder (0.0.0)
-
-PATH
-  remote: plugins/dockerb
-  specs:
-    samson_dockerb (0.0.0)
-      dockerb
+      docker-api
 
 PATH
   remote: plugins/env
@@ -103,41 +103,41 @@ GEM
   remote: https://rubygems.org/
   remote: https://rails-assets.org/
   specs:
-    actioncable (5.1.0)
-      actionpack (= 5.1.0)
+    actioncable (5.1.4)
+      actionpack (= 5.1.4)
       nio4r (~> 2.0)
       websocket-driver (~> 0.6.1)
-    actionmailer (5.1.0)
-      actionpack (= 5.1.0)
-      actionview (= 5.1.0)
-      activejob (= 5.1.0)
+    actionmailer (5.1.4)
+      actionpack (= 5.1.4)
+      actionview (= 5.1.4)
+      activejob (= 5.1.4)
       mail (~> 2.5, >= 2.5.4)
       rails-dom-testing (~> 2.0)
-    actionpack (5.1.0)
-      actionview (= 5.1.0)
-      activesupport (= 5.1.0)
+    actionpack (5.1.4)
+      actionview (= 5.1.4)
+      activesupport (= 5.1.4)
       rack (~> 2.0)
-      rack-test (~> 0.6.3)
+      rack-test (>= 0.6.3)
       rails-dom-testing (~> 2.0)
       rails-html-sanitizer (~> 1.0, >= 1.0.2)
-    actionview (5.1.0)
-      activesupport (= 5.1.0)
+    actionview (5.1.4)
+      activesupport (= 5.1.4)
       builder (~> 3.1)
       erubi (~> 1.4)
       rails-dom-testing (~> 2.0)
       rails-html-sanitizer (~> 1.0, >= 1.0.3)
     active_hash (1.4.1)
       activesupport (>= 2.2.2)
-    activejob (5.1.0)
-      activesupport (= 5.1.0)
+    activejob (5.1.4)
+      activesupport (= 5.1.4)
       globalid (>= 0.3.6)
-    activemodel (5.1.0)
-      activesupport (= 5.1.0)
-    activerecord (5.1.0)
-      activemodel (= 5.1.0)
-      activesupport (= 5.1.0)
+    activemodel (5.1.4)
+      activesupport (= 5.1.4)
+    activerecord (5.1.4)
+      activemodel (= 5.1.4)
+      activesupport (= 5.1.4)
       arel (~> 8.0)
-    activesupport (5.1.0)
+    activesupport (5.1.4)
       concurrent-ruby (~> 1.0, >= 1.0.2)
       i18n (~> 0.7)
       minitest (~> 5.1)
@@ -156,7 +156,7 @@ GEM
       activerecord (>= 4.2.0, < 5.2.0)
     arel (8.0.0)
     ast (2.3.0)
-    attr_encrypted (3.0.3)
+    attr_encrypted (3.1.0)
       encryptor (~> 3.0.0)
     audited (4.5.0)
       activerecord (>= 4.0, < 5.2)
@@ -170,7 +170,9 @@ GEM
     bootstrap-sass (3.3.6)
       autoprefixer-rails (>= 5.2.1)
       sass (>= 3.3.4)
-    brakeman (4.1.1)
+    bootstrap3-datetimepicker-rails (4.17.47)
+      momentjs-rails (>= 2.8.1)
+    brakeman (4.2.0)
     builder (3.2.3)
     bundler-audit (0.5.0)
       bundler (~> 1.2)
@@ -181,14 +183,12 @@ GEM
     connection_pool (2.2.1)
     crack (0.4.3)
       safe_yaml (~> 1.0.0)
+    crass (1.0.3)
     dalli (2.7.6)
-    ddtrace (0.8.2)
-      msgpack
     diffy (3.2.0)
     docker-api (1.33.6)
       excon (>= 0.38.0)
       json
-    dockerb (0.3.0)
     dogapi (1.21.0)
       multi_json
     dogstatsd-ruby (3.0.0)
@@ -198,7 +198,7 @@ GEM
       railties (>= 4.2)
     dotenv (2.2.1)
     encryptor (3.0.0)
-    erubi (1.6.0)
+    erubi (1.7.0)
     erubis (2.7.0)
     excon (0.57.1)
     execjs (2.7.0)
@@ -214,11 +214,10 @@ GEM
     flowdock (0.6.0)
       httparty (~> 0.7)
       multi_json
-    forking_test_runner (1.0.0)
-      activerecord (< 5.2.0)
+    forking_test_runner (1.2.0)
       parallel_tests (>= 1.3.7)
     github-markdown (0.6.9)
-    globalid (0.4.0)
+    globalid (0.4.1)
       activesupport (>= 4.2.0)
     goldiloader (2.0.1)
       activerecord (>= 4.2, < 5.2)
@@ -236,7 +235,8 @@ GEM
     http_parser.rb (0.6.0)
     httparty (0.14.0)
       multi_xml (>= 0.5.2)
-    i18n (0.8.1)
+    i18n (0.9.5)
+      concurrent-ruby (~> 1.0)
     inflection (1.0.0)
     jenkins_api_client (1.5.3)
       json (>= 1.0)
@@ -257,29 +257,35 @@ GEM
       http (= 0.9.8)
       recursive-open-struct (= 1.0.0)
       rest-client
-    lograge (0.5.0)
-      actionpack (>= 4, <= 5.1.0)
-      activesupport (>= 4, <= 5.1.0)
-      railties (>= 4, <= 5.1.0)
+    large_object_store (1.3.4)
+    lograge (0.9.0)
+      actionpack (>= 4)
+      activesupport (>= 4)
+      railties (>= 4)
+      request_store (~> 1.0)
     logstash-event (1.2.02)
-    loofah (2.0.3)
+    loofah (2.1.1)
+      crass (~> 1.0.2)
       nokogiri (>= 1.5.9)
-    mail (2.6.5)
-      mime-types (>= 1.16, < 4)
+    mail (2.7.0)
+      mini_mime (>= 0.1.1)
     marco-polo (1.2.1)
     maxitest (2.4.0)
       minitest (>= 5.0.0, < 5.11.0)
     metaclass (0.0.4)
     method_source (0.8.2)
     mime-types (2.99.3)
+    mini_mime (1.0.0)
     mini_portile2 (2.3.0)
-    minitest (5.10.1)
+    minitest (5.10.3)
     minitest-rails (3.0.0)
       minitest (~> 5.8)
       railties (~> 5.0)
     mixlib-shellout (2.2.7)
     mocha (1.2.1)
       metaclass (~> 0.0.1)
+    momentjs-rails (2.17.1)
+      railties (>= 3.1)
     msgpack (1.2.0)
     multi_json (1.12.0)
     multi_xml (0.5.5)
@@ -292,8 +298,8 @@ GEM
     ngannotate-rails (1.2.2)
       execjs
       rails (>= 3.1)
-    nio4r (2.0.0)
-    nokogiri (1.8.1)
+    nio4r (2.2.0)
+    nokogiri (1.8.2)
       mini_portile2 (~> 2.3.0)
     oauth (0.5.3)
     oauth2 (1.1.0)
@@ -333,8 +339,8 @@ GEM
     omniauth-oauth2 (1.4.0)
       oauth2 (~> 1.0)
       omniauth (~> 1.2)
-    parallel (1.10.0)
-    parallel_tests (2.12.0)
+    parallel (1.12.1)
+    parallel_tests (2.21.1)
       parallel
     parser (2.4.0.2)
       ast (~> 2.3)
@@ -349,22 +355,22 @@ GEM
       pry (>= 0.9.10)
     puma (3.8.2)
     pyu-ruby-sasl (0.0.3.3)
-    rack (2.0.1)
+    rack (2.0.4)
     rack-mini-profiler (0.10.2)
       rack (>= 1.2.0)
-    rack-test (0.6.3)
-      rack (>= 1.0)
-    rails (5.1.0)
-      actioncable (= 5.1.0)
-      actionmailer (= 5.1.0)
-      actionpack (= 5.1.0)
-      actionview (= 5.1.0)
-      activejob (= 5.1.0)
-      activemodel (= 5.1.0)
-      activerecord (= 5.1.0)
-      activesupport (= 5.1.0)
-      bundler (>= 1.3.0, < 2.0)
-      railties (= 5.1.0)
+    rack-test (0.8.2)
+      rack (>= 1.0, < 3)
+    rails (5.1.4)
+      actioncable (= 5.1.4)
+      actionmailer (= 5.1.4)
+      actionpack (= 5.1.4)
+      actionview (= 5.1.4)
+      activejob (= 5.1.4)
+      activemodel (= 5.1.4)
+      activerecord (= 5.1.4)
+      activesupport (= 5.1.4)
+      bundler (>= 1.3.0)
+      railties (= 5.1.4)
       sprockets-rails (>= 2.0.0)
     rails-assets-angular (1.4.9)
     rails-assets-angular-mocks (1.4.9)
@@ -380,8 +386,8 @@ GEM
       rails-assets-jquery (>= 1.6)
     rails-assets-jquery-ujs (1.2.0)
       rails-assets-jquery (> 1.8)
+    rails-assets-jsSHA (2.3.1)
     rails-assets-jstimezonedetect (1.0.5)
-    rails-assets-moment (2.11.2)
     rails-assets-typeahead.js (0.11.1)
       rails-assets-jquery (>= 1.7)
     rails-assets-underscore (1.8.3)
@@ -391,20 +397,22 @@ GEM
       actionpack (~> 5.x)
       actionview (~> 5.x)
       activesupport (~> 5.x)
-    rails-dom-testing (2.0.2)
-      activesupport (>= 4.2.0, < 6.0)
-      nokogiri (~> 1.6)
+    rails-dom-testing (2.0.3)
+      activesupport (>= 4.2.0)
+      nokogiri (>= 1.6)
     rails-html-sanitizer (1.0.3)
       loofah (~> 2.0)
-    railties (5.1.0)
-      actionpack (= 5.1.0)
-      activesupport (= 5.1.0)
+    railties (5.1.4)
+      actionpack (= 5.1.4)
+      activesupport (= 5.1.4)
       method_source
       rake (>= 0.8.7)
       thor (>= 0.18.1, < 2.0)
     rainbow (3.0.0)
-    rake (12.0.0)
+    rake (12.3.0)
     recursive-open-struct (1.0.0)
+    request_store (1.4.0)
+      rack (>= 1.4)
     rest-client (2.0.2)
       http-cookie (>= 1.0.2, < 2.0)
       mime-types (>= 1.16, < 4.0)
@@ -433,15 +441,15 @@ GEM
       faraday (~> 0.8, < 0.10)
     scrub_rb (1.0.1)
     sexp_processor (4.9.0)
-    single_cov (0.5.9)
+    single_cov (0.8.3)
     slop (3.6.0)
     socksify (1.7.1)
-    soft_deletion (1.1.0)
+    soft_deletion (1.3.0)
       activerecord (>= 3.2.0, < 5.2.0)
     sprockets (3.7.1)
       concurrent-ruby (~> 1.0)
       rack (> 1, < 3)
-    sprockets-rails (3.2.0)
+    sprockets-rails (3.2.1)
       actionpack (>= 4.0)
       activesupport (>= 4.0)
       sprockets (>= 3.0.0)
@@ -450,10 +458,10 @@ GEM
       rails (>= 4.2.0, < 5.2)
     terminal-table (1.7.3)
       unicode-display_width (~> 1.1.1)
-    thor (0.19.4)
+    thor (0.20.0)
     thread_safe (0.3.6)
     tilt (2.0.5)
-    tzinfo (1.2.3)
+    tzinfo (1.2.5)
       thread_safe (~> 0.1)
     uglifier (3.2.0)
       execjs (>= 0.3.0, < 3)
@@ -472,7 +480,7 @@ GEM
       hashdiff
     websocket-driver (0.6.5)
       websocket-extensions (>= 0.1.0)
-    websocket-extensions (0.1.2)
+    websocket-extensions (0.1.3)
     zendesk_api (1.13.4)
       faraday (~> 0.9)
       hashie (>= 1.2, < 4.0, != 3.3.0)
@@ -495,6 +503,7 @@ DEPENDENCIES
   awesome_print
   bootsnap
   bootstrap-sass
+  bootstrap3-datetimepicker-rails
   brakeman
   bundler
   bundler-audit
@@ -503,9 +512,7 @@ DEPENDENCIES
   concurrent-ruby
   connection_pool
   dalli
-  ddtrace
   diffy
-  docker-api
   dogstatsd-ruby
   doorkeeper
   dotenv
@@ -517,12 +524,14 @@ DEPENDENCIES
   github-markdown
   goldiloader
   kaminari
+  large_object_store
   lograge
   logstash-event
   marco-polo
   maxitest
   minitest-rails
   mocha
+  momentjs-rails
   mysql2
   net-http-persistent
   newrelic_rpm
@@ -535,13 +544,14 @@ DEPENDENCIES
   omniauth-google-oauth2
   omniauth-ldap
   omniauth-oauth2
+  parallel
   parallel_tests
   pg
   pry
   pry-rails
   puma
   rack-mini-profiler
-  rails (= 5.1.0)
+  rails (= 5.1.4)
   rails-assets-angular!
   rails-assets-angular-mocks!
   rails-assets-angular-scenario!
@@ -550,18 +560,18 @@ DEPENDENCIES
   rails-assets-jquery-cookie!
   rails-assets-jquery-ui!
   rails-assets-jquery-ujs!
+  rails-assets-jsSHA!
   rails-assets-jstimezonedetect!
-  rails-assets-moment!
   rails-assets-typeahead.js!
   rails-assets-underscore!
   rails-assets-x-editable!
   rails-controller-testing
   rubocop
   samson_airbrake!
+  samson_assertible!
   samson_aws_ecr!
   samson_datadog!
   samson_docker_binary_builder!
-  samson_dockerb!
   samson_env!
   samson_flowdock!
   samson_github!
@@ -587,7 +597,7 @@ DEPENDENCIES
   webmock
 
 RUBY VERSION
-   ruby 2.4.1p111
+   ruby 2.5.0p0
 
 BUNDLED WITH
    1.16.1

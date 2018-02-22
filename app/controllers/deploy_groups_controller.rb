@@ -1,10 +1,7 @@
 # frozen_string_literal: true
 class DeployGroupsController < ApplicationController
-  before_action :authorize_super_admin!, except: [:index, :show]
-  before_action :deploy_group, only: [
-    :show, :edit, :update, :destroy,
-    :deploy_all, :create_all_stages, :create_all_stages_preview, :delete_all_stages
-  ]
+  before_action :authorize_super_admin!, except: [:index, :show, :missing_config]
+  before_action :deploy_group, except: [:index, :create, :new]
 
   def index
     @deploy_groups =
@@ -65,7 +62,7 @@ class DeployGroupsController < ApplicationController
 
   def destroy
     if deploy_group.deploy_groups_stages.empty?
-      deploy_group.soft_delete!
+      deploy_group.soft_delete!(validate: false)
       flash[:notice] = "Successfully deleted deploy group: #{deploy_group.name}"
       redirect_to action: :index
     else
@@ -74,143 +71,46 @@ class DeployGroupsController < ApplicationController
     end
   end
 
-  def deploy_all
-    environment = deploy_group.environment
-    template_stages = environment.template_stages.all
-    missing_only = params[:missing_only] == "true"
-    stages_to_deploy = missing_only ? deploy_group.stages.reject(&:last_successful_deploy) : deploy_group.stages
-    deploys = stages_to_deploy.map do |stage|
-      template_stage = template_stages.detect { |ts| ts.project_id == stage.project.id }
-      next unless template_stage
+  def missing_config
+    return unless compare = params[:compare].presence
+    compare = DeployGroup.find_by_permalink!(compare)
 
-      last_success_deploy = template_stage.last_successful_deploy
-      next unless last_success_deploy
+    @diff = Hash.new { |h, k| h[k] = Hash.new { |h, k| h[k] = [] } }
 
-      deploy_service = DeployService.new(current_user)
-      deploy_service.deploy(stage, reference: last_success_deploy.reference)
-    end.compact
-
-    if deploys.empty?
-      flash[:error] = "There were no stages ready for deploy."
-      redirect_to deploys_path
-    else
-      redirect_to deploys_path(ids: deploys.map(&:id))
+    if missing_secrets = compare_values(compare, deploy_group) { |dg| custom_secrets(dg) }
+      missing_secrets.each do |id, s|
+        @diff[s.fetch(:project_permalink)]["Secrets"] << id
+      end
     end
-  end
 
-  def create_all_stages_preview
-    @preexisting_stages, @missing_stages = self.class.stages_for_creation(deploy_group)
-  end
-
-  # No more than one stage, per project, per deploy_group
-  # Note: you can call this multiple times, and it will create missing stages, but no redundant stages.
-  def create_all_stages
-    stages_created = self.class.create_all_stages(deploy_group)
-
-    redirect_to deploy_group, notice: "Created #{stages_created.length} Stages"
-  end
-
-  def merge_all_stages
-    render_failures(try_each_cloned_stage { |stage| merge_stage(stage) })
-  end
-
-  def delete_all_stages
-    render_failures(try_each_cloned_stage { |stage| delete_stage(stage) })
-  end
-
-  def self.create_all_stages(deploy_group)
-    _, missing_stages = stages_for_creation(deploy_group)
-    missing_stages.map do |template_stage|
-      create_stage_with_group(template_stage, deploy_group)
+    if missing_env = compare_values(compare, deploy_group) { |dg| custom_env(dg) }
+      missing_env.each do |e|
+        project_permalink = (e.parent_type == "Project" ? e.parent.permalink : "global")
+        @diff[project_permalink]["Environment"] << e
+      end
     end
   end
 
   private
 
-  def render_failures(failures)
-    message = failures.map { |reason, stage| "#{stage.project.name} #{stage.name} #{reason}" }.join(", ")
-
-    redirect_to deploy_group, alert: (failures.empty? ? nil : "Some stages were skipped: #{message}")
+  def compare_values(a, b)
+    a = yield(a)
+    b = yield(b)
+    return unless missing_keys = (a.keys - b.keys).presence
+    a.values_at(*missing_keys)
   end
 
-  # executes the block for each cloned stage, returns an array of [result, stage] any non-nil responses.
-  def try_each_cloned_stage
-    cloned_stages = deploy_group.stages.cloned
-    results = cloned_stages.map do |stage|
-      result = yield stage
-      [result, stage]
+  def custom_env(deploy_group)
+    EnvironmentVariable.where(scope: deploy_group).each_with_object({}) do |e, h|
+      h[[e.name, e.parent_type, e.parent_id]] = e
     end
-
-    results.select(&:first)
   end
 
-  # returns nil on success, otherwise the reason this stage was skipped.
-  def merge_stage(stage)
-    template_stage = stage.template_stage
-
-    return "has no template stage to merge into" unless template_stage
-    return "is a template stage" if stage.is_template
-    return "has no deploy groups" if stage.deploy_groups.count.zero?
-    return "has more than one deploy group" if stage.deploy_groups.count > 1
-    return "commands in template stage differ" if stage.script != template_stage.script
-
-    unless template_stage.deploy_groups.include?(stage.deploy_groups.first)
-      template_stage.deploy_groups += stage.deploy_groups
-      template_stage.save!
-    end
-
-    stage.project.stages.reload # need to reload to make verify_not_part_of_pipeline have current data and not fail
-    stage.soft_delete!
-
-    nil
-  end
-
-  def delete_stage(stage)
-    return "has no template stage" unless stage.template_stage
-    return "is a template stage" if stage.is_template
-    return "has more than one deploy group" if stage.deploy_groups.count > 1
-    return "commands in template stage differ" if stage.script != stage.template_stage.script
-
-    stage.soft_delete!
-
-    nil
-  end
-
-  class << self
-    # returns a list of stages already created and list of stages to create (through their template stages)
-    def stages_for_creation(deploy_group)
-      environment = deploy_group.environment
-      template_stages = environment.template_stages.all
-      deploy_group_stages = deploy_group.stages.all
-
-      preexisting_stages = []
-      missing_stages = []
-      Project.where(include_new_deploy_groups: true).each do |project|
-        template_stage = template_stages.detect { |ts| ts.project_id == project.id }
-        deploy_group_stage = deploy_group_stages.detect { |dgs| dgs.project_id == project.id }
-        if deploy_group_stage
-          preexisting_stages << deploy_group_stage
-        elsif template_stage
-          missing_stages << template_stage
-        end
-      end
-
-      [preexisting_stages, missing_stages]
-    end
-
-    def create_stage_with_group(template_stage, deploy_group)
-      stage = Stage.build_clone(template_stage)
-      stage.deploy_groups << deploy_group
-      stage.name = deploy_group.name
-      stage.is_template = false
-      stage.save!
-
-      if template_stage.respond_to?(:next_stage_ids) # pipeline plugin was installed
-        template_stage.next_stage_ids << stage.id
-        template_stage.save!
-      end
-
-      stage
+  def custom_secrets(deploy_group)
+    Samson::Secrets::Manager.lookup_cache.each_with_object({}) do |(id, _), h|
+      parts = Samson::Secrets::Manager.parse_id(id)
+      next unless parts.fetch(:deploy_group_permalink) == deploy_group.permalink
+      h[parts.except(:deploy_group_permalink)] = [id, parts]
     end
   end
 

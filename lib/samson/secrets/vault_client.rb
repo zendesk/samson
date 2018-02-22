@@ -54,7 +54,13 @@ module Samson
 
       # called via cron job to renew the current token
       def renew_token
-        clients.each_value { |c| with_retries { c.auth_token.renew_self } }
+        clients.each do |id, client|
+          begin
+            with_retries { client.auth_token.renew_self }
+          rescue
+            Airbrake.notify($!, vault_server_id: id)
+          end
+        end
       end
 
       def client(deploy_group_permalink)
@@ -84,7 +90,7 @@ module Samson
       # - servers in environment for environment specific id
       # - all for global id
       def responsible_clients(id)
-        parts = SecretStorage.parse_id(id)
+        parts = Samson::Secrets::Manager.parse_id(id)
         deploy_group_permalink = parts.fetch(:deploy_group_permalink)
         environment_permalink = parts.fetch(:environment_permalink)
 

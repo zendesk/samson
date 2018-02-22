@@ -17,16 +17,13 @@ module Samson
         env_name = env_name.to_s
         return [] unless validate_wildcard(env_name, secret_key)
 
-        possible_id_list = possible_ids(secret_key)
-        found =
-          if secret_key.end_with?(WILDCARD)
-            expand_wildcard_keys(env_name, secret_key, possible_id_list)
-          else
-            expand_simple_key(env_name, possible_id_list)
-          end
+        possible_ids, forbidden_ids = partition_possible_ids(secret_key)
+
+        found = find_keys(secret_key, env_name, possible_ids)
+        found_but_forbidden = find_keys(secret_key, env_name, forbidden_ids).map(&:last)
 
         if found.empty?
-          @errors << "#{secret_key} (tried: #{possible_id_list.join(', ')})"
+          @errors << error_message(secret_key, possible_ids, found_but_forbidden)
           return []
         end
 
@@ -40,7 +37,8 @@ module Samson
 
       def read(key)
         return unless full_key = expand_key(key)
-        SecretStorage.read_multi([full_key], include_value: true).values.first&.fetch(:value) # read key without raising
+        Samson::Secrets::Manager.read_multi([full_key], include_value: true).
+          values.first&.fetch(:value) # read key without raising
       end
 
       # raises all errors at once for faster debugging
@@ -55,18 +53,40 @@ module Samson
 
       private
 
-      # get a list of all possible ids for a given secret
-      def possible_ids(secret_key)
-        possible_secret_id_parts.map do |id_parts|
+      def find_keys(secret_key, env_name, id_list)
+        if secret_key.end_with?(WILDCARD)
+          expand_wildcard_keys(env_name, secret_key, id_list)
+        else
+          expand_simple_key(env_name, id_list)
+        end
+      end
+
+      # sorts possible ids for a secret into allowed and forbidden lists based on secret sharing grants
+      def partition_possible_ids(secret_key)
+        possible_secret_id_parts.each_with_object([[], []]) do |id_parts, (possible, forbidden)|
           id_parts = id_parts.merge(key: secret_key)
-          id = SecretStorage.generate_id(id_parts)
-          id if key_granted?(id_parts) && !deprecated?(id)
-        end.compact
+          id = Samson::Secrets::Manager.generate_id(id_parts)
+          unless deprecated?(id)
+            (key_granted?(id_parts) ? possible : forbidden) << id
+          end
+        end
+      end
+
+      def error_message(secret_key, possible_ids, forbidden_ids)
+        if forbidden_ids.any?
+          ignored_error = "(ignored: global secrets #{forbidden_ids.join(', ')} add a secret sharing grant to use them)"
+        end
+
+        <<~TEXT.strip
+          #{secret_key}
+            (tried: #{possible_ids.join(', ')})
+            #{ignored_error}
+        TEXT
       end
 
       # local cache so we do not have to re-fetch cache on every resolve
       def deprecated?(id)
-        @deprecated_ids ||= SecretStorage.lookup_cache.each_with_object([]) do |(id, secret_stub), all|
+        @deprecated_ids ||= Samson::Secrets::Manager.lookup_cache.each_with_object([]) do |(id, secret_stub), all|
           all << id if secret_stub.fetch(:deprecated_at)
         end
         @deprecated_ids.include?(id)
@@ -80,7 +100,7 @@ module Samson
 
       # find the first id that exists, preserving priority in possible_ids
       def expand_simple_key(env_name, possible_ids)
-        if found = (possible_ids & SecretStorage.ids).first
+        if found = (possible_ids & Samson::Secrets::Manager.ids).first
           [[env_name, found]]
         else
           []
@@ -90,18 +110,18 @@ module Samson
       # FOO_* with foo_* -> [[FOO_BAR, a/a/a/foo_bar], [FOO_BAZ, a/a/a/foo_baz]]
       def expand_wildcard_keys(env_name, secret_key, possible_ids)
         # look through all keys to check which ones match
-        all = SecretStorage.ids
+        all = Samson::Secrets::Manager.ids
         matched = possible_ids.flat_map do |id|
           all.select { |a| a.start_with?(id.delete('*')) }
         end
 
         # pick the most specific id per key, they are already sorted ... [a/b/c/d, a/a/a/d] -> [a/b/c/d]
-        matched.uniq! { |id| SecretStorage.parse_id(id).fetch(:key) }
+        matched.uniq! { |id| Samson::Secrets::Manager.parse_id(id).fetch(:key) }
 
         # expand env name to match the expanded key
         # env FOO_* with key d_* finds id a/b/c/d_bar and results in [FOO_BAR, a/b/c/d_bar]
         matched.map! do |id|
-          expanded = SecretStorage.parse_id(id).fetch(:key)
+          expanded = Samson::Secrets::Manager.parse_id(id).fetch(:key)
           expanded.slice!(0, secret_key.size - 1)
           [env_name.delete('*') + expanded.upcase, id]
         end
@@ -110,7 +130,7 @@ module Samson
       end
 
       def key_granted?(key_parts)
-        if SecretStorage.sharing_grants? && key_parts.fetch(:project_permalink) == "global"
+        if Samson::Secrets::Manager.sharing_grants? && key_parts.fetch(:project_permalink) == "global"
           @shared_keys ||= SecretSharingGrant.where(project: @project).pluck(:key)
           @shared_keys.include?(key_parts.fetch(:key))
         else

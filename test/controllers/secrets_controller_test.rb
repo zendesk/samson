@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 1
 
 describe SecretsController do
   def create_global
@@ -83,33 +83,31 @@ describe SecretsController do
         assigns[:secrets].map(&:first).must_equal ['production/foo-bar/pod2/bar']
       end
 
-      it 'can filter by value' do
+      it 'can filter by value_hashed' do
         other = create_secret 'production/global/pod2/baz'
-        SecretStorage.write other.id, value: 'other', user_id: 1, visible: true, comment: nil, deprecated_at: nil
-        get :index, params: {search: {value: 'other'}}
+        Samson::Secrets::Manager.write(
+          other.id, value: 'other', user_id: 1, visible: true, comment: nil, deprecated_at: nil
+        )
+        get :index, params: {search: {value_hashed: Samson::Secrets::Manager.send(:hash_value, 'other')}}
         assert_template :index
         assigns[:secrets].map(&:first).must_equal [other.id]
       end
 
       it 'can filter by value_from' do
         other = create_secret 'production/global/pod2/baz'
-        SecretStorage.write other.id, value: 'other', user_id: 1, visible: true, comment: nil, deprecated_at: nil
-        SecretStorage.write "#{other.id}-2", value: 'other', user_id: 1, visible: true, comment: nil, deprecated_at: nil
+        Samson::Secrets::Manager.write(
+          other.id, value: 'other', user_id: 1, visible: true, comment: nil, deprecated_at: nil
+        )
+        Samson::Secrets::Manager.write(
+          "#{other.id}-2", value: 'other', user_id: 1, visible: true, comment: nil, deprecated_at: nil
+        )
         get :index, params: {search: {value_from: other.id}}
         assert_template :index
         assigns[:secrets].map(&:first).must_equal ["#{other.id}-2"]
       end
 
-      it 'can filter by value_hashed' do
-        other = create_secret 'production/global/pod2/baz'
-        SecretStorage.write other.id, value: 'other', user_id: 1, visible: true, comment: nil, deprecated_at: nil
-        get :index, params: {search: {value_hashed: SecretStorage.send(:hash_value, 'other')}}
-        assert_template :index
-        assigns[:secrets].map(&:first).must_equal [other.id]
-      end
-
       it 'raises when vault server is broken' do
-        SecretStorage.expects(:lookup_cache).raises(Samson::Secrets::BackendError.new('this is my error'))
+        Samson::Secrets::Manager.expects(:lookup_cache).raises(Samson::Secrets::BackendError.new('this is my error'))
         get :index
         assert flash[:error]
       end
@@ -214,7 +212,7 @@ describe SecretsController do
         post :create, params: {secret: attributes.merge(visible: 'false')}
         assert flash[:notice]
         assert_redirected_to secrets_path
-        secret = SecretStorage::DbBackend::Secret.find('production/foo/pod2/hi')
+        secret = Samson::Secrets::DbBackend::Secret.find('production/foo/pod2/hi')
         secret.updater_id.must_equal user.id
         secret.creator_id.must_equal user.id
         secret.visible.must_equal false
@@ -224,7 +222,7 @@ describe SecretsController do
 
       it 'writes nil to deprecated_at to make vault work and not store strange values' do
         attributes[:deprecated_at] = "0"
-        SecretStorage.expects(:write).with { |_, data| data.fetch(:deprecated_at).must_equal nil }
+        Samson::Secrets::Manager.expects(:write).with { |_, data| data.fetch(:deprecated_at).must_equal nil }
         post :create, params: {secret: attributes}
       end
 
@@ -266,7 +264,7 @@ describe SecretsController do
 
     describe '#update' do
       def attributes
-        @attributes ||= super.except(*SecretStorage::ID_PARTS)
+        @attributes ||= super.except(*Samson::Secrets::Manager::ID_PARTS)
       end
 
       def do_update
@@ -303,7 +301,7 @@ describe SecretsController do
 
       it "does not allow backfills when secret was visible since value should have been visible" do
         attributes[:value] = ""
-        SecretStorage.write(
+        Samson::Secrets::Manager.write(
           secret.id, visible: true, value: "secret", user_id: user.id, comment: "", deprecated_at: nil
         )
         do_update
@@ -312,7 +310,7 @@ describe SecretsController do
       end
 
       it 'fails to update when write fails' do
-        SecretStorage.expects(:write).returns(false)
+        Samson::Secrets::Manager.expects(:write).returns(false)
         do_update
         assert_template :show
         assert flash[:error]
@@ -323,6 +321,43 @@ describe SecretsController do
         do_update
         assert_redirected_to secrets_path
         secret.reload.id.must_equal 'production/foo/pod2/some_key'
+      end
+
+      describe 'duplicate secret key values' do
+        def do_update(extras = {})
+          secret
+          create_secret 'production/foo/pod2/other_key', value: 'do-not-duplicate'
+          put :update, params: { id: secret, secret: attributes.merge(value: 'do-not-duplicate').merge(extras) }
+        end
+
+        it 'shows validation error on duplicate secret' do
+          do_update
+
+          assert_response :success
+          assert flash[:error]
+        end
+
+        it 'allows duplicate secret if allow_duplicates is true' do
+          do_update(allow_duplicates: '1')
+
+          assert_redirected_to secrets_path
+        end
+
+        it 'shows validation error when not checking allow_duplicates' do
+          do_update(allow_duplicates: '0')
+
+          assert_response :success
+          assert flash[:error]
+        end
+
+        it 'allows editing of an already existing duplicate value' do
+          secret
+          create_secret 'production/foo/pod2/other_key', value: secret.value
+
+          put :update, params: { id: secret, secret: { comment: 'hello', visible: '0' } }
+
+          assert_redirected_to secrets_path
+        end
       end
 
       describe 'showing a not owned project' do
@@ -348,7 +383,7 @@ describe SecretsController do
       it "deletes project secret" do
         delete :destroy, params: {id: secret}
         assert_redirected_to "/secrets"
-        SecretStorage::DbBackend::Secret.exists?(secret.id).must_equal(false)
+        Samson::Secrets::DbBackend::Secret.exists?(secret.id).must_equal(false)
       end
 
       it "deletes secret that already was deleted so we can cleanup after a partial deletetion failure" do
@@ -359,7 +394,7 @@ describe SecretsController do
       it "responds ok to xhr" do
         delete :destroy, params: {id: secret}, xhr: true
         assert_response :success
-        SecretStorage::DbBackend::Secret.exists?(secret.id).must_equal(false)
+        Samson::Secrets::DbBackend::Secret.exists?(secret.id).must_equal(false)
       end
 
       it "is unauthorized for global" do
@@ -398,7 +433,7 @@ describe SecretsController do
 
     describe '#update' do
       it "updates" do
-        put :update, params: {id: secret, secret: attributes.except(*SecretStorage::ID_PARTS)}
+        put :update, params: {id: secret, secret: attributes.except(*Samson::Secrets::Manager::ID_PARTS)}
         assert_redirected_to secrets_path
       end
     end
@@ -407,14 +442,14 @@ describe SecretsController do
       it 'deletes global secret' do
         delete :destroy, params: {id: secret.id}
         assert_redirected_to "/secrets"
-        SecretStorage::DbBackend::Secret.exists?(secret.id).must_equal(false)
+        Samson::Secrets::DbBackend::Secret.exists?(secret.id).must_equal(false)
       end
 
       it "works with unknown project" do
         secret.update_column(:id, 'oops/bar')
         delete :destroy, params: {id: secret.id}
         assert_redirected_to "/secrets"
-        SecretStorage::DbBackend::Secret.exists?(secret.id).must_equal(false)
+        Samson::Secrets::DbBackend::Secret.exists?(secret.id).must_equal(false)
       end
     end
   end

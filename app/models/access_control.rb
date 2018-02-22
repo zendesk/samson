@@ -18,10 +18,12 @@ class AccessControl
         case action
         when :read then true
         when :write
-          if scope
-            user.deployer_for?(scope) # stage locks
+          return user.admin? if scope.nil? # global locks
+          return false unless scope.is_a?(Stage) # stage locks
+          if ENV['PRODUCTION_STAGE_LOCK_REQUIRES_ADMIN'] && scope.production
+            user.admin_for?(scope.project)
           else
-            user.admin? # global locks
+            user.deployer_for?(scope.project)
           end
         else raise ArgumentError, "Unsupported action #{action}"
         end
@@ -50,7 +52,11 @@ class AccessControl
         else raise ArgumentError, "Unsupported action #{action}"
         end
       else
-        raise ArgumentError, "Unsupported resource_namespace #{resource_namespace}"
+        if block = (@@plugin_namespaces ||= Samson::Hooks.fire(:can).to_h)[resource_namespace]
+          block.call(user, action, scope)
+        else
+          raise ArgumentError, "Unsupported resource_namespace #{resource_namespace}"
+        end
       end
     end
 

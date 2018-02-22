@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../../../test_helper'
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 4
 
 describe Samson::Secrets::KeyResolver do
   let(:project) { projects(:test) }
@@ -42,12 +42,12 @@ describe Samson::Secrets::KeyResolver do
         "global/global/global/baz"
       ]
       resolver.instance_variable_get(:@errors).must_equal(
-        ["baz (tried: #{keys.join(", ")})"]
+        ["baz\n  (tried: #{keys.join(", ")})"]
       )
     end
 
     it "does not find deprecated" do
-      SecretStorage.write(
+      Samson::Secrets::Manager.write(
         "global/global/global/bar",
         value: 'dsffd',
         comment: '',
@@ -97,18 +97,22 @@ describe Samson::Secrets::KeyResolver do
 
       it "fails when no key is found" do
         resolver.expand('ABC_*', 'bax*').must_equal []
-        errors.first.must_include "bax* (tried: production/foo/pod1/bax*"
+        errors.first.must_include "bax*\n  (tried: production/foo/pod1/bax*"
       end
     end
 
     describe "secret sharing" do
       with_env SECRET_STORAGE_SHARING_GRANTS: 'true'
 
-      it "does not include global by default" do
-        assert SecretStorage.sharing_grants?
+      it "does not include global by default but gives warning they are ignored" do
+        assert Samson::Secrets::Manager.sharing_grants?
         resolver.expand('ABC', 'bar').must_equal []
         resolver.instance_variable_get(:@errors).first.must_equal(
-          "bar (tried: production/foo/pod1/bar, global/foo/pod1/bar, production/foo/global/bar, global/foo/global/bar)"
+          <<~TEXT.strip
+            bar
+              (tried: production/foo/pod1/bar, global/foo/pod1/bar, production/foo/global/bar, global/foo/global/bar)
+              (ignored: global secrets global/global/global/bar add a secret sharing grant to use them)
+          TEXT
         )
       end
 
@@ -134,9 +138,9 @@ describe Samson::Secrets::KeyResolver do
     end
 
     it "returns nil when it fails to read secrets" do
-      SecretStorage.expects(:read_multi).never
+      Samson::Secrets::Manager.expects(:read_multi).never
       resolver.read("foobar").must_be_nil
-      errors.first.must_include "foobar (tried"
+      errors.first.must_include "foobar\n  (tried"
     end
   end
 

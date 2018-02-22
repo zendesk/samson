@@ -79,7 +79,7 @@ class GitRepository
   def file_content(file, sha, pull: true)
     if !pull
       return unless mirrored?
-    elsif sha =~ Build::SHA1_REGEX
+    elsif sha.match?(Build::SHA1_REGEX)
       (mirrored? && sha_exist?(sha)) || ensure_mirror_current
     else
       ensure_mirror_current
@@ -165,14 +165,13 @@ class GitRepository
   # success: stdout as string
   # error: nil
   def capture_stdout(*command, dir: repo_cache_dir)
-    Dir.chdir(dir) do
-      success, output = Samson::CommandExecutor.execute(
-        *command,
-        whitelist_env: ['HOME', 'PATH'],
-        timeout: 30.minutes,
-        err: '/dev/null'
-      )
-      output.strip if success
-    end
+    success, output = Samson::CommandExecutor.execute(
+      *command,
+      whitelist_env: ['HOME', 'PATH'],
+      timeout: 30.minutes,
+      err: '/dev/null',
+      dir: dir
+    )
+    output.strip if success
   end
 end

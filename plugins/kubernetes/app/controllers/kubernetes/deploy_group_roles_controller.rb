@@ -55,7 +55,7 @@ class Kubernetes::DeployGroupRolesController < ApplicationController
       format.json do
         deploy_group_role = @deploy_group_role.as_json
         if params[:include].to_s.split(',').include?("verification_template")
-          deploy_group_role[:verification_template] = verification_template
+          deploy_group_role[:verification_template] = verification_template.to_hash(verification: true)
         end
 
         render json: {
@@ -134,6 +134,7 @@ class Kubernetes::DeployGroupRolesController < ApplicationController
       git_sha: git_sha,
       project: project,
       user: current_user,
+      builds: [],
       deploy_groups: [@deploy_group_role.deploy_group]
     )
     release_doc = Kubernetes::ReleaseDoc.new(
@@ -178,7 +179,7 @@ class Kubernetes::DeployGroupRolesController < ApplicationController
   def deploy_group_role_params(scope: params.require(:kubernetes_deploy_group_role))
     scope.permit(
       :kubernetes_role_id, :requests_memory, :requests_cpu, :limits_memory, :limits_cpu,
-      :replicas, :project_id, :deploy_group_id
+      :replicas, :project_id, :deploy_group_id, :delete_resource
     )
   end
 end

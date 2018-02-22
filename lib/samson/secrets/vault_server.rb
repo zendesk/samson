@@ -70,7 +70,7 @@ module Samson
 
         # we can only write the keys that are allowed to live in this server
         keys.select! do |key|
-          scope = SecretStorage.parse_id(key.sub(PREFIX, ''))
+          scope = Samson::Secrets::Manager.parse_id(key.sub(PREFIX, ''))
           allowed_envs.include?(scope.fetch(:environment_permalink)) &&
             allowed_groups.include?(scope.fetch(:deploy_group_permalink))
         end

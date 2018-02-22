@@ -5,7 +5,7 @@
     <%= redirect_to_field %>
     <%= render 'shared/errors', object: @secret_sharing_grant %>
     <%= form.input :key, required: true do %>
-      <%= form.select :key, SecretStorage.shareable_keys, {required: true}, Samson::FormBuilder::LIVE_SELECT_OPTIONS %>
+      <%= form.select :key, Samson::Secrets::Manager.shareable_keys, {required: true}, Samson::FormBuilder::LIVE_SELECT_OPTIONS %>
     <% end %>
     <%= form.input :project_id, required: true do %>
       <% projects = Project.order(:name).pluck(:name, :id) %>

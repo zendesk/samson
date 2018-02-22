@@ -6,7 +6,7 @@ require 'bundler/setup'
 # anything loaded before coverage will be uncovered
 require 'single_cov'
 SingleCov::APP_FOLDERS << 'decorators' << 'presenters'
-SingleCov.setup :minitest unless defined?(Spring)
+SingleCov.setup :minitest, branches: true unless defined?(Spring)
 
 # rake adds these, but we don't need them / want to be consistent with using `ruby x_test.rb`
 $LOAD_PATH.delete 'lib'
@@ -68,6 +68,11 @@ ActiveSupport::TestCase.class_eval do
     end
   end
 
+  def refute_valid_on(model, attribute, message)
+    assert_predicate model, :invalid?
+    assert_includes model.errors.full_messages_for(attribute), message
+  end
+
   def freeze_time
     Time.stubs(:now).returns(Time.new(2001, 2, 3, 4, 5, 6))
   end
@@ -93,7 +98,7 @@ ActiveSupport::TestCase.class_eval do
   end
 
   def create_secret(id, extra = {})
-    SecretStorage.write(
+    Samson::Secrets::Manager.write(
       id,
       {
         value: 'MY-SECRET',
@@ -103,7 +108,7 @@ ActiveSupport::TestCase.class_eval do
         deprecated_at: nil
       }.merge(extra)
     )
-    SecretStorage::DbBackend::Secret.find(id) # TODO: just return id
+    Samson::Secrets::DbBackend::Secret.find(id) # TODO: just return id
   end
 
   def create_vault_server(overrides = {})
@@ -128,6 +133,20 @@ ActiveSupport::TestCase.class_eval do
 
   def self.with_env(env)
     around { |test| with_env(env, &test) }
+  end
+
+  def with_config(key, value)
+    config = Rails.application.config.samson
+    old = config.send(key)
+
+    config.send("#{key}=", value)
+    yield
+  ensure
+    config.send("#{key}=", old)
+  end
+
+  def self.with_config(*args)
+    around { |test| with_config(*args, &test) }
   end
 
   def self.run_inside_of_temp_directory
@@ -179,6 +198,14 @@ ActiveSupport::TestCase.class_eval do
 
   def stub_github_status_check
     stub_request(:get, "#{Rails.application.config.samson.github.status_url}/api/status.json").to_return(body: "{}")
+  end
+
+  def silence_thread_exceptions
+    old = Thread.report_on_exception
+    Thread.report_on_exception = false
+    yield
+  ensure
+    Thread.report_on_exception = old
   end
 end
 

@@ -2,6 +2,7 @@
 class Integrations::BaseController < ApplicationController
   skip_before_action :login_user
   skip_before_action :verify_authenticity_token
+  before_action :hide_token
   before_action :validate_token
   before_action :validate_request
   after_action :record_webhook
@@ -105,6 +106,11 @@ class Integrations::BaseController < ApplicationController
 
   def validate_token
     project || render(plain: "Invalid token", status: :unauthorized)
+  end
+
+  def hide_token
+    request.env["PATH_INFO"] =
+      request.env["PATH_INFO"].sub(params[:token], "hidden-#{project&.permalink || "project-not-found"}-token")
   end
 
   def service_type

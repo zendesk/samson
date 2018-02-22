@@ -49,6 +49,17 @@ describe Kubernetes::DeployGroupRole do
       deploy_group_role.limits_memory = 0
       refute_valid deploy_group_role
     end
+
+    it "is invalid if a duplicate of it already exists" do
+      dgr = deploy_group_role
+      new_dgr = Kubernetes::DeployGroupRole.new(
+        project_id: dgr.project_id,
+        deploy_group_id: dgr.deploy_group_id,
+        kubernetes_role_id: dgr.kubernetes_role_id
+      )
+
+      refute_valid new_dgr
+    end
   end
 
   describe ".matrix" do
@@ -78,7 +89,7 @@ describe Kubernetes::DeployGroupRole do
     end
 
     it "ignores soft deleted roles" do
-      kubernetes_roles(:app_server).soft_delete!
+      kubernetes_roles(:app_server).soft_delete!(validate: false)
       Kubernetes::DeployGroupRole.matrix(stage).must_equal(
         [[
           stage.deploy_groups.first,
@@ -252,6 +263,13 @@ describe Kubernetes::DeployGroupRole do
           ]
         )
       end
+    end
+  end
+
+  describe "#delete_on_0_replicas" do
+    it "is valid without usage_limit" do
+      deploy_group_role.delete_resource = true
+      refute_valid deploy_group_role
     end
   end
 end

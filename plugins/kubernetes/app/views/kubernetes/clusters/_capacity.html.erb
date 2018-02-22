@@ -1,6 +1,6 @@
 <%
   @deploy_group_usage ||= Kubernetes::DeployGroupRole.usage # avoiding N+1 for every cluster
-  nodes = cluster.schedulable_nodes
+  nodes = @cluster_nodes.fetch(cluster.id)
   available_cpu = nodes.sum { |n| n.dig(:status, :capacity, :cpu).to_f }
   available_memory = nodes.sum { |n| n.dig(:status, :capacity, :memory).to_i / 1024 / 1024 }
   used_cpu = cluster.deploy_groups.sum { |dg| @deploy_group_usage.dig(dg.id, 'cpu').to_f || 0 }

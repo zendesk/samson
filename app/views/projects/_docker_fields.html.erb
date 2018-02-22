@@ -1,0 +1,15 @@
+<fieldset>
+  <legend>
+    Docker
+  </legend>
+  <%= form.input :docker_build_method, help: docker_build_methods_help_text do %>
+    <%= form.select :docker_build_method,
+        Project::DOCKER_BUILD_METHODS.map { |method| [method[:label], method[:method]] },
+        {},
+        class: "form-control"
+    %>
+  <% end %>
+
+  <%= form.input :docker_release_branch, help: 'New commits on this branch will cause a docker image to be built when a webhook arrives.' %>
+  <%= form.input :dockerfiles, help: 'Space separated list of dockerfiles to build, default: Dockerfile' %>
+</fieldset>

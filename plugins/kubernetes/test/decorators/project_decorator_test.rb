@@ -17,7 +17,7 @@ describe Project do
 
     it "cleans them up when getting soft deleted" do
       assert_difference 'Kubernetes::DeployGroupRole.count', -4 do
-        project.soft_delete!
+        project.soft_delete!(validate: false)
       end
     end
   end
@@ -31,7 +31,7 @@ describe Project do
 
     it "cleans them up when getting soft deleted" do
       assert_difference 'Kubernetes::Role.not_deleted.count', -2 do
-        project.soft_delete!
+        project.soft_delete!(validate: false)
       end
     end
   end

@@ -58,6 +58,8 @@ module JsonRenderer
     json = {namespace => resource_json}
     JsonRenderer.add_includes(json, resource_list, requested_includes)
 
+    yield json if block_given?
+
     render status: status, json: json
   rescue ActiveRecord::AssociationNotFoundError, JsonRenderer::ForbiddenIncludesError
     render status: 400, json: {status: 400, error: $!.message}

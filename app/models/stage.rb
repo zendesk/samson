@@ -50,8 +50,8 @@ class Stage < ActiveRecord::Base
     end
   end
 
-  def self.build_clone(old_stage)
-    new(old_stage.attributes.except("id")).tap do |new_stage|
+  def self.build_clone(old_stage, attributes = {})
+    new(old_stage.attributes.except("id", "next_stage_ids").merge(attributes)).tap do |new_stage|
       Samson::Hooks.fire(:stage_clone, old_stage, new_stage)
       new_stage.command_ids = old_stage.command_ids
       new_stage.template_stage = old_stage
@@ -194,6 +194,15 @@ class Stage < ActiveRecord::Base
 
   def direct?
     !confirm? && no_reference_selection? && !deploy_requires_approval?
+  end
+
+  # A unique name to identify this stage in the whole system. useful for log files.
+  def unique_name
+    "#{project.name} / #{name}"
+  end
+
+  def url
+    Rails.application.routes.url_helpers.project_stage_url(project, self)
   end
 
   private

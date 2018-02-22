@@ -21,7 +21,7 @@ class OutboundWebhooksController < ApplicationController
 
   def destroy
     outbound_webhook = current_project.outbound_webhooks.find(params[:id])
-    outbound_webhook.soft_delete!
+    outbound_webhook.soft_delete!(validate: false)
 
     redirect_to project_webhooks_path(current_project)
   end

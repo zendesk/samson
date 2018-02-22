@@ -32,6 +32,7 @@ end
 ###
 
 require_relative "../lib/samson/env_check"
+# other requires should live at the bottom of the file
 
 module Samson
   class Application < Rails::Application
@@ -72,7 +73,7 @@ module Samson
           socket_failure_delay: 0.2
         )
       end
-      config.cache_store = :dalli_store, servers, options
+      config.cache_store = :mem_cache_store, servers, options
     end
 
     # Allow streaming
@@ -134,6 +135,8 @@ module Samson
     config.samson.stream_origin = ENV['STREAM_ORIGIN'].presence || config.samson.uri.to_s
     config.samson.deploy_origin = ENV['DEPLOY_ORIGIN'].presence || config.samson.uri.to_s
 
+    config.samson.deploy_timeout = Integer(ENV["DEPLOY_TIMEOUT"] || 2.hours.to_i)
+
     self.default_url_options = {
       host: config.samson.uri.host,
       protocol: config.samson.uri.scheme
@@ -159,6 +162,8 @@ module Samson
 
     unless ENV['PRECOMPILE']
       config.after_initialize do
+        require_relative "../lib/samson/mapped_database_exceptions"
+
         # Token used to request badges
         config.samson.badge_token = \
           Digest::MD5.hexdigest('badge_token' + Samson::Application.config.secret_key_base)
@@ -175,4 +180,7 @@ module Samson
 end
 
 require 'samson/hooks'
-require "#{Rails.root}/lib/samson/logging"
+
+require_relative "../lib/samson/logging"
+require_relative "../lib/samson/initializer_logging"
+require_relative "../app/models/job_queue" # need to load early or dev reload will lose the .enabled

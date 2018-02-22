@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../../test_helper'
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 1
 
 describe Kubernetes::Release do
   let(:build)  { builds(:docker_build) }
@@ -79,27 +79,37 @@ describe Kubernetes::Release do
 
     it "fails to save with missing deploy groups" do
       assert_create_fails do
-        Kubernetes::Release.create_release(release_params.except(:deploy_groups))
+        release_params.delete :grouped_deploy_group_roles
+        Kubernetes::Release.create_release(release_params)
       end
     end
 
     it "fails to save with empty deploy groups" do
       assert_create_fails do
-        Kubernetes::Release.create_release(release_params.tap { |params| params[:deploy_groups].clear })
+        release_params[:grouped_deploy_group_roles].first.clear
+        Kubernetes::Release.create_release(release_params)
       end
     end
 
-    it "fails to save with missing roles" do
-      assert_create_fails do
-        params = release_params.tap { |params| params[:deploy_groups].each { |dg| dg.delete(:roles) } }
-        Kubernetes::Release.create_release(params)
-      end
-    end
+    describe "blue green" do
+      before { app_server.blue_green = true }
 
-    it "fails to save with empty roles" do
-      assert_create_fails do
-        params = release_params.tap { |params| params[:deploy_groups].each { |dg| dg[:roles].clear } }
-        Kubernetes::Release.create_release(params)
+      it 'does not set when not using blue_green' do
+        app_server.blue_green = false
+        expect_file_contents_from_repo
+        assert_create_succeeds(release_params).blue_green_color.must_be_nil
+      end
+
+      it 'creates first as blue' do
+        expect_file_contents_from_repo
+        assert_create_succeeds(release_params).blue_green_color.must_equal "blue"
+      end
+
+      it 'creates followup as green' do
+        expect_file_contents_from_repo
+        release.blue_green_color = "blue"
+        Kubernetes::Release.any_instance.expects(:previous_successful_release).returns(release)
+        assert_create_succeeds(release_params).blue_green_color.must_equal "green"
       end
     end
   end
@@ -160,10 +170,21 @@ describe Kubernetes::Release do
     end
   end
 
-  describe "#builds" do
-    it "finds builds accross projects" do
-      release.project = nil
-      release.builds.must_equal [build]
+  describe "#previous_successful_release" do
+    before { release.deploy = deploys(:failed_staging_test) }
+
+    it "finds successful release" do
+      release.previous_successful_release.must_equal kubernetes_releases(:test_release)
+    end
+
+    it "is nil when non was found" do
+      deploys(:succeeded_test).delete
+      release.previous_successful_release.must_be_nil
+    end
+
+    it "is ignores failed releases" do
+      deploys(:succeeded_test).job.update_column(:status, 'failed')
+      release.previous_successful_release.must_be_nil
     end
   end
 
@@ -172,41 +193,44 @@ describe Kubernetes::Release do
   end
 
   def release_params
-    {
+    @release_params ||= {
+      builds: [build],
       git_sha: build.git_sha,
       git_ref: build.git_ref,
       project: project,
       user: user,
       deploy: deploys(:succeeded_test),
-      deploy_groups: [
-        {
-          deploy_group: deploy_group,
-          roles: [
-            {
-              role: app_server,
-              replicas: 1,
-              requests_cpu: 0.5,
-              requests_memory: 20,
-              limits_cpu: 1,
-              limits_memory: 50
-            }
-          ]
-        }
+      grouped_deploy_group_roles: [
+        [
+          Kubernetes::DeployGroupRole.new(
+            deploy_group: deploy_group,
+            kubernetes_role: app_server,
+            replicas: 1,
+            requests_cpu: 0.5,
+            requests_memory: 20,
+            limits_cpu: 1,
+            limits_memory: 50,
+            delete_resource: false
+          )
+        ]
       ]
     }
   end
 
   def multiple_roles_release_params
     release_params.tap do |params|
-      params[:deploy_groups].each do |dg|
-        dg[:roles].push(
-          role: resque_worker,
+      params[:grouped_deploy_group_roles].each do |dgrs|
+        copy = dgrs.first.dup
+        copy.attributes = {
+          kubernetes_role: resque_worker,
           replicas: 2,
           limits_cpu: 2,
           limits_memory: 100,
           requests_cpu: 1,
-          requests_memory: 50
-        )
+          requests_memory: 50,
+          delete_resource: false
+        }
+        dgrs.push(copy)
       end
     end
   end

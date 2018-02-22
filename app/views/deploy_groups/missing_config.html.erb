@@ -1,0 +1,51 @@
+<%= page_title "#{@deploy_group.name} Missing Config" %>
+
+<section class="form-horizontal">
+  <%= form_tag "?", method: :get, class: "form-horizontal" do %>
+    <div class="col-md-2">
+      <%= label_tag "Deploy group" %>
+    </div>
+    <div class="col-md-2">
+      <%= live_select_tag :compare, options_from_collection_for_select(DeployGroup.where.not(id: @deploy_group.id).sort_by(&:natural_order), :permalink, :name) %>
+    </div>
+    <div class="col-md-2">
+      <%= submit_tag "Compare", class: 'btn btn-primary' %>
+    </div>
+    <br/><br/>
+
+    <% if @diff %>
+      <% if @diff.empty? %>
+        No diff found!
+      <% else %>
+        <% @diff.each do |project_permalink, sections| %>
+          <h2>Project <%= link_to_if project_permalink != "global", project_permalink, project_path(project_permalink) %></h2>
+
+          <% sections.each do |section, diff| %>
+            <h3><%= section %></h3>
+
+            <table class="table">
+              <% if section == "Environment" %>
+                <tr><th>Item</th><th>History</th><th>Value</th></tr>
+              <% end %>
+              <% diff.each do |item| %>
+                <% case item %>
+                <% when EnvironmentVariable %>
+                  <tr>
+                    <td><%= item.name %></td>
+                    <td><%= link_to_history(item, counter: false) %></td>
+                    <td><%= item.value %></td>
+                  </tr>
+                <% when String %>
+                  <tr>
+                    <td><%= link_to item, secret_path(item) %></td>
+                  </tr>
+                <% else raise("WUT #{item.class}") %>
+                <% end %>
+              <% end %>
+            </table>
+          <% end %>
+        <% end %>
+      <% end %>
+    <% end %>
+  <% end %>
+</section>

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 2
 
 describe Lock do
   let(:user) { users(:deployer) }
@@ -31,6 +31,11 @@ describe Lock do
       it "is valid with description" do
         lock.description = "X"
         assert_valid lock
+      end
+
+      it "is invalid with a delete_at in the past" do
+        lock.delete_at = 1.day.ago
+        refute_valid_on lock, :delete_at, "Delete at Date must be in the future"
       end
     end
 
@@ -91,7 +96,7 @@ describe Lock do
       end
 
       it "does not find deleted" do
-        lock.soft_delete!
+        lock.soft_delete!(validate: false)
         Lock.global.must_be_empty
       end
     end
@@ -309,7 +314,7 @@ describe Lock do
     it "expires when lock is soft deleted" do
       lock # trigger create
       Lock.send(:all_cached).must_equal [lock]
-      lock.soft_delete!
+      lock.soft_delete!(validate: false)
       assert_sql_queries 1 do
         Lock.send(:all_cached).must_equal []
       end

@@ -84,11 +84,14 @@ Samson::Application.routes.draw do
 
   resources :deploy_groups do
     member do
-      post :deploy_all
-      get :create_all_stages_preview
-      post :create_all_stages
-      post :merge_all_stages
-      post :delete_all_stages
+      get :missing_config
+    end
+
+    resource :mass_rollouts, only: [:new, :create, :destroy] do
+      collection do
+        post :merge
+        post :deploy
+      end
     end
   end
 
@@ -118,6 +121,7 @@ Samson::Application.routes.draw do
   post '/api/locks', to: 'locks#create'
   delete '/api/locks/:id', to: 'locks#destroy'
   delete '/locks', to: 'locks#destroy_via_resource'
+  delete '/api/locks', to: 'locks#destroy_via_resource'
   get '/api/projects', to: 'projects#index'
   post '/api/projects/:project_id/automated_deploys', to: 'automated_deploys#create'
   get '/api/deploys/active_count', to: 'deploys#active_count'

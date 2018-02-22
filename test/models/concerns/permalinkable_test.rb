@@ -147,7 +147,7 @@ describe Permalinkable do
 
   describe "#free_permalink_for_deletion" do
     it "frees the permalink when soft deleting" do
-      project.soft_delete!
+      project.soft_delete!(validate: false)
       project.permalink.must_match /\Afoo-deleted-\d+\z/
     end
   end

@@ -19,7 +19,6 @@ module.exports = function(config) {
       '<%= resolve_javascript("angular-mocks/angular-mocks.js") %>',
       '<%= resolve_javascript("underscore/underscore.js") %>',
       'app/assets/javascripts/underscore_mixins.js',
-      '<%= resolve_javascript("moment/moment.js") %>',
       'test/angular/test_helper.js',
       'app/assets/javascripts/app.js',
       'app/assets/javascripts/controllers/**/*.js',

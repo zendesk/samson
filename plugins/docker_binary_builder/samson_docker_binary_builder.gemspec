@@ -4,4 +4,5 @@ Gem::Specification.new 'samson_docker_binary_builder', '0.0.0' do |s|
   s.authors = ['Shane Hender', 'Fabio Neves', 'Stuart Gray', 'Andrei Balcanasu']
   s.email = ['henders@gmail.com']
   s.files = Dir['{app,config,db,lib}/**/*']
+  s.add_runtime_dependency 'docker-api'
 end

@@ -6,14 +6,16 @@ module Samson
       # timeout could be done more reliably with timeout(1) from gnu coreutils ... but that would add another dependency
       # popen vs timeout http://stackoverflow.com/questions/17237743/timeout-within-a-popen-works-but-popen-inside-a-timeout-doesnt
       # TODO: stream output so we have a partial output when command times out
-      def execute(*command, timeout:, whitelist_env: [], env: {}, err: [:child, :out])
+      def execute(*command, timeout:, whitelist_env: [], env: {}, err: [:child, :out], dir: nil)
         raise ArgumentError, "Positive timeout required" if timeout <= 0
         env = ENV.to_h.slice(*whitelist_env).merge(env)
         pio = nil
+        popen_options = { unsetenv_others: true, err: err }
+        popen_options[:chdir] = dir if dir
 
         Timeout.timeout(timeout) do
           begin
-            pio = IO.popen(env, command.map(&:to_s), unsetenv_others: true, err: err)
+            pio = IO.popen(env, command.map(&:to_s), popen_options)
             output = pio.read
             pio.close
             [$?.success?, output]

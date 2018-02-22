@@ -12,12 +12,11 @@ module SamsonGcloud
 
         builds.each do |build|
           digest = build.docker_repo_digest
-          next unless digest =~ /(^|\/|\.)gcr.io\// # gcr.io or https://gcr.io or region like asia.gcr.io
+          next unless digest.match?(/(^|\/|\.)gcr.io\//) # gcr.io or https://gcr.io or region like asia.gcr.io
           base = digest.split('@').first
           tag = deploy.stage.permalink
           command = [
-            "gcloud", *SamsonGcloud.container_in_beta, "container", "images", "add-tag", digest, "#{base}:#{tag}",
-            "--quiet", *SamsonGcloud.cli_options
+            "gcloud", "container", "images", "add-tag", digest, "#{base}:#{tag}", "--quiet", *SamsonGcloud.cli_options
           ]
           success, output = Samson::CommandExecutor.execute(*command, timeout: 10, whitelist_env: ["PATH"])
           deploy.job.append_output!(

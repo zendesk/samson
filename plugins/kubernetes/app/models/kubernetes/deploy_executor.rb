@@ -31,7 +31,7 @@ module Kubernetes
         @output,
         @job,
         @reference,
-        images: @job.project.docker_image_building_disabled? && used_images
+        build_selectors: build_selectors
       )
     end
 
@@ -52,18 +52,18 @@ module Kubernetes
 
     def execute(*)
       verify_kubernetes_templates!
-      @build_finder.ensure_successful_builds
+      @builds = @build_finder.ensure_successful_builds
       return false if cancelled?
-      release = create_release
+      @release = create_release
 
-      prerequisites, deploys = release.release_docs.partition(&:prerequisite?)
+      prerequisites, deploys = @release.release_docs.partition(&:prerequisite?)
       if prerequisites.any?
         @output.puts "First deploying prerequisite ..." if deploys.any?
-        return false unless deploy_and_watch(release, prerequisites)
+        return false unless deploy_and_watch(prerequisites)
         @output.puts "Now deploying other roles ..." if deploys.any?
       end
       if deploys.any?
-        return false unless deploy_and_watch(release, deploys)
+        return false unless deploy_and_watch(deploys)
       end
       true
     end
@@ -72,14 +72,14 @@ module Kubernetes
 
     # check all pods and see if they are running
     # once they are running check if they are stable (for apps only, since jobs are finished and will not change)
-    def wait_for_resources_to_complete(release, release_docs)
+    def wait_for_resources_to_complete(release_docs)
       raise "prerequisites should not check for stability" if @testing_for_stability
       @wait_start_time = Time.now
       stable_ticks = CHECK_STABLE / TICK
       @output.puts "Waiting for pods to be created"
 
       loop do
-        statuses = pod_statuses(release, release_docs)
+        statuses = pod_statuses(release_docs)
         return success if statuses.none?
         not_ready = statuses.reject(&:live)
 
@@ -116,32 +116,35 @@ module Kubernetes
       end
     end
 
-    def pod_statuses(release, release_docs)
-      pods = fetch_pods(release)
+    def pod_statuses(release_docs)
+      pods = fetch_pods
       release_docs.flat_map { |release_doc| release_statuses(pods, release_doc) }
     end
 
     # efficient pod fetching by querying once per cluster instead of once per deploy group
-    def fetch_pods(release)
-      release.clients.flat_map do |client, query|
+    def fetch_pods
+      @release.clients.flat_map do |client, query|
         pods = SamsonKubernetes.retry_on_connection_errors { client.get_pods(query) }
         pods.map! { |p| Kubernetes::Api::Pod.new(p, client: client) }
       end
     end
 
-    def show_failure_cause(release, release_docs, statuses)
+    def show_failure_cause(release_docs, statuses)
       release_docs.each { |doc| print_resource_events(doc) }
       log_end_time = Integer(ENV['KUBERNETES_LOG_TIMEOUT'] || '20').seconds.from_now
 
       statuses.reject(&:live).select(&:pod).each do |status|
         pod = status.pod
-        deploy_group = deploy_group_for_pod(pod, release)
-        @output.puts "\n#{deploy_group.name} pod #{pod.name}:"
+        @output.puts "\n#{pod_identifier(pod)}:"
         print_pod_events(pod)
         @output.puts
         print_pod_logs(pod, log_end_time)
         @output.puts "\n------------------------------------------\n"
       end
+    end
+
+    def pod_identifier(pod)
+      "#{deploy_group_for_pod(pod).name} pod #{pod.name}"
     end
 
     # show why container failed to boot
@@ -196,10 +199,10 @@ module Kubernetes
       end
     end
 
-    def unstable!(reason, release_statuses)
+    def unstable!(reason, bad_release_statuses)
       @output.puts "UNSTABLE: #{reason}"
-      release_statuses.select(&:pod).each do |status|
-        @output.puts "  #{status.pod.namespace}.#{status.pod.name}: #{status.details}"
+      bad_release_statuses.select(&:pod).each do |status|
+        @output.puts "  #{pod_identifier(status.pod)}: #{status.details}"
       end
     end
 
@@ -272,20 +275,30 @@ module Kubernetes
     def rollback(release_docs)
       release_docs.each do |release_doc|
         begin
-          action = (release_doc.previous_resources.any? ? 'Rolling back' : 'Deleting')
-          @output.puts "#{action} #{release_doc.deploy_group.name} role #{release_doc.kubernetes_role.name}"
-          release_doc.revert
+          if release_doc.blue_green_color
+            # NOTE: service is not rolled back since it was not changed during deploy
+            delete_blue_green_resources(release_doc)
+          else
+            puts_action(release_doc.previous_resources.any? ? 'Rolling back' : 'Deleting', release_doc)
+            release_doc.revert
+          end
         rescue # ... still show events and logs if somehow the rollback fails
           @output.puts "FAILED: #{$!.message}"
         end
       end
     end
 
+    def puts_action(action, release_doc)
+      blue_green = " #{release_doc.blue_green_color.upcase} resources for" if release_doc.blue_green_color
+      @output.puts "#{action}#{blue_green} #{release_doc.deploy_group.name} role #{release_doc.kubernetes_role.name}"
+    end
+
     # create a release, storing all the configuration
     def create_release
       release = Kubernetes::Release.create_release(
+        builds: @builds,
         deploy_id: @job.deploy.id,
-        deploy_groups: deploy_group_configs,
+        grouped_deploy_group_roles: grouped_deploy_group_roles,
         git_sha: @job.commit,
         git_ref: @reference,
         user: @job.user,
@@ -300,10 +313,9 @@ module Kubernetes
       release
     end
 
-    def deploy_group_configs
+    def grouped_deploy_group_roles
       @deploy_group_configs ||= begin
-        # load all role configs to avoid N+1s
-        roles_configs = Kubernetes::DeployGroupRole.where(
+        deploy_group_roles = Kubernetes::DeployGroupRole.where(
           project_id: @job.project_id,
           deploy_group: @job.deploy.stage.deploy_groups.map(&:id)
         )
@@ -311,63 +323,66 @@ module Kubernetes
         # roles that exist in the repo for this sha
         roles_present_in_repo = Kubernetes::Role.configured_for_project(@job.project, @job.commit)
 
-        # build config for every cluster and role we want to deploy to
+        # check that all roles have a matching deploy_group_role
+        # and all roles are configured
         errors = []
-        group_configs = @job.deploy.stage.deploy_groups.map do |group|
-          group_role_configs = roles_configs.select { |dgr| dgr.deploy_group_id == group.id }
+        groups = @job.deploy.stage.deploy_groups.map do |deploy_group|
+          group_roles = deploy_group_roles.select { |dgr| dgr.deploy_group_id == deploy_group.id }
 
-          if missing = (group_role_configs.map(&:kubernetes_role) - roles_present_in_repo).presence
+          # safe some sql queries during release creation
+          group_roles.each do |dgr|
+            dgr.deploy_group = deploy_group
+            found = roles_present_in_repo.detect { |r| r.id == dgr.kubernetes_role_id }
+            dgr.kubernetes_role = found if found
+          end
+
+          if missing = (group_roles.map(&:kubernetes_role) - roles_present_in_repo).presence
             files = missing.map(&:config_file).sort
             raise(
               Samson::Hooks::UserError,
-              "Could not find config files for #{group.name} #{files.join(", ")} at #{@job.commit}"
+              "Could not find config files for #{deploy_group.name} #{files.join(", ")} at #{@job.commit}"
             )
           end
 
-          if extra = (roles_present_in_repo - group_role_configs.map(&:kubernetes_role)).presence
+          if extra = (roles_present_in_repo - group_roles.map(&:kubernetes_role)).presence
             roles = extra.map(&:name).join(', ')
             raise(
               Samson::Hooks::UserError,
-              "Role #{roles} for #{group.name} is not configured, but in repo at #{@job.commit}. " \
+              "Role #{roles} for #{deploy_group.name} is not configured, but in repo at #{@job.commit}. " \
               "Remove it from the repo or configure it via the stage page."
             )
           end
 
-          roles = roles_present_in_repo.map do |role|
-            role_config = group_role_configs.detect { |dgr| dgr.kubernetes_role_id == role.id } || raise
-            {
-              role: role,
-              replicas: role_config.replicas,
-              requests_cpu: role_config.requests_cpu,
-              requests_memory: role_config.requests_memory,
-              limits_cpu: role_config.limits_cpu,
-              limits_memory: role_config.limits_memory
-            }
-          end
-
-          {deploy_group: group, roles: roles}
+          group_roles
         end
 
         raise Samson::Hooks::UserError, errors.join("\n") if errors.any?
-        group_configs
+        groups
       end
     end
 
     # updates resources via kubernetes api
     def deploy(release_docs)
       release_docs.each do |release_doc|
-        @output.puts "Creating for #{release_doc.deploy_group.name} role #{release_doc.kubernetes_role.name}"
-        release_doc.deploy
+        puts_action "Deploying", release_doc
+        if release_doc.blue_green_color
+          non_service_resources(release_doc).each(&:deploy)
+        else
+          release_doc.deploy
+        end
       end
     end
 
-    def deploy_and_watch(release, release_docs)
+    def deploy_and_watch(release_docs)
       deploy(release_docs)
-      result = wait_for_resources_to_complete(release, release_docs)
+      result = wait_for_resources_to_complete(release_docs)
       if result == true
+        if blue_green = release_docs.select(&:blue_green_color).presence
+          finish_blue_green_deployment(blue_green)
+        end
         true
       else
-        show_failure_cause(release, release_docs, result)
+        show_failure_cause(release_docs, result)
         rollback(release_docs) if @job.deploy.kubernetes_rollback
         @output.puts "DONE"
         false
@@ -384,13 +399,13 @@ module Kubernetes
     end
 
     # find deploy group without extra sql queries
-    def deploy_group_for_pod(pod, release)
-      release.release_docs.detect { |rd| break rd.deploy_group if rd.deploy_group_id == pod.deploy_group_id }
+    def deploy_group_for_pod(pod)
+      @release.release_docs.detect { |rd| break rd.deploy_group if rd.deploy_group_id == pod.deploy_group_id }
     end
 
-    # all images used ... they vary by role and not by deploy-group
-    def used_images
-      temp_release_docs.uniq(&:kubernetes_role_id).flat_map(&:images).uniq
+    # vary by role and not by deploy-group
+    def build_selectors
+      temp_release_docs.uniq(&:kubernetes_role_id).flat_map(&:build_selectors).uniq
     end
 
     # verify with a temp release so we can verify everything before creating a real release
@@ -398,9 +413,9 @@ module Kubernetes
     def verify_kubernetes_templates!
       # - make sure each file exists
       # - make sure each deploy group has consistent labels
-      deploy_group_configs.each do |config|
-        primary_resources = config.fetch(:roles).map do |role_config|
-          role = role_config.fetch(:role)
+      grouped_deploy_group_roles.each do |deploy_group_roles|
+        primary_resources = deploy_group_roles.map do |deploy_group_role|
+          role = deploy_group_role.kubernetes_role
           config = role.role_config_file(@job.commit)
           raise Samson::Hooks::UserError, "Error parsing #{role.config_file}" unless config
           config.primary
@@ -415,16 +430,46 @@ module Kubernetes
     def temp_release_docs
       @temp_release_docs ||= begin
         release = Kubernetes::Release.new(project: @job.project, git_sha: @job.commit, git_ref: 'master')
-        deploy_group_configs.flat_map do |config|
-          config.fetch(:roles).map do |role|
-            Kubernetes::ReleaseDoc.new(
-              kubernetes_release: release,
-              deploy_group: config.fetch(:deploy_group),
-              kubernetes_role: role.fetch(:role)
-            )
-          end
+        grouped_deploy_group_roles.flatten.map do |deploy_group_role|
+          Kubernetes::ReleaseDoc.new(
+            kubernetes_release: release,
+            deploy_group: deploy_group_role.deploy_group,
+            kubernetes_role: deploy_group_role.kubernetes_role
+          )
         end
       end
+    end
+
+    def finish_blue_green_deployment(release_docs)
+      switch_blue_green_service(release_docs)
+      previous = @release.previous_successful_release
+      if previous && previous.blue_green_color != @release.blue_green_color
+        previous.release_docs.each { |d| delete_blue_green_resources(d) }
+      end
+    end
+
+    def switch_blue_green_service(release_docs)
+      release_docs.each do |release_doc|
+        next unless services = service_resources(release_doc).presence
+        @output.puts "Switching service for #{release_doc.deploy_group.name} " \
+          "role #{release_doc.kubernetes_role.name} to #{release_doc.blue_green_color.upcase}"
+        services.each(&:deploy)
+      end
+    end
+
+    def delete_blue_green_resources(release_doc)
+      puts_action "Deleting", release_doc
+      non_service_resources(release_doc).each(&:delete)
+    end
+
+    # used for blue_green deployment
+    def non_service_resources(release_doc)
+      release_doc.resources - service_resources(release_doc)
+    end
+
+    # used for blue_green deployment
+    def service_resources(release_doc)
+      release_doc.resources.select { |r| r.is_a?(Kubernetes::Resource::Service) }
     end
   end
 end

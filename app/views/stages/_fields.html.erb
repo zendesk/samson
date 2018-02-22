@@ -48,6 +48,8 @@
   <% end %>
 
   <%= form.input :builds_in_environment, as: :check_box, label: "Builds available in environment", help: "Useful for manual docker deploys or artifact extraction, format is BUILD_FROM_Dockerfile=" %>
+
+  <%= Samson::Hooks.render_views(:stage_form_checkbox, self, form: form) %>
 </fieldset>
 
 <%= render 'commands', form: form %>

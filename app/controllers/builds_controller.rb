@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 class BuildsController < ApplicationController
-  EXTERNAL_BUILD_ATTRIBUTES = [:external_id, :docker_repo_digest].freeze
+  EXTERNAL_BUILD_ATTRIBUTES = [:external_url, :external_status, :docker_repo_digest].freeze
   include CurrentProject
 
   before_action :authorize_resource!
@@ -14,8 +14,8 @@ class BuildsController < ApplicationController
       if external = search.delete(:external).presence
         @builds =
           case external.to_s
-          when "true" then @builds.where.not(external_id: nil)
-          when "false" then @builds.where(external_id: nil)
+          when "true" then @builds.where.not(external_status: nil)
+          when "false" then @builds.where(external_status: nil)
           else raise
           end
       end
@@ -34,17 +34,22 @@ class BuildsController < ApplicationController
   end
 
   def create
-    external_id = params.dig(:build, :external_id).presence
-    if external_id && @build = Build.where(external_id: external_id).first
-      @build.attributes = edit_build_params(validate: false)
-    else
-      @build = scope.new(new_build_params.merge(creator: current_user))
+    new = false
+    saved = false
+
+    Samson::Retry.retry_when_not_unique do
+      if registering_external_build? && @build = find_external_build
+        return head :unprocessable_entity if @build.docker_repo_digest
+        @build.attributes = edit_build_params(validate: false)
+      else
+        @build = scope.new(new_build_params.merge(creator: current_user))
+      end
+
+      new = @build.new_record?
+      saved = @build.save
     end
 
-    new = @build.new_record?
-    saved = @build.save
-
-    start_docker_build if saved && EXTERNAL_BUILD_ATTRIBUTES.all? { |e| @build.public_send(e).blank? }
+    start_docker_build if saved && !registering_external_build?
     respond_to_save saved, (new ? :created : :ok), :new
   end
 
@@ -75,6 +80,16 @@ class BuildsController < ApplicationController
 
   private
 
+  def find_external_build
+    build_params = params.require(:build)
+    scope = Build.where(git_sha: build_params.require(:git_sha))
+    if image_name = build_params[:image_name].presence
+      scope.where(image_name: image_name)
+    else
+      scope.where(dockerfile: build_params.require(:dockerfile))
+    end.first
+  end
+
   def find_build
     @build = Build.find(params[:id])
   end
@@ -86,21 +101,24 @@ class BuildsController < ApplicationController
   end
 
   def new_build_params
-    params.require(:build).permit(
+    build_params = params.require(:build)
+    build_params.delete(:external_id) # deprecated old attribute
+    build_params.permit(
       :git_ref, :name, :description, :dockerfile, :image_name, :docker_repo_digest, :git_sha,
-      :external_id, :external_status, :external_url,
+      :external_status, :external_url,
       *Samson::Hooks.fire(:build_permitted_params)
     )
   end
 
   def edit_build_params(validate:)
-    attributes = params.require(:build)
-    allowed = [:name, :description, :external_status]
+    build_params = params.require(:build)
+    build_params.delete(:external_id) # deprecated old attribute
+    allowed = [:name, :description, :external_status, :external_url]
     allowed << :docker_repo_digest unless @build.docker_repo_digest # can update external build to set digest
     if validate
-      attributes.permit(*allowed)
+      build_params.permit(*allowed)
     else
-      attributes.to_unsafe_h.slice(*allowed)
+      build_params.to_unsafe_h.slice(*allowed)
     end
   end
 
@@ -134,7 +152,11 @@ class BuildsController < ApplicationController
   end
 
   def registering_external_build?
-    action_name == "create" && EXTERNAL_BUILD_ATTRIBUTES.any? { |e| params.dig(:build, e).present? }
+    return @registering_external_build if defined?(@registering_external_build)
+    @registering_external_build = (
+      action_name == "create" &&
+      EXTERNAL_BUILD_ATTRIBUTES.any? { |e| params.dig(:build, e).present? }
+    )
   end
 
   def scope

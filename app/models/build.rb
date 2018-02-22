@@ -11,13 +11,12 @@ class Build < ActiveRecord::Base
 
   before_validation :nil_out_blanks
   before_validation :make_default_dockerfile_and_image_name_not_collide, on: :create
-  before_validation :set_default_external_status, on: :create
 
   validate :validate_docker_repo_digest_matches_git_sha, on: :create
   validate :validate_git_reference, on: :create
   validates :project, presence: true
   validates :git_sha, allow_nil: true, format: SHA1_REGEX
-  validates :dockerfile, presence: true, unless: :external_id
+  validates :dockerfile, presence: true, unless: :external?
   [:dockerfile, :image_name].each do |attribute|
     validates(
       :git_sha,
@@ -31,6 +30,12 @@ class Build < ActiveRecord::Base
   validates :external_status, inclusion: Job::VALID_STATUSES, allow_nil: true
 
   before_create :assign_number
+
+  def self.cancel_stalled_builds
+    builds_to_cancel = where('created_at < ?', Rails.application.config.samson.deploy_timeout.seconds.ago).
+      where(external_status: Job::ACTIVE_STATUSES)
+    builds_to_cancel.find_each { |b| b.update_attributes(external_status: 'cancelled') }
+  end
 
   def nice_name
     name.presence || "Build #{id}"
@@ -55,7 +60,11 @@ class Build < ActiveRecord::Base
   end
 
   def active?
-    external_id? ? !docker_repo_digest? : docker_build_job&.active?
+    if external?
+      !docker_repo_digest? && (!external_status || Job::ACTIVE_STATUSES.include?(external_status))
+    else
+      docker_build_job&.active?
+    end
   end
 
   private
@@ -69,10 +78,6 @@ class Build < ActiveRecord::Base
   # if we enforce uniqueness via image_name then having a default dockerfile set will break that uniqueness
   def make_default_dockerfile_and_image_name_not_collide
     self.dockerfile = nil if dockerfile == 'Dockerfile' && image_name
-  end
-
-  def set_default_external_status
-    self.external_status ||= 'succeeded' if external_id
   end
 
   def validate_docker_repo_digest_matches_git_sha
@@ -105,5 +110,9 @@ class Build < ActiveRecord::Base
   def assign_number
     biggest_number = project.builds.maximum(:number) || 0
     self.number = biggest_number + 1
+  end
+
+  def external?
+    external_status.present? || external_url.present?
   end
 end

@@ -58,10 +58,12 @@ describe AccessRequestsController do
         let(:role) { Role::DEPLOYER }
         let(:request_params) do
           {
-            manager_email: manager_email,
-            reason: reason,
-            project_ids: Project.all.pluck(:id),
-            role_id: role.id,
+            access_request: {
+              manager_email: manager_email,
+              reason: reason,
+              project_ids: Project.all.pluck(:id),
+              role_id: role.id,
+            },
             redirect_to: '/projects'
           }
         end
@@ -80,6 +82,14 @@ describe AccessRequestsController do
           it 'redirects to referrer' do
             assert_redirected_to '/projects'
           end
+        end
+
+        it 'invalid access request' do
+          request_params[:access_request][:manager_email] = nil
+          post :create, params: request_params
+
+          assert_response :unprocessable_entity
+          assert_select 'h1', text: 'Request access'
         end
 
         describe 'email' do

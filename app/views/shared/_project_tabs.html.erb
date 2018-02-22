@@ -30,7 +30,7 @@
     <%= link_to icon_tag('user'), project_user_project_roles_path(project) %>
   </li>
 
-  <% if admin_for_project? %>
+  <% if can? :read, :projects, @project %>
     <li class="<%= 'active' if active == 'settings' %>">
       <%= link_to icon_tag('cog'), edit_project_path(project) %>
     </li>

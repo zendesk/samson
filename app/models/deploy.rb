@@ -76,7 +76,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def short_reference
-    if reference =~ Build::SHA1_REGEX
+    if reference.match?(Build::SHA1_REGEX)
       reference[0...7]
     else
       reference

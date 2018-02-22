@@ -1,11 +1,15 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 4
 
 describe Stage do
   subject { stages(:test_staging) }
   let(:stage) { subject }
+
+  it "#unique_name" do
+    assert_equal "Foo / Staging", stage.unique_name
+  end
 
   describe "validations" do
     it "is valid" do
@@ -83,7 +87,7 @@ describe Stage do
     end
 
     it 'succeeds even if a stages points to a deleted stage' do
-      stage3.soft_delete!
+      stage3.soft_delete!(validate: false)
       stage1.update! next_stage_ids: [stage3.id]
 
       Stage.reset_order [stage2.id, stage1.id]
@@ -280,15 +284,20 @@ describe Stage do
     before do
       subject.notify_email_address = "test@test.ttt"
       subject.flowdock_flows = [FlowdockFlow.new(name: "test", token: "abcxyz", stage_id: subject.id)]
+      subject.next_stage_ids = [1, 2]
       subject.save
 
       @clone = Stage.build_clone(subject)
     end
 
     it "returns an unsaved copy of the given stage with exactly the same everything except id" do
-      @clone.attributes.except("id").except("template_stage_id").
-          must_equal subject.attributes.except("id").except("template_stage_id")
+      @clone.attributes.except("id", "next_stage_ids", "template_stage_id").
+          must_equal subject.attributes.except("id", "next_stage_ids", "template_stage_id")
       @clone.id.wont_equal subject.id
+    end
+
+    it "doesn't clone the deploy pipeline" do
+      @clone.next_stage_ids.wont_equal subject.next_stage_ids
     end
   end
 
@@ -393,7 +402,7 @@ describe Stage do
     it "soft deletes all it's StageCommand" do
       Stage.with_deleted do
         assert_difference "StageCommand.count", -1 do
-          stage.soft_delete!
+          stage.soft_delete!(validate: false)
         end
 
         assert_difference "StageCommand.count", +1 do
@@ -405,7 +414,7 @@ describe Stage do
     it "removes the stage from the pipeline of other stages" do
       other_stage = Stage.create!(project: stage.project, name: 'stage1', next_stage_ids: [stage.id])
       assert other_stage.next_stage_ids.include?(stage.id)
-      stage.soft_delete!
+      stage.soft_delete!(validate: false)
       refute other_stage.reload.next_stage_ids.include?(stage.id)
     end
   end
@@ -736,6 +745,12 @@ describe Stage do
     it "ignores failed" do
       deploy.job.update_column(:status, 'failed')
       stage.deployed_or_running_deploy.must_be_nil
+    end
+  end
+
+  describe "#url" do
+    it "builds" do
+      stage.url.must_equal "http://www.test-url.com/projects/foo/stages/staging"
     end
   end
 end

@@ -10,20 +10,8 @@ describe Samson::Parallelizer do
       Samson::Parallelizer.map([]).must_equal []
     end
 
-    it "does not produce threads when serial work is equally fast" do
-      Thread.expects(:new).never
-      Samson::Parallelizer.map([1]) { 2 }.must_equal [2]
-    end
-
-    it "fails fast when non-array is given" do
-      assert_raises ArgumentError do
-        Samson::Parallelizer.map([1].each_slice(2)) { 2 }
-      end
-    end
-
-    it "produces maximum amount of threads" do
-      Thread.expects(:new).times(10).returns([])
-      Samson::Parallelizer.map(Array.new(20)) { 1 }.must_equal(Array.new(20))
+    it "can handle non-arrays" do
+      Samson::Parallelizer.map([1].each_slice(2)) { |x| x }.must_equal [[1]]
     end
 
     it "works in reused threads" do

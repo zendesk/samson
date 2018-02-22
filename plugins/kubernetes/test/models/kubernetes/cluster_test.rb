@@ -97,24 +97,6 @@ describe Kubernetes::Cluster do
     end
   end
 
-  describe "#namespace_exists?" do
-    it 'is true when it exists' do
-      cluster.expects(:namespaces).returns(['a'])
-      assert cluster.namespace_exists?('a')
-    end
-
-    it "is false when it does not exist" do
-      cluster.expects(:namespaces).returns(['b'])
-      refute cluster.namespace_exists?('a')
-    end
-
-    it "is false api is unreachable" do
-      assert_request(:get, "http://foobar.server/api/v1/namespaces", to_return: {status: 404}) do
-        refute cluster.namespace_exists?('a')
-      end
-    end
-  end
-
   describe "#schedulable_nodes" do
     def stub_response
       stub_request(:get, "http://foobar.server/api/v1/nodes").to_return(body: {items: nodes}.to_json)

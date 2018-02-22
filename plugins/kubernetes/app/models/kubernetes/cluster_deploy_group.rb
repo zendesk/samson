@@ -14,8 +14,15 @@ module Kubernetes
     private
 
     def validate_namespace_exists
-      if cluster && namespace.present? && !cluster.namespace_exists?(namespace)
-        errors.add(:namespace, "named '#{namespace}' does not exist")
+      return if !cluster || namespace.blank?
+
+      begin
+        namespaces = cluster.namespaces
+        unless namespaces.include?(namespace)
+          errors.add(:namespace, "named '#{namespace}' does not exist, found: #{namespaces.join(", ")}")
+        end
+      rescue *SamsonKubernetes.connection_errors
+        errors.add(:namespace, "error looking up namespaces")
       end
     end
   end
