@@ -8,7 +8,7 @@ Each plugin is a rails engine.
 
 Available plugins:
 
- - [Airbrake notification on deploy](https://github.com/zendesk/samson/tree/master/plugins/airbrake)
+ - [Airbrake notification on deploy](https://github.com/zendesk/samson/tree/master/plugins/airbrake_hook)
  - [AWS ECR credential refresher](https://github.com/zendesk/samson/tree/master/plugins/aws_ecr)
  - [Datadog monitoring and deploy tracking](https://github.com/zendesk/samson/tree/master/plugins/datadog)
  - [Docker binary builder](https://github.com/zendesk/samson/tree/master/plugins/docker_binary_builder)

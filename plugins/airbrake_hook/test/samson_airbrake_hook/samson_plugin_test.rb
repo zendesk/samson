@@ -3,7 +3,7 @@ require_relative '../test_helper'
 
 SingleCov.covered!
 
-describe SamsonAirbrake::Engine do
+describe SamsonAirbrakeHook::Engine do
   describe :after_deploy do
     def notify
       Samson::Hooks.fire :after_deploy, deploy, users(:admin)
@@ -87,15 +87,15 @@ describe SamsonAirbrake::Engine do
 
   describe ".git_to_http" do
     it "converts git to http" do
-      SamsonAirbrake::Notification.send(:git_to_http, 'git@foo.com:a.git').must_equal 'https://foo.com/a'
+      SamsonAirbrakeHook::Notification.send(:git_to_http, 'git@foo.com:a.git').must_equal 'https://foo.com/a'
     end
 
     it "converts ssh git to http" do
-      SamsonAirbrake::Notification.send(:git_to_http, 'ssh://git@foo.com:a.git').must_equal 'https://foo.com/a'
+      SamsonAirbrakeHook::Notification.send(:git_to_http, 'ssh://git@foo.com:a.git').must_equal 'https://foo.com/a'
     end
 
     it "converts http git" do
-      SamsonAirbrake::Notification.send(:git_to_http, 'http://foo.com/a.git').must_equal 'http://foo.com/a'
+      SamsonAirbrakeHook::Notification.send(:git_to_http, 'http://foo.com/a.git').must_equal 'http://foo.com/a'
     end
   end
 end

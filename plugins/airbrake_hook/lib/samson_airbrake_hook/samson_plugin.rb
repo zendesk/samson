@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-module SamsonAirbrake
+module SamsonAirbrakeHook
   class Engine < Rails::Engine
   end
 
@@ -50,9 +50,9 @@ module SamsonAirbrake
 end
 
 Samson::Hooks.callback :after_deploy do |deploy, _buddy|
-  SamsonAirbrake::Notification.deliver_for(deploy)
+  SamsonAirbrakeHook::Notification.deliver_for(deploy)
 end
 
-Samson::Hooks.view :stage_form, 'samson_airbrake/stage_form'
+Samson::Hooks.view :stage_form, 'samson_airbrake_hook/stage_form'
 
 Samson::Hooks.callback(:stage_permitted_params) { :notify_airbrake }
