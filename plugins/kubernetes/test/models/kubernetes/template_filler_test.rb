@@ -179,10 +179,6 @@ describe Kubernetes::TemplateFiller do
     describe "service" do
       before { raw_template[:kind] = 'Service' }
 
-      it "sets node port" do
-        template.to_hash[:spec][:type].must_equal 'NodePort'
-      end
-
       it "does not override with blank service name" do
         doc.kubernetes_role.update_column(:service_name, '') # user left field empty
         template.to_hash[:metadata][:name].must_equal 'some-project-rc'
