@@ -1,8 +1,7 @@
 PATH
-  remote: plugins/airbrake
+  remote: plugins/airbrake_hook
   specs:
-    samson_airbrake (0.0.0)
-      airbrake
+    samson_airbrake_hook (0.0.0)
 
 PATH
   remote: plugins/assertible
@@ -567,7 +566,7 @@ DEPENDENCIES
   rails-assets-x-editable!
   rails-controller-testing
   rubocop
-  samson_airbrake!
+  samson_airbrake_hook!
   samson_assertible!
   samson_aws_ecr!
   samson_datadog!
