@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180209012126) do
+ActiveRecord::Schema.define(version: 20180222155246) do
 
   create_table "audits", force: :cascade do |t|
     t.integer "auditable_id", null: false
@@ -213,9 +213,9 @@ ActiveRecord::Schema.define(version: 20180209012126) do
     t.integer "deploy_group_id", null: false
     t.integer "replicas", null: false
     t.integer "limits_memory", null: false
-    t.decimal "limits_cpu", precision: 4, scale: 2, null: false
+    t.decimal "limits_cpu", precision: 6, scale: 2, null: false
     t.integer "kubernetes_role_id", null: false
-    t.decimal "requests_cpu", precision: 4, scale: 2, null: false
+    t.decimal "requests_cpu", precision: 6, scale: 2, null: false
     t.integer "requests_memory", null: false
     t.boolean "delete_resource", default: false, null: false
     t.index ["deploy_group_id"], name: "index_kubernetes_deploy_group_roles_on_deploy_group_id"
@@ -229,10 +229,10 @@ ActiveRecord::Schema.define(version: 20180209012126) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer "deploy_group_id"
-    t.decimal "limits_cpu", precision: 4, scale: 2, null: false
+    t.decimal "limits_cpu", precision: 6, scale: 2, null: false
     t.integer "limits_memory", null: false
     t.text "resource_template"
-    t.decimal "requests_cpu", precision: 4, scale: 2, null: false
+    t.decimal "requests_cpu", precision: 6, scale: 2, null: false
     t.integer "requests_memory", null: false
     t.boolean "delete_resource", default: false, null: false
     t.index ["kubernetes_release_id"], name: "index_kubernetes_release_docs_on_kubernetes_release_id"
@@ -271,7 +271,7 @@ ActiveRecord::Schema.define(version: 20180209012126) do
     t.integer "scope_id"
     t.string "scope_type"
     t.integer "memory", null: false
-    t.decimal "cpu", precision: 4, scale: 2, null: false
+    t.decimal "cpu", precision: 6, scale: 2, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "comment", limit: 512
@@ -380,6 +380,7 @@ ActiveRecord::Schema.define(version: 20180209012126) do
     t.string "dockerfiles"
     t.boolean "build_with_gcb", default: false, null: false
     t.boolean "show_gcr_vulnerabilities", default: false, null: false
+    t.boolean "kubernetes_allow_writing_to_root_filesystem", default: false, null: false
     t.index ["build_command_id"], name: "index_projects_on_build_command_id"
     t.index ["permalink"], name: "index_projects_on_permalink", unique: true, length: { permalink: 191 }
     t.index ["token"], name: "index_projects_on_token", unique: true, length: { token: 191 }
