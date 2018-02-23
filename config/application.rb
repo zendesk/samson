@@ -177,6 +177,12 @@ module Samson
   RELEASE_NUMBER = '\d+(:?\.\d+)*'
 end
 
+# Configure sensitive parameters which will be filtered from the log file
+# Must be here instead of in an initializer because plugin initializers run before app initializers
+# Used in plugins/airbrake which does not support the 'foo.bar' syntax as rails does
+# https://github.com/airbrake/airbrake-ruby/issues/137
+Rails.application.config.filter_parameters.concat [:password, :value, :value_hashed, :token, :access_token]
+
 require 'samson/hooks'
 
 require_relative "../lib/samson/logging"
