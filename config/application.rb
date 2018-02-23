@@ -17,8 +17,6 @@ if ['development', 'staging'].include?(Rails.env)
 end
 
 if ['staging', 'production'].include?(Rails.env)
-  require 'airbrake'
-  require 'airbrake/user_informer'
   require 'newrelic_rpm'
 else
   # avoids circular dependencies warning

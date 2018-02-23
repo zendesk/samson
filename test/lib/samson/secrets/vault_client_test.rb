@@ -72,7 +72,7 @@ describe Samson::Secrets::VaultClient do
     end
 
     it "does not fail when a single server fails" do
-      Airbrake.expects(:notify).times(2)
+      ErrorNotifier.expects(:notify).times(2)
       assert_vault_request :get, '?list=true', status: 500, times: 2 do
         client.list_recursive('').must_equal []
       end
@@ -90,7 +90,7 @@ describe Samson::Secrets::VaultClient do
     end
 
     it "does not prevent renewing all tokens when a single renew fails" do
-      Airbrake.expects(:notify).times(2)
+      ErrorNotifier.expects(:notify).times(2)
       assert_request(
         :put,
         "http://vault-land.com/v1/auth/token/renew-self",

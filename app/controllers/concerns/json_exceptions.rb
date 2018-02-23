@@ -15,7 +15,7 @@ module JsonExceptions
       render_json_error 400, exception.param => ["is required"]
     end
 
-    # otherwise renders a 500 and goes to airbrake
+    # otherwise renders a 500 and goes to error notifier
     # https://coderwall.com/p/ea5vtw/validating-rest-queries-with-rails
     base.rescue_from ActionController::UnpermittedParameters do |exception|
       raise unless request.format.json?

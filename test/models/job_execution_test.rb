@@ -354,7 +354,7 @@ describe JobExecution do
     end
 
     it "records exceptions to output" do
-      Airbrake.expects(:notify)
+      ErrorNotifier.expects(:notify)
       job.expects(:running!).raises("Oh boy")
       perform
       execution.output.to_s.must_include "JobExecution failed: Oh boy"
@@ -363,8 +363,8 @@ describe JobExecution do
       job.reload.output.wont_include '/gems/' # hides unimportant backtrace
     end
 
-    it "does not spam airbrake on user erorrs" do
-      Airbrake.expects(:notify).never
+    it "does not spam exception notifier on user erorrs" do
+      ErrorNotifier.expects(:notify).never
       job.expects(:running!).raises(Samson::Hooks::UserError, "Oh boy")
       perform
       execution.output.to_s.must_include "JobExecution failed: Oh boy"
@@ -372,7 +372,7 @@ describe JobExecution do
 
     it "does not show error backtraces in production to hide internals" do
       with_hidden_errors do
-        Airbrake.expects(:notify)
+        ErrorNotifier.expects(:notify)
         job.expects(:running!).raises("Oh boy")
         perform
         execution.output.to_s.must_include "JobExecution failed: Oh boy"
@@ -380,24 +380,11 @@ describe JobExecution do
       end
     end
 
-    it "shows airbrake error location" do
+    it "shows exception notifier error location" do
       with_hidden_errors do
-        Airbrake.expects(:notify_sync).returns('id' => "12345")
-        Airbrake.expects(:user_information).returns('href="http://foo.com/{{error_id}}"')
+        ErrorNotifier.expects(:notify).with { |_e, o| assert o.key?(:sync) }.returns('foo')
         job.expects(:running!).raises("Oh boy")
         perform
-        execution.output.to_s.must_include "JobExecution failed: Oh boy"
-        execution.output.to_s.must_include "http://foo.com/12345"
-      end
-    end
-
-    it "shows warnings to users when things went wrong instead of blowing up" do
-      with_hidden_errors do
-        Airbrake.expects(:notify_sync).returns({})
-        job.expects(:running!).raises("Oh boy")
-        perform
-        execution.output.to_s.must_include "JobExecution failed: Oh boy"
-        execution.output.to_s.must_include "Airbrake did not return an error id"
       end
     end
   end
@@ -484,7 +471,7 @@ describe JobExecution do
   describe "#make_tempdir" do
     # the actual issue we saw was Errno::ENOTEMPTY ... but that is harder to reproduce
     it "does not fail when directory cannot be removed" do
-      Airbrake.expects(:notify).with { |e| e.must_include "Notify: make_tempdir error No such" }
+      ErrorNotifier.expects(:notify).with { |e| e.must_include "Notify: make_tempdir error No such" }
 
       execution.send(:make_tempdir) do |dir|
         FileUtils.rm_rf(dir)

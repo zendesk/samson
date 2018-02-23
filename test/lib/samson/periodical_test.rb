@@ -75,9 +75,9 @@ describe Samson::Periodical do
       Samson::Periodical.run_once(:remove_expired_locks)
     end
 
-    it "sends errors to airbrake" do
+    it "sends errors to error notifier" do
       Lock.expects(:remove_expired_locks).raises custom_error
-      Airbrake.expects(:notify).
+      ErrorNotifier.expects(:notify).
         with(instance_of(custom_error), error_message: "Samson::Periodical remove_expired_locks failed")
       assert_raises custom_error do
         Samson::Periodical.run_once(:remove_expired_locks)
@@ -110,8 +110,8 @@ describe Samson::Periodical do
       Samson::Periodical.run.must_equal []
     end
 
-    it "sends errors to airbrake XXXX" do
-      Airbrake.expects(:notify).with(instance_of(custom_error), error_message: "Samson::Periodical foo failed")
+    it "sends errors to error notifier XXXX" do
+      ErrorNotifier.expects(:notify).with(instance_of(custom_error), error_message: "Samson::Periodical foo failed")
       Samson::Periodical.register(:foo, 'bar') { raise custom_error }
       tasks = Samson::Periodical.run
       sleep 0.05 # let task execute

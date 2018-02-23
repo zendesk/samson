@@ -10,7 +10,7 @@ class JobExecutionSubscriber
   rescue => exception
     # ideally append errors to log here, but would not work for before hooks and
     # would not be streamed to the user for after hooks
-    Airbrake.notify(
+    ErrorNotifier.notify(
       exception,
       error_message: "JobExecutionSubscriber failed: #{exception.message}",
       parameters: { job_url: @job.url }

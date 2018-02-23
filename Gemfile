@@ -66,11 +66,6 @@ group :sqlite do
   gem "sqlite3"
 end
 
-group :production, :staging do
-  gem 'airbrake'
-  gem 'airbrake-user_informer'
-end
-
 group :assets do
   gem 'ngannotate-rails'
   gem 'sass-rails'

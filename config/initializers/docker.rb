@@ -16,6 +16,6 @@ if !Rails.env.test? && !ENV['PRECOMPILE'] && ENV['DOCKER_FEATURE']
     end
   rescue
     warn "Unable to verify local docker!"
-    Airbrake.notify($!)
+    ErrorNotifier.notify($!)
   end
 end

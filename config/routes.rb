@@ -158,6 +158,7 @@ Samson::Application.routes.draw do
   end
 
   get '/ping', to: 'ping#show'
+  get '/error', to: 'ping#error'
 
   resources :access_requests, only: [:new, :create]
 

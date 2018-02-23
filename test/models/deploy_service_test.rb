@@ -246,7 +246,7 @@ describe DeployService do
       it "does not fail all callbacks when 1 callback fails" do
         service.stubs(:send_sse_deploy_update)
         service.expects(:send_sse_deploy_update).with('finish', anything).raises # first callback
-        Airbrake.expects(:notify)
+        ErrorNotifier.expects(:notify)
         DeployMailer.expects(:deploy_email).returns(stub(deliver_now: true))
         run_deploy
       end
