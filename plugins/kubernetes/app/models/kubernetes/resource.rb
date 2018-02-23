@@ -210,7 +210,8 @@ module Kubernetes
         [
           "metadata.resourceVersion",
           "spec.clusterIP",
-          *ENV["KUBERNETES_SERVICE_PERSISTENT_FIELDS"].to_s.split(",")
+          *ENV["KUBERNETES_SERVICE_PERSISTENT_FIELDS"].to_s.split(/\s,/),
+          *copy.dig(:metadata, :annotations, :"samson/persistent_fields").to_s.split(/\s,/)
         ].each do |keep|
           path = keep.split(".").map!(&:to_sym)
           old_value = resource.dig(*path)
