@@ -4,7 +4,6 @@ class Waitlist
   WAITLIST_KEY = 'deploy_waitlist'.freeze
   METADATA_KEY = '.metadata'.freeze
 
-
   def initialize(project_id, stage_id)
     @project_id = project_id
     @stage_id = stage_id
@@ -32,6 +31,14 @@ class Waitlist
 
   def head_updated_at
     @metadata[:head_updated_at]
+  end
+
+  def to_json
+    {
+      created_at: created_at,
+      head_updated_at: head_updated_at,
+      list: list
+     }
   end
 
   private

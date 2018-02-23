@@ -1,50 +1,95 @@
 <%
   waitlist = Waitlist.new(@project.id, @stage.id)
 %>
-<div style="margin-bottom: 20px; margin-top: 20px;">
-  <h2>Deployment Waitlist
-    <% if waitlist.created_at.present? %>
-      <span style="font-size:10px; font-style: italic;">
-        Active since: <%= waitlist.created_at.in_time_zone('America/Los_Angeles').strftime('%b %d, %Y %H:%M %Z') %>
-      </span>
-    <% end %>
-  </h2>
-  <form method="post" action="/deploy_waitlist/add" id="waitlist_form">
-    <% if waitlist.list.present? %>
-      <ol style="width: 60%">
-        <% waitlist.list.each_with_index do |deployer, index| %>
-        <li>
-          <%= deployer[:email] %>
-          <% if index == 0 && waitlist.head_updated_at.present? %>
-            <span style="font-weight: 600; font-size: 10px;">Head of queue for <%= time_ago_in_words(waitlist.head_updated_at.to_datetime) %></span>
-          <% else %>
-            <span style="font-size: 10px">In queue for <%= time_ago_in_words(deployer[:added].to_datetime) %></span>
-          <% end %>
-          <a href="#" onclick="removeUser('<%= index %>');" style="color: red; position: relative; float: right; margin-right: 5px;">
-            <span class="glyphicon glyphicon-remove"></span>
-          </a>
-        </li>
-        <% end %>
-      </ol>
-    <% else %>
-      <div>
-        (Queue is empty)
-      </div>
-    <% end %>
-    <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
-    <input type="hidden" name="stage" value="<%= @stage.id %>">
-    <input type="hidden" name="project" value="<%= @project.id %>">
-    <input type="hidden" name="deployer" value="<%= current_user.email %>"/>
-    <button onclick="submit();"><span class="glyphicon glyphicon-plus"></span> Add Me</button>
-  </form>
-
+<div id="waitlist" style="margin-bottom: 20px; margin-top: 20px;">
+  <h2>Deployment Waitlist <span style="font-size:10px; font-style: italic;" id="createdAt"/></h2>
+  <ol style="width: 60%" id="list"></ol>
+  <div style="display: none; margin: 25px;" id="empty">Such empty! ¯\_(ツ)_/¯</div>
+  <button onclick="addUser();"><span class="glyphicon glyphicon-plus"></span> Add Me</button>
 </div>
 
 <script>
-  function removeUser(user) {
-    document.getElementById("waitlist_form").action = '/deploy_waitlist/remove';
-    document.getElementById("waitlist_form").deployer.value = user;
-    document.getElementById("waitlist_form").submit();
-    return true;
+  var stageId = <%= @stage.id %>;
+  var projectId = <%= @project.id %>;
+  var deployer = '<%= current_user.email %>';
+  var authenticity_token = '<%= form_authenticity_token %>';
+  stage: stageId,
+
+  $( document ).ready(function(){
+    $.getScript( "https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.20.1/moment.min.js", function( data, textStatus, jqxhr ) {
+      $.getScript("https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.14/moment-timezone-with-data-2012-2022.min.js", function( data, textStatus, jqxhr ) {
+        drawList();
+      });
+    });
+  });
+
+  function drawList() {
+    $.ajax({
+      url: "/deploy_waitlist.json?stage=" + stageId + "&project=" + projectId,
+    }).done(function(wishlist) {
+      var createdAt = moment(wishlist.created_at).tz('America/Los_Angeles').format("MMM Do, YYYY h:mm a");
+      var headUpdatedAt =  moment(wishlist.head_updated_at).fromNow();
+      var deployers = wishlist.list;
+      if (createdAt) {
+        $("#createdAt").html("created " + createdAt);
+      }
+      var list =  $(document.createElement('ol')).attr('id','list')
+                                                 .css({ 'width'       : '60%',
+                                                        'list-style'  : 'none',
+                                                        'padding-left' : '0'});
+      if (deployers.length) {
+        $.each(deployers, function( index, value ) {
+          $(list).append(listItem(value, index));
+        });
+        var headSince = $(document.createElement('span')).css({'margin-left' : '10px',
+                                                               'font-size'   : '10px',
+                                                               'font-weight' : 600});
+        $(headSince).append("Head since " + headUpdatedAt)
+        $(list).find('li').first().append(headSince);
+        $("#empty").hide();
+      } else {
+        $("#empty").show();
+      }
+      $("#list").replaceWith(list);
+      setTimeout(drawList, 3000);
+    });
+  }
+
+  function listItem(deployer, index) {
+    var item = $(document.createElement('li'));
+    var added = $(document.createElement('span')).css('margin-left', '10px').css('font-size', '10px');
+    $(added).append("Enqueued " + moment(deployer.added).fromNow());
+    $(item).append(deployer.email).append(added);
+    var remove = $(document.createElement('a'));
+    $(remove).attr('href', '#');
+    $(remove).click(function() {
+      removeUser(index);
+    })
+    $(remove).css({
+                    'color' : 'red',
+                    'margin-right' : '5px'
+                  });
+    $(remove).append('<span class="glyphicon glyphicon-remove"></span>');
+    $(item).prepend(remove);
+    return item;
+  }
+
+  function addUser() {
+    $.post( "/deploy_waitlist/add", $.extend({}, postParams(), { deployer: deployer}), function( data ) {
+      drawList(data);
+    });
+  }
+  function removeUser(index) {
+    $.post( "/deploy_waitlist/remove", $.extend({}, postParams(), { deployer: index}), function( data ) {
+      drawList(data);
+    });
+  }
+
+  function postParams() {
+    return {
+              authenticity_token: authenticity_token,
+              stage: stageId,
+              project: projectId
+            }
   }
 </script>
