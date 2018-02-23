@@ -3,7 +3,7 @@ require_relative '../test_helper'
 
 SingleCov.covered!
 
-describe SamsonRollbar do
+describe SamsonRollbarHook do
   let(:deploy) { deploys(:succeeded_test) }
   let(:stage) { deploy.stage }
 
