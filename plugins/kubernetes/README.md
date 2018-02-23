@@ -142,6 +142,7 @@ samson will then override the `project` labels and keep deployments/services uni
 ### Service updates
 
 Too keep fields/labels that are manually managed persistent during updates, use `KUBERNETES_SERVICE_PERSISTENT_FIELDS`, see .env.example
+or set `metadata.annotations.samson/persistent_fields`
 
 ### Blue/Green Deployment
 
