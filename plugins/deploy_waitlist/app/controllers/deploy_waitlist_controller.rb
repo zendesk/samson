@@ -1,32 +1,31 @@
 class DeployWaitlistController < ApplicationController
 
+  def show
+    respond_to do |format|
+      format.html
+      format.json { render json: current_waitlist.to_json }
+    end
+  end
+
   def add
-    current_waitlist.deployers += [{ email: deployer, added: now }]
-    redirect_to project_stage_path(project, stage)
+    Rails.logger.warn("current_waitlist: #{current_waitlist.list}")
+    current_waitlist.add({ email: deployer, added: now })
+    render json: current_waitlist.to_json
   end
 
   def remove
     current_waitlist.remove(deployer.to_i)
-    redirect_to project_stage_path(project, stage)
+    render json: current_waitlist.to_json
   end
 
   private
 
   def now
-    Time.now.utc
-  end
-
-  def save_queue
-    Rails.cache.write(key, current_waitlist)
-    Rails.cache.write(metadata_key, metadata)
+    Time.now
   end
 
   def current_waitlist
     @waitlist ||= Waitlist.new(project.id, stage.id)
-  end
-
-  def queue_action
-    params[:queue_action]
   end
 
   def deployer
@@ -34,10 +33,10 @@ class DeployWaitlistController < ApplicationController
   end
 
   def stage
-    Stage.find_by_name(params[:stage])
+    Stage.find params[:stage]
   end
 
   def project
-    Project.find_by_name(params[:project])
+    Project.find params[:project]
   end
 end
