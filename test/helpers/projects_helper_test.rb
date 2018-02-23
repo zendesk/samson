@@ -111,7 +111,7 @@ describe ProjectsHelper do
   describe "#docker_build_methods_help_text" do
     it 'returns help text html for build methods' do
       result = docker_build_methods_help_text
-      result.must_include '<b>Docker images build externally: </b>'
+      result.must_include '<b>Docker images built externally: </b>'
       result.must_include '<b>Build docker with GCB CLI: </b>'
       result.wont_include '<b>Samson manages docker images: </b>'
     end

@@ -4,7 +4,7 @@ class Project < ActiveRecord::Base
   DEFAULT_DOCKER_BUILD_METHOD = 'samson'
   DOCKER_BUILD_METHODS = [
     {
-      label: 'Docker images build externally',
+      label: 'Docker images built externally',
       method: 'docker_image_building_disabled',
       help_text: 'Disable local building of docker images, they must be added via api.'
     },
