@@ -92,10 +92,10 @@ module Kubernetes
     end
 
     def requests_below_limits
-      if limits_cpu && requests_cpu > limits_cpu
+      if limits_cpu && requests_cpu && requests_cpu > limits_cpu
         errors.add :requests_cpu, "must be less than or equal to the limit"
       end
-      if limits_memory && requests_memory > limits_memory
+      if limits_memory && requests_memory && requests_memory > limits_memory
         errors.add :requests_memory, "must be less than or equal to the limit"
       end
     end
@@ -105,13 +105,14 @@ module Kubernetes
       if limits_cpu && limits_cpu > minimum_requested_cpu * MAX_LIMITS_TO_REQUESTS_RATIO
         errors.add :limits_cpu, "must be less than #{MAX_LIMITS_TO_REQUESTS_RATIO}x requested cpu"
       end
-      if limits_memory && limits_memory > requests_memory * MAX_LIMITS_TO_REQUESTS_RATIO
+      if limits_memory && requests_memory && limits_memory > requests_memory * MAX_LIMITS_TO_REQUESTS_RATIO
         errors.add :limits_memory, "must be less than #{MAX_LIMITS_TO_REQUESTS_RATIO}x requested memory"
       end
     end
 
     def requests_below_usage_limits
-      return unless limit = UsageLimit.most_specific(project, deploy_group)
+      return unless replicas && requests_cpu && requests_memory &&
+        limit = UsageLimit.most_specific(project, deploy_group)
       message = "must be less than or equal to kubernetes usage limit"
       usage_limit_warning = ENV["KUBERNETES_USAGE_LIMIT_WARNING"]
       usage_limit_warning = ". #{usage_limit_warning}" if usage_limit_warning
