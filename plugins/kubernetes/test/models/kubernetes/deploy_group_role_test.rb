@@ -234,6 +234,22 @@ describe Kubernetes::DeployGroupRole do
       assert_valid deploy_group_role
     end
 
+    it "does not blow up when requests_* is not set" do
+      deploy_group_role.requests_cpu = nil
+      deploy_group_role.requests_memory = nil
+      deploy_group_role.replicas = nil
+      refute_valid deploy_group_role
+      deploy_group_role.errors.full_messages.must_equal(
+        [
+          "Requests cpu can't be blank",
+          "Requests cpu is not a number",
+          "Requests memory can't be blank",
+          "Requests memory is not a number",
+          "Replicas can't be blank"
+        ]
+      )
+    end
+
     describe "when requests are above usage_limit" do
       before do
         deploy_group_role.requests_cpu = deploy_group_role.limits_cpu = 1
