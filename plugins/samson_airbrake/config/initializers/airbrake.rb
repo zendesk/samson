@@ -9,12 +9,12 @@ if key = ENV['AIRBRAKE_API_KEY']
     config.project_id = ENV.fetch('AIRBRAKE_PROJECT_ID')
     config.project_key = key
 
+    raise 'This must run after config/initializers/ ' if Rails.application.config.filter_parameters.empty?
     config.blacklist_keys = Rails.application.config.filter_parameters + ['HTTP_AUTHORIZATION']
 
     # send correct errors even when something blows up during initialization
-    config.environment = 'staging'
+    config.environment = Rails.env
     config.ignore_environments = [:test, :development]
-    config.root_directory = Bundler.root.realpath # can be removed after https://github.com/airbrake/airbrake-ruby/pull/180
 
     # report in development:
     # - add AIRBRAKE_API_KEY to ENV
