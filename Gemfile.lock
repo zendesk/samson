@@ -71,9 +71,9 @@ PATH
     samson_pipelines (0.0.0)
 
 PATH
-  remote: plugins/rollbar
+  remote: plugins/rollbar_hook
   specs:
-    samson_rollbar (0.0.0)
+    samson_rollbar_hook (0.0.0)
 
 PATH
   remote: plugins/samson_airbrake
@@ -585,7 +585,7 @@ DEPENDENCIES
   samson_ledger!
   samson_new_relic!
   samson_pipelines!
-  samson_rollbar!
+  samson_rollbar_hook!
   samson_slack_app!
   samson_slack_webhooks!
   samson_zendesk!
