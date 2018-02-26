@@ -2,7 +2,10 @@
   waitlist = Waitlist.new(@project.id, @stage.id)
 %>
 <div id="waitlist" style="margin-bottom: 20px; margin-top: 20px;">
-  <h2>Deployment Waitlist <span style="font-size:10px; font-style: italic;" id="createdAt"/></h2>
+  <h2 style="margin-bottom: 0px;">Deployment Waitlist <span style="font-size:10px; font-style: italic;" id="createdAt"/></h2>
+  <div style="margin-bottom: 10px;">
+    <span class="glyphicon glyphicon-time"></span> Note: Once you're head of the waitlist, you have <%= SamsonDeployWaitlist::WaitlistMonitor::TIME_TO_LOCK_QUEUE %>
+    minutes to lock the deployment before you're automatically kicked to the back of the line.</div>
   <ol style="width: 60%" id="list"></ol>
   <div style="display: none; margin: 25px;" id="empty">Such empty! ¯\_(ツ)_/¯</div>
   <button onclick="addUser();"><span class="glyphicon glyphicon-plus"></span> Add Me</button>
@@ -27,6 +30,7 @@
     $.ajax({
       url: "/deploy_waitlist.json?stage=" + stageId + "&project=" + projectId,
     }).done(function(wishlist) {
+      console.log(wishlist);
       var createdAt = moment(wishlist.created_at).tz('America/Los_Angeles').format("MMM Do, YYYY h:mm a");
       var headUpdatedAt =  moment(wishlist.head_updated_at).fromNow();
       var deployers = wishlist.list;
@@ -45,7 +49,13 @@
                                                                'font-size'   : '10px',
                                                                'font-weight' : 600});
         $(headSince).append("Head since " + headUpdatedAt)
+        if (wishlist.head_is_locked) {
+            $(headSince).prepend('<span class="glyphicon glyphicon-lock"></span> ');
+        } else {
+          $(headSince).css('color', 'red');
+        }
         $(list).find('li').first().append(headSince);
+
         $("#empty").hide();
       } else {
         $("#empty").show();

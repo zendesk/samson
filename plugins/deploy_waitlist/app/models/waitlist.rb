@@ -14,6 +14,7 @@ class Waitlist
   def add(deployer_hash = {})
     @list << deployer_hash
     @metadata[:last_updated] = Time.now
+    @metadata[:head_updated_at] = Time.now if @list.size == 1
     set
   end
 
@@ -33,10 +34,18 @@ class Waitlist
     @metadata[:head_updated_at]
   end
 
+  def head_locked?
+    return false if @list.blank?
+    stage = Stage.find @stage_id
+    return false unless stage.lock.present?
+    stage.lock.user.email == list[0][:email]
+  end
+
   def to_json
     {
       created_at: created_at,
       head_updated_at: head_updated_at,
+      head_is_locked: head_locked?,
       list: list
      }
   end
