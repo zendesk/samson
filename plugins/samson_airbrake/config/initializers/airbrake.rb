@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 if key = ENV['AIRBRAKE_API_KEY']
-  Airbrake.user_information = # replaces <!-- AIRBRAKE ERROR --> on 500 pages
+  Airbrake.user_information_placeholder = ErrorNotifier::USER_INFORMATION_PLACEHOLDER
+  Airbrake.user_information = # replaces replaces user_information_placeholder on 500 pages
     "<br/><br/>Error number: <a href='https://airbrake.io/locate/{{error_id}}'>{{error_id}}</a>" +
       ((link = ENV['HELP_LINK']) ? "<br/><br/>#{link}" : "")
 
@@ -9,6 +10,7 @@ if key = ENV['AIRBRAKE_API_KEY']
     config.project_id = ENV.fetch('AIRBRAKE_PROJECT_ID')
     config.project_key = key
 
+    config.app_version = Rails.application.config.samson.revision
     raise 'This must run after config/initializers/ ' if Rails.application.config.filter_parameters.empty?
     config.blacklist_keys = Rails.application.config.filter_parameters + ['HTTP_AUTHORIZATION']
 

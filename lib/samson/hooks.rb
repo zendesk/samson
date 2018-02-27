@@ -55,11 +55,10 @@ module Samson
       :stage_permitted_params
     ].freeze
 
-    INTERNAL_HOOKS = [:class_defined].freeze
+    KNOWN = VIEW_HOOKS + EVENT_HOOKS
 
-    KNOWN = VIEW_HOOKS + EVENT_HOOKS + INTERNAL_HOOKS
-
-    @hooks = {}
+    @hooks = Hash.new { |h, k| h[k] = [] }
+    @class_decorators = Hash.new { |h, k| h[k] = [] }
 
     class Plugin
       attr_reader :name, :folder
@@ -135,15 +134,27 @@ module Samson
       end
 
       def decorator(class_name, file)
-        hooks(:class_defined, class_name) << file
+        @class_decorators[class_name] << file
       end
 
       # temporarily add a hook for testing
       def with_callback(name, hook_block)
-        hooks(name) << hook_block
+        original_hooks = @hooks[name].dup
+        @hooks[name] = [hook_block]
         yield
       ensure
-        hooks(name).pop
+        @hooks[name] = original_hooks
+      end
+
+      # temporarily removes all callbacks for specified hook except for those of the passed in plugin for testing
+      def only_callbacks_for_plugin(plugin_name, hook_name)
+        original_hooks = @hooks[hook_name]
+        @hooks[hook_name] = @hooks[hook_name].select do |proc|
+          proc.source_location.first.include?(plugin_name)
+        end
+        yield
+      ensure
+        @hooks[hook_name] = original_hooks
       end
 
       # use
@@ -160,7 +171,7 @@ module Samson
       end
 
       def load_decorators(class_name)
-        hooks(:class_defined, class_name).each { |path| require_dependency(path) }
+        @class_decorators[class_name].each { |path| require_dependency(path) }
       end
 
       def plugin_setup
@@ -214,9 +225,9 @@ module Samson
         nil
       end
 
-      def hooks(*args)
-        raise "Using unsupported hook #{args.inspect}" unless KNOWN.include?(args.first)
-        (@hooks[args] ||= [])
+      def hooks(name)
+        raise "Using unsupported hook #{name.inspect}" unless KNOWN.include?(name)
+        @hooks[name]
       end
     end
   end
