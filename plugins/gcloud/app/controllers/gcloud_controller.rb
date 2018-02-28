@@ -6,6 +6,7 @@ class GcloudController < ApplicationController
     "WORKING" => "running",
     "FAILURE" => "failed",
     "ERRORED" => "failed",
+    "TIMEOUT" => "failed",
     "CANCELLED" => "cancelled"
   }.freeze
 
