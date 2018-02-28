@@ -2,9 +2,12 @@
 require 'faraday'
 
 class RollbarNotification
-  def initialize(webhook_url:, access_token:, environment:, revision:)
+  def initialize(project:, webhook_url:, access_token:, environment:, revision:)
     @webhook_url = webhook_url
     @access_token = access_token
+    if key = @access_token.to_s.dup.sub!(TerminalExecutor::SECRET_PREFIX, "")
+      @access_token = Samson::Secrets::KeyResolver.new(project, []).read(key)
+    end
     @environment = environment
     @revision = revision
   end

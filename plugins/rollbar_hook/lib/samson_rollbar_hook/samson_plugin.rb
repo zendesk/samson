@@ -18,6 +18,7 @@ end
 Samson::Hooks.callback :after_deploy do |deploy|
   deploy.stage.rollbar_webhooks.each do |webhook|
     RollbarNotification.new(
+      project: deploy.project,
       webhook_url: webhook.webhook_url,
       access_token: webhook.access_token,
       environment: webhook.environment,
