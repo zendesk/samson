@@ -31,3 +31,14 @@ Puma::Runner.prepend(Module.new do
     super
   end
 end)
+
+# sometimes when puma tries to stop the @server is not even there and then things blow up
+# so we just pretend like we stopped it and hope that helps with our hanging restarts issue
+# https://github.com/puma/puma/issues/1523
+Puma::Single.prepend(Module.new do
+  def stop
+    super
+  rescue NoMethodError
+    nil
+  end
+end)
