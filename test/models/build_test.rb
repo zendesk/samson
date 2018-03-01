@@ -228,6 +228,39 @@ describe Build do
     end
   end
 
+  describe "#duration" do
+    before do
+      job = jobs(:succeeded_test)
+      job.created_at = 1.minute.ago
+      job.updated_at = job.created_at + 60
+      build.docker_build_job = job
+      build.created_at = job.created_at
+      build.updated_at = job.created_at + 30
+    end
+
+    it "is nil without a job" do
+      build.docker_build_job = nil
+      build.duration.must_be_nil
+    end
+
+    it "is job duration" do
+      build.duration.must_equal 60.0
+    end
+
+    describe "external" do
+      before { build.external_status = 'succeeded' }
+
+      it "is external duration" do
+        build.duration.must_equal 30.0
+      end
+
+      it "is nil when we only got a single external request" do
+        build.created_at = build.updated_at
+        build.duration.must_be_nil
+      end
+    end
+  end
+
   describe ".cancel_stalled_builds" do
     before do
       build.update_columns(created_at: 3.hours.ago, external_status: 'running')

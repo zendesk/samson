@@ -67,6 +67,14 @@ class Build < ActiveRecord::Base
     end
   end
 
+  def duration
+    if external?
+      updated_at - created_at if created_at.to_i != updated_at.to_i
+    else
+      docker_build_job&.duration
+    end
+  end
+
   private
 
   def nil_out_blanks
