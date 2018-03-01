@@ -13,6 +13,15 @@ class ApplicationController < ActionController::Base
   include JsonExceptions
   include JsonRenderer
 
+  # show error details to users and do not bother ExceptionNotifier
+  rescue_from Samson::Hooks::UserError do |exception|
+    if request.format.json?
+      render_json_error 400, exception.message
+    else
+      render status: 400, plain: exception.message
+    end
+  end
+
   protected
 
   def page

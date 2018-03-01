@@ -1,4 +1,6 @@
 # frozen_string_literal: true
+#
+# Rewrite unhelpful rails default errors
 module JsonExceptions
   def self.included(base)
     # default error has very little information
