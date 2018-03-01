@@ -79,6 +79,26 @@ describe ApplicationController do
       request.env['requested_oauth_scopes'].must_equal ['default', 'application_test']
     end
   end
+
+  describe "Samson::Hooks::UserError" do
+    as_a_viewer do
+      before do
+        ApplicationTestController.any_instance.expects(:test_redirect_back).raises(Samson::Hooks::UserError, "Wut")
+      end
+
+      it "displays nice html message" do
+        get :test_redirect_back, params: {test_route: true}
+        assert_response :bad_request
+        response.body.must_equal "Wut"
+      end
+
+      it "displays nice json message" do
+        get :test_redirect_back, params: {test_route: true}, format: :json
+        assert_response :bad_request
+        response.body.must_equal "{\"status\":400,\"error\":\"Wut\"}"
+      end
+    end
+  end
 end
 
 describe "ApplicationController Integration" do
