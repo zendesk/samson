@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 2
+SingleCov.covered! uncovered: 1
 
 describe BuildsController do
   include GitRepoTestHelper
@@ -209,7 +209,7 @@ describe BuildsController do
           build.external_url.must_equal "https://blob.com"
         end
 
-        it 'does not all updating a successful build to prevent tampering' do
+        it 'does not allow updating a successful build to prevent tampering' do
           build.update_columns docker_repo_digest: digest
 
           create external_url: "https://blob.com", git_sha: build.git_sha, dockerfile: build.dockerfile, format: :json
@@ -217,6 +217,22 @@ describe BuildsController do
 
           build.reload
           build.external_url.must_be_nil
+        end
+
+        it 'returns no content for successful builds that have not changes' do
+          build.update_columns(docker_repo_digest: digest, external_status: 'success', description: 'hello')
+
+          # duplicate success
+          create(
+            name: build.name,
+            description: build.description,
+            git_sha: build.git_sha,
+            dockerfile: build.dockerfile,
+            external_status: 'success',
+            format: :json
+          )
+
+          assert_response :ok
         end
 
         it 'retries when 2 requests come in at the exact same time and cause uniqueness error' do
