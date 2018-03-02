@@ -27,6 +27,7 @@ describe Kubernetes::TemplateFiller do
     doc.kubernetes_release.builds = [builds(:docker_build)]
 
     stub_request(:get, %r{http://foobar.server/api/v1/namespaces/\S+/secrets}).to_return(body: "{}")
+
     Samson::Secrets::VaultClient.any_instance.stubs(:client).
       returns(stub(options: {address: 'https://test.hvault.server', ssl_verify: false}))
   end
@@ -278,11 +279,10 @@ describe Kubernetes::TemplateFiller do
       let(:result) { template.to_hash }
       let(:containers) { result.dig_fetch(:spec, :template, :spec, :containers) }
       let(:container) { containers.first }
+      let(:build) { builds(:docker_build) }
+      let(:image) { build.docker_repo_digest }
 
       describe "image manipulation" do
-        let(:build) { builds(:docker_build) }
-        let(:image) { build.docker_repo_digest }
-
         it "overrides image" do
           container.fetch(:image).must_equal image
         end
@@ -353,6 +353,56 @@ describe Kubernetes::TemplateFiller do
             build.update_column(:image_name, 'nope')
             e = assert_raises(Samson::Hooks::UserError) { container.fetch(:image).must_equal image }
             e.message.must_include "Did not find build for dockerfile nil or image_name \"truth_service\""
+          end
+        end
+      end
+
+      describe '#modify_init_container' do
+        def add_init_contnainer_new_syntax(container)
+          raw_template[:spec][:template][:spec][:initContainers] = [container]
+        end
+
+        let(:spec_annotation_containers) do
+          JSON.parse(result.dig(:spec, :template, :metadata, :annotations, init_container_key) || '[]')
+        end
+
+        let(:spec_init_containers) { result.dig(:spec, :template, :spec, :initContainers) || [] }
+
+        it 'sets init containers in annotations if using < 1.6.0 k8s server version' do
+          add_init_container("samson/dockerfile": 'Dockerfile')
+          spec_annotation_containers[0].must_equal("samson/dockerfile" => "Dockerfile", "image" => image)
+        end
+
+        it 'sets init containers using updated syntax to old syntax if using < 1.6.0 k8s server version' do
+          add_init_contnainer_new_syntax('samson/dockerfile': 'Dockerfile')
+
+          spec_init_containers.must_equal([])
+          spec_annotation_containers[0].must_equal("samson/dockerfile" => "Dockerfile", "image" => image)
+        end
+
+        it 'does not set init containers if there are none' do
+          spec_annotation_containers.must_equal([])
+        end
+
+        describe 'using new server version' do
+          before do
+            stub_request(:get, 'http://foobar.server/version').to_return(body: '{"gitVersion": "v1.6.0"}')
+          end
+
+          it 'sets init containers in spec if using >= 1.6.0 k8s server version' do
+            add_init_contnainer_new_syntax("samson/dockerfile": 'Dockerfile')
+            spec_init_containers[0].must_equal('samson/dockerfile': "Dockerfile", image: image)
+          end
+
+          it 'sets init containers using old syntax to new syntax if using >= 1.6.0 k8s server version' do
+            add_init_container("samson/dockerfile": 'Dockerfile')
+
+            spec_annotation_containers.must_equal([])
+            spec_init_containers[0].must_equal('samson/dockerfile': "Dockerfile", image: image)
+          end
+
+          it 'does not set init containers if there are none' do
+            spec_init_containers.must_equal([])
           end
         end
       end
