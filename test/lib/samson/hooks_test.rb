@@ -78,10 +78,11 @@ describe Samson::Hooks do
       Samson::Hooks.send(:hooks, :stage_clone)
     end
 
-    it "adds a hook" do
+    it 'adds a hook' do
       before = hooks.size
+      before.must_be :>, 1
       Samson::Hooks.with_callback(:stage_clone, -> {}) do
-        hooks.size.must_equal before + 1
+        hooks.size.must_equal 1
       end
       hooks.size.must_equal before
     end
@@ -92,6 +93,27 @@ describe Samson::Hooks do
         Samson::Hooks.fire(:stage_clone, stages(:test_staging), stages(:test_staging))
         called.must_equal [1]
       end
+    end
+  end
+
+  describe '.with_callbacks_for_plugin' do
+    def hooks
+      Samson::Hooks.send(:hooks, :error)
+    end
+
+    it 'removes all callbacks for hook except for the one for the specified plugin' do
+      mock_exception = mock
+      Airbrake.expects(:notify).with(mock_exception, foo: 'bar').once
+      Rollbar.expects(:error).never
+
+      hooks.size.must_equal 2
+
+      Samson::Hooks.only_callbacks_for_plugin('samson_airbrake', :error) do
+        hooks.size.must_equal 1
+        Samson::Hooks.fire(:error, mock_exception, foo: 'bar').size.must_equal 1
+      end
+
+      hooks.size.must_equal 2
     end
   end
 

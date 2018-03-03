@@ -1,0 +1,29 @@
+# frozen_string_literal: true
+
+if token = ENV['ROLLBAR_ACCESS_TOKEN']
+  Rollbar.configure do |config|
+    config.access_token = token
+    config.environment = Rails.env
+    config.endpoint = ENV.fetch('ROLLBAR_URL') + '/api/1/item/'
+    config.web_base = ENV.fetch('ROLLBAR_URL')
+    config.use_thread # use threads for async notifications (waits for them at_exit)
+    config.code_version = Rails.application.config.samson.revision.presence
+    config.populate_empty_backtraces = true
+    config.logger = Rails.logger
+    config.scrub_fields |= Rails.application.config.filter_parameters + ['HTTP_AUTHORIZATION']
+    config.enabled = true
+
+    # ignore errors we do not want to send to Rollbar
+    config.before_process << proc do |options|
+      raise Rollbar::Ignore if Samson::Hooks.fire(:ignore_error, options[:exception].class.name).any?
+    end
+
+    SamsonRollbar::RollbarUserInformer.user_information_placeholder = ErrorNotifier::USER_INFORMATION_PLACEHOLDER
+    SamsonRollbar::RollbarUserInformer.user_information = <<~HTML
+      <br/><br/>
+      <a href="#{Rollbar.notifier.configuration.web_base}/instance/uuid?uuid={{error_uuid}}">
+        View error {{error_uuid}} on Rollbar
+      </a>
+    HTML
+  end
+end

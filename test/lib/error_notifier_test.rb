@@ -34,4 +34,10 @@ describe ErrorNotifier do
       ErrorNotifier.notify(error)
     end
   end
+
+  describe 'user information placeholder' do
+    it 'has the same placeholder as what is in 500.html' do
+      File.read("public/500.html").must_include(ErrorNotifier::USER_INFORMATION_PLACEHOLDER)
+    end
+  end
 end

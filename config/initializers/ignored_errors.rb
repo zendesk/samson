@@ -15,7 +15,7 @@ end
 
 Rails.application.console do
   Samson::Hooks.callback(:ignore_error) do |_error_class_name|
-    puts "Not sending errors to airbrake in console"
+    puts "Not sending errors to handler in console"
     true
   end
 end
