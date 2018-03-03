@@ -36,21 +36,27 @@ class BuildsController < ApplicationController
   def create
     new = false
     saved = false
+    external_build_has_digest = false
 
     Samson::Retry.retry_when_not_unique do
       if registering_external_build? && @build = find_external_build
-        return head :unprocessable_entity if @build.docker_repo_digest
+        external_build_has_digest = @build.docker_repo_digest.present?
         @build.attributes = edit_build_params(validate: false)
       else
         @build = scope.new(new_build_params.merge(creator: current_user))
       end
 
       new = @build.new_record?
-      saved = @build.save
+      changed = @build.changed?
+
+      return head :unprocessable_entity if external_build_has_digest && changed
+      saved = !changed || @build.save # nothing has changed or save result
     end
 
     start_docker_build if saved && !registering_external_build?
-    respond_to_save saved, (new ? :created : :ok), :new
+
+    status = new ? :created : :ok
+    respond_to_save saved, status, :new
   end
 
   def show
