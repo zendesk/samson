@@ -4,6 +4,13 @@ PATH
     samson_airbrake_hook (0.0.0)
 
 PATH
+  remote: plugins/airbrake
+  specs:
+    samson_airbrake (0.0.0)
+      airbrake
+      airbrake-user_informer
+
+PATH
   remote: plugins/assertible
   specs:
     samson_assertible (0.0.0)
@@ -86,13 +93,6 @@ PATH
   specs:
     samson_rollbar (0.0.0)
       rollbar
-
-PATH
-  remote: plugins/samson_airbrake
-  specs:
-    samson_airbrake (0.0.0)
-      airbrake
-      airbrake-user_informer
 
 PATH
   remote: plugins/slack_app
