@@ -47,11 +47,9 @@ module Kubernetes
           set_secrets
           set_image_pull_secrets
           set_resource_blue_green if blue_green_color
+          set_init_containers
         end
-
-        hash = template
-        Rails.logger.info "Created Kubernetes hash: #{hash.to_json}"
-        hash
+        template
       end
     end
 
@@ -69,8 +67,7 @@ module Kubernetes
     end
 
     def build_selectors
-      all = containers
-      modify_init_container { |containers| all += containers }
+      all = containers + init_containers
       all.map { |c| build_selector_for_container(c) }.compact
     end
 
@@ -203,20 +200,18 @@ module Kubernetes
     # /vaultauth is a secrets volume in the cluster
     # /secretkeys are where the annotations from the config are mounted
     def set_secret_puller
-      secret_vol = { mountPath: "/secrets", name: "secrets-volume" }
-      modify_init_container do |containers|
-        containers.unshift(
-          image: SECRET_PULLER_IMAGE,
-          imagePullPolicy: 'IfNotPresent',
-          name: 'secret-puller',
-          volumeMounts: [
-            { mountPath: "/vault-auth", name: "vaultauth" },
-            { mountPath: "/secretkeys", name: "secretkeys" },
-            secret_vol
-          ],
-          env: vault_env
-        )
-      end
+      secret_vol = {mountPath: "/secrets", name: "secrets-volume"}
+      init_containers.unshift(
+        image: SECRET_PULLER_IMAGE,
+        imagePullPolicy: 'IfNotPresent',
+        name: 'secret-puller',
+        volumeMounts: [
+          {mountPath: "/vault-auth", name: "vaultauth"},
+          {mountPath: "/secretkeys", name: "secretkeys"},
+          secret_vol
+        ],
+        env: vault_env
+      )
 
       # share secrets volume between all containers
       containers.each do |container|
@@ -238,11 +233,20 @@ module Kubernetes
 
     # Init containers are stored as a json annotation
     # see http://kubernetes.io/docs/user-guide/production-pods/#handling-initialization
-    def modify_init_container
+    def set_init_containers
+      return if init_containers.empty?
       key = Kubernetes::Api::Pod::INIT_CONTAINER_KEY
-      init_containers = JSON.parse(annotations[key] || '[]', symbolize_names: true)
-      yield init_containers
-      annotations[key] = JSON.pretty_generate(init_containers) if init_containers.any?
+      if init_containers_in_beta?
+        pod_template.dig_set([:spec, :initContainers], init_containers)
+        annotations.delete(key)
+      else
+        annotations[key] = JSON.pretty_generate(init_containers)
+        pod_template[:spec].delete(:initContainers)
+      end
+    end
+
+    def init_containers_in_beta?
+      @doc.deploy_group.kubernetes_cluster.server_version >= Gem::Version.new('1.6.0')
     end
 
     # This key replaces the default kubernetes key: 'deployment.kubernetes.io/podTemplateHash'
@@ -300,10 +304,8 @@ module Kubernetes
     # To not break previous workflows for sidecars we do not pick the default Dockerfile
     def set_docker_image
       builds = @doc.kubernetes_release.builds
-      set_docker_image_for_containers(builds, containers)
-      modify_init_container do |containers|
-        set_docker_image_for_containers(builds, containers)
-      end
+
+      set_docker_image_for_containers(builds, containers + init_containers)
     end
 
     def set_docker_image_for_containers(builds, containers)
@@ -421,6 +423,12 @@ module Kubernetes
       containers.each do |container|
         (container[:lifecycle] ||= {})[:preStop] ||= {exec: {command: ["sleep", "3"]}}
       end
+    end
+
+    def init_containers
+      @init_containers ||=
+        JSON.parse(annotations[Kubernetes::Api::Pod::INIT_CONTAINER_KEY] || '[]', symbolize_names: true) +
+        (pod_template.dig(:spec, :initContainers) || [])
     end
 
     def containers

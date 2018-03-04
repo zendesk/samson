@@ -59,6 +59,13 @@ module Kubernetes
       []
     end
 
+    def server_version
+      version = Rails.cache.fetch(cache_key, expires_in: 1.hour) do
+        JSON.parse(client.create_rest_client('version').get.body).fetch('gitVersion')[1..-1]
+      end
+      Gem::Version.new(version)
+    end
+
     private
 
     def connection_valid?

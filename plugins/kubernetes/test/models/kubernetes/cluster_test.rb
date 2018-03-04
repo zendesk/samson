@@ -128,6 +128,22 @@ describe Kubernetes::Cluster do
     end
   end
 
+  describe '#server_version' do
+    it 'caches the clusters server version' do
+      assert_request :get, 'http://foobar.server/version', to_return: { body: '{"gitVersion": "v1.6.0"}' }, times: 1 do
+        cluster.server_version
+        Rails.cache.read(cluster.cache_key).must_equal '1.6.0' # cache correctly set
+        cluster.server_version
+      end
+    end
+
+    it 'returns the server version as a Gem::Version object' do
+      result = cluster.server_version
+      result.must_be_instance_of Gem::Version
+      result.version.must_equal '1.5.0'
+    end
+  end
+
   describe "#ensure_unused" do
     it "does not destroy used" do
       Kubernetes::ClusterDeployGroup.any_instance.stubs(:validate_namespace_exists)

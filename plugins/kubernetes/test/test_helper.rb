@@ -146,5 +146,7 @@ class ActiveSupport::TestCase
       body = KUBERNETES_VERSION_REPLIES[version] || raise("Missing version stub for #{version}")
       {body: body.to_json}
     end
+
+    stub_request(:get, 'http://foobar.server/version').to_return(body: '{"gitVersion": "v1.5.0"}')
   end
 end

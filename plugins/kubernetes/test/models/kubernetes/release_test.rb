@@ -53,7 +53,9 @@ describe Kubernetes::Release do
       release
     end
 
-    before { Kubernetes::TemplateFiller.any_instance.stubs(:set_image_pull_secrets) }
+    before do
+      Kubernetes::TemplateFiller.any_instance.stubs(:set_image_pull_secrets)
+    end
 
     it 'creates with 1 role' do
       expect_file_contents_from_repo
