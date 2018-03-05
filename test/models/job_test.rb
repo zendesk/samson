@@ -2,7 +2,7 @@
 require_relative '../test_helper'
 require 'ar_multi_threaded_transactional_tests'
 
-SingleCov.covered! uncovered: 3
+SingleCov.covered! uncovered: 1
 
 describe Job do
   include GitRepoTestHelper

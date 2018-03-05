@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../../test_helper'
 
-SingleCov.covered! uncovered: 1
+SingleCov.covered!
 
 describe Integrations::BaseController do
   class BaseTestController < Integrations::BaseController

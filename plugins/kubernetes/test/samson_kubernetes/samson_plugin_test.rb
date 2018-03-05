@@ -2,7 +2,7 @@
 require_relative "../test_helper"
 require "kubeclient"
 
-SingleCov.covered! uncovered: 6
+SingleCov.covered!
 
 describe SamsonKubernetes do
   describe :stage_permitted_params do
