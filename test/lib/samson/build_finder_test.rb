@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative "../../test_helper"
 
-SingleCov.covered! uncovered: 8
+SingleCov.covered! uncovered: 6
 
 describe Samson::BuildFinder do
   def setup_using_previous_builds

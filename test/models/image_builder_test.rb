@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 3
+SingleCov.covered! uncovered: 2
 
 describe ImageBuilder do
   let(:output) { executor.output.to_s }

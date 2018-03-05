@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 7
+SingleCov.covered! uncovered: 3
 
 describe ProjectsController do
   def fields_disabled?
