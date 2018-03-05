@@ -10,7 +10,7 @@ if key = ENV['AIRBRAKE_API_KEY']
     config.project_id = ENV.fetch('AIRBRAKE_PROJECT_ID')
     config.project_key = key
 
-    config.app_version = Rails.application.config.samson.revision
+    config.app_version = Rails.application.config.samson.version&.first(7)
     raise 'This must run after config/initializers/ ' if Rails.application.config.filter_parameters.empty?
     config.blacklist_keys = Rails.application.config.filter_parameters + ['HTTP_AUTHORIZATION']
 

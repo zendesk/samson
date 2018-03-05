@@ -7,7 +7,7 @@ if token = ENV['ROLLBAR_ACCESS_TOKEN']
     config.endpoint = ENV.fetch('ROLLBAR_URL') + '/api/1/item/'
     config.web_base = ENV.fetch('ROLLBAR_URL')
     config.use_thread # use threads for async notifications (waits for them at_exit)
-    config.code_version = Rails.application.config.samson.revision.presence
+    config.code_version = Rails.application.config.samson.version&.first(7)
     config.populate_empty_backtraces = true
     config.logger = Rails.logger
     config.scrub_fields |= Rails.application.config.filter_parameters + ['HTTP_AUTHORIZATION']

@@ -11,9 +11,9 @@
         <li><%= link.html_safe %></li>
       <% end %>
 
-      <% if revision = Rails.application.config.samson.revision.presence %>
+      <% if version = Rails.application.config.samson.version %>
         <li>
-          <%= link_to revision[0..7], "https://github.com/zendesk/samson/commit/#{revision}",
+          <%= link_to version.first(7), "https://github.com/zendesk/samson/commit/#{version}",
               title: "Currently deployed samson version since #{Rails.application.config.samson.start_time.to_s(:db)}", class: "sha" %>
         </li>
       <% end %>
