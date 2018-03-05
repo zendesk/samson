@@ -86,6 +86,7 @@ PATH
   specs:
     samson_rollbar (0.0.0)
       rollbar
+      rollbar-user_informer
 
 PATH
   remote: plugins/samson_airbrake
@@ -431,6 +432,8 @@ GEM
       netrc (~> 0.8)
     rollbar (2.15.5)
       multi_json
+    rollbar-user_informer (0.1.0)
+      rollbar (~> 2.15)
     rubocop (0.52.1)
       parallel (~> 1.10)
       parser (>= 2.4.0.2, < 3.0)

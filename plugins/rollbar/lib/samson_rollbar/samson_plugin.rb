@@ -1,12 +1,10 @@
 # frozen_string_literal: true
 
 require 'rollbar'
+require 'rollbar/user_informer'
 
 module SamsonRollbar
   class Engine < Rails::Engine
-    initializer "rollbar.user_informer" do |app|
-      app.config.middleware.insert_before(::Rack::Runtime, SamsonRollbar::RollbarUserInformer)
-    end
   end
 end
 
