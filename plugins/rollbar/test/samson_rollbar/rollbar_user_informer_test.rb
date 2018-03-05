@@ -2,7 +2,7 @@
 
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 1 # TODO: 1 Unconvered line due to what we think is a SingleCov bug
+SingleCov.covered!
 
 describe SamsonRollbar::RollbarUserInformer do
   let(:env) { { 'rollbar.exception_uuid' => '1234' } }
