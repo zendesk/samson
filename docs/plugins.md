@@ -20,6 +20,7 @@ Available plugins:
  - [Jenkins jobs management](https://github.com/zendesk/samson/tree/master/plugins/jenkins)
  - [Hipchat notification](https://github.com/listia/samson_hipchat)
  - [Kubernetes](https://github.com/zendesk/samson/tree/master/plugins/kubernetes)
+ - [Ledger](https://github.com/zendesk/samson/tree/master/plugins/ledger)
  - [Release Number From CI](https://github.com/redbubble/samson-release-number-from-ci)
  - [NewRelic monitoring](https://github.com/zendesk/samson/tree/master/plugins/new_relic)
  - [Pipelined deploys](https://github.com/zendesk/samson/tree/master/plugins/pipelines)
