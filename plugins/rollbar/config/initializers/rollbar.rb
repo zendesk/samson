@@ -18,8 +18,8 @@ if token = ENV['ROLLBAR_ACCESS_TOKEN']
       raise Rollbar::Ignore if Samson::Hooks.fire(:ignore_error, options[:exception].class.name).any?
     end
 
-    SamsonRollbar::RollbarUserInformer.user_information_placeholder = ErrorNotifier::USER_INFORMATION_PLACEHOLDER
-    SamsonRollbar::RollbarUserInformer.user_information = <<~HTML
+    Rollbar::UserInformer.user_information_placeholder = ErrorNotifier::USER_INFORMATION_PLACEHOLDER
+    Rollbar::UserInformer.user_information = <<~HTML
       <br/><br/>
       <a href="#{Rollbar.notifier.configuration.web_base}/instance/uuid?uuid={{error_uuid}}">
         View error {{error_uuid}} on Rollbar
