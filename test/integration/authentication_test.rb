@@ -47,6 +47,8 @@ describe 'Authentication Integration' do
 
     let(:valid_header) { "Basic #{Base64.encode64(user.email + ':' + user.token).strip}" }
 
+    before { user.update_column(:last_seen_at, 1.minute.ago) }
+
     it "updates last_seen_at when it was unset" do
       user.update_column(:last_seen_at, nil)
       perform_get valid_header
