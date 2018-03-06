@@ -102,6 +102,16 @@ describe Kubernetes::Resource do
       end
     end
 
+    it "explains why updating matchLabels is a bad idea" do
+      template[:spec][:selector] = {matchLabels: {foo: "bar"}}
+      assert_request(:get, url, to_return: {body: "{}"}) do
+        e = assert_raises(Samson::Hooks::UserError) { resource.deploy }
+        e.message.must_equal(
+          "Updating spec.selector.matchLabels from nil to {:foo=>\"bar\"} can only be done with a delete"
+        )
+      end
+    end
+
     it "keeps replicase when autoscaled, to not revert autoscaler changes" do
       assert_request(:get, url, to_return: {body: {spec: {replicas: 5}}.to_json}) do
         assert_request(:put, url, to_return: {body: "{}"}, with: ->(x) { x.body.must_include '"replicas":5'; true }) do

@@ -112,8 +112,21 @@ module Kubernetes
 
       # TODO: remove the expire_cache and assign @resource but that breaks a bunch of deploy_executor tests
       def update
+        ensure_not_updating_match_labels
         request(:update, template_for_update)
         expire_cache
+      end
+
+      def ensure_not_updating_match_labels
+        static = [:spec, :selector, :matchLabels]
+        old = @resource.dig(*static)
+        new = @template.dig(*static)
+        if old != new
+          raise(
+            Samson::Hooks::UserError,
+            "Updating #{static.join(".")} from #{old.inspect} to #{new.inspect} can only be done with a delete"
+          )
+        end
       end
 
       def template_for_update
