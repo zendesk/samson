@@ -4,6 +4,8 @@ require_relative '../test_helper'
 SingleCov.not_covered!
 
 describe "db" do
+  let(:maxitest_timeout) { 10 }
+
   let_all(:tasks) do
     Rails.application.load_tasks # cannot be in before since it would load multiple times
     Rake::Task
