@@ -101,6 +101,7 @@ describe Kubernetes::ReleaseDoc do
       stub_request(:put, service_url).to_return(body: '{"RE":"SOURCE"}')
 
       # check and update deployment
+      Kubernetes::Resource::Deployment.any_instance.stubs(:ensure_not_updating_match_labels)
       client.expects(:get_deployment).returns(DE: "PLOY")
       client.expects(:update_deployment).returns("Rest client resonse")
 

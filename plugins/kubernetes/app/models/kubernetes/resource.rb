@@ -118,13 +118,17 @@ module Kubernetes
       end
 
       def ensure_not_updating_match_labels
+        # blue-green deply is allowed to do this, see template_filler.rb + deploy_executor.rb
+        return if @template.dig(:spec, :selector, :matchLabels, :blue_green)
+
         static = [:spec, :selector, :matchLabels]
-        old = @resource.dig(*static)
-        new = @template.dig(*static)
-        if old != new
+        old_labels = @resource.dig(*static)
+        new_labels = @template.dig(*static)
+        if old_labels != new_labels
           raise(
             Samson::Hooks::UserError,
-            "Updating #{static.join(".")} from #{old.inspect} to #{new.inspect} can only be done with a delete"
+            "Updating #{static.join(".")} from #{old_labels.inspect} to #{new_labels.inspect} " \
+            "can only be done can only be done by deleting and redeploying"
           )
         end
       end
@@ -182,7 +186,7 @@ module Kubernetes
       end
 
       def loop_sleep
-        sleep 2 unless Rails.env == 'test'
+        sleep 2 unless Rails.env.test?
       end
 
       def restore_template

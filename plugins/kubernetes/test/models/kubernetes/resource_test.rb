@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative "../../test_helper"
 
-SingleCov.covered! uncovered: 2
+SingleCov.covered!
 
 describe Kubernetes::Resource do
   def assert_pods_lookup(&block)
@@ -102,16 +102,6 @@ describe Kubernetes::Resource do
       end
     end
 
-    it "explains why updating matchLabels is a bad idea" do
-      template[:spec][:selector] = {matchLabels: {foo: "bar"}}
-      assert_request(:get, url, to_return: {body: "{}"}) do
-        e = assert_raises(Samson::Hooks::UserError) { resource.deploy }
-        e.message.must_equal(
-          "Updating spec.selector.matchLabels from nil to {:foo=>\"bar\"} can only be done with a delete"
-        )
-      end
-    end
-
     it "keeps replicase when autoscaled, to not revert autoscaler changes" do
       assert_request(:get, url, to_return: {body: {spec: {replicas: 5}}.to_json}) do
         assert_request(:put, url, to_return: {body: "{}"}, with: ->(x) { x.body.must_include '"replicas":5'; true }) do
@@ -126,6 +116,29 @@ describe Kubernetes::Resource do
         error = '{"message":"Foo.extensions \"app\" is invalid:"}'
         assert_request(:post, base_url, to_return: {body: error, status: 400}) do
           assert_raises(Samson::Hooks::UserError) { resource.deploy }.message.must_include "Kubernetes error: Foo"
+        end
+      end
+    end
+
+    describe "updating matchLabels" do
+      before { template[:spec][:selector] = {matchLabels: {foo: "bar"}} }
+
+      it "explains why it is a bad idea" do
+        assert_request(:get, url, to_return: {body: "{}"}) do
+          e = assert_raises(Samson::Hooks::UserError) { resource.deploy }
+          e.message.must_equal(
+            "Updating spec.selector.matchLabels from nil to {:foo=>\"bar\"} " \
+          "can only be done can only be done by deleting and redeploying"
+          )
+        end
+      end
+
+      it "allows it for blue-green deploys" do
+        template[:spec][:selector][:matchLabels][:blue_green] = "blue"
+        assert_request(:get, url, to_return: {body: "{}"}) do
+          assert_request(:put, url, to_return: {body: "{}"}) do
+            resource.deploy
+          end
         end
       end
     end
@@ -256,6 +269,14 @@ describe Kubernetes::Resource do
         autoscaled!
         resource.desired_pod_count.must_equal 2
       end
+    end
+  end
+
+  describe "#loop_sleep" do
+    it "sleeps when not in test" do
+      Rails.env.expects(:test?)
+      resource.expects(:sleep)
+      resource.send(:loop_sleep)
     end
   end
 
@@ -506,9 +527,11 @@ describe Kubernetes::Resource do
             to_return: {body: "{}"}
           ) do
             assert_pod_deletion do
-              resource.expects(:pods).times(2).returns(
-                [{metadata: {creationTimestamp: '1', name: 'pod1', namespace: 'name1'}}],
-                [{metadata: {creationTimestamp: '2'}}]
+              resource.expects(:sleep)
+              resource.expects(:pods).times(3).returns(
+                [{metadata: {creationTimestamp: '1', name: 'pod1', namespace: 'name1'}}], # old
+                [{metadata: {creationTimestamp: '1'}}], # first check
+                [{metadata: {creationTimestamp: '2'}}] # second check
               )
               resource.deploy
             end
