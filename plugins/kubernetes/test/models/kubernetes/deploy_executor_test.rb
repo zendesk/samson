@@ -4,6 +4,7 @@ require_relative "../../test_helper"
 SingleCov.covered! uncovered: 7
 
 describe Kubernetes::DeployExecutor do
+  assert_requests
   let(:output) { StringIO.new }
   let(:out) { output.string }
   let(:stage) { deploy.stage }
@@ -64,7 +65,8 @@ describe Kubernetes::DeployExecutor do
         items: [kubernetes_roles(:resque_worker), kubernetes_roles(:app_server)].map do |role|
           {
             status: {
-              phase: "Running", conditions: [{type: "Ready", status: "True"}],
+              phase: "Running",
+              conditions: [{type: "Ready", status: "True"}],
               containerStatuses: [{restartCount: 0, state: {}}]
             },
             metadata: {
@@ -76,7 +78,7 @@ describe Kubernetes::DeployExecutor do
               containers: [
                 {name: 'container1'}
               ]
-            }
+            },
           }
         end
       }
@@ -102,13 +104,12 @@ describe Kubernetes::DeployExecutor do
 
       stub_request(:get, "#{deployments_url}/test-app-server").to_return(status: 404) # previous deploys ? -> none!
       stub_request(:get, "#{deployments_url}/test-resque-worker").to_return(status: 404) # previous deploys ? -> none!
-      stub_request(:post, deployments_url).to_return(body: {}.to_json) # creates deployment
-      stub_request(:put, "#{deployments_url}/test-resque-worker").
-        to_return(body: {}.to_json) # updating deployment during delete for rollback
+      stub_request(:post, deployments_url).to_return(body: "{}") # creates deployment
+      stub_request(:put, "#{deployments_url}/test-resque-worker").to_return(body: '{}') # during delete for rollback
 
-      Kubernetes::DeployExecutor.any_instance.stubs(:sleep) # not using executor to keep it uninitialized
-      stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/events}).
-        to_return(body: {items: []}.to_json)
+      Kubernetes::DeployExecutor.any_instance.stubs(:sleep) # not using .executor to keep it uninitialized
+
+      stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/events}).to_return(body: {items: []}.to_json)
       stub_request(:get, /#{Regexp.escape(log_url)}/)
 
       GitRepository.any_instance.stubs(:file_content).with('Dockerfile', commit).returns "FROM all"
@@ -121,14 +122,14 @@ describe Kubernetes::DeployExecutor do
 
       stub_request(:get, service_url).to_return(status: 404) # previous service ? -> none!
       stub_request(:post, File.dirname(service_url)).to_return(body: "{}")
-      stub_request(:delete, service_url)
+      stub_request(:delete, service_url).to_return(body: "{}")
 
       Samson::Secrets::VaultClient.any_instance.stubs(:client).
         returns(stub(options: {address: 'https://test.hvault.server', ssl_verify: false}))
     end
 
     it "succeeds" do
-      assert execute
+      assert execute, out
       out.must_include "resque-worker: Live\n"
       out.must_include "SUCCESS"
       out.wont_include "BigDecimal" # properly serialized configs
@@ -142,14 +143,14 @@ describe Kubernetes::DeployExecutor do
 
       job.project.update_column :docker_image_building_disabled, true
 
-      assert execute
+      assert execute, out
       out.must_include "resque-worker: Live\n"
       out.must_include "SUCCESS"
     end
 
     it "can deploy roles with 0 replicas to disable them" do
       worker_role.update_column(:replicas, 0)
-      assert execute
+      assert execute, out
       out.wont_include "resque-worker: Live\n"
       out.must_include "app-server: Live\n"
     end
@@ -157,7 +158,7 @@ describe Kubernetes::DeployExecutor do
     it "does not test for stability when not deploying any pods" do
       worker_role.update_column(:replicas, 0)
       server_role.update_column(:replicas, 0)
-      assert execute
+      assert execute, out
       out.must_include "SUCCESS"
       out.wont_include "Stable"
       out.wont_include "Deploy status after"
@@ -165,7 +166,7 @@ describe Kubernetes::DeployExecutor do
 
     it "does limited amounts of queries" do
       assert_sql_queries(27) do
-        assert execute
+        assert execute, out
       end
     end
 
@@ -232,7 +233,7 @@ describe Kubernetes::DeployExecutor do
 
     describe "role settings" do
       it "uses configured role settings" do
-        assert execute
+        assert execute, out
         doc = Kubernetes::Release.last.release_docs.sort_by(&:kubernetes_role).last
         config = server_role
         doc.replica_target.must_equal config.replicas
@@ -298,7 +299,7 @@ describe Kubernetes::DeployExecutor do
 
       it "runs only jobs" do
         kubernetes_roles(:app_server).destroy
-        assert execute
+        assert execute, out
         out.must_include "resque-worker: Live\n"
         out.must_include "SUCCESS"
         out.wont_include "stability"
@@ -307,7 +308,7 @@ describe Kubernetes::DeployExecutor do
       end
 
       it "runs prerequisites and then the deploy" do
-        assert execute
+        assert execute, out
         out.must_include "resque-worker: Live\n"
         out.must_include "SUCCESS"
         out.must_include "stability" # testing deploy for stability
@@ -333,7 +334,7 @@ describe Kubernetes::DeployExecutor do
     it "shows status of each individual pod when there is more than 1 per deploy group" do
       worker_role.update_column(:replicas, 2)
       pod_reply[:items] << pod_reply[:items].first
-      assert execute
+      assert execute, out
       out.scan(/resque-worker: Live/).count.must_equal 2
       out.must_include "SUCCESS"
     end
@@ -463,7 +464,7 @@ describe Kubernetes::DeployExecutor do
 
         worker_is_unstable
 
-        assert execute
+        assert execute, out
 
         out.scan(/resque-worker: Live/).count.must_equal 1
         out.must_include "(autoscaled role, only showing one pod)"
@@ -506,8 +507,8 @@ describe Kubernetes::DeployExecutor do
           metadata: {uid: '123', name: 'some-project', namespace: 'staging', resourceVersion: 'X'},
           spec: {clusterIP: "Y"}
         }
-        stub_request(:get, service_url).to_return(body: old.to_json)
-        stub_request(:put, service_url)
+        assert_request(:get, service_url, to_return: {body: old.to_json}, times: 6)
+        assert_request(:put, service_url, to_return: {body: "{}"}, times: 4)
 
         refute execute
 
@@ -544,7 +545,7 @@ describe Kubernetes::DeployExecutor do
 
       it "does not rollback when deploy disabled it" do
         deploy.update_column(:kubernetes_rollback, false)
-        Kubernetes::Resource::Deployment.any_instance.stubs(:revert).never
+        Kubernetes::Resource::Deployment.any_instance.expects(:revert).never
 
         refute execute
 
@@ -674,8 +675,6 @@ describe Kubernetes::DeployExecutor do
     let(:deployments_url) { "#{origin}/apis/extensions/v1beta1/namespaces/pod1/deployments" }
     let(:services_url) { "#{origin}/api/v1/namespaces/pod1/services" }
     let(:release) { kubernetes_releases(:test_release) }
-
-    assert_requests
 
     before do
       kubernetes_roles(:app_server).update_columns blue_green: true

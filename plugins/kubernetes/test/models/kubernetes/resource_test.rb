@@ -79,14 +79,12 @@ describe Kubernetes::Resource do
     let(:url) { "#{origin}/apis/extensions/v1beta1/namespaces/pod1/deployments/some-project" }
 
     it "creates when missing" do
-      assert_request(:get, url, to_return: {status: 404}) do
+      assert_request(:get, url, to_return: [{status: 404}, {body: "{}"}]) do
         assert_request(:post, base_url, to_return: {body: "{}"}) do
           resource.deploy
         end
-      end
 
-      # cache was expired (this counts the 404 and the successful request ...)
-      assert_request(:get, url, to_return: {body: "{}"}, times: 2) do
+        # not auto-cached
         assert resource.running?
         assert resource.running?
       end
@@ -98,7 +96,7 @@ describe Kubernetes::Resource do
           resource.deploy
         end
 
-        # cache was expired
+        # not auto-cached
         assert resource.running?
         assert resource.running?
       end
@@ -265,7 +263,7 @@ describe Kubernetes::Resource do
             }
           }
         }
-      }.to_json
+      }
     end
 
     let(:kind) { 'DaemonSet' }
@@ -298,8 +296,8 @@ describe Kubernetes::Resource do
       end
 
       it "deletes and created when daemonset exists with pods" do
-        client.expects(:update_daemon_set)
         client.expects(:get_daemon_set).raises(KubeException.new(404, 'Not Found', {}))
+        client.expects(:update_daemon_set).returns(daemonset_stub(1, 1))
         client.expects(:get_daemon_set).times(4).returns(
           daemonset_stub(1, 1), # running check
           daemonset_stub(1, 1), # after update check #1 ... still running
@@ -316,7 +314,7 @@ describe Kubernetes::Resource do
       end
 
       it "tells the user what is wrong when the pods never get terminated" do
-        client.expects(:update_daemon_set)
+        client.expects(:update_daemon_set).returns(daemonset_stub(0, 1))
         client.expects(:get_daemon_set).times(31).returns(daemonset_stub(0, 1))
         client.expects(:delete_daemon_set).never
         client.expects(:create_daemon_set).never
@@ -382,7 +380,7 @@ describe Kubernetes::Resource do
       {
         spec: {},
         status: {replicas: replica_count}
-      }.to_json
+      }
     end
 
     let(:kind) { 'Deployment' }
@@ -432,8 +430,9 @@ describe Kubernetes::Resource do
         basic = {kind: 'Deployment', metadata: {name: 'some-project', namespace: 'pod1'}}
         previous = basic.deep_merge(metadata: {uid: 'UID'}).freeze
 
+        with = ->(request) { request.body.must_equal basic.to_json }
         assert_request(:get, url, to_return: {body: "{}"}) do
-          assert_request(:put, url, with: ->(request) { request.body.must_equal basic.to_json }) do
+          assert_request(:put, url, with: with, to_return: {body: "{}"}) do
             resource.revert(previous)
           end
         end
@@ -612,7 +611,7 @@ describe Kubernetes::Resource do
 
       it "replaces existing while keeping fields that kubernetes demands" do
         assert_request(:get, url, to_return: {body: old.to_json}) do
-          assert_request(:put, url, with: {body: expected_body.to_json}) do
+          assert_request(:put, url, with: {body: expected_body.to_json}, to_return: {body: "{}"}) do
             resource.deploy
           end
         end
@@ -621,7 +620,8 @@ describe Kubernetes::Resource do
       it "keeps whitelisted fields" do
         with_env KUBERNETES_SERVICE_PERSISTENT_FIELDS: "metadata.foo" do
           assert_request(:get, url, to_return: {body: old.to_json}) do
-            assert_request(:put, url, with: {body: expected_body.deep_merge(metadata: {foo: "B"}).to_json}) do
+            with = {body: expected_body.deep_merge(metadata: {foo: "B"}).to_json}
+            assert_request(:put, url, with: with, to_return: {body: "{}"}) do
               resource.deploy
             end
           end
@@ -631,7 +631,7 @@ describe Kubernetes::Resource do
       it "ignores unknown whitelisted fields" do
         with_env KUBERNETES_SERVICE_PERSISTENT_FIELDS: "metadata.nope" do
           assert_request(:get, url, to_return: {body: old.to_json}) do
-            assert_request(:put, url, with: {body: expected_body.to_json}) do
+            assert_request(:put, url, with: {body: expected_body.to_json}, to_return: {body: "{}"}) do
               resource.deploy
             end
           end
@@ -644,7 +644,7 @@ describe Kubernetes::Resource do
           assert_request(:get, url, to_return: {body: old.to_json}) do
             expected_body[:metadata][:nope] = "X"
             expected_body[:metadata][:resourceVersion] = expected_body[:metadata].delete(:resourceVersion) # keep order
-            assert_request(:put, url, with: {body: expected_body.to_json}) do
+            assert_request(:put, url, with: {body: expected_body.to_json}, to_return: {body: "{}"}) do
               resource.deploy
             end
           end
@@ -654,7 +654,8 @@ describe Kubernetes::Resource do
       it "keeps whitelisted fields via annotation" do
         template[:metadata][:annotations] = {"samson/persistent_fields": "metadata.foo"}
         assert_request(:get, url, to_return: {body: old.to_json}) do
-          assert_request(:put, url, with: {body: expected_body.deep_merge(metadata: {foo: "B"}).to_json}) do
+          with = {body: expected_body.deep_merge(metadata: {foo: "B"}).to_json}
+          assert_request(:put, url, with: with, to_return: {body: "{}"}) do
             resource.deploy
           end
         end
@@ -694,7 +695,7 @@ describe Kubernetes::Resource do
 
       it "replaces when existing" do
         assert_request(:get, url, to_return: [{body: "{}"}, {status: 404}]) do
-          assert_request(:delete, url) do
+          assert_request(:delete, url, to_return: {body: "{}"}) do
             assert_request(:post, base_url, to_return: {body: "{}"}) do
               resource.deploy
             end
@@ -705,8 +706,8 @@ describe Kubernetes::Resource do
       it "waits for deletion to finish before replacing to avoid duplication errors" do
         resource.expects(:sleep).times(2)
 
-        assert_request(:get, url, to_return: [{body: "{}"}, {body: "{}"}, {body: "{}"}, {status: 404}]) do
-          assert_request(:delete, url) do
+        assert_request(:get, url, to_return: [{body: "{}"}, {body: "{}"}, {body: "{}"}, {status: 404, body: "{}"}]) do
+          assert_request(:delete, url, to_return: {body: '{}'}) do
             assert_request(:post, base_url, to_return: {body: "{}"}) do
               resource.deploy
             end
@@ -729,7 +730,7 @@ describe Kubernetes::Resource do
 
       it "creates when missing" do
         assert_request(:get, url, to_return: {body: '{}'}) do
-          assert_request(:put, url) do
+          assert_request(:put, url, to_return: {body: '{}'}) do
             resource.deploy
           end
         end

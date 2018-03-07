@@ -124,7 +124,7 @@ module Kubernetes
     # efficient pod fetching by querying once per cluster instead of once per deploy group
     def fetch_pods
       @release.clients.flat_map do |client, query|
-        pods = SamsonKubernetes.retry_on_connection_errors { client.get_pods(query) }
+        pods = SamsonKubernetes.retry_on_connection_errors { client.get_pods(query).fetch(:items) }
         pods.map! { |p| Kubernetes::Api::Pod.new(p, client: client) }
       end
     end
@@ -176,7 +176,7 @@ module Kubernetes
         events = doc.deploy_group.kubernetes_cluster.client.get_events(
           namespace: resource.namespace,
           field_selector: selector.join(',')
-        )
+        ).fetch(:items)
         next if events.none?
         @output.puts "RESOURCE EVENTS #{resource.namespace}.#{resource.name}:"
         print_events(events)
@@ -190,12 +190,12 @@ module Kubernetes
     end
 
     def print_events(events)
-      groups = events.group_by { |e| [e.reason, (e.message || "").split("\n").sort] }
+      groups = events.group_by { |e| [e[:reason], (e[:message] || "").split("\n").sort] }
       groups.each do |_, event_group|
-        count = event_group.sum(&:count)
+        count = event_group.sum { |e| e[:count] }
         counter = " x#{count}" if count != 1
         e = event_group.first
-        @output.puts "  #{e.reason}: #{e.message}#{counter}"
+        @output.puts "  #{e[:reason]}: #{e[:message]}#{counter}"
       end
     end
 

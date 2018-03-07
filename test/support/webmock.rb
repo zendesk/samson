@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 ActiveSupport::TestCase.class_eval do
+  # TODO: does not work when asserting the same method/path twice in the same test but different blocks
   def assert_request(method, path, options = {})
     if options[:to_return].is_a?(Array) && !options[:times]
       options = options.merge(times: options[:to_return].size)
@@ -27,6 +28,7 @@ ActiveSupport::TestCase.class_eval do
     end
   end
 
+  # TODO: prevent this getting called twice in the same test ... leads to weird bugs
   def self.assert_requests
     before { @assert_requests = [] } # set here so we can check that users did not forget to set the block
     after { @assert_requests.each { |assert_args| assert_requested(*assert_args) } }

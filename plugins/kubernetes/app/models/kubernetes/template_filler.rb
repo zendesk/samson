@@ -405,10 +405,10 @@ module Kubernetes
     # in kubernetes 1.3 this might work without this workaround
     def set_image_pull_secrets
       client = @doc.deploy_group.kubernetes_cluster.client
-      secrets = client.get_secrets(namespace: template.dig_fetch(:metadata, :namespace))
+      secrets = client.get_secrets(namespace: template.dig_fetch(:metadata, :namespace)).fetch(:items)
       docker_credentials = secrets.
-        select { |secret| ['kubernetes.io/dockercfg', 'kubernetes.io/dockerconfigjson'].include? secret.type }.
-        map! { |c| {name: c.metadata.name} }
+        select { |secret| ['kubernetes.io/dockercfg', 'kubernetes.io/dockerconfigjson'].include? secret.fetch(:type) }.
+        map! { |c| {name: c.dig(:metadata, :name)} }
 
       return if docker_credentials.empty?
 

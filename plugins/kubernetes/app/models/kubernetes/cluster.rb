@@ -44,7 +44,7 @@ module Kubernetes
     end
 
     def namespaces
-      client.get_namespaces.map { |ns| ns.metadata.name } - %w[kube-system]
+      client.get_namespaces.fetch(:items).map { |ns| ns.dig(:metadata, :name) } - %w[kube-system]
     end
 
     def kubeconfig
@@ -52,7 +52,7 @@ module Kubernetes
     end
 
     def schedulable_nodes
-      nodes = JSON.parse(client.get_nodes(as: :raw), symbolize_names: true).fetch(:items)
+      nodes = client.get_nodes.fetch(:items)
       nodes.reject { |n| n.dig(:spec, :unschedulable) }
     rescue
       Rails.logger.error("Error loading nodes from cluster #{id}: #{$!}")
