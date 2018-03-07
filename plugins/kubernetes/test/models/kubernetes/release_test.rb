@@ -127,7 +127,7 @@ describe Kubernetes::Release do
         resourceVersion: "1",
         items: [{}, {}]
       }.to_json)
-      release.clients.map { |c, q| c.get_pods(q) }.first.size.must_equal 2
+      release.clients.map { |c, q| c.get_pods(q).fetch(:items) }.first.size.must_equal 2
     end
 
     it "can scope queries by resource namespace" do
@@ -137,7 +137,7 @@ describe Kubernetes::Release do
         resourceVersion: "1",
         items: [{}, {}]
       }.to_json)
-      release.clients.map { |c, q| c.get_pods(q) }.first.size.must_equal 2
+      release.clients.map { |c, q| c.get_pods(q).fetch(:items) }.first.size.must_equal 2
     end
 
     it "scoped statefulset for previous release since they do not update their labels when using patch" do

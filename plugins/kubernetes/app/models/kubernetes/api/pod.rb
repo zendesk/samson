@@ -11,11 +11,11 @@ module Kubernetes
       end
 
       def name
-        @pod.metadata.name
+        @pod.dig(:metadata, :name)
       end
 
       def namespace
-        @pod.metadata.namespace
+        @pod.dig(:metadata, :namespace)
       end
 
       def live?
@@ -31,32 +31,32 @@ module Kubernetes
       end
 
       def restarted?
-        @pod.status.containerStatuses.try(:any?) { |s| s.restartCount.positive? }
+        @pod.dig(:status, :containerStatuses)&.any? { |s| s.fetch(:restartCount).positive? }
       end
 
       def phase
-        @pod.status.phase
+        @pod.dig(:status, :phase)
       end
 
       def reason
         reasons = []
-        reasons.concat @pod.status.conditions.try(:map, &:reason).to_a
-        reasons.concat @pod.status.containerStatuses.
-          try(:map) { |s| s.to_h.fetch(:state).values.map { |s| s[:reason] } }.
+        reasons.concat @pod.dig(:status, :conditions)&.map { |c| c[:reason] }.to_a
+        reasons.concat @pod.dig(:status, :containerStatuses)&.
+          map { |s| s.fetch(:state).values.map { |s| s[:reason] } }.
           to_a
         reasons.reject(&:blank?).uniq.join("/").presence || "Unknown"
       end
 
       def deploy_group_id
-        labels.deploy_group_id.to_i
+        Integer(labels.fetch(:deploy_group_id))
       end
 
       def role_id
-        labels.role_id.to_i
+        Integer(labels.fetch(:role_id))
       end
 
       def containers
-        @pod.spec.containers.map(&:to_h)
+        @pod.dig(:spec, :containers)
       end
 
       # tries to get logs from current or previous pod depending on if it restarted
@@ -71,9 +71,9 @@ module Kubernetes
       end
 
       def events_indicate_failure?
-        bad = events.reject { |e| e.type == 'Normal' || ignorable_hpa_event?(e) }
+        bad = events.reject { |e| e.fetch(:type) == 'Normal' || ignorable_hpa_event?(e) }
         readiness_failures, other_failures = bad.partition do |e|
-          e.reason == "Unhealthy" && e.message =~ /\A\S+ness probe failed/
+          e[:reason] == "Unhealthy" && e[:message] =~ /\A\S+ness probe failed/
         end
         other_failures.any? || readiness_failures.any? { |event| probe_failed_to_often?(event) }
       end
@@ -81,7 +81,7 @@ module Kubernetes
       def events
         @events ||= raw_events.select do |event|
           # compare strings to avoid parsing time '2017-03-31T22:56:20Z'
-          event.metadata.creationTimestamp >= @pod.status.startTime.to_s
+          event.dig(:metadata, :creationTimestamp) >= @pod.dig(:status, :startTime).to_s
         end
       end
 
@@ -93,7 +93,7 @@ module Kubernetes
       private
 
       def ignorable_hpa_event?(event)
-        event.kind == 'HorizontalPodAutoscaler' && INGORED_AUTOSCALE_EVENT_REASONS.include?(event.reason)
+        event[:kind] == 'HorizontalPodAutoscaler' && INGORED_AUTOSCALE_EVENT_REASONS.include?(event[:reason])
       end
 
       def raw_events
@@ -101,7 +101,7 @@ module Kubernetes
           @client.get_events(
             namespace: namespace,
             field_selector: "involvedObject.name=#{name}"
-          )
+          ).fetch(:items)
         end
       end
 
@@ -138,12 +138,12 @@ module Kubernetes
 
       def probe_failed_to_often?(event)
         probe =
-          case event.message
+          case event[:message]
           when /\AReadiness/ then :readinessProbe
           when /\ALiveness/ then :livenessProbe
-          else raise("Unknown probe #{event.message}")
+          else raise("Unknown probe #{event[:message]}")
           end
-        event.count >= failure_threshold(probe)
+        event[:count] >= failure_threshold(probe)
       end
 
       # per http://kubernetes.io/docs/api-reference/v1/definitions/ default is 3
@@ -153,16 +153,11 @@ module Kubernetes
       end
 
       def labels
-        @pod.metadata.try(:labels)
+        @pod.dig(:metadata, :labels)
       end
 
       def ready?
-        if @pod.status.conditions.present?
-          ready = @pod.status.conditions.find { |c| c['type'] == 'Ready' }
-          ready && ready['status'] == 'True'
-        else
-          false
-        end
+        @pod.dig(:status, :conditions)&.detect { |c| c[:type] == 'Ready' && c[:status] == 'True' }
       end
     end
   end

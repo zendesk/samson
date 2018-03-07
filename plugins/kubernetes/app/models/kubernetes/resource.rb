@@ -104,12 +104,13 @@ module Kubernetes
         remove_instance_variable(:@resource) if defined?(@resource)
       end
 
+      # TODO: remove the expire_cache and assign @resource but that breaks a bunch of deploy_executor tests
       def create
         request(:create, @template)
         expire_cache
       end
 
-      # FYI: do not use result of update call, see https://github.com/abonas/kubeclient/issues/196
+      # TODO: remove the expire_cache and assign @resource but that breaks a bunch of deploy_executor tests
       def update
         request(:update, template_for_update)
         expire_cache
@@ -128,15 +129,14 @@ module Kubernetes
 
       def fetch_resource
         ignore_404 do
-          reply = request(:get, name, namespace, as: :raw)
-          JSON.parse(reply, symbolize_names: true)
+          request(:get, name, namespace)
         end
       end
 
       def pods
         ids = resource.dig_fetch(:spec, :template, :metadata, :labels).values_at(:release_id, :deploy_group_id)
         selector = Kubernetes::Release.pod_selector(*ids, query: true)
-        pod_client.get_pods(label_selector: selector, namespace: namespace).map(&:to_hash)
+        pod_client.get_pods(label_selector: selector, namespace: namespace).fetch(:items)
       end
 
       def delete_pods

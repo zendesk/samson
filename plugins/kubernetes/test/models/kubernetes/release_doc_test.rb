@@ -5,41 +5,35 @@ SingleCov.covered! uncovered: 2
 
 describe Kubernetes::ReleaseDoc do
   def deployment_stub(replica_count)
-    stub(
-      "Deployment stub",
-      to_hash: {
-        spec: {
-          'replicas=' => replica_count
-        },
-        status: {
-          replicas: replica_count
-        }
+    {
+      spec: {
+        'replicas=' => replica_count
+      },
+      status: {
+        replicas: replica_count
       }
-    )
+    }
   end
 
   def daemonset_stub(scheduled, misscheduled)
-    stub(
-      "DaemonSet stub",
-      to_hash: {
-        kind: "DaemonSet",
-        metadata: {
-          name: 'some-project',
-          namespace: 'pod1'
-        },
-        status: {
-          currentNumberScheduled: scheduled,
-          numberMisscheduled:     misscheduled
-        },
-        spec: {
-          template: {
-            spec: {
-              'nodeSelector=' => nil
-            }
+    {
+      kind: "DaemonSet",
+      metadata: {
+        name: 'some-project',
+        namespace: 'pod1'
+      },
+      status: {
+        currentNumberScheduled: scheduled,
+        numberMisscheduled:     misscheduled
+      },
+      spec: {
+        template: {
+          spec: {
+            'nodeSelector=' => nil
           }
         }
       }
-    )
+    }
   end
 
   let(:doc) { kubernetes_release_docs(:test_release_pod_1) }
@@ -95,7 +89,7 @@ describe Kubernetes::ReleaseDoc do
 
       # check and then create deployment
       client.expects(:get_deployment).raises(kube_404)
-      client.expects(:create_deployment).returns(stub(to_hash: {}))
+      client.expects(:create_deployment).returns({})
 
       doc.deploy
       doc.instance_variable_get(:@previous_resources).must_equal([nil, nil]) # will not revert
@@ -104,10 +98,10 @@ describe Kubernetes::ReleaseDoc do
     it "remembers the previous deploy in case we have to revert" do
       # check service ... do nothing
       stub_request(:get, service_url).to_return(body: '{"SER":"VICE"}')
-      stub_request(:put, service_url)
+      stub_request(:put, service_url).to_return(body: '{"RE":"SOURCE"}')
 
       # check and update deployment
-      client.expects(:get_deployment).returns({DE: "PLOY"}.to_json)
+      client.expects(:get_deployment).returns(DE: "PLOY")
       client.expects(:update_deployment).returns("Rest client resonse")
 
       doc.deploy
