@@ -3,9 +3,6 @@
 # JobQueue locks a mutex, hence the need for a separate SignalHandler thread
 # Self-pipe is also best practice, since signal handlers can themselves be interrupted
 class RestartSignalHandler
-  LISTEN_SIGNAL = 'SIGUSR1'
-  PASSED_SIGNAL = 'SIGUSR2'
-
   class << self
     alias_method :listen, :new
 
@@ -34,8 +31,9 @@ class RestartSignalHandler
 
   def initialize
     @read, @write = IO.pipe
+    @puma_restart_handler = Signal.trap('SIGUSR1') { signal_restart }
+    raise 'Wrong boot order, puma needs to be loaded first' unless @puma_restart_handler.is_a?(Proc)
     Thread.new { run }
-    Signal.trap(LISTEN_SIGNAL) { signal_restart }
   end
 
   private
@@ -47,14 +45,14 @@ class RestartSignalHandler
   def run
     wait_for_restart_signal
 
-    output 'preparing restart'
+    output 'Waiting for all Samson activity to stop'
 
     JobQueue.enabled = false # Disable new job execution
     Samson::Periodical.enabled = false
     wait_for_active_jobs_to_stop
 
-    output "Passing #{PASSED_SIGNAL} on."
-    Process.kill(PASSED_SIGNAL, Process.pid) # shut down underlying server
+    output "Calling puma restart handler"
+    @puma_restart_handler.call
   rescue
     output "Failed #{$!.message} ... restart manually when all deploys have finished"
     ErrorNotifier.notify($!, sync: true)
