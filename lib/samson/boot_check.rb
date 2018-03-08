@@ -18,7 +18,8 @@ module Samson
           [
             ActiveRecord::Base.send(:descendants).map(&:name) - ["Audited::Audit"],
             ActionController::Base.descendants.map(&:name),
-            (defined?(Mocha) && "mocha")
+            (defined?(Mocha) && "mocha"),
+            Thread.list.count == 1 || "Extra threads"
           ].compact.flatten.each { |c| raise "#{c} should not be loaded" }
         end
       end
