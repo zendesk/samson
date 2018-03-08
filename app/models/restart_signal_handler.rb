@@ -53,10 +53,24 @@ class RestartSignalHandler
 
     output "Calling puma restart handler"
     @puma_restart_handler.call
+    sleep 5
+    hard_restart
   rescue
     output "Failed #{$!.message} ... restart manually when all deploys have finished"
     ErrorNotifier.notify($!, sync: true)
     raise
+  end
+
+  # failsafe in case of puma restart failure, so process monitoring will hard restart Samson
+  # this means that we lose all requests until Samson is booted up again. This is bad, but better
+  # than hanging forever.
+  def hard_restart
+    ErrorNotifier.notify('Hard restarting, requests will be lost', sync: true)
+    output 'Error: Sending SIGTERM to hard restart'
+    Process.kill(:SIGTERM, Process.pid)
+    sleep 5
+    output 'Error: Sending SIGKILL to hard restart'
+    Process.kill(:SIGKILL, Process.pid)
   end
 
   def wait_for_restart_signal
