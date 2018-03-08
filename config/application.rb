@@ -12,7 +12,7 @@ Bundler.require(:assets) if Rails.env.development? || ENV["PRECOMPILE"]
 
 ###
 # Railties need to be loaded before the application is defined
-if ['development', 'staging'].include?(Rails.env)
+if ['development', 'staging'].include?(Rails.env) && ENV["SERVER_MODE"]
   require 'rack-mini-profiler' # side effect: removes expires headers
 end
 
@@ -25,6 +25,10 @@ else
 
   # needed even in dev/test mode
   require 'new_relic/agent/method_tracer'
+end
+
+if ENV["SERVER_MODE"]
+  require 'sse-rails-engine'
 end
 # END Railties
 ###
@@ -128,7 +132,10 @@ module Samson
     config.samson.auth.bitbucket = Samson::EnvCheck.set?("AUTH_BITBUCKET")
 
     config.samson.uri = URI(ENV["DEFAULT_URL"] || 'http://localhost:3000')
-    config.sse_rails_engine.access_control_allow_origin = config.samson.uri.to_s
+
+    if ENV["SERVER_MODE"]
+      config.sse_rails_engine.access_control_allow_origin = config.samson.uri.to_s
+    end
 
     config.samson.stream_origin = ENV['STREAM_ORIGIN'].presence || config.samson.uri.to_s
     config.samson.deploy_origin = ENV['DEPLOY_ORIGIN'].presence || config.samson.uri.to_s

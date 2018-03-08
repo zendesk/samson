@@ -224,7 +224,6 @@ describe DeployService do
     end
 
     before do
-      SseRailsEngine.expects(:send_event).with('deploys', type: 'finish').never
       stage.stubs(:create_deploy).returns(deploy)
       deploy.stubs(:persisted?).returns(true)
       job_execution.stubs(:execute)
