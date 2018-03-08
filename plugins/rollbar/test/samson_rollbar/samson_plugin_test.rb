@@ -6,28 +6,26 @@ SingleCov.covered!
 
 describe SamsonRollbar do
   describe 'error callback' do
-    it 'returns url if sync option is true' do
-      mock_data = mock('data')
-      mock_url = mock('url')
-      mock_config = mock('config')
-      mock_exception = mock('exception')
+    let(:exception) { mock('exception') }
 
-      Rollbar.expects(:error).with(mock_exception, foo: 'bar').returns(mock_data)
-      Rollbar.expects(:configuration).returns(mock_config)
+    around { |t| Samson::Hooks.only_callbacks_for_plugin('rollbar', :error, &t) }
 
-      Rollbar::Util.expects(:uuid_rollbar_url).with(mock_data, mock_config).returns(mock_url)
-
-      Samson::Hooks.only_callbacks_for_plugin('rollbar', :error) do
-        Samson::Hooks.fire(:error, mock_exception, foo: 'bar', sync: true).must_equal [mock_url]
-      end
+    it 'reports error' do
+      Rollbar.expects(:error).with(exception, foo: 'bar').returns(123)
+      Samson::Hooks.fire(:error, exception, foo: 'bar').must_equal [123]
     end
 
-    it 'calls error if sync option is false/nil' do
-      mock_exception = mock
-      Rollbar.expects(:error).with(mock_exception, foo: 'bar').once
+    describe "with sync" do
+      it 'returns url' do
+        Rollbar.expects(:error).with(exception, foo: 'bar').returns(uuid: '123')
+        Samson::Hooks.fire(:error, exception, foo: 'bar', sync: true).must_equal(
+          ["https://rollbar.com/instance/uuid?uuid=123"]
+        )
+      end
 
-      Samson::Hooks.only_callbacks_for_plugin('rollbar', :error) do
-        Samson::Hooks.fire(:error, mock_exception, foo: 'bar').must_equal [nil]
+      it "ignores disabled reporter, so other reporters can show their url" do
+        # the [nil] means that what other reporters send is shown to the user, see ErrorNotifier#notify
+        Samson::Hooks.fire(:error, exception, foo: 'bar', sync: true).must_equal [nil]
       end
     end
   end

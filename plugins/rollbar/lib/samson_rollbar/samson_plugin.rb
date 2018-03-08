@@ -14,7 +14,7 @@ Samson::Hooks.callback :error do |exception, options|
   data = Rollbar.error(exception, options)
 
   if sync
-    Rollbar::Util.uuid_rollbar_url(data, Rollbar.configuration)
+    Rollbar::Util.uuid_rollbar_url(data, Rollbar.configuration) if data.is_a?(Hash)
   else
     data
   end
