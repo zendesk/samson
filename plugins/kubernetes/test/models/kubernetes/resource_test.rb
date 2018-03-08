@@ -660,6 +660,16 @@ describe Kubernetes::Resource do
           end
         end
       end
+
+      it "multiple keeps whitelisted fields via annotation" do
+        template[:metadata][:annotations] = {"samson/persistent_fields": "barfoo, metadata.foo"}
+        assert_request(:get, url, to_return: {body: old.to_json}) do
+          with = {body: expected_body.deep_merge(metadata: {foo: "B"}).to_json}
+          assert_request(:put, url, with: with, to_return: {body: "{}"}) do
+            resource.deploy
+          end
+        end
+      end
     end
   end
 
