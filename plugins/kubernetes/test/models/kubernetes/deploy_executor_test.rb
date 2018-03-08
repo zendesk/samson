@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative "../../test_helper"
 
-SingleCov.covered! uncovered: 7
+SingleCov.covered! uncovered: 8
 
 describe Kubernetes::DeployExecutor do
   assert_requests
@@ -108,6 +108,7 @@ describe Kubernetes::DeployExecutor do
       stub_request(:put, "#{deployments_url}/test-resque-worker").to_return(body: '{}') # during delete for rollback
 
       Kubernetes::DeployExecutor.any_instance.stubs(:sleep) # not using .executor to keep it uninitialized
+      Kubernetes::DeployExecutor.any_instance.stubs(:stable?).returns(true) # otherwise takes a real minute
 
       stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/events}).to_return(body: {items: []}.to_json)
       stub_request(:get, /#{Regexp.escape(log_url)}/)
@@ -639,6 +640,23 @@ describe Kubernetes::DeployExecutor do
       Kubeclient::Client.any_instance.expects(:get_pods).times(4).raises(OpenSSL::SSL::SSLError.new)
       executor.instance_variable_set(:@release, kubernetes_releases(:test_release))
       assert_raises(OpenSSL::SSL::SSLError) { executor.send(:fetch_pods) }
+    end
+  end
+
+  describe "#stable?" do
+    before do
+      Kubernetes::DeployExecutor.any_instance.stubs(:build_selectors).returns([])
+      executor.unstub(:stable?)
+    end
+
+    it "is stable when enough time has passed" do
+      executor.instance_variable_set(:@testing_for_stability, 2.minutes.ago.to_i)
+      assert executor.send(:stable?)
+    end
+
+    it "is unstable when recently deployed" do
+      executor.instance_variable_set(:@testing_for_stability, 10.seconds.ago.to_i)
+      refute executor.send(:stable?)
     end
   end
 

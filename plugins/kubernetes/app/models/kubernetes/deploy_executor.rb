@@ -6,7 +6,7 @@ require 'vault'
 module Kubernetes
   class DeployExecutor
     WAIT_FOR_LIVE = ENV.fetch('KUBE_WAIT_FOR_LIVE', 10).to_i.minutes
-    CHECK_STABLE = 1.minute
+    STABILITY_CHECK_DURATION = 1.minute
     TICK = 2.seconds
     RESTARTED = "Restarted"
 
@@ -75,7 +75,6 @@ module Kubernetes
     def wait_for_resources_to_complete(release_docs)
       raise "prerequisites should not check for stability" if @testing_for_stability
       @wait_start_time = Time.now
-      stable_ticks = CHECK_STABLE / TICK
       @output.puts "Waiting for pods to be created"
 
       loop do
@@ -89,9 +88,8 @@ module Kubernetes
             unstable!('one or more pods are not live', not_ready)
             return statuses
           else
-            @testing_for_stability += 1
-            @output.puts "Stable #{@testing_for_stability}/#{stable_ticks}"
-            return success if stable_ticks == @testing_for_stability
+            @output.puts "Testing for stability: #{stable_time_remaining}s"
+            return success if stable?
           end
         else
           print_statuses(statuses)
@@ -107,13 +105,21 @@ module Kubernetes
             return success
           else
             @output.puts "READY, starting stability test"
-            @testing_for_stability = 0
+            @testing_for_stability = Time.now.to_i
           end
         end
 
         sleep TICK
         return statuses if cancelled?
       end
+    end
+
+    def stable?
+      stable_time_remaining == 0
+    end
+
+    def stable_time_remaining
+      [@testing_for_stability + STABILITY_CHECK_DURATION - Time.now.to_i, 0].max
     end
 
     def pod_statuses(release_docs)
