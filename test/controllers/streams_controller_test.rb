@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 4
+SingleCov.covered! uncovered: 2
 
 describe StreamsController do
   include OutputBufferSupport
@@ -61,18 +61,39 @@ describe StreamsController do
       @controller.instance_variable_set(:@job, job)
     end
 
-    it "renders deploy header" do
-      response = JSON.parse(@controller.send(:event_handler, :started, {}))
-      response.fetch("title").must_include "Staging deploy"
-      response.fetch("html").must_include "<h1>"
+    describe 'started' do
+      it "renders deploy header" do
+        response = JSON.parse(@controller.send(:event_handler, :started, {}))
+        response.fetch("title").must_include "Staging deploy"
+        response.fetch("html").must_include "<h1>"
+      end
+
+      it "renders jobs header" do
+        job.deploy.destroy!
+        response = JSON.parse(@controller.send(:event_handler, :started, {}))
+        response.fetch("title").must_equal "Foo deploy (succeeded)"
+        response.fetch("html").wont_include "<h1>"
+        response.fetch("html").must_include "Super Admin executed"
+      end
     end
 
-    it "renders jobs header" do
-      job.deploy.destroy!
-      response = JSON.parse(@controller.send(:event_handler, :started, {}))
-      response.fetch("title").must_equal "Foo deploy (succeeded)"
-      response.fetch("html").wont_include "<h1>"
-      response.fetch("html").must_include "Super Admin executed"
+    describe 'finished' do
+      before do
+        mock_execution = mock
+        mock_execution.expects(:viewers).once.returns([users(:admin)])
+        @controller.instance_variable_set(:@execution, mock_execution)
+      end
+
+      it 'renders successful finished deploy with green favicon' do
+        response = JSON.parse(@controller.send(:event_handler, :finished, {}))
+        response.fetch('favicon_path').must_equal '/assets/favicons/32x32_green.png'
+      end
+
+      it 'renders errored finished deploy with red favicon' do
+        @controller.instance_variable_set(:@job, jobs(:failed_test))
+        response = JSON.parse(@controller.send(:event_handler, :finished, {}))
+        response.fetch('favicon_path').must_equal '/assets/favicons/32x32_red.png'
+      end
     end
   end
 end

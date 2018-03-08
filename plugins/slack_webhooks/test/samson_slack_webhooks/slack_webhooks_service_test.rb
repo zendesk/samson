@@ -61,7 +61,8 @@ describe SamsonSlackWebhooks::SlackWebhooksService do
   describe "#deliver_message_via_webhook" do
     let(:webhook) { SlackWebhook.new(webhook_url: 'http://foo.com') }
     let(:icon) do
-      "\"icon_url\":\"https://github.com/zendesk/samson/blob/master/app/assets/images/32x32_light.png?raw=true\""
+      "\"icon_url\":" \
+      "\"https://github.com/zendesk/samson/blob/master/app/assets/images/favicons/32x32_light.png?raw=true\""
     end
 
     it "sends a message" do

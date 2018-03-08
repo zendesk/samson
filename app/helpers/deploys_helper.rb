@@ -96,4 +96,17 @@ module DeploysHelper
       options.merge(method: :delete, class: options.fetch(:class, 'btn btn-danger btn-xl'))
     )
   end
+
+  def deploy_favicon_path(deploy)
+    favicon =
+      if deploy.active?
+        'favicons/32x32_yellow.png'
+      elsif deploy.succeeded?
+        'favicons/32x32_green.png'
+      else
+        'favicons/32x32_red.png'
+      end
+
+    path_to_image(favicon)
+  end
 end

@@ -185,4 +185,22 @@ describe DeploysHelper do
       button.must_include ">Cancel<"
     end
   end
+
+  describe "#favicon" do
+    it 'returns pending favicon if deploy is active' do
+      deploy.job = jobs(:running_test)
+
+      deploy_favicon_path(deploy).must_equal "/images/favicons/32x32_yellow.png"
+    end
+
+    it 'returns succeeded favicon if deploy was successful' do
+      deploy_favicon_path(deploy).must_equal "/images/favicons/32x32_green.png"
+    end
+
+    it 'returns failed favicon if deploy failed' do
+      deploy.job = jobs(:failed_test)
+
+      deploy_favicon_path(deploy).must_equal "/images/favicons/32x32_red.png"
+    end
+  end
 end

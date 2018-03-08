@@ -1,3 +1,5 @@
+<% content_for(:favicon_path) { deploy_favicon_path(@deploy) } %>
+
 <% page_title deploy_page_title %>
 
 <%= breadcrumb @project, @deploy.stage, "Deploy ##{@deploy.id}" %>

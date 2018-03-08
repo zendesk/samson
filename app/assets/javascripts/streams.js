@@ -16,9 +16,14 @@ function startStream() {
       $messages.append(msg);
     }
 
-    function updateStatusAndTitle(e) {
-      var data = JSON.parse(e.data);
+    function updateFavicon(faviconPath) {
+      if(!faviconPath) {
+        return;
+      }
+      $('#favicon').attr('href', faviconPath);
+    }
 
+    function updateStatusAndTitle(data) {
       $('#header').html(data.html);
       timeAgoFormat(); // header includes new dates ... show them nicely instantly
       window.document.title = data.title;
@@ -58,13 +63,16 @@ function startStream() {
     }, false);
 
     source.addEventListener('started', function(e) {
-      updateStatusAndTitle(e);
+      var data = JSON.parse(e.data);
+      updateFavicon(data.faveicon_path);
+      updateStatusAndTitle(data);
     }, false);
 
     source.addEventListener('finished', function(e) {
       $messages.trigger('contentchanged');
-
-      updateStatusAndTitle(e);
+      var data = JSON.parse(e.data);
+      updateFavicon(data.favicon_path);
+      updateStatusAndTitle(data);
       toggleOutputToolbar();
       timeAgoFormat();
 
