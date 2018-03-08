@@ -33,6 +33,14 @@ describe ErrorNotifier do
 
       ErrorNotifier.notify(error)
     end
+
+    it 'can log error if exception is a string' do
+      Rails.env.expects(:test?).returns(false)
+
+      Rails.logger.expects(:error).with('ErrorNotifier: Oh no!')
+
+      ErrorNotifier.notify('Oh no!')
+    end
   end
 
   describe 'user information placeholder' do
