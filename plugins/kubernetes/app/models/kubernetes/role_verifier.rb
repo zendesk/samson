@@ -13,12 +13,11 @@ module Kubernetes
     ].freeze
 
     def initialize(elements)
-      @errors = []
       @elements = elements.compact
     end
 
     def verify
-      return @errors if @errors.any?
+      @errors = []
       return ["No content found"] if @elements.blank?
       return ["Only hashes supported"] unless @elements.all? { |e| e.is_a?(Hash) }
       verify_name

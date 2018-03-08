@@ -112,8 +112,25 @@ module Kubernetes
 
       # TODO: remove the expire_cache and assign @resource but that breaks a bunch of deploy_executor tests
       def update
+        ensure_not_updating_match_labels
         request(:update, template_for_update)
         expire_cache
+      end
+
+      def ensure_not_updating_match_labels
+        # blue-green deply is allowed to do this, see template_filler.rb + deploy_executor.rb
+        return if @template.dig(:spec, :selector, :matchLabels, :blue_green)
+
+        static = [:spec, :selector, :matchLabels]
+        old_labels = @resource.dig(*static)
+        new_labels = @template.dig(*static)
+        if old_labels != new_labels
+          raise(
+            Samson::Hooks::UserError,
+            "Updating #{static.join(".")} from #{old_labels.inspect} to #{new_labels.inspect} " \
+            "can only be done can only be done by deleting and redeploying"
+          )
+        end
       end
 
       def template_for_update
@@ -169,7 +186,7 @@ module Kubernetes
       end
 
       def loop_sleep
-        sleep 2 unless Rails.env == 'test'
+        sleep 2 unless Rails.env.test?
       end
 
       def restore_template
