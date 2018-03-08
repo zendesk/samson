@@ -5,12 +5,15 @@ SingleCov.covered!
 
 describe RestartSignalHandler do
   def handle
-    Signal.expects(:trap).with('SIGUSR1')
+    @puma_restarted = false
+    Signal.expects(:trap).with('SIGUSR1').returns(-> do
+      @puma_restarted = true
+      Thread.current.kill # simulates passing signal to puma and it calling exec
+    end)
     handler = RestartSignalHandler.listen
-
-    Process.expects(:kill).with('SIGUSR2', Process.pid)
-    handler.send(:signal_restart)
+    Thread.new { handler.send(:signal_restart) }.join
     sleep 0.1
+    assert @puma_restarted
   end
 
   def silence_stdout
@@ -26,13 +29,19 @@ describe RestartSignalHandler do
   before do
     # make sure we never do something silly
     Signal.expects(:trap).never
-    Process.expects(:trap).never
     RestartSignalHandler.any_instance.expects(:sleep).never
   end
 
   describe ".listen" do
     it "waits for SIGUSR1 and then kills the underlying server" do
       handle
+    end
+
+    it 'fails when Puma handler was never set up' do
+      Signal.expects(:trap).with('SIGUSR1').returns('DEFAULT') # returned when no previous trap was set up
+      assert_raises RuntimeError, 'Wrong boot order, puma needs to be loaded first' do
+        RestartSignalHandler.listen
+      end
     end
 
     it "turns job processing off" do
@@ -64,8 +73,33 @@ describe RestartSignalHandler do
       silence_thread_exceptions do
         assert_raises(RuntimeError) { handle }.message.must_equal "Whoops"
       end
+    end
 
-      Process.kill('SIGUSR2', Process.pid) # satisfy expect from `before`
+    it 'performs a hard restart if puma takes too long to call exec' do
+      Signal.expects(:trap).with('SIGUSR1').returns(-> {})
+      handler = RestartSignalHandler.listen
+      handler.expects(:sleep)
+      handler.expects(:hard_restart)
+
+      handler.send(:signal_restart)
+      wait_for_threads # lets signal thread finish
+    end
+  end
+
+  describe ".hard_restart" do
+    it 'reports to rollbar and then hard restarts' do
+      Signal.expects(:trap).with('SIGUSR1').returns(-> {})
+      Thread.expects(:new) # ignore background runner
+      handler = RestartSignalHandler.listen
+
+      ErrorNotifier.expects(:notify).with('Hard restarting, requests will be lost', sync: true)
+      handler.expects(:output).with('Error: Sending SIGTERM to hard restart')
+      Process.expects(:kill).with(:SIGTERM, Process.pid)
+      handler.expects(:sleep)
+      handler.expects(:output).with('Error: Sending SIGKILL to hard restart')
+      Process.expects(:kill).with(:SIGKILL, Process.pid)
+
+      handler.send(:hard_restart)
     end
   end
 
