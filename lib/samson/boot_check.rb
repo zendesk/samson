@@ -15,12 +15,13 @@ module Samson
           end
         else
           # make sure we do not regress into slow startup time by preloading too much
-          [
-            ActiveRecord::Base.send(:descendants).map(&:name) - ["Audited::Audit"],
+          bad = [
+            ActiveRecord::Base.descendants.map(&:name) - ["Audited::Audit"],
             ActionController::Base.descendants.map(&:name),
-            (defined?(Mocha) && "mocha"),
-            Thread.list.count == 1 || "Extra threads"
-          ].compact.flatten.each { |c| raise "#{c} should not be loaded" }
+            (const_defined?(:Mocha) && "mocha"),
+            ((Thread.list.count != 1) && "Extra threads")
+          ].flatten.select { |x| x }
+          raise "#{bad.join(", ")} should not be loaded" if bad.any?
         end
       end
     end
