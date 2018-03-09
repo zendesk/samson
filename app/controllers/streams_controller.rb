@@ -52,12 +52,17 @@ class StreamsController < ApplicationController
     end
 
     if @deploy
-      params = {
+      data = {
         title: deploy_page_title,
         html: render_to_body(partial: 'deploys/header', formats: :html)
       }
-      params[:notification] = deploy_notification if event == :finished
-      JSON.dump(params)
+
+      if event == :finished
+        data[:notification] = deploy_notification
+        data[:favicon_path] = self.class.helpers.deploy_favicon_path(@deploy)
+      end
+
+      JSON.dump(data)
     else
       JSON.dump(
         title: job_page_title,
