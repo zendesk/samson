@@ -8,6 +8,20 @@ module SamsonRollbar
   end
 end
 
+Samson::Hooks.callback :project_created do |name|
+  response = Faraday.post(
+    Rollbar.configuration.web_base + '/api/1/projects',
+    access_token: ENV['ROLLBAR_ACCOUNT_TOKEN'],
+    name: name
+  )
+
+  if response.success?
+    'Rollbar project created successfully'
+  else
+    'There was a problem creating a Rollbar project. Please create one manually.'
+  end
+end
+
 Samson::Hooks.callback :error do |exception, options|
   sync = options[:sync]
   options = options.without(:sync)

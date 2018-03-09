@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 require 'csv'
+require 'action_view'
 
 class ProjectsController < ApplicationController
+  include ActionView::Helpers::OutputSafetyHelper
   include CurrentProject
 
   skip_before_action :require_project, only: [:index, :new, :create]
@@ -40,7 +42,11 @@ class ProjectsController < ApplicationController
       if Rails.application.config.samson.project_created_email
         ProjectMailer.created_email(@current_user, @project).deliver_now
       end
-      redirect_to @project
+
+      hook_messages = Samson::Hooks.fire(:project_created, @project.name).select { |res| res.is_a?(String) }
+      message = safe_join(hook_messages.unshift('Project created successfully'), '<br/>'.html_safe)
+
+      redirect_to @project, notice: message
       Rails.logger.info("#{@current_user.name_and_email} created a new project #{@project.to_param}")
     else
       render :new
