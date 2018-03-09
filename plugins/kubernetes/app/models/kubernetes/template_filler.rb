@@ -40,6 +40,7 @@ module Kubernetes
 
           set_name
           set_contact_info
+          set_repo_info
           set_spec_template_metadata
           set_docker_image unless verification
           set_resource_usage
@@ -187,6 +188,10 @@ module Kubernetes
     def set_contact_info
       annotations[:deployer] = @doc.kubernetes_release.user&.email.to_s
       annotations[:owner] = project.owner.to_s
+    end
+
+    def set_repo_info
+      annotations[:"samson/github-repo"] = project.repository_path
     end
 
     def secret_annotations
