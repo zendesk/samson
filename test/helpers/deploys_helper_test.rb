@@ -65,7 +65,7 @@ describe DeploysHelper do
     it "renders" do
       @deploy = deploy
       @project = projects(:test)
-      deploy_page_title.must_equal "Staging deploy (succeeded) - Foo"
+      deploy_page_title.must_equal "Staging deploy - Foo"
     end
   end
 
