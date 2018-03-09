@@ -281,23 +281,32 @@ describe Stage do
   end
 
   describe ".build_clone" do
-    before do
-      subject.notify_email_address = "test@test.ttt"
-      subject.flowdock_flows = [FlowdockFlow.new(name: "test", token: "abcxyz", stage_id: subject.id)]
-      subject.next_stage_ids = [1, 2]
-      subject.save
-
-      @clone = Stage.build_clone(subject)
+    def clone_diff
+      stage_attributes = stage.attributes
+      cloned.attributes.map { |k, v| [k, stage_attributes[k], v] unless stage_attributes[k] == v }.compact
     end
 
-    it "returns an unsaved copy of the given stage with exactly the same everything except id" do
-      @clone.attributes.except("id", "next_stage_ids", "template_stage_id").
-          must_equal subject.attributes.except("id", "next_stage_ids", "template_stage_id")
-      @clone.id.wont_equal subject.id
+    let(:stage) { stages(:test_staging) }
+    let(:cloned) { Stage.build_clone(stage) }
+
+    it "returns an unsaved copy of the given stage" do
+      clone_diff.must_equal(
+        [
+          ["id", stage.id, nil],
+          ["is_template", true, false],
+          ["template_stage_id", nil, stage.id]
+        ]
+      )
     end
 
-    it "doesn't clone the deploy pipeline" do
-      @clone.next_stage_ids.wont_equal subject.next_stage_ids
+    it "copies associations" do
+      stage.flowdock_flows = [FlowdockFlow.new(name: "test", token: "abcxyz", stage_id: subject.id)]
+      cloned.flowdock_flows.size.must_equal 1
+    end
+
+    it "does not copy deploy pipeline since that would result in duplicate deploys" do
+      stage.next_stage_ids = [stages(:test_production).id]
+      cloned.next_stage_ids.must_equal []
     end
   end
 

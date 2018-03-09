@@ -135,9 +135,7 @@ class MassRolloutsController < ApplicationController
     stage = Stage.build_clone(
       template_stage,
       deploy_groups: [deploy_group],
-      name: deploy_group.name,
-      is_template: false,
-      next_stage_ids: []
+      name: deploy_group.name
     )
 
     stage.save!
