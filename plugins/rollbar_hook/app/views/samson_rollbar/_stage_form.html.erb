@@ -25,6 +25,10 @@
             <%= rollbar_field.text_field :environment, class: "form-control", placeholder: "Environment" %>
           </div>
 
+          <div class="col-lg-1">
+            <%= button_tag "Test", class: "btn btn-default test-rollbar" %>
+          </div>
+
           <%= delete_checkbox rollbar_field %>
         </div>
       <% end %>
@@ -32,3 +36,17 @@
     </div>
   </fieldset>
 <% end %>
+
+<script>
+  // submit current form content and display result
+  $(function(){
+    $(".test-rollbar").click(function(e){
+      e.preventDefault();
+      var data = {};
+      $(this).parent().siblings().find("[type=text],[type=url]").each(function(i, input){
+        data[input.id.split(/\d_/)[1]] = input.value;
+      })
+      
+    });
+  })
+</script>
