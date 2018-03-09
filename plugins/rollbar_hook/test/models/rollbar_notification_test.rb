@@ -7,7 +7,6 @@ describe RollbarNotification do
   let(:endpoint) { 'https://rollbar.com' }
   def notification(token = 'token')
     RollbarNotification.new(
-      project: projects(:test),
       webhook_url: endpoint,
       access_token: token,
       environment: 'test',
@@ -40,21 +39,6 @@ describe RollbarNotification do
       Rails.logger.expects(:info).with("Failed to send Rollbar notification. HTTP 500: oops..")
 
       notification.deliver
-    end
-
-    it "can resolve access-token secret" do
-      request = stub_request(:post, endpoint).with(
-        body: {
-          access_token: 'MY-SECRET',
-          environment: 'test',
-          revision: 'v1',
-          local_username: 'Samson'
-        }
-      )
-
-      create_secret "global/global/global/foo_token"
-      notification("secret://foo_token").deliver
-      assert_requested request
     end
   end
 end
