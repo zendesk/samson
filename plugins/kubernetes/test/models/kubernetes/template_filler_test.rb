@@ -167,9 +167,18 @@ describe Kubernetes::TemplateFiller do
       end
     end
 
+    describe "github-repo" do
+      let(:result) { template.to_hash.dig_fetch(:spec, :template, :metadata, :annotations, :"samson/github-repo") }
+
+      it "sets github-repo" do
+        result.must_equal "bar/foo"
+      end
+    end
+
     describe "configmap" do
-      it "only modifies namespec" do
+      it "only modifies namespace since there is no template" do
         raw_template[:kind] = "ConfigMap"
+        raw_template.delete(:spec)
         raw_template[:metadata][:namespace] = 'old'
         old = raw_template.deep_dup
         old[:metadata][:namespace] = 'pod1'
@@ -503,10 +512,9 @@ describe Kubernetes::TemplateFiller do
         )
 
         # secrets got resolved?
-        template.to_hash[:spec][:template][:metadata][:annotations].
-          except(init_container_key, :deployer, :owner).must_equal(
-            "secret/FOO" => "global/global/global/bar"
-          )
+        template.to_hash[:spec][:template][:metadata][:annotations].select { |k, _| k.match?("secret") }.must_equal(
+          "secret/FOO" => "global/global/global/bar"
+        )
       end
 
       it "fails when vault is not configured" do
