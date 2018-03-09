@@ -50,6 +50,7 @@ module Samson
       :link_parts_for_resource,
       :project_docker_build_method_options,
       :project_permitted_params,
+      :project_created,
       :release_deploy_conditions,
       :stage_clone,
       :stage_permitted_params

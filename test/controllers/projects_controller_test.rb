@@ -243,22 +243,34 @@ describe ProjectsController do
 
     describe "#create" do
       before do
-        post :create, params: params
+        Samson::Hooks.expects(:fire).with(:project_permitted_params).returns([])
       end
 
       describe "with valid parameters" do
+        let(:project_name) { 'Hello' }
+
+        let(:project) { Project.where(name: project_name).first }
+
         let(:params) do
           {
             project: {
-              name: "Hello",
+              name: project_name,
               repository_url: "git://foo.com/bar"
             }
           }
         end
-        let(:project) { Project.where(name: "Hello").first }
+
+        before do
+          Samson::Hooks.expects(:fire).with(:project_created, project_name).returns([1, nil, 'Huzzah!'])
+          post :create, params: params
+        end
 
         it "redirects to the new project's page" do
           assert_redirected_to project_path(project)
+        end
+
+        it "shows correct flash message" do
+          flash[:notice].must_equal('Project created successfully<br/>Huzzah!')
         end
 
         it "creates a new project" do
@@ -277,6 +289,7 @@ describe ProjectsController do
         let(:params) { {project: {name: ""}} }
 
         it "renders new template" do
+          post :create, params: params
           assert_template :new
         end
       end
