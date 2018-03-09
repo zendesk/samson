@@ -28,7 +28,7 @@ module DeploysHelper
   end
 
   def deploy_page_title
-    "#{@deploy.stage.name} deploy (#{@deploy.status}) - #{@project.name}"
+    "#{@deploy.stage.name} deploy - #{@project.name}"
   end
 
   def deploy_notification
