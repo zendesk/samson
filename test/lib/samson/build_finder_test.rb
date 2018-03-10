@@ -189,6 +189,17 @@ describe Samson::BuildFinder do
         setup_using_previous_builds
         execute.must_equal [build]
       end
+
+      it "prefers previous builds since that is what the user selected" do
+        setup_using_previous_builds
+        current = builds(:staging)
+        current.update_columns(
+          docker_repo_digest: 'ababababab',
+          git_sha: job.commit,
+          image_name: build.image_name
+        )
+        execute.must_equal [build]
+      end
     end
 
     describe "when using external builds" do
