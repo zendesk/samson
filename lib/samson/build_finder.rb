@@ -45,9 +45,10 @@ module Samson
       all = []
 
       wait_for_build_creation do |last_try|
+        possible = possible_builds
         needed.delete_if do |dockerfile, image|
           found = self.class.detect_build_by_selector!(
-            possible_builds, dockerfile, image, fail: (last_try && build_disabled)
+            possible, dockerfile, image, fail: (last_try && build_disabled)
           )
           if found
             all << found
@@ -79,12 +80,13 @@ module Samson
 
     private
 
+    # all the builds we could use, starting with the finished ones
     def possible_builds
       commits = [@job.commit]
 
       if defined?(SamsonKubernetes) && @job.deploy.kubernetes_reuse_build
         previous = @job.deploy.previous_deploy&.job&.commit
-        commits << previous if previous
+        commits.unshift previous if previous
       end
 
       Build.where(git_sha: commits).sort_by { |build| commits.index(build.git_sha) }
