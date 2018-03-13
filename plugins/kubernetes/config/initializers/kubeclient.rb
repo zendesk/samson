@@ -19,3 +19,13 @@ Kubeclient::Client.class_eval do
     end
   end
 end
+
+# we want know what cluster had ssl errors
+Kubeclient::Client.prepend(Module.new do
+  def handle_exception
+    super
+  rescue OpenSSL::SSL::SSLError
+    $!.message << " (#{@api_endpoint})" unless $!.message.frozen?
+    raise
+  end
+end)
