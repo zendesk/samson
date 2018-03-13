@@ -6,6 +6,7 @@ ignored = [
   'ActionController::UnknownHttpMethod',
   'ActionController::UnpermittedParameters',
   'ActionController::ParameterMissing',
+  'ActionController::RoutingError',
   'ActiveRecord::RecordNotFound',
 ]
 
