@@ -37,6 +37,21 @@ module Samson
           data
         end
 
+        # useful for console sessions
+        def move(from, to)
+          raise "#{to} already exists" if exist?(to)
+
+          old = read(from, include_value: true)
+
+          old[:user_id] = old.delete(:creator_id)
+          write(to, old)
+
+          old[:user_id] = old.delete(:updater_id)
+          write(to, old)
+
+          delete(from)
+        end
+
         def exist?(id)
           backend.read_multi([id]).values.map(&:nil?) == [false]
         end

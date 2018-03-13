@@ -131,6 +131,33 @@ describe Samson::Secrets::Manager do
     end
   end
 
+  describe ".move" do
+    def move
+      Samson::Secrets::Manager.move "global/foo/global/bar", "global/baz/global/bar"
+    end
+
+    before do
+      create_secret "global/foo/global/bar" # create
+      create_secret "global/foo/global/bar", user_id: users(:deployer).id # update
+    end
+
+    it "moves and cleanes up the old" do
+      old = Samson::Secrets::Manager.read "global/foo/global/bar", include_value: true
+
+      move
+
+      moved = Samson::Secrets::Manager.read("global/baz/global/bar", include_value: true)
+      moved.except(:updated_at, :created_at).must_equal(old.except(:updated_at, :created_at))
+      refute Samson::Secrets::Manager.exist?("global/foo/global/bar")
+    end
+
+    it "fails when target exists" do
+      create_secret "global/baz/global/bar"
+      e = assert_raises { move }
+      e.message.must_equal "global/baz/global/bar already exists"
+    end
+  end
+
   describe ".exist?" do
     it "is true when when it exists" do
       Samson::Secrets::Manager.exist?(secret.id).must_equal true
