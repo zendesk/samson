@@ -226,7 +226,7 @@ describe Samson::BuildFinder do
 
         e = assert_raises(Samson::Hooks::UserError) { execute }
         e.message.must_equal(
-          "Did not find build for dockerfile \"foobar\" or image_name \"foo-foobar\".\nFound builds: []."
+          "Did not find build for dockerfile \"foobar\" or image_name \"foobar\".\nFound builds: []."
         )
       end
 

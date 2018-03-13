@@ -422,6 +422,18 @@ describe Project do
     it "builds nonstandard" do
       project.docker_image("Dockerfile.baz").must_equal "foo-baz"
     end
+
+    it "builds folders" do
+      project.docker_image("baz/Dockerfile").must_equal "foo-baz"
+    end
+
+    it "builds standard" do
+      project.docker_image("Dockerfile").must_equal "foo"
+    end
+
+    it "builds 1-off to allow flexibility" do
+      project.docker_image("wut").must_equal "wut"
+    end
   end
 
   describe '#soft_delete' do

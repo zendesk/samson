@@ -92,11 +92,15 @@ class Project < ActiveRecord::Base
   end
 
   def docker_image(dockerfile)
-    name = permalink_base
-    if suffix = dockerfile.gsub(/^Dockerfile\.?|\/Dockerfile\.?/, '').presence
-      name << "-#{suffix.parameterize}"
+    if suffix = dockerfile.dup.gsub!(/(^|\/)Dockerfile\.?/, '')
+      if suffix.present?
+        "#{permalink_base}-#{suffix.parameterize}"
+      else
+        permalink_base
+      end
+    else
+      dockerfile
     end
-    name
   end
 
   def dockerfile_list
