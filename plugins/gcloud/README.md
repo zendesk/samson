@@ -2,7 +2,8 @@
 
 ## Image tagging
 
-Tag gcloud images with the stage permalink they deployed to, so developers can pull down the "production" image.
+Tag gcloud images with the stage permalink they deployed to, so developers can pull down the a specific stage's image.
+If the stage is a production stage, the image is also tagged with 'production'.
 
 ## Image building
 

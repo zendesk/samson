@@ -33,6 +33,26 @@ describe SamsonGcloud::ImageTagger do
       deploy.job.output.must_include "\nOUT\nSUCCESS"
     end
 
+    it 'tags with production if stage is production' do
+      deploy.stage.expects(:production?).returns(true)
+
+      Samson::CommandExecutor.expects(:execute).with(
+        'gcloud', 'container', 'images', 'add-tag', 'gcr.io/sdfsfsdf@some-sha', 'gcr.io/sdfsfsdf:production',
+        '--quiet', *auth_options, anything
+      ).returns([true, "OUT"])
+
+      Samson::CommandExecutor.expects(:execute).with(
+        'gcloud', 'container', 'images', 'add-tag', 'gcr.io/sdfsfsdf@some-sha', 'gcr.io/sdfsfsdf:staging',
+        '--quiet', *auth_options, anything
+      ).returns([true, "OUT"])
+
+      deploy.stage.permalink.wont_equal 'production'
+
+      tag
+
+      deploy.job.output.must_include "\nOUT\nSUCCESS"
+    end
+
     it "tags other regions" do
       build.update_column(:docker_repo_digest, 'asia.gcr.io/sdfsfsdf@some-sha')
       Samson::CommandExecutor.expects(:execute).returns([true, "OUT"])
