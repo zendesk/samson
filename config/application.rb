@@ -14,6 +14,7 @@ Bundler.require(:assets) if Rails.env.development? || ENV["PRECOMPILE"]
 # Railties need to be loaded before the application is defined
 if ['development', 'staging'].include?(Rails.env) && ENV["SERVER_MODE"]
   require 'rack-mini-profiler' # side effect: removes expires headers
+  Rack::MiniProfiler.config.authorization_mode = :allow_all
 end
 
 if ['staging', 'production'].include?(Rails.env)
