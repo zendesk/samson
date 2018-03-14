@@ -14,15 +14,25 @@ module SamsonGcloud
           digest = build.docker_repo_digest
           next unless digest.match?(/(^|\/|\.)gcr.io\//) # gcr.io or https://gcr.io or region like asia.gcr.io
           base = digest.split('@').first
-          tag = deploy.stage.permalink
-          command = [
-            "gcloud", "container", "images", "add-tag", digest, "#{base}:#{tag}", "--quiet", *SamsonGcloud.cli_options
-          ]
-          success, output = Samson::CommandExecutor.execute(*command, timeout: 10, whitelist_env: ["PATH"])
-          deploy.job.append_output!(
-            "Tagging GCR image:\n#{command.join(" ")}\n#{output.strip}\n#{success ? "SUCCESS" : "FAILED"}\n"
-          )
+
+          if deploy.stage.production?
+            tag_image('production', deploy, base, digest)
+          end
+
+          tag_image(deploy.stage.permalink, deploy, base, digest)
         end
+      end
+
+      private
+
+      def tag_image(tag, deploy, base, digest)
+        command = [
+          "gcloud", "container", "images", "add-tag", digest, "#{base}:#{tag}", "--quiet", *SamsonGcloud.cli_options
+        ]
+        success, output = Samson::CommandExecutor.execute(*command, timeout: 10, whitelist_env: ["PATH"])
+        deploy.job.append_output!(
+          "Tagging GCR image:\n#{command.join(" ")}\n#{output.strip}\n#{success ? "SUCCESS" : "FAILED"}\n"
+        )
       end
     end
   end
