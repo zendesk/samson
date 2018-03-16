@@ -5,9 +5,13 @@ require 'rollbar/user_informer'
 
 module SamsonRollbar
   class Engine < Rails::Engine
+    initializer "refinery.assets.precompile" do |app|
+      app.config.assets.precompile.append %w[rollbar/icon.png]
+    end
   end
 end
 
+Samson::Hooks.view :project_tabs_view, 'samson_rollbar/project_tab'
 Samson::Hooks.view :project_form, "samson_rollbar/fields"
 
 Samson::Hooks.callback :project_permitted_params do

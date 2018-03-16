@@ -1,0 +1,11 @@
+<fieldset>
+    <legend>
+      Rollbar
+    </legend>
+    <% help_text = <<~TEXT
+        Token for your Rollbar project with READ scope.
+        Supports secret lookup ex. secret://rollbar_read_token
+       TEXT
+    %>
+  <%= form.input :rollbar_read_token, help: help_text %>
+</fieldset>
