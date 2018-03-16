@@ -572,4 +572,18 @@ describe Project do
       project.as_json.fetch("repository_path").must_equal "bar/foo"
     end
   end
+
+  describe "#resolved_rollbar_read_token" do
+    it 'resolves the secret' do
+      create_secret "global/global/global/rollbar_read_token", value: 'super secret secret'
+
+      project.rollbar_read_token = "secret://rollbar_read_token"
+      project.resolved_rollbar_read_token.must_equal 'super secret secret'
+    end
+
+    it 'defaults to attribute value if value doesnt match secret prefix' do
+      project.rollbar_read_token = "1234Foo"
+      project.resolved_rollbar_read_token.must_equal '1234Foo'
+    end
+  end
 end

@@ -8,6 +8,12 @@ module SamsonRollbar
   end
 end
 
+Samson::Hooks.view :project_form, "samson_rollbar/fields"
+
+Samson::Hooks.callback :project_permitted_params do
+  [:rollbar_read_token]
+end
+
 Samson::Hooks.callback :error do |exception, options|
   sync = options[:sync]
   options = options.without(:sync)

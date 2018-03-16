@@ -5,6 +5,14 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe SamsonRollbar do
+  describe 'project_permitted_params_callback' do
+    it 'adds rollbar_read_token to permitted params' do
+      Samson::Hooks.only_callbacks_for_plugin('rollbar', :project_permitted_params) do
+        Samson::Hooks.fire(:project_permitted_params).must_equal [[:rollbar_read_token]]
+      end
+    end
+  end
+
   describe 'error callback' do
     let(:exception) { mock('exception') }
 

@@ -184,6 +184,14 @@ class Project < ActiveRecord::Base
     super(except: [:token, :deleted_at], methods: [:repository_path])
   end
 
+  def resolved_rollbar_read_token
+    if key = rollbar_read_token.to_s.dup.sub!(TerminalExecutor::SECRET_PREFIX, "")
+      Samson::Secrets::KeyResolver.new(self, []).read(key)
+    else
+      rollbar_read_token
+    end
+  end
+
   private
 
   def repository_homepage_github
