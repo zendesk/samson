@@ -10,7 +10,7 @@ describe StreamsController do
   let(:stage) { stages(:test_staging) }
   let(:job) { jobs(:running_test) }
 
-  after { kill_extra_threads } # SSE heartbeat never finishes
+  after { maxitest_kill_extra_threads } # SSE heartbeat never finishes
 
   as_a_viewer do
     describe "#show" do

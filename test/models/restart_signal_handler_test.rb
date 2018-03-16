@@ -82,7 +82,7 @@ describe RestartSignalHandler do
       handler.expects(:hard_restart)
 
       handler.send(:signal_restart)
-      wait_for_threads # lets signal thread finish
+      maxitest_wait_for_extra_threads # lets signal thread finish
     end
   end
 
