@@ -12,7 +12,7 @@ describe RestartSignalHandler do
     end)
     handler = RestartSignalHandler.listen
     Thread.new { handler.send(:signal_restart) }.join
-    sleep 0.1
+    maxitest_wait_for_extra_threads
     assert @puma_restarted
   end
 
@@ -82,7 +82,7 @@ describe RestartSignalHandler do
       handler.expects(:hard_restart)
 
       handler.send(:signal_restart)
-      wait_for_threads # lets signal thread finish
+      maxitest_wait_for_extra_threads # lets signal thread finish
     end
   end
 

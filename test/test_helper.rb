@@ -19,6 +19,7 @@ require 'rails-controller-testing'
 Rails::Controller::Testing.install
 require 'maxitest/autorun'
 require 'maxitest/timeout'
+require 'maxitest/threads'
 require 'webmock/minitest'
 require 'mocha/setup'
 

@@ -283,7 +283,7 @@ GEM
     mail (2.7.0)
       mini_mime (>= 0.1.1)
     marco-polo (1.2.1)
-    maxitest (2.7.0)
+    maxitest (2.8.0)
       minitest (>= 5.0.0, < 5.12.0)
     metaclass (0.0.4)
     method_source (0.8.2)

@@ -14,7 +14,7 @@ describe Samson::Periodical do
   end
   let(:custom_error) { Class.new(StandardError) }
 
-  after { kill_extra_threads } # concurrent leaves a bunch of threads running
+  after { maxitest_kill_extra_threads } # concurrent leaves a bunch of threads running
 
   around do |test|
     begin
