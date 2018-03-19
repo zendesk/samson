@@ -52,10 +52,10 @@ module Samson
 
     config.eager_load_paths << "#{config.root}/lib"
 
-    if Rails.env.test?
+    case ENV["CACHE_STORE"]
+    when "memory"
       config.cache_store = :memory_store
-    else
-      servers = []
+    when "memcached"
       options = {
         value_max_bytes: 3000000,
         compress: true,
@@ -75,8 +75,12 @@ module Samson
           socket_timeout: 1.5,
           socket_failure_delay: 0.2
         )
+      else
+        servers = ["localhost:11211"]
       end
       config.cache_store = :mem_cache_store, servers, options
+    else
+      raise "Set CACHE_STORE environment variable to either memory or memcached"
     end
 
     # Allow streaming

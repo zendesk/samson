@@ -35,8 +35,7 @@ Samson will:
 #### Requirements
 
 * MySQL, Postgresql, or SQLite
-* Memcache
-* Ruby (>= 2.3.1)
+* Ruby (see .ruby-version)
 * Git (>= 1.7.2)
 
 ### Documentation
