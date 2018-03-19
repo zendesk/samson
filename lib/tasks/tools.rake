@@ -11,10 +11,14 @@ namespace :tools do
     end)
 
     production_stages = Stage.where.not(permalink: 'production').select(&:production?)
-    deploys = production_stages.map do |stage|
-      stage.deploys.where(created_at: (1.year.ago...Time.zone.local.new(2018, 3, 16))).select(&:succeeded?).first
-    end
 
-    deploys.each { |deploy| SamsonGcloud::ImageTagger.tag(deploy) }
+    ids = Deploy.
+      reorder(nil).
+      successful.
+      where(stage_id: production_stages.map(&:id), created_at: (1.year.ago...Time.parse('2018-03-16'))).
+      group(:stage_id).
+      pluck('max(deploys.id)')
+
+    Deploy.find(ids).each { |deploy| SamsonGcloud::ImageTagger.tag(deploy) }
   end
 end
