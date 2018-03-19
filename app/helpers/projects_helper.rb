@@ -5,10 +5,10 @@ module ProjectsHelper
   def star_for_project(project)
     starred = current_user.starred_project?(project)
 
-    content_tag :span, class: 'star' do
+    content_tag :span do
       link_to(
         '', project_stars_path(project),
-        class: "glyphicon glyphicon-star #{"starred" if starred}",
+        class: "glyphicon glyphicon-star star project-star #{"starred" if starred}",
         data: {method: :post, remote: true},
         title: "#{starred ? "Unstar" : "Star"} this project"
       )
