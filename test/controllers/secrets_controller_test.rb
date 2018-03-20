@@ -337,6 +337,14 @@ describe SecretsController do
           assert flash[:error]
         end
 
+        it 'changes value placeholder and makes it required on duplicate secret' do
+          do_update
+
+          assert_response :ok
+          assert_select '#secret_value[required=?]', 'required'
+          assert_select '#secret_value[placeholder]', count: 0
+        end
+
         it 'allows duplicate secret if allow_duplicates is true' do
           do_update(allow_duplicates: '1')
 
