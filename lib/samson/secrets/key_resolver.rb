@@ -51,6 +51,14 @@ module Samson
         end
       end
 
+      def resolved_attribute(attribute_value)
+        if key = attribute_value.to_s.dup.sub!(TerminalExecutor::SECRET_PREFIX, "")
+          read(key)
+        else
+          attribute_value
+        end
+      end
+
       private
 
       def find_keys(secret_key, env_name, id_list)

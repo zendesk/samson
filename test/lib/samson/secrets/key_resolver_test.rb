@@ -159,4 +159,21 @@ describe Samson::Secrets::KeyResolver do
       e.message.must_include 'yyy'
     end
   end
+
+  describe "#resolved_attribute" do
+    let(:deploy) { deploys(:succeeded_test) }
+    let(:resolver) { Samson::Secrets::KeyResolver.new(deploy.project, []) }
+
+    it 'resolves the secret' do
+      create_secret "global/global/global/rollbar_read_token", value: 'super secret value'
+
+      deploy.reference = "secret://rollbar_read_token"
+      resolver.resolved_attribute(deploy.reference).must_equal 'super secret value'
+    end
+
+    it 'defaults to attribute value if value doesnt match secret prefix' do
+      deploy.reference = '1234Foo'
+      resolver.resolved_attribute(deploy.reference).must_equal '1234Foo'
+    end
+  end
 end

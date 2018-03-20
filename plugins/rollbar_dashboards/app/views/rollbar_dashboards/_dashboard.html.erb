@@ -1,0 +1,21 @@
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <%= image_tag 'rollbar_dashboards/icon', height: '30px' %>
+    <%= "#{title} (#{dashboard_data.first.base_url})" %>
+  </div>
+  <% items = dashboard_data.second %>
+  <% if items %>
+    <table class="table">
+      <tr>
+        <th>Count</th>
+        <th>Title</th>
+        <th>Environment</th>
+      </tr>
+      <%= render partial: 'rollbar_dashboards/item', collection: items %>
+    </table>
+  <% else %>
+    <div class="panel-body">
+      <p>There are no items to display at this time...</p>
+    </div>
+  <% end %>
+</div>

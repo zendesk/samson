@@ -8,6 +8,8 @@
   <%= render 'header' %>
 </div>
 
+<%= Samson::Hooks.render_views(:deploy_show_view, self, deploy: @deploy) %>
+
 <ul id="deploy-tabs" class="nav nav-tabs" data-changeset-url="<%= changeset_project_deploy_url(@project, @deploy) %>">
   <li class="active"><a href="#output" data-toggle="tab">Output</a></li>
   <li><a href="#files" data-type="github" data-toggle="tab">Files</a></li>

@@ -1,3 +1,3 @@
 # Rollbar Dashboards Plugin
 
-A super awesome plugin. You should use it.
+A plugin which displays the top Rollbar items for projects and deploys.

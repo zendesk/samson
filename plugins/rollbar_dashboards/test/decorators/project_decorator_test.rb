@@ -7,6 +7,8 @@ describe Project do
   let(:project) { projects(:test) }
 
   describe "assigning rollbar attributes" do
+    before { RollbarDashboards::Setting.destroy_all }
+
     it "assigns rollbar dashboard attributes" do
       project.attributes = {
         rollbar_dashboards_settings_attributes: { 0 => { read_token: '123', base_url: 'https://foobar.org' } }

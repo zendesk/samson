@@ -1,0 +1,13 @@
+<% if deploy.project.rollbar_dashboards_settings.any? && deploy.succeeded? %>
+  <%# replaced by responsive_load.js.erb %>
+  <%= content_tag(
+      :span,
+      '',
+      class: 'lazy-load',
+      data: {
+          url: deploy_dashboard_deploy_rollbar_dashboards_dashboards_path(deploy),
+          delay: 1000
+      }
+    )
+  %>
+<% end %>

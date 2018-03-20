@@ -204,6 +204,16 @@ describe Deploy do
     end
   end
 
+  describe "#next_successful_deploy" do
+    it 'returns the next successful deploy' do
+      deploy1 = create_deploy!
+      create_deploy!(job: create_job!(status: "errored"))
+      deploy3 = create_deploy!
+
+      deploy1.next_successful_deploy.must_equal deploy3
+    end
+  end
+
   describe "#changeset" do
     it "creates a changeset to the previous deploy" do
       deploy.changeset.commit.must_equal "abcabcaaabcabcaaabcabcaaabcabcaaabcabca1"
@@ -375,6 +385,26 @@ describe Deploy do
 
     it "properly scopes new deploys to the correct stage" do
       prod_stage.deploys.prior_to(Deploy.new).first.must_equal prod_deploy
+    end
+  end
+
+  describe ".next" do
+    let(:deploys) { Array.new(3).map { create_deploy! } }
+    let(:prod_stage) { stages(:test_production) }
+    let(:other_deploy) { create_deploy!(stage: prod_stage) }
+
+    before do
+      Deploy.delete_all
+      deploys
+      other_deploy
+    end
+
+    it 'scopes the records to deploys after the one passed in' do
+      stage.deploys.after(deploys[1]).first.must_equal deploys[2]
+    end
+
+    it 'properly scopes new deploys to the correct stage' do
+      stage.deploys.after(deploys[2]).must_equal []
     end
   end
 

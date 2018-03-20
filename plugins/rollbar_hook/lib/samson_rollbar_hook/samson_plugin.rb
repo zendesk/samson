@@ -17,9 +17,10 @@ end
 
 Samson::Hooks.callback :after_deploy do |deploy|
   deploy.stage.rollbar_webhooks.each do |webhook|
+    key_resolver = Samson::Secrets::KeyResolver.new(webhook.stage.project, [])
     RollbarNotification.new(
       webhook_url: webhook.webhook_url,
-      access_token: webhook.resolved_access_token,
+      access_token: key_resolver.resolved_attribute(webhook.access_token),
       environment: webhook.environment,
       revision: deploy.reference
     ).deliver

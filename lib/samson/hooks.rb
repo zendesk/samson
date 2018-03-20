@@ -18,13 +18,15 @@ module Samson
       :deploy_group_table_header,
       :deploy_group_table_cell,
       :deploys_header,
+      :deploy_show_view,
       :deploy_tab_nav,
       :deploy_tab_body,
       :deploy_view,
       :deploy_form, # for external plugin, so they can add extra form fields
       :admin_menu,
       :manage_menu,
-      :project_tabs_view
+      :project_tabs_view,
+      :project_view
     ].freeze
 
     EVENT_HOOKS = [

@@ -91,6 +91,10 @@ class Deploy < ActiveRecord::Base
     stage.deploys.successful.prior_to(self).first
   end
 
+  def next_successful_deploy
+    stage.deploys.successful.after(self).first
+  end
+
   def changeset
     @changeset ||= changeset_to(previous_successful_deploy)
   end
@@ -164,6 +168,10 @@ class Deploy < ActiveRecord::Base
 
   def self.prior_to(deploy)
     deploy.persisted? ? where("#{table_name}.id < ?", deploy.id) : all
+  end
+
+  def self.after(deploy)
+    where("#{table_name}.id > ?", deploy.id)
   end
 
   def self.expired
