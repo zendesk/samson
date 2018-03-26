@@ -1,6 +1,8 @@
 // show loading animation and errors inside the container that is being replaced
 $(document).ready(function () {
-  $('.lazy-load').responsiveLoad();
+  $('.lazy-load').each(function () {
+    $(this).responsiveLoad();
+  });
 });
 
 $.fn.responsiveLoad = function(url, callback){
