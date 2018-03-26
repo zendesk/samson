@@ -54,6 +54,24 @@ module Samson
       end
     end
 
+    # Creates multi-row input field
+    def fields_for_many(association, description, add_rows_allowed: false)
+      content = ''.html_safe
+      if description.is_a?(Array)
+        description, description_options = description
+      end
+      content << content_tag(:p, description, description_options || {})
+      content << fields_for(association) do |a|
+        content_tag(:div, class: 'form-group') do
+          yield(a)
+          @template.delete_checkbox a
+        end
+      end
+      content << @template.link_to("Add row", "#", class: "duplicate_previous_row") if add_rows_allowed
+
+      content
+    end
+
     private
 
     # html regexp input ... allows blank values, does not know case insensitive so use a-zA-Z, does not know \A\z
