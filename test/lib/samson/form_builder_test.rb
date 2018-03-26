@@ -143,4 +143,31 @@ describe Samson::FormBuilder do
       builder.actions(label: 'Execute!').must_include "value=\"Execute!\""
     end
   end
+
+  describe '#fields_for_many' do
+    before { template.expects(:delete_checkbox).returns('delete_checkbox') }
+    def render(args)
+      builder.fields_for_many(*args) do |p|
+        p.text_field :name
+      end
+    end
+
+    it 'renders' do
+      result = render([:projects, 'cool stuff!'])
+
+      result.must_include '<p>cool stuff!</p>'
+      result.must_include 'form-group'
+      result.must_include 'delete_checkbox'
+    end
+
+    it 'can handle description options' do
+      result = render([:projects, ['cool stuff!', { class: 'cool-class' }]])
+      result.must_include '<p class="cool-class">'
+    end
+
+    it 'includes add new row link if option is true' do
+      result = render([:projects, 'cool stuff!', add_rows_allowed: true])
+      result.must_include 'Add row'
+    end
+  end
 end

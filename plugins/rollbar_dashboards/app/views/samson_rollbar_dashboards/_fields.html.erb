@@ -3,19 +3,21 @@
     Rollbar Dashboards
   </legend>
   <% @project.rollbar_dashboards_settings.build %>
-    <b>Base URL:</b> https://api.rollbar.com/api/1 unless you're using a self-hosted instance of Rollbar.<br>
-    <b>Access token:</b> Your Rollbar project's <b>read</b> token, supports secret lookup (e.g. secret://rollbar_read_token)<br>
-    <br/>
-    <%= form.fields_for :rollbar_dashboards_settings do |setting| %>
-      <div class="form-group">
-        <div class="col-lg-4">
-          <%= setting.url_field :base_url, class: "form-control", placeholder: "Base URL"  %>
-        </div>
-        <div class="col-lg-3">
-          <%= setting.text_field :read_token, class: "form-control", placeholder: "Project Read Token" %>
-        </div>
-        <%= delete_checkbox setting %>
-      </div>
-    <% end %>
-    <%= link_to "Add row", "#", class: "duplicate_previous_row" %>
+
+  <%
+     description = <<~HTML.html_safe
+      <b>Base URL:</b> https://api.rollbar.com/api/1 unless you're using a self-hosted instance of Rollbar.<br>
+      <b>Access token:</b> Your Rollbar project's <b>read</b> token, supports secret lookup (e.g. secret://rollbar_read_token)
+      <br/>
+     HTML
+  %>
+
+  <%= form.fields_for_many(:rollbar_dashboards_settings, description, add_rows_allowed: true) do |setting| %>
+    <div class="col-lg-4">
+      <%= setting.url_field :base_url, class: "form-control", placeholder: "Base URL"  %>
+    </div>
+    <div class="col-lg-3">
+      <%= setting.text_field :read_token, class: "form-control", placeholder: "Project Read Token" %>
+    </div>
+  <% end %>
 </fieldset>
