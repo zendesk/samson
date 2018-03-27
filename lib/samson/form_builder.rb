@@ -64,7 +64,7 @@ module Samson
       content << fields_for(association) do |a|
         content_tag(:div, class: 'form-group') do
           yield(a)
-          @template.delete_checkbox a
+          @template.concat @template.delete_checkbox a
         end
       end
       content << @template.link_to("Add row", "#", class: "duplicate_previous_row") if add_rows_allowed
