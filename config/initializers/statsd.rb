@@ -33,6 +33,16 @@ ActiveSupport::Notifications.subscribe("system_stats.samson") do |*, payload|
   payload.each { |key, value| Samson.statsd.gauge key.to_s, value }
 end
 
+ActiveSupport::Notifications.subscribe("wait_for_build.samson") do |*args|
+  event = ActiveSupport::Notifications::Event.new(*args)
+  tags = [
+    "project:#{event.payload.fetch(:project)}",
+    "external:#{event.payload.fetch(:external)}"
+  ]
+
+  Samson.statsd.timing "builds.time.wait_time", event.duration, tags: tags
+end
+
 # basic web stats
 ActiveSupport::Notifications.subscribe("process_action.action_controller") do |*args|
   event = ActiveSupport::Notifications::Event.new(*args)

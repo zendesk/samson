@@ -75,6 +75,10 @@ class Build < ActiveRecord::Base
     end
   end
 
+  def external?
+    external_status.present? || external_url.present?
+  end
+
   private
 
   def nil_out_blanks
@@ -118,9 +122,5 @@ class Build < ActiveRecord::Base
   def assign_number
     biggest_number = project.builds.maximum(:number) || 0
     self.number = biggest_number + 1
-  end
-
-  def external?
-    external_status.present? || external_url.present?
   end
 end

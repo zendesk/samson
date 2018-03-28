@@ -261,6 +261,24 @@ describe Build do
     end
   end
 
+  describe '#external' do
+    it 'returns true if external status is present' do
+      build.update_column(:external_status, 'succeeded')
+
+      assert build.external?
+    end
+
+    it 'returns true if external url is present' do
+      build.update_column(:external_url, 'https://build.com')
+
+      assert build.external?
+    end
+
+    it 'returns false if neither external status or url is present' do
+      refute build.external?
+    end
+  end
+
   describe ".cancel_stalled_builds" do
     before do
       build.update_columns(created_at: 3.hours.ago, external_status: 'running')
