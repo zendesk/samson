@@ -40,7 +40,9 @@ ActiveSupport::Notifications.subscribe("process_action.action_controller") do |*
   action = "action:#{event.payload.fetch(:action)}"
   format = "format:#{event.payload[:format] || 'all'}"
   format = "format:all" if format == "format:*/*"
-  status = event.payload[:status] || 401 # unauthorized redirect/error has no status because it is a `throw`
+  # Unauthorized and 500s have no status because it is a `throw`
+  # samson/vendor/bundle/gems/actionpack-5.1.4/lib/action_controller/metal/instrumentation.rb:35
+  status = event.payload[:status] || 'THR'
   tags = [controller, action, format]
 
   # db and view runtime are not set for actions without db/views
