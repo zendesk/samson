@@ -173,4 +173,18 @@ describe EnvironmentVariable do
       result.must_equal(["A-Production", "A-Production", "A-Staging", "A-Staging", "A-", "B-Production"])
     end
   end
+
+  describe '.variables_to_string' do
+    it 'displays environment variables as a string' do
+      variables = [
+        EnvironmentVariable.new(name: "FOO", value: 'bar', scope: environments(:production)),
+        EnvironmentVariable.new(name: "MARCO", value: 'polo', scope: environments(:staging))
+      ]
+
+      scopes = Environment.env_deploy_group_array
+
+      expected = %(FOO="bar" # Production\nMARCO="polo" # Staging)
+      EnvironmentVariable.serialize(variables, scopes).must_equal expected
+    end
+  end
 end

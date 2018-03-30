@@ -19,6 +19,17 @@ module GroupScope
     "#{scope_type}-#{scope_id}"
   end
 
+  def matches_scope?(deploy_group)
+    return true unless scope_id # for all
+    return false unless deploy_group # unscoped -> no specific groups
+
+    case scope_type
+    when "DeployGroup" then scope_id == deploy_group.id # matches deploy group
+    when "Environment" then scope_id == deploy_group.environment_id # matches deploy group's environment
+    else raise "Unsupported scope #{scope_type}"
+    end
+  end
+
   private
 
   def priority
@@ -31,16 +42,5 @@ module GroupScope
       else raise "Unsupported scope #{scope_type}"
       end
     ]
-  end
-
-  def matches_scope?(deploy_group)
-    return true unless scope_id # for all
-    return false unless deploy_group # unscoped -> no specific groups
-
-    case scope_type
-    when "DeployGroup" then scope_id == deploy_group.id # matches deploy group
-    when "Environment" then scope_id == deploy_group.environment_id # matches deploy group's environment
-    else raise "Unsupported scope #{scope_type}"
-    end
   end
 end
