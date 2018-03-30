@@ -22,7 +22,7 @@ class EnvironmentVariable < ActiveRecord::Base
       variables = nested_variables(project)
       variables.sort_by! { |ev| ev.send(:priority) }
       env = variables.each_with_object({}) do |ev, all|
-        all[ev.name] = ev.value if !all[ev.name] && ev.send(:matches_scope?, deploy_group)
+        all[ev.name] = ev.value if !all[ev.name] && ev.matches_scope?(deploy_group)
       end
 
       resolve_dollar_variables(env)
@@ -38,6 +38,14 @@ class EnvironmentVariable < ActiveRecord::Base
 
     def nested_variables(project)
       project.environment_variables + project.environment_variable_groups.flat_map(&:environment_variables)
+    end
+
+    # env_scopes is given as argument since it needs to be cached
+    def serialize(variables, env_scopes)
+      sorted = EnvironmentVariable.sort_by_scopes(variables, env_scopes)
+      sorted.map do |var|
+        "#{var.name}=#{var.value.inspect} # #{var.scope&.name || "All"}"
+      end.join("\n")
     end
 
     private

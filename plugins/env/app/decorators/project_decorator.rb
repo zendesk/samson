@@ -20,12 +20,9 @@ Project.class_eval do
   end
 
   def serialized_environment_variables
-    @env_scopes ||= Environment.env_deploy_group_array # cache since each save needs them twice
     variables = EnvironmentVariable.nested_variables(self)
-    sorted = EnvironmentVariable.sort_by_scopes(variables, @env_scopes)
-    sorted.map do |var|
-      "#{var.name}=#{var.value.inspect} # #{var.scope&.name || "All"}"
-    end.join("\n")
+    @env_scopes ||= Environment.env_deploy_group_array # cache since each save needs them twice
+    EnvironmentVariable.serialize(variables, @env_scopes)
   end
 
   private

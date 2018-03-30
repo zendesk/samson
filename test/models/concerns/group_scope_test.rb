@@ -62,29 +62,29 @@ describe GroupScope do
   describe ".matches_scope?" do
     it "fails on bad references" do
       e = assert_raises RuntimeError do
-        EnvironmentVariable.new(scope_type: 'Foo', scope_id: 123).send(:matches_scope?, deploy_groups(:pod1))
+        EnvironmentVariable.new(scope_type: 'Foo', scope_id: 123).matches_scope?(deploy_groups(:pod1))
       end
       e.message.must_equal "Unsupported scope Foo"
     end
 
     it "does not match nothing" do
-      refute EnvironmentVariable.new(scope_type: 'Foo', scope_id: 123).send(:matches_scope?, nil)
+      refute EnvironmentVariable.new(scope_type: 'Foo', scope_id: 123).matches_scope?(nil)
     end
 
     it "matches without scope" do
-      assert EnvironmentVariable.new.send(:matches_scope?, deploy_group)
+      assert EnvironmentVariable.new.matches_scope?(deploy_group)
     end
 
     it "matches exact" do
-      assert EnvironmentVariable.new(scope: deploy_group).send(:matches_scope?, deploy_group)
+      assert EnvironmentVariable.new(scope: deploy_group).matches_scope?(deploy_group)
     end
 
     it "matches environment" do
-      assert EnvironmentVariable.new(scope: deploy_group.environment).send(:matches_scope?, deploy_group)
+      assert EnvironmentVariable.new(scope: deploy_group.environment).matches_scope?(deploy_group)
     end
 
     it "does not matche other" do
-      refute EnvironmentVariable.new(scope: deploy_groups(:pod1)).send(:matches_scope?, deploy_group)
+      refute EnvironmentVariable.new(scope: deploy_groups(:pod1)).matches_scope?(deploy_group)
     end
   end
 end
