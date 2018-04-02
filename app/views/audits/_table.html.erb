@@ -28,7 +28,7 @@
           <%= column %>:
           <% if audit.action == "update" # others are just attribute hashes %>
             <% if before.is_a?(String) && after.is_a?(String) && (before + after).count("\n").nonzero? %>
-              <%= text_diff before, after %>
+              <%= Samson::Diff.text_diff before, after %>
               <summary>
                 <details>
                   Before:<br/>
@@ -54,4 +54,4 @@
 
 <%= paginate audits if audits.respond_to?(:total_pages) %>
 
-<style><%= Diffy::CSS %></style>
+<%= Samson::Diff.style_tag %>

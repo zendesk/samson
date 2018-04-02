@@ -3,6 +3,10 @@
 Deploy.class_eval do
   before_create :store_env_state
 
+  def retrieve_env_state
+    persisted? ? env_state : serialized_environment_variables
+  end
+
   private
 
   def serialized_environment_variables

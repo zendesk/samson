@@ -13,6 +13,8 @@ module Samson
       :build_button,
       :build_new,
       :build_show,
+      :deploy_confirmation_tab_nav,
+      :deploy_confirmation_tab_body,
       :deploy_group_show,
       :deploy_group_form,
       :deploy_group_table_header,

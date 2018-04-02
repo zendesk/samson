@@ -8,6 +8,61 @@ describe SamsonEnv do
   let(:stage) { deploy.stage }
   let(:project) { stage.project }
 
+  describe "view callbacks" do
+    let(:view_context) do
+      view_context = ActionView::Base.new(ActionController::Base.view_paths)
+
+      class << view_context
+        include Rails.application.routes.url_helpers
+      end
+
+      view_context
+    end
+
+    describe 'deploy_tab_nav' do
+      it 'renders environment variable diff deploy tab nav' do
+        result = Samson::Hooks.render_views(:deploy_confirmation_tab_nav, view_context)
+
+        expected = %(<li><a href="#environment-variables" data-toggle="tab">Environment variables</a></li>\n)
+        result.must_equal expected
+      end
+    end
+
+    describe 'deploy_tab_body' do
+      it 'renders environment variable diff deploy tab with new deploy' do
+        new_deploy = Deploy.new(deploy.attributes.except('id', 'created_at', 'updated_at'))
+        new_deploy.expects(:serialized_environment_variables).returns('THING=thing # All')
+
+        view_context.instance_variable_set(:@deploy, new_deploy)
+
+        result = Samson::Hooks.render_views(:deploy_confirmation_tab_body, view_context)
+
+        result.must_include '<ins>THING=thing # All</ins>'
+      end
+
+      it 'renders environment variable diff deploy tab with preexisting deploy' do
+        other_deploy = Deploy.create!(deploy.attributes.except('id', 'created_at', 'updated_at'))
+        other_deploy .env_state = "a\nb\nc"
+
+        view_context.instance_variable_set(:@deploy, other_deploy)
+
+        result = Samson::Hooks.render_views(:deploy_confirmation_tab_body, view_context)
+
+        result.must_include 'class="diff"'
+        result.must_include '<ins>a</ins>'
+        result.must_include '<ins>b</ins>'
+        result.must_include '<ins>c</ins>'
+      end
+
+      it 'renders no changes were made if env_state is the same' do
+        other_deploy = Deploy.create!(deploy.attributes.except('id', 'created_at', 'updated_at'))
+        view_context.instance_variable_set(:@deploy, other_deploy)
+
+        Samson::Hooks.render_views(:deploy_confirmation_tab_body, view_context).must_include 'No changes.'
+      end
+    end
+  end
+
   describe :project_permitted_params do
     it "adds params" do
       Samson::Hooks.fire(:project_permitted_params).must_include(

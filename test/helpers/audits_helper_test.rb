@@ -16,15 +16,6 @@ describe AuditsHelper do
     end
   end
 
-  describe "#text_diff" do
-    it "produces a safe diff" do
-      diff = text_diff("a", "<script>alert(1)</script>")
-      diff.must_include "<del>a</del>"
-      diff.must_include "<ins><strong>&lt;script&gt;</strong>a<strong>lert(1)&lt;/script&gt;</strong></ins>"
-      assert diff.html_safe?
-    end
-  end
-
   describe "#audit_author" do
     it "shows regular user" do
       audit_author(Audited::Audit.new(user: users(:admin))).

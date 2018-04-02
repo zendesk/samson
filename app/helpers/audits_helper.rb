@@ -6,11 +6,6 @@ module AuditsHelper
     v.class == BigDecimal ? v : v.inspect
   end
 
-  # see https://github.com/samg/diffy
-  def text_diff(a, b)
-    Diffy::Diff.new(a, b).to_s(:html).html_safe
-  end
-
   def audit_author(audit)
     case audit.user
     when String
