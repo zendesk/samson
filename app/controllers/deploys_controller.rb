@@ -47,7 +47,8 @@ class DeploysController < ApplicationController
   end
 
   def new
-    @deploy = current_project.deploys.build(params.except(:project_id).permit(:stage_id, :reference))
+    deploy_params = params.except(:project_id, :stage_id).permit(:reference).merge(stage: @stage)
+    @deploy = current_project.deploys.build(deploy_params)
   end
 
   def create

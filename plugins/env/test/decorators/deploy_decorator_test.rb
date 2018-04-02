@@ -6,6 +6,7 @@ SingleCov.covered!
 
 describe Deploy do
   let(:deploy) { deploys(:succeeded_test) }
+  let(:serialized_vars) { %(VAR="thing" # ALL) }
 
   describe '#serialized_environment_variables' do
     let(:project) { projects(:test) }
@@ -33,10 +34,23 @@ describe Deploy do
     end
   end
 
+  describe "#get_or_set_env_state" do
+    it 'gets the env_state of a persisted deploy' do
+      deploy.env_state = serialized_vars
+
+      deploy.retrieve_env_state.must_equal serialized_vars
+    end
+
+    it 'gets the env_state of a new deploy' do
+      new_deploy = Deploy.new(deploy.attributes.except('id'))
+      new_deploy.expects(:serialized_environment_variables).returns(serialized_vars)
+
+      new_deploy.retrieve_env_state.must_equal serialized_vars
+    end
+  end
+
   describe "#store_env_state" do
     it 'assigns env_state on create' do
-      serialized_vars = %(VAR="thing" # ALL)
-
       new_deploy = Deploy.new(deploy.attributes.except('id'))
       new_deploy.expects(:serialized_environment_variables).once.returns(serialized_vars)
 

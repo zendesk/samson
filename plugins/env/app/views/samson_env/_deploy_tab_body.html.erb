@@ -1,0 +1,13 @@
+<div class="tab-pane" id="environment-variables">
+  <%
+    previous_env = @deploy.stage ? @deploy.previous_successful_deploy&.env_state : nil
+    current_env = @deploy.project ? @deploy.retrieve_env_state : nil
+
+    if previous_env.presence != current_env.presence
+  %>
+    <%= Samson::Diff.text_diff(previous_env, current_env) %>
+    <%= Samson::Diff.style_tag %>
+  <% else %>
+    No changes.
+  <% end %>
+</div>

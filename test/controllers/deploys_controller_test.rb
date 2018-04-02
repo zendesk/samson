@@ -338,6 +338,7 @@ describe DeploysController do
       it "sets stage and reference" do
         get :new, params: {project_id: project.to_param, stage_id: stage.to_param, reference: "abcd"}
         deploy = assigns(:deploy)
+        deploy.stage.must_equal stage
         deploy.reference.must_equal "abcd"
       end
     end
