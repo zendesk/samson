@@ -18,7 +18,11 @@ end
 
 # Injects specific environment variables for the deploy if any
 Samson::Hooks.callback :job_additional_vars do |job|
-  job.deploy.environment_variables.each_with_object({}) do |var, collection|
-    collection.merge!(var.name => var.value)
+  if job.deploy
+    job.deploy.environment_variables.each_with_object({}) do |var, collection|
+      collection.merge!(var.name => var.value)
+    end
+  else
+    []
   end
 end
