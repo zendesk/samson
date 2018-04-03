@@ -7,15 +7,17 @@ module SamsonKubernetes
     end
   end
 
+  NOT_A_404 = ->(e) { !e.is_a?(Kubeclient::ResourceNotFoundError) }
+
   # http errors and ssl errors are not handled uniformly, but we want to ignore/retry on both
   # see https://github.com/abonas/kubeclient/issues/240
   # using a method to avoid loading kubeclient on every boot ~0.1s
   def self.connection_errors
-    [OpenSSL::SSL::SSLError, KubeException, Errno::ECONNREFUSED].freeze
+    [OpenSSL::SSL::SSLError, Kubeclient::HttpError, Errno::ECONNREFUSED].freeze
   end
 
   def self.retry_on_connection_errors(&block)
-    Samson::Retry.with_retries connection_errors, 3, &block
+    Samson::Retry.with_retries connection_errors, 3, if: NOT_A_404, &block
   end
 end
 

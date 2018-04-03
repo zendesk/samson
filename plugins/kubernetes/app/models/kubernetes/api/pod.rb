@@ -109,18 +109,24 @@ module Kubernetes
       # necessary since logs often hang for a while even if the pod is already done
       def fetch_logs(container, end_time, previous:)
         if previous
-          @client.get_pod_log(name, namespace, container: container, previous: true)
+          SamsonKubernetes.retry_on_connection_errors do
+            @client.get_pod_log(name, namespace, container: container, previous: true)
+          end
         else
           wait = end_time - Time.now
           if wait < 2 # timeout almost over or over, so just fetch logs
-            @client.get_pod_log(name, namespace, container: container)
+            SamsonKubernetes.retry_on_connection_errors do
+              @client.get_pod_log(name, namespace, container: container)
+            end
           else
             # still waiting, stream logs
             result = +""
             begin
               timeout_logs(wait) do
-                @client.watch_pod_log(name, namespace, container: container).each do |log|
-                  result << log << "\n"
+                SamsonKubernetes.retry_on_connection_errors do
+                  @client.watch_pod_log(name, namespace, container: container).each do |log|
+                    result << log << "\n"
+                  end
                 end
               end
             rescue Timeout::Error
