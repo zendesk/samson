@@ -19,7 +19,7 @@ end
 
 Samson::Periodical.register :report_system_stats, "Report system stats" do
   memcached_available =
-    if Rails.env.test?
+    if Rails.cache.class == ActiveSupport::Cache::MemoryStore
       1
     else
       Rails.cache.instance_variable_get(:@data).send(:ring).servers.count(&:alive?)
