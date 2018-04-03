@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module SamsonDeployEnvVars
   class Engine < Rails::Engine
     config.after_initialize do
@@ -20,7 +21,8 @@ end
 Samson::Hooks.callback :job_additional_vars do |job|
   if job.deploy
     job.deploy.environment_variables.each_with_object({}) do |var, collection|
-      collection.merge!(var.name => var.value)
+      collection[var.name] = var.value
+      collection
     end
   else
     {}

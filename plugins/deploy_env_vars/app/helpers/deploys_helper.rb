@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 DeploysHelper.class_eval do
   def redeploy_button
     return if @deploy.job.active?
@@ -31,8 +32,9 @@ DeploysHelper.class_eval do
     params = Samson::Hooks.fire(:deploy_permitted_params).flatten(1) || []
     params.each_with_object(reference: @deploy.reference) do |param, collection|
       case param
-      when String,Symbol
-        collection.merge!(param => @deploy.public_send(param))
+      when String, Symbol
+        collection[param] = @deploy.public_send(param)
+        collection
       when Hash
         nested_redeploy_params(collection, param)
       else
@@ -44,10 +46,9 @@ DeploysHelper.class_eval do
   def nested_redeploy_params(collection, params)
     params.each_with_object(collection) do |(key, attributes), nested|
       if key.to_s.ends_with?('attributes')
-        nested.merge!(key => deploy_relation_attributes(key, attributes))
-      else
-        nested
+        nested[key] = deploy_relation_attributes(key, attributes)
       end
+      nested
     end
   end
 
@@ -55,8 +56,9 @@ DeploysHelper.class_eval do
   def deploy_relation_attributes(key, attributes)
     relation_name = key.to_s.gsub(/_attributes$/, '')
     @deploy.public_send(relation_name).map do |item|
-      (attributes - [ :id, :_destroy ]).each_with_object({}) do |attribute, hash|
-        hash.merge!(attribute => item.public_send(attribute))
+      (attributes - [:id, :_destroy]).each_with_object({}) do |attribute, hash|
+        hash[attribute] = item.public_send(attribute)
+        hash
       end
     end
   end

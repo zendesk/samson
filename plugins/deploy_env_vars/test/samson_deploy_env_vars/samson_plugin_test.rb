@@ -10,10 +10,9 @@ describe SamsonDeployEnvVars do
   describe :deploy_permitted_params do
     it "includes the environment_variables attributes" do
       Samson::Hooks.fire(:deploy_permitted_params).must_include(
-        { :environment_variables_attributes => [
-            :name, :value, :scope_type_and_id, :_destroy, :id
-          ]
-        },
+        environment_variables_attributes: [
+          :name, :value, :scope_type_and_id, :_destroy, :id
+        ]
       )
     end
   end
@@ -22,7 +21,7 @@ describe SamsonDeployEnvVars do
     context "if the job does not have a deploy" do
       let(:user) { users(:admin) }
       let(:project) { projects(:test) }
-      let(:job) { project.jobs.create!(command: 'cat foo', user: user, project: project)  }
+      let(:job) { project.jobs.create!(command: 'cat foo', user: user, project: project) }
 
       it "returns an empty hash" do
         Samson::Hooks.fire(:job_additional_vars, job).must_equal([{}])

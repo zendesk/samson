@@ -1,9 +1,9 @@
+# frozen_string_literal: true
 require_relative "../test_helper"
 
 SingleCov.covered!
 
 describe DeploysHelper do
-
   let(:deploy) { deploys(:succeeded_test) }
 
   # Standard redeploy button tests
@@ -47,7 +47,7 @@ describe DeploysHelper do
       end
 
       let(:href)   { /href=\"([^"]*)\"/.match(redeploy_button)[1] }
-      let(:uri)    { URI.parse(URI.decode(href)) }
+      let(:uri)    { URI.parse(CGI.unescape(href)) }
       let(:params) { CGI.parse(uri.query).to_a }
 
       it "generates a link with the environment variables and the rest of params" do
