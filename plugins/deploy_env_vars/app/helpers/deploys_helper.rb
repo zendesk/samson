@@ -37,7 +37,7 @@ DeploysHelper.class_eval do
       when Hash
         nested_redeploy_params(collection, param)
       else
-        collection
+        raise "Unsupported deploy param class: `#{param.class}` for `#{param}`."
       end
     end
   end

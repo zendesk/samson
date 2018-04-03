@@ -72,10 +72,10 @@ describe DeploysHelper do
       end
     end
 
-    context "invalid deploy params" do
+    context "unrecognized deploy hash params" do
       before do
         Samson::Hooks.callback :deploy_permitted_params do
-          [['invalid_array_params'], {'invalid_hash' => 'one'}]
+          [{'invalid_hash' => 'one'}]
         end
       end
 
@@ -83,6 +83,19 @@ describe DeploysHelper do
         link = redeploy_button
         link.must_include "?deploy%5Bkubernetes_reuse_build%5D=false" \
           "&amp;deploy%5Bkubernetes_rollback%5D=true&amp;deploy%5Breference%5D=staging\""
+      end
+    end
+
+    context "invalid deploy param class" do
+      before do
+        Samson::Hooks.stubs(fire: [[['invalid_array_params']]])
+      end
+
+      it "raises an exception" do
+        error = -> { redeploy_button }.must_raise RuntimeError
+        error.message.must_equal(
+          "Unsupported deploy param class: `Array` for `[\"invalid_array_params\"]`."
+        )
       end
     end
   end
