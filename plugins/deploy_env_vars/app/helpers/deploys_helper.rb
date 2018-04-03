@@ -44,7 +44,7 @@ DeploysHelper.class_eval do
 
   def nested_redeploy_params(collection, params)
     params.each_with_object(collection) do |(key, attributes), nested|
-      if key.to_s.ends_with?('attributes')
+      if key.to_s.end_with?('attributes')
         nested[key] = deploy_relation_attributes(key, attributes)
       end
       nested
