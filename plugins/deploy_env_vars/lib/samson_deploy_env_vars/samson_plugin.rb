@@ -23,6 +23,6 @@ Samson::Hooks.callback :job_additional_vars do |job|
       collection.merge!(var.name => var.value)
     end
   else
-    []
+    {}
   end
 end
