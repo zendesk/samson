@@ -3,7 +3,11 @@
     Env variables written to the .env file or added to kubernetes before deploy
     <%= additional_info SamsonEnv::HELP_TEXT %>
   </legend>
-  <%= render "samson_env/environment_variables", form: form %>
+
+  <% scopes = Environment.env_deploy_group_array %>
+  <% sorted_env_vars = EnvironmentVariable.sort_by_scopes(form.object.environment_variables, scopes) %>
+  <% sorted_env_vars << EnvironmentVariable.new %>
+  <%= render "samson_env/environment_variables", form: form, environment_variables: sorted_env_vars %>
 
   <h4>Groups</h4>
   <% project = form.object %>
