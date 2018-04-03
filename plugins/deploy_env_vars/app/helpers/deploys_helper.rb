@@ -51,7 +51,8 @@ DeploysHelper.class_eval do
     end
   end
 
-  # currently, one has_many relations are supported
+  # currently, this only supports `has_many` relations, cause the public_method
+  # we call on the instance is expected to return an array
   def deploy_relation_attributes(key, attributes)
     relation_name = key.to_s.gsub(/_attributes$/, '')
     @deploy.public_send(relation_name).map do |item|
