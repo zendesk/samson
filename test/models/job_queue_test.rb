@@ -6,12 +6,20 @@ JobQueue.clear
 SingleCov.covered! uncovered: 1
 
 describe JobQueue do
+  fake_job = Class.new do
+    attr_reader :deploy
+    def initialize(deploy)
+      @deploy = deploy
+    end
+  end
+
   # JobExecution is slow/complicated ... so we stub it out
   fake_execution = Class.new do
-    attr_reader :id
+    attr_reader :id, :job
     attr_writer :thread
-    def initialize(id)
+    def initialize(id, job)
       @id = id
+      @job = job
     end
 
     # when expectations fail we need to know what failed
@@ -75,9 +83,10 @@ describe JobQueue do
   end
 
   let(:subject) { JobQueue }
-  let(:job_execution) { fake_execution.new(:active) }
-  let(:queued_job_execution) { fake_execution.new(:queued) }
-  let(:another_job_execution) { fake_execution.new(:another) }
+  let(:job) { fake_job.new(nil) }
+  let(:job_execution) { fake_execution.new(:active, job) }
+  let(:queued_job_execution) { fake_execution.new(:queued, job) }
+  let(:another_job_execution) { fake_execution.new(:another, job) }
   let(:active_lock) { Mutex.new }
   let(:queued_lock) { Mutex.new }
   let(:another_lock) { Mutex.new }
@@ -161,17 +170,43 @@ describe JobQueue do
       end
     end
 
-    it 'reports queue length' do
-      states = [
-        [1, 0], # add active
-        [1, 1], # add queued
-        [1, 0], # done active ... enqueue queued
-        [0, 0], # done queued
-      ]
-      states.each do |t, q|
-        ActiveSupport::Notifications.expects(:instrument).with("job_queue.samson", threads: t, queued: q)
+    describe 'queue length' do
+      def assert_queue_length_notifications
+        states = [
+          [1, 0], # add active
+          [1, 1], # add queued
+          [1, 0], # done active ... enqueue queued
+          [0, 0], # done queued
+        ]
+        states.each do |t, q|
+          yield(t, q)
+        end
+        with_a_queued_job {} # noop
       end
-      with_a_queued_job {} # noop
+
+      it 'reports queue length' do
+        assert_queue_length_notifications do |t, q|
+          ActiveSupport::Notifications.expects(:instrument).with(
+            "job_queue.samson",
+            jobs: { executing: t, queued: q, },
+            deploys: { executing: 0, queued: 0 }
+          )
+        end
+      end
+
+      describe 'with deploys' do
+        let(:job) { fake_job.new(mock) }
+
+        it 'reports deploy queue lengths' do
+          assert_queue_length_notifications do |t, q|
+            ActiveSupport::Notifications.expects(:instrument).with(
+              "job_queue.samson",
+              jobs: { executing: t, queued: q },
+              deploys: { executing: t, queued: q }
+            )
+          end
+        end
+      end
     end
 
     describe 'with queued job' do
@@ -319,6 +354,26 @@ describe JobQueue do
 
     it "does nothing when job is dead" do
       subject.kill(123)
+    end
+  end
+
+  describe '#is_deploy?' do
+    before { JobQueue.unstub(:new) }
+
+    def deploy?(job_execution)
+      JobQueue.send(:new).send(:deploy?, job_execution)
+    end
+
+    it 'returns true if job execution is a deploy' do
+      assert deploy?(mock(job: mock(deploy: mock)))
+    end
+
+    it 'returns false if job execution does not respond to job' do
+      refute deploy?(mock)
+    end
+
+    it 'returns false if job execution job does not have a deploy' do
+      refute deploy?(mock(job: mock(deploy: nil)))
     end
   end
 end

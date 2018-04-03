@@ -166,7 +166,7 @@ describe Kubernetes::DeployExecutor do
     end
 
     it "does limited amounts of queries" do
-      assert_sql_queries(27) do
+      assert_sql_queries(28) do
         assert execute, out
       end
     end

@@ -26,7 +26,10 @@ ActiveSupport::Notifications.subscribe("execute_job.samson") do |*args|
 end
 
 ActiveSupport::Notifications.subscribe("job_queue.samson") do |*, payload|
-  payload.each { |key, value| Samson.statsd.gauge "job.#{key}", value }
+  [[:deploys, true], [:jobs, false]].each do |(type, is_deploy)|
+    metrics = payload.fetch(type)
+    metrics.each { |key, value| Samson.statsd.gauge "job.#{key}", value, tags: ["deploy:#{is_deploy}"] }
+  end
 end
 
 ActiveSupport::Notifications.subscribe("system_stats.samson") do |*, payload|
