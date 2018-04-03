@@ -147,6 +147,9 @@ module Kubernetes
         print_pod_logs(pod, log_end_time)
         @output.puts "\n------------------------------------------\n"
       end
+    rescue
+      info = ErrorNotifier.notify($!, sync: true)
+      @output.puts "Error showing failure cause: #{info}"
     end
 
     def pod_identifier(pod)

@@ -660,6 +660,17 @@ describe Kubernetes::DeployExecutor do
     end
   end
 
+  describe "#show_failure_cause" do
+    it "prints details but does not fail when something goes wrong" do
+      Kubernetes::DeployExecutor.any_instance.stubs(:build_selectors).returns([])
+      with_env KUBERNETES_LOG_TIMEOUT: "foo" do
+        ErrorNotifier.expects(:notify).returns("Details")
+        executor.send(:show_failure_cause, [], [])
+      end
+      output.string.must_equal "Error showing failure cause: Details\n"
+    end
+  end
+
   describe "blue green" do
     def add_service_to_release_doc
       kubernetes_fake_raw_template
