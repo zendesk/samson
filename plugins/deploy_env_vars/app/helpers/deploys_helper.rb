@@ -29,12 +29,11 @@ DeploysHelper.class_eval do
   # Applies different logic depending on the class of each of the deploy
   # parameters, so it supports nested paramaters based on object relations
   def redeploy_params
-    params = Samson::Hooks.fire(:deploy_permitted_params).flatten(1) || []
+    params = Samson::Hooks.fire(:deploy_permitted_params).flatten(1)
     params.each_with_object(reference: @deploy.reference) do |param, collection|
       case param
       when String, Symbol
         collection[param] = @deploy.public_send(param)
-        collection
       when Hash
         nested_redeploy_params(collection, param)
       else
@@ -58,7 +57,6 @@ DeploysHelper.class_eval do
     @deploy.public_send(relation_name).map do |item|
       (attributes - [:id, :_destroy]).each_with_object({}) do |attribute, hash|
         hash[attribute] = item.public_send(attribute)
-        hash
       end
     end
   end
