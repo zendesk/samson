@@ -369,4 +369,48 @@ describe Job do
       job.reload.output.must_equal "beforeHelloWorld"
     end
   end
+
+  describe "#status!" do
+    it 'updates' do
+      job.update_column(:status, 'pending')
+
+      job.send(:status!, 'succeeded')
+
+      job.status.must_equal 'succeeded'
+    end
+
+    it 'reports state' do
+      job.expects(:report_state)
+
+      job.send(:status!, 'succeeded')
+    end
+
+    it 'does not notify if job is not finished' do
+      job.expects(:report_state).never
+
+      job.send(:status!, 'pending')
+    end
+  end
+
+  describe "#report_state" do
+    def assert_instrument(with)
+      ActiveSupport::Notifications.expects(:instrument).with('job_status.samson', with)
+    end
+
+    let(:job) { jobs(:succeeded_test) }
+
+    it 'reports for deploy' do
+      assert_instrument(type: 'deploy', status: 'succeeded')
+
+      job.send(:report_state)
+    end
+
+    it 'reports for build' do
+      assert_instrument(type: 'build', status: 'succeeded')
+      job = jobs(:running_test) # job without deploy
+      job.update_column(:status, 'succeeded')
+
+      job.send(:report_state)
+    end
+  end
 end
