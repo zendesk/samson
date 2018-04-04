@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 1
+SingleCov.covered!
 
 describe DeploysHelper do
   include StatusHelper
@@ -241,6 +241,14 @@ describe DeploysHelper do
     it "builds with a job" do
       button = cancel_button(deploy: deploy.job, project: deploy.project)
       button.must_include ">Cancel<"
+    end
+
+    it "raises an exception if the deploy is nil" do
+      -> { cancel_button(deploy: nil, project: deploy.project) }.must_raise RuntimeError
+    end
+
+    it "raises an exception if the project is nil" do
+      -> { cancel_button(deploy: deploy.job, project: nil) }.must_raise RuntimeError
     end
   end
 
