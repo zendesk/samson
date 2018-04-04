@@ -5,11 +5,12 @@ module Samson
       with_retries [ActiveRecord::RecordNotUnique], 1, &block
     end
 
-    def self.with_retries(errors, count)
+    def self.with_retries(errors, count, options = nil)
+      check = options && options[:if]
       yield
     rescue *errors
       count -= 1
-      count >= 0 ? retry : raise
+      count >= 0 && (!check || check.call($!)) ? retry : raise
     end
   end
 end

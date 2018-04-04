@@ -167,13 +167,17 @@ module Kubernetes
       end
 
       def request(method, *args)
-        client.send("#{method}_#{@template.fetch(:kind).underscore}", *args)
-      rescue
-        message = $!.message.to_s
-        if message.include?(" is invalid:") || message.include?(" no kind ")
-          raise Samson::Hooks::UserError, "Kubernetes error: #{message}"
-        else
-          raise
+        SamsonKubernetes.retry_on_connection_errors do
+          begin
+            client.send("#{method}_#{@template.fetch(:kind).underscore}", *args)
+          rescue Kubeclient::HttpError
+            message = $!.message.to_s
+            if message.include?(" is invalid:") || message.include?(" no kind ")
+              raise Samson::Hooks::UserError, "Kubernetes error: #{message}"
+            else
+              raise
+            end
+          end
         end
       end
 
@@ -199,8 +203,7 @@ module Kubernetes
 
       def ignore_404
         yield
-      rescue KubeException => e
-        raise e unless e.respond_to?(:error_code) && e.error_code == 404
+      rescue Kubeclient::ResourceNotFoundError
         nil
       end
     end

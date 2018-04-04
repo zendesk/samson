@@ -196,7 +196,7 @@ describe Kubernetes::Api::Pod do
 
     it "fetches previous logs when current logs are not available" do
       stub_request(:get, "#{log_url}&follow=true").
-        to_raise(KubeException.new('a', 'b', 'c'))
+        to_raise(Kubeclient::HttpError.new('a', 'b', 'c'))
       stub_request(:get, "#{log_url}&previous=true").
         and_return(body: "HELLO")
       pod_with_client.logs('some-container', 10.seconds.from_now).must_equal "HELLO"
@@ -204,9 +204,9 @@ describe Kubernetes::Api::Pod do
 
     it "does not crash when both log endpoints fails with a 404" do
       stub_request(:get, "#{log_url}&follow=true").
-        to_raise(KubeException.new('a', 'b', 'c'))
+        to_raise(Kubeclient::HttpError.new('a', 'b', 'c'))
       stub_request(:get, "#{log_url}&previous=true").
-        to_raise(KubeException.new('a', 'b', 'c'))
+        to_raise(Kubeclient::HttpError.new('a', 'b', 'c'))
       pod_with_client.logs('some-container', 10.seconds.from_now).must_be_nil
     end
 
@@ -248,7 +248,7 @@ describe Kubernetes::Api::Pod do
 
     it "retries on errors" do
       request = stub_request(:get, events_url).to_timeout
-      assert_raises(KubeException) { pod_with_client.events_indicate_failure? }
+      assert_raises(Kubeclient::HttpError) { pod_with_client.events_indicate_failure? }
       assert_requested request, times: 4
     end
 

@@ -175,13 +175,13 @@ describe Kubernetes::Resource do
     end
 
     it "raises when a non 404 exception is raised" do
-      assert_request(:get, url, to_return: {status: 500}) do
-        assert_raises(KubeException) { resource.running? }
+      assert_request(:get, url, to_return: {status: 500}, times: 4) do
+        assert_raises(Kubeclient::HttpError) { resource.running? }
       end
     end
 
     it "raises SSL exception is raised" do
-      assert_request(:get, url, to_raise: OpenSSL::SSL::SSLError) do
+      assert_request(:get, url, to_raise: OpenSSL::SSL::SSLError, times: 4) do
         assert_raises(OpenSSL::SSL::SSLError) { resource.running? }
       end
     end
@@ -319,7 +319,7 @@ describe Kubernetes::Resource do
       end
 
       it "deletes and created when daemonset exists without pods" do
-        client.expects(:get_daemon_set).raises(KubeException.new(404, 'Not Found', {}))
+        client.expects(:get_daemon_set).raises(Kubeclient::ResourceNotFoundError.new(404, 'Not Found', {}))
         client.expects(:get_daemon_set).returns(daemonset_stub(0, 0))
         client.expects(:delete_daemon_set)
         client.expects(:create_daemon_set)
@@ -327,7 +327,7 @@ describe Kubernetes::Resource do
       end
 
       it "deletes and created when daemonset exists with pods" do
-        client.expects(:get_daemon_set).raises(KubeException.new(404, 'Not Found', {}))
+        client.expects(:get_daemon_set).raises(Kubeclient::ResourceNotFoundError.new(404, 'Not Found', {}))
         client.expects(:update_daemon_set).returns(daemonset_stub(1, 1))
         client.expects(:get_daemon_set).times(4).returns(
           daemonset_stub(1, 1), # running check
@@ -435,7 +435,7 @@ describe Kubernetes::Resource do
         client.expects(:update_deployment).with do |template|
           template[:spec][:replicas].must_equal 0
         end
-        client.expects(:get_deployment).raises(KubeException.new(404, 'Not Found', {}))
+        client.expects(:get_deployment).raises(Kubeclient::ResourceNotFoundError.new(404, 'Not Found', {}))
         client.expects(:get_deployment).times(3).returns(
           deployment_stub(3),
           deployment_stub(3),
@@ -449,7 +449,7 @@ describe Kubernetes::Resource do
       it "does not fail on unset replicas" do
         client = resource.send(:client)
         client.expects(:update_deployment)
-        client.expects(:get_deployment).raises(KubeException.new(404, 'Not Found', {}))
+        client.expects(:get_deployment).raises(Kubeclient::ResourceNotFoundError.new(404, 'Not Found', {}))
         client.expects(:get_deployment).times(2).returns(deployment_stub(nil))
         client.expects(:delete_deployment)
         resource.delete

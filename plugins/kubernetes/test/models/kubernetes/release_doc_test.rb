@@ -38,7 +38,7 @@ describe Kubernetes::ReleaseDoc do
 
   let(:doc) { kubernetes_release_docs(:test_release_pod_1) }
   let(:primary_template) { doc.resource_template[0] }
-  let(:kube_404) { KubeException.new(404, 2, 3) }
+  let(:kube_404) { Kubeclient::ResourceNotFoundError.new(404, 2, 3) }
   let(:service_url) { "http://foobar.server/api/v1/namespaces/pod1/services/some-project" }
 
   before do

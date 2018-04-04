@@ -101,5 +101,27 @@ describe SamsonKubernetes do
       end
       count.must_equal 4
     end
+
+    it "retries generic kubeclient errors" do
+      count = 0
+      assert_raises Kubeclient::HttpError do
+        SamsonKubernetes.retry_on_connection_errors do
+          count += 1
+          raise Kubeclient::HttpError.new(123, 'x', nil)
+        end
+      end
+      count.must_equal 4
+    end
+
+    it "does not retry 404s" do
+      count = 0
+      assert_raises Kubeclient::ResourceNotFoundError do
+        SamsonKubernetes.retry_on_connection_errors do
+          count += 1
+          raise Kubeclient::ResourceNotFoundError.new(404, 'x', nil)
+        end
+      end
+      count.must_equal 1
+    end
   end
 end
