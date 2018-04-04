@@ -1,10 +1,6 @@
 # frozen_string_literal: true
 module SamsonDeployEnvVars
   class Engine < Rails::Engine
-    config.after_initialize do
-      # Decorates default deploys helper. Maybe there is a better way to do this?
-      require_relative '../../app/helpers/deploys_helper'
-    end
   end
 end
 
