@@ -121,7 +121,6 @@ task :flay do
     'plugins/pipelines/app/views/samson_pipelines/_stage_show.html.erb', # super simple html
     'app/views/secrets/index.html.erb', # simple html
     'plugins/kubernetes/app/models/kubernetes/deploy_group_role.rb', # similar but slightly different validations
-    'plugins/deploy_env_vars/app/views/samson_deploy_env_vars/_deploy_form.html.erb', # simple html
   ]
   flay = Flay.run([*files, '--mass', '25']) # mass threshold is shown mass / occurrences
   abort "Code duplication found" if flay.report.any?
