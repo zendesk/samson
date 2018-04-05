@@ -75,14 +75,11 @@ module DeploysHelper
       html_options[:class] = 'btn btn-danger'
     end
 
-    deploy_params = {reference: @deploy.reference}
-    Samson::Hooks.fire(:deploy_permitted_params).flatten(1).each { |p| deploy_params[p] = @deploy.public_send(p) }
-
     link_to "Redeploy",
       project_stage_deploys_path(
         @project,
         @deploy.stage,
-        deploy: deploy_params
+        deploy: Samson::RedeployParams.new(@deploy).to_hash
       ),
       html_options
   end
