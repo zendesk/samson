@@ -14,7 +14,7 @@ module Samson
         when String, Symbol
           collection[param] = @deploy.public_send(param)
         when Hash
-          nested_redeploy_params(collection, param)
+          add_nested_redeploy_params!(collection, param)
         else
           raise "Unsupported deploy param class: `#{param.class}` for `#{param}`."
         end
@@ -23,8 +23,8 @@ module Samson
 
     private
 
-    def nested_redeploy_params(collection, params)
-      params.each_with_object(collection) do |(key, attributes), collection|
+    def add_nested_redeploy_params!(collection, params)
+      params.each do |(key, attributes)|
         if key.to_s.end_with?('attributes')
           collection[key] = deploy_relation_attributes(key, attributes)
         end
