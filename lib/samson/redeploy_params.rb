@@ -1,19 +1,13 @@
 # frozen_string_literal: true
 module Samson
   class RedeployParams
-    class << self
-      def call(deploy)
-        new(deploy).call
-      end
-    end
-
     def initialize(deploy)
       @deploy = deploy
     end
 
     # Applies different logic depending on the class of each of the deploy
     # parameters, so it supports nested paramaters based on object relations
-    def call
+    def to_hash
       params = Samson::Hooks.fire(:deploy_permitted_params).flatten(1)
       params.each_with_object(reference: @deploy.reference) do |param, collection|
         case param
@@ -30,9 +24,9 @@ module Samson
     private
 
     def nested_redeploy_params(collection, params)
-      params.each_with_object(collection) do |(key, attributes), nested|
+      params.each_with_object(collection) do |(key, attributes), collection|
         if key.to_s.end_with?('attributes')
-          nested[key] = deploy_relation_attributes(key, attributes)
+          collection[key] = deploy_relation_attributes(key, attributes)
         end
       end
     end
