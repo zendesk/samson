@@ -5,7 +5,7 @@ SingleCov.covered!
 
 describe TerminalExecutor do
   let(:output) { StringIO.new }
-  subject { TerminalExecutor.new(output) }
+  subject { TerminalExecutor.new(output, project: projects(:test)) }
 
   before { freeze_time }
 
@@ -127,8 +127,15 @@ describe TerminalExecutor do
       subject.execute('echo "hi"')
     end
 
+    it "uses regular executor on linux" do
+      RbConfig::CONFIG.expects(:[]).with("host_os").returns("ubuntu")
+      PTY.expects(:spawn).with { |_, command, _| command.wont_include("script-executor"); true }
+      TerminalExecutor.any_instance.expects(:record_pid)
+      subject.execute('echo "hi"')
+    end
+
     describe 'in verbose mode' do
-      subject { TerminalExecutor.new(output, verbose: true) }
+      subject { TerminalExecutor.new(output, verbose: true, project: projects(:test)) }
 
       before { freeze_time }
 
@@ -207,7 +214,7 @@ describe TerminalExecutor do
       end
 
       it "cannot use specific secrets without a deploy" do
-        refute_resolves "global/#{deploy.project.permalink}/global/bar"
+        refute_resolves "global/global/#{deploy.stage.deploy_groups.first.permalink}/bar"
       end
 
       it "does not show secrets in verbose mode" do

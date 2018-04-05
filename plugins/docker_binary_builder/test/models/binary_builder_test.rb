@@ -9,7 +9,7 @@ describe BinaryBuilder do
   let(:project) { projects(:test) }
   let(:reference) { 'aBc-19F' }
   let(:output) { StringIO.new }
-  let(:executor) { TerminalExecutor.new(output, verbose: true) }
+  let(:executor) { TerminalExecutor.new(output, verbose: true, project: project) }
   let(:builder) { BinaryBuilder.new(Dir.pwd, project, reference, output, executor) }
 
   before do

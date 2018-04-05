@@ -12,10 +12,10 @@ class GitRepository
     Rails.application.config.samson.cached_repos_dir
   end
 
-  def initialize(repository_url:, repository_dir:, executor: nil)
+  def initialize(repository_url:, repository_dir:, executor:)
     @repository_url = repository_url
     @repository_directory = repository_dir
-    @executor = executor || TerminalExecutor.new(StringIO.new)
+    @executor = executor
   end
 
   def checkout_workspace(work_dir, git_reference)
