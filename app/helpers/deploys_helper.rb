@@ -130,14 +130,13 @@ module DeploysHelper
       if key.to_s.end_with?('attributes')
         nested[key] = deploy_relation_attributes(key, attributes)
       end
-      nested
     end
   end
 
   # currently, this only supports `has_many` relations, cause the public_method
   # we call on the instance is expected to return an array
   def deploy_relation_attributes(key, attributes)
-    relation_name = key.to_s.gsub(/_attributes$/, '')
+    relation_name = key.to_s.sub(/_attributes$/, '')
     @deploy.public_send(relation_name).map do |item|
       (attributes - [:id, :_destroy]).each_with_object({}) do |attribute, hash|
         hash[attribute] = item.public_send(attribute)
