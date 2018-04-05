@@ -10,7 +10,7 @@
       <%= fields.text_area :value, class: "form-control", placeholder: "Value", rows: 1 %>
     </div>
 
-    <% if DeployGroup.enabled? %>
+    <% if DeployGroup.enabled? && defined?(scopes) %>
       <div class="col-lg-2">
         <%= fields.select :scope_type_and_id, scopes, {}, Samson::FormBuilder::LIVE_SELECT_OPTIONS %>
       </div>
