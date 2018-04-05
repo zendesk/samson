@@ -169,64 +169,6 @@ describe DeploysHelper do
       redeploy_button.must_include "btn-danger"
       redeploy_button.wont_include redeploy_warning
     end
-
-    context "when a plugin includes extra permitted params" do
-      before do
-        Samson::Hooks.stubs(fire: extra_params)
-      end
-
-      context "when the deploy has a has_many relation" do
-        let(:extra_params) { [{ items_attributes: [:uuid, :name] }] }
-        let(:items) { [OpenStruct.new(uuid: "xyz", name: "item 1")] }
-
-        before do
-          @deploy.stubs(items: items)
-        end
-
-        let(:href)   { /href=\"([^"]*)\"/.match(redeploy_button)[1] }
-        let(:uri)    { URI.parse(CGI.unescape(href)) }
-        let(:params) { CGI.parse(uri.query).to_a }
-
-        it "generates a link with the environment variables and the rest of params" do
-          params.must_include(
-            ["deploy[items_attributes][][uuid]", ["xyz"]]
-          )
-          params.must_include(
-            ["deploy[items_attributes][][name]", ["item 1"]]
-          )
-          params.must_include(
-            ["deploy[reference]", ["staging"]]
-          )
-        end
-      end
-    end
-
-    context "unrecognized deploy hash params" do
-      before do
-        Samson::Hooks.callback :deploy_permitted_params do
-          [{'invalid_hash' => 'one'}]
-        end
-      end
-
-      it "generates a link and the invalid params are ignored" do
-        link = redeploy_button
-        link.must_include "?deploy%5Bkubernetes_reuse_build%5D=false" \
-          "&amp;deploy%5Bkubernetes_rollback%5D=true&amp;deploy%5Breference%5D=staging\""
-      end
-    end
-
-    context "invalid deploy param class" do
-      before do
-        Samson::Hooks.stubs(fire: [[['invalid_array_params']]])
-      end
-
-      it "raises an exception" do
-        error = -> { redeploy_button }.must_raise RuntimeError
-        error.message.must_equal(
-          "Unsupported deploy param class: `Array` for `[\"invalid_array_params\"]`."
-        )
-      end
-    end
   end
 
   describe "#cancel_button" do
