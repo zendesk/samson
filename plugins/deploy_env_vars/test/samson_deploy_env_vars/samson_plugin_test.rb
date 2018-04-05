@@ -39,15 +39,12 @@ describe SamsonDeployEnvVars do
 
       context "if the deploy has environment variables" do
         before do
-          job.deploy.environment_variables << EnvironmentVariable.create(
-            name: "ENV_VARIABLE_TWO",
-            value: "TWO"
-          )
+          job.deploy.environment_variables.create!(name: "TWO", value: "2")
         end
 
         it "returns a hash with the deploy environment variables" do
           Samson::Hooks.fire(:job_additional_vars, job).must_equal([{
-            "ENV_VARIABLE_TWO" => "TWO"
+            "TWO" => "2"
           }])
         end
       end
