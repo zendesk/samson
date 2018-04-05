@@ -19,7 +19,5 @@ Samson::Hooks.callback :job_additional_vars do |job|
     job.deploy.environment_variables.each_with_object({}) do |var, collection|
       collection[var.name] = var.value
     end
-  else
-    {}
   end
 end

@@ -23,8 +23,8 @@ describe SamsonDeployEnvVars do
       let(:project) { projects(:test) }
       let(:job) { project.jobs.create!(command: 'cat foo', user: user, project: project) }
 
-      it "returns an empty hash" do
-        Samson::Hooks.fire(:job_additional_vars, job).must_equal([{}])
+      it "returns nil" do
+        Samson::Hooks.fire(:job_additional_vars, job).must_equal([nil])
       end
     end
 
