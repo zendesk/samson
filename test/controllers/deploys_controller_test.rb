@@ -144,7 +144,7 @@ describe DeploysController do
         Deploy.delete_all
         Job.delete_all
         cmd = 'cap staging deploy'
-        project = Project.first
+        project = projects(:test)
         job_def = {project_id: project.id, command: cmd, status: nil, user_id: admin.id}
         statuses = [
           {status: 'failed', production: true },
@@ -248,6 +248,13 @@ describe DeploysController do
         get :index, params: {search: {project_name: "Foo"}}, format: "json"
         assert_response :ok
         deploys["deploys"].count.must_equal 4
+      end
+
+      it "filters by permalinks" do
+        Deploy.last.update_column(:project_id, projects(:other).id)
+
+        get :index, params: { search: { project_permalinks: 'foo,bar' } }, format: "json"
+        deploys['deploys'].count.must_equal 4
       end
 
       it "filters by non-production via json" do
