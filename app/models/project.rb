@@ -163,7 +163,11 @@ class Project < ActiveRecord::Base
   end
 
   def repository
-    @repository ||= GitRepository.new(repository_url: repository_url, repository_dir: repository_directory)
+    @repository ||= GitRepository.new(
+      repository_url: repository_url,
+      repository_dir: repository_directory,
+      executor: TerminalExecutor.new(StringIO.new, project: self)
+    )
   end
 
   def last_deploy_by_group(before_time, include_failed_deploys: false)
@@ -234,7 +238,11 @@ class Project < ActiveRecord::Base
   end
 
   def clean_old_repository
-    GitRepository.new(repository_url: repository_url_was, repository_dir: old_repository_dir).clean!
+    GitRepository.new(
+      repository_url: repository_url_was,
+      repository_dir: old_repository_dir,
+      executor: TerminalExecutor.new(StringIO.new, project: self)
+    ).clean!
     @repository, @repository_directory = nil
   end
 

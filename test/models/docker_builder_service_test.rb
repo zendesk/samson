@@ -98,7 +98,7 @@ describe DockerBuilderService do
       service.send(:build_image, tmp_dir, tag_as_latest: false)
     end
 
-    let(:executor) { TerminalExecutor.new(OutputBuffer.new, verbose: true) } # the job executor is verbose
+    let(:executor) { TerminalExecutor.new(OutputBuffer.new, verbose: true, project: project) } # verbose
 
     before do
       ImageBuilder.expects(:build_image).returns(digest)

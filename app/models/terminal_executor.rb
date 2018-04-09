@@ -7,7 +7,8 @@ require 'pty'
 # Example:
 #
 #   output = StringIO.new
-#   terminal = TerminalExecutor.new(output)
+#   project = Project.first
+#   terminal = TerminalExecutor.new(output, project: project)
 #   terminal.execute!("echo hello", "echo world")
 #
 #   output.string #=> "hello\r\nworld\r\n"
@@ -17,7 +18,7 @@ class TerminalExecutor
 
   attr_reader :pid, :pgid, :output, :timeout
 
-  def initialize(output, verbose: false, deploy: nil, project: nil)
+  def initialize(output, project:, verbose: false, deploy: nil)
     @output = output
     @verbose = verbose
     @deploy = deploy
@@ -73,7 +74,7 @@ class TerminalExecutor
   # write script to a file so it cannot be seen via `ps`
   def script_as_executable(script)
     suffix = +""
-    suffix << "-#{@project.permalink}" if @project
+    suffix << "-#{@project.permalink}"
     suffix << "-#{@deploy.id}" if @deploy
     f = Tempfile.new "samson-terminal-executor#{suffix}-"
     File.chmod(0o700, f.path) # making sure nobody can read it before we add content

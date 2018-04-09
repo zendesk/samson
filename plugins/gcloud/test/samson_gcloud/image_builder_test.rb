@@ -17,7 +17,7 @@ describe SamsonGcloud::ImageBuilder do
 
     let(:dir) { "some-dir" }
     let(:output) { OutputBuffer.new }
-    let(:executor) { TerminalExecutor.new(output, verbose: true) }
+    let(:executor) { TerminalExecutor.new(output, verbose: true, project: build.project) }
     let(:repo) { 'gcr.io/p-123/samson/foo' }
 
     with_env GCLOUD_PROJECT: 'p-123', GCLOUD_ACCOUNT: 'acc'

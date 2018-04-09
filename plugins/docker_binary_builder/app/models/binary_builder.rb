@@ -16,7 +16,7 @@ class BinaryBuilder
     @project = project
     @git_reference = reference
     @output = output
-    @executor = executor || TerminalExecutor.new(@output, verbose: true)
+    @executor = executor || TerminalExecutor.new(@output, verbose: true, project: @project)
   end
 
   def build

@@ -156,7 +156,7 @@ module Samson
           deploy_group_permalinks = ['global']
 
           environment_permalinks.concat(environments.map(&:permalink)) if environments.size == 1
-          project_permalinks << @project.permalink if @project
+          project_permalinks << @project.permalink
           deploy_group_permalinks.concat(@deploy_groups.map(&:permalink)) if @deploy_groups.size == 1
 
           # build a list of all key part combinations, sorted by most specific

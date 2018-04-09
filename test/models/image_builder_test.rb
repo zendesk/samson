@@ -5,7 +5,7 @@ SingleCov.covered! uncovered: 2
 
 describe ImageBuilder do
   let(:output) { executor.output.to_s }
-  let(:executor) { TerminalExecutor.new(OutputBuffer.new, verbose: true) } # the job executor is verbose
+  let(:executor) { TerminalExecutor.new(OutputBuffer.new, verbose: true, project: project) } # verbose
   let(:project) { projects(:test) }
   let(:build) { project.builds.create!(git_ref: 'v123', git_sha: 'a' * 40, creator: users(:admin)) }
   let(:image_id) { '2d2b0b3204b0166435c3d96d0b27d0ad2083e5e040192632c58eeb9491d6bfaa' }
