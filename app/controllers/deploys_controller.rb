@@ -141,6 +141,11 @@ class DeploysController < ApplicationController
       ).pluck(:id)
     end
 
+    # For external searches
+    if project_permalinks = search[:project_permalinks].to_s.split(",").presence
+      projects &= Project.where(permalink: project_permalinks).pluck(:id)
+    end
+
     if users || status || git_sha
       jobs = Job
       jobs = jobs.where(user: users) if users
