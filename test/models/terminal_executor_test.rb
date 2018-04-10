@@ -228,6 +228,16 @@ describe TerminalExecutor do
         output.string.must_equal \
           "» export SECRET='secret://baz'; echo $SECRET\r\n#{secret.value}\r\n"
       end
+
+      it "escapes secret value with special characters" do
+        freeze_time
+
+        id = 'global/global/global/baz'
+        secret = create_secret(id, value: 'before; echo "after!"')
+        # author forgot to quote the export declaration to expose the raw content of the variable
+        subject.execute("export SECRET=secret://baz; echo $SECRET")
+        output.string.must_equal "#{secret.value}\r\n"
+      end
     end
   end
 

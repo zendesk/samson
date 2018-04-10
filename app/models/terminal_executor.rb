@@ -134,7 +134,7 @@ class TerminalExecutor
       key = $1
       if expanded = resolver.expand('unused', key).first&.last
         key.replace(expanded)
-        Samson::Secrets::Manager.read(key, include_value: true).fetch(:value)
+        Samson::Secrets::Manager.read(key, include_value: true).fetch(:value).shellescape
       end
     end
 
