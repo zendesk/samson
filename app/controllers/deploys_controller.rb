@@ -143,7 +143,8 @@ class DeploysController < ApplicationController
 
     # For external searches
     if project_permalinks = search[:project_permalinks].to_s.split(",").presence
-      projects &= Project.where(permalink: project_permalinks).pluck(:id)
+      projects_from_permalinks = Project.where(permalink: project_permalinks).pluck(:id)
+      projects = projects ? projects_from_permalinks & projects : projects_from_permalinks
     end
 
     if users || status || git_sha
