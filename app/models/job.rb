@@ -155,7 +155,9 @@ class Job < ActiveRecord::Base
   end
 
   def status!(status)
-    update_column(:status, status)
+    success = update_column(:status, status)
+    report_state if finished?
+    success
   end
 
   def short_reference
@@ -164,5 +166,10 @@ class Job < ActiveRecord::Base
     else
       commit
     end
+  end
+
+  def report_state
+    type = deploy ? 'deploy' : 'build'
+    ActiveSupport::Notifications.instrument('job_status.samson', type: type, status: status)
   end
 end

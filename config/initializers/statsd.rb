@@ -26,11 +26,28 @@ ActiveSupport::Notifications.subscribe("execute_job.samson") do |*args|
 end
 
 ActiveSupport::Notifications.subscribe("job_queue.samson") do |*, payload|
-  payload.each { |key, value| Samson.statsd.gauge "job.#{key}", value }
+  [[:deploys, true], [:jobs, false]].each do |(type, is_deploy)|
+    metrics = payload.fetch(type)
+    metrics.each { |key, value| Samson.statsd.gauge "job.#{key}", value, tags: ["deploy:#{is_deploy}"] }
+  end
+end
+
+ActiveSupport::Notifications.subscribe("job_status.samson") do |*, payload|
+  Samson.statsd.increment "jobs.#{payload.fetch(:type)}.#{payload.fetch(:status)}"
 end
 
 ActiveSupport::Notifications.subscribe("system_stats.samson") do |*, payload|
   payload.each { |key, value| Samson.statsd.gauge key.to_s, value }
+end
+
+ActiveSupport::Notifications.subscribe("wait_for_build.samson") do |*args|
+  event = ActiveSupport::Notifications::Event.new(*args)
+  tags = [
+    "project:#{event.payload.fetch(:project)}",
+    "external:#{event.payload.fetch(:external)}"
+  ]
+
+  Samson.statsd.timing "builds.time.wait_time", event.duration, tags: tags
 end
 
 # basic web stats
@@ -40,7 +57,9 @@ ActiveSupport::Notifications.subscribe("process_action.action_controller") do |*
   action = "action:#{event.payload.fetch(:action)}"
   format = "format:#{event.payload[:format] || 'all'}"
   format = "format:all" if format == "format:*/*"
-  status = event.payload[:status] || 401 # unauthorized redirect/error has no status because it is a `throw`
+  # Unauthorized and 500s have no status because it is a `throw`
+  # samson/vendor/bundle/gems/actionpack-5.1.4/lib/action_controller/metal/instrumentation.rb:35
+  status = event.payload[:status] || 'THR'
   tags = [controller, action, format]
 
   # db and view runtime are not set for actions without db/views

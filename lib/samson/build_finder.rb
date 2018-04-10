@@ -28,7 +28,10 @@ module Samson
     def ensure_successful_builds
       builds = find_or_create_builds
       builds.compact.each do |build|
-        wait_for_build_completion(build)
+        payload = { project: build.project.name, external: build.external? }
+        ActiveSupport::Notifications.instrument("wait_for_build.samson", payload) do
+          wait_for_build_completion(build)
+        end
         ensure_build_is_successful(build) unless @cancelled
       end
     end

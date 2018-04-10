@@ -142,8 +142,18 @@ class JobQueue
   def instrument
     ActiveSupport::Notifications.instrument(
       "job_queue.samson",
-      threads: @executing.length,
-      queued: @queue.length
+      jobs: {
+        executing: @executing.length,
+        queued: @queue.length,
+      },
+      deploys: {
+        executing: @executing.values.select { |je| deploy? je }.size,
+        queued: @queue.select { |i| deploy? i[:job_execution] }.size
+      }
     )
+  end
+
+  def deploy?(job_execution)
+    job_execution.respond_to?(:job) && job_execution.job.deploy
   end
 end
