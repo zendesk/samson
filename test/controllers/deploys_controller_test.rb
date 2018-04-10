@@ -257,6 +257,13 @@ describe DeploysController do
         deploys['deploys'].count.must_equal 4
       end
 
+      it 'filters by project and permalink' do
+        Deploy.last.update_column(:project_id, projects(:other).id)
+
+        get :index, params: { search: { project_name: 'Foo', project_permalinks: 'foo' } }, format: "json"
+        deploys['deploys'].count.must_equal 4
+      end
+
       it "filters by non-production via json" do
         get :index, params: {search: {production: 0}}, format: "json"
         assert_response :ok
