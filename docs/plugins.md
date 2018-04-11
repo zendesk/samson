@@ -19,6 +19,7 @@ Available plugins:
  - [Github](https://github.com/zendesk/samson/tree/master/plugins/github)
  - [Gcloud](https://github.com/zendesk/samson/tree/master/plugins/gcloud)
  - [Jenkins jobs management](https://github.com/zendesk/samson/tree/master/plugins/jenkins)
+ - [Jenkins Status Checker](https://github.com/zendesk/samson/tree/master/plugins/jenkins_status_checker)
  - [Hipchat notification](https://github.com/listia/samson_hipchat)
  - [Kubernetes](https://github.com/zendesk/samson/tree/master/plugins/kubernetes)
  - [Ledger](https://github.com/zendesk/samson/tree/master/plugins/ledger)
