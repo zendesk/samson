@@ -102,6 +102,7 @@ class TerminalExecutor
 
   def stream(from:, to:)
     from.each(256) do |chunk|
+      chunk.scrub!
       chunk = chunk.gsub(/\r\e\[\d+[ABCD]\r\n/, "\r") # ignore cursor movement http://ascii-table.com/ansi-escape-sequences.php
       to.write chunk
     end

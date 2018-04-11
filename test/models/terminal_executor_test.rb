@@ -72,6 +72,11 @@ describe TerminalExecutor do
       output.string.must_equal("#{"ß" * 400}\r\n")
     end
 
+    it "scrubs non-UTF8 characters" do
+      subject.execute("echo 'K\xB7}L\xE7#\xEC'")
+      output.string.must_equal "K�}L�#�\r\n"
+    end
+
     it "ignores getpgid failures since they mean the program finished early" do
       Process.expects(:getpgid).raises(Errno::ESRCH)
       subject.execute('sleep 0.1').must_equal true
