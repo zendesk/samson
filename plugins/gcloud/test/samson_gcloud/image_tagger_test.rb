@@ -78,6 +78,17 @@ describe SamsonGcloud::ImageTagger do
       deploy.job.output.must_include "\nOUT\nSUCCESS"
     end
 
+    it 'does not tag with production if stage does not deploy code' do
+      deploy.stage.update_column(:no_code_deployed, true)
+      deploy.stage.expects(:production?).returns(true)
+
+      assert_tagged_with 'stage-staging'
+
+      tag
+
+      deploy.job.output.must_include "\nOUT\nSUCCESS"
+    end
+
     it "tags other regions" do
       build.update_column(:docker_repo_digest, 'asia.gcr.io/sdfsfsdf@some-sha')
       Samson::CommandExecutor.expects(:execute).returns([true, "OUT"])
