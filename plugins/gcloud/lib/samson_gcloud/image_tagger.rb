@@ -29,7 +29,7 @@ module SamsonGcloud
         tags = []
         stage = deploy.stage
 
-        if stage.production?
+        if stage.production? && !stage.no_code_deployed?
           tags << PRODUCTION_TAG
         end
 
