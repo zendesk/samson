@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 1
+SingleCov.covered!
 
 describe Lock do
   let(:user) { users(:deployer) }
@@ -150,6 +150,17 @@ describe Lock do
     it "sets delete_at to nil when given an empty string" do
       lock = Lock.new(delete_in: "")
       lock.delete_at.must_be_nil
+    end
+  end
+
+  describe "#reason" do
+    it "is default when not given" do
+      lock.reason.must_equal "Description not given"
+    end
+
+    it "is description when given" do
+      lock.description = "ABC"
+      lock.reason.must_equal "ABC"
     end
   end
 
