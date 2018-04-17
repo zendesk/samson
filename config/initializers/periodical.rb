@@ -17,6 +17,10 @@ Samson::Periodical.register :remove_expired_locks, "Remove expired locks" do
   Lock.remove_expired_locks
 end
 
+Samson::Periodical.register :dequeue_deploy, 'Attempt to dequeue deploy' do
+  DeployStaggerer.dequeue
+end
+
 Samson::Periodical.register :report_system_stats, "Report system stats" do
   memcached_available =
     if Rails.cache.class == ActiveSupport::Cache::MemoryStore

@@ -102,7 +102,7 @@ class Job < ActiveRecord::Base
   end
 
   def queued?
-    JobQueue.queued?(id)
+    JobQueue.queued?(id) || DeployStaggerer.queued?(id)
   end
 
   def active?
