@@ -1,9 +1,11 @@
 # frozen_string_literal: true
 # make jobs with the same queue run in serial and track their status
-class JobQueue
-  include Singleton
 
-  STAGGER_INTERVAL = Integer(ENV['JOB_STAGGER_INTERVAL'] || '0').seconds
+require 'samson/job_queue/stagger_jobs'
+
+class JobQueue
+  prepend Samson::JobQueue::StaggerJobs
+  include Singleton
 
   # Whether or not execution is enabled. This allows completely disabling job
   # execution for testing purposes and when restarting samson.
@@ -25,7 +27,7 @@ class JobQueue
   end
 
   def queued?(id)
-    (@queue + @stagger_queue).detect { |i| return i[:job_execution] if i[:job_execution].id == id }
+    @queue.detect { |i| return i[:job_execution] if i[:job_execution].id == id }
   end
 
   def dequeue(id)
@@ -47,7 +49,7 @@ class JobQueue
           @queue.push(queue: queue, job_execution: job_execution)
           false
         else
-          stagger_job_or_execute(job_execution, queue)
+          handle_job(job_execution, queue)
           true
         end
       end
@@ -59,9 +61,7 @@ class JobQueue
   def debug
     grouped = debug_hash_from_queue(@queue)
 
-    result = [@executing, grouped]
-    result << debug_hash_from_queue(@stagger_queue) if staggering_enabled?
-    result
+    [@executing, grouped]
   end
 
   def clear
@@ -71,7 +71,6 @@ class JobQueue
     @threads.clear
     @executing.clear
     @queue.clear
-    @stagger_queue.clear
   end
 
   def wait(id, timeout = nil)
@@ -86,14 +85,13 @@ class JobQueue
 
   def initialize
     @queue = []
-    @stagger_queue = []
     @lock = Mutex.new
     @executing = {}
     @threads = {}
+  end
 
-    if staggering_enabled?
-      start_staggered_job_dequeuer
-    end
+  def handle_job(job_execution, queue)
+    perform_job(job_execution, queue)
   end
 
   # assign the thread first so we do not get into a state where the execution is findable but has no thread
@@ -112,38 +110,10 @@ class JobQueue
     end
   end
 
-  def stagger_job_or_execute(job_execution, queue)
-    if staggering_enabled?
-      @stagger_queue.push(job_execution: job_execution, queue: queue)
-    else
-      perform_job(job_execution, queue)
-    end
-  end
-
-  def dequeue_staggered_job
-    @lock.synchronize do
-      perform_job(*@stagger_queue.shift.values) unless @stagger_queue.empty?
-    end
-  end
-
-  def start_staggered_job_dequeuer
-    Concurrent::TimerTask.new(now: true, timeout_interval: 10, execution_interval: stagger_interval) do
-      dequeue_staggered_job
-    end.execute
-  end
-
   def debug_hash_from_queue(queue)
     queue.each_with_object(Hash.new { |h, q| h[q] = [] }) do |queue_hash, h|
       h[queue_hash[:queue]] << queue_hash[:job_execution]
     end
-  end
-
-  def staggering_enabled?
-    ENV['SERVER_MODE'] && !stagger_interval.zero?
-  end
-
-  def stagger_interval
-    STAGGER_INTERVAL
   end
 
   def full?(queue)
@@ -171,7 +141,7 @@ class JobQueue
             next
           end
           @queue.delete(i)
-          stagger_job_or_execute(i[:job_execution], i[:queue])
+          handle_job(i[:job_execution], i[:queue])
           break
         end
       end

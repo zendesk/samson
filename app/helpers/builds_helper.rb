@@ -16,7 +16,7 @@ module BuildsHelper
       sha_text.prepend "#{build.git_ref} ("
       sha_text.concat ")"
     end
-
+''
     sha_text
   end
 

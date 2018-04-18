@@ -272,106 +272,106 @@ describe JobQueue do
     end
   end
 
-  describe 'staggered jobs' do
-    def with_staggering_enabled(stagger_interval: 1.second, &block)
-      JobQueue.any_instance.expects(:stagger_interval).returns(stagger_interval)
-      with_env SERVER_MODE: 'true', &block
-    end
-
-    describe '#initialize' do
-      it 'starts staggered job deque task if staggering is enabled' do
-        JobQueue.any_instance.expects(:start_staggered_job_dequeuer)
-        with_staggering_enabled do
-          JobQueue.unstub(:new)
-          JobQueue.send(:new)
-        end
-      end
-    end
-
-    describe '#debug' do
-      it 'includes staggered jobs if enabled' do
-        with_staggering_enabled do
-          subject.debug.must_equal [{}, {}, {}]
-        end
-      end
-    end
-
-    describe '#stagger_job_or_execute' do
-      it 'pushes job to staggered queue if queue is enabled' do
-        with_staggering_enabled do
-          instance.instance_variable_get(:@stagger_queue).must_equal []
-
-          instance.send(:stagger_job_or_execute, job_execution, '')
-
-          instance.instance_variable_get(:@stagger_queue).must_equal [{ job_execution: job_execution, queue: '' }]
-          subject.clear
-        end
-      end
-
-      it 'performs job if staggering is not enabled' do
-        instance.expects(:perform_job).with(job_execution, '')
-        instance.instance_variable_get(:@stagger_queue).must_equal []
-
-        instance.send(:stagger_job_or_execute, job_execution, '')
-
-        instance.instance_variable_get(:@stagger_queue).must_equal []
-      end
-    end
-
-    describe '#dequeue_staggered_job' do
-      it 'performs dequeued job' do
-        instance.expects(:perform_job).with(job_execution, queue_name)
-        instance.instance_variable_set(:@stagger_queue, [{ job_execution: job_execution, queue: queue_name }])
-
-        instance.send(:dequeue_staggered_job)
-        subject.clear
-      end
-
-      it 'does not call perform_job if queue is empty' do
-        instance.expects(:perform_job).never
-
-        instance.send(:dequeue_staggered_job)
-      end
-    end
-
-    describe '#start_staggered_job_dequeuer' do
-      it 'creates new timer task and starts it' do
-        mock_timer_task = mock(execute: true)
-        expected_task_params = { now: true, timeout_interval: 10, execution_interval: 1.second }
-        instance.expects(:dequeue_staggered_job)
-        Concurrent::TimerTask.expects(:new).with(expected_task_params).yields.returns(mock_timer_task)
-
-        with_staggering_enabled do
-          instance.send(:start_staggered_job_dequeuer)
-        end
-        subject.clear
-      end
-    end
-
-    describe '#staggering_enabled?' do
-      it 'returns true if in server mode and stagger interval is set' do
-        with_staggering_enabled do
-          assert instance.send(:staggering_enabled?)
-        end
-      end
-
-      it 'returns false if not in server mode' do
-        refute instance.send(:staggering_enabled?)
-      end
-
-      it 'returns false if stagger interval is not set' do
-        with_env SERVER_MODE: 'true' do
-          refute instance.send(:staggering_enabled?)
-        end
-      end
-    end
-
-    describe "#stagger_interval" do
-      it 'gets the stagger interval constant' do
-        instance.send(:stagger_interval).must_equal 0.seconds
-      end
-    end
-  end
+  # describe 'staggered jobs' do
+  #   def with_staggering_enabled(stagger_interval: 1.second, &block)
+  #     JobQueue.any_instance.expects(:stagger_interval).returns(stagger_interval)
+  #     with_env SERVER_MODE: 'true', &block
+  #   end
+  #
+  #   describe '#initialize' do
+  #     it 'starts staggered job deque task if staggering is enabled' do
+  #       JobQueue.any_instance.expects(:start_staggered_job_dequeuer)
+  #       with_staggering_enabled do
+  #         JobQueue.unstub(:new)
+  #         JobQueue.send(:new)
+  #       end
+  #     end
+  #   end
+  #
+  #   describe '#debug' do
+  #     it 'includes staggered jobs if enabled' do
+  #       with_staggering_enabled do
+  #         subject.debug.must_equal [{}, {}, {}]
+  #       end
+  #     end
+  #   end
+  #
+  #   describe '#stagger_job_or_execute' do
+  #     it 'pushes job to staggered queue if queue is enabled' do
+  #       with_staggering_enabled do
+  #         instance.instance_variable_get(:@stagger_queue).must_equal []
+  #
+  #         instance.send(:stagger_job_or_execute, job_execution, '')
+  #
+  #         instance.instance_variable_get(:@stagger_queue).must_equal [{ job_execution: job_execution, queue: '' }]
+  #         subject.clear
+  #       end
+  #     end
+  #
+  #     it 'performs job if staggering is not enabled' do
+  #       instance.expects(:perform_job).with(job_execution, '')
+  #       instance.instance_variable_get(:@stagger_queue).must_equal []
+  #
+  #       instance.send(:stagger_job_or_execute, job_execution, '')
+  #
+  #       instance.instance_variable_get(:@stagger_queue).must_equal []
+  #     end
+  #   end
+  #
+  #   describe '#dequeue_staggered_job' do
+  #     it 'performs dequeued job' do
+  #       instance.expects(:perform_job).with(job_execution, queue_name)
+  #       instance.instance_variable_set(:@stagger_queue, [{ job_execution: job_execution, queue: queue_name }])
+  #
+  #       instance.send(:dequeue_staggered_job)
+  #       subject.clear
+  #     end
+  #
+  #     it 'does not call perform_job if queue is empty' do
+  #       instance.expects(:perform_job).never
+  #
+  #       instance.send(:dequeue_staggered_job)
+  #     end
+  #   end
+  #
+  #   describe '#start_staggered_job_dequeuer' do
+  #     it 'creates new timer task and starts it' do
+  #       mock_timer_task = mock(execute: true)
+  #       expected_task_params = { now: true, timeout_interval: 10, execution_interval: 1.second }
+  #       instance.expects(:dequeue_staggered_job)
+  #       Concurrent::TimerTask.expects(:new).with(expected_task_params).yields.returns(mock_timer_task)
+  #
+  #       with_staggering_enabled do
+  #         instance.send(:start_staggered_job_dequeuer)
+  #       end
+  #       subject.clear
+  #     end
+  #   end
+  #
+  #   describe '#staggering_enabled?' do
+  #     it 'returns true if in server mode and stagger interval is set' do
+  #       with_staggering_enabled do
+  #         assert instance.send(:staggering_enabled?)
+  #       end
+  #     end
+  #
+  #     it 'returns false if not in server mode' do
+  #       refute instance.send(:staggering_enabled?)
+  #     end
+  #
+  #     it 'returns false if stagger interval is not set' do
+  #       with_env SERVER_MODE: 'true' do
+  #         refute instance.send(:staggering_enabled?)
+  #       end
+  #     end
+  #   end
+  #
+  #   describe "#stagger_interval" do
+  #     it 'gets the stagger interval constant' do
+  #       instance.send(:stagger_interval).must_equal 0.seconds
+  #     end
+  #   end
+  # end
 
   describe "#dequeue" do
     it "removes a job from the queue" do
