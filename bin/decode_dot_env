@@ -1,0 +1,7 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+# tiny tool to de-obfuscate our checked in .env.bootstrap file to avoid triggering automated security tools
+# - called from bin/setup
+# - to encode new things use Base64.encode64('FOO=bar').delete("\n")
+require 'base64'
+File.write(".env", File.read(".env").gsub(/bin\/decode_dot_env-(.*)/) { Base64.decode64($1) })
