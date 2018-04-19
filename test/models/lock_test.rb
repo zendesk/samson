@@ -165,27 +165,25 @@ describe Lock do
   end
 
   describe ".remove_expired_locks" do
-    before do
-      expired = 2.hour.ago
-      Lock.create!(user: users(:deployer), resource: stages(:test_staging), created_at: expired, delete_in: 3600)
-      Lock.create!(user: users(:deployer), resource: stages(:test_production), created_at: expired, delete_in: 3600)
-      Lock.create!(user: users(:deployer), resource: stages(:test_staging), delete_in: 3600)
-      Lock.create!(user: users(:deployer), resource: stages(:test_production), delete_in: 3600)
-      Lock.create!(user: users(:deployer), resource: stages(:test_production_pod))
-
+    def expire(attributes = {})
+      lock = Lock.create!(user: users(:deployer), resource: stages(:test_staging))
+      lock.update_columns({delete_at: 1.day.ago}.merge(attributes))
       Lock.remove_expired_locks
     end
 
     it "removes expired locks" do
-      Lock.where("delete_at < ?", Time.now).must_be_empty
+      expire
+      Lock.count.must_equal 0
     end
 
     it "leaves unexpired locks alone" do
-      Lock.where("delete_at > ?", Time.now).wont_be_empty
+      expire delete_at: 1.minute.from_now
+      Lock.count.must_equal 1
     end
 
     it "leaves indefinite locks alone" do
-      Lock.where("delete_at is null").wont_be_empty
+      expire delete_at: nil
+      Lock.count.must_equal 1
     end
   end
 
