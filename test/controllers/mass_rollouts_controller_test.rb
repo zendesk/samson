@@ -194,7 +194,7 @@ describe MassRolloutsController do
         template_dgr.update_attributes!(deploy_group_id: template_stage.deploy_groups.first.id)
 
         assert_difference 'Stage.count', 1 do
-          post :create, params: { deploy_group_id: deploy_group }
+          post :create, params: {deploy_group_id: deploy_group}
         end
 
         stage = Stage.last

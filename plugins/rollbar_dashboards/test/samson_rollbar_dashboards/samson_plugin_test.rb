@@ -7,7 +7,7 @@ SingleCov.covered!
 describe SamsonRollbarDashboards do
   describe 'project_permitted_params callback' do
     it 'adds rollbar_read_token to permitted params' do
-      expected = [{ rollbar_dashboards_settings_attributes: [:id, :base_url, :read_token, :_destroy] }]
+      expected = [{rollbar_dashboards_settings_attributes: [:id, :base_url, :read_token, :_destroy]}]
       Samson::Hooks.only_callbacks_for_plugin('rollbar_dashboards', :project_permitted_params) do
         Samson::Hooks.fire(:project_permitted_params).must_equal expected
       end

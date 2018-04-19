@@ -94,7 +94,7 @@ describe BinaryBuilder do
         'Cmd' => ['/app/build.sh'],
         'Image' => 'foo_build:abc-19f',
         'Env' => [],
-        'Volumes' => { '/opt/samson_build_cache' => {} },
+        'Volumes' => {'/opt/samson_build_cache' => {}},
         'HostConfig' => {
           'Binds' => ['/opt/samson_build_cache:/build/cache'],
           'NetworkMode' => 'host'

@@ -163,7 +163,7 @@ describe StagesController do
   as_a_project_admin do
     describe '#new' do
       describe 'valid' do
-        before { get :new, params: {project_id: subject.project.to_param } }
+        before { get :new, params: {project_id: subject.project.to_param} }
 
         it 'renders' do
           assert_template :new
@@ -232,7 +232,7 @@ describe StagesController do
 
     describe '#edit' do
       describe 'valid' do
-        before { get :edit, params: {project_id: subject.project.to_param, id: subject.to_param } }
+        before { get :edit, params: {project_id: subject.project.to_param, id: subject.to_param} }
 
         it 'renders' do
           assert_template :edit
@@ -253,7 +253,7 @@ describe StagesController do
         subject.next_stage_ids = [next_stage.id]
         subject.save!
 
-        get :edit, params: {project_id: subject.project.to_param, id: subject.to_param }
+        get :edit, params: {project_id: subject.project.to_param, id: subject.to_param}
 
         checkbox = css_select('#stage_next_stage_ids_').
             detect { |node| node.attribute('value')&.value == next_stage.id.to_s }
@@ -310,7 +310,7 @@ describe StagesController do
         end
 
         describe 'invalid attributes' do
-          let(:attributes) { { name: nil } }
+          let(:attributes) { {name: nil} }
 
           it 'renders' do
             assert_template :edit
@@ -333,7 +333,7 @@ describe StagesController do
 
     describe '#destroy' do
       describe 'valid' do
-        before { delete :destroy, params: {project_id: subject.project.to_param, id: subject.to_param } }
+        before { delete :destroy, params: {project_id: subject.project.to_param, id: subject.to_param} }
 
         it 'redirects' do
           assert_redirected_to project_path(subject.project)
@@ -382,7 +382,7 @@ describe StagesController do
     end
 
     describe '#reorder' do
-      before { patch :reorder, params: {project_id: subject.project.to_param, stage_id: [subject.id] } }
+      before { patch :reorder, params: {project_id: subject.project.to_param, stage_id: [subject.id]} }
 
       it 'succeeds' do
         assert_response :success

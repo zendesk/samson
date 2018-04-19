@@ -9,7 +9,7 @@ module ReleasesHelper
   end
 
   def link_to_deploy_stage(stage, release)
-    deploy_params = { reference: release.version }
+    deploy_params = {reference: release.version}
 
     if stage.confirm?
       link_to stage.name, new_project_stage_deploy_path(@project, stage, deploy_params)

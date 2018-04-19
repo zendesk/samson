@@ -20,10 +20,10 @@ class User < ActiveRecord::Base
   has_many :csv_exports, dependent: :destroy
   has_many :access_tokens, dependent: :destroy, class_name: 'Doorkeeper::AccessToken', foreign_key: :resource_owner_id
 
-  validates :role_id, inclusion: { in: Role.all.map(&:id) }
+  validates :role_id, inclusion: {in: Role.all.map(&:id)}
 
   before_create :set_token
-  validates :time_format, inclusion: { in: TIME_FORMATS }
+  validates :time_format, inclusion: {in: TIME_FORMATS}
   validates :external_id,
     uniqueness: {scope: :deleted_at}, presence: true, unless: :integration?, if: :external_id_changed?
 

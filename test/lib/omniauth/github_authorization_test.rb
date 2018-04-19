@@ -49,7 +49,7 @@ describe GithubAuthorization do
   describe 'with an admin team' do
     let(:teams) do
       [
-        { id: 1, slug: config.admin_team, member: member? }
+        {id: 1, slug: config.admin_team, member: member?}
       ]
     end
 
@@ -73,7 +73,7 @@ describe GithubAuthorization do
   describe 'with a deploy team' do
     let(:teams) do
       [
-        { id: 2, slug: config.deploy_team, member: member? }
+        {id: 2, slug: config.deploy_team, member: member?}
       ]
     end
 
@@ -96,8 +96,8 @@ describe GithubAuthorization do
   describe 'with both teams' do
     let(:teams) do
       [
-        { id: 1, slug: config.admin_team, member: true },
-        { id: 2, slug: config.deploy_team, member: true }
+        {id: 1, slug: config.admin_team, member: true},
+        {id: 2, slug: config.deploy_team, member: true}
       ]
     end
 

@@ -141,7 +141,7 @@ describe Kubernetes::Release do
     end
 
     it "scoped statefulset for previous release since they do not update their labels when using patch" do
-      resource = {spec: {template: {metadata: {labels: {release_id: 123 }}}}}
+      resource = {spec: {template: {metadata: {labels: {release_id: 123}}}}}
       Kubernetes::Resource.expects(:build).returns(stub(
         is_a?: true, patch_replace?: true, resource: resource, namespace: 'pod1'
       ))

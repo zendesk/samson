@@ -10,7 +10,7 @@ module Samson
         raise ArgumentError, "Positive timeout required" if timeout <= 0
         env = ENV.to_h.slice(*whitelist_env).merge(env)
         pio = nil
-        popen_options = { unsetenv_others: true, err: err }
+        popen_options = {unsetenv_others: true, err: err}
         popen_options[:chdir] = dir if dir
 
         Timeout.timeout(timeout) do

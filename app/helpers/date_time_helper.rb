@@ -5,7 +5,7 @@ module DateTimeHelper
   end
 
   def relative_time(time)
-    content_tag(:span, time.rfc822, data: { time: datetime_to_js_ms(time) }, class: "mouseover")
+    content_tag(:span, time.rfc822, data: {time: datetime_to_js_ms(time)}, class: "mouseover")
   end
 
   def render_time(time, format = params[:time_format])

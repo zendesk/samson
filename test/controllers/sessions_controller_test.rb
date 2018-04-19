@@ -69,7 +69,7 @@ describe SessionsController do
     end
 
     describe 'with an origin' do
-      let(:env) { { 'omniauth.origin' => '/hello' } }
+      let(:env) { {'omniauth.origin' => '/hello'} }
 
       it 'redirects to /hello' do
         assert_redirected_to '/hello'
@@ -134,7 +134,7 @@ describe SessionsController do
       end
 
       describe 'with an origin' do
-        let(:env) { { 'omniauth.origin' => '/hello' } }
+        let(:env) { {'omniauth.origin' => '/hello'} }
 
         it 'redirects to /hello' do
           assert_redirected_to '/hello'
@@ -198,7 +198,7 @@ describe SessionsController do
       end
 
       describe 'with an origin' do
-        let(:env) { { 'omniauth.origin' => '/hello' } }
+        let(:env) { {'omniauth.origin' => '/hello'} }
 
         it 'redirects to /hello' do
           assert_redirected_to '/hello'
@@ -268,7 +268,7 @@ describe SessionsController do
       end
 
       describe 'with an origin' do
-        let(:env) { { 'omniauth.origin' => '/hello' } }
+        let(:env) { {'omniauth.origin' => '/hello'} }
 
         it 'redirects to /hello' do
           assert_redirected_to '/hello'
@@ -345,7 +345,7 @@ describe SessionsController do
       end
 
       describe 'with an origin' do
-        let(:env) { { 'omniauth.origin' => '/hello' } }
+        let(:env) { {'omniauth.origin' => '/hello'} }
 
         it 'redirects to /hello' do
           assert_redirected_to '/hello'

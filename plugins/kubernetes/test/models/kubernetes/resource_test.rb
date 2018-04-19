@@ -357,7 +357,7 @@ describe Kubernetes::Resource do
     end
 
     describe "#desired_pod_count" do
-      before { template[:spec] = {replicas: 2 } }
+      before { template[:spec] = {replicas: 2} }
 
       it "reads the value from the server since it is comlicated" do
         assert_request(:get, url, to_return: {body: {status: {desiredNumberScheduled: 5}}.to_json}) do

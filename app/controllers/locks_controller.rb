@@ -19,7 +19,7 @@ class LocksController < ApplicationController
       end
     else
       respond_to do |format|
-        format.html { redirect_back flash: { error: format_errors(new_lock) }, fallback_location: root_path }
+        format.html { redirect_back flash: {error: format_errors(new_lock)}, fallback_location: root_path }
         format.json { render_json_error 422, new_lock.errors }
       end
     end

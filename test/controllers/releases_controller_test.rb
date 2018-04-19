@@ -45,7 +45,7 @@ describe ReleasesController do
 
   as_a_project_deployer do
     describe "#create" do
-      let(:release_params) { { commit: "abcd" } }
+      let(:release_params) { {commit: "abcd"} }
       before do
         GitRepository.any_instance.expects(:commit_from_ref).with('abcd').returns('a' * 40)
         GITHUB.stubs(:create_release)

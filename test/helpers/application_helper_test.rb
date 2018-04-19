@@ -126,7 +126,7 @@ describe ApplicationHelper do
   end
 
   describe "#sortable" do
-    let(:url_options) { { controller: 'ping', action: 'show' } }
+    let(:url_options) { {controller: 'ping', action: 'show'} }
 
     it "builds a link" do
       sortable("foo").must_equal "<a href=\"/ping?direction=asc&amp;sort=foo\">Foo</a>"

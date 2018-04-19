@@ -53,7 +53,7 @@ describe 'Unauthorized' do
       end
 
       describe 'with a referer' do
-        let(:headers) { { 'HTTP_REFERER' => '/hello' } }
+        let(:headers) { {'HTTP_REFERER' => '/hello'} }
 
         it 'redirects to the login path' do
           last_response.status.must_equal 302

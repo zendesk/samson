@@ -30,7 +30,7 @@ describe WebhooksController do
 
   as_a_project_deployer do
     describe '#create' do
-      let(:params) { { branch: "master", stage_id: stage.id, source: 'any' } }
+      let(:params) { {branch: "master", stage_id: stage.id, source: 'any'} }
 
       it "redirects to index" do
         post :create, params: {project_id: project.to_param, webhook: params}

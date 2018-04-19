@@ -106,7 +106,7 @@ describe EnvironmentVariableGroupsController do
 
     describe "a json GET to #preview" do
       it "succeeds" do
-        get :preview, params: {group_id: env_group.id, project_id: project.id }, format: :json
+        get :preview, params: {group_id: env_group.id, project_id: project.id}, format: :json
         assert_response :success
         json_response = JSON.parse response.body
         json_response['groups'].sort.must_equal [
@@ -117,7 +117,7 @@ describe EnvironmentVariableGroupsController do
       end
 
       it "only shows single deploy_group with filtering on" do
-        get :preview, params: {group_id: env_group.id, project_id: project.id, deploy_group: "pod2" }, format: :json
+        get :preview, params: {group_id: env_group.id, project_id: project.id, deploy_group: "pod2"}, format: :json
         assert_response :success
         json_response = JSON.parse response.body
         json_response['groups'].sort.must_equal [
@@ -127,7 +127,7 @@ describe EnvironmentVariableGroupsController do
 
       it "fails when deploy group is unknown" do
         assert_raises ActiveRecord::RecordNotFound do
-          get :preview, params: {group_id: env_group.id, project_id: project.id, deploy_group: "pod23" }, format: :json
+          get :preview, params: {group_id: env_group.id, project_id: project.id, deploy_group: "pod23"}, format: :json
         end
       end
     end

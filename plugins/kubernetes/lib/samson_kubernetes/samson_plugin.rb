@@ -34,7 +34,7 @@ Samson::Hooks.view :deploy_group_table_header, "samson_kubernetes/deploy_group_t
 Samson::Hooks.view :deploy_group_table_cell, "samson_kubernetes/deploy_group_table_cell"
 
 Samson::Hooks.callback :deploy_group_permitted_params do
-  { cluster_deploy_group_attributes: [:kubernetes_cluster_id, :namespace] }
+  {cluster_deploy_group_attributes: [:kubernetes_cluster_id, :namespace]}
 end
 Samson::Hooks.callback(:stage_permitted_params) { :kubernetes }
 Samson::Hooks.callback(:deploy_permitted_params) { [:kubernetes_rollback, :kubernetes_reuse_build] }

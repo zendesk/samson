@@ -30,7 +30,7 @@ describe DeploysController do
       "/projects/1/stages/2/deploys/new",
       controller: "deploys", action: "new", project_id: "1", stage_id: "2"
     )
-    assert_routing({ method: "post", path: "/projects/1/stages/2/deploys" },
+    assert_routing({method: "post", path: "/projects/1/stages/2/deploys"},
       controller: "deploys", action: "create", project_id: "1", stage_id: "2")
   end
 
@@ -100,7 +100,7 @@ describe DeploysController do
 
     describe "#show" do
       it "renders" do
-        get :show, params: {project_id: project, id: deploy }
+        get :show, params: {project_id: project, id: deploy}
         assert_template :show
       end
 
@@ -111,7 +111,7 @@ describe DeploysController do
       end
 
       describe "with format .text" do
-        before { get :show, params: {format: :text, project_id: project.to_param, id: deploy.to_param } }
+        before { get :show, params: {format: :text, project_id: project.to_param, id: deploy.to_param} }
 
         it "responds with a plain text file" do
           assert_equal response.content_type, "text/plain"
@@ -124,7 +124,7 @@ describe DeploysController do
 
       describe "with format .json" do
         it "renders without project" do
-          get :show, params: {format: :json, id: deploy.to_param }
+          get :show, params: {format: :json, id: deploy.to_param}
           json.keys.must_equal ['deploy']
           json['deploy']['id'].must_equal deploy.id
         end
@@ -147,7 +147,7 @@ describe DeploysController do
         project = projects(:test)
         job_def = {project_id: project.id, command: cmd, status: nil, user_id: admin.id}
         statuses = [
-          {status: 'failed', production: true },
+          {status: 'failed', production: true},
           {status: 'running', production: true},
           {status: 'succeeded', production: true},
           {status: 'succeeded', production: false}
@@ -253,14 +253,14 @@ describe DeploysController do
       it "filters by permalinks" do
         Deploy.last.update_column(:project_id, projects(:other).id)
 
-        get :index, params: { search: { project_permalinks: 'foo,bar' } }, format: "json"
+        get :index, params: {search: {project_permalinks: 'foo,bar'}}, format: "json"
         deploys['deploys'].count.must_equal 4
       end
 
       it 'filters by project and permalink' do
         Deploy.last.update_column(:project_id, projects(:other).id)
 
-        get :index, params: { search: { project_name: 'Foo', project_permalinks: 'foo' } }, format: "json"
+        get :index, params: {search: {project_name: 'Foo', project_permalinks: 'foo'}}, format: "json"
         deploys['deploys'].count.must_equal 4
       end
 
@@ -358,7 +358,7 @@ describe DeploysController do
     end
 
     describe "#create" do
-      let(:params) { { deploy: { reference: "master" }} }
+      let(:params) { {deploy: {reference: "master"}} }
 
       before do
         post :create, params: params.merge(project_id: project.to_param, stage_id: stage.to_param, format: format)
@@ -411,7 +411,7 @@ describe DeploysController do
       before do
         Deploy.delete_all # triggers more callbacks
 
-        post :confirm, params: {project_id: project.to_param, stage_id: stage.to_param, deploy: { reference: "master" }}
+        post :confirm, params: {project_id: project.to_param, stage_id: stage.to_param, deploy: {reference: "master"}}
       end
 
       it "renders the template" do

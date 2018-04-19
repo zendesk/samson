@@ -35,7 +35,7 @@ describe CommitStatusesController do
         let(:commit_status_data) do
           {
             status: 'pending',
-            status_list: [{ status: 'pending', description: 'the Travis build is still running' }]
+            status_list: [{status: 'pending', description: 'the Travis build is still running'}]
           }
         end
 

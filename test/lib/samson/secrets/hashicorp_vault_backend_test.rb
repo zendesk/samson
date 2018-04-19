@@ -46,7 +46,7 @@ describe Samson::Secrets::HashicorpVaultBackend do
 
   describe ".read_multi" do
     it "returns values as hash" do
-      assert_vault_request :get, "production/foo/pod2/bar", body: {data: { vault: "SECRET"}}.to_json do
+      assert_vault_request :get, "production/foo/pod2/bar", body: {data: {vault: "SECRET"}}.to_json do
         backend.read_multi(['production/foo/pod2/bar']).must_equal(
           'production/foo/pod2/bar' => {
             auth: nil,

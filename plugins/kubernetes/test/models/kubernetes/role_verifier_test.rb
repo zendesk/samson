@@ -164,7 +164,7 @@ describe Kubernetes::RoleVerifier do
     end
 
     it "works with proper annotations" do
-      role.first[:spec][:template][:metadata][:annotations] = { 'secret/FOO' => 'bar' }
+      role.first[:spec][:template][:metadata][:annotations] = {'secret/FOO' => 'bar'}
       errors.must_be_nil
     end
 

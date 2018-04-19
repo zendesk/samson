@@ -85,7 +85,7 @@ describe CommandsController do
     end
 
     describe '#update' do
-      let(:params) { {id: commands(:echo).id, command: {command: 'echo hi', project_id: project.id} } }
+      let(:params) { {id: commands(:echo).id, command: {command: 'echo hi', project_id: project.id}} }
 
       it "can update html" do
         patch :update, params: params
@@ -159,12 +159,12 @@ describe CommandsController do
 
     describe '#update' do
       it "updates a project" do
-        put :update, params: {id: commands(:echo).id, command: { command: 'echo hi', project_id: other_project.id }}
+        put :update, params: {id: commands(:echo).id, command: {command: 'echo hi', project_id: other_project.id}}
         assert_redirected_to commands_path
       end
 
       it "updates a global commands" do
-        put :update, params: {id: commands(:global).id, command: { command: 'echo hi' }}
+        put :update, params: {id: commands(:global).id, command: {command: 'echo hi'}}
         assert_redirected_to commands_path
       end
     end
@@ -179,7 +179,7 @@ describe CommandsController do
       describe 'valid' do
         before do
           StageCommand.delete_all
-          delete :destroy, params: {id: commands(:echo).id, format: format }
+          delete :destroy, params: {id: commands(:echo).id, format: format}
         end
 
         describe 'html' do
@@ -205,7 +205,7 @@ describe CommandsController do
       end
 
       describe 'invalid' do
-        before { delete :destroy, params: {id: commands(:echo).id, format: format } }
+        before { delete :destroy, params: {id: commands(:echo).id, format: format} }
 
         describe 'html' do
           let(:format) { 'html' }

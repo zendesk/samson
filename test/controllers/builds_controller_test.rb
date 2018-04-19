@@ -140,7 +140,7 @@ describe BuildsController do
           :create,
           params: {
             project_id: project.to_param,
-            build: { name: 'Test creation', git_ref: 'master', description: 'hi there' }.merge(attributes),
+            build: {name: 'Test creation', git_ref: 'master', description: 'hi there'}.merge(attributes),
             format: format
           }
         )

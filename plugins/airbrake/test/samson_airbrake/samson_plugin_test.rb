@@ -7,7 +7,7 @@ SingleCov.covered!
 describe SamsonAirbrake do
   describe '.exception_debug_info' do
     it 'returns error debug info' do
-      notice = { 'id' => '1' }
+      notice = {'id' => '1'}
       Airbrake.
         expects(:user_information).
         returns("<br/><br/>Error number: <a href='https://airbrake.io/locate/{{error_id}}'>{{error_id}}</a>")
@@ -23,13 +23,13 @@ describe SamsonAirbrake do
     end
 
     it 'returns url error if error finding url' do
-      notice = { 'id' => '1' }
+      notice = {'id' => '1'}
       Airbrake.expects(:user_information).returns('')
       SamsonAirbrake::Engine.exception_debug_info(notice).must_equal 'Unable to find Airbrake url'
     end
 
     it 'returns error_id error if there is no error_id placeholder' do
-      notice = { 'id' => '1' }
+      notice = {'id' => '1'}
       Airbrake.expects(:user_information).returns('"httpfoobar"')
       SamsonAirbrake::Engine.exception_debug_info(notice).must_equal 'Unable to find error_id placeholder'
     end

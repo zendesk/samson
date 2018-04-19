@@ -13,7 +13,7 @@ class JobExecutionSubscriber
     ErrorNotifier.notify(
       exception,
       error_message: "JobExecutionSubscriber failed: #{exception.message}",
-      parameters: { job_url: @job.url }
+      parameters: {job_url: @job.url}
     )
   end
 end

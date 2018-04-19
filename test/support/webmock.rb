@@ -39,7 +39,7 @@ ActiveSupport::TestCase.class_eval do
     stub_request(:get, url).to_return(
       status: status,
       body: JSON.dump(response),
-      headers: { 'Content-Type' => 'application/json' }
+      headers: {'Content-Type' => 'application/json'}
     )
   end
 end

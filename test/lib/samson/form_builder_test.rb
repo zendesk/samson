@@ -171,7 +171,7 @@ describe Samson::FormBuilder do
     end
 
     it 'can handle description options' do
-      result = render([:rollbar_dashboards_settings, ['cool stuff!', { class: 'cool-class' }]])
+      result = render([:rollbar_dashboards_settings, ['cool stuff!', {class: 'cool-class'}]])
       result.must_include '<p class="cool-class">'
     end
 

@@ -28,7 +28,7 @@ class Job < ActiveRecord::Base
   end
 
   def self.non_deploy
-    joins('left join deploys on deploys.job_id = jobs.id').where(deploys: { id: nil })
+    joins('left join deploys on deploys.job_id = jobs.id').where(deploys: {id: nil})
   end
 
   def self.pending

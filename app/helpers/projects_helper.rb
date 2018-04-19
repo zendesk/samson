@@ -36,9 +36,9 @@ module ProjectsHelper
 
   def repository_web_link(project)
     if project.github?
-      render partial: 'shared/github_link', locals: { project: project }
+      render partial: 'shared/github_link', locals: {project: project}
     elsif project.gitlab?
-      render partial: 'shared/gitlab_link', locals: { project: project }
+      render partial: 'shared/gitlab_link', locals: {project: project}
     else
       ""
     end

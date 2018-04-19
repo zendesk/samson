@@ -19,21 +19,21 @@ describe RollbarDashboards::Client do
     end
 
     it 'gets top errors' do
-      assert_request(:get, endpoint, to_return: { body: { result: [item: { marco: 'polo'}] }.to_json }) do
+      assert_request(:get, endpoint, to_return: {body: {result: [item: {marco: 'polo'}]}.to_json}) do
         result = RollbarDashboards::Client.new(dashboard).top_errors
-        result.must_equal([{ marco: 'polo' }])
+        result.must_equal([{marco: 'polo'}])
       end
     end
 
     it 'returns nil if response is unsuccessful' do
-      assert_request(:get, endpoint, to_return: { status: 400 }) do
+      assert_request(:get, endpoint, to_return: {status: 400}) do
         RollbarDashboards::Client.new(dashboard).top_errors.must_be_nil
       end
     end
 
     it 'returns nil if a json parse error occurs' do
       ErrorNotifier.expects(:notify)
-      assert_request(:get, endpoint, to_return: { body: '<definitely>notjson</definitely>' }) do
+      assert_request(:get, endpoint, to_return: {body: '<definitely>notjson</definitely>'}) do
         RollbarDashboards::Client.new(dashboard).top_errors.must_be_nil
       end
     end
@@ -56,14 +56,14 @@ describe RollbarDashboards::Client do
     let(:query) { 'select * from all_the_things' }
 
     it 'creates a job' do
-      assert_request(:post, endpoint, with: with, to_return: { body: { result: { id: 1 } }.to_json }) do
+      assert_request(:post, endpoint, with: with, to_return: {body: {result: {id: 1}}.to_json}) do
         result = RollbarDashboards::Client.new(dashboard).create_rql_job(query)
         result.must_equal 1
       end
     end
 
     it 'returns nil if response is unsuccessful' do
-      assert_request(:post, endpoint, with: with, to_return: { status: 400 }) do
+      assert_request(:post, endpoint, with: with, to_return: {status: 400}) do
         result = RollbarDashboards::Client.new(dashboard).create_rql_job(query)
         result.must_be_nil
       end
@@ -71,7 +71,7 @@ describe RollbarDashboards::Client do
 
     it 'returns nil if an error occurs' do
       ErrorNotifier.expects(:notify)
-      assert_request(:post, endpoint, with: with, to_return: { body: '<definitely>notjson</definitely>' }) do
+      assert_request(:post, endpoint, with: with, to_return: {body: '<definitely>notjson</definitely>'}) do
         RollbarDashboards::Client.new(dashboard).create_rql_job(query).must_be_nil
       end
     end
@@ -94,11 +94,11 @@ describe RollbarDashboards::Client do
       }.to_json
 
       expected_result = [
-        { id: 123, title: 'A most terrible error', environment: 'production' },
-        { id: 456, title: 'A series of unfortunate errors', environment: 'production' },
+        {id: 123, title: 'A most terrible error', environment: 'production'},
+        {id: 456, title: 'A series of unfortunate errors', environment: 'production'},
       ]
 
-      assert_request(:get, endpoint, to_return: { body: returned }) do
+      assert_request(:get, endpoint, to_return: {body: returned}) do
         result = RollbarDashboards::Client.new(dashboard).rql_job_result(1)
         result.must_equal expected_result
       end
@@ -114,20 +114,20 @@ describe RollbarDashboards::Client do
         }
       }.to_json
 
-      assert_request(:get, endpoint, to_return: { body: returned }) do
+      assert_request(:get, endpoint, to_return: {body: returned}) do
         RollbarDashboards::Client.new(dashboard).rql_job_result(1).must_be_nil
       end
     end
 
     it 'returns nil if response was unsuccessful' do
-      assert_request(:get, endpoint, to_return: { status: 400 }) do
+      assert_request(:get, endpoint, to_return: {status: 400}) do
         RollbarDashboards::Client.new(dashboard).rql_job_result(1).must_be_nil
       end
     end
 
     it 'returns nil if an error occurs' do
       ErrorNotifier.expects(:notify)
-      assert_request(:get, endpoint, to_return: { body: '{}' }) do
+      assert_request(:get, endpoint, to_return: {body: '{}'}) do
         RollbarDashboards::Client.new(dashboard).rql_job_result(1).must_be_nil
       end
     end
@@ -142,23 +142,23 @@ describe RollbarDashboards::Client do
         }
       }.to_json
 
-      pending_job_result = { result: { result: nil } }.to_json
+      pending_job_result = {result: {result: nil}}.to_json
 
-      expected_result = [{ occurrences: 123, title: 'Error', environment: 'rain forest'}]
+      expected_result = [{occurrences: 123, title: 'Error', environment: 'rain forest'}]
 
       client = RollbarDashboards::Client.new(dashboard)
       client.expects(:sleep).with(1)
-      assert_request(:get, endpoint, to_return: [{ body: pending_job_result }, { body: finished_job_result }]) do
+      assert_request(:get, endpoint, to_return: [{body: pending_job_result}, {body: finished_job_result}]) do
         client.rql_job_result(1).must_equal expected_result
       end
     end
 
     it 'returns nil if max wait time is reached' do
-      pending_job_result = { result: { result: nil } }.to_json
+      pending_job_result = {result: {result: nil}}.to_json
 
       client = RollbarDashboards::Client.new(dashboard)
       client.expects(:sleep).with(1).times(4)
-      assert_request(:get, endpoint, to_return: Array.new(5) { { body: pending_job_result } }) do
+      assert_request(:get, endpoint, to_return: Array.new(5) { {body: pending_job_result} }) do
         client.rql_job_result(1).must_be_nil
       end
     end

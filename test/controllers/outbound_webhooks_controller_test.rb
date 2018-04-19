@@ -6,8 +6,8 @@ SingleCov.covered!
 describe OutboundWebhooksController do
   let(:project) { projects(:test) }
   let(:stage) { stages(:test_staging) }
-  let(:params) { { url: "https://zendesk.com", stage_id: stage.id } }
-  let(:invalid_params) { { url: "https://zendesk.com", username: "poopthe@cat.com", stage_id: stage.id } }
+  let(:params) { {url: "https://zendesk.com", stage_id: stage.id} }
+  let(:invalid_params) { {url: "https://zendesk.com", username: "poopthe@cat.com", stage_id: stage.id} }
 
   as_a_viewer do
     unauthorized :post, :create, project_id: :foo

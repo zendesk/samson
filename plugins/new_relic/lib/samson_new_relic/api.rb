@@ -50,7 +50,7 @@ module SamsonNewRelic
       end
 
       def response(values)
-        { applications: values, count: values.size }
+        {applications: values, count: values.size}
       end
 
       def application_map(application_names)

@@ -27,5 +27,5 @@ describe Integrations::JenkinsController do
   end
 
   test_regular_commit "Jenkins",
-    no_mapping: {build: { scm: { branch: "foobar" }}}, failed: {build: { status: "FAILURE" }}
+    no_mapping: {build: {scm: {branch: "foobar"}}}, failed: {build: {status: "FAILURE"}}
 end

@@ -6,7 +6,7 @@ class CsvExport < ActiveRecord::Base
 
   before_destroy :delete_file
 
-  validates :status, inclusion: { in: STATUS_VALUES }
+  validates :status, inclusion: {in: STATUS_VALUES}
   delegate :email, to: :user, allow_nil: true
 
   scope :old, lambda {

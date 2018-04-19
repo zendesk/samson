@@ -97,7 +97,7 @@ describe UsersController do
 
       it 'succeeds' do
         get :show, params: {id: modified_user.id}
-        assert_template :show, partial: '_project', locals: { user: modified_user }
+        assert_template :show, partial: '_project', locals: {user: modified_user}
         assigns[:projects].must_equal []
       end
 
