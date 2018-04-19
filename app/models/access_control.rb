@@ -14,6 +14,13 @@ class AccessControl
         when :write then user.deployer_for?(scope)
         else raise ArgumentError, "Unsupported action #{action}"
         end
+      when :environment_variable_groups
+        case action
+        when :read then true
+        when :write
+          can_write_projects?(user, scope&.projects)
+        else raise ArgumentError, "Unsupported action #{action}"
+        end
       when :locks
         case action
         when :read then true
@@ -64,6 +71,10 @@ class AccessControl
 
     def can_deploy_anything?(user)
       user.deployer? || user.user_project_roles.where('role_id >= ?', Role::DEPLOYER.id).exists?
+    end
+
+    def can_write_projects?(user, projects)
+      projects&.all? { |project| can?(user, :write, :projects, project) }
     end
   end
 end

@@ -48,6 +48,29 @@ describe AccessControl do
     end
   end
 
+  describe "environment_variable_groups" do
+    let(:other_project) { projects(:other) }
+    let(:group) { EnvironmentVariableGroup.create!(name: 'foo', projects: [project, other_project]) }
+
+    it "fails on unknown action" do
+      assert_raises(ArgumentError) { AccessControl.can?(admin, :bingbong, :environment_variable_groups, group) }
+    end
+
+    it "allows editing if user can edit all projects affected" do
+      admin.expects(:admin_for?).with(project).returns(true)
+      admin.expects(:admin_for?).with(other_project).returns(true)
+
+      assert AccessControl.can?(admin, :write, :environment_variable_groups, group)
+    end
+
+    it "does not allow editing if user cannot edit a project affected" do
+      admin.expects(:admin_for?).with(project).returns(true)
+      admin.expects(:admin_for?).with(other_project).returns(false)
+
+      refute AccessControl.can?(admin, :write, :environment_variable_groups, group)
+    end
+  end
+
   ["builds", "webhooks"].each do |resource|
     describe resource do
       it "fails on unknown action" do
