@@ -36,14 +36,22 @@ module Kubernetes
       @errors.presence
     end
 
-    def self.verify_group(elements)
+    def self.verify_groups(element_groups)
+      elements = element_groups.flatten(1)
       return if elements.empty?
       return if elements.any? { |r| r.dig(:metadata, :annotations, :"samson/multi_project") }
 
       errors = []
 
-      roles = elements.map { |r| r.dig(:metadata, :labels, :role) }.compact
-      errors << "metadata.labels.role must be set and unique" if roles.uniq.size != elements.size
+      element_groups.each do |element_group|
+        roles = element_group.map { |r| r.dig(:metadata, :labels, :role) }.uniq
+        if roles.size != 1 || roles == [nil]
+          errors << "metadata.labels.role must be set and consistent in each config file"
+        end
+      end
+
+      roles = element_groups.map(&:first).map { |r| r.dig(:metadata, :labels, :role) }
+      errors << "metadata.labels.role must be set and unique" if roles.uniq.size != element_groups.size
 
       projects = elements.map { |r| r.dig(:metadata, :labels, :project) }.uniq
       errors << "metadata.labels.project must be consistent" if projects.size != 1

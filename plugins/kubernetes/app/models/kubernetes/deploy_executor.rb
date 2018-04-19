@@ -423,13 +423,13 @@ module Kubernetes
       # - make sure each file exists
       # - make sure each deploy group has consistent labels
       grouped_deploy_group_roles.each do |deploy_group_roles|
-        primary_resources = deploy_group_roles.map do |deploy_group_role|
+        element_groups = deploy_group_roles.map do |deploy_group_role|
           role = deploy_group_role.kubernetes_role
           config = role.role_config_file(@job.commit)
           raise Samson::Hooks::UserError, "Error parsing #{role.config_file}" unless config
-          config.primary
+          config.elements
         end.compact
-        Kubernetes::RoleVerifier.verify_group(primary_resources)
+        Kubernetes::RoleVerifier.verify_groups(element_groups)
       end
 
       # make sure each template is valid
