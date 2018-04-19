@@ -19,7 +19,7 @@ class Integrations::BuildkiteController < Integrations::BaseController
   end
 
   def build_param
-    @build_param ||= params.fetch(:build, { })
+    @build_param ||= params.fetch(:build, {})
   end
 
   def message

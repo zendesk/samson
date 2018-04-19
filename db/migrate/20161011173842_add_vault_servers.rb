@@ -9,6 +9,6 @@ class AddVaultServers < ActiveRecord::Migration[5.0]
       t.timestamps
     end
 
-    add_index :vault_servers, :name, unique: true, length: { name: 191 }
+    add_index :vault_servers, :name, unique: true, length: {name: 191}
   end
 end

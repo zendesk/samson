@@ -9,8 +9,8 @@ class Release < ActiveRecord::Base
   before_validation :assign_release_number
   before_validation :covert_ref_to_sha
 
-  validates :number, format: { with: NUMBER_REGEX, message: "may only contain numbers and decimals." }
-  validates :commit, format: { with: Build::SHA1_REGEX, message: "can only be a full sha"}, on: :create
+  validates :number, format: {with: NUMBER_REGEX, message: "may only contain numbers and decimals."}
+  validates :commit, format: {with: Build::SHA1_REGEX, message: "can only be a full sha"}, on: :create
 
   # DEFAULT_RELEASE_NUMBER is the default value assigned to release#number by the database.
   # This constant is here for convenience - the value that the database uses is in db/schema.rb.

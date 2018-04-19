@@ -53,9 +53,9 @@ describe DashboardsHelper do
     @versions = Hashie::Mash.new(
       0 => {},
       1 => {
-        '1' => { reference: ref, id: 1 },
-        '2' => { reference: 'v1.0' },
-        '3' => { reference: 'v1.0' }
+        '1' => {reference: ref, id: 1},
+        '2' => {reference: 'v1.0'},
+        '3' => {reference: 'v1.0'}
       }
     )
   end

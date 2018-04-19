@@ -189,8 +189,8 @@ describe JobQueue do
         assert_queue_length_notifications do |t, q|
           ActiveSupport::Notifications.expects(:instrument).with(
             "job_queue.samson",
-            jobs: { executing: t, queued: q, },
-            deploys: { executing: 0, queued: 0 }
+            jobs: {executing: t, queued: q,},
+            deploys: {executing: 0, queued: 0}
           )
         end
       end
@@ -202,8 +202,8 @@ describe JobQueue do
           assert_queue_length_notifications do |t, q|
             ActiveSupport::Notifications.expects(:instrument).with(
               "job_queue.samson",
-              jobs: { executing: t, queued: q },
-              deploys: { executing: t, queued: q }
+              jobs: {executing: t, queued: q},
+              deploys: {executing: t, queued: q}
             )
           end
         end
@@ -303,7 +303,7 @@ describe JobQueue do
 
           instance.send(:stagger_job_or_execute, job_execution, '')
 
-          instance.instance_variable_get(:@stagger_queue).must_equal [{ job_execution: job_execution, queue: '' }]
+          instance.instance_variable_get(:@stagger_queue).must_equal [{job_execution: job_execution, queue: ''}]
           subject.clear
         end
       end
@@ -321,7 +321,7 @@ describe JobQueue do
     describe '#dequeue_staggered_job' do
       it 'performs dequeued job' do
         instance.expects(:perform_job).with(job_execution, queue_name)
-        instance.instance_variable_set(:@stagger_queue, [{ job_execution: job_execution, queue: queue_name }])
+        instance.instance_variable_set(:@stagger_queue, [{job_execution: job_execution, queue: queue_name}])
 
         instance.send(:dequeue_staggered_job)
         subject.clear
@@ -337,7 +337,7 @@ describe JobQueue do
     describe '#start_staggered_job_dequeuer' do
       it 'creates new timer task and starts it' do
         mock_timer_task = mock(execute: true)
-        expected_task_params = { now: true, timeout_interval: 10, execution_interval: 1.second }
+        expected_task_params = {now: true, timeout_interval: 10, execution_interval: 1.second}
         instance.expects(:dequeue_staggered_job)
         Concurrent::TimerTask.expects(:new).with(expected_task_params).yields.returns(mock_timer_task)
 
@@ -398,7 +398,7 @@ describe JobQueue do
 
   describe '#debug_hash_from_queue' do
     it 'returns the expected debug hash from a queue' do
-      queue = [{ queue: queue_name, job_execution: job_execution }]
+      queue = [{queue: queue_name, job_execution: job_execution}]
       instance.send(:debug_hash_from_queue, queue).must_equal "#{queue_name}": [job_execution]
     end
   end

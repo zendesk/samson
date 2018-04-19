@@ -50,7 +50,7 @@ class EnvironmentVariableGroupsController < ApplicationController
 
     respond_to do |format|
       format.html
-      format.json { render json: { groups: @groups || [] } }
+      format.json { render json: {groups: @groups || []} }
     end
   end
 

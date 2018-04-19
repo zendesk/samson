@@ -26,7 +26,7 @@ Octokit.middleware = Faraday::RackBuilder.new do |builder|
   builder.adapter Faraday.default_adapter
 end
 
-Octokit.connection_options[:request] = { open_timeout: 2 }
+Octokit.connection_options[:request] = {open_timeout: 2}
 
 token = ENV['GITHUB_TOKEN']
 

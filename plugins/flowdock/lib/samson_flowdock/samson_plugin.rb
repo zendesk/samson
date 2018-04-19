@@ -14,7 +14,7 @@ Samson::Hooks.callback :stage_clone do |old_stage, new_stage|
 end
 
 Samson::Hooks.callback :stage_permitted_params do
-  { flowdock_flows_attributes: [:id, :name, :token, :_destroy] }
+  {flowdock_flows_attributes: [:id, :name, :token, :_destroy]}
 end
 
 notify = ->(deploy, _buddy) do

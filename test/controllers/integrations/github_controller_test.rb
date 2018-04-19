@@ -26,7 +26,7 @@ describe Integrations::GithubController do
     project.webhooks.create!(stage: stages(:test_staging), branch: "dev", source: 'any')
   end
 
-  test_regular_commit "Github", no_mapping: { ref: 'refs/heads/foobar' }, failed: false
+  test_regular_commit "Github", no_mapping: {ref: 'refs/heads/foobar'}, failed: false
 
   it_ignores_skipped_commits
 

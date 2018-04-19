@@ -16,18 +16,18 @@ describe RollbarDashboards::DashboardsController do
 
   describe "#project_dashboard" do
     def get_dashboard(project)
-      get :project_dashboard, params: { project_id: project }
+      get :project_dashboard, params: {project_id: project}
     end
 
     let(:project) { projects(:test) }
     let(:endpoint) do
       "#{setting.base_url}/reports/top_active_items?access_token=12345&hours=24&environments=production"
     end
-    let(:item) { { title: 'Crazy Error', environment: 'production', occurrences: 9000 } }
+    let(:item) { {title: 'Crazy Error', environment: 'production', occurrences: 9000} }
 
     as_a_viewer do
       it 'renders project dashboard' do
-        assert_request(:get, endpoint, to_return: { body: { result: [item: item] }.to_json }) do
+        assert_request(:get, endpoint, to_return: {body: {result: [item: item]}.to_json}) do
           get_dashboard(project)
           assert_select '.panel-heading', 'Top 4 Items in the Last 24 Hours (https://bingbong.gov/api/1)'
           assert_select '.badge', '9000'
@@ -37,14 +37,14 @@ describe RollbarDashboards::DashboardsController do
       end
 
       it 'renders empty dashboard if there are no items' do
-        assert_request(:get, endpoint, to_return: { status: 400 }) do
+        assert_request(:get, endpoint, to_return: {status: 400}) do
           get_dashboard(project)
           assert_select 'p', text: 'There are no items to display at this time...'
         end
       end
 
       it 'caches the project items' do
-        assert_request(:get, endpoint, to_return: { body: { result: [item: item] }.to_json }) do
+        assert_request(:get, endpoint, to_return: {body: {result: [item: item]}.to_json}) do
           get_dashboard(project)
           assert_select '.badge', '9000'
           assert_select 'td', 'Crazy Error'
@@ -62,15 +62,15 @@ describe RollbarDashboards::DashboardsController do
 
   describe "#deploy_dashboard" do
     def get_dashboard(deploy)
-      get :deploy_dashboard, params: { deploy_id: deploy }
+      get :deploy_dashboard, params: {deploy_id: deploy}
     end
 
     def stub_deploy_rql_query(return_value)
       @controller.expects(:deploy_rql_query).returns(return_value)
     end
 
-    def assert_create_rql_job(params: {}, return_value: { body: { result: { id: 1 } }.to_json }, &block)
-      params = { body: { access_token: '12345', query_string: query, force_refresh: '1' }.merge(params) }
+    def assert_create_rql_job(params: {}, return_value: {body: {result: {id: 1}}.to_json}, &block)
+      params = {body: {access_token: '12345', query_string: query, force_refresh: '1'}.merge(params)}
 
       assert_request :post, rql_create_endpoint, with: params, to_return: return_value, &block
     end
@@ -130,7 +130,7 @@ describe RollbarDashboards::DashboardsController do
       it 'renders no items when job id is nil' do
         stub_deploy_rql_query(query)
 
-        assert_create_rql_job(return_value: { status: 400 }) do
+        assert_create_rql_job(return_value: {status: 400}) do
           get_dashboard(deploy)
           assert_select 'p', text: 'There are no items to display at this time...'
         end

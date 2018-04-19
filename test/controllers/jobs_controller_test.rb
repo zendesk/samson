@@ -26,7 +26,7 @@ describe JobsController do
     end
 
     describe "#index" do
-      before { get :index, params: {project_id: project.to_param } }
+      before { get :index, params: {project_id: project.to_param} }
 
       it "renders the template" do
         assert_template :index
@@ -35,7 +35,7 @@ describe JobsController do
 
     describe "#show" do
       describe 'with a job' do
-        before { get :show, params: {project_id: project.to_param, id: job } }
+        before { get :show, params: {project_id: project.to_param, id: job} }
 
         it "renders the template" do
           assert_template :show
@@ -43,7 +43,7 @@ describe JobsController do
       end
 
       describe 'with a running job' do
-        before { get :show, params: {project_id: project.to_param, id: jobs(:running_test) } }
+        before { get :show, params: {project_id: project.to_param, id: jobs(:running_test)} }
 
         it "renders the template" do
           assert_template :show
@@ -57,7 +57,7 @@ describe JobsController do
       end
 
       describe "with format .text" do
-        before { get :show, params: {format: :text, project_id: project.to_param, id: job } }
+        before { get :show, params: {format: :text, project_id: project.to_param, id: job} }
 
         it "responds with a plain text file" do
           assert_equal response.content_type, "text/plain"

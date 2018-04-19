@@ -430,9 +430,9 @@ describe Deploy do
   end
 
   describe ".for_user" do
-    let!(:deploy_one) { create_deploy!(job_attributes: { user: user}) }
-    let!(:deploy_two) { create_deploy!(job_attributes: { user: user2}) }
-    let!(:deploy_three) { create_deploy!(job_attributes: { user: user}) }
+    let!(:deploy_one) { create_deploy!(job_attributes: {user: user}) }
+    let!(:deploy_two) { create_deploy!(job_attributes: {user: user2}) }
+    let!(:deploy_three) { create_deploy!(job_attributes: {user: user}) }
 
     it "finds  all the deploys for the given user" do
       Deploy.for_user(user).to_a.sort.must_equal([deploy_one, deploy_three])
@@ -502,7 +502,7 @@ describe Deploy do
 
   describe "#validate_stage_is_unlocked" do
     def deploy
-      create_deploy!(job_attributes: { user: user })
+      create_deploy!(job_attributes: {user: user})
     end
 
     it("can deploy") { deploy }
@@ -518,14 +518,14 @@ describe Deploy do
     end
 
     it "can update a deploy while something else is deployed" do
-      create_deploy!(job_attributes: { user: user, status: "running" })
+      create_deploy!(job_attributes: {user: user, status: "running"})
       deploys(:succeeded_test).update_attributes!(buddy_id: 123)
     end
   end
 
   describe "#validate_stage_uses_deploy_groups_properly" do
     def deploy
-      create_deploy!(job_attributes: { user: user })
+      create_deploy!(job_attributes: {user: user})
     end
 
     before do

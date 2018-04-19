@@ -35,7 +35,7 @@ Samson::Hooks.view :stage_form, "samson_pipelines/stage_form"
 Samson::Hooks.view :stage_show, "samson_pipelines/stage_show"
 
 Samson::Hooks.callback :stage_permitted_params do
-  { next_stage_ids: [] }
+  {next_stage_ids: []}
 end
 
 Samson::Hooks.callback :after_job_execution do |job, success, output|

@@ -127,6 +127,6 @@ class OutputBuffer
     # Sometimes the JSON line is too big to fit in one chunk, so we get
     # a chunk back that is an incomplete JSON object.
     puts line
-    { 'message' => line }
+    {'message' => line}
   end
 end

@@ -21,7 +21,7 @@ describe Samson::RedeployParams do
       end
 
       context "when the deploy has a has_many relation" do
-        let(:extra_params) { [{ items_attributes: [:uuid, :name] }] }
+        let(:extra_params) { [{items_attributes: [:uuid, :name]}] }
         let(:items) { [OpenStruct.new(uuid: "xyz", name: "item 1")] }
 
         before do
@@ -30,7 +30,7 @@ describe Samson::RedeployParams do
 
         it "includes the attributes of the items in the hash" do
           redeploy_params_array.must_include(
-            [:items_attributes, [{ uuid: "xyz", name: "item 1" }]]
+            [:items_attributes, [{uuid: "xyz", name: "item 1"}]]
           )
         end
       end

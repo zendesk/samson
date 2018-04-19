@@ -141,7 +141,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def self.active
-    includes(:job).where(jobs: { status: Job::ACTIVE_STATUSES })
+    includes(:job).where(jobs: {status: Job::ACTIVE_STATUSES})
   end
 
   def self.active_count
@@ -151,19 +151,19 @@ class Deploy < ActiveRecord::Base
   end
 
   def self.pending
-    joins(:job).where(jobs: { status: 'pending' })
+    joins(:job).where(jobs: {status: 'pending'})
   end
 
   def self.running
-    joins(:job).where(jobs: { status: 'running' })
+    joins(:job).where(jobs: {status: 'running'})
   end
 
   def self.successful
-    joins(:job).where(jobs: { status: 'succeeded' })
+    joins(:job).where(jobs: {status: 'succeeded'})
   end
 
   def self.finished_naturally
-    joins(:job).where(jobs: { status: ['succeeded', 'failed'] })
+    joins(:job).where(jobs: {status: ['succeeded', 'failed']})
   end
 
   def self.prior_to(deploy)
@@ -176,12 +176,12 @@ class Deploy < ActiveRecord::Base
 
   def self.expired
     threshold = BuddyCheck.time_limit.ago
-    stale = where(buddy_id: nil).joins(:job).where(jobs: { status: 'pending'}).where("jobs.created_at < ?", threshold)
+    stale = where(buddy_id: nil).joins(:job).where(jobs: {status: 'pending'}).where("jobs.created_at < ?", threshold)
     stale.select(&:waiting_for_buddy?)
   end
 
   def self.for_user(user)
-    joins(:job).where(jobs: { user: user })
+    joins(:job).where(jobs: {user: user})
   end
 
   def self.last_deploys_for_projects

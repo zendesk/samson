@@ -16,7 +16,7 @@ class RollbarDashboards::DashboardsController < ApplicationController
         partial: 'rollbar_dashboards/dashboard',
         collection: data,
         as: :dashboard_data,
-        locals: { title: "Top #{NUM_ITEMS} Items in the Last 24 Hours" }
+        locals: {title: "Top #{NUM_ITEMS} Items in the Last 24 Hours"}
       )
     end
 
@@ -39,7 +39,7 @@ class RollbarDashboards::DashboardsController < ApplicationController
         partial: 'rollbar_dashboards/dashboard',
         collection: data,
         as: :dashboard_data,
-        locals: { title: "Top #{NUM_ITEMS} Items That Occurred This Deploy" }
+        locals: {title: "Top #{NUM_ITEMS} Items That Occurred This Deploy"}
       )
     end
 

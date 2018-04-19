@@ -7,6 +7,6 @@ class CommitStatusesController < ApplicationController
   def show
     stage = current_project.stages.find_by_permalink!(params.require(:stage_id))
     commit_status = CommitStatus.new(stage, params.require(:ref))
-    render json: { status: commit_status.status, status_list: commit_status.status_list }
+    render json: {status: commit_status.status, status_list: commit_status.status_list}
   end
 end

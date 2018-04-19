@@ -25,19 +25,19 @@ describe SamsonGcloud::ImageScanner do
 
     it "returns success" do
       assert_done
-      assert_request(:get, /PACKAGE_VULNERABILITY/, to_return: { body: "[]" })
+      assert_request(:get, /PACKAGE_VULNERABILITY/, to_return: {body: "[]"})
       SamsonGcloud::ImageScanner.scan(build).must_equal SamsonGcloud::ImageScanner::SUCCESS
     end
 
     it "returns found" do
       assert_done
-      assert_request(:get, /PACKAGE_VULNERABILITY/, to_return: { body: "[111]" })
+      assert_request(:get, /PACKAGE_VULNERABILITY/, to_return: {body: "[111]"})
       SamsonGcloud::ImageScanner.scan(build).must_equal SamsonGcloud::ImageScanner::FOUND
     end
 
     it "returns error when not found" do
       assert_done
-      assert_request(:get, /PACKAGE_VULNERABILITY/, to_return: { status: 400, body: "[]" })
+      assert_request(:get, /PACKAGE_VULNERABILITY/, to_return: {status: 400, body: "[]"})
       SamsonGcloud::ImageScanner.scan(build).must_equal SamsonGcloud::ImageScanner::ERROR
     end
 
@@ -53,12 +53,12 @@ describe SamsonGcloud::ImageScanner do
     end
 
     it "returns waiting if we are unable to determine the status" do
-      assert_request(:get, /DISCOVERY/, to_return: { body: "{}" })
+      assert_request(:get, /DISCOVERY/, to_return: {body: "{}"})
       SamsonGcloud::ImageScanner.scan(build).must_equal SamsonGcloud::ImageScanner::WAITING
     end
 
     it "retries request if error code >= 500" do
-      assert_request(:get, /DISCOVERY/, to_return: { status: 500 }, times: 3)
+      assert_request(:get, /DISCOVERY/, to_return: {status: 500}, times: 3)
       SamsonGcloud::ImageScanner.scan(build).must_equal SamsonGcloud::ImageScanner::ERROR
     end
   end

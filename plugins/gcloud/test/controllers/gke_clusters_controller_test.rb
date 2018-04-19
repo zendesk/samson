@@ -21,7 +21,7 @@ describe GkeClustersController do
 
     describe "#create" do
       def do_create(gcp_project: 'pp', cluster_name: 'cc', zone: 'zz')
-        post :create, params: { gke_cluster: { gcp_project: gcp_project, cluster_name: cluster_name, zone: zone } }
+        post :create, params: {gke_cluster: {gcp_project: gcp_project, cluster_name: cluster_name, zone: zone}}
       end
 
       let(:expected_file) { "#{ENV["GCLOUD_GKE_CLUSTERS_FOLDER"]}/pp-cc.yml" }

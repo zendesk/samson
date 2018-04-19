@@ -42,7 +42,7 @@ describe Integrations::BuildkiteController do
   end
 
   test_regular_commit 'Buildkite',
-    failed: { build: { state: 'failed' }}, no_mapping: { build: { branch: 'non-existent-branch' } }
+    failed: {build: {state: 'failed'}}, no_mapping: {build: {branch: 'non-existent-branch'}}
 
   it_ignores_skipped_commits
 

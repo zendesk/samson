@@ -11,7 +11,7 @@ class DashboardsController < ApplicationController
   end
 
   def deploy_groups
-    render json: { deploy_groups: @environment.deploy_groups.sort_by(&:natural_order) }
+    render json: {deploy_groups: @environment.deploy_groups.sort_by(&:natural_order)}
   end
 
   private

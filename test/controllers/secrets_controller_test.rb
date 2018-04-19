@@ -327,7 +327,7 @@ describe SecretsController do
         def do_update(extras = {})
           secret
           create_secret 'production/foo/pod2/other_key', value: 'do-not-duplicate'
-          put :update, params: { id: secret, secret: attributes.merge(value: 'do-not-duplicate').merge(extras) }
+          put :update, params: {id: secret, secret: attributes.merge(value: 'do-not-duplicate').merge(extras)}
         end
 
         it 'shows validation error on duplicate secret' do
@@ -362,7 +362,7 @@ describe SecretsController do
           secret
           create_secret 'production/foo/pod2/other_key', value: secret.value
 
-          put :update, params: { id: secret, secret: { comment: 'hello', visible: '0' } }
+          put :update, params: {id: secret, secret: {comment: 'hello', visible: '0'}}
 
           assert_redirected_to secrets_path
         end

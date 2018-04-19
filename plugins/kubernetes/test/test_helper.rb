@@ -10,13 +10,13 @@ class ActiveSupport::TestCase
         'clusters' => [
           {
             'name' => 'somecluster',
-            'cluster' => { 'server' => 'http://k8s.example.com' }
+            'cluster' => {'server' => 'http://k8s.example.com'}
           }
         ],
         'contexts' => [
           {
             'name' => 'default',
-            'context' => { 'cluster' => 'somecluster', 'user' => '' }
+            'context' => {'cluster' => 'somecluster', 'user' => ''}
           }
         ],
         'current-context' => 'default'

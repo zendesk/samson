@@ -27,7 +27,7 @@ class Stage < ActiveRecord::Base
 
   default_scope { order(:order) }
 
-  validates :name, presence: true, uniqueness: { scope: [:project, :deleted_at] }
+  validates :name, presence: true, uniqueness: {scope: [:project, :deleted_at]}
 
   # n emails separated by ;
   email = '([^\s;]+@[^\s;]+)'
@@ -64,8 +64,8 @@ class Stage < ActiveRecord::Base
 
   def self.where_reference_being_deployed(reference)
     joins(deploys: :job).where(
-      deploys: { reference: reference },
-      jobs: { status: Job::ACTIVE_STATUSES }
+      deploys: {reference: reference},
+      jobs: {status: Job::ACTIVE_STATUSES}
     )
   end
 

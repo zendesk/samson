@@ -718,7 +718,7 @@ describe Kubernetes::TemplateFiller do
 
       it "does not include images that should not be built" do
         raw_template[:spec][:template][:spec][:containers][0][:'samson/dockerfile'] = 'none'
-        raw_template[:spec][:template][:spec][:containers] << { 'samson/dockerfile': 'bar', image: 'baz' }
+        raw_template[:spec][:template][:spec][:containers] << {'samson/dockerfile': 'bar', image: 'baz'}
 
         template.build_selectors.must_equal [[nil, 'baz']]
       end

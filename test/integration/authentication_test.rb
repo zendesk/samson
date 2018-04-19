@@ -88,7 +88,7 @@ describe 'Authentication Integration' do
       end
     end
     let(:params) do
-      { client_id: oauth_app.uid, redirect_uri: redirect_uri, state: "", response_type: "code", scope: "" }
+      {client_id: oauth_app.uid, redirect_uri: redirect_uri, state: "", response_type: "code", scope: ""}
     end
 
     describe 'when not logged in' do

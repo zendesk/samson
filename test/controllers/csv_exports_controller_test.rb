@@ -119,7 +119,7 @@ describe CsvExportsController do
         describe "users type" do
           before { users(:super_admin).soft_delete! }
           let(:expected) do
-            { inherited: false, deleted: false, project_id: nil, user_id: nil }
+            {inherited: false, deleted: false, project_id: nil, user_id: nil}
           end
 
           it "returns csv with default options" do

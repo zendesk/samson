@@ -7,7 +7,7 @@ class CreateKubernetesDeployGroupRoles < ActiveRecord::Migration[4.2]
       t.string :name, null: false
     end
     add_index :kubernetes_deploy_group_roles, [:project_id, :deploy_group_id, :name],
-      name: 'index_kubernetes_deploy_group_roles_on_project_id', length: { name: 191 }
+      name: 'index_kubernetes_deploy_group_roles_on_project_id', length: {name: 191}
     add_index :kubernetes_deploy_group_roles, :deploy_group_id
   end
 end

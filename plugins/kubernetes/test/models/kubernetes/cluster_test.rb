@@ -91,7 +91,7 @@ describe Kubernetes::Cluster do
   describe "#namespaces" do
     it 'ignores kube-system because it is internal and should not be deployed too' do
       items = [{metadata: {name: 'N1'}}, {metadata: {name: 'N2'}}, {metadata: {name: 'kube-system'}}]
-      assert_request(:get, "http://foobar.server/api/v1/namespaces", to_return: {body: {items: items, }.to_json}) do
+      assert_request(:get, "http://foobar.server/api/v1/namespaces", to_return: {body: {items: items,}.to_json}) do
         cluster.namespaces.must_equal ['N1', 'N2']
       end
     end
@@ -130,7 +130,7 @@ describe Kubernetes::Cluster do
 
   describe '#server_version' do
     it 'caches the clusters server version' do
-      assert_request :get, 'http://foobar.server/version', to_return: { body: '{"gitVersion": "v1.6.0"}' }, times: 1 do
+      assert_request :get, 'http://foobar.server/version', to_return: {body: '{"gitVersion": "v1.6.0"}'}, times: 1 do
         cluster.server_version
         Rails.cache.read(cluster.cache_key).must_equal '1.6.0' # cache correctly set
         cluster.server_version

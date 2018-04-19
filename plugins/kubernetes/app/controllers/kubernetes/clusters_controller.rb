@@ -86,7 +86,7 @@ class Kubernetes::ClustersController < ApplicationController
   # kubectl create secret docker-registry kube-ecr-auth --docker-server=X --docker-username=X --docker-password=X
   def update_secret(namespace)
     docker_config = DockerRegistry.all.each_with_object({}) do |r, h|
-      h[r.host] = { username: r.username, password: r.password }
+      h[r.host] = {username: r.username, password: r.password}
     end
 
     secret = {

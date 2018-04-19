@@ -27,11 +27,11 @@ describe Changeset do
 
     describe "with master" do
       it "doesn't cache" do
-        stub_github_api("repos/foo/bar/branches/master", commit: { sha: "foo"})
+        stub_github_api("repos/foo/bar/branches/master", commit: {sha: "foo"})
         stub_github_api("repos/foo/bar/compare/a...foo", "x" => "y")
         Changeset.new("foo/bar", "a", "master").comparison.to_h.must_equal x: "y"
 
-        stub_github_api("repos/foo/bar/branches/master", commit: { sha: "bar"})
+        stub_github_api("repos/foo/bar/branches/master", commit: {sha: "bar"})
         stub_github_api("repos/foo/bar/compare/a...bar", "x" => "z")
         Changeset.new("foo/bar", "a", "master").comparison.to_h.must_equal x: "z"
       end
@@ -59,7 +59,7 @@ describe Changeset do
 
     # tests config/initializers/octokit.rb Octokit::RedirectAsError
     it "uses the cached body of a 304" do
-      stub_github_api("repos/foo/bar/branches/master", {commit: { sha: "bar"}}, 304)
+      stub_github_api("repos/foo/bar/branches/master", {commit: {sha: "bar"}}, 304)
       stub_github_api("repos/foo/bar/compare/a...bar", "x" => "z")
       Changeset.new("foo/bar", "a", "master").comparison.to_h.must_equal x: "z"
     end

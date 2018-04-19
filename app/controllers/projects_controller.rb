@@ -16,7 +16,7 @@ class ProjectsController < ApplicationController
 
       format.json do
         projects = Project.ordered_for_user(current_user).all
-        render json: { projects: projects_as_json(projects) }
+        render json: {projects: projects_as_json(projects)}
       end
 
       format.csv do

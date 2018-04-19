@@ -131,8 +131,8 @@ describe OutputBuffer do
 
     it "handles multiple lines in one chunk" do
       lines = [
-        { 'foo' => 1, 'bar' => 2 },
-        { 'foo' => 3, 'bar' => 4 }
+        {'foo' => 1, 'bar' => 2},
+        {'foo' => 3, 'bar' => 4}
       ]
 
       output = lines.map(&:to_json).join("\n")

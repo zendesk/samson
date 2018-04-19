@@ -24,8 +24,9 @@ HashSyntax:
 Style/SignalException:
   Enabled: false
 
+# make `a = {bar: 1}` look like `a = foo(bar: 1)`
 Layout/SpaceInsideHashLiteralBraces:
-  Enabled: false
+  EnforcedStyle: no_space
 
 Lint/AmbiguousOperator:
   Enabled: false

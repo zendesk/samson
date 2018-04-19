@@ -8,7 +8,7 @@ class ChangeEnvDeployGroupToScope < ActiveRecord::Migration[4.2]
 
     EnvironmentVariable.update_all scope_type: "DeployGroup"
 
-    add_index :environment_variables, [:parent_id, :parent_type, :name, :scope_type, :scope_id], unique: true, name: "environment_variables_unique_scope", length: { name: 191, parent_type: 191, scope_type: 191 }
+    add_index :environment_variables, [:parent_id, :parent_type, :name, :scope_type, :scope_id], unique: true, name: "environment_variables_unique_scope", length: {name: 191, parent_type: 191, scope_type: 191}
 
     add_column :environment_variable_groups, :comment, :text
   end
