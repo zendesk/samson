@@ -80,9 +80,21 @@ describe EnvironmentVariableGroupsController do
     end
 
     describe "#show" do
+      def unauthorized_env_group
+        ProjectEnvironmentVariableGroup.create!(environment_variable_group: env_group, project: other_project)
+      end
+
       it "renders" do
         get :show, params: {id: env_group.id}
         assert_response :success
+      end
+
+      it 'disables fields if user cannot edit env group' do
+        unauthorized_env_group
+        get :show, params: {id: env_group.id}
+
+        assert_response :success
+        assert_select 'fieldset[disabled]', count: 2
       end
     end
 
