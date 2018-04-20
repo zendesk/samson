@@ -336,42 +336,68 @@ describe Kubernetes::RoleVerifier do
     end
   end
 
-  describe '.verify_group' do
+  describe '.verify_groups' do
+    def verify_error(roles)
+      Kubernetes::RoleVerifier.verify_groups(roles)
+    rescue Samson::Hooks::UserError
+      $!.message
+    end
+
     it "is valid with no role" do
-      Kubernetes::RoleVerifier.verify_group([])
+      Kubernetes::RoleVerifier.verify_groups([])
     end
 
     it "is valid with a single role" do
-      Kubernetes::RoleVerifier.verify_group([role.first])
+      Kubernetes::RoleVerifier.verify_groups([[role.first]])
     end
 
     it "is valid with multiple different roles" do
       primary = role.first
       primary2 = primary.dup
       primary2[:metadata] = {labels: {role: "meh", project: primary.dig(:metadata, :labels, :project)}}
-      Kubernetes::RoleVerifier.verify_group([primary, primary2])
+      Kubernetes::RoleVerifier.verify_groups([[primary], [primary2]])
     end
 
     it "is valid with a duplicate role but magic annotation" do
       role.first[:metadata][:annotations] = {"samson/multi_project": "true"}
-      Kubernetes::RoleVerifier.verify_group([role.first, role.first])
+      Kubernetes::RoleVerifier.verify_groups([[role.first], [role.first]])
     end
 
     it "is invalid with a duplicate role" do
-      e = assert_raises Samson::Hooks::UserError do
-        Kubernetes::RoleVerifier.verify_group([role.first, role.first])
-      end
-      e.message.must_equal "metadata.labels.role must be set and unique"
+      verify_error([[role.first], [role.first]]).must_equal "metadata.labels.role must be set and unique"
     end
 
     it "is invalid with different projects" do
       primary = role.first
       primary2 = primary.dup
       primary2[:metadata] = {labels: {role: "meh", project: "other"}}
-      e = assert_raises Samson::Hooks::UserError do
-        Kubernetes::RoleVerifier.verify_group([primary, primary2])
-      end
-      e.message.must_equal "metadata.labels.project must be consistent"
+      verify_error([[primary], [primary2]]).must_equal "metadata.labels.project must be consistent"
+    end
+
+    it "is invalid with different role labels in a single role" do
+      primary = role.first
+      primary2 = primary.dup
+      primary2[:metadata] = {labels: {role: "meh", project: primary.dig(:metadata, :labels, :project)}}
+      verify_error([[primary, primary2]]).must_equal(
+        "metadata.labels.role must be set and consistent in each config file"
+      )
+    end
+
+    it "is invalid when a role is not set" do
+      primary = role.first
+      primary2 = primary.dup
+      primary2[:metadata] = {labels: {project: primary.dig(:metadata, :labels, :project)}}
+      verify_error([[primary, primary2]]).must_equal(
+        "metadata.labels.role must be set and consistent in each config file"
+      )
+    end
+
+    it "is invalid when all role are not set" do
+      primary = role.first
+      primary[:metadata][:labels].delete :role
+      verify_error([[primary, primary]]).must_equal(
+        "metadata.labels.role must be set and consistent in each config file"
+      )
     end
   end
 end
