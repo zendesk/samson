@@ -54,6 +54,11 @@ module Kubernetes
       end
     end
 
+    def kubernetes_secret_entries
+      to_hash
+      @kubernetes_secret_entries
+    end
+
     def verify_env
       return unless missing_env # save work when there will be nothing to do
       set_env
@@ -343,6 +348,18 @@ module Kubernetes
 
       static_env.each { |k, v| all << {name: k.to_s, value: v.to_s} }
 
+      @kubernetes_secret_entries.each_key do |secret_key|
+        all << {
+          name: secret_key.to_s,
+          valueFrom: {
+            secretKeyRef: {
+              name: "#{project.permalink}--#{@doc.kubernetes_role.name}--#{@doc.kubernetes_role_id}--#{@doc.kubernetes_release_id}".gsub('_', '-'),
+              key: secret_key.to_s,
+            }
+          }
+        }
+      end
+
       # dynamic lookups for unknown things during deploy
       {
         POD_NAME: 'metadata.name',
@@ -386,7 +403,19 @@ module Kubernetes
       env[:BLUE_GREEN] = blue_green_color if blue_green_color
 
       # env from plugins
-      env.merge!(Samson::Hooks.fire(:deploy_group_env, project, @doc.deploy_group).inject({}, :merge!))
+      project_env = Samson::Hooks.fire(:deploy_group_env, project, @doc.deploy_group).inject({}, :merge!)
+      secret_vars = EnvironmentVariable.secret_variable_names(project, @doc.deploy_group)
+      secret_env, unsecret_env = project_env.partition { |key, value| secret_vars.include?(key) }.map(&:to_h)
+      
+      env.merge!(unsecret_env)
+
+      if template.dig(:metadata, :annotations, :"samson/use_kubernetes_secrets") == 'true'
+        # This will be plucked out later to make a secret object in kubernetes
+        @kubernetes_secret_entries = secret_env
+      else
+        @kubernetes_secret_entries = {}
+        env.merge!(secret_env)
+      end
     end
 
     def blue_green_color

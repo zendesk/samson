@@ -438,6 +438,13 @@ module Kubernetes
       end
     end
 
+    class Secret < Base
+      def deploy
+        delete
+        create
+      end
+    end
+
     def self.build(*args)
       "Kubernetes::Resource::#{args.first.fetch(:kind)}".constantize.new(*args)
     end

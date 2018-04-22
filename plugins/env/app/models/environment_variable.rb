@@ -19,16 +19,23 @@ class EnvironmentVariable < ActiveRecord::Base
     # but return a value with a helpful message
     # also used by an external plugin
     def env(project, deploy_group, preview: false)
-      variables = nested_variables(project)
-      variables.sort_by! { |ev| ev.send(:priority) }
-      env = variables.each_with_object({}) do |ev, all|
-        all[ev.name] = ev.value if !all[ev.name] && ev.matches_scope?(deploy_group)
-      end
+      env = variables_in_scope(project, deploy_group)
 
       resolve_dollar_variables(env)
       resolve_secrets(project, deploy_group, env, preview: preview)
 
       env
+    end
+
+    # Given the project/deploy_group, returns the names of env variables
+    # which should be considered sensitive
+    def secret_variable_names(project, deploy_group)
+      env = variables_in_scope(project, deploy_group)
+      resolve_dollar_variables(env)
+
+      env.keys.select do |env_var_name|
+        env[env_var_name].start_with?(TerminalExecutor::SECRET_PREFIX)
+      end
     end
 
     # scopes is given as argument since it needs to be cached
@@ -49,6 +56,14 @@ class EnvironmentVariable < ActiveRecord::Base
     end
 
     private
+
+    def variables_in_scope(project, deploy_group)
+      variables = nested_variables(project)
+      variables.sort_by! { |ev| ev.send(:priority) }
+      variables.each_with_object({}) do |ev, all|
+        all[ev.name] = ev.value if !all[ev.name] && ev.matches_scope?(deploy_group)
+      end
+    end
 
     def resolve_dollar_variables(env)
       env.each do |k, value|

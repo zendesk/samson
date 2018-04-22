@@ -1,4 +1,7 @@
 # frozen_string_literal: true
+
+require 'base64'
+
 module Kubernetes
   class ReleaseDoc < ActiveRecord::Base
     self.table_name = 'kubernetes_release_docs'
@@ -80,9 +83,26 @@ module Kubernetes
     # dynamically fill out the templates and store the result
     def store_resource_template
       counter = Hash.new(-1)
+      secrets_vars = {}
       self.resource_template = raw_template.map do |resource|
         index = (counter[resource.fetch(:kind)] += 1)
-        TemplateFiller.new(self, resource, index: index).to_hash
+        filter = TemplateFiller.new(self, resource, index: index)
+        secrets_vars.merge!(filter.kubernetes_secret_entries)
+        filter.to_hash
+      end
+
+      # Plus one document at the start for the secrets
+      if secrets_vars.size > 0
+        secrets_doc = {
+          apiVersion: 'v1',
+          kind: 'Secret',
+          metadata: {
+            name: "#{kubernetes_release.project.permalink}--#{kubernetes_role.name}--#{kubernetes_role_id}--#{kubernetes_release_id}".gsub('_', '-'),
+            namespace: self.resource_template.first[:metadata][:namespace],
+          },
+          data: secrets_vars.map { |key, value| [key, Base64.strict_encode64(value)] }.to_h,
+        }
+        self.resource_template = [secrets_doc] + self.resource_template
       end
     end
 
