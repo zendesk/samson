@@ -23,7 +23,6 @@ module SamsonPipelines
       )
       raise deploy.errors.full_messages.join(", ") unless deploy.persisted?
 
-      deploy_service.confirm_deploy(deploy) if stage.deploy_requires_approval?
       output.puts "# Pipeline: Started stage: '#{stage.name}' - #{deploy.url}\n"
     rescue => ex
       output.puts "# Pipeline: Failed to start stage '#{stage.name}': #{ex.message}\n"

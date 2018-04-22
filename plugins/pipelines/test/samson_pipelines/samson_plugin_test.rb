@@ -14,7 +14,7 @@ describe SamsonPipelines do
       project: stage.project,
       command: "echo hello world",
       status: "running",
-      user: User.first,
+      user: users(:viewer),
       deploy: deploy
     )
   end
@@ -76,14 +76,15 @@ describe SamsonPipelines do
         "# Pipeline: Failed to start stage 'Production Pod': Foo\n"
     end
 
-    it "confirms when stage requires approval" do
-      DeployService.any_instance.expects(:deploy).times(2).returns(deploy)
-      DeployService.any_instance.expects(:confirm_deploy).times(2)
-      Stage.any_instance.expects(:deploy_requires_approval?).times(2).returns(true)
+    it "correctly passes down buddy check to subsequent deploys" do
+      deploy.expects(:buddy).twice.returns(users(:admin)) # Buddy check acquired for top level deploy
+      Stage.any_instance.expects(:deploy_requires_approval?).twice.returns(true)
+      DeployService.any_instance.expects(:confirm_deploy).twice
+
       Samson::Hooks.fire(:after_job_execution, job, true, output)
 
-      output.string.must_equal "# Pipeline: Started stage: 'Production' - #{deploy.url}\n" \
-        "# Pipeline: Started stage: 'Production Pod' - #{deploy.url}\n"
+      output.string.must_include "# Pipeline: Started stage: 'Production'"
+      output.string.must_include "# Pipeline: Started stage: 'Production Pod'"
     end
   end
 
