@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 #
-# basic ledger event client
+# ledger event client
 #
 require 'faraday'
 require 'openssl'
@@ -8,26 +8,28 @@ require 'openssl'
 module SamsonLedger
   class Client
     LEDGER_PATH = "/api/v1/events"
-    class << self
-      def plugin_enabled?
-        if ENV["LEDGER_TOKEN"].nil? || ENV["LEDGER_BASE_URL"].nil?
-          false
-        else
-          true
-        end
-      end
 
+    class << self
       def post_deployment(deploy)
-        return false unless plugin_enabled?
-        post_event(deploy) unless deploy.stage.no_code_deployed?
+        post_event(deploy) if ledger_token && ledger_base_url && !deploy.stage.no_code_deployed?
+      rescue StandardError
+        ErrorNotifier.notify($!, notice: true)
       end
 
       private
 
+      def ledger_token
+        ENV["LEDGER_TOKEN"]
+      end
+
+      def ledger_base_url
+        ENV["LEDGER_BASE_URL"]
+      end
+
       def post_event(deploy)
         results = post(build_event(deploy))
         if results.status.to_i != 200
-          Rails.logger.error("Ledger Client got a #{results.status} from #{ENV.fetch("LEDGER_BASE_URL")}")
+          Rails.logger.error("Ledger Client got a #{results.status} from #{ledger_base_url}")
         end
         results
       end
@@ -45,7 +47,7 @@ module SamsonLedger
           pods:          pods(deploy.stage.deploy_groups),
           pull_requests: pull_requests(deploy.changeset)
         }
-        {"events": [event]}
+        {events: [event]}
       end
 
       def pods(deploy_groups)
@@ -72,10 +74,10 @@ module SamsonLedger
       end
 
       def post(data)
-        connection = Faraday.new(url: ENV.fetch("LEDGER_BASE_URL") + LEDGER_PATH)
+        connection = Faraday.new(url: ledger_base_url + LEDGER_PATH)
         connection.post do |request|
           request.headers['Content-Type'] = "application/json"
-          request.headers['Authorization'] = "Token token=#{ENV.fetch("LEDGER_TOKEN")}"
+          request.headers['Authorization'] = "Token token=#{ledger_token}"
           request.body = data.to_json
         end
       end
