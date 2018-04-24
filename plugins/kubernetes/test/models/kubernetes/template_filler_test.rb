@@ -456,7 +456,7 @@ describe Kubernetes::TemplateFiller do
       end
 
       it "adds env from deploy_group_env hook" do
-        Samson::Hooks.with_callback(:deploy_group_env, ->(p, dg) { {FromEnv: "#{p.name}-#{dg.name}"} }) do
+        Samson::Hooks.with_callback(:deploy_group_env, ->(p, dg, _) { {FromEnv: "#{p.name}-#{dg.name}"} }) do
           container.fetch(:env).must_include(name: 'FromEnv', value: 'Foo-Pod1')
         end
       end
@@ -513,7 +513,7 @@ describe Kubernetes::TemplateFiller do
 
         # secrets got resolved?
         template.to_hash[:spec][:template][:metadata][:annotations].select { |k, _| k.match?("secret") }.must_equal(
-          "secret/FOO" => "global/global/global/bar"
+          "secret/FOO": "global/global/global/bar"
         )
       end
 
@@ -578,6 +578,36 @@ describe Kubernetes::TemplateFiller do
         e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
         e.message.must_include "bar\n  (tried: production/foo/pod1/bar"
         e.message.must_include "baz\n  (tried: production/foo/pod1/baz" # shows all at once for easier debugging
+      end
+
+      describe "converting secrets in env to annotations" do
+        with_env SECRET_ENV_AS_ANNOTATIONS: 'true'
+
+        before do
+          create_secret 'global/global/global/foo'
+          EnvironmentVariable.create!(parent: project, name: 'BAR', value: 'secret://foo')
+          EnvironmentVariable.create!(parent: project, name: 'BAZ', value: 'nope-secret://foo')
+        end
+
+        it "coverts secrets in env to annotations" do
+          hash = template.to_hash
+
+          # secrets got resolved?
+          hash[:spec][:template][:metadata][:annotations].select { |k, _| k.match?("secret") }.must_equal(
+            "secret/FOO": "global/global/global/bar",
+            "secret/BAR": "foo"
+          )
+
+          # keeps the unresolved around for debugging
+          env = hash[:spec][:template][:spec][:containers][0][:env]
+          env.select { |e| ["BAR", "BAZ"].include?(e[:name]) }.must_equal [{name: "BAZ", value: "nope-secret://foo"}]
+        end
+
+        it "blows up when annotations would be overwritten" do
+          raw_template[:spec][:template][:metadata][:annotations] = {"secret/BAR": 'foo'}
+          e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
+          e.message.must_equal "Annotation key secret/BAR is already set, cannot set it via environment too"
+        end
       end
     end
 

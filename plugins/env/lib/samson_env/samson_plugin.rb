@@ -68,8 +68,8 @@ Samson::Hooks.callback :before_docker_build do |tmp_dir, build, _|
   SamsonEnv.write_env_files(tmp_dir, build.project, [])
 end
 
-Samson::Hooks.callback :deploy_group_env do |project, deploy_group|
-  EnvironmentVariable.env(project, deploy_group)
+Samson::Hooks.callback :deploy_group_env do |*args|
+  EnvironmentVariable.env(*args)
 end
 
 # TODO: make a edit page and link to that

@@ -64,7 +64,28 @@ module Kubernetes
     def set_secrets
       return unless needs_secret_puller?
       set_secret_puller
+      convert_secret_env_to_annotations if secret_env_as_annotations?
       expand_secret_annotations
+    end
+
+    def secret_env_as_annotations?
+      ENV["SECRET_ENV_AS_ANNOTATIONS"]
+    end
+
+    # storing secrets as env vars makes them visible in the deploy docs and when inspecting deployments, avoid it
+    # we replace all secrtes from the env here and they are expanded by expand_secret_annotations later
+    def convert_secret_env_to_annotations
+      containers.each do |c|
+        c.fetch(:env).reject! do |var|
+          next unless value = var[:value]
+          next unless secret_key = value.dup.sub!(/^#{Regexp.escape TerminalExecutor::SECRET_PREFIX}/, '')
+          key = "secret/#{var.fetch(:name)}".to_sym
+          if annotations.key?(key)
+            raise Samson::Hooks::UserError, "Annotation key #{key} is already set, cannot set it via environment too"
+          end
+          annotations[key] = secret_key
+        end
+      end
     end
 
     def build_selectors
@@ -172,7 +193,7 @@ module Kubernetes
       resolver = Samson::Secrets::KeyResolver.new(project, [@doc.deploy_group])
       secret_annotations.each do |k, v|
         annotations.delete(k)
-        resolver.expand(k, v).each { |k, v| annotations[k] = v }
+        resolver.expand(k, v).each { |k, v| annotations[k.to_sym] = v }
       end
       resolver.verify!
     end
@@ -386,7 +407,8 @@ module Kubernetes
       env[:BLUE_GREEN] = blue_green_color if blue_green_color
 
       # env from plugins
-      env.merge!(Samson::Hooks.fire(:deploy_group_env, project, @doc.deploy_group).inject({}, :merge!))
+      plugin_envs = Samson::Hooks.fire(:deploy_group_env, project, @doc.deploy_group, resolve_secrets: false)
+      env.merge!(plugin_envs.inject({}, :merge!))
     end
 
     def blue_green_color
