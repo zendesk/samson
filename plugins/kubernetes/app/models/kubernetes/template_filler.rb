@@ -6,6 +6,7 @@ module Kubernetes
 
     CUSTOM_UNIQUE_LABEL_KEY = 'rc_unique_identifier'
     SECRET_PULLER_IMAGE = ENV['SECRET_PULLER_IMAGE'].presence
+    SECRET_PREFIX = "secret/"
 
     def initialize(release_doc, template, index:)
       @doc = release_doc
@@ -54,38 +55,9 @@ module Kubernetes
       end
     end
 
-    def verify_env
-      return unless missing_env # save work when there will be nothing to do
-      set_env
-      return unless missing = missing_env
-      raise Samson::Hooks::UserError, "Missing env variables #{missing.join(", ")}"
-    end
-
-    def set_secrets
-      return unless needs_secret_puller?
-      set_secret_puller
-      convert_secret_env_to_annotations if secret_env_as_annotations?
-      expand_secret_annotations
-    end
-
-    def secret_env_as_annotations?
-      ENV["SECRET_ENV_AS_ANNOTATIONS"]
-    end
-
-    # storing secrets as env vars makes them visible in the deploy docs and when inspecting deployments, avoid it
-    # we replace all secrtes from the env here and they are expanded by expand_secret_annotations later
-    def convert_secret_env_to_annotations
-      containers.each do |c|
-        c.fetch(:env).reject! do |var|
-          next unless value = var[:value]
-          next unless secret_key = value.dup.sub!(/^#{Regexp.escape TerminalExecutor::SECRET_PREFIX}/, '')
-          key = "secret/#{var.fetch(:name)}".to_sym
-          if annotations.key?(key)
-            raise Samson::Hooks::UserError, "Annotation key #{key} is already set, cannot set it via environment too"
-          end
-          annotations[key] = secret_key
-        end
-      end
+    def verify
+      verify_env
+      set_secrets
     end
 
     def build_selectors
@@ -189,6 +161,7 @@ module Kubernetes
     end
 
     # replace keys in annotations by looking them up in all possible namespaces by specificity
+    # also supports wildcard expansion
     def expand_secret_annotations
       resolver = Samson::Secrets::KeyResolver.new(project, [@doc.deploy_group])
       secret_annotations.each do |k, v|
@@ -216,8 +189,8 @@ module Kubernetes
     end
 
     def secret_annotations
-      @secret_annotations ||= annotations.to_h.select do |annotation_name, _|
-        annotation_name.to_s.start_with?('secret/')
+      annotations.select do |annotation_name, _|
+        annotation_name.to_s.start_with?(SECRET_PREFIX)
       end
     end
 
@@ -348,12 +321,19 @@ module Kubernetes
 
     # custom annotation we support here and in kucodiff
     def missing_env
-      test_env = (containers.first[:env] || [])
+      test_env = containers.flat_map { |c| c[:env] ||= [] }
       (required_env - test_env.map { |e| e.fetch(:name) }).presence
     end
 
     def required_env
       ((annotations || {})[:"samson/required_env"] || "").strip.split(/[\s,]/)
+    end
+
+    def verify_env
+      return unless missing_env # save work when there will be nothing to do
+      set_env
+      return unless missing = missing_env
+      raise Samson::Hooks::UserError, "Missing env variables #{missing.join(", ")}"
     end
 
     # helpful env vars, also useful for log tagging
@@ -409,6 +389,37 @@ module Kubernetes
       # env from plugins
       plugin_envs = Samson::Hooks.fire(:deploy_group_env, project, @doc.deploy_group, resolve_secrets: false)
       env.merge!(plugin_envs.inject({}, :merge!))
+    end
+
+    def set_secrets
+      return unless needs_secret_puller?
+      set_secret_puller
+      convert_secret_env_to_annotations if secret_env_as_annotations?
+      expand_secret_annotations
+    end
+
+    def secret_env_as_annotations?
+      ENV["SECRET_ENV_AS_ANNOTATIONS"]
+    end
+
+    # storing secrets as env vars makes them visible in the deploy docs and when inspecting deployments, avoid it
+    # we replace all secrtes from the env here and they are expanded by expand_secret_annotations later
+    def convert_secret_env_to_annotations
+      converted = []
+      containers.each do |c|
+        c.fetch(:env).reject! do |var|
+          next unless value = var[:value]
+          next true if converted.include?(value)
+          next unless secret_key = value.dup.sub!(/^#{Regexp.escape TerminalExecutor::SECRET_PREFIX}/, '')
+          converted << value
+
+          key = "#{SECRET_PREFIX}#{var.fetch(:name)}".to_sym
+          if annotations.key?(key)
+            raise Samson::Hooks::UserError, "Annotation key #{key} is already set, cannot set it via environment too"
+          end
+          annotations[key] = secret_key
+        end
+      end
     end
 
     def blue_green_color

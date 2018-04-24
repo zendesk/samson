@@ -595,7 +595,7 @@ describe Kubernetes::TemplateFiller do
           # secrets got resolved?
           hash[:spec][:template][:metadata][:annotations].select { |k, _| k.match?("secret") }.must_equal(
             "secret/FOO": "global/global/global/bar",
-            "secret/BAR": "foo"
+            "secret/BAR": "global/global/global/foo"
           )
 
           # keeps the unresolved around for debugging
@@ -607,6 +607,23 @@ describe Kubernetes::TemplateFiller do
           raw_template[:spec][:template][:metadata][:annotations] = {"secret/BAR": 'foo'}
           e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
           e.message.must_equal "Annotation key secret/BAR is already set, cannot set it via environment too"
+        end
+
+        it "does not blow up when using multiple containers with the same env" do
+          raw_template[:spec][:template][:spec][:containers] = [{}, {}]
+          hash = template.to_hash
+
+          # secrets got resolved?
+          hash[:spec][:template][:metadata][:annotations].select { |k, _| k.match?("secret") }.must_equal(
+            "secret/FOO": "global/global/global/bar",
+            "secret/BAR": "global/global/global/foo"
+          )
+
+          # keeps the unresolved around for debugging
+          envs = hash[:spec][:template][:spec][:containers].map { |c| c[:env] }
+          envs.each do |env|
+            env.select { |e| ["BAR", "BAZ"].include?(e[:name]) }.must_equal [{name: "BAZ", value: "nope-secret://foo"}]
+          end
         end
       end
     end
@@ -695,10 +712,24 @@ describe Kubernetes::TemplateFiller do
     end
   end
 
+  describe "#verify" do
+    it "checks env and secrets" do
+      template.expects(:verify_env)
+      template.expects(:set_secrets)
+      template.verify
+    end
+
+    it "can verify when resolving secret envs" do
+      with_env SECRET_ENV_AS_ANNOTATIONS: 'true' do
+        template.verify
+      end
+    end
+  end
+
   describe "#verify_env" do
     it "passes when nothing is required" do
       template.expects(:set_env).never # does not call expensive stuff if nothing is required
-      template.verify_env
+      template.send(:verify_env)
     end
 
     describe "when something is required" do
@@ -706,13 +737,13 @@ describe Kubernetes::TemplateFiller do
 
       it "fails when value is missing" do
         assert_raises Samson::Hooks::UserError do
-          template.verify_env
+          template.send(:verify_env)
         end
       end
 
       it "passes when missing value is filled out" do
         EnvironmentVariable.create!(parent: projects(:test), name: 'FOO', value: 'BAR')
-        template.verify_env
+        template.send(:verify_env)
       end
     end
   end
