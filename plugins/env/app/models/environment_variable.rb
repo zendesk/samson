@@ -18,7 +18,7 @@ class EnvironmentVariable < ActiveRecord::Base
     # preview parameter can be used to not raise an error,
     # but return a value with a helpful message
     # also used by an external plugin
-    def env(project, deploy_group, preview: false)
+    def env(project, deploy_group, preview: false, resolve_secrets: true)
       variables = nested_variables(project)
       variables.sort_by! { |ev| ev.send(:priority) }
       env = variables.each_with_object({}) do |ev, all|
@@ -26,7 +26,7 @@ class EnvironmentVariable < ActiveRecord::Base
       end
 
       resolve_dollar_variables(env)
-      resolve_secrets(project, deploy_group, env, preview: preview)
+      resolve_secrets(project, deploy_group, env, preview: preview) if resolve_secrets
 
       env
     end
@@ -59,18 +59,16 @@ class EnvironmentVariable < ActiveRecord::Base
     def resolve_secrets(project, deploy_group, env, preview:)
       resolver = Samson::Secrets::KeyResolver.new(project, Array(deploy_group))
       env.each do |key, value|
-        if value.start_with?(TerminalExecutor::SECRET_PREFIX)
-          secret_key = value.sub(TerminalExecutor::SECRET_PREFIX, '')
-          found = resolver.read(secret_key)
-          resolved =
-            if preview
-              path = resolver.expand_key(secret_key)
-              path ? "#{TerminalExecutor::SECRET_PREFIX}#{path}" : "#{value}#{FAILED_LOOKUP_MARK}"
-            else
-              found.to_s
-            end
-          env[key] = resolved
-        end
+        next unless secret_key = value.dup.sub!(/^#{Regexp.escape TerminalExecutor::SECRET_PREFIX}/, '')
+        found = resolver.read(secret_key)
+        resolved =
+          if preview
+            path = resolver.expand_key(secret_key)
+            path ? "#{TerminalExecutor::SECRET_PREFIX}#{path}" : "#{value}#{FAILED_LOOKUP_MARK}"
+          else
+            found.to_s
+          end
+        env[key] = resolved
       end
       resolver.verify! unless preview
     end

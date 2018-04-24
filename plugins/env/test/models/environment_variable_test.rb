@@ -109,16 +109,25 @@ describe EnvironmentVariable do
       end
 
       describe "secrets" do
-        before { project.environment_variables.last.update_column(:value, "secret://foobar") }
+        before do
+          create_secret 'global/global/global/foobar'
+          project.environment_variables.last.update_column(:value, "secret://foobar")
+        end
 
         it "can resolve secrets" do
-          create_secret 'global/global/global/foobar'
           EnvironmentVariable.env(project, nil).must_equal(
             "PROJECT" => "MY-SECRET", "X" => "Y", "Y" => "Z"
           )
         end
 
+        it "does not resolve secrets when asked to not do it" do
+          EnvironmentVariable.env(project, nil, resolve_secrets: false).must_equal(
+            "PROJECT" => "secret://foobar", "X" => "Y", "Y" => "Z"
+          )
+        end
+
         it "fails on unfound secrets" do
+          Samson::Secrets::Manager.delete 'global/global/global/foobar'
           e = assert_raises Samson::Hooks::UserError do
             EnvironmentVariable.env(project, nil)
           end
@@ -126,14 +135,12 @@ describe EnvironmentVariable do
         end
 
         it "does not show secret values in preview mode" do
-          create_secret 'global/global/global/foobar'
           EnvironmentVariable.env(project, nil, preview: true).must_equal(
             "PROJECT" => "secret://global/global/global/foobar", "X" => "Y", "Y" => "Z"
           )
         end
 
         it "does not duplicate secret values in preview mode" do
-          create_secret 'global/global/global/foobar'
           all = DeployGroup.all.map do |dg|
             EnvironmentVariable.env(project, dg, preview: true)
           end
@@ -147,7 +154,7 @@ describe EnvironmentVariable do
         end
 
         it "does not raise on missing secret values in preview mode" do
-          Samson::Secrets::DbBackend::Secret.delete_all
+          Samson::Secrets::Manager.delete 'global/global/global/foobar'
           EnvironmentVariable.env(project, nil, preview: true).must_equal(
             "PROJECT" => "secret://foobar X", "X" => "Y", "Y" => "Z"
           )
