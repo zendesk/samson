@@ -1,49 +1,15 @@
 # frozen_string_literal: true
 require_relative "../../test_helper"
 
-SingleCov.covered! uncovered: 2
+SingleCov.covered!
 
-describe 'SamsonLedger::Client' do
-  let(:deploy) { Deploy.first }
-  let(:no_code_deploy) do
-    Deploy.last.stage.update!(no_code_deployed: true)
-    Deploy.last
-  end
-
+describe SamsonLedger::Client do
   with_env(LEDGER_BASE_URL: 'https://foo.bar', LEDGER_TOKEN: "sometoken")
 
-  describe ".plugin_enabled?" do
-    it "is enabled" do
-      assert SamsonLedger::Client.plugin_enabled?
-    end
-
-    it "is not enabled without token" do
-      ENV.delete("LEDGER_TOKEN")
-      refute SamsonLedger::Client.plugin_enabled?
-    end
-
-    it "is not enabled without base_url" do
-      ENV.delete("LEDGER_BASE_URL")
-      refute SamsonLedger::Client.plugin_enabled?
-    end
-  end
-
   describe ".post_deployment" do
-    before do
-      stub_github_api("repos/bar/foo/compare/abcabcaaabcabcaaabcabcaaabcabcaaabcabca1...staging", "x" => "y")
-      GITHUB.stubs(:compare).with("bar/foo", "abcabcaaabcabcaaabcabcaaabcabcaaabcabca1", "staging").returns(comparison)
-      Changeset::PullRequest.stubs(:find).with("bar/foo", 42).returns(pull_request)
-
-      request_lambda = ->(request) do
-        results << JSON.parse(request.body)['events'].first
-        request
-      end
-      @event_sent = stub_request(:post, "https://foo.bar/api/v1/events").with(&request_lambda).to_return(response)
-    end
-
+    let(:deploy) { Deploy.first }
     let(:results) { [] }
     let(:response) { {status: 200} }
-
     let(:sawyer_agent) { Sawyer::Agent.new('') }
     let(:comparison) { Sawyer::Resource.new(sawyer_agent, commits: [commit]) }
     let(:commit) { Sawyer::Resource.new(sawyer_agent, commit: commit_message) }
@@ -59,13 +25,45 @@ describe 'SamsonLedger::Client' do
     end
     let(:github_user) { nil }
 
+    before do
+      stub_github_api("repos/bar/foo/compare/abcabcaaabcabcaaabcabcaaabcabcaaabcabca1...staging", "x" => "y")
+      GITHUB.stubs(:compare).with("bar/foo", "abcabcaaabcabcaaabcabcaaabcabcaaabcabca1", "staging").returns(comparison)
+      Changeset::PullRequest.stubs(:find).with("bar/foo", 42).returns(pull_request)
+
+      request_lambda = ->(request) do
+        results << JSON.parse(request.body)['events'].first
+        request
+      end
+      @event_sent = stub_request(:post, "https://foo.bar/api/v1/events").with(&request_lambda).to_return(response)
+    end
+
     it "posts an event with a valid client" do
       SamsonLedger::Client.post_deployment(deploy)
       assert_requested(@event_sent)
     end
 
+    it "does not stop all deploys when ledger does not reply" do
+      sent = stub_request(:post, "https://foo.bar/api/v1/events").to_timeout
+      ErrorNotifier.expects(:notify)
+      SamsonLedger::Client.post_deployment(deploy)
+      assert_requested(sent)
+    end
+
+    it "does not post an event without token" do
+      ENV.delete 'LEDGER_TOKEN'
+      SamsonLedger::Client.post_deployment(deploy)
+      assert_not_requested(@event_sent)
+    end
+
+    it "does not post an event without url" do
+      ENV.delete 'LEDGER_BASE_URL'
+      SamsonLedger::Client.post_deployment(deploy)
+      assert_not_requested(@event_sent)
+    end
+
     it "does not post an event when no_code_deployed" do
-      SamsonLedger::Client.post_deployment(no_code_deploy)
+      deploy.stage.update!(no_code_deployed: true)
+      SamsonLedger::Client.post_deployment(deploy)
       assert_not_requested(@event_sent)
     end
 
@@ -118,6 +116,12 @@ describe 'SamsonLedger::Client' do
         results.first['pull_requests'].must_include("##{pull_request.number}")
         results.first['pull_requests'].must_include(pull_request.url)
         results.first['pull_requests'].must_include(pull_request.title)
+      end
+
+      it "does not include pull requests when none were found" do
+        Changeset::PullRequest.stubs(:find).returns(nil)
+        SamsonLedger::Client.post_deployment(deploy)
+        results.first['pull_requests'].must_be_nil
       end
     end
 
