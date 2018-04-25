@@ -414,8 +414,11 @@ module Kubernetes
           converted << value
 
           key = "#{SECRET_PREFIX}#{var.fetch(:name)}".to_sym
-          if annotations.key?(key)
-            raise Samson::Hooks::UserError, "Annotation key #{key} is already set, cannot set it via environment too"
+          if (old = annotations[key]) && old != secret_key
+            raise(
+              Samson::Hooks::UserError,
+              "Annotation key #{key} is already set to #{old}, cannot set it via environment to #{secret_key}"
+            )
           end
           annotations[key] = secret_key
         end

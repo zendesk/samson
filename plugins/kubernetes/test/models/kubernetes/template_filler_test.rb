@@ -603,10 +603,15 @@ describe Kubernetes::TemplateFiller do
           env.select { |e| ["BAR", "BAZ"].include?(e[:name]) }.must_equal [{name: "BAZ", value: "nope-secret://foo"}]
         end
 
-        it "blows up when annotations would be overwritten" do
+        it "ignores when annotations would be overwritten with the same value" do
           raw_template[:spec][:template][:metadata][:annotations] = {"secret/BAR": 'foo'}
+          template.to_hash
+        end
+
+        it "blows up when annotations would be overwritten with a different value" do
+          raw_template[:spec][:template][:metadata][:annotations] = {"secret/BAR": 'foo2'}
           e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
-          e.message.must_equal "Annotation key secret/BAR is already set, cannot set it via environment too"
+          e.message.must_equal "Annotation key secret/BAR is already set to foo2, cannot set it via environment to foo"
         end
 
         it "does not blow up when using multiple containers with the same env" do
