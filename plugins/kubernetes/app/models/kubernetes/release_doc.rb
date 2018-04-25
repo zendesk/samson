@@ -35,9 +35,7 @@ module Kubernetes
     # run on unsaved mock ReleaseDoc to test template and secrets before we save or create a build
     # this create a bit of duplicated work, but fails the deploy fast
     def verify_template
-      template = verification_template
-      template.set_secrets
-      template.verify_env
+      verification_template.verify
     end
 
     # kubeclient needs pure symbol hash ... not indifferent access

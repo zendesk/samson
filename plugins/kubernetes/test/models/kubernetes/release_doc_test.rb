@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative "../../test_helper"
 
-SingleCov.covered! uncovered: 2
+SingleCov.covered!
 
 describe Kubernetes::ReleaseDoc do
   def deployment_stub(replica_count)
@@ -117,6 +117,10 @@ describe Kubernetes::ReleaseDoc do
       doc.send(:resources)[1].expects(:revert).with(SER: "VICE")
       doc.revert
     end
+
+    it "fails when called out of order" do
+      assert_raises(RuntimeError) { doc.revert }
+    end
   end
 
   describe "#validate_config_file" do
@@ -138,6 +142,14 @@ describe Kubernetes::ReleaseDoc do
     it "reports detailed errors when invalid" do
       GitRepository.any_instance.expects(:file_content).returns("foo: bar")
       refute_valid doc
+    end
+
+    it "does nothing when no role is set" do
+      doc.kubernetes_role = nil
+      refute_valid doc
+      doc.errors.full_messages.must_equal(
+        ["Kubernetes role must exist", "Kubernetes role can't be blank"]
+      )
     end
   end
 
