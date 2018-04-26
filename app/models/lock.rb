@@ -54,7 +54,7 @@ class Lock < ActiveRecord::Base
   end
 
   def self.remove_expired_locks
-    Lock.where("delete_at IS NOT NULL and delete_at < CURRENT_TIMESTAMP").find_each(&:soft_delete!)
+    Lock.where("delete_at IS NOT NULL and delete_at < ?", Time.now).find_each(&:soft_delete!)
   end
 
   def delete_in=(seconds)
