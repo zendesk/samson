@@ -4,10 +4,11 @@
 
 ```bash
 docker-compose up
-open http://$DOCKER_HOST_IP:9080
+open http://localhost:3000
 ```
 
-When not running on `192.168.42.45` use a different auth provider, the IP is hardcoded.
+When running on virtual `192.168.42.45` use `.env.virtualbox` from `docker-compose.yml`.
+When running on neither localhost nor `192.168.42.45` create your own credentials and load them from `docker-compose.yml`.
 
 ### Local
 ```bash
