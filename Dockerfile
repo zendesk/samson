@@ -12,11 +12,12 @@ COPY bin /app/bin
 COPY public /app/public
 COPY db /app/db
 COPY .env.bootstrap /app/.env
+COPY .env.virtualbox /app/
 COPY .ruby-version /app/.ruby-version
 
 # NPM
 COPY package.json /app/package.json
-RUN npm install
+RUN npm install --silent
 
 # Gems
 COPY Gemfile /app/
@@ -33,8 +34,8 @@ COPY lib /app/lib
 
 # Assets
 COPY vendor/assets /app/vendor/assets
-RUN echo "takes 5 minute" && RAILS_ENV=production PRECOMPILE=1 bundle exec rake assets:precompile
+RUN echo "takes 5 minute" && ./bin/decode_dot_env .env && RAILS_ENV=production PRECOMPILE=1 bundle exec rake assets:precompile
 
 EXPOSE 9080
 
-CMD ["bundle", "exec", "puma", "-C", "./config/puma.rb"]
+CMD ["bundle", "exec", "puma", "-C", "config/puma.rb"]

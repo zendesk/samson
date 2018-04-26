@@ -3,14 +3,9 @@ services:
   samson:
     image: zendesk/samson:latest
     ports:
-      - "9080:9080"
+      - "3000:9080"
     environment:
       DATABASE_URL: "sqlite3://db/development.sqlite"
-      # test application samson-compose from some-public-token user (192.168.42.45:9080)
-      DEFAULT_URL: "http://192.168.42.45:9080"
-      GITHUB_CLIENT_ID: "b2e12de0cb7d301d6158"
-      GITHUB_SECRET: "4346472f3d168fb72ca540a04d2d277c0cb8f247"
-
       RAILS_LOG_TO_STDOUT: 1
-    env_file: .env.bootstrap
-    command: "bash -c 'rake db:setup && puma -C config/puma.rb'"
+    # to use .env.virtualbox with 192.168.42.45 host prefix ./bin/decode_dot_env .env.virtualbox && source <(sed -E -n 's/[^#]+/export &/ p' .env.virtualbox) &&
+    command: ["bash", "-c", "rake db:setup && bundle exec puma -C config/puma.rb"]
