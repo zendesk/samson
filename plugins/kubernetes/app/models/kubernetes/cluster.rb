@@ -39,6 +39,10 @@ module Kubernetes
       @batch_client ||= build_client 'batch/v1'
     end
 
+    def policy_client
+      @policy_client ||= build_client 'policy/v1beta1'
+    end
+
     def context
       @context ||= kubeconfig.context(config_context)
     end

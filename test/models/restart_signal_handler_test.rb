@@ -11,6 +11,7 @@ describe RestartSignalHandler do
       Thread.current.kill # simulates passing signal to puma and it calling exec
     end)
     handler = RestartSignalHandler.listen
+    Thread.pass # make sure listener thread starts
     Thread.new { handler.send(:signal_restart) }.join
     maxitest_wait_for_extra_threads
     assert @puma_restarted

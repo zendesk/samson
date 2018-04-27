@@ -15,10 +15,10 @@ describe Kubernetes::RoleVerifier do
       [YAML.safe_load(read_kubernetes_sample_file('kubernetes_job.yml')).deep_symbolize_keys]
     end
     let(:pod_role) do
-      [{kind: 'Pod', metadata: {name: 'my-map'}, spec: {containers: [{name: "foo"}]}}]
+      [{kind: 'Pod', metadata: {name: 'my-map', labels: labels}, spec: {containers: [{name: "foo"}]}}]
     end
+    let(:labels) { {project: "some-project", role: "some-role"} }
     let(:stateful_set_role) do
-      labels = {project: "some-project", role: "some-role"}
       [
         deployment_role[1],
         {
@@ -46,7 +46,7 @@ describe Kubernetes::RoleVerifier do
     end
 
     it "allows ConfigMap" do
-      role_json[-1...-1] = ", #{{kind: 'ConfigMap', metadata: {name: 'my-map'}}.to_json}"
+      role_json[-1...-1] = ", #{{kind: 'ConfigMap', metadata: {name: 'my-map', labels: labels}}.to_json}"
       errors.must_equal nil
     end
 
@@ -94,6 +94,37 @@ describe Kubernetes::RoleVerifier do
       it "enforces updateStrategy" do
         stateful_set_role[1][:spec][:updateStrategy] = nil
         errors.first.must_include "updateStrategy"
+      end
+    end
+
+    describe 'PodDisruptionBudget' do
+      before do
+        role.push(
+          kind: 'PodDisruptionBudget',
+          metadata: {name: 'foo', labels: labels},
+          spec: {selector: {matchLabels: labels}}
+        )
+      end
+
+      it "allows" do
+        errors.must_equal nil
+      end
+
+      it "shows inconsistent labels" do
+        role[0][:metadata][:labels][:project] = 'nope'
+        errors.must_equal ["Project and role labels must be consistent across resources"]
+      end
+
+      it "shows eviction deadlock" do
+        role.last[:spec][:minAvailable] = 2
+        errors.must_equal [
+          "PodDisruptionBudget spec.minAvailable must be lower than spec.replicas to avoid eviction deadlock"
+        ]
+      end
+
+      it "allows correct minAvailable eviction" do
+        role.last[:spec][:minAvailable] = 1
+        errors.must_equal nil
       end
     end
 
@@ -252,7 +283,7 @@ describe Kubernetes::RoleVerifier do
     end
 
     describe '#verify_project_and_role_consistent' do
-      let(:error_message) { "Project and role labels must be consistent across Deployment/DaemonSet/Service/Job" }
+      let(:error_message) { "Project and role labels must be consistent across resources" }
 
       # this is not super important, but adding it for consistency
       it "reports missing job labels" do

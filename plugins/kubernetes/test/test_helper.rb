@@ -137,7 +137,13 @@ class ActiveSupport::TestCase
         {"name" => "horizontalpodautoscalers", "namespaced" => true, "kind" => "HorizontalPodAutoscaler"},
         {"name" => "horizontalpodautoscalers/status", "namespaced" => true, "kind" => "HorizontalPodAutoscaler"},
       ]
-    }
+    },
+    "policy/v1beta1" => {
+      "kind" => "APIResourceList",
+      "resources" => [
+        {"name" => "poddisruptionbudgets", "namespaced" => true, "kind" => "PodDisruptionBudget"}
+      ]
+    },
   }.freeze
 
   before do

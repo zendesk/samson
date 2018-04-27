@@ -141,7 +141,18 @@ module Kubernetes
         path = [:spec, :replicas]
         copy.dig_set(path, replica_source.dig(*path)) if @template.dig(*path)
 
+        # copy fields
+        persistent_fields.each do |keep|
+          path = keep.split(".").map!(&:to_sym)
+          old_value = resource.dig(*path)
+          copy.dig_set path, old_value unless old_value.nil? # boolean fields are kept, but nothing is nil in kubernetes
+        end
+
         copy
+      end
+
+      def persistent_fields
+        []
       end
 
       def fetch_resource
@@ -225,19 +236,13 @@ module Kubernetes
       # updating a service requires re-submitting resourceVersion and clusterIP
       # we also keep whitelisted fields that are manually changed for load-balancing
       # (meant for labels, but other fields could work too)
-      def template_for_update
-        copy = super
+      def persistent_fields
         [
           "metadata.resourceVersion",
           "spec.clusterIP",
           *ENV["KUBERNETES_SERVICE_PERSISTENT_FIELDS"].to_s.split(/\s,/),
-          *copy.dig(:metadata, :annotations, :"samson/persistent_fields").to_s.split(/[,\s]+/)
-        ].each do |keep|
-          path = keep.split(".").map!(&:to_sym)
-          old_value = resource.dig(*path)
-          copy.dig_set path, old_value unless old_value.nil? # boolean fields are kept, but nothing is nil in kubernetes
-        end
-        copy
+          *@template.dig(:metadata, :annotations, :"samson/persistent_fields").to_s.split(/[,\s]+/)
+        ]
       end
     end
 
@@ -435,6 +440,20 @@ module Kubernetes
 
       def desired_pod_count
         1
+      end
+    end
+
+    class PodDisruptionBudget < Base
+      # cannot be updated `Forbidden: updates to poddisruptionbudget spec are forbidden`
+      def deploy
+        delete
+        create
+      end
+
+      private
+
+      def client
+        @deploy_group.kubernetes_cluster.policy_client
       end
     end
 

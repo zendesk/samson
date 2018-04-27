@@ -771,10 +771,27 @@ describe Kubernetes::Resource do
       let(:kind) { 'HorizontalPodAutoscaler' }
       let(:url) { "#{origin}/apis/autoscaling/v1/namespaces/pod1/horizontalpodautoscalers/some-project" }
 
-      it "creates when missing" do
+      it "updates" do
         assert_request(:get, url, to_return: {body: '{}'}) do
           assert_request(:put, url, to_return: {body: '{}'}) do
             resource.deploy
+          end
+        end
+      end
+    end
+  end
+
+  describe Kubernetes::Resource::PodDisruptionBudget do
+    describe "#deploy" do
+      let(:kind) { 'PodDisruptionBudget' }
+      let(:url) { "#{origin}/apis/policy/v1beta1/namespaces/pod1/poddisruptionbudgets/some-project" }
+
+      it "updates" do
+        assert_request(:get, url, to_return: [{body: '{}'}, {status: 404}]) do
+          assert_request(:delete, url, to_return: {body: '{}'}) do
+            assert_request(:post, File.dirname(url), to_return: {body: '{}'}) do
+              resource.deploy
+            end
           end
         end
       end
