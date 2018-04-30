@@ -144,6 +144,11 @@ samson will then override the `project` labels and keep deployments/services uni
 Too keep fields/labels that are manually managed persistent during updates, use `KUBERNETES_SERVICE_PERSISTENT_FIELDS`, see .env.example
 or set `metadata.annotations.samson/persistent_fields`
 
+### PodDisruptionBudget
+
+Samson can add a dynamic PodDisruptionBudget by setting `metadata.annotations.minAvailable: 30%`, it calculates the ceil of this with the configured replicas.
+(also supports absolute values like `"1"`)
+
 ### Blue/Green Deployment
 
 Can be enabled per role, it then starts a new isolated deployment shifting between blue and green sufixes, 
