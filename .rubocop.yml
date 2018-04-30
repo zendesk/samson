@@ -46,7 +46,7 @@ Metrics/AbcSize:
 Style/WordArray:
   Enabled: false
 
-Lint/EndAlignment:
+Layout/EndAlignment:
   EnforcedStyleAlignWith: variable
 
 Style/StringLiteralsInInterpolation:
@@ -144,7 +144,10 @@ Lint/AssignmentInCondition:
 Style/SingleLineBlockParams:
   Enabled: false
 
-Style/TrailingCommaInLiteral:
+Style/TrailingCommaInArrayLiteral:
+  Enabled: false
+
+Style/TrailingCommaInHashLiteral:
   Enabled: false
 
 Style/PerlBackrefs:
@@ -189,10 +192,9 @@ Style/RescueStandardError:
 Style/FormatStringToken:
   Enabled: false
 
-# too many false-positives
-Performance/HashEachMethods:
-  Enabled: false
-
 # we cannot enable this until breakman does not barf on ruby 2.5 blocks with rescue
 Style/RedundantBegin:
+  Enabled: false
+
+Naming/UncommunicativeMethodParamName:
   Enabled: false

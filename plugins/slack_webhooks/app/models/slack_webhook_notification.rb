@@ -74,7 +74,7 @@ class SlackWebhookNotification
   def deploy_callback_content
     subject = "[#{@project.name}] #{@deploy.summary}"
     controller = ActionController::Base.new
-    view = ActionView::Base.new(File.expand_path("../../views/samson_slack_webhooks", __FILE__), {}, controller)
+    view = ActionView::Base.new(File.expand_path('../views/samson_slack_webhooks', __dir__), {}, controller)
     show_prs = @deploy.pending? || @deploy.running?
     status_emoji =
       case @deploy.status

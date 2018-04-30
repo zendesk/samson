@@ -323,7 +323,7 @@ module Kubernetes
     end
 
     def grouped_deploy_group_roles
-      @deploy_group_configs ||= begin
+      @grouped_deploy_group_roles ||= begin
         deploy_group_roles = Kubernetes::DeployGroupRole.where(
           project_id: @job.project_id,
           deploy_group: @job.deploy.stage.deploy_groups.map(&:id)

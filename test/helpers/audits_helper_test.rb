@@ -12,7 +12,7 @@ describe AuditsHelper do
     end
 
     it "makes BigDecimal look nice" do
-      readable_ruby_value(BigDecimal.new(1.2, 2)).to_s.must_equal '1.2'
+      readable_ruby_value(BigDecimal(1.2, 2)).to_s.must_equal '1.2'
     end
   end
 
