@@ -17,6 +17,7 @@ describe Kubernetes::DeployExecutor do
   let(:log_url) { "http://foobar.server/api/v1/namespaces/staging/pods/pod-resque-worker/log?container=container1" }
   let(:commit) { '1a6f551a2ffa6d88e15eef5461384da0bfb1c194' }
   let(:origin) { "http://foobar.server" }
+  let(:maxitest_timeout) { 10 }
 
   before do
     stage.update_column :kubernetes, true
