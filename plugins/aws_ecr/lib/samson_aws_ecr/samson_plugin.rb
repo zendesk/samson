@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-require 'aws-sdk-core'
+require 'aws-sdk-ecr'
 
 module SamsonAwsEcr
   class Engine < Rails::Engine
