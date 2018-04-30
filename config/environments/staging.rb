@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-load File.expand_path '../production.rb', __FILE__
+load File.expand_path 'production.rb', __dir__
 
 Samson::Application.configure do
   # show errors for easier debugging

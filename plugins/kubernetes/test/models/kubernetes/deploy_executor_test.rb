@@ -236,7 +236,7 @@ describe Kubernetes::DeployExecutor do
     describe "role settings" do
       it "uses configured role settings" do
         assert execute, out
-        doc = Kubernetes::Release.last.release_docs.sort_by(&:kubernetes_role).last
+        doc = Kubernetes::Release.last.release_docs.max_by(&:kubernetes_role)
         config = server_role
         doc.replica_target.must_equal config.replicas
         doc.limits_cpu.must_equal config.limits_cpu

@@ -172,7 +172,7 @@ class Project < ActiveRecord::Base
 
   def last_deploy_by_group(before_time, include_failed_deploys: false)
     releases = deploys_by_group(before_time, include_failed_deploys)
-    releases.map { |group_id, deploys| [group_id, deploys.sort_by(&:updated_at).last] }.to_h
+    releases.map { |group_id, deploys| [group_id, deploys.max_by(&:updated_at)] }.to_h
   end
 
   def last_deploy_by_stage

@@ -152,7 +152,7 @@ class Kubernetes::DeployGroupRolesController < ApplicationController
   end
 
   def current_project
-    @project ||=
+    @project ||= # rubocop:disable Naming/MemoizedInstanceVariableName
       if action_name == 'create'
         Project.find(deploy_group_role_params.require(:project_id))
       elsif action_name == 'seed'

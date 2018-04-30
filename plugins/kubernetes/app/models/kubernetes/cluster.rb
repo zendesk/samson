@@ -32,7 +32,7 @@ module Kubernetes
     end
 
     def apps_client
-      @extension_client ||= build_client 'apps/v1beta1'
+      @apps_client ||= build_client 'apps/v1beta1'
     end
 
     def batch_client
