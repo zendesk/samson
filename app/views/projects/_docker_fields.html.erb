@@ -2,9 +2,9 @@
   <legend>
     Docker
   </legend>
-  <% obj = form.object %>
-  <% if obj.force_external_build? %>
-    <%= form.hidden_field :docker_build_method, value: "docker_image_building_disabled" if obj.new_record?%>
+  <% form_obj = form.object %>
+  <% if form_obj.force_external_build? %>
+    <%= form.hidden_field :docker_build_method, value: "docker_image_building_disabled" if form_obj.new_record?%>
     <span>
       <%= lock_icon %>
       Configured to use externally built docker images only.
