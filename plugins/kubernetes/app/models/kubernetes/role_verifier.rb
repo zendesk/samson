@@ -2,7 +2,7 @@
 module Kubernetes
   class RoleVerifier
     VALID_LABEL = /\A[a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?\z/ # also used in js ... cannot use /i
-    IGNORED = ['ConfigMap', 'HorizontalPodAutoscaler'].freeze
+    IGNORED = ['ConfigMap', 'HorizontalPodAutoscaler', 'PodDisruptionBudget'].freeze
     SUPPORTED_KINDS = [
       ['Deployment'],
       ['DaemonSet'],
@@ -26,6 +26,7 @@ module Kubernetes
       verify_containers
       verify_container_name
       verify_job_restart_policy
+      verify_pod_disruption_budget
       verify_numeric_limits
       verify_project_and_role_consistent
       verify_stateful_set_service_consistent
@@ -107,23 +108,26 @@ module Kubernetes
           case kind
           when 'Service'
             [
-              [:metadata, :labels],
               [:spec, :selector]
+            ]
+          when 'PodDisruptionBudget'
+            [
+              [:spec, :selector, :matchLabels]
             ]
           when *RoleConfigFile::DEPLOY_KINDS
             [
-              [:metadata, :labels],
               [:spec, :template, :metadata, :labels],
               [:spec, :selector, :matchLabels],
             ]
           when *RoleConfigFile::JOB_KINDS
             [
-              [:metadata, :labels],
               [:spec, :template, :metadata, :labels]
             ]
-          else # when adding new keep consistent with error message below
+          else
             [] # ignore unknown / unsupported types
           end
+
+        label_paths.unshift [:metadata, :labels]
 
         label_paths.map do |path|
           labels = path.inject(resource) { |r, k| r[k] || {} }
@@ -149,7 +153,7 @@ module Kubernetes
       end
 
       return if labels.uniq.size <= 1
-      @errors << "Project and role labels must be consistent across Deployment/DaemonSet/Service/Job"
+      @errors << "Project and role labels must be consistent across resources"
     end
 
     def verify_stateful_set_service_consistent
@@ -193,6 +197,16 @@ module Kubernetes
       names = map_attributes(path, elements: jobs)
       return if names - allowed == []
       @errors << "Job #{path.join('.')} must be one of #{allowed.join('/')}"
+    end
+
+    def verify_pod_disruption_budget
+      return unless budget = @elements.detect { |e| e[:kind] == "PodDisruptionBudget" }
+      return unless min = budget.dig(:spec, :minAvailable)
+      @elements.each do |e|
+        next unless replicas = e.dig(:spec, :replicas)
+        next if min < replicas
+        @errors << "PodDisruptionBudget spec.minAvailable must be lower than spec.replicas to avoid eviction deadlock"
+      end
     end
 
     def verify_annotations

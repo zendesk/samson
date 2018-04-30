@@ -309,16 +309,12 @@ describe Kubernetes::Role do
     end
 
     it "does not fail without spec" do
+      labels = {project: 'some-project', role: 'some-role'}
       map = {
         kind: 'ConfigMap',
-        metadata: {
-          name: 'datadog'
-        },
+        metadata: {name: 'datadog', labels: labels},
         namespace: 'default',
-        labels: {
-          project: 'some-project',
-          role: 'some-role'
-        }
+        labels: labels
       }.to_yaml
       config_content_yml.prepend("#{map}\n---\n")
       role.defaults.must_equal(
