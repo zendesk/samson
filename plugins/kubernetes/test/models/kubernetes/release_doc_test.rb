@@ -55,6 +55,8 @@ describe Kubernetes::ReleaseDoc do
       )
     end
 
+    let(:template) { Kubernetes::ReleaseDoc.new.send(:raw_template) } # makes all docs share the stubbed template
+
     before do
       kubernetes_fake_raw_template
       Kubernetes::TemplateFiller.any_instance.stubs(:set_image_pull_secrets) # makes an extra request we ignore
@@ -72,10 +74,31 @@ describe Kubernetes::ReleaseDoc do
 
     it "adds counter to service names when using multiple services" do
       doc.kubernetes_role.update_column(:service_name, 'foo')
-      template = Kubernetes::ReleaseDoc.new.send(:raw_template) # stubs makes all docs share the same template
       template.push template[1].deep_dup # 2 Services
       create!.resource_template[1][:metadata][:name].must_equal 'foo'
       create!.resource_template[2][:metadata][:name].must_equal 'foo-2'
+    end
+
+    describe "PodDisruptionBudget" do
+      it "adds relative PodDisruptionBudget when requested" do
+        template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '30%'}
+        create!.resource_template[2][:spec][:minAvailable].must_equal 1
+      end
+
+      it "adds valid relative PodDisruptionBudget when sometimes invalid is requested" do
+        template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '90%'}
+        create!.resource_template[2][:spec][:minAvailable].must_equal 1
+      end
+
+      it "fails when completely invalid is requested" do
+        template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '100%'}
+        assert_raises(Samson::Hooks::UserError) { create! }
+      end
+
+      it "adds absolute PodDisruptionBudget when requested" do
+        template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '1'}
+        create!.resource_template[2][:spec][:minAvailable].must_equal 1
+      end
     end
   end
 

@@ -77,11 +77,44 @@ module Kubernetes
 
     # dynamically fill out the templates and store the result
     def store_resource_template
+      add_pod_disruption_budget
       counter = Hash.new(-1)
       self.resource_template = raw_template.map do |resource|
         index = (counter[resource.fetch(:kind)] += 1)
         TemplateFiller.new(self, resource, index: index).to_hash
       end
+    end
+
+    def add_pod_disruption_budget
+      min_available = nil
+      raw_template.each do |t|
+        min_available ||= t.dig(:metadata, :annotations, :"samson/minAvailable")
+      end
+      return unless min_available
+
+      target = if percent = min_available.to_s[/\A(\d+)\s*%\z/, 1] # "30%" -> 30 / "30 %" -> 30
+        percent = Integer(percent)
+        if percent >= 100
+          raise Samson::Hooks::UserError, "minAvailable of >= 100% would result in eviction deadlock, pick lower"
+        else
+          [((replica_target.to_f / 100) * percent).ceil, replica_target - 1].min
+        end
+      else
+        Integer(min_available)
+      end
+
+      raw_template << {
+        apiVersion: "policy/v1beta1",
+        kind: "PodDisruptionBudget",
+        metadata: {
+          name: kubernetes_role.resource_name,
+          labels: raw_template.first.dig_fetch(:metadata, :labels).dup
+        },
+        spec: {
+          minAvailable: target,
+          selector: {matchLabels: raw_template.first.dig_fetch(:spec, :selector, :matchLabels).dup}
+        }
+      }
     end
 
     def validate_config_file
