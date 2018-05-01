@@ -45,7 +45,8 @@ class Lock < ActiveRecord::Base
     if Samson::Periodical.overdue?(:remove_expired_locks, delete_at)
       " and expiration is not working"
     else
-      " and will expire in #{time_ago_in_words(delete_at)}"
+      time = (block_given? ? yield(delete_at) : "in #{time_ago_in_words(delete_at)}")
+      " and will expire ".html_safe << time
     end
   end
 

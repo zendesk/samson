@@ -4,6 +4,6 @@
   <% else %>
     <%= lock_icon %> Deployments to <%= lock.affected %> were locked
   <% end %>
-  <%= sanitize lock.reason %> by <%= lock.locked_by %> <%= time_ago_in_words(lock.created_at) %>
-  ago<%= lock.expire_summary %>.
+  <%= sanitize lock.reason %> by <%= lock.locked_by %> <%= render_time lock.created_at %>
+  ago <%= lock.expire_summary { |t| render_time(t) } %>.
 </div>
