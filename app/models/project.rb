@@ -73,6 +73,7 @@ class Project < ActiveRecord::Base
 
   # Forms use abstract "docker_build_method " attribute
   def docker_build_method
+    return "docker_image_building_disabled" if force_external_build?
     active = DOCKER_BUILD_METHODS.map { |h| h.fetch(:method) }.detect do |build_method|
       build_method != DEFAULT_DOCKER_BUILD_METHOD && send("#{build_method}?")
     end
@@ -186,6 +187,14 @@ class Project < ActiveRecord::Base
 
   def as_json
     super(except: [:token, :deleted_at], methods: [:repository_path])
+  end
+
+  def docker_image_building_disabled?
+    force_external_build? ? true : docker_image_building_disabled
+  end
+
+  def force_external_build?
+    ENV['DOCKER_FORCE_EXTERNAL_BUILD'].present?
   end
 
   private

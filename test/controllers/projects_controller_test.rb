@@ -162,10 +162,27 @@ describe ProjectsController do
     unauthorized :post, :create
 
     describe "#edit" do
+      with_env DOCKER_FEATURE: "1"
       it "renders" do
         get :edit, params: {id: project.to_param}
         assert_template :edit
         refute fields_disabled?
+      end
+
+      it "renders with docker fields" do
+        with_env DOCKER_FORCE_EXTERNAL_BUILD: nil do
+          get :edit, params: {id: project.to_param}
+          @response.body.must_include "Docker release branch"
+          @response.body.must_include "Dockerfiles"
+        end
+      end
+
+      it "renders without docker fields" do
+        with_env DOCKER_FORCE_EXTERNAL_BUILD: "1" do
+          get :edit, params: {id: project.to_param}
+          @response.body.wont_include "Docker release branch"
+          @response.body.wont_include "Dockerfiles"
+        end
       end
 
       it "does not find soft deleted" do

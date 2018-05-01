@@ -572,4 +572,29 @@ describe Project do
       project.as_json.fetch("repository_path").must_equal "bar/foo"
     end
   end
+
+  describe "#force_external_build?" do
+    it "defaults build method to 'docker_image_building_disabled' with env" do
+      with_env DOCKER_FORCE_EXTERNAL_BUILD: "1" do
+        project.force_external_build?.must_equal true
+        project.docker_build_method.must_equal("docker_image_building_disabled")
+      end
+    end
+
+    it "is false by default" do
+      project.force_external_build?.must_equal false
+    end
+  end
+
+  describe "#docker_image_building_disabled?" do
+    it "is false by default " do
+      project.docker_image_building_disabled?.must_equal false
+    end
+
+    it "disable docker image building with env" do
+      with_env DOCKER_FORCE_EXTERNAL_BUILD: "1" do
+        project.docker_image_building_disabled?.must_equal true
+      end
+    end
+  end
 end
