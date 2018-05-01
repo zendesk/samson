@@ -49,6 +49,28 @@
     return $new_row;
   }
 
+  // Update the query string of the associated preview link
+  // with the given group ID, and toggle its visibility
+  function formatEnvGroupPreviewLink($preview, val) {
+    $preview[0].search = $.param({ group_id: val });
+    $preview.toggle(!!val);
+  }
+
+  // Select the pair of env group input and preview link to:
+  // - Format the query string of the preview link
+  // - Update the query string when the env group input changes
+  function setupEnvGroupPreview($input) {
+    var $select = $input.find('select');
+    var $preview = $input.find('.checkbox a');
+
+    $select.on('change', function(e) {
+      e.preventDefault();
+      formatEnvGroupPreviewLink($preview, $select.val());
+    });
+
+    $select.trigger('change');
+  }
+
   function withoutSelectpicker($row, callback){
     var $picker = $row.find('.selectpicker');
     $picker.selectpicker('destroy').addClass('selectpicker'); // normalize existing so they are ready to copy
@@ -56,7 +78,10 @@
     var rows = callback().concat([$row]);
 
     // add selectpicker to copied and original rows
-    $.each(rows, function(k,v) { v.find(".selectpicker").selectpicker(); });
+    $.each(rows, function(idx, $row) {
+      $row.find(".selectpicker").selectpicker();
+      setupEnvGroupPreview($row);
+    });
   }
 
   $(document).on("click", ".duplicate_previous_row", function(e){
@@ -92,4 +117,14 @@
       });
     });
   });
+
+  // Display preview link dynamically when env group dropdown changes
+  $(document).ready(function() {
+    var $inputs = $(".env_group_inputs");
+
+    $inputs.each(function(idx, input) {
+      setupEnvGroupPreview($(input));
+    });
+  });
+
 }());
