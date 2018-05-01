@@ -157,7 +157,7 @@ describe CsvExportsController do
           def csv_test(options, expected)
             options = options.merge(format: :csv, type: "users")
             get :new, params: options
-            response.success?.must_equal true
+            assert_response :success
             CSV.parse(response.body).pop.pop.must_equal expected.to_json
           end
         end

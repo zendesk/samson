@@ -129,10 +129,10 @@ describe DeploysHelper do
       )
       result.must_equal(
         "<a title=\"foologin\" href=\"foourl\">" \
-          "<img width=\"20\" height=\"20\" src=\"/images/fooavatar\" alt=\"Fooavatar\" />" \
+          "<img width=\"20\" height=\"20\" src=\"/images/fooavatar\" />" \
         "</a> " \
         "<a title=\"bar&quot;&lt;script&gt;login\" href=\"barurl\">" \
-          "<img width=\"20\" height=\"20\" src=\"/images/baravatar\" alt=\"Baravatar\" />" \
+          "<img width=\"20\" height=\"20\" src=\"/images/baravatar\" />" \
         "</a>"
       )
       result.html_safe?.must_equal true

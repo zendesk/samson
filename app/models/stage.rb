@@ -186,7 +186,8 @@ class Stage < ActiveRecord::Base
 
   def influencing_stage_ids
     deploy_group_ids = deploy_groups_stages.reorder(nil).pluck(:deploy_group_id)
-    stage_ids = DeployGroupsStage.reorder(nil).where(deploy_group_id: deploy_group_ids).pluck('distinct stage_id')
+    stage_ids = DeployGroupsStage.reorder(nil).where(deploy_group_id: deploy_group_ids).
+      pluck(Arel.sql('distinct stage_id'))
     Stage.reorder(nil).where(no_code_deployed: false, id: stage_ids, project_id: project_id).pluck(:id)
   end
 
