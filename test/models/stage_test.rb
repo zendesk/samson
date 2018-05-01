@@ -426,6 +426,12 @@ describe Stage do
       stage.soft_delete!(validate: false)
       refute other_stage.reload.next_stage_ids.include?(stage.id)
     end
+
+    it "removes the stage when other stages exist (issue #2719 regression)" do
+      Stage.any_instance.stubs(:next_stage_ids).returns(nil) # this happens when the pipeline plugin is disabled
+      other_stage = Stage.create!(project: stage.project, name: 'stage1')
+      stage.soft_delete!(validate: false)
+    end
   end
 
   describe '#script' do
