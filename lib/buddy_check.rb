@@ -2,7 +2,7 @@
 module BuddyCheck
   class << self
     def enabled?
-      ![nil, 'false'].include?(ENV["BUDDY_CHECK_FEATURE"])
+      Samson::EnvCheck.set?("BUDDY_CHECK_FEATURE")
     end
 
     # how long can the same commit be deployed ?
