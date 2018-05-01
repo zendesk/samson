@@ -117,19 +117,27 @@ describe Lock do
     end
   end
 
-  describe "#unlock_summary" do
+  describe "#expire_summary" do
     it "is emppty when not deleting" do
       lock.expire_summary.must_be_nil
-    end
-
-    it "says when unlock is in the future" do
-      lock.delete_at = 5.minutes.from_now + 2
-      lock.expire_summary.must_equal " and will expire in 5 minutes"
     end
 
     it "says when unlock failed" do
       lock.delete_at = 5.minutes.ago
       lock.expire_summary.must_equal " and expiration is not working"
+    end
+
+    describe "locked in the future" do
+      before { lock.delete_at = 5.minutes.from_now + 2 }
+
+      it "says when it unlocks" do
+        lock.expire_summary.must_equal " and will expire in 5 minutes"
+      end
+
+      it "can produce html from given block" do
+        text = lock.expire_summary { "<a>X</a>".html_safe }
+        ERB::Util.html_escape(text).must_equal " and will expire <a>X</a>"
+      end
     end
   end
 

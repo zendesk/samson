@@ -73,6 +73,8 @@ describe LocksHelper do
   describe "#render_lock" do
     let(:stage) { stages(:test_staging) }
 
+    before { view.stubs(current_user: users(:viewer)) }
+
     it "can render global" do
       Lock.create!(user: users(:admin))
       global_lock # caches
