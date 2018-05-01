@@ -169,4 +169,13 @@ describe Stage do
       stage1.previous_stages.must_equal []
     end
   end
+
+  describe "destroy" do
+    it "removes the stage from the pipeline of other stages" do
+      other_stage = project.stages.create!(name: 'stage4', next_stage_ids: [stage1.id])
+      assert other_stage.next_stage_ids.include?(stage1.id)
+      stage1.soft_delete!(validate: false)
+      refute other_stage.reload.next_stage_ids.include?(stage1.id)
+    end
+  end
 end
