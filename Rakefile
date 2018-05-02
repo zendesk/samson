@@ -137,4 +137,6 @@ if Rails.env.development?
   end
 end
 
+ActiveRecord::Migration.verbose = false if ENV["SILENCE_MIGRATIONS"]
+
 Audited.store[:audited_user] = "rake"
