@@ -4,7 +4,7 @@ class ActiveSupport::TestCase
   # not on rails 5.1 payload[:name] could be used for finding schema queries, maybe fixed on 5.2/6.0
   SCHEMA_QUERIES = [
     "RELEASE SAVEPOINT", "SAVEPOINT", "SELECT column_name", "SHOW FULL FIELDS FROM", "SELECT a.attname",
-    "PRAGMA table_info", "SELECT sql FROM", "SHOW search_path"
+    "PRAGMA table_info", "SELECT sql FROM", "SHOW search_path", "SHOW max_identifier_length"
   ].freeze
 
   def sql_queries(&block)

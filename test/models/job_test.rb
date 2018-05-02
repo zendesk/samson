@@ -192,6 +192,13 @@ describe Job do
       job.commit.must_equal "foo"
       job.tag.must_equal "bar"
     end
+
+    it "expires the deploy" do
+      job.deploy = deploys(:succeeded_test)
+      Rails.cache.fetch(job.deploy) { 1 }
+      job.update_git_references!(commit: "foo", tag: "bar")
+      Rails.cache.fetch(job.deploy) { 2 }.must_equal 2
+    end
   end
 
   describe "#url" do
