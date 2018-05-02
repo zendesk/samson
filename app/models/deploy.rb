@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 class Deploy < ActiveRecord::Base
+  include Samson::BumpTouch
   has_soft_deletion default_scope: true
 
   belongs_to :stage, touch: true
@@ -35,10 +36,6 @@ class Deploy < ActiveRecord::Base
     "failed"     => "failed to deploy",
     "errored"    => "encountered an error deploying"
   }.freeze
-
-  def cache_key
-    [super, commit]
-  end
 
   # queue deploys on stages that cannot execute in parallel
   def job_execution_queue_name

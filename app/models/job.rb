@@ -127,6 +127,7 @@ class Job < ActiveRecord::Base
 
   def update_git_references!(commit:, tag:)
     update_columns(commit: commit, tag: tag)
+    deploy&.bump_touch
   end
 
   def url

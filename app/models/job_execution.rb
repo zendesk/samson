@@ -190,6 +190,7 @@ class JobExecution
     tag = @repository.fuzzy_tag_from_ref(@reference)
     if commit
       @job.update_git_references!(commit: commit, tag: tag)
+
       @output.puts("Commit: #{commit}")
       true
     else
