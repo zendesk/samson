@@ -22,10 +22,9 @@ RUN npm install --silent
 # Gems
 COPY Gemfile /app/
 COPY Gemfile.lock /app/
-COPY vendor/cache /app/vendor/cache
 COPY plugins /app/plugins
 
-RUN bundle install --quiet --local --jobs 4 || bundle check
+RUN bundle install --quiet --jobs 4
 
 # Code
 COPY config /app/config
