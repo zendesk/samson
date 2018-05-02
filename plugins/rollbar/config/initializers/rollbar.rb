@@ -4,8 +4,8 @@ if token = ENV['ROLLBAR_ACCESS_TOKEN']
   Rollbar.configure do |config|
     config.access_token = token
     config.environment = Rails.env
-    config.endpoint = ENV.fetch('ROLLBAR_URL') + '/api/1/item/' if ENV.has_key?('ROLLBAR_URL')
-    config.web_base = ENV.fetch('ROLLBAR_WEB_BASE') if ENV.has_key?('ROLLBAR_WEB_BASE')
+    config.endpoint = ENV.fetch('ROLLBAR_URL') + '/api/1/item/' if ENV.key?('ROLLBAR_URL')
+    config.web_base = ENV.fetch('ROLLBAR_WEB_BASE') if ENV.key?('ROLLBAR_WEB_BASE')
     config.use_thread # use threads for async notifications (waits for them at_exit)
     config.code_version = Rails.application.config.samson.version&.first(7)
     config.populate_empty_backtraces = true
