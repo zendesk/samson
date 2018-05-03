@@ -4,7 +4,7 @@
   </legend>
   <% form_obj = form.object %>
   <% if form_obj.force_external_build? %>
-    <%= form.hidden_field :docker_build_method, value: "docker_image_building_disabled" if form_obj.new_record?%>
+    <%= form.hidden_field :docker_build_method, value: "docker_image_building_disabled" if form_obj.new_record? %>
     <span>
       Configured to use externally built docker images only, click
       <%= link_to "here", "https://zendesk.atlassian.net/wiki/spaces/TOOLS/pages/274488773/Building+Docker+Images+using+Google+Container+Builder", target: '_blank' %>
@@ -18,8 +18,7 @@
           class: "form-control"
       %>
     <% end %>
-
     <%= form.input :docker_release_branch, help: 'New commits on this branch will cause a docker image to be built when a webhook arrives.' %>
-    <%= form.input :dockerfiles, help: 'Space separated list of dockerfiles to build, default: Dockerfile' %>
   <% end %>
+  <%= form.input :dockerfiles, help: 'Space separated list of dockerfiles to build, default: Dockerfile' %>
 </fieldset>

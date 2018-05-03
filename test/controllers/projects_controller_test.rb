@@ -172,16 +172,18 @@ describe ProjectsController do
       it "renders with docker fields" do
         with_env DOCKER_FORCE_EXTERNAL_BUILD: nil do
           get :edit, params: {id: project.to_param}
-          @response.body.must_include "Docker release branch"
-          @response.body.must_include "Dockerfiles"
+          assert_select 'select[id=project_docker_build_method]'
+          assert_select 'input[id=project_docker_release_branch]'
+          assert_select 'input[id=project_dockerfiles]'
         end
       end
 
       it "renders without docker fields" do
         with_env DOCKER_FORCE_EXTERNAL_BUILD: "1" do
           get :edit, params: {id: project.to_param}
-          @response.body.wont_include "Docker release branch"
-          @response.body.wont_include "Dockerfiles"
+          assert_select 'input[id=project_docker_release_branch]', count: 0
+          assert_select 'select[id=project_docker_build_method]', count: 0
+          assert_select 'input[id=project_dockerfiles]'
         end
       end
 
