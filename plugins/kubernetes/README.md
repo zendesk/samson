@@ -148,6 +148,7 @@ or set `metadata.annotations.samson/persistent_fields`
 
 Samson can add a dynamic PodDisruptionBudget by setting `metadata.annotations.minAvailable: 30%`, it calculates the ceil of this with the configured replicas.
 (also supports absolute values like `"1"`)
+To remove it, set to '0', deploy, delete it from the template.
 
 ### Blue/Green Deployment
 
