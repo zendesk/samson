@@ -108,6 +108,7 @@ module Kubernetes
         kind: "PodDisruptionBudget",
         metadata: {
           name: kubernetes_role.resource_name,
+          namespace: raw_template.first.dig(:metadata, :namespace),
           labels: raw_template.first.dig_fetch(:metadata, :labels).dup
         },
         spec: {
