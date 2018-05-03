@@ -125,11 +125,20 @@ describe TerminalExecutor do
       output.string.must_equal "Hello\rWorld\r\n"
     end
 
-    it "uses script-executor to avoid slowness on osx" do
-      RbConfig::CONFIG.expects(:[]).with("host_os").returns("darwin-foo")
-      PTY.expects(:spawn).with { |_, command, _| command.must_include("script-executor") }
-      TerminalExecutor.any_instance.expects(:record_pid)
-      subject.execute('echo "hi"')
+    describe "with script-executor" do
+      before { RbConfig::CONFIG.expects(:[]).with("host_os").returns("darwin-foo") }
+
+      it "uses script-executor to avoid slowness on osx" do
+        PTY.expects(:spawn).with { |_, command, _| command.must_include("script-executor") }
+        TerminalExecutor.any_instance.expects(:record_pid)
+        subject.execute('echo "hi"')
+      end
+
+      it "works while switching directories" do
+        Dir.chdir "/tmp" do
+          assert subject.execute('echo "hi"')
+        end
+      end
     end
 
     it "uses regular executor on linux" do

@@ -84,7 +84,8 @@ class TerminalExecutor
 
     # osx has a 4s startup delay for each new executable, so we keep the executable stable
     if RbConfig::CONFIG['host_os'].include?('darwin')
-      command = "export FILE=#{f.path.shellescape} && #{File.expand_path("bin/script-executor").shellescape}"
+      executor = File.expand_path("../../bin/script-executor", __dir__)
+      command = "export FILE=#{f.path.shellescape} && #{executor.shellescape}"
     end
 
     yield command
