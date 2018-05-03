@@ -115,6 +115,11 @@ describe Kubernetes::ReleaseDoc do
         template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '0'}
         create!.resource_template[2][:delete].must_equal true
       end
+
+      it "alerts when creating a deadlock by setting a absolute value" do
+        template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '2'}
+        assert_raises(Samson::Hooks::UserError) { create! }
+      end
     end
   end
 
