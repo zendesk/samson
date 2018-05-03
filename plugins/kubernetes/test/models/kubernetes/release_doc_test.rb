@@ -83,6 +83,7 @@ describe Kubernetes::ReleaseDoc do
       it "adds relative PodDisruptionBudget when requested" do
         template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '30%'}
         create!.resource_template[2][:spec][:minAvailable].must_equal 1
+        create!.resource_template[2][:metadata][:namespace].must_equal 'pod1'
       end
 
       it "adds valid relative PodDisruptionBudget when sometimes invalid is requested" do
@@ -98,6 +99,14 @@ describe Kubernetes::ReleaseDoc do
       it "adds absolute PodDisruptionBudget when requested" do
         template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '1'}
         create!.resource_template[2][:spec][:minAvailable].must_equal 1
+      end
+
+      it "uses the same namespace as the resource" do
+        metadata = template.dig(0, :metadata)
+        metadata[:annotations] = {"samson/minAvailable": '30%'}
+        metadata[:namespace] = "default"
+        metadata[:labels][:'kubernetes.io/cluster-service'] = 'true'
+        create!.resource_template[2][:metadata][:namespace].must_equal 'default'
       end
     end
   end
