@@ -103,7 +103,7 @@ module Kubernetes
         Integer(min_available)
       end
 
-      raw_template << {
+      budget = {
         apiVersion: "policy/v1beta1",
         kind: "PodDisruptionBudget",
         metadata: {
@@ -116,6 +116,8 @@ module Kubernetes
           selector: {matchLabels: raw_template.first.dig_fetch(:spec, :selector, :matchLabels).dup}
         }
       }
+      budget[:delete] = true if target == 0
+      raw_template << budget
     end
 
     def validate_config_file

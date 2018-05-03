@@ -447,7 +447,7 @@ module Kubernetes
       # cannot be updated `Forbidden: updates to poddisruptionbudget spec are forbidden`
       def deploy
         delete
-        create
+        create unless @template[:delete] # allow deletion
       end
 
       private

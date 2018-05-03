@@ -82,8 +82,10 @@ describe Kubernetes::ReleaseDoc do
     describe "PodDisruptionBudget" do
       it "adds relative PodDisruptionBudget when requested" do
         template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '30%'}
-        create!.resource_template[2][:spec][:minAvailable].must_equal 1
-        create!.resource_template[2][:metadata][:namespace].must_equal 'pod1'
+        budget = create!.resource_template[2]
+        budget[:spec][:minAvailable].must_equal 1
+        budget[:metadata][:namespace].must_equal 'pod1'
+        refute budget.key?(:delete)
       end
 
       it "adds valid relative PodDisruptionBudget when sometimes invalid is requested" do
@@ -107,6 +109,11 @@ describe Kubernetes::ReleaseDoc do
         metadata[:namespace] = "default"
         metadata[:labels][:'kubernetes.io/cluster-service'] = 'true'
         create!.resource_template[2][:metadata][:namespace].must_equal 'default'
+      end
+
+      it "deletes when set to 0" do
+        template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '0'}
+        create!.resource_template[2][:delete].must_equal true
       end
     end
   end

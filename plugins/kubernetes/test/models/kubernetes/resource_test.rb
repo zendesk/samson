@@ -795,6 +795,15 @@ describe Kubernetes::Resource do
           end
         end
       end
+
+      it "deletes" do
+        template[:delete] = true
+        assert_request(:get, url, to_return: [{body: '{}'}, {status: 404}]) do
+          assert_request(:delete, url, to_return: {body: '{}'}) do
+            resource.deploy
+          end
+        end
+      end
     end
   end
 end
