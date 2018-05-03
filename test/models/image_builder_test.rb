@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 2
+SingleCov.covered!
 
 describe ImageBuilder do
   let(:output) { executor.output.to_s }
@@ -66,6 +66,18 @@ describe ImageBuilder do
           call
         end
       end
+    end
+
+    it "can build without tag" do
+      executor.expects(:execute).with do |*commands|
+        commands.to_s.must_include "docker build -f Dockerfile . --cache-from cache"
+      end.returns(true)
+      refute call(tag: nil)
+    end
+
+    it "fails when build fails" do
+      executor.expects(:execute).returns(false)
+      refute call
     end
 
     describe "when building the image worked" do
@@ -153,6 +165,15 @@ describe ImageBuilder do
         ImageBuilder.send(:local_docker_login) do |commands|
           dir = commands.first[/DOCKER_CONFIG=(.*)/, 1]
           File.read("#{dir}/config.json").must_equal "hello"
+        end
+      end
+    end
+
+    it "does not copy when config file does not exist" do
+      with_env DOCKER_CONFIG: '.' do
+        ImageBuilder.send(:local_docker_login) do |commands|
+          dir = commands.first[/DOCKER_CONFIG=(.*)/, 1]
+          refute File.exist?("#{dir}/config.json")
         end
       end
     end
