@@ -100,7 +100,14 @@ module Kubernetes
           [((replica_target.to_f / 100) * percent).ceil, replica_target - 1].min
         end
       else
-        Integer(min_available)
+        min = Integer(min_available)
+        if min >= replica_target
+          raise(
+            Samson::Hooks::UserError,
+            "minAvailable of #{min} would result in eviction deadlock, pick lower but >0 or increase replicas"
+          )
+        end
+        min
       end
 
       budget = {
