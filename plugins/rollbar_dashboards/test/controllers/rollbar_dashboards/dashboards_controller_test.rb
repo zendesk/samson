@@ -36,8 +36,15 @@ describe RollbarDashboards::DashboardsController do
         end
       end
 
-      it 'renders empty dashboard if there are no items' do
+      it 'renders empty dashboard if items are nil' do
         assert_request(:get, endpoint, to_return: {status: 400}) do
+          get_dashboard(project)
+          assert_select 'p', text: 'There are no items to display at this time...'
+        end
+      end
+
+      it 'renders empty dashboard if there are no items' do
+        assert_request(:get, endpoint, to_return: {body: {result: []}.to_json}) do
           get_dashboard(project)
           assert_select 'p', text: 'There are no items to display at this time...'
         end

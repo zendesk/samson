@@ -1,10 +1,10 @@
-<div class="panel panel-default">
+<div class="panel panel-default" style="min-height: <%= RollbarDashboards::DashboardsHelper::DASHBOARD_HEIGHT %>em">
   <div class="panel-heading">
     <%= image_tag 'rollbar_dashboards/icon.png', height: '30px' %>
     <%= "#{title} (#{dashboard_data.first.base_url})" %>
   </div>
   <% items = dashboard_data.second %>
-  <% if items %>
+  <% if items.present? %>
     <table class="table">
       <tr>
         <th>Count</th>
