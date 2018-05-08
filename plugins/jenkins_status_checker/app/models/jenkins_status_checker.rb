@@ -13,7 +13,7 @@ class JenkinsStatusChecker
       items << result
     else
       result["jobs"].each do |job|
-        items << "#{job["name"]} is not stable" if job["color"] != "blue"
+        items << "#{job["name"]} is #{job["color"]}" if job["color"] != "blue"
       end
     end
     items << "All projects stable!" if items.empty?
