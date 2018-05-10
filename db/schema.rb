@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180329204838) do
+ActiveRecord::Schema.define(version: 20180510172630) do
 
   create_table "audits", force: :cascade do |t|
     t.integer "auditable_id", null: false
@@ -119,11 +119,13 @@ ActiveRecord::Schema.define(version: 20180329204838) do
     t.boolean "kubernetes_rollback", default: true, null: false
     t.boolean "kubernetes_reuse_build", default: false, null: false
     t.text "env_state"
+    t.integer "triggering_deploy_id"
     t.index ["build_id"], name: "index_deploys_on_build_id"
     t.index ["deleted_at"], name: "index_deploys_on_deleted_at"
     t.index ["job_id", "deleted_at"], name: "index_deploys_on_job_id_and_deleted_at"
     t.index ["project_id", "deleted_at"], name: "index_deploys_on_project_id_and_deleted_at"
     t.index ["stage_id", "deleted_at"], name: "index_deploys_on_stage_id_and_deleted_at"
+    t.index ["triggering_deploy_id"], name: "index_deploys_on_triggering_deploy_id"
   end
 
   create_table "environment_variable_groups", id: :integer, force: :cascade do |t|
@@ -598,6 +600,7 @@ ActiveRecord::Schema.define(version: 20180329204838) do
   end
 
   add_foreign_key "deploy_groups", "environments"
+  add_foreign_key "deploys", "deploys", column: "triggering_deploy_id"
   add_foreign_key "oauth_access_grants", "oauth_applications", column: "application_id"
   add_foreign_key "oauth_access_tokens", "oauth_applications", column: "application_id"
 end
