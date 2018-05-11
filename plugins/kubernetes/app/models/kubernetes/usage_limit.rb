@@ -11,7 +11,7 @@ class Kubernetes::UsageLimit < ActiveRecord::Base
   validates :scope_id, uniqueness: {scope: [:scope_type, :project_id]}
 
   def self.most_specific(project, deploy_group)
-    all.sort_by { |l| l.send :priority }.detect { |l| l.send(:matches?, project, deploy_group) }
+    all.sort_by(&:priority).detect { |l| l.send(:matches?, project, deploy_group) }
   end
 
   private

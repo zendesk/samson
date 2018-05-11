@@ -30,8 +30,6 @@ module GroupScope
     end
   end
 
-  private
-
   def priority
     [
       (project? ? 0 : 1),
