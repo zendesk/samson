@@ -10,13 +10,14 @@ Deploy.class_eval do
   private
 
   def serialized_environment_variables
-    variables = EnvironmentVariable.nested_variables(project)
-
-    if deploy_groups = stage.deploy_groups.presence
-      variables = variables.select { |ev| deploy_groups.any? { |dg| ev.matches_scope?(dg) } }
+    if groups = SamsonEnv.env_groups(project, stage.deploy_groups, preview: true, resolve_secrets: false)
+      groups.map do |name, data|
+        name = name.empty? ? '' : "# #{name.delete('.').titleize}\n"
+        "#{name}#{SamsonEnv.generate_dotenv(data)}"
+      end.join("\n")
+    else
+      ''
     end
-
-    EnvironmentVariable.serialize(variables, Environment.env_deploy_group_array)
   end
 
   def store_env_state

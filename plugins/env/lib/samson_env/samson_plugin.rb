@@ -12,17 +12,17 @@ module SamsonEnv
       write_dotenv("#{dir}/.env", groups)
     end
 
-    def env_groups(project, deploy_groups, preview: false)
+    def env_groups(project, deploy_groups, **kwargs)
       groups =
         if deploy_groups.any?
           deploy_groups.map do |deploy_group|
             [
               ".#{deploy_group.name.parameterize}",
-              EnvironmentVariable.env(project, deploy_group, preview: preview)
+              EnvironmentVariable.env(project, deploy_group, **kwargs)
             ]
           end
         else
-          [["", EnvironmentVariable.env(project, nil, preview: preview)]]
+          [["", EnvironmentVariable.env(project, nil, **kwargs)]]
         end
       return groups if groups.any? { |_, data| data.present? }
     end

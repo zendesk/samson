@@ -12,24 +12,35 @@ describe Deploy do
     let(:project) { projects(:test) }
     let(:deploy_group) { deploy_groups(:pod100) }
     let(:other_deploy_group) { deploy_groups(:pod2) }
+    let(:environment) { deploy_group.environment }
 
     before do
       create_secret('global/global/global/baz')
       EnvironmentVariable.create!(parent: project, name: 'BAR', value: 'secret://baz')
+      EnvironmentVariable.create!(parent: project, name: 'FOO', value: 'bar', scope: deploy_group)
       EnvironmentVariable.create!(parent: project, name: 'FOO', value: 'bar', scope: other_deploy_group)
-      EnvironmentVariable.create!(parent: project, name: 'DING', value: 'dong', scope: deploy_group)
-      EnvironmentVariable.create!(parent: project, name: 'COOL', value: 'beans', scope: environments(:production))
+      EnvironmentVariable.create!(parent: project, name: 'BAZ', value: 'baz', scope: environment)
     end
 
     it 'serializes env vars to string with no deploy groups' do
+      EnvironmentVariable.create!(parent: project, name: 'BAR', value: 'secret://baz')
       deploy.stage.update_attribute(:deploy_groups, [])
 
-      expected = %(BAR="secret://baz" # All\nCOOL="beans" # Production\nDING="dong" # Pod 100\nFOO="bar" # Pod2)
+      expected = %(BAR="secret://baz"\n)
       deploy.send(:serialized_environment_variables).must_equal expected
     end
 
-    it 'serializes env state to string scoped to deploy groups' do
-      expected = %(BAR="secret://baz" # All\nDING="dong" # Pod 100)
+    it 'serializes env vars to string with deploy groups' do
+      deploy.stage.update_attribute(:deploy_groups, [deploy_group, other_deploy_group])
+
+      expected = %(# Pod 100\nFOO="bar"\nBAZ="baz"\nBAR="secret://baz"\n\n# Pod2\nFOO="bar"\nBAR="secret://baz"\n)
+      deploy.send(:serialized_environment_variables).must_equal expected
+    end
+
+    it 'serializes with no env vars' do
+      EnvironmentVariable.destroy_all
+
+      expected = ''
       deploy.send(:serialized_environment_variables).must_equal expected
     end
   end
