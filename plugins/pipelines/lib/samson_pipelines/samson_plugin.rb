@@ -14,12 +14,13 @@ module SamsonPipelines
 
     private
 
-    def deploy_to_stage(stage, template_deploy, output)
-      deploy_service = DeployService.new(template_deploy.user)
+    def deploy_to_stage(stage, previous_deploy, output)
+      deploy_service = DeployService.new(previous_deploy.user)
       deploy = deploy_service.deploy(
         stage,
-        reference: template_deploy.reference,
-        buddy: template_deploy.buddy
+        reference: previous_deploy.reference,
+        buddy: previous_deploy.buddy,
+        triggering_deploy: previous_deploy
       )
       raise deploy.errors.full_messages.join(", ") unless deploy.persisted?
 
@@ -32,6 +33,7 @@ end
 
 Samson::Hooks.view :stage_form, "samson_pipelines/stage_form"
 Samson::Hooks.view :stage_show, "samson_pipelines/stage_show"
+Samson::Hooks.view :deploys_header, "samson_pipelines/deploy_header"
 
 Samson::Hooks.callback :stage_permitted_params do
   {next_stage_ids: []}
