@@ -20,7 +20,7 @@ class EnvironmentVariable < ActiveRecord::Base
     # also used by an external plugin
     def env(project, deploy_group, preview: false, resolve_secrets: true)
       variables = nested_variables(project)
-      variables.sort_by! { |ev| ev.send(:priority) }
+      variables.sort_by!(&:priority)
       env = variables.each_with_object({}) do |ev, all|
         all[ev.name] = ev.value if !all[ev.name] && ev.matches_scope?(deploy_group)
       end

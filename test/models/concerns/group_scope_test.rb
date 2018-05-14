@@ -37,25 +37,25 @@ describe GroupScope do
   describe "#priority" do
     it "fails on bad references" do
       e = assert_raises RuntimeError do
-        EnvironmentVariable.new(scope_type: 'Foo', scope_id: 123).send(:priority)
+        EnvironmentVariable.new(scope_type: 'Foo', scope_id: 123).priority
       end
       e.message.must_equal "Unsupported scope Foo"
     end
 
     it "is higher with project" do
-      EnvironmentVariable.new(parent_type: 'Project').send(:priority).must_equal [0, 2]
+      EnvironmentVariable.new(parent_type: 'Project').priority.must_equal [0, 2]
     end
 
     it "is lower without project" do
-      EnvironmentVariable.new.send(:priority).must_equal [1, 2]
+      EnvironmentVariable.new.priority.must_equal [1, 2]
     end
 
     it "is higher with deploy group" do
-      EnvironmentVariable.new(scope_type: 'DeployGroup').send(:priority).must_equal [1, 0]
+      EnvironmentVariable.new(scope_type: 'DeployGroup').priority.must_equal [1, 0]
     end
 
     it "is lower with environment" do
-      EnvironmentVariable.new(scope_type: 'Environment').send(:priority).must_equal [1, 1]
+      EnvironmentVariable.new(scope_type: 'Environment').priority.must_equal [1, 1]
     end
   end
 
