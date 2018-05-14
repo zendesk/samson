@@ -29,6 +29,7 @@ class JobExecution
     @repository.executor = @executor
 
     on_finish do
+      Rails.logger.info("Calling finish callback for Job Execution #{id}")
       # weird issue we are seeing with docker builds never finishing
       if !Rails.env.test? && !JobQueue.find_by_id(@job.id) && @job.active?
         ErrorNotifier.notify("Active but not running job found", job: @job.id)
@@ -149,6 +150,7 @@ class JobExecution
   end
 
   def execute(dir)
+    Rails.logger.info("Executing Job Execution #{id}")
     Samson::Hooks.fire(:after_deploy_setup, dir, @job, @output, @reference)
 
     @output.write("\n# Executing deploy\n")
@@ -181,7 +183,9 @@ class JobExecution
   end
 
   def setup(dir)
+    Rails.logger.info("Setting up Job Execution #{id}")
     return unless resolve_ref_to_commit
+
     kubernetes? || @repository.checkout_workspace(dir, @reference)
   end
 
