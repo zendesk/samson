@@ -144,7 +144,7 @@ describe DeploysHelper do
   end
 
   describe "#redeploy_button" do
-    let(:redeploy_warning) { "Previous deploy succeeded" }
+    let(:redeploy_warning) { "Previous deploy succeeded." }
 
     before do
       @deploy = deploy
