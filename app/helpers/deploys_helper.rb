@@ -66,11 +66,6 @@ module DeploysHelper
     html_options = {method: :post}
     if @deploy.succeeded?
       html_options[:class] = 'btn btn-default'
-      html_options[:data] = {
-        toggle: 'tooltip',
-        placement: 'auto bottom'
-      }
-      html_options[:title] = 'Why? This deploy succeeded.'
     else
       html_options[:class] = 'btn btn-danger'
     end
