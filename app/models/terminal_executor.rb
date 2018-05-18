@@ -166,10 +166,11 @@ class TerminalExecutor
   def whitelisted_env
     whitelist = [
       'PATH', 'HOME', 'TMPDIR', 'CACHE_DIR', 'TERM', 'SHELL', # general
-      'RBENV_ROOT', 'RBENV_HOOK_PATH', 'RBENV_DIR', # ruby
+      'RBENV_ROOT', 'RBENV_HOOK_PATH', # ruby
       'DOCKER_HOST', 'DOCKER_URL', 'DOCKER_REGISTRY' # docker
     ] + ENV['ENV_WHITELIST'].to_s.split(/, ?/)
     env = ENV.to_h.slice(*whitelist)
+    env["PATH"] = env["PATH"].split(":").grep_v(/\/rbenv\/versions\//).join(":")
     env['DOCKER_REGISTRY'] ||= DockerRegistry.first&.host
     env
   end
