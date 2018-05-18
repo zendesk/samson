@@ -9,13 +9,12 @@ if ENV['USE_UTF8MB4'] && config['adapter'] == 'mysql2'
   config['encoding'] = 'utf8mb4'
   config['collation'] = 'utf8mb4_bin'
 
-  module ActiveRecord
-    module ConnectionAdapters
-      class Mysql2Adapter < AbstractMysqlAdapter
-        def create_table(table_name, options = {}) #:nodoc:
-          super(table_name, options.reverse_merge(options: "ROW_FORMAT=DYNAMIC ENGINE=InnoDB"))
-        end
-      end
+  ActiveRecord::ConnectionAdapters::Mysql2Adapter.class_eval do
+    # enhance included create_table method
+    def create_table(table_name, options = {}) #:nodoc:
+      sql_options = options[:options] # always passed in via lib/active_record/migration/compatibility.rb
+      sql_options = "ROW_FORMAT=DYNAMIC #{sql_options}" unless sql_options.to_s.include?("ROW_FORMAT")
+      super(table_name, options.merge(options: sql_options))
     end
   end
 end
