@@ -101,7 +101,7 @@ describe CommitStatus do
 
     describe "with bad ref" do
       let(:reference) { '[/r' }
-      let(:url) { "repos/#{stage.project.repository_path}/commits/%255B/r/status" }
+      let(:url) { "repos/#{stage.project.repository_path}/commits/%5B/r/status" }
 
       it "escapes the url" do
         failure!

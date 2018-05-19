@@ -8,6 +8,7 @@ describe ApplicationHelper do
   include LocksHelper
   include StatusHelper
   include ERB::Util
+  include Kaminari::Helpers::HelperMethods
 
   describe "#render_log" do
     it "removes translates ascii escapes to html colors" do

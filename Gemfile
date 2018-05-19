@@ -39,7 +39,7 @@ gem 'active_hash'
 gem 'ansible'
 gem 'github-markdown'
 gem 'coderay'
-gem 'net-http-persistent'
+gem 'net-http-persistent', '~> 2.9.0' # breaks tests when updated
 gem 'concurrent-ruby'
 gem 'vault'
 gem 'newrelic_rpm'
@@ -75,7 +75,7 @@ group :assets do
   gem 'bootstrap3-datetimepicker-rails'
 
   source 'https://rails-assets.org' do
-    gem 'rails-assets-angular'
+    gem 'rails-assets-angular', '~> 1.4.9' # new versions break js
     gem 'rails-assets-angular-mocks'
     gem 'rails-assets-angular-scenario'
     gem 'rails-assets-bootstrap-select'
