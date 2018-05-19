@@ -182,7 +182,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def self.last_deploys_for_projects
-    deploy_ids = group(:project_id).reorder("max(deploys.id)").pluck('max(deploys.id)')
+    deploy_ids = group(:project_id).reorder(Arel.sql("max(deploys.id)")).pluck(Arel.sql('max(deploys.id)'))
     where(id: deploy_ids) # extra select so we get all columns from the correct deploy without group functions
   end
 

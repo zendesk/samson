@@ -56,7 +56,7 @@ describe UsersController do
       it 'succeeds' do
         get :index, params: {format: :json}
 
-        response.success?.must_equal true
+        assert_response :success
         json_response = JSON.parse response.body
         user_list = json_response['users']
         assert_not_nil user_list
@@ -70,14 +70,14 @@ describe UsersController do
       it 'succeeds and fetches a single user' do
         get :index, params: {search: 'Super Admin', format: :json}
 
-        response.success?.must_equal true
+        assert_response :success
         assigns(:users).must_equal [users(:super_admin)]
       end
 
       it 'succeeds and with search as empty fetches all users' do
         get :index, params: {search: ''}
 
-        response.success?.must_equal true
+        assert_response :success
         user_list = assigns(:users)
         user_list.wont_be_nil
         per_page = User.max_per_page || Kaminari.config.default_per_page

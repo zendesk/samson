@@ -77,8 +77,8 @@ class CommitStatus
 
   # optimized to sql instead of AR fanciness to make it go from 1s -> 0.01s on our worst case stage
   def last_deployed_references
-    last_deployed = deploy_scope.pluck('max(deploys.id)')
-    Deploy.reorder(nil).where(id: last_deployed).pluck('distinct reference')
+    last_deployed = deploy_scope.pluck(Arel.sql('max(deploys.id)'))
+    Deploy.reorder(nil).where(id: last_deployed).pluck(Arel.sql('distinct reference'))
   end
 
   def deploy_scope

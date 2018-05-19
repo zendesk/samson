@@ -26,6 +26,13 @@ require 'mocha/setup'
 # Use ActiveSupport::TestCase for everything that was not matched before
 MiniTest::Spec::DSL::TYPES[-1] = [//, ActiveSupport::TestCase]
 
+# https://github.com/rails/rails/issues/31324
+if ActionPack::VERSION::STRING == "5.2.0"
+  Minitest::Rails::TestUnit = Rails::TestUnit
+else
+  raise "remove"
+end
+
 Mocha::Expectation.class_eval do
   def capture(into)
     with { |*args| into << args }

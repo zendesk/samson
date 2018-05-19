@@ -19,7 +19,7 @@ module Samson
             ActiveRecord::Base.descendants.map(&:name) - ["Audited::Audit"],
             ActionController::Base.descendants.map(&:name),
             (const_defined?(:Mocha) && "mocha"),
-            ((Thread.list.count != 1) && "Extra threads")
+            ((Thread.list.count != 1) && "Extra threads: #{Thread.list - [Thread.current]}")
           ].flatten.select { |x| x }
           raise "#{bad.join(", ")} should not be loaded" if bad.any?
         end

@@ -8,6 +8,7 @@ development:
   database: db/development.sqlite3
   pool: <%= ENV['RAILS_MAX_THREADS'] %>
   timeout: 5000
+  reaping_frequency: 0
 
 # Warning: The database defined as "test" will be erased and
 # re-generated from your development database when you run "rake".
@@ -17,6 +18,7 @@ test:
   database: db/test.sqlite3<%= ENV['TEST_ENV_NUMBER'] %>
   pool: <%= ENV['RAILS_MAX_THREADS'] %>
   timeout: 5000
+  reaping_frequency: 0
 
 production:
   adapter: sqlite3

@@ -5,7 +5,7 @@
 <%= page_title title %>
 
 <%= search_form do %>
-  <% names = EnvironmentVariable.order(:name).pluck('distinct name') %>
+  <% names = EnvironmentVariable.order(:name).pluck(Arel.sql('distinct name')) %>
   <%= search_select :name, names, live: true, size: 3 %>
 
   <div class="col-sm-3">

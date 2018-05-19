@@ -7,6 +7,7 @@ common: &common
   host: 127.0.0.1
   pool: <%= ENV['RAILS_MAX_THREADS'] %>
   timeout: 5000
+  reaping_frequency: 0
 
 development:
   <<: *common

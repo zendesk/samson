@@ -1,6 +1,11 @@
 # frozen_string_literal: true
 require_relative 'boot'
-require 'rails/all'
+require 'active_record/railtie'
+require 'action_controller/railtie'
+require 'action_view/railtie'
+require 'action_mailer/railtie'
+require 'rails/test_unit/railtie'
+require 'sprockets/railtie'
 
 if (google_domain = ENV["GOOGLE_DOMAIN"]) && !ENV['EMAIL_DOMAIN']
   warn "Stop using deprecated GOOGLE_DOMAIN"
@@ -42,7 +47,7 @@ module Samson
     # Settings in config/environments/* take precedence over those specified here.
     # Application configuration should go into files in config/initializers
     # -- all .rb files in that directory are automatically loaded.
-    config.load_defaults 5.1
+    config.load_defaults 5.2
 
     deprecated_url = ->(var) do
       url = ENV[var].presence
