@@ -80,19 +80,34 @@ describe Kubernetes::TemplateFiller do
       template.to_hash[:metadata][:name].must_equal 'test-app-server'
     end
 
-    it "sets imagePullSecrets" do
-      reply = {
-        items: [
-          {type: "kubernetes.io/dockercfg", metadata: {name: 'a'}},
-          {type: "kubernetes.io/nope", metadata: {name: 'b'}},
-          {type: "kubernetes.io/dockerconfigjson", metadata: {name: 'c'}},
-          {type: "kubernetes.io/dockerNotValidConfigThing", metadata: {name: 'd'}}
-        ]
-      }
-      stub_request(:get, "http://foobar.server/api/v1/namespaces/pod1/secrets").to_return(body: reply.to_json)
-      template.to_hash[:spec][:template][:spec][:imagePullSecrets].must_equal(
-        [{name: 'a'}, {name: 'c'}]
-      )
+    describe "imagePullSecrets" do
+      let(:url) { "http://foobar.server/api/v1/namespaces/pod1/secrets" }
+      let(:reply) do
+        {
+          items: [
+            {type: "kubernetes.io/dockercfg", metadata: {name: 'a'}},
+            {type: "kubernetes.io/nope", metadata: {name: 'b'}},
+            {type: "kubernetes.io/dockerconfigjson", metadata: {name: 'c'}},
+            {type: "kubernetes.io/dockerNotValidConfigThing", metadata: {name: 'd'}}
+          ]
+        }
+      end
+
+      it "gets set" do
+        assert_request(:get, url, to_return: {body: reply.to_json}) do
+          template.to_hash[:spec][:template][:spec][:imagePullSecrets].must_equal(
+            [{name: 'a'}, {name: 'c'}]
+          )
+        end
+      end
+
+      it "retries when it fails" do
+        assert_request(:get, url, to_return: [{status: 500}, {body: reply.to_json}]) do
+          template.to_hash[:spec][:template][:spec][:imagePullSecrets].must_equal(
+            [{name: 'a'}, {name: 'c'}]
+          )
+        end
+      end
     end
 
     it "sets revisionHistoryLimit" do
