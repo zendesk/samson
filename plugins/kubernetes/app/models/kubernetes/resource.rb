@@ -106,7 +106,10 @@ module Kubernetes
 
       # TODO: remove the expire_cache and assign @resource but that breaks a bunch of deploy_executor tests
       def create
-        request(:create, @template)
+        restore_template do
+          @template[:metadata].delete(:resourceVersion)
+          request(:create, @template)
+        end
         expire_cache
       end
 

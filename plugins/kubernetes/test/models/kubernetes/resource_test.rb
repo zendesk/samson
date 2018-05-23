@@ -49,10 +49,11 @@ describe Kubernetes::Resource do
 
   before { Kubernetes::Resource::Base.any_instance.expects(:sleep).with { raise }.never }
 
-  it "does modify passed in template" do
+  it "does not modify passed in template" do
     content = File.read(File.expand_path("../../../app/models/kubernetes/resource.rb", __dir__))
-    reset_code_usages = 3
-    content.scan(/@template.*(=|dig_set)/).size.must_equal content.scan('restore_template do').size + reset_code_usages
+    restore_usages = content.scan('restore_template do').size
+    template_modified = content.scan(/@template.*(=|dig_set|delete)/).size
+    template_modified.must_equal restore_usages + 4
   end
 
   describe ".build" do
@@ -782,17 +783,22 @@ describe Kubernetes::Resource do
   end
 
   describe Kubernetes::Resource::PodDisruptionBudget do
-    describe "#deploy" do
-      let(:kind) { 'PodDisruptionBudget' }
-      let(:url) { "#{origin}/apis/policy/v1beta1/namespaces/pod1/poddisruptionbudgets/some-project" }
+    def assert_create_and_delete_requests(**args, &block)
+      assert_request(:get, url, to_return: [{body: '{}'}, {status: 404}]) do
+        assert_request(:delete, url, to_return: {body: '{}'}) do
+          assert_request(:post, create_url, **args, to_return: {body: '{}'}, &block)
+        end
+      end
+    end
 
+    let(:kind) { 'PodDisruptionBudget' }
+    let(:url) { "#{origin}/apis/policy/v1beta1/namespaces/pod1/poddisruptionbudgets/some-project" }
+    let(:create_url) { File.dirname(url) }
+
+    describe "#deploy" do
       it "updates" do
-        assert_request(:get, url, to_return: [{body: '{}'}, {status: 404}]) do
-          assert_request(:delete, url, to_return: {body: '{}'}) do
-            assert_request(:post, File.dirname(url), to_return: {body: '{}'}) do
-              resource.deploy
-            end
-          end
+        assert_create_and_delete_requests do
+          resource.deploy
         end
       end
 
@@ -802,6 +808,15 @@ describe Kubernetes::Resource do
           assert_request(:delete, url, to_return: {body: '{}'}) do
             resource.deploy
           end
+        end
+      end
+    end
+
+    describe "#revert" do
+      it "deletes and then creates without resourceVersion because that is not allowed" do
+        with = ->(request) { request.body.wont_include "resourceVersion"; true }
+        assert_create_and_delete_requests(with: with) do
+          resource.revert(template.deep_merge(metadata: {resourceVersion: '123'}))
         end
       end
     end
