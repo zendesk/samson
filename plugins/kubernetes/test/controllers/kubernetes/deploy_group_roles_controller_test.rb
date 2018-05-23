@@ -27,6 +27,12 @@ describe Kubernetes::DeployGroupRolesController do
         assigns[:deploy_group_roles].must_include deploy_group_role
       end
 
+      it "renders when deploy group got deleted" do
+        kubernetes_release_docs(:test_release_pod_1).deploy_group.update_column(:deleted_at, Time.now)
+        get :index
+        assert_template :index
+      end
+
       it "renders as project tab" do
         get :index, params: {project_id: project}
         assert_template :index
