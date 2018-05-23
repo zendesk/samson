@@ -397,6 +397,20 @@ describe Job do
 
       job.send(:status!, 'pending')
     end
+
+    it 'updates deploy updated_at' do
+      job = jobs(:succeeded_test)
+      deploy = job.deploy
+
+      freeze_time do
+        deploy.update_column(:updated_at, 1.day.ago)
+        deploy.updated_at.wont_equal Time.now
+
+        job.send(:status!, 'succeeded')
+
+        deploy.updated_at.must_equal Time.now
+      end
+    end
   end
 
   describe "#report_state" do

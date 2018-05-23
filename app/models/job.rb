@@ -156,7 +156,7 @@ class Job < ActiveRecord::Base
   end
 
   def status!(status)
-    success = update_column(:status, status)
+    success = update_attribute(:status, status)
     report_state if finished?
     success
   end
