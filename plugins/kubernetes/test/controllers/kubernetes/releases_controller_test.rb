@@ -15,6 +15,12 @@ describe Kubernetes::ReleasesController do
         get :index, params: {project_id: :foo}
         assert_response :success
       end
+
+      it "does not blow up when a deploy group was removed" do
+        kubernetes_release_docs(:test_release_pod_1).deploy_group.update_column(:deleted_at, Time.now)
+        get :index, params: {project_id: :foo}
+        assert_response :success
+      end
     end
 
     describe '#show' do
