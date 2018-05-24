@@ -90,6 +90,11 @@ module Kubernetes
       raw_template.each do |t|
         min_available ||= t.dig(:metadata, :annotations, :"samson/minAvailable")
       end
+      return if min_available == "disabled"
+
+      if !min_available && replica_target > 1
+        min_available = ENV["KUBERNETES_AUTO_MIN_AVAILABLE"]
+      end
       return unless min_available
 
       target = if percent = min_available.to_s[/\A(\d+)\s*%\z/, 1] # "30%" -> 30 / "30 %" -> 30
