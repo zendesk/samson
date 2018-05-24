@@ -2,6 +2,14 @@
 module SamsonDatadog
   class Engine < Rails::Engine
   end
+
+  class << self
+    def send_notification(deploy, **kwargs)
+      if deploy.stage.send_datadog_notifications?
+        DatadogNotification.new(deploy).deliver(**kwargs)
+      end
+    end
+  end
 end
 
 Samson::Hooks.view :stage_form, "samson_datadog/fields"
@@ -14,8 +22,10 @@ Samson::Hooks.callback :stage_permitted_params do
   ]
 end
 
+Samson::Hooks.callback :before_deploy do |deploy, _buddy|
+  SamsonDatadog.send_notification(deploy, additional_tags: ['started'], now: true)
+end
+
 Samson::Hooks.callback :after_deploy do |deploy, _buddy|
-  if deploy.stage.send_datadog_notifications?
-    DatadogNotification.new(deploy).deliver
-  end
+  SamsonDatadog.send_notification(deploy, additional_tags: ['finished'])
 end

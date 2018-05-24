@@ -8,10 +8,17 @@ class DatadogNotification
     @stage = @deploy.stage
   end
 
-  def deliver
+  def deliver(additional_tags: [], now: false)
     Rails.logger.info "Sending Datadog notification..."
 
-    status = @deploy.succeeded? ? "success" : "error"
+    status =
+      if @deploy.active?
+        "info"
+      elsif @deploy.succeeded?
+        "success"
+      else
+        "error"
+      end
 
     event = Dogapi::Event.new(
       body,
@@ -20,8 +27,8 @@ class DatadogNotification
       event_object: Digest::MD5.hexdigest("#{Time.new}|#{rand}"),
       alert_type: status,
       source_type_name: "samson",
-      date_happened: @deploy.updated_at,
-      tags: @stage.datadog_tags_as_array + ["deploy"]
+      date_happened: now ? Time.now : @deploy.updated_at,
+      tags: @stage.datadog_tags_as_array + ["deploy", *additional_tags]
     )
 
     client = Dogapi::Client.new(api_key, nil, "")
