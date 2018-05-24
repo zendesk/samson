@@ -103,6 +103,24 @@ describe Kubernetes::ReleaseDoc do
         create!.resource_template[2][:spec][:minAvailable].must_equal 1
       end
 
+      describe "with auto-add" do
+        with_env KUBERNETES_AUTO_MIN_AVAILABLE: "1"
+
+        it "add default" do
+          create!.resource_template[2][:spec][:minAvailable].must_equal 1
+        end
+
+        it "does not add for things that are not highly available anyway" do
+          doc.replica_target = 1
+          refute create!.resource_template[2]
+        end
+
+        it "can disable with disabled" do
+          template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": "disabled"}
+          refute create!.resource_template[2]
+        end
+      end
+
       it "uses the same namespace as the resource" do
         metadata = template.dig(0, :metadata)
         metadata[:annotations] = {"samson/minAvailable": '30%'}
