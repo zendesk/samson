@@ -29,6 +29,7 @@ module Kubernetes
       validate_pod_disruption_budget
       validate_numeric_limits
       validate_project_and_role_consistent
+      validate_team_labels
       validate_not_matching_team
       validate_stateful_set_service_consistent
       validate_stateful_set_restart_policy
@@ -153,6 +154,17 @@ module Kubernetes
       @elements.each do |element|
         if element.dig(:spec, :selector, :team) || element.dig(:spec, :selector, :matchLabels, :team)
           @errors << "Team names change, do not select or match on them"
+        end
+      end
+    end
+
+    def validate_team_labels
+      return unless ENV["KUBERNETES_ENFORCE_TEAMS"]
+      @elements.each do |element|
+        required = [[:metadata, :labels, :team]]
+        required << [:spec, :template, :metadata, :labels, :team] if element.dig(:spec, :template)
+        required.each do |path|
+          @errors << "#{path.join(".")} must be set" unless element.dig(*path)
         end
       end
     end
