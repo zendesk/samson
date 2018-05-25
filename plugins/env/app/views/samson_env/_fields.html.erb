@@ -15,16 +15,20 @@
   <% environment_variable_groups = EnvironmentVariableGroup.order(:name).map { |g| [g.name, g.id] } %>
   <% if environment_variable_groups.any? %>
     <% ids.each do |id| %>
-      <div class="form-group">
-        <div class="col-lg-2 col-lg-offset-2">
+      <div class="form-group env_group_inputs">
+        <div class="col-lg-3">
           <%= live_select_tag "project[environment_variable_group_ids][]",
             options_for_select([[nil, nil]] + environment_variable_groups, id), placeholder: "Name"
           %>
+        </div>
+        <div class="col-lg-2 checkbox">
+          <%# updated dynammically in the client-side JS %>
+          <%= link_to "Preview", preview_environment_variable_groups_path %>
         </div>
       </div>
     <% end %>
     <%= link_to "Add row", "#", class: "duplicate_previous_row" %> |
   <% end %>
-  <%= link_to "Group overview", EnvironmentVariableGroup %> |
-  <%= link_to "Preview", preview_environment_variable_groups_path(project_id: form.object.id) %>
+  <%= link_to "Groups overview", EnvironmentVariableGroup %> |
+  <%= link_to "Groups preview", preview_environment_variable_groups_path(project_id: form.object.id) %>
 </fieldset>

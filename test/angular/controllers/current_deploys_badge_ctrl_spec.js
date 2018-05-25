@@ -15,6 +15,7 @@ describe('currentDeployBadgeCtrl', function() {
     fakeBadgeElement = {
       show: jasmine.createSpy('show'),
       hide: jasmine.createSpy('hide'),
+      each: jasmine.createSpy('each'),
       data: function(){ return '0' }
     };
     spyOn(window, '$').and.returnValue(fakeBadgeElement);
