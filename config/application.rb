@@ -147,8 +147,7 @@ module Samson
       config.sse_rails_engine.access_control_allow_origin = config.samson.uri.to_s
     end
 
-    config.samson.stream_origin = ENV['STREAM_ORIGIN'].presence || config.samson.uri.to_s
-    config.samson.deploy_origin = ENV['DEPLOY_ORIGIN'].presence || config.samson.uri.to_s
+    raise if ENV['STREAM_ORIGIN'] || ENV['DEPLOY_ORIGIN'] # alert users with deprecated options, remove 2019-05-01
 
     config.samson.deploy_timeout = Integer(ENV["DEPLOY_TIMEOUT"] || 2.hours.to_i)
 
