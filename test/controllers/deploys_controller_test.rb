@@ -173,7 +173,6 @@ describe DeploysController do
       it "renders with given ids" do
         get :index, params: {ids: [deploy.id]}
         assert_template :index
-        assigns[:deploys].limit_value.must_equal 1000
         assigns[:deploys].must_equal [deploy]
       end
 

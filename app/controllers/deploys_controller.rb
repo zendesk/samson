@@ -27,9 +27,9 @@ class DeploysController < ApplicationController
   #   * production (boolean, is this in proudction or not)
   #   * status (what is the status of this job failed|running| etc)
   def index
-    @deploys =
+    @pagy, @deploys =
       if ids = params[:ids]
-        Kaminari.paginate_array(deploys_scope.find(ids)).page(1).per(1000)
+        pagy_array(deploys_scope.find(ids), page: 1, items: 1000)
       else
         search || return
       end
@@ -180,7 +180,7 @@ class DeploysController < ApplicationController
     if updated_at = search[:updated_at].presence
       deploys = deploys.where("updated_at between ? AND ?", *updated_at)
     end
-    deploys.page(page).per(30)
+    pagy(deploys, page: page, items: 30)
   end
 
   def deploy_permitted_params

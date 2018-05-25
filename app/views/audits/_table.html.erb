@@ -52,6 +52,6 @@
   </tbody>
 </table>
 
-<%= paginate audits if audits.respond_to?(:total_pages) %>
+<%= paginate @pagy if @pagy %>
 
 <%= Samson::Diff.style_tag %>

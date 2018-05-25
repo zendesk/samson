@@ -11,7 +11,7 @@ class ProjectsController < ApplicationController
   def index
     respond_to do |format|
       format.html do
-        @projects = projects_for_user
+        @pagy, @projects = projects_for_user
       end
 
       format.json do
@@ -111,9 +111,9 @@ class ProjectsController < ApplicationController
     elsif ids = current_user.starred_project_ids.presence
       # fake association sorting since order by array is hard to support in mysql+postgres+sqlite
       array = scope.all.sort_by { |p| ids.include?(p.id) ? 0 : 1 }
-      return Kaminari.paginate_array(array).page(page).per(per_page)
+      return pagy_array(array, page: page, items: per_page)
     end
-    scope.order(id: :desc).page(page).per(per_page)
+    pagy(scope.order(id: :desc), page: page, items: per_page)
   end
 
   # Overriding require_project from CurrentProject

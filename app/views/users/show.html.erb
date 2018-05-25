@@ -52,7 +52,7 @@
     <% end %>
     </tbody>
   </table>
-  <%= paginate @projects %>
+  <%= paginate @pagy %>
 
   <h3>Create new project role</h3>
   <%= form_tag user_project_roles_path(user_id: @user.id), class: 'form-horizontal' do %>

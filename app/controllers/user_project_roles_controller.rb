@@ -9,8 +9,12 @@ class UserProjectRolesController < ApplicationController
     options[:project_id] = current_project.id # override permalink with id
     options[:role_id] = Role::VIEWER.id if options[:role_id].blank? # force the join so we get project_role_id
 
-    @users = User.search_by_criteria(options)
-    @users = @users.select('users.*, user_project_roles.role_id AS user_project_role_id')
+    @pagy, @users = pagy(
+      User.search_by_criteria(options),
+      page: params[:page],
+      items: 15
+    )
+    @users = @users.select('users.*, user_project_roles.role_id AS user_project_role_id') # avoid breaking joins
 
     respond_to do |format|
       format.html

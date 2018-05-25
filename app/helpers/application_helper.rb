@@ -8,6 +8,7 @@ module ApplicationHelper
 
   include Ansible
   include DateTimeHelper
+  include Pagy::Frontend
 
   cattr_reader(:github_status_cache_key) { 'github-status-ok' }
 
@@ -277,9 +278,12 @@ module ApplicationHelper
     select_tag name, values, Samson::FormBuilder::LIVE_SELECT_OPTIONS.merge(options)
   end
 
-  def paginate(objects, *)
-    result = super
-    result << " #{objects.total_count} records" if objects.total_pages > 1
+  def paginate(pagy)
+    multi_page = pagy.pages > 1
+    result = (multi_page ? pagy_nav_bootstrap(pagy) : "").html_safe
+    if multi_page
+      result << content_tag(:span, " #{pagy.count} records", style: "padding: 10px")
+    end
     result
   end
 

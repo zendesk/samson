@@ -2,7 +2,7 @@
 
 <%= render 'projects/header', project: @project, tab: "releases" %>
 
-<% cache [@project, @releases.current_page, deployer_for_project?] do %>
+<% cache [@project, @pagy.page, deployer_for_project?] do %>
   <section class="clearfix tabs">
     <p class="pull-right">
       <%= link_to "Create release manually", new_project_release_path(@project), class: "btn btn-default" %>
@@ -30,7 +30,7 @@
         </tbody>
       </table>
 
-      <%= paginate @releases %>
+      <%= paginate @pagy %>
     <% elsif @project.release_branch.present? %>
       <div class="alert alert-warning">
         <p>No release created from release branch <%= @project.release_branch %>.</p>

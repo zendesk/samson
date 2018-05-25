@@ -7,7 +7,7 @@ class EnvironmentVariablesController < ApplicationController
     search = params[:search] || {}
     scope = scope.where(name: search[:name]) if search[:name].present?
     scope = scope.where(value: search[:value]) if search[:value].present?
-    @environment_variables = scope.page(params[:page]).per(30)
+    @pagy, @environment_variables = pagy(scope, page: params[:page], items: 30)
   end
 
   def destroy

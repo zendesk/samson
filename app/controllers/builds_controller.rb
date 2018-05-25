@@ -9,7 +9,7 @@ class BuildsController < ApplicationController
   before_action :find_build, only: [:show, :build_docker_image, :edit, :update]
 
   def index
-    @builds = scope.order('id desc').page(page)
+    @builds = scope.order('id desc')
     if search = params[:search]&.except(:time_format)
       if external = search.delete(:external).presence
         @builds =
@@ -22,6 +22,8 @@ class BuildsController < ApplicationController
 
       @builds = @builds.where(search.permit(*Build.column_names)) unless search.empty?
     end
+
+    @pagy, @builds = pagy(@builds, page: page, items: 15)
 
     respond_to do |format|
       format.html

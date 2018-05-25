@@ -6,9 +6,7 @@ module Searchable
     def search_by_criteria(criteria)
       scope = self
       scope = scope.search(criteria[:search]) if criteria[:search]
-      scope.
-        order(sort_column(criteria[:sort]) => sort_direction(criteria[:direction])).
-        page(criteria[:page])
+      scope.order(sort_column(criteria[:sort]) => sort_direction(criteria[:direction]))
     end
 
     private
