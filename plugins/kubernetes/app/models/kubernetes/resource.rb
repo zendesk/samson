@@ -125,13 +125,15 @@ module Kubernetes
         return if @template.dig(:spec, :selector, :matchLabels, :blue_green)
 
         static = [:spec, :selector, :matchLabels]
-        old_labels = @resource.dig(*static)
-        new_labels = @template.dig(*static)
-        if old_labels != new_labels
+        # fallback is only for tests that use simple replies
+        old_labels = @resource.dig(*static) || {}
+        new_labels = @template.dig(*static) || {}
+
+        if new_labels.any? { |k, v| old_labels[k] != v }
           raise(
             Samson::Hooks::UserError,
             "Updating #{static.join(".")} from #{old_labels.inspect} to #{new_labels.inspect} " \
-            "can only be done can only be done by deleting and redeploying"
+            "can only be done can only be done by deleting and redeploying or old pods would not be deleted."
           )
         end
       end

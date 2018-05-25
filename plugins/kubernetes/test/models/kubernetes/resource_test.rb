@@ -125,12 +125,22 @@ describe Kubernetes::Resource do
       before { template[:spec][:selector] = {matchLabels: {foo: "bar"}} }
 
       it "explains why it is a bad idea" do
-        assert_request(:get, url, to_return: {body: "{}"}) do
+        old = {spec: {selector: {matchLabels: {foo: "baz"}}}}
+        assert_request(:get, url, to_return: {body: old.to_json}) do
           e = assert_raises(Samson::Hooks::UserError) { resource.deploy }
           e.message.must_equal(
-            "Updating spec.selector.matchLabels from nil to {:foo=>\"bar\"} " \
-          "can only be done can only be done by deleting and redeploying"
+            "Updating spec.selector.matchLabels from {:foo=>\"baz\"} to {:foo=>\"bar\"} " \
+            "can only be done can only be done by deleting and redeploying or old pods would not be deleted."
           )
+        end
+      end
+
+      it "allows removing a label" do
+        old = {spec: {selector: {matchLabels: {foo: "bar", bar: "baz"}}}}
+        assert_request(:get, url, to_return: {body: old.to_json}) do
+          assert_request(:put, url, to_return: {body: "{}"}) do
+            resource.deploy
+          end
         end
       end
 
