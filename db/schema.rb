@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180510172630) do
+ActiveRecord::Schema.define(version: 2018_05_28_222146) do
 
   create_table "audits", force: :cascade do |t|
     t.integer "auditable_id", null: false
