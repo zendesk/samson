@@ -9,7 +9,7 @@ describe EnvironmentVariable do
   let(:deploy_group) { stage.deploy_groups.first }
   let(:environment) { deploy_group.environment }
   let(:deploy_group_scope_type_and_id) { "DeployGroup-#{deploy_group.id}" }
-  let(:environment_variable) { EnvironmentVariable.new(name: "NAME", parent: project) }
+  let(:environment_variable) { EnvironmentVariable.new(name: "NAME", parent: project, value: "foo") }
 
   describe "validations" do
     # postgres and sqlite do not have string limits defined
@@ -192,6 +192,21 @@ describe EnvironmentVariable do
 
       expected = %(FOO="bar" # Production\nMARCO="polo" # Staging)
       EnvironmentVariable.serialize(variables, scopes).must_equal expected
+    end
+  end
+
+  describe "#auditing_enabled" do
+    it "creates audits for regular vars" do
+      assert_difference "Audited::Audit.count", +1 do
+        environment_variable.save!
+      end
+    end
+
+    it "does not audit deploys which never change" do
+      environment_variable.parent = deploys(:succeeded_test)
+      assert_difference "Audited::Audit.count", 0 do
+        environment_variable.save!
+      end
     end
   end
 end
