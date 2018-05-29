@@ -3,8 +3,7 @@ function startStream() {
     var $messages = $("#messages");
     var streamUrl = $("#output").data("streamUrl");
     var doNotify = $("#output").data("desktopNotify");
-    var origin = $('meta[name=deploy-origin]').first().attr('content');
-    var source = new EventSource(origin + streamUrl, { withCredentials: true });
+    var source = new EventSource(streamUrl, { withCredentials: true });
 
     function addLine(data, replace) {
       var msg = JSON.parse(data).msg;
