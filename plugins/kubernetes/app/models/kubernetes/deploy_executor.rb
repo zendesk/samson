@@ -372,14 +372,18 @@ module Kubernetes
 
     # updates resources via kubernetes api
     def deploy(release_docs)
-      release_docs.each do |release_doc|
+      # We deploy each resource in parallel.
+      resources = release_docs.flat_map do |release_doc|
         puts_action "Deploying", release_doc
+
         if release_doc.blue_green_color
-          non_service_resources(release_doc).each(&:deploy)
+          non_service_resources(release_doc)
         else
-          release_doc.deploy
+          release_doc.deploy_group.kubernetes_cluster # cache before threading
+          [release_doc]
         end
       end
+      Samson::Parallelizer.map(resources, db: true, &:deploy)
     end
 
     def deploy_and_watch(release_docs)
