@@ -92,7 +92,7 @@ module Kubernetes
       end
       return if min_available == "disabled"
 
-      if !min_available && replica_target > 1
+      if !min_available && replica_target > 1 && !kubernetes_role.autoscaled?
         min_available = ENV["KUBERNETES_AUTO_MIN_AVAILABLE"]
       end
       return unless min_available

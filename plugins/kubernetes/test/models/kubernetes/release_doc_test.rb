@@ -110,8 +110,13 @@ describe Kubernetes::ReleaseDoc do
           create!.resource_template[2][:spec][:minAvailable].must_equal 1
         end
 
-        it "does not add for things that are not highly available anyway" do
+        it "does not add when not highly available" do
           doc.replica_target = 1
+          refute create!.resource_template[2]
+        end
+
+        it "does not add when replicas are unknown" do
+          doc.kubernetes_role.update_column(:autoscaled, true)
           refute create!.resource_template[2]
         end
 
