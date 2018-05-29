@@ -49,6 +49,7 @@ describe ReleasesController do
       before do
         GitRepository.any_instance.expects(:commit_from_ref).with('abcd').returns('a' * 40)
         GITHUB.stubs(:create_release)
+        GITHUB.stubs(:release_for_tag)
       end
 
       it "creates a new release" do

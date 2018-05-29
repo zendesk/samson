@@ -7,7 +7,8 @@ class ReleaseService
   def release(attrs = {})
     release = @project.releases.create(attrs)
     if release.persisted?
-      push_tag_to_git_repository(release)
+      push_tag_to_git_repository(release.version, release.commit)
+      ensure_tag_in_git_repository(release.version)
       start_deploys(release)
     end
     release
@@ -21,8 +22,14 @@ class ReleaseService
 
   private
 
-  def push_tag_to_git_repository(release)
-    GITHUB.create_release(@project.repository_path, release.version, target_commitish: release.commit)
+  def push_tag_to_git_repository(version, commit)
+    GITHUB.create_release(@project.repository_path, version, target_commitish: commit)
+  end
+
+  def ensure_tag_in_git_repository(tag)
+    Samson::Retry.with_retries [Octokit::NotFound], 3, wait_time: 1 do
+      GITHUB.release_for_tag(@project.repository_path, tag)
+    end
   end
 
   def start_deploys(release)
