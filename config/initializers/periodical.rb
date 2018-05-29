@@ -22,7 +22,7 @@ Samson::Periodical.register :report_system_stats, "Report system stats" do
     if Rails.cache.class == ActiveSupport::Cache::MemoryStore
       1
     else
-      Rails.cache.instance_variable_get(:@data).send(:ring).servers.count(&:alive?)
+      Rails.cache.instance_variable_get(:@data).with { |c| c.send(:ring).servers.count(&:alive?) }
     end
 
   ActiveSupport::Notifications.instrument(
