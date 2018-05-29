@@ -1,1 +1,8 @@
-<li><a href="#environment-variables" data-toggle="tab">Environment variables</a></li>
+<li>
+  <a href="#environment-variables" data-toggle="tab">
+    Environment variables
+    <% if deploy_environment_variable_diff %>
+      <span class="badge">!</span>
+    <% end %>
+  </a>
+</li>
