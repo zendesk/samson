@@ -34,7 +34,7 @@ describe Samson::Retry do
     it "retries when check passes" do
       calls = 0
       assert_raises RuntimeError do
-        Samson::Retry.with_retries([RuntimeError], 3, if: ->(_) { true }) do
+        Samson::Retry.with_retries([RuntimeError], 3, only_if: ->(_) { true }) do
           calls += 1
           raise "Nope"
         end
@@ -43,10 +43,19 @@ describe Samson::Retry do
       calls.must_equal 4
     end
 
+    it "sleeps before retrying when requested" do
+      Samson::Retry.expects(:sleep).times(3)
+      assert_raises RuntimeError do
+        Samson::Retry.with_retries([RuntimeError], 3, wait_time: 1) do
+          raise "Nope"
+        end
+      end
+    end
+
     it "does not retry when check fails" do
       calls = 0
       assert_raises RuntimeError do
-        Samson::Retry.with_retries([RuntimeError], 3, if: ->(_) { false }) do
+        Samson::Retry.with_retries([RuntimeError], 3, only_if: ->(_) { false }) do
           calls += 1
           raise "Nope"
         end

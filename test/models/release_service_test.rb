@@ -1,33 +1,49 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 1
+SingleCov.covered!
 
 describe ReleaseService do
   let(:project) { projects(:test) }
   let(:service) { ReleaseService.new(project) }
 
-  describe "#release!" do
+  describe "#release" do
     let(:author) { users(:deployer) }
     let(:commit) { "abcd" * 10 }
     let(:release_params_used) { [] }
 
     before do
       GITHUB.stubs(:create_release).capture(release_params_used)
+      GITHUB.stubs(:release_for_tag)
       GitRepository.any_instance.expects(:fuzzy_tag_from_ref).returns(nil)
     end
 
     it "creates a new release" do
-      count = Release.count
+      assert_difference "Release.count", +1 do
+        service.release(commit: commit, author: author)
+      end
+    end
 
-      service.release(commit: commit, author: author)
-
-      assert_equal count + 1, Release.count
+    it "does nothing when release failed validation" do
+      GitRepository.any_instance.unstub(:fuzzy_tag_from_ref)
+      assert_difference "Release.count", 0 do
+        Release.any_instance.expects(:save).returns(false)
+        service.release(commit: commit, author: author)
+      end
     end
 
     it "tags the release" do
       service.release(commit: commit, author: author)
       assert_equal [[project.repository_path, 'v124', target_commitish: commit]], release_params_used
+    end
+
+    it "stops when release cannot be found" do
+      GITHUB.unstub(:release_for_tag)
+      GITHUB.expects(:release_for_tag).times(4).raises(Octokit::NotFound)
+      Samson::Retry.expects(:sleep).times(3)
+      assert_raises Octokit::NotFound do
+        service.release(commit: commit, author: author)
+      end
     end
 
     it "deploys the commit to stages if they're configured to" do

@@ -25,6 +25,7 @@ describe Integrations::BaseController do
     Build.any_instance.stubs(:validate_git_reference).returns(true)
     GitRepository.any_instance.stubs(:fuzzy_tag_from_ref).returns(nil)
     stub_request(:post, "https://api.github.com/repos/bar/foo/releases")
+    stub_request(:get, "https://api.github.com/repos/bar/foo/releases/tags/v1")
   end
 
   describe "#create" do

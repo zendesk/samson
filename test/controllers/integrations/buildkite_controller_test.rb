@@ -61,6 +61,7 @@ describe Integrations::BuildkiteController do
     end
 
     it 'creates the release with the buildkite build number' do
+      stub_request(:get, "https://api.github.com/repos/bar/foo/releases/tags/v9")
       assert_request(:post, "https://api.github.com/repos/bar/foo/releases") do
         Samson::Hooks.with_callback(:buildkite_release_params, buildkite_build_number) do |_|
           post :create, params: payload.merge(token: project.token, test_route: true)
