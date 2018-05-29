@@ -78,4 +78,10 @@ class EnvironmentVariable < ActiveRecord::Base
   def project?
     parent_type == "Project"
   end
+
+  private
+
+  def auditing_enabled
+    parent_type != "Deploy" && super
+  end
 end
