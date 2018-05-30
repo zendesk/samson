@@ -80,8 +80,7 @@ describe UsersController do
         assert_response :success
         user_list = assigns(:users)
         user_list.wont_be_nil
-        per_page = User.max_per_page || Kaminari.config.default_per_page
-        assigns(:users).size.must_equal [User.count, per_page].min
+        assigns(:users).size.must_equal [User.count, 25].min
       end
     end
 

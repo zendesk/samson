@@ -5,7 +5,7 @@ class UsersController < ApplicationController
   before_action :authorize_resource!
 
   def index
-    @users = User.search_by_criteria(params)
+    @pagy, @users = pagy(User.search_by_criteria(params), page: params[:page], items: 25)
     respond_to do |format|
       format.html
       format.json { render_as_json :users, @users, allowed_includes: [:user_project_roles] }
@@ -30,8 +30,13 @@ class UsersController < ApplicationController
   end
 
   def show
-    @projects = Project.search_by_criteria(params).joins(:user_project_roles).
-      where(user_project_roles: {user_id: user.id})
+    @pagy, @projects = pagy(
+      Project.search_by_criteria(params).
+        joins(:user_project_roles).
+        where(user_project_roles: {user_id: user.id}),
+      page: params[:page],
+      items: 15
+    )
     if role_id = params[:role_id].presence
       @projects = @projects.where("user_project_roles.role_id >= ?", role_id)
     end

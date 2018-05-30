@@ -594,20 +594,27 @@ describe ApplicationHelper do
   end
 
   describe "#paginate" do
-    include Kaminari::ActionViewExtension
+    include Pagy::Frontend
+    include Pagy::Backend
+
+    let(:request) { stub(script_name: "script", path: "path", GET: {}) }
 
     before { stubs(url_for: "foo") }
 
+    it "does not show nav for 1-page" do
+      paginate(pagy(User.where("1=2"), page: 1, items: 1).first).must_equal ""
+    end
+
     it "shows records for paginate" do
-      paginate(User.page(1).per(1)).must_include " #{User.count} records"
+      paginate(pagy(User, page: 1, items: 1).first).must_include " #{User.count} records"
     end
 
     it "does not show records for single-page" do
-      paginate(User.page(1).per(100)).wont_include " records"
+      paginate(pagy(User, page: 1, items: 100).first).wont_include " records"
     end
 
     it "does not show records for 0-page" do
-      paginate(User.where("1=2").page(1).per(1)).wont_include " records"
+      paginate(pagy(User.where("1=2"), page: 1, items: 1).first).wont_include " records"
     end
   end
 
