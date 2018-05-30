@@ -41,7 +41,7 @@ describe AuditsController do
 
       it "does not N+1" do
         20.times { create_audit user }
-        assert_sql_queries 10 do
+        assert_sql_queries 9 do
           get :index
           assert_template :index
           assigns(:audits).size.must_equal 21

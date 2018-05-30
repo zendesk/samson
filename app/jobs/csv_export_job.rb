@@ -72,7 +72,7 @@ class CsvExportJob
   end
 
   def filter_deploys(filter)
-    if filter.keys.include?('environments.production')
+    if filter.key?('environments.production')
       production_value = filter.delete('environments.production')
       # To match logic of stages.production? True when any deploy_group environment is true or
       # deploy_groups environment is empty and stages is true
