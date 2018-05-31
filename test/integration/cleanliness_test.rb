@@ -47,7 +47,7 @@ describe "cleanliness" do
       indexes = definition.scan(/t.index (\[(.*?)\].*$)/)
       strings.map do |string|
         # it is bad when a string is used in the index but no length is declared
-        if indexes.any? { |i| i[1].include?(%("#{string}")) && i[0] !~ /length: .*#{string}/ }
+        if indexes.any? { |i| i[1].include?(%("#{string}")) && i[0] !~ /length: .*#{string}|length: \d+/ }
           [table, string]
         end
       end.compact
