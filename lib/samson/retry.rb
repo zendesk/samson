@@ -16,5 +16,15 @@ module Samson
         raise
       end
     end
+
+    def self.until_result(tries:, wait_time:, error:)
+      loop do
+        tries -= 1
+        result = yield
+        return result if result
+        raise error if tries.zero?
+        sleep(wait_time)
+      end
+    end
   end
 end
