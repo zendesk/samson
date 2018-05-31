@@ -14,7 +14,7 @@ describe ReleaseService do
 
     before do
       GITHUB.stubs(:create_release).capture(release_params_used)
-      GITHUB.stubs(:release_for_tag)
+      project.repository.stubs(:commit_from_ref).returns("abc")
       GitRepository.any_instance.expects(:fuzzy_tag_from_ref).returns(nil)
     end
 
@@ -39,9 +39,9 @@ describe ReleaseService do
 
     it "stops when release cannot be found" do
       GITHUB.unstub(:release_for_tag)
-      GITHUB.expects(:release_for_tag).times(4).raises(Octokit::NotFound)
+      project.repository.expects(:commit_from_ref).times(4).returns(nil)
       Samson::Retry.expects(:sleep).times(3)
-      assert_raises Octokit::NotFound do
+      assert_raises RuntimeError do
         service.release(commit: commit, author: author)
       end
     end

@@ -27,8 +27,8 @@ class ReleaseService
   end
 
   def ensure_tag_in_git_repository(tag)
-    Samson::Retry.with_retries [Octokit::NotFound], 3, wait_time: 1 do
-      GITHUB.release_for_tag(@project.repository_path, tag)
+    Samson::Retry.until_result tries: 4, wait_time: 1, error: "Unable to find ref" do
+      @project.repository.commit_from_ref(tag)
     end
   end
 

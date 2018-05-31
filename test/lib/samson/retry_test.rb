@@ -64,4 +64,39 @@ describe Samson::Retry do
       calls.must_equal 1
     end
   end
+
+  describe ".until_result" do
+    it "returns result" do
+      calls = 0
+      Samson::Retry.until_result(tries: 3, wait_time: 1, error: "Ops") do
+        calls += 1
+        :x
+      end.must_equal :x
+      calls.must_equal 1
+    end
+
+    it "retries when result is not returned" do
+      results = [nil, nil, :x]
+      calls = 0
+      Samson::Retry.expects(:sleep).times(2)
+      Samson::Retry.until_result(tries: 3, wait_time: 1, error: "Ops") do
+        calls += 1
+        results.shift
+      end.must_equal :x
+      calls.must_equal 3
+    end
+
+    it "returns nil when it runs out of tries" do
+      results = [nil, nil, nil, :x]
+      calls = 0
+      Samson::Retry.expects(:sleep).times(2)
+      assert_raises RuntimeError do
+        Samson::Retry.until_result(tries: 3, wait_time: 1, error: "Ops") do
+          calls += 1
+          results.shift
+        end
+      end
+      calls.must_equal 3
+    end
+  end
 end
