@@ -86,10 +86,15 @@ module Kubernetes
     end
 
     def add_pod_disruption_budget
-      min_available = nil
-      raw_template.each do |t|
-        min_available ||= t.dig(:metadata, :annotations, :"samson/minAvailable")
-      end
+      min_available_path = [:metadata, :annotations, :"samson/minAvailable"]
+      match_labels_path = [:spec, :selector, :matchLabels]
+
+      return unless resource = (
+        raw_template.detect { |t| t.dig(*min_available_path) } ||
+        raw_template.detect { |t| t.dig(*match_labels_path) }
+      )
+
+      min_available = resource.dig(*min_available_path)
       return if min_available == "disabled"
 
       if !min_available && replica_target > 1
@@ -120,12 +125,12 @@ module Kubernetes
         kind: "PodDisruptionBudget",
         metadata: {
           name: kubernetes_role.resource_name,
-          namespace: raw_template.first.dig(:metadata, :namespace),
-          labels: raw_template.first.dig_fetch(:metadata, :labels).dup
+          namespace: resource.dig(:metadata, :namespace),
+          labels: resource.dig_fetch(:metadata, :labels).dup
         },
         spec: {
           minAvailable: target,
-          selector: {matchLabels: raw_template.first.dig_fetch(:spec, :selector, :matchLabels).dup}
+          selector: {matchLabels: resource.dig_fetch(:spec, :selector, :matchLabels).dup}
         }
       }
       budget[:delete] = true if target == 0

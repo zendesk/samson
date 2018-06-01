@@ -110,6 +110,16 @@ describe Kubernetes::ReleaseDoc do
           create!.resource_template[2][:spec][:minAvailable].must_equal 1
         end
 
+        it "adds when first is not a Deployment" do
+          template.unshift(kind: "ConfigMap", metadata: {})
+          create!.resource_template[3][:spec][:minAvailable].must_equal 1
+        end
+
+        it "ignores when there is no deployment" do
+          template.replace([{kind: "ConfigMap", metadata: {}}])
+          refute create!.resource_template[1]
+        end
+
         it "does not add for things that are not highly available anyway" do
           doc.replica_target = 1
           refute create!.resource_template[2]
