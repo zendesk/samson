@@ -335,7 +335,6 @@ describe Kubernetes::Role do
 
     {
       '10000000' => 10,
-      '10000000000m' => 10,
       '10000K' => 10,
       '10000Ki' => 10,
       '10M' => 10,
@@ -352,6 +351,11 @@ describe Kubernetes::Role do
 
     it "ignores unknown units" do
       assert config_content_yml.sub!('100M', '200T')
+      role.defaults.must_be_nil
+    end
+
+    it "ignores units that do not fit the metric" do
+      assert config_content_yml.sub!('100M', '200m')
       role.defaults.must_be_nil
     end
 
