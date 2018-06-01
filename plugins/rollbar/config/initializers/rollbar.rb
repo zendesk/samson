@@ -7,7 +7,7 @@ if token = ENV['ROLLBAR_ACCESS_TOKEN']
     if url = ENV['ROLLBAR_URL']
       config.endpoint = url + '/api/1/item/'
     end
-    if web_base = ENV['ROLLBAR_WEB_BASE']
+    if web_base = ENV['ROLLBAR_WEB_BASE'] || url
       config.web_base = web_base
     end
     config.use_thread # use threads for async notifications (waits for them at_exit)
