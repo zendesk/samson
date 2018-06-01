@@ -7,15 +7,18 @@ module Kubernetes
     # TL;DR:
     # You can express memory as a plain integer or as a fixed-point integer using one of these
     # suffixes: E, P, T, G, M, K. You can also use the power-of-two equivalents: Ei, Pi, Ti, Gi, Mi, Ki.
-    KUBE_RESOURCE_VALUES = {
+    KUBE_MEMORY_VALUES = {
       "" => 1,
-      'm' => 0.001,
       'K' => 1000,
       'Ki' => 1024,
       'M' => 1000**2,
       'Mi' => 1024**2,
       'G' => 1000**3,
       'Gi' => 1024**3
+    }.freeze
+    KUBE_CPU_VALUES = {
+      "" => 1,
+      'm' => 0.001
     }.freeze
 
     self.table_name = 'kubernetes_roles'
@@ -105,13 +108,13 @@ module Kubernetes
       end
 
       return unless limits = spec.dig(:containers, 0, :resources, :limits)
-      return unless limits_cpu = parse_resource_value(limits[:cpu])
-      return unless limits_memory = parse_resource_value(limits[:memory])
+      return unless limits_cpu = parse_resource_value(limits[:cpu], KUBE_CPU_VALUES)
+      return unless limits_memory = parse_resource_value(limits[:memory], KUBE_MEMORY_VALUES)
       limits_memory /= 1000**2 # we store megabyte
 
       if requests = spec.dig(:containers, 0, :resources, :requests)
-        requests_cpu = parse_resource_value(requests[:cpu])
-        if requests_memory = parse_resource_value(requests[:memory])
+        requests_cpu = parse_resource_value(requests[:cpu], KUBE_CPU_VALUES)
+        if requests_memory = parse_resource_value(requests[:memory], KUBE_MEMORY_VALUES)
           requests_memory /= 1000**2 # we store megabyte
         end
       end
@@ -140,9 +143,9 @@ module Kubernetes
       self.service_name = service_name.presence
     end
 
-    def parse_resource_value(v)
-      return unless v.to_s =~ /^(\d+(?:\.\d+)?)(#{KUBE_RESOURCE_VALUES.keys.join('|')})$/
-      $1.to_f * KUBE_RESOURCE_VALUES.fetch($2)
+    def parse_resource_value(v, possible)
+      return unless v.to_s =~ /^(\d+(?:\.\d+)?)(#{possible.keys.join('|')})$/
+      $1.to_f * possible.fetch($2)
     end
 
     def delete_kubernetes_deploy_group_roles
