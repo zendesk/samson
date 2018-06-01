@@ -45,7 +45,10 @@ describe 'Authentication Integration' do
       get "/", headers: {HTTP_AUTHORIZATION: authorization}
     end
 
-    let(:valid_header) { "Basic #{Base64.encode64(user.email + ':' + user.token).strip}" }
+    let(:valid_header) do
+      token = Doorkeeper::AccessToken.create!(resource_owner_id: user.id, scopes: 'default')
+      "Bearer #{token.token}"
+    end
 
     before { user.update_column(:last_seen_at, 1.minute.ago) }
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_05_28_222146) do
+ActiveRecord::Schema.define(version: 2018_06_01_222241) do
 
   create_table "audits" do |t|
     t.integer "auditable_id", null: false
@@ -552,7 +552,6 @@ ActiveRecord::Schema.define(version: 2018_05_28_222146) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer "role_id", default: 0, null: false
-    t.string "token"
     t.datetime "deleted_at"
     t.string "external_id"
     t.boolean "desktop_notify", default: false, null: false

@@ -10,7 +10,7 @@ class User < ActiveRecord::Base
 
   has_soft_deletion default_scope: true
 
-  audited except: [:last_seen_at, :last_login_at, :token]
+  audited except: [:last_seen_at, :last_login_at]
 
   has_many :commands
   has_many :stars
@@ -22,7 +22,6 @@ class User < ActiveRecord::Base
 
   validates :role_id, inclusion: {in: Role.all.map(&:id)}
 
-  before_create :set_token
   validates :time_format, inclusion: {in: TIME_FORMATS}
   validates :external_id,
     uniqueness: {scope: :deleted_at}, presence: true, unless: :integration?, if: :external_id_changed?
@@ -136,10 +135,6 @@ class User < ActiveRecord::Base
   end
 
   private
-
-  def set_token
-    self.token = SecureRandom.hex
-  end
 
   def destroy_user_project_roles
     user_project_roles.each(&:destroy)
