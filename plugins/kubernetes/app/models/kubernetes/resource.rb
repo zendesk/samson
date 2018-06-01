@@ -1,4 +1,6 @@
 # frozen_string_literal: true
+require 'samson/retry' # avoid race condition when using multiple threads to do kubeclient requests which use retry
+
 module Kubernetes
   # abstraction for interacting with kubernetes resources
   #
