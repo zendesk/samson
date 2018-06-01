@@ -27,7 +27,8 @@ class ReleaseService
   end
 
   def ensure_tag_in_git_repository(tag)
-    Samson::Retry.until_result tries: 4, wait_time: 1, error: "Unable to find ref" do
+    tries = Integer(ENV["RELEASE_TAG_IN_REPO_RETRIES"] || 4)
+    Samson::Retry.until_result tries: tries, wait_time: 1, error: "Unable to find ref" do
       @project.repository.commit_from_ref(tag)
     end
   end
