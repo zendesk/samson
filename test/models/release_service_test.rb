@@ -8,6 +8,15 @@ describe ReleaseService do
   let(:service) { ReleaseService.new(project) }
 
   describe "#release" do
+    def assert_failed_ref_find(count)
+      GITHUB.unstub(:release_for_tag)
+      project.repository.expects(:commit_from_ref).times(count).returns(nil)
+      Samson::Retry.expects(:sleep).times(count - 1)
+      assert_raises RuntimeError do
+        service.release(commit: commit, author: author)
+      end
+    end
+
     let(:author) { users(:deployer) }
     let(:commit) { "abcd" * 10 }
     let(:release_params_used) { [] }
@@ -38,11 +47,12 @@ describe ReleaseService do
     end
 
     it "stops when release cannot be found" do
-      GITHUB.unstub(:release_for_tag)
-      project.repository.expects(:commit_from_ref).times(4).returns(nil)
-      Samson::Retry.expects(:sleep).times(3)
-      assert_raises RuntimeError do
-        service.release(commit: commit, author: author)
+      assert_failed_ref_find 4
+    end
+
+    it "can configure numbers of retries" do
+      with_env RELEASE_TAG_IN_REPO_RETRIES: "10" do
+        assert_failed_ref_find 10
       end
     end
 
