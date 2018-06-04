@@ -199,6 +199,11 @@ end
 # https://github.com/airbrake/airbrake-ruby/issues/137
 Rails.application.config.filter_parameters.concat [:password, :value, :value_hashed, :token, :access_token]
 
+# Avoid starting up another background thread if we don't need it, see lib/samson/boot_check.rb
+if ["test", "development"].include?(Rails.env)
+  ActiveRecord::ConnectionAdapters::ConnectionPool::Reaper.define_method(:run) {}
+end
+
 require 'samson/hooks'
 
 require_relative "../lib/samson/logging"
