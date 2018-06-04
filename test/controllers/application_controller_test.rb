@@ -115,12 +115,6 @@ describe "ApplicationController Integration" do
       assert_response :success
     end
 
-    it 'can POST without authenticity_token when logging in via per request basic auth' do
-      auth = "Basic #{Base64.encode64(user.email + ':' + user.token).strip}"
-      post '/locks', params: post_params, headers: {'Authorization' => auth}
-      assert_response :success
-    end
-
     it 'does not authenticate twice' do
       ::Doorkeeper::OAuth::Token.expects(:authenticate).returns(token) # called inside of DoorkeeperStrategy
       post '/locks', params: post_params, headers: {'Authorization' => "Bearer #{token.token}"}

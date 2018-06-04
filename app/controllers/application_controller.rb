@@ -64,7 +64,6 @@ class ApplicationController < ActionController::Base
     warden.authenticate # trigger auth so we see which strategy won
 
     [
-      Warden::Strategies::BasicStrategy,
       Warden::Strategies::Doorkeeper
     ].include? warden.winning_strategy.class
   end

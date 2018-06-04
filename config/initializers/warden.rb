@@ -15,7 +15,6 @@ Warden::Manager.after_set_user do |user|
   user.update_column(:last_seen_at, Time.now) unless user.last_seen_at&.> 10.minutes.ago
 end
 
-require 'warden/strategies/basic_strategy'
 require "warden/strategies/doorkeeper_strategy"
 
 Rails.application.config.middleware.insert_after(ActionDispatch::Flash, Warden::Manager) do |manager|

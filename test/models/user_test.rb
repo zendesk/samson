@@ -96,10 +96,6 @@ describe User do
         user.persisted?.must_equal(true)
       end
 
-      it "sets the token" do
-        user.token.must_match(/[a-z0-9]+/)
-      end
-
       it "sets the role_id" do
         user.role_id.must_equal(Role::ADMIN.id)
       end
@@ -131,8 +127,7 @@ describe User do
         {
           name: "Test User",
           email: "test@example.org",
-          external_id: 9,
-          token: "abc123"
+          external_id: 9
         }
       end
 
@@ -140,7 +135,6 @@ describe User do
 
       it "does not update the user" do
         user.name.must_equal("Test")
-        user.token.wont_equal("abc123")
       end
 
       it "does update nil fields" do
@@ -489,12 +483,7 @@ describe User do
     end
 
     it "ignores unimportant changes" do
-      user.update_attributes!(updated_at: 1.second.from_now)
-      user.audits.size.must_equal 0
-    end
-
-    it "ignores sensitive changes" do
-      user.update_attributes!(token: 'secret')
+      user.update_attributes!(updated_at: 1.second.from_now, last_login_at: Time.now)
       user.audits.size.must_equal 0
     end
 
