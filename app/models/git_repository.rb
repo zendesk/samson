@@ -87,6 +87,10 @@ class GitRepository
     capture_stdout "git", "show", "#{sha}:#{file}"
   end
 
+  def update_mirror
+    exclusive { (mirrored? ? update! : clone!) }
+  end
+
   private
 
   attr_reader :repository_url, :repository_directory
@@ -94,7 +98,7 @@ class GitRepository
   # @returns [true, false]
   def ensure_mirror_current
     return @mirror_current unless @mirror_current.nil?
-    @mirror_current = exclusive { (mirrored? ? update! : clone!) }
+    @mirror_current = update_mirror
   end
 
   # makes sure that only 1 repository is doing mirror/clone at any given time
