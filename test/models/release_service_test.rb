@@ -24,6 +24,7 @@ describe ReleaseService do
     before do
       GITHUB.stubs(:create_release).capture(release_params_used)
       project.repository.stubs(:commit_from_ref).returns("abc")
+      project.repository.stubs(:commit_from_ref).returns("abc")
       GitRepository.any_instance.expects(:fuzzy_tag_from_ref).returns(nil)
     end
 

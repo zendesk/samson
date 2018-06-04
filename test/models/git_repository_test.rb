@@ -95,6 +95,7 @@ describe GitRepository do
       public = file.split(/^  private$/).first
       methods = public.scan(/^  def ([a-z_\?\!]+)(.*?)^  end/m)
       methods.size.must_be :>, 5 # making sure the logic is sound
+      methods.delete_if { |method, _| method == "update_mirror" }
       methods.each do |name, body|
         next if ["initialize", "repo_cache_dir", "clean!", "valid_url?"].include?(name)
         body.must_include "ensure_mirror_current", "Expected #{name} to update the repo with ensure_mirror_current"
