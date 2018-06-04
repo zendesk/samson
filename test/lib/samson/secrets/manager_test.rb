@@ -158,6 +158,16 @@ describe Samson::Secrets::Manager do
     end
   end
 
+  describe ".rename_project" do
+    it "copies secrets and tells user how many were copied" do
+      create_secret "global/bar/global/bar" # create a bogus secret to make sure we filter
+      secret # trigger creation
+      Samson::Secrets::Manager.rename_project("foo", "baz").must_equal 1
+      assert Samson::Secrets::Manager.read('production/foo/pod2/hello')
+      assert Samson::Secrets::Manager.read('production/baz/pod2/hello')
+    end
+  end
+
   describe ".exist?" do
     it "is true when when it exists" do
       Samson::Secrets::Manager.exist?(secret.id).must_equal true
