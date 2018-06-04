@@ -3,7 +3,6 @@ class Changeset::PullRequest
   # Common patterns
   CODE_ONLY = "[A-Z][A-Z\\d]+-\\d+" # e.g., S4MS0N-123, SAM-456
   PUNCT = "\\s|\\p{Punct}|~|="
-  HTML_TAGS = /<\/?[^>]*>/
 
   WEBHOOK_FILTER = /(^|\s)\[samson review\]($|\s)/i
 
@@ -131,7 +130,8 @@ class Changeset::PullRequest
   private
 
   def parse_risks(body)
-    body.to_s.split(RISKS_SECTION, 2)[1].to_s.strip.gsub(HTML_TAGS, '').strip.split(SECTION_HEADING).first.to_s.strip.presence
+    body_stripped = ActionController::Base.helpers.strip_tags(body)
+    body_stripped.to_s.split(RISKS_SECTION, 2)[1].to_s.strip.split(SECTION_HEADING).first.to_s.strip.presence
   end
 
   def parse_jira_issues
