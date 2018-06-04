@@ -35,7 +35,7 @@ describe Samson::BootCheck do
 
       it "fails when something is busy" do
         ActiveRecord::Base.connection_pool.expects(:stat).times(10).returns(busy: 1)
-        Samson::BootCheck.expects(:sleep).times(9)
+        Samson::Retry.expects(:sleep).times(9)
         e = assert_raises(RuntimeError) { Samson::BootCheck.check }
         e.message.must_include "Do not use AR on the main thread"
       end
