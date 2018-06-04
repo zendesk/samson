@@ -418,6 +418,15 @@ describe Changeset::PullRequest do
       pr.risks.must_equal "- Planes"
     end
 
+    it "finds risks and skips html tags" do
+      body.replace(+<<~BODY)
+        ## Risks ##
+          <!-- This is a temporary risk -->
+          - Planes
+      BODY
+      pr.risks.must_equal "- Planes"
+    end
+
     it "ends the risks section if there are subsequent sections" do
       body.replace(+<<~BODY)
         # Risks
