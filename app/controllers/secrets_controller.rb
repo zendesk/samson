@@ -5,7 +5,7 @@ class SecretsController < ApplicationController
 
   include CurrentProject
 
-  before_action :find_project_permalinks
+  before_action :find_writable_project_permalinks, only: [:new, :create, :show, :update]
   before_action :find_secret, only: [:update, :show]
 
   before_action :normalize_params_for_backend, only: [:update, :create, :new]
@@ -17,6 +17,7 @@ class SecretsController < ApplicationController
     end
 
     @keys = @secrets.map { |_, parts, _| parts.fetch(:key) }.uniq.sort
+    @project_permalinks = @secrets.map { |_, parts, _| parts.fetch(:project_permalink) }.uniq.sort
 
     Samson::Secrets::Manager::ID_PARTS.each do |part|
       if value = params.dig(:search, part).presence
@@ -145,8 +146,8 @@ class SecretsController < ApplicationController
     @secret[:value] = nil unless @secret.fetch(:visible)
   end
 
-  def find_project_permalinks
-    @project_permalinks = Samson::Secrets::Manager.allowed_project_prefixes(current_user)
+  def find_writable_project_permalinks
+    @writable_project_permalinks = Samson::Secrets::Manager.allowed_project_prefixes(current_user)
   end
 
   def require_project
