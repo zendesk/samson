@@ -92,15 +92,13 @@ module Kubernetes
     end
 
     def set_project_labels
-      project_label = project.permalink
-      template.dig_set([:metadata, :labels, :project], project_label)
-
-      kind = template.fetch(:kind)
-      if kind == "Service"
-        template.dig_set([:spec, :selector, :project], project_label)
-      elsif kind != "Pod"
-        template.dig_set([:spec, :selector, :matchLabels, :project], project_label)
-        template.dig_set([:spec, :template, :metadata, :labels, :project], project_label)
+      [
+        [:metadata, :labels],
+        [:spec, :selector],
+        [:spec, :selector, :matchLabels],
+        [:spec, :template, :metadata, :labels]
+      ].each do |path|
+        template.dig(*path)[:project] = project.permalink if template.dig(*path, :project)
       end
     end
 
