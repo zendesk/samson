@@ -5,8 +5,6 @@ cache:
     - tmp/rubocop_cache
     - node_modules
 sudo: false
-services:
-  - memcached
 branches:
   only: master
 env:
