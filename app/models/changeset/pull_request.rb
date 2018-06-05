@@ -130,7 +130,8 @@ class Changeset::PullRequest
   private
 
   def parse_risks(body)
-    body.to_s.split(RISKS_SECTION, 2)[1].to_s.strip.split(SECTION_HEADING).first.to_s.strip.presence
+    body_stripped = ActionController::Base.helpers.strip_tags(body)
+    body_stripped.to_s.split(RISKS_SECTION, 2)[1].to_s.strip.split(SECTION_HEADING).first.to_s.strip.presence
   end
 
   def parse_jira_issues
