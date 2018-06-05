@@ -145,13 +145,14 @@ describe Kubernetes::TemplateFiller do
 
       it "overrides project label in pod" do
         raw_template.replace(raw_template.dig(:spec, :template).merge(raw_template.slice(:metadata)))
-        raw_template[:kind] = "Pod"
+        raw_template[:spec].delete(:template)
+        raw_template[:spec].delete(:selector)
         labels.must_equal ["foo", nil, nil, nil]
       end
 
       it "overrides project label in service" do
-        raw_template[:kind] = "Service"
-        labels.must_equal ["foo", "foo", "some-project", "some-project"]
+        raw_template[:spec][:selector][:project] = "bar"
+        labels.must_equal ["foo", "foo", "foo", "foo"]
       end
     end
 

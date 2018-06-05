@@ -126,7 +126,8 @@ module Kubernetes
         metadata: {
           name: kubernetes_role.resource_name,
           namespace: resource.dig(:metadata, :namespace),
-          labels: resource.dig_fetch(:metadata, :labels).dup
+          labels: resource.dig_fetch(:metadata, :labels).dup,
+          annotations: (resource.dig(:metadata, :annotations) || {}).dup
         },
         spec: {
           minAvailable: target,

@@ -139,6 +139,13 @@ describe Kubernetes::ReleaseDoc do
         create!.resource_template[2][:metadata][:namespace].must_equal 'default'
       end
 
+      it "supports multiproject" do
+        metadata = template.dig(0, :metadata)
+        metadata[:annotations] = {"samson/minAvailable": '30%', "samson/override_project_label": "true"}
+        metadata[:labels][:project] = 'change-me'
+        create!.resource_template[2][:metadata][:labels][:project].must_equal 'foo'
+      end
+
       it "deletes when set to 0" do
         template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '0'}
         create!.resource_template[2][:delete].must_equal true
