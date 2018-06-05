@@ -70,7 +70,7 @@ module DeploysHelper
         toggle: 'tooltip',
         placement: 'auto bottom'
       }
-      html_options[:title] = 'Why? This deploy succeeded.'
+      html_options[:title] = 'Previous deploy succeeded.'
     else
       html_options[:class] = 'btn btn-danger'
     end
