@@ -80,15 +80,24 @@
     // add selectpicker to copied and original rows
     $.each(rows, function(idx, $row) {
       $row.find(".selectpicker").selectpicker();
-      setupEnvGroupPreview($row);
     });
+
+    return rows;
   }
 
   $(document).on("click", ".duplicate_previous_row", function(e){
     e.preventDefault();
     var $row = $(this).prev();
-    withoutSelectpicker($row, function(){
+    var rows = withoutSelectpicker($row, function(){
       return [copyRow($row)];
+    });
+
+    // Row duplication logic is reused in several places so only
+    // setup the preview link for the right target.
+    $.each(rows, function(idx, $row) {
+      if ($row.hasClass("env_group_inputs")) {
+        setupEnvGroupPreview($row);
+      }
     });
   });
 
