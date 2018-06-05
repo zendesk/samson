@@ -74,6 +74,7 @@ describe RestartSignalHandler do
       silence_thread_exceptions do
         assert_raises(RuntimeError) { handle }.message.must_equal "Whoops"
       end
+      maxitest_wait_for_extra_threads # lets signal thread finish
     end
 
     it 'performs a hard restart if puma takes too long to call exec' do
