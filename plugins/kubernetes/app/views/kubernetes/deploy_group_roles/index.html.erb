@@ -36,7 +36,7 @@
           <% unless @project %>
             <td><%= link_to deploy_group_role.project.name, deploy_group_role.project %></td>
           <% end %>
-          <td><%= DeployGroup.with_deleted { link_to deploy_group_role.deploy_group.name, deploy_group_role.deploy_group } %></td>
+          <td><%= link_to deploy_group_role.deploy_group.name, deploy_group_role.deploy_group %></td>
           <td><%= link_to deploy_group_role.kubernetes_role.name, [deploy_group_role.project, deploy_group_role.kubernetes_role] %></td>
           <td><%= deploy_group_role.requests_cpu %> to <%= deploy_group_role.limits_cpu %></td>
           <td><%= deploy_group_role.requests_memory %> to <%= deploy_group_role.limits_memory %></td>

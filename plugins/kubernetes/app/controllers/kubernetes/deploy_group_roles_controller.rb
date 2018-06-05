@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 class Kubernetes::DeployGroupRolesController < ApplicationController
   before_action :find_role, only: [:show, :edit, :update, :destroy]
-  before_action :find_roles, only: [:edit_many, :update_many]
+  before_action :find_roles, only: [:index, :edit_many, :update_many]
   before_action :find_stage, only: [:seed]
   before_action :authorize_project_admin!, except: [:index, :show, :new]
 
@@ -22,27 +22,6 @@ class Kubernetes::DeployGroupRolesController < ApplicationController
   end
 
   def index
-    if params[:project_id]
-      find_roles
-    else
-      @deploy_group_roles = ::Kubernetes::DeployGroupRole
-      [:project_id, :deploy_group_id].each do |scope|
-        if id = params.dig(:search, scope).presence
-          @deploy_group_roles = @deploy_group_roles.where(scope => id)
-        end
-      end
-    end
-
-    [:project_id, :deploy_group_id].each do |scope|
-      if id = params.dig(:search, scope).presence
-        @deploy_group_roles = @deploy_group_roles.where(scope => id)
-      end
-    end
-
-    @deploy_group_roles = @deploy_group_roles.
-      joins(:project, :kubernetes_role).
-      order('projects.name, kubernetes_roles.name')
-
     respond_to do |format|
       format.html
       format.json { render json: {deploy_group_roles: @deploy_group_roles} }
@@ -118,7 +97,23 @@ class Kubernetes::DeployGroupRolesController < ApplicationController
   private
 
   def find_roles
-    @deploy_group_roles = current_project.kubernetes_deploy_group_roles
+    # treat project/foo/roles the same as a search
+    if params[:project_id]
+      params[:search] ||= {}
+      params[:search][:project_id] = current_project.id
+    end
+
+    deploy_group_roles = ::Kubernetes::DeployGroupRole.where(nil)
+    [:project_id, :deploy_group_id].each do |scope|
+      if id = params.dig(:search, scope).presence
+        deploy_group_roles = deploy_group_roles.where(scope => id)
+      end
+    end
+
+    @deploy_group_roles = DeployGroup.with_deleted do
+      deploy_group_roles.
+        sort_by { |dgr| [dgr.project.name, dgr.kubernetes_role.name, dgr.deploy_group&.natural_order].compact }
+    end
   end
 
   def verification_template
