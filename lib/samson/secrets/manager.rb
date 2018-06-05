@@ -39,6 +39,12 @@ module Samson
 
         # useful for console sessions
         def move(from, to)
+          copy(from, to)
+          delete(from)
+        end
+
+        # useful for console sessions
+        def copy(from, to)
           raise "#{to} already exists" if exist?(to)
 
           old = read(from, include_value: true)
@@ -48,8 +54,18 @@ module Samson
 
           old[:user_id] = old.delete(:updater_id)
           write(to, old)
+        end
 
-          delete(from)
+        # useful for console sessions
+        # copies secrets over to new project, needs cleanup of old secrets once project is deployed everywhere
+        # since otherwise in the meantime existing deploys would be unable to restart due to missing secrets
+        def rename_project(from_project, to_project)
+          id_parts = ids.map { |id| parse_id(id) }
+          id_parts.select! { |parts| parts.fetch(:project_permalink) == from_project }
+          id_parts.each do |parts|
+            copy(generate_id(parts), generate_id(parts.merge(project_permalink: to_project)))
+          end
+          id_parts.size
         end
 
         def exist?(id)
