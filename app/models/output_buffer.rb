@@ -104,7 +104,7 @@ class OutputBuffer
     @line_finished = lines.last.end_with?($/)
     stamped << lines.shift if append
     lines.each do |line|
-      stamped << "[#{Time.now.utc.strftime("%T")}] #{line}"
+      stamped << "#{Samson::OutputUtils.timestamp} #{line}"
     end
     stamped
   end

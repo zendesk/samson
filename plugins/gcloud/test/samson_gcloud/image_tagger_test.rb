@@ -37,6 +37,13 @@ describe SamsonGcloud::ImageTagger do
       deploy.job.output.must_include "\nOUT\nSUCCESS"
     end
 
+    it 'includes timestamp' do
+      freeze_time
+      assert_tagged_with 'stage-staging'
+      tag
+      deploy.job.output.must_include "[04:05:06] Tagging GCR image:\n"
+    end
+
     it 'does not tag with invalid stage permalink' do
       deploy.stage.update_column(:permalink, '%$!')
       tag
