@@ -29,6 +29,7 @@ module Kubernetes
       verify_pod_disruption_budget
       verify_numeric_limits
       verify_project_and_role_consistent
+      verify_not_matching_team
       verify_stateful_set_service_consistent
       verify_stateful_set_restart_policy
       verify_annotations || verify_prerequisites
@@ -80,14 +81,6 @@ module Kubernetes
       supported = SUPPORTED_KINDS.map { |c| c.join(' + ') }.join(', ')
       @errors << "Unsupported combination of kinds: #{kinds.join(' + ')}" \
         ", supported combinations are: #{supported} and #{IGNORED.join(", ")}"
-    end
-
-    # [1,2,3,1,4] -> [2,3,4,1]
-    def uniq_element!(array, element)
-      if array.count(element) > 1
-        array.delete(element)
-        array << element
-      end
     end
 
     # spec actually allows this, but blows up when used
@@ -156,6 +149,14 @@ module Kubernetes
       @errors << "Project and role labels must be consistent across resources"
     end
 
+    def verify_not_matching_team
+      @elements.each do |element|
+        if element.dig(:spec, :selector, :team) || element.dig(:spec, :selector, :matchLabels, :team)
+          @errors << "Team names change, do not select or match on them"
+        end
+      end
+    end
+
     def verify_stateful_set_service_consistent
       return unless service = @elements.detect { |t| t[:kind] == "Service" }
       return unless set = find_stateful_set
@@ -168,10 +169,6 @@ module Kubernetes
       return if set.dig(:spec, :updateStrategy)
       @errors << "StatefulSet spec.updateStrategy must be set. " \
         "OnDelete will be supported soon but is brittle/rough, prefer RollingUpdate on kubernetes 1.7+."
-    end
-
-    def find_stateful_set
-      @elements.detect { |t| t[:kind] == "StatefulSet" }
     end
 
     def verify_containers
@@ -247,6 +244,18 @@ module Kubernetes
     end
 
     # helpers below
+
+    # [1,2,3,1,4] -> [2,3,4,1]
+    def uniq_element!(array, element)
+      if array.count(element) > 1
+        array.delete(element)
+        array << element
+      end
+    end
+
+    def find_stateful_set
+      @elements.detect { |t| t[:kind] == "StatefulSet" }
+    end
 
     def jobs
       @elements.select { |e| RoleConfigFile::JOB_KINDS.include?(e[:kind]) }

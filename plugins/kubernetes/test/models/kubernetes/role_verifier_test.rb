@@ -343,6 +343,18 @@ describe Kubernetes::RoleVerifier do
         errors.must_equal ["Only volume host paths /data/, /foo/bar/ are allowed, not /foo/."]
       end
     end
+
+    describe "#verify_not_matching_team" do
+      it "reports bad selector" do
+        role.last[:spec][:selector][:team] = 'foo'
+        errors.must_equal ["Team names change, do not select or match on them"]
+      end
+
+      it "reports bad matchLabels" do
+        role.first[:spec][:selector][:matchLabels][:team] = 'foo'
+        errors.must_equal ["Team names change, do not select or match on them"]
+      end
+    end
   end
 
   describe '.map_attributes' do
