@@ -128,8 +128,11 @@ module Samson
     config.samson.ldap.bind_dn = ENV["LDAP_BINDDN"].presence
     config.samson.ldap.password = ENV["LDAP_PASSWORD"].presence
 
+    # Configuration for Gitlab
     config.samson.gitlab = ActiveSupport::OrderedOptions.new
-    config.samson.gitlab.web_url = deprecated_url.call("GITLAB_URL") || 'https://gitlab.com'
+    config.samson.gitlab.web_url = ENV["GITLAB_WEB_URL"] || 'https://gitlab.com'
+    config.samson.gitlab.api_url = ENV["GITLAB_API_URL"] ||  config.samson.gitlab.web_url + '/api/v4'
+    config.samson.gitlab.status_url = ENV["GITLAB_STATUS_URL"] || 'https://status.gitlab.com'
 
     config.samson.auth = ActiveSupport::OrderedOptions.new
     config.samson.auth.github = Samson::EnvCheck.set?("AUTH_GITHUB")

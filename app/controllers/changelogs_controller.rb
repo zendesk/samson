@@ -14,7 +14,8 @@ class ChangelogsController < ApplicationController
     @changeset = Changeset.new(
       current_project.repository_path,
       "#{@branch}@{#{@start_date}}",
-      "#{@branch}@{#{@end_date}}"
+      "#{@branch}@{#{@end_date}}",
+      current_project.github?
     )
   end
 end
