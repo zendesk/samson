@@ -48,9 +48,12 @@ module SamsonGcloud
           "gcloud", "container", "images", "add-tag", digest, "#{base}:#{tag}", "--quiet", *SamsonGcloud.cli_options
         ]
         success, output = Samson::CommandExecutor.execute(*command, timeout: 10, whitelist_env: ["PATH"])
-        deploy.job.append_output!(
-          "Tagging GCR image:\n#{command.join(" ")}\n#{output.strip}\n#{success ? "SUCCESS" : "FAILED"}\n"
-        )
+        deploy.job.append_output!(<<~TEXT)
+          #{Samson::OutputUtils.timestamp} Tagging GCR image:
+          #{command.join(" ")}
+          #{output.strip}
+          #{success ? "SUCCESS" : "FAILED"}
+        TEXT
       end
     end
   end
