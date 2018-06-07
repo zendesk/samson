@@ -20,5 +20,17 @@ module RollbarDashboards
         }
       )
     end
+
+    def item_link(item_title, item_id, dashboard_setting)
+      if account_and_project_name = dashboard_setting.account_and_project_name
+        # Removes path and handles https://api.rollbar.com cases
+        domain = URI.join(dashboard_setting.base_url, '/').to_s.sub('://api.', '://')
+
+        item_url = "#{domain}#{account_and_project_name}/items/#{item_id}"
+        link_to item_title, item_url
+      else
+        item_title
+      end
+    end
   end
 end

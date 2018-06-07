@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_06_01_222241) do
+ActiveRecord::Schema.define(version: 2018_06_07_172824) do
 
   create_table "audits" do |t|
     t.integer "auditable_id", null: false
@@ -407,6 +407,7 @@ ActiveRecord::Schema.define(version: 2018_06_01_222241) do
     t.bigint "project_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "account_and_project_name"
     t.index ["project_id"], name: "index_rollbar_dashboards_settings_on_project_id"
   end
 

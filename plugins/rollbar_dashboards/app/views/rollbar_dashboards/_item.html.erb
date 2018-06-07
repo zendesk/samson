@@ -1,5 +1,5 @@
 <tr>
   <td><span class="badge"><%= item[:occurrences] %></span></td>
-  <td><%= item[:title] %></td>
+  <td><%= item_link(item[:title], item[:counter], dashboard_setting) %></td>
   <td><%= item[:environment] %></td>
 </tr>

@@ -23,4 +23,27 @@ describe RollbarDashboards::DashboardsHelper do
       HTML
     end
   end
+
+  describe '#item_link' do
+    def setting(stubs = {account_and_project_name: 'Account/Cool-Project', base_url: 'https://rollbar-us.com/api/1'})
+      @setting ||= mock(stubs)
+    end
+
+    it 'generates item link' do
+      item_link('title', '123', setting).must_equal <<~HTML.delete("\n")
+        <a href="https://rollbar-us.com/Account/Cool-Project/items/123">title</a>
+      HTML
+    end
+
+    it 'returns item title if account_and_project_name is nil' do
+      item_link('title', '123', setting(account_and_project_name: nil)).must_equal 'title'
+    end
+
+    it 'handles api subdomain' do
+      setting(account_and_project_name: 'Account/Cool-Project', base_url: 'https://api.rollbar.com')
+      item_link('title', '123', setting).must_equal <<~HTML.delete("\n")
+        <a href="https://rollbar.com/Account/Cool-Project/items/123">title</a>
+      HTML
+    end
+  end
 end
