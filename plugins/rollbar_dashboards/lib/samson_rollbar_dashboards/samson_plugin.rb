@@ -16,6 +16,7 @@ module SamsonRollbarDashboards
         :id,
         :base_url,
         :read_token,
+        :account_and_project_name,
         :_destroy
       ]
     }

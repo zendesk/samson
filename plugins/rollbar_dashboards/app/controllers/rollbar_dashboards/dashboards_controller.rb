@@ -60,7 +60,7 @@ class RollbarDashboards::DashboardsController < ApplicationController
 
     <<~RQL.squish
       SELECT timestamp DIV 86400 as t,
-             item.counter as item_id,
+             item.counter as counter,
              item.title as title,
              Count(*) as occurrences,
              item.environment as environment

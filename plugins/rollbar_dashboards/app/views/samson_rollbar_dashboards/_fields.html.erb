@@ -6,9 +6,10 @@
 
   <%
      description = <<~HTML.html_safe
-      <b>Base URL:</b> https://api.rollbar.com/api/1 unless you're using a self-hosted instance of Rollbar.<br>
-      <b>Access token:</b> Your Rollbar project's <b>read</b> token, supports secret lookup (e.g. secret://rollbar_read_token)
-      <br/>
+      <b>Base URL:</b> https://api.rollbar.com/api/1 unless you're using a self-hosted instance of Rollbar<br/>
+      <b>Access token:</b> Your Rollbar project's <b>read</b> token, supports secret lookup (e.g. secret://rollbar_read_token)<br/>
+      <b>Account and Project Name:</b> Your Rollbar project's organization and project forward slash separated
+      (e.g. account name/project name). Add to enable links to Rollbar items in dashboards<br/>
      HTML
   %>
 
@@ -18,6 +19,12 @@
     </div>
     <div class="col-lg-3">
       <%= setting.text_field :read_token, class: "form-control", placeholder: "Project Read Token" %>
+    </div>
+    <div class="col-lg-3">
+      <%= setting.text_field :account_and_project_name,
+            class: "form-control",
+            placeholder: "{Account Name}/{Project Name}"
+      %>
     </div>
   <% end %>
 </fieldset>

@@ -11,7 +11,7 @@
         <th>Title</th>
         <th>Environment</th>
       </tr>
-      <%= render partial: 'rollbar_dashboards/item', collection: items %>
+      <%= render partial: 'rollbar_dashboards/item', collection: items, locals: {dashboard_setting: dashboard_data.first} %>
     </table>
   <% else %>
     <div class="panel-body">
