@@ -25,7 +25,7 @@ module Kubernetes
         raise Samson::Hooks::UserError, "Error found when parsing #{path}\n#{$!.message}"
       end
 
-      if errors = Kubernetes::RoleVerifier.new(@elements).verify
+      if errors = Kubernetes::RoleValidator.new(@elements).validate
         raise Samson::Hooks::UserError, "Error found when parsing #{path}\n#{errors.join("\n")}"
       end
     end

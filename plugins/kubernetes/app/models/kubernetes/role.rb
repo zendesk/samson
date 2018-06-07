@@ -37,14 +37,14 @@ module Kubernetes
     before_validation :strip_config_file
 
     validates :project, presence: true
-    validates :name, presence: true, format: Kubernetes::RoleVerifier::VALID_LABEL
+    validates :name, presence: true, format: Kubernetes::RoleValidator::VALID_LABEL
     validates :service_name,
       uniqueness: {scope: :deleted_at, allow_nil: true},
-      format: Kubernetes::RoleVerifier::VALID_LABEL,
+      format: Kubernetes::RoleValidator::VALID_LABEL,
       allow_nil: true
     validates :resource_name,
       uniqueness: {scope: :deleted_at, allow_nil: true},
-      format: Kubernetes::RoleVerifier::VALID_LABEL
+      format: Kubernetes::RoleValidator::VALID_LABEL
 
     scope :not_deleted, -> { where(deleted_at: nil) }
 

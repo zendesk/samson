@@ -433,7 +433,7 @@ module Kubernetes
           raise Samson::Hooks::UserError, "Error parsing #{role.config_file}" unless config
           config.elements
         end.compact
-        Kubernetes::RoleVerifier.verify_groups(element_groups)
+        Kubernetes::RoleValidator.validate_groups(element_groups)
       end
 
       # make sure each template is valid

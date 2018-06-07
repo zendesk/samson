@@ -14,7 +14,7 @@ describe Kubernetes::RoleVerificationsController do
 
     describe '#create' do
       it "succeeds when valid" do
-        Kubernetes::RoleVerifier.any_instance.expects(:verify).returns nil
+        Kubernetes::RoleValidator.any_instance.expects(:validate).returns nil
         post :create, params: {role: {}.to_json}
         assert flash.now[:notice], assigns[:errors]
         assert_template :new

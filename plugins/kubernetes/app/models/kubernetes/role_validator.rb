@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 module Kubernetes
-  class RoleVerifier
+  class RoleValidator
     VALID_LABEL = /\A[a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?\z/ # also used in js ... cannot use /i
     IGNORED = ['ConfigMap', 'HorizontalPodAutoscaler', 'PodDisruptionBudget'].freeze
     SUPPORTED_KINDS = [
@@ -16,29 +16,29 @@ module Kubernetes
       @elements = elements.compact
     end
 
-    def verify
+    def validate
       @errors = []
       return ["No content found"] if @elements.blank?
       return ["Only hashes supported"] unless @elements.all? { |e| e.is_a?(Hash) }
-      verify_name
-      verify_namespace
-      verify_kinds
-      verify_containers
-      verify_container_name
-      verify_job_restart_policy
-      verify_pod_disruption_budget
-      verify_numeric_limits
-      verify_project_and_role_consistent
-      verify_not_matching_team
-      verify_stateful_set_service_consistent
-      verify_stateful_set_restart_policy
-      verify_annotations || verify_prerequisites
-      verify_env_values
-      verify_host_volume_paths
+      validate_name
+      validate_namespace
+      validate_kinds
+      validate_containers
+      validate_container_name
+      validate_job_restart_policy
+      validate_pod_disruption_budget
+      validate_numeric_limits
+      validate_project_and_role_consistent
+      validate_not_matching_team
+      validate_stateful_set_service_consistent
+      validate_stateful_set_restart_policy
+      validate_annotations || validate_prerequisites
+      validate_env_values
+      validate_host_volume_paths
       @errors.presence
     end
 
-    def self.verify_groups(element_groups)
+    def self.validate_groups(element_groups)
       elements = element_groups.flatten(1)
       return if elements.empty?
       return if elements.any? { |r| r.dig(:metadata, :annotations, :"samson/multi_project") }
@@ -63,15 +63,15 @@ module Kubernetes
 
     private
 
-    def verify_name
+    def validate_name
       @errors << "Needs a metadata.name" unless map_attributes([:metadata, :name]).all?
     end
 
-    def verify_namespace
+    def validate_namespace
       @errors << "Namespaces need to be unique" if map_attributes([:metadata, :namespace]).uniq.size != 1
     end
 
-    def verify_kinds
+    def validate_kinds
       kinds = map_attributes([:kind])
       IGNORED.each { |k| kinds.delete k }
       uniq_element!(kinds, 'Service') # ignore multiple services
@@ -84,7 +84,7 @@ module Kubernetes
     end
 
     # spec actually allows this, but blows up when used
-    def verify_numeric_limits
+    def validate_numeric_limits
       [:requests, :limits].each do |scope|
         base = [:spec, :template, :spec, :containers, :resources, scope, :cpu]
         types = map_attributes(base).flatten(1).map(&:class)
@@ -93,7 +93,7 @@ module Kubernetes
       end
     end
 
-    def verify_project_and_role_consistent
+    def validate_project_and_role_consistent
       labels = @elements.flat_map do |resource|
         kind = resource[:kind]
 
@@ -149,7 +149,7 @@ module Kubernetes
       @errors << "Project and role labels must be consistent across resources"
     end
 
-    def verify_not_matching_team
+    def validate_not_matching_team
       @elements.each do |element|
         if element.dig(:spec, :selector, :team) || element.dig(:spec, :selector, :matchLabels, :team)
           @errors << "Team names change, do not select or match on them"
@@ -157,21 +157,21 @@ module Kubernetes
       end
     end
 
-    def verify_stateful_set_service_consistent
+    def validate_stateful_set_service_consistent
       return unless service = @elements.detect { |t| t[:kind] == "Service" }
       return unless set = find_stateful_set
       return if set.dig(:spec, :serviceName) == service.dig(:metadata, :name)
       @errors << "Service metadata.name and StatefulSet spec.serviceName must be consistent"
     end
 
-    def verify_stateful_set_restart_policy
+    def validate_stateful_set_restart_policy
       return unless set = find_stateful_set
       return if set.dig(:spec, :updateStrategy)
       @errors << "StatefulSet spec.updateStrategy must be set. " \
         "OnDelete will be supported soon but is brittle/rough, prefer RollingUpdate on kubernetes 1.7+."
     end
 
-    def verify_containers
+    def validate_containers
       primary_kinds = RoleConfigFile::PRIMARY_KINDS
       containered = templates.select { |t| primary_kinds.include?(t[:kind]) }
       containers = map_attributes([:spec, :containers], elements: containered)
@@ -179,7 +179,7 @@ module Kubernetes
       @errors << "#{primary_kinds.join("/")} need at least 1 container"
     end
 
-    def verify_container_name
+    def validate_container_name
       names = map_attributes([:spec, :containers], elements: templates).compact.flatten(1).map { |c| c[:name] }
       if names.any?(&:nil?)
         @errors << "Containers need a name"
@@ -188,7 +188,7 @@ module Kubernetes
       end
     end
 
-    def verify_job_restart_policy
+    def validate_job_restart_policy
       allowed = ['Never', 'OnFailure']
       path = [:spec, :template, :spec, :restartPolicy]
       names = map_attributes(path, elements: jobs)
@@ -196,7 +196,7 @@ module Kubernetes
       @errors << "Job #{path.join('.')} must be one of #{allowed.join('/')}"
     end
 
-    def verify_pod_disruption_budget
+    def validate_pod_disruption_budget
       return unless budget = @elements.detect { |e| e[:kind] == "PodDisruptionBudget" }
       return unless min = budget.dig(:spec, :minAvailable)
       @elements.each do |e|
@@ -206,7 +206,7 @@ module Kubernetes
       end
     end
 
-    def verify_annotations
+    def validate_annotations
       path = [:metadata, :annotations]
       annotations = (map_attributes(path, elements: templates) + map_attributes(path)).compact
       if annotations.any? { |a| !a.is_a?(Hash) }
@@ -218,14 +218,14 @@ module Kubernetes
       end
     end
 
-    def verify_env_values
+    def validate_env_values
       path = [:spec, :containers, :env, :value]
       values = map_attributes(path, elements: templates).flatten(1).compact
       bad = values.reject { |x| x.is_a?(String) }
       @errors << "Env values #{bad.join(', ')} must be strings." if bad.any?
     end
 
-    def verify_prerequisites
+    def validate_prerequisites
       allowed = ["Job", "Pod"]
       bad = templates.any? do |t|
         t.dig(*RoleConfigFile::PREREQUISITE) && !allowed.include?(t[:kind])
@@ -234,7 +234,7 @@ module Kubernetes
     end
 
     # comparing all directories with trailing / so we can use simple matching logic
-    def verify_host_volume_paths
+    def validate_host_volume_paths
       return unless allowed = ENV['KUBERNETES_ALLOWED_VOLUME_HOST_PATHS'].presence
       allowed = allowed.split(",").map { |d| File.join(d, '') }
       used = map_attributes([:spec, :volumes, :hostPath, :path], elements: templates).

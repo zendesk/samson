@@ -7,7 +7,7 @@
     <%= form.input :config_file %>
     <%= form.input :service_name %>
     <%= form.input :resource_name,
-          pattern: Kubernetes::RoleVerifier::VALID_LABEL,
+          pattern: Kubernetes::RoleValidator::VALID_LABEL,
           help: "Name for the resource this role will create (service/job), a-Z 0-9 and -"
     %>
     <%= form.input :autoscaled, label: "Replicas managed externally", as: :check_box, help: "Deploying will not change replicas count. Use this when autoscaling deployments." %>

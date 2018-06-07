@@ -3,7 +3,7 @@ require_relative "../../test_helper"
 
 SingleCov.covered!
 
-describe Kubernetes::RoleVerifier do
+describe Kubernetes::RoleValidator do
   let(:deployment_role) do
     YAML.load_stream(read_kubernetes_sample_file('kubernetes_deployment.yml')).map(&:deep_symbolize_keys)
   end
@@ -38,7 +38,7 @@ describe Kubernetes::RoleVerifier do
     let(:role_json) { role.to_json }
     let(:errors) do
       elements = Kubernetes::Util.parse_file(role_json, 'fake.json').map(&:deep_symbolize_keys)
-      Kubernetes::RoleVerifier.new(elements).verify
+      Kubernetes::RoleValidator.new(elements).validate
     end
 
     it "works" do
@@ -62,12 +62,12 @@ describe Kubernetes::RoleVerifier do
 
     it "fails nicely with false" do
       elements = Kubernetes::Util.parse_file('---', 'fake.yml')
-      errors = Kubernetes::RoleVerifier.new(elements).verify
+      errors = Kubernetes::RoleValidator.new(elements).validate
       errors.must_equal ["No content found"]
     end
 
     it "fails nicely with bad template" do
-      Kubernetes::RoleVerifier.new(["bad", {kind: "Good"}]).verify.must_equal ["Only hashes supported"]
+      Kubernetes::RoleValidator.new(["bad", {kind: "Good"}]).validate.must_equal ["Only hashes supported"]
     end
 
     it "reports invalid types" do
@@ -223,7 +223,7 @@ describe Kubernetes::RoleVerifier do
       errors.must_include "Annotation values 1234, true must be strings."
     end
 
-    describe "#verify_prerequisites" do
+    describe "#validate_prerequisites" do
       before do
         role.pop
         role.first[:kind] = "Job"
@@ -267,7 +267,7 @@ describe Kubernetes::RoleVerifier do
       end
     end
 
-    describe '#verify_job_restart_policy' do
+    describe '#validate_job_restart_policy' do
       let(:expected) { ["Job spec.template.spec.restartPolicy must be one of Never/OnFailure"] }
       before { role.replace(job_role) }
 
@@ -282,7 +282,7 @@ describe Kubernetes::RoleVerifier do
       end
     end
 
-    describe '#verify_project_and_role_consistent' do
+    describe '#validate_project_and_role_consistent' do
       let(:error_message) { "Project and role labels must be consistent across resources" }
 
       # this is not super important, but adding it for consistency
@@ -322,7 +322,7 @@ describe Kubernetes::RoleVerifier do
       end
     end
 
-    describe "#verify_host_volume_paths" do
+    describe "#validate_host_volume_paths" do
       with_env KUBERNETES_ALLOWED_VOLUME_HOST_PATHS: '/data/,/foo/bar'
 
       before do
@@ -344,7 +344,7 @@ describe Kubernetes::RoleVerifier do
       end
     end
 
-    describe "#verify_not_matching_team" do
+    describe "#validate_not_matching_team" do
       it "reports bad selector" do
         role.last[:spec][:selector][:team] = 'foo'
         errors.must_equal ["Team names change, do not select or match on them"]
@@ -359,7 +359,7 @@ describe Kubernetes::RoleVerifier do
 
   describe '.map_attributes' do
     def call(path, elements)
-      Kubernetes::RoleVerifier.new(elements).send(:map_attributes, path)
+      Kubernetes::RoleValidator.new(elements).send(:map_attributes, path)
     end
 
     it "finds simple" do
@@ -379,49 +379,49 @@ describe Kubernetes::RoleVerifier do
     end
   end
 
-  describe '.verify_groups' do
-    def verify_error(roles)
-      Kubernetes::RoleVerifier.verify_groups(roles)
+  describe '.validate_groups' do
+    def validate_error(roles)
+      Kubernetes::RoleValidator.validate_groups(roles)
     rescue Samson::Hooks::UserError
       $!.message
     end
 
     it "is valid with no role" do
-      Kubernetes::RoleVerifier.verify_groups([])
+      Kubernetes::RoleValidator.validate_groups([])
     end
 
     it "is valid with a single role" do
-      Kubernetes::RoleVerifier.verify_groups([[role.first]])
+      Kubernetes::RoleValidator.validate_groups([[role.first]])
     end
 
     it "is valid with multiple different roles" do
       primary = role.first
       primary2 = primary.dup
       primary2[:metadata] = {labels: {role: "meh", project: primary.dig(:metadata, :labels, :project)}}
-      Kubernetes::RoleVerifier.verify_groups([[primary], [primary2]])
+      Kubernetes::RoleValidator.validate_groups([[primary], [primary2]])
     end
 
     it "is valid with a duplicate role but magic annotation" do
       role.first[:metadata][:annotations] = {"samson/multi_project": "true"}
-      Kubernetes::RoleVerifier.verify_groups([[role.first], [role.first]])
+      Kubernetes::RoleValidator.validate_groups([[role.first], [role.first]])
     end
 
     it "is invalid with a duplicate role" do
-      verify_error([[role.first], [role.first]]).must_equal "metadata.labels.role must be set and unique"
+      validate_error([[role.first], [role.first]]).must_equal "metadata.labels.role must be set and unique"
     end
 
     it "is invalid with different projects" do
       primary = role.first
       primary2 = primary.dup
       primary2[:metadata] = {labels: {role: "meh", project: "other"}}
-      verify_error([[primary], [primary2]]).must_equal "metadata.labels.project must be consistent"
+      validate_error([[primary], [primary2]]).must_equal "metadata.labels.project must be consistent"
     end
 
     it "is invalid with different role labels in a single role" do
       primary = role.first
       primary2 = primary.dup
       primary2[:metadata] = {labels: {role: "meh", project: primary.dig(:metadata, :labels, :project)}}
-      verify_error([[primary, primary2]]).must_equal(
+      validate_error([[primary, primary2]]).must_equal(
         "metadata.labels.role must be set and consistent in each config file"
       )
     end
@@ -430,7 +430,7 @@ describe Kubernetes::RoleVerifier do
       primary = role.first
       primary2 = primary.dup
       primary2[:metadata] = {labels: {project: primary.dig(:metadata, :labels, :project)}}
-      verify_error([[primary, primary2]]).must_equal(
+      validate_error([[primary, primary2]]).must_equal(
         "metadata.labels.role must be set and consistent in each config file"
       )
     end
@@ -438,7 +438,7 @@ describe Kubernetes::RoleVerifier do
     it "is invalid when all role are not set" do
       primary = role.first
       primary[:metadata][:labels].delete :role
-      verify_error([[primary, primary]]).must_equal(
+      validate_error([[primary, primary]]).must_equal(
         "metadata.labels.role must be set and consistent in each config file"
       )
     end
