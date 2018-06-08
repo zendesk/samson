@@ -5,7 +5,7 @@ class Kubernetes::ReleasesController < ApplicationController
   before_action :authorize_project_deployer!
 
   def index
-    @kubernetes_releases = current_project.kubernetes_releases.order('id desc')
+    @pagy, @kubernetes_releases = pagy(current_project.kubernetes_releases.order('id desc'), items: 25)
   end
 
   def show
