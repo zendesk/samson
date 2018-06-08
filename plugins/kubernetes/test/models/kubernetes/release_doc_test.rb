@@ -120,9 +120,9 @@ describe Kubernetes::ReleaseDoc do
           refute create!.resource_template[1]
         end
 
-        it "does not add for things that are not highly available anyway" do
+        it "deletes for things that are not highly available anyway" do
           doc.replica_target = 1
-          refute create!.resource_template[2]
+          assert create!.resource_template[2][:delete]
         end
 
         it "can disable with disabled" do
@@ -151,9 +151,16 @@ describe Kubernetes::ReleaseDoc do
         create!.resource_template[2][:delete].must_equal true
       end
 
-      it "alerts when creating a deadlock by setting a absolute value" do
+      it "deletes when deploying with 0 replicas to delete the deployment" do
         template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '2'}
-        assert_raises(Samson::Hooks::UserError) { create! }
+        doc.replica_target = 0
+        create!.resource_template[2][:delete].must_equal true
+      end
+
+      it "fixes when creating a deadlock by setting a absolute value" do
+        template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '2'}
+        create!
+        create!.resource_template[2][:spec][:minAvailable].must_equal 1
       end
     end
   end
