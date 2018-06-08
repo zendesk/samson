@@ -97,9 +97,8 @@ module Kubernetes
       min_available = resource.dig(*min_available_path)
       return if min_available == "disabled"
 
-      if !min_available && replica_target > 1
-        min_available = ENV["KUBERNETES_AUTO_MIN_AVAILABLE"]
-      end
+      # NOTE: this is a bit of overhead for 0 or 1 replica deployments, but we don't know if a bad budget existed before
+      min_available ||= ENV["KUBERNETES_AUTO_MIN_AVAILABLE"]
       return unless min_available
 
       target = if percent = min_available.to_s[/\A(\d+)\s*%\z/, 1] # "30%" -> 30 / "30 %" -> 30
@@ -110,14 +109,7 @@ module Kubernetes
           [((replica_target.to_f / 100) * percent).ceil, replica_target - 1].min
         end
       else
-        min = Integer(min_available)
-        if min >= replica_target
-          raise(
-            Samson::Hooks::UserError,
-            "minAvailable of #{min} would result in eviction deadlock, pick lower but >0 or increase replicas"
-          )
-        end
-        min
+        [[replica_target - 1, Integer(min_available)].min, 0].max
       end
 
       budget = {
