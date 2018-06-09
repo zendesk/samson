@@ -19,9 +19,10 @@
 #   # `stream` is e.g. the response.stream object in a Rails controller.
 #   streamer = EventStreamer.new(stream)
 #
-#   # `output` is anything that responds to `#each`. The block will be called
-#   # with each chunk of data that is about to be streamed - its return value
-#   # will be sent instead.
+#   # `output` is anything that responds to `#each` or if a String is passed
+#   # in, the object will emulate an append-only stream consisting of each
+#   # line. The block will be called with each chunk of data that is about to
+#   # be streamed - its return value will be sent instead.
 #   streamer.start(output) {|chunk| chunk.html_safe }
 #
 class EventStreamer
@@ -37,8 +38,15 @@ class EventStreamer
   end
 
   def start(output)
-    @scanner = TerminalOutputScanner.new(output)
-    @scanner.each { |event, data| emit_event(event, @handler.call(event, data)) }
+    if output.is_a?(String)
+      output.split("\n").each do |line|
+        emit_event(:append, @handler.call(:append, line))
+      end
+      emit_event(:finished, @handler.call(:finished, nil))
+    else
+      @scanner = TerminalOutputScanner.new(output)
+      @scanner.each { |event, data| emit_event(event, @handler.call(event, data)) }
+    end
   rescue IOError, ActionController::Live::ClientDisconnected
     # Raised on stream close
     nil

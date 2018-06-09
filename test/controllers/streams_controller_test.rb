@@ -8,46 +8,70 @@ describe StreamsController do
 
   let(:project) { projects(:test) }
   let(:stage) { stages(:test_staging) }
-  let(:job) { jobs(:running_test) }
 
   after { maxitest_kill_extra_threads } # SSE heartbeat never finishes
 
   as_a_viewer do
     describe "#show" do
-      it "has an initial :started SSE and a :finished SSE" do
-        # Override the job retrieval in the streams controller. This way we don't have
-        # to stub out all the rest of the JobExecution setup/execute/... flow.
-        fake_execution = JobExecution.new("foo", job)
-        JobQueue.expects(:find_by_id).returns(fake_execution)
+      context "with a running job" do
+        let(:job) { jobs(:running_test) }
 
-        # make sure that the JobExecution object responds to the pid method
-        assert fake_execution.respond_to?(:pid)
+        it "has an initial :started SSE and a :finished SSE" do
+          # Override the job retrieval in the streams controller. This way we don't have
+          # to stub out all the rest of the JobExecution setup/execute/... flow.
+          fake_execution = JobExecution.new("foo", job)
+          JobQueue.expects(:find_by_id).returns(fake_execution)
 
-        # wait a bit for stream to open, then generate events
-        t = Thread.new do
-          sleep 0.2
-          wait_for_listeners(fake_execution.output)
+          # make sure that the JobExecution object responds to the pid method
+          assert fake_execution.respond_to?(:pid)
 
-          # Write some msgs to our fake TerminalExecutor stream
-          fake_execution.output.write("Hello there!\n")
-          # Close the stream to denote the job finishing, which will trigger sending the :finished SSE
-          fake_execution.output.close
+          # wait a bit for stream to open, then generate events
+          lines = String.new
+          t = Thread.new do
+            sleep 0.1
+            wait_for_listeners(fake_execution.output)
 
-          # Collect the output from the ActiveController::Live::Buffer stream
-          lines = []
-          response.stream.each { |l| lines << l }
+            # Write some msgs to our fake TerminalExecutor stream
+            fake_execution.output.write("Hello there!\n")
+            # Close the stream to denote the job finishing, which will trigger sending the :finished SSE
+            fake_execution.output.close
+
+            # Collect the output from the ActiveController::Live::Buffer stream
+            response.stream.each { |l| lines << l }
+          end
+
+          # Get the :show page to open the SSE stream
+          get :show, params: {id: job.id}
+
+          response.status.must_equal(200)
+          t.join
 
           # Ensure we have at least the :started and :finished SSE msgs
-          assert lines.grep(/event: started\ndata:/)
-          assert lines.grep(/event: append\ndata:.*Hello there!/)
-          assert lines.grep(/event: finished\ndata/)
+          lines.must_match(/event: started\ndata:/)
+          lines.must_match(/event: append\ndata:.*Hello there!/)
+          lines.must_match(/event: finished\ndata/)
         end
+      end
 
-        # Get the :show page to open the SSE stream
-        get :show, params: {id: job.id}
+      context "with a finished job" do
+        let(:job) { jobs(:succeeded_test) }
+        it "has some :append SSEs and a :finished SSE" do
+          # Collect the output from the ActiveController::Live::Buffer stream
+          lines = String.new
+          t = Thread.new do
+            sleep 0.1
+            response.stream.each { |l| lines << l }
+          end
 
-        response.status.must_equal(200)
-        t.join
+          get :show, params: {id: job.id}
+
+          response.status.must_equal(200)
+          t.join
+
+          # Ensure we have at least the :started and :finished SSE msgs
+          lines.must_match(/event: append\ndata:.*#{Regexp.escape(job.output.split("\n").first)}/)
+          lines.must_match(/event: finished\ndata/)
+        end
       end
     end
   end
