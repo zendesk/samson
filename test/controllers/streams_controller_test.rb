@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 2
+SingleCov.covered! uncovered: 1
 
 describe StreamsController do
   include OutputBufferSupport
@@ -21,6 +21,7 @@ describe StreamsController do
           # to stub out all the rest of the JobExecution setup/execute/... flow.
           fake_execution = JobExecution.new("foo", job)
           JobQueue.expects(:find_by_id).returns(fake_execution)
+          @controller.stubs(:render_to_body).returns("some html")
 
           # make sure that the JobExecution object responds to the pid method
           assert fake_execution.respond_to?(:pid)
@@ -32,8 +33,10 @@ describe StreamsController do
             wait_for_listeners(fake_execution.output)
 
             # Write some msgs to our fake TerminalExecutor stream
+            fake_execution.output.write('', :started)
             fake_execution.output.write("Hello there!\n")
-            # Close the stream to denote the job finishing, which will trigger sending the :finished SSE
+            # Close the stream and denote the job finishing, which will trigger sending the :finished SSE
+            fake_execution.output.write('', :finished)
             fake_execution.output.close
 
             # Collect the output from the ActiveController::Live::Buffer stream
