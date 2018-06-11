@@ -1,10 +1,13 @@
 # frozen_string_literal: true
+require 'soft_deletion'
+
 module Kubernetes
   class DeployGroupRole < ActiveRecord::Base
     MAX_LIMITS_TO_REQUESTS_RATIO = 10
 
     self.table_name = 'kubernetes_deploy_group_roles'
 
+    has_soft_deletion default_scope: true
     audited
 
     belongs_to :project

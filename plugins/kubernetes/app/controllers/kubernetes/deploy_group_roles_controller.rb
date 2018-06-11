@@ -75,7 +75,7 @@ class Kubernetes::DeployGroupRolesController < ApplicationController
   end
 
   def destroy
-    @deploy_group_role.destroy
+    @deploy_group_role.soft_delete!(validate: false)
     redirect_to action: :index
   end
 

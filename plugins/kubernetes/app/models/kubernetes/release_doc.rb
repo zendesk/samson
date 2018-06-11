@@ -64,6 +64,10 @@ module Kubernetes
       kubernetes_release.blue_green_color if kubernetes_role.blue_green?
     end
 
+    def deploy_group
+      DeployGroup.with_deleted { super } if deploy_group_id
+    end
+
     private
 
     def primary_resource

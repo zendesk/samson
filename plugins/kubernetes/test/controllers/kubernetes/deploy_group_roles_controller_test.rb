@@ -193,15 +193,13 @@ describe Kubernetes::DeployGroupRolesController do
     describe "#destroy" do
       it "deletes" do
         delete :destroy, params: {id: deploy_group_role.id}
-        assert_raises(ActiveRecord::RecordNotFound) do
-          deploy_group_role.reload
-        end
+        deploy_group_role.reload.deleted_at.wont_equal nil
       end
 
       it "does not delete when I am not an admin" do
         user.user_project_roles.delete_all
         delete :destroy, params: {id: deploy_group_role.id}
-        assert deploy_group_role.reload
+        refute deploy_group_role.reload.deleted_at
       end
     end
 
