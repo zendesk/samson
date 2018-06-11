@@ -184,8 +184,8 @@ module Kubernetes
         if uid = resource.uid
           selector << "involvedObject.uid=#{uid}"
         end
-
-        events = doc.deploy_group.kubernetes_cluster.client.get_events(
+        deploy_group = DeployGroup.with_deleted{ doc.deploy_group }
+        events = deploy_group.kubernetes_cluster.client.get_events(
           namespace: resource.namespace,
           field_selector: selector.join(',')
         ).fetch(:items)
@@ -227,7 +227,7 @@ module Kubernetes
     end
 
     def release_statuses(pods, release_doc)
-      group = release_doc.deploy_group
+      group = DeployGroup.with_deleted{ release_doc.deploy_group }
       role = release_doc.kubernetes_role
 
       pods = pods.select { |pod| pod.role_id == role.id && pod.deploy_group_id == group.id }
@@ -301,8 +301,9 @@ module Kubernetes
     end
 
     def puts_action(action, release_doc)
+      deploy_group = DeployGroup.with_deleted{ release_doc.deploy_group }
       blue_green = " #{release_doc.blue_green_color.upcase} resources for" if release_doc.blue_green_color
-      @output.puts "#{action}#{blue_green} #{release_doc.deploy_group.name} role #{release_doc.kubernetes_role.name}"
+      @output.puts "#{action}#{blue_green} #{deploy_group.name} role #{release_doc.kubernetes_role.name}"
     end
 
     # create a release, storing all the configuration
@@ -382,7 +383,7 @@ module Kubernetes
         if release_doc.blue_green_color
           non_service_resources(release_doc)
         else
-          release_doc.deploy_group.kubernetes_cluster # cache before threading
+          DeployGroup.with_deleted{ release_doc.deploy_group.kubernetes_cluster } # cache before threading
           [release_doc]
         end
       end
@@ -416,7 +417,7 @@ module Kubernetes
 
     # find deploy group without extra sql queries
     def deploy_group_for_pod(pod)
-      @release.release_docs.detect { |rd| break rd.deploy_group if rd.deploy_group_id == pod.deploy_group_id }
+      @release.release_docs.detect { |rd| break DeployGroup.with_deleted{ rd.deploy_group } if rd.deploy_group_id == pod.deploy_group_id }
     end
 
     # vary by role and not by deploy-group
@@ -467,7 +468,7 @@ module Kubernetes
     def switch_blue_green_service(release_docs)
       release_docs.each do |release_doc|
         next unless services = service_resources(release_doc).presence
-        @output.puts "Switching service for #{release_doc.deploy_group.name} " \
+        @output.puts "Switching service for #{DeployGroup.with_deleted{ release_doc.deploy_group.name }} " \
           "role #{release_doc.kubernetes_role.name} to #{release_doc.blue_green_color.upcase}"
         services.each(&:deploy)
       end

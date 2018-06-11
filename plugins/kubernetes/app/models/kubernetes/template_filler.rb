@@ -10,6 +10,7 @@ module Kubernetes
 
     def initialize(release_doc, template, index:)
       @doc = release_doc
+      @deploy_group = DeployGroup.with_deleted{ @doc.deploy_group }
       @template = template
       @index = index
     end
@@ -128,7 +129,7 @@ module Kubernetes
     def prefix_service_cluster_ip
       return unless ip = template[:spec][:clusterIP]
       return if ip == "None"
-      return unless prefix = @doc.deploy_group.kubernetes_cluster.ip_prefix.presence
+      return unless prefix = @deploy_group.kubernetes_cluster.ip_prefix.presence
       ip = ip.split('.')
       prefix = prefix.split('.')
       ip[0...prefix.size] = prefix
@@ -139,7 +140,7 @@ module Kubernetes
       system_namespaces = ["default", "kube-system"]
       return if system_namespaces.include?(template.dig(:metadata, :namespace)) &&
         template.dig(:metadata, :labels, :'kubernetes.io/cluster-service') == 'true'
-      template[:metadata][:namespace] = @doc.deploy_group.kubernetes_namespace
+      template[:metadata][:namespace] = @deploy_group.kubernetes_namespace
     end
 
     # If the user renames the service the StatefulSet will not match it, so we fix.
@@ -161,7 +162,7 @@ module Kubernetes
     # replace keys in annotations by looking them up in all possible namespaces by specificity
     # also supports wildcard expansion
     def expand_secret_annotations
-      resolver = Samson::Secrets::KeyResolver.new(project, [@doc.deploy_group])
+      resolver = Samson::Secrets::KeyResolver.new(project, [@deploy_group])
       secret_annotations.each do |k, v|
         annotations.delete(k)
         resolver.expand(k, v).each { |k, v| annotations[k.to_sym] = v }
@@ -243,7 +244,7 @@ module Kubernetes
     end
 
     def init_containers_in_beta?
-      @doc.deploy_group.kubernetes_cluster.server_version >= Gem::Version.new('1.6.0')
+      @deploy_group.kubernetes_cluster.server_version >= Gem::Version.new('1.6.0')
     end
 
     # This key replaces the default kubernetes key: 'deployment.kubernetes.io/podTemplateHash'
@@ -278,13 +279,12 @@ module Kubernetes
       @release_doc_metadata ||= begin
         release = @doc.kubernetes_release
         role = @doc.kubernetes_role
-        deploy_group = @doc.deploy_group
 
-        Kubernetes::Release.pod_selector(release.id, deploy_group.id, query: false).merge(
+        Kubernetes::Release.pod_selector(release.id, @deploy_group.id, query: false).merge(
           deploy_id: release.deploy_id,
           project_id: release.project_id,
           role_id: role.id,
-          deploy_group: deploy_group.env_value.parameterize.tr('_', '-'),
+          deploy_group: @deploy_group.env_value.parameterize.tr('_', '-'),
           revision: release.git_sha,
           tag: release.git_ref.parameterize.tr('_', '-')
         )
@@ -387,7 +387,7 @@ module Kubernetes
       env[:BLUE_GREEN] = blue_green_color if blue_green_color
 
       # env from plugins
-      plugin_envs = Samson::Hooks.fire(:deploy_group_env, project, @doc.deploy_group, resolve_secrets: false)
+      plugin_envs = Samson::Hooks.fire(:deploy_group_env, project, @deploy_group, resolve_secrets: false)
       env.merge!(plugin_envs.inject({}, :merge!))
     end
 
@@ -435,7 +435,7 @@ module Kubernetes
     end
 
     def vault_env
-      vault_client = Samson::Secrets::VaultClient.client.client(@doc.deploy_group.permalink)
+      vault_client = Samson::Secrets::VaultClient.client.client(@deploy_group.permalink)
       [
         {name: "VAULT_ADDR", value: vault_client.options.fetch(:address)},
         {name: "VAULT_SSL_VERIFY", value: vault_client.options.fetch(:ssl_verify).to_s}
@@ -445,7 +445,7 @@ module Kubernetes
     # kubernetes needs docker secrets to be able to pull down images from the registry
     # in kubernetes 1.3 this might work without this workaround
     def set_image_pull_secrets
-      cluster = @doc.deploy_group.kubernetes_cluster
+      cluster = @deploy_group.kubernetes_cluster
       docker_configs = ['kubernetes.io/dockercfg', 'kubernetes.io/dockerconfigjson']
 
       docker_credentials = Rails.cache.fetch(["docker_credentials", cluster], expires_in: 1.hour) do

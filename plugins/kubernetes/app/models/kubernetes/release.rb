@@ -49,11 +49,12 @@ module Kubernetes
     def clients
       scopes = release_docs.map do |release_doc|
         release_id = resource_release_id(release_doc)
+        deploy_group = DeployGroup.with_deleted{ release_doc.deploy_group }
         [
-          release_doc.deploy_group,
+          deploy_group,
           {
             namespace: release_doc.resources.first.namespace,
-            label_selector: self.class.pod_selector(release_id, release_doc.deploy_group.id, query: true)
+            label_selector: self.class.pod_selector(release_id, deploy_group.id, query: true)
           }
         ]
       end
