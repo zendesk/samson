@@ -27,7 +27,7 @@ describe StreamsController do
           assert fake_execution.respond_to?(:pid)
 
           # wait a bit for stream to open, then generate events
-          lines = String.new
+          lines = +''
           t = Thread.new do
             sleep 0.1
             wait_for_listeners(fake_execution.output)
@@ -60,7 +60,7 @@ describe StreamsController do
         let(:job) { jobs(:succeeded_test) }
         it "has some :append SSEs and a :finished SSE" do
           # Collect the output from the ActiveController::Live::Buffer stream
-          lines = String.new
+          lines = +''
           t = Thread.new do
             sleep 0.1
             response.stream.each { |l| lines << l }
