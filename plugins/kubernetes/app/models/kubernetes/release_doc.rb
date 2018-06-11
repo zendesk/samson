@@ -109,8 +109,9 @@ module Kubernetes
           [((replica_target.to_f / 100) * percent).ceil, replica_target - 1].min
         end
       else
-        [[replica_target - 1, Integer(min_available)].min, 0].max
+        [replica_target - 1, Integer(min_available)].min
       end
+      target = 0 if target < 0
 
       budget = {
         apiVersion: "policy/v1beta1",
