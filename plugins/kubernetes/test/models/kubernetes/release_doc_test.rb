@@ -151,6 +151,12 @@ describe Kubernetes::ReleaseDoc do
         create!.resource_template[2][:delete].must_equal true
       end
 
+      it "deletes when set to 0 via relative" do
+        doc.replica_target = 0
+        template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '50%'}
+        create!.resource_template[2][:delete].must_equal true
+      end
+
       it "deletes when deploying with 0 replicas to delete the deployment" do
         template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '2'}
         doc.replica_target = 0
