@@ -1,19 +1,14 @@
 # frozen_string_literal: true
 
+class Deploy < ActiveRecord::Base; end
+
 class AddAverageDeployTimeToStages < ActiveRecord::Migration[5.2]
   def up
     add_column :stages, :average_deploy_time, :float
 
     ActiveRecord::Base.transaction do
       # Grab data
-      deploy_data = execute(<<~SQL).to_a
-        SELECT stage_id,
-               updated_at,
-               started_at,
-               created_at
-        FROM deploys
-        WHERE deploys.deleted_at IS NULL
-      SQL
+      deploy_data = Deploy.pluck(:stage_id, :updated_at, :started_at, :created_at)
 
       stage_groups = deploy_data.group_by(&:first)
 
