@@ -50,10 +50,10 @@ describe Samson::Secrets::VaultServer do
       ) { refute_valid server }
     end
 
-    it "nullifies the association on destroy" do
+    it "removes valut servers from associated deploy group" do
       deploy_group = deploy_groups(:pod100)
       server.deploy_groups = [deploy_group]
-      server.save
+      server.save!
       deploy_group.vault_server.must_equal server
       server.destroy!
       refute deploy_group.reload.vault_server_id
