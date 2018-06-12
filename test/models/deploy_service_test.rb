@@ -263,4 +263,30 @@ describe DeployService do
       run_deploy
     end
   end
+
+  describe "#update_average_deploy_time" do
+    it 'updates stage average_deploy_time with new duration' do
+      stage.update_column(:average_deploy_time, 3.00)
+
+      new_deploy = Deploy.create!(deploy.attributes.except('id', 'created_at', 'updated_at'))
+      new_deploy.expects(:duration).returns(4.0)
+
+      service.send(:update_average_deploy_time, new_deploy)
+
+      stage.reload
+      assert_in_delta 3.33, stage.average_deploy_time, 0.004
+    end
+
+    it 'handles no previous average' do
+      stage.deploys.where.not(id: deploy.id).delete_all
+      stage.average_deploy_time.must_be_nil
+
+      deploy.expects(:duration).returns(4.0)
+
+      service.send(:update_average_deploy_time, deploy)
+
+      stage.reload
+      assert_in_delta 4.0, stage.average_deploy_time
+    end
+  end
 end

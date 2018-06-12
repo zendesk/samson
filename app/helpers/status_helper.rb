@@ -24,26 +24,32 @@ module StatusHelper
     "label-#{LABEL_STATUS_MAPPING.fetch(key, 'info')}"
   end
 
-  def status_panel(deploy)
-    content = h deploy.summary
-    if deploy.active?
+  def status_panel(deployable)
+    is_deploy = deployable.is_a?(Deploy)
+
+    content = h deployable.summary
+    if deployable.active?
       content << content_tag(:br)
       content << "Started "
-      content << relative_time(deploy.start_time)
-      job = (deploy.respond_to?(:job) ? deploy.job : deploy)
+      content << relative_time(deployable.start_time)
+      job = (is_deploy ? deployable.job : deployable)
       content << " [Process ID: #{job.pid}]"
+      if is_deploy
+        content << content_tag(:br)
+        content << "ETA: #{duration_text deployable.stage.average_deploy_time}"
+      end
     end
 
-    if deploy.finished?
+    if deployable.finished?
       content << ". Started "
-      content << render_time(deploy.start_time, current_user.time_format)
-      content << ", took #{duration_text deploy.duration}."
+      content << render_time(deployable.start_time, current_user.time_format)
+      content << ", took #{duration_text deployable.duration}."
     end
 
-    content_tag :div, content, class: "alert #{status_alert(deploy.status)}"
+    content_tag :div, content, class: "alert #{status_alert(deployable.status)}"
   end
 
   def duration_text(duration)
-    Time.at(duration).utc.strftime('%H:%M:%S')
+    duration ? Time.at(duration).utc.strftime('%H:%M:%S') : ''
   end
 end
