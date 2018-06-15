@@ -79,7 +79,10 @@ module Kubernetes
 
       loop do
         statuses = pod_statuses(release_docs)
-        return success if statuses.none?
+        if statuses.none?
+          @output.puts "No pods were created"
+          return success
+        end
         not_ready = statuses.reject(&:live)
 
         if @testing_for_stability
