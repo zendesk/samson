@@ -38,6 +38,7 @@ class DeployService
     end
     job_execution.on_finish do
       send_after_notifications(deploy)
+      update_average_deploy_time(deploy)
     end
 
     JobQueue.perform_later(job_execution, queue: deploy.job_execution_queue_name)
@@ -46,6 +47,17 @@ class DeployService
   end
 
   private
+
+  def update_average_deploy_time(deploy)
+    stage = deploy.stage
+
+    old_average = stage.average_deploy_time || 0.00
+    number_of_deploys = stage.deploys.size
+
+    new_average = (old_average + ((deploy.duration - old_average) / number_of_deploys))
+
+    stage.update_column(:average_deploy_time, new_average)
+  end
 
   def construct_env(stage)
     env = {STAGE: stage.permalink}

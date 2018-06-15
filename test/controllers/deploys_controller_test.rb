@@ -69,6 +69,16 @@ describe DeploysController do
           response.body.must_include queued.id.to_s # renders as job
         end
       end
+
+      it 'renders active deploy expected time' do
+        Deploy.expects(:active).twice.returns([deploy])
+        deploy.expects(:active?).returns(true)
+        deploy.stage.expects(:average_deploy_time).returns(4.123)
+
+        get :active
+
+        response.body.must_include "(00:00:04)"
+      end
     end
 
     describe '#active_count' do
