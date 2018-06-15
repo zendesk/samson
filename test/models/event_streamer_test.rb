@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 2
+SingleCov.covered! uncovered: 1
 
 describe EventStreamer do
   class FakeStream
@@ -63,6 +63,14 @@ describe EventStreamer do
 
   it "closes the stream when there is no more output" do
     streamer.start(output)
+    assert stream.closed?
+  end
+
+  it "converts a string into a newline separated stream" do
+    output = "hello\nworld\n"
+    streamer.start(output)
+    stream.lines.must_include %(event: append\ndata: {"msg":"hello"}\n\n)
+    stream.lines.must_include %(event: append\ndata: {"msg":"world"}\n\n)
     assert stream.closed?
   end
 end
