@@ -36,7 +36,7 @@ module Samson
         read_timeout: 2
       }.freeze
 
-      has_many :deploy_groups
+      has_many :deploy_groups, dependent: :nullify
 
       attribute :token
       attr_encrypted :token
