@@ -1,6 +1,13 @@
 # frozen_string_literal: true
 # Used to display all warnings/failures before user actually deploys
 class CommitStatus
+  STATUS_PRIORITY = {
+    success: 0,
+    pending: 1,
+    failure: 2,
+    error: 3
+  }.freeze
+
   def initialize(stage, reference)
     @stage = stage
     @reference = reference
@@ -26,15 +33,22 @@ class CommitStatus
   private
 
   def combined_status
-    @combined_status ||= merge(github_status, release_status)
+    @combined_status ||= begin
+      statuses = [github_status, release_status, ref_status]
+      statuses.each_with_object({}) { |status, merged_statuses| merge(merged_statuses, status) }
+    end
   end
 
-  # simplistic merge that overrides state and combines messages
   def merge(a, b)
     return a unless b
-    a[:state] = b.fetch(:state)
+    a[:state] = pick_highest_state(a[:state], b.fetch(:state))
     (a[:statuses] ||= []).concat b.fetch(:statuses)
-    a
+  end
+
+  # picks the state with the higher priority
+  def pick_highest_state(a, b)
+    return b if a.nil?
+    STATUS_PRIORITY[a.to_sym] > STATUS_PRIORITY[b.to_sym] ? a : b
   end
 
   # need to do weird escape logic since other wise either 'foo/bar' or 'bar[].foo' do not work
@@ -68,6 +82,19 @@ class CommitStatus
           " by #{interfering_stages.join(", ")}"
       }]
     }
+  end
+
+  def ref_status
+    # Check if ref has been deployed to any non-production stages first if deploying to production
+    if @stage.production? && !@stage.project.deployed_reference_to_non_production_stage?(@reference)
+      {
+        state: "pending",
+        statuses: [{
+          state: "Production Only Reference",
+          description: "#{@reference} has not been deployed to a non-production stage."
+        }]
+      }
+    end
   end
 
   def version(reference)

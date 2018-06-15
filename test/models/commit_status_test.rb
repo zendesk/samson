@@ -10,7 +10,9 @@ describe CommitStatus do
 
     before do
       DeployGroup.stubs(enabled?: true)
-      stage.deploy_groups << deploy_groups(:pod1)
+      dg = deploy_groups(:pod1)
+      dg.update_column(:environment_id, environments(:staging).id)
+      stage.deploy_groups << dg
       deploy.update_column(:reference, 'v4.3')
     end
   end
@@ -23,10 +25,13 @@ describe CommitStatus do
     stub_github_api(url, nil, 404)
   end
 
+  def status(stage_param: stage, reference_param: reference)
+    @status ||= CommitStatus.new(stage_param, reference_param)
+  end
+
   let(:stage) { stages(:test_staging) }
   let(:reference) { 'master' }
   let(:url) { "repos/#{stage.project.repository_path}/commits/#{reference}/status" }
-  let(:status) { CommitStatus.new(stage, reference) }
 
   describe "#status" do
     it "returns state" do
@@ -44,7 +49,7 @@ describe CommitStatus do
 
       it "warns" do
         success!
-        assert_sql_queries 7 do
+        assert_sql_queries 10 do
           status.status.must_equal 'error'
         end
       end
@@ -138,6 +143,48 @@ describe CommitStatus do
           {state: "Old Release", description: "v4.3 was deployed to deploy groups in this stage by Production"}
         ]
       end
+    end
+  end
+
+  describe "#resolve_states" do
+    it 'picks the first state if it has higher priority' do
+      status.send(:pick_highest_state, 'error', 'success').must_equal 'error'
+    end
+
+    it 'picks the second state if it has higher priority' do
+      status.send(:pick_highest_state, 'success', 'error').must_equal 'error'
+    end
+
+    it 'returns second state if first state is nil' do
+      status.send(:pick_highest_state, nil, 'pending').must_equal 'pending'
+    end
+  end
+
+  describe '#ref_status' do
+    let(:production_stage) { stages(:test_production) }
+
+    it 'returns nothing if stage is not production' do
+      status.send(:ref_status).must_be_nil
+    end
+
+    it 'returns nothing if ref has been deployed to non-production stage' do
+      production_stage.project.expects(:deployed_reference_to_non_production_stage?).returns(true)
+
+      status(stage_param: production_stage).send(:ref_status).must_be_nil
+    end
+
+    it 'returns status if ref has not been deployed to non-production stage' do
+      production_stage.project.expects(:deployed_reference_to_non_production_stage?).returns(false)
+
+      expected_hash = {
+        state: "pending",
+        statuses: [{
+          state: "Production Only Reference",
+          description: "master has not been deployed to a non-production stage."
+        }]
+      }
+
+      status(stage_param: production_stage).send(:ref_status).must_equal expected_hash
     end
   end
 end
