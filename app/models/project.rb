@@ -181,6 +181,14 @@ class Project < ActiveRecord::Base
     Deploy.find(found.map(&:id)).select(&:stage).sort_by { |d| d.stage.order }.presence
   end
 
+  def deployed_reference_to_non_production_stage?(reference)
+    return false unless commit = repository.commit_from_ref(reference)
+
+    stages.joins(deploys: :job).where(
+      jobs: {status: 'succeeded', commit: commit}
+    ).distinct.any? { |stage| !stage.production? }
+  end
+
   def url
     Rails.application.routes.url_helpers.project_url(self)
   end

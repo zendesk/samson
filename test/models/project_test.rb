@@ -319,6 +319,40 @@ describe Project do
     end
   end
 
+  describe "#deployed_reference_to_non_production_stage?" do
+    def stub_commit(found = true)
+      result = found ? deploy.job.commit : nil
+      project.repository.expects(:commit_from_ref).with(deploy.reference).returns(result)
+    end
+
+    let(:deploy) { deploys(:succeeded_test) }
+
+    it 'returns true if non production stage exists that deployed ref' do
+      stub_commit
+      project.deployed_reference_to_non_production_stage?(deploy.reference).must_equal true
+    end
+
+    it 'filters by job status' do
+      stub_commit
+      deploy.job.update_column(:status, 'failed')
+
+      project.deployed_reference_to_non_production_stage?(deploy.reference).must_equal false
+    end
+
+    it 'filters out production stages' do
+      stub_commit
+      deploy.update_column(:stage_id, stages(:test_production).id)
+
+      project.deployed_reference_to_non_production_stage?(deploy.reference).must_equal false
+    end
+
+    it 'returns false when reference cant be resolved' do
+      stub_commit(false)
+
+      project.deployed_reference_to_non_production_stage?(deploy.reference).must_equal false
+    end
+  end
+
   describe '#ordered_for_user' do
     it 'returns unstarred projects in alphabetical order' do
       Project.create!(name: 'A', repository_url: url)

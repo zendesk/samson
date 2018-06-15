@@ -53,7 +53,7 @@ describe DeploysHelper do
       end
 
       it "renders buddy check when waiting for buddy" do
-        stub_github_api "repos/bar/foo/commits/staging/status", state: "success", statuses: {}
+        stub_github_api "repos/bar/foo/commits/staging/status", state: "success", statuses: []
         deploy.expects(:waiting_for_buddy?).returns(true)
         result.wont_include output
         result.must_include 'This deploy requires a buddy.'
