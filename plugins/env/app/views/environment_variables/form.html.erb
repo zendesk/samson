@@ -1,0 +1,26 @@
+<%
+  title = "Edit #{@variable.name}"
+  can_edit = can?(:write, :environment_variable_groups, @variable)
+  disabled = can_edit ? '' : 'disabled'
+  crumbs = [["Environment variables", EnvironmentVariableGroup]]
+%>
+
+<%= manual_breadcrumb(crumbs + [[title, nil]]) %>
+
+<%= page_title title %>
+
+<section>
+  <% if !can_edit %>
+    <div class="alert alert-warning">
+      You must either be an admin or have project admin privileges for all projects that use this environment variable to
+      edit it.
+    </div>
+  <% end %>
+  <%= form_for @variable, html: { class: "form-horizontal" } do |form| %>
+    <fieldset <%= disabled %>>
+      <%= form.input :name %>
+      <%= form.input :description, as: :text_area, input_html: {size: "80x4"}%>
+    </fieldset>
+    <%= form.actions %>
+  <% end %>
+</section>

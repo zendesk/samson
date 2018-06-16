@@ -2,7 +2,7 @@
 <%= form.fields_for :environment_variables, environment_variables do |fields| %>
   <div class="form-group">
     <div class="col-lg-3">
-      <%= fields.text_field :name, class: "form-control", placeholder: "Name" %>
+      <%= fields.text_field :name, class: "form-control", placeholder: "Name", title: fields.object.name %>
     </div>
 
     <div class="col-lg-5">
@@ -19,6 +19,9 @@
     <% if fields.object.persisted? %>
       <div class="col-lg-1 checkbox">
         <%= link_to_history fields.object, counter: false %>
+      </div>
+      <div class="col-lg-1 checkbox">
+        <%= link_to "Description", environment_variable_path(fields.object), title: fields.object.description %>
       </div>
       <div class="col-lg-1 checkbox">
         <%= fields.label :_destroy do %>
