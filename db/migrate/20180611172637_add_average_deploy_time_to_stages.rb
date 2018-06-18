@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-class Deploy < ActiveRecord::Base; end
-
 class AddAverageDeployTimeToStages < ActiveRecord::Migration[5.2]
+  class Deploy < ActiveRecord::Base; end
+
   def up
     add_column :stages, :average_deploy_time, :float
 
