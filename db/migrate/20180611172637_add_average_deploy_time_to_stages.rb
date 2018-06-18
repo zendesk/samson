@@ -6,21 +6,21 @@ class AddAverageDeployTimeToStages < ActiveRecord::Migration[5.2]
   def up
     add_column :stages, :average_deploy_time, :float
 
-    ActiveRecord::Base.transaction do
-      # Grab data
-      deploy_data = Deploy.pluck(:stage_id, :updated_at, :started_at, :created_at)
+    # Grab data
+    deploy_data = Deploy.pluck(:stage_id, :updated_at, :started_at, :created_at)
 
-      stage_groups = deploy_data.group_by(&:first)
+    stage_groups = deploy_data.group_by(&:first)
 
-      stage_insert_values = stage_groups.map do |stage_id, deploys|
-        average = deploys.reduce(0) do |sum, (_stage_id, updated_at, started_at, created_at)|
-          sum + (updated_at - (started_at || created_at))
-        end / deploys.size
+    stage_insert_values = stage_groups.map do |stage_id, deploys|
+      average = deploys.reduce(0) do |sum, (_stage_id, updated_at, started_at, created_at)|
+        sum + (updated_at - (started_at || created_at))
+      end / deploys.size
 
-        "(#{stage_id},#{average})"
-      end
+      "(#{stage_id},#{average})"
+    end
 
-      if stage_insert_values.any?
+    if stage_insert_values.any?
+      ActiveRecord::Base.transaction do
         # Create temporary table
         execute(<<~SQL)
           CREATE TEMPORARY TABLE averages (
