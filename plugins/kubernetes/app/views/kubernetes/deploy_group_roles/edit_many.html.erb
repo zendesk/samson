@@ -10,6 +10,7 @@
         [:limits_cpu, 'Limits CPU Cores'],
         [:limits_memory, 'Limits Memory in MB']
     ] %>
+    <% row_builder = -> (field, type, attribute) { type == :boolean ? field.check_box(attribute) : field.text_field(attribute, size: 10) } %>
     <table class="table table-hover table-condensed">
       <thead>
         <tr>
@@ -32,17 +33,20 @@
           <td><%= deploy_group_role.kubernetes_role.name %></td>
           <%= fields_for "kubernetes_deploy_group_roles[#{deploy_group_role.id}]", deploy_group_role do |field| %>
             <% rows.each do |attribute, _, type| %>
-              <td>
-                <% if type == :boolean %>
-                  <%= field.check_box attribute %>
-                <% else %>
-                  <%= field.text_field attribute, size: 10 %>
-                <% end %>
-              </td>
+              <td><%= row_builder.(field, type, attribute) %></td>
             <% end %>
           <% end %>
         </tr>
       <% end %>
+
+      <tr class="set-all-row" style="background: light-gray">
+        <td colspan="2">ALL</td>
+        <%= fields_for "all", Kubernetes::DeployGroupRole.new do |field| %>
+          <% rows.each do |attribute, _, type| %>
+            <td><%= row_builder.(field, type, attribute) %></td>
+          <% end %>
+        <% end %>
+      </tr>
     </table>
 
     <%= submit_tag "Update all" %>
