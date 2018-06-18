@@ -345,8 +345,9 @@ describe Kubernetes::TemplateFiller do
           it "complains when build was not found" do
             e = assert_raises(Samson::Hooks::UserError) { container }
             e.message.must_equal(
-              "Did not find build for dockerfile \"Dockerfile.new\" or image_name nil.\n" \
-              "Found builds: [[\"Dockerfile\", nil]]."
+              "Did not find build for dockerfile \"Dockerfile.new\".\n" \
+              "Found builds: [[\"Dockerfile\"]].\n" \
+              "Project builds URL: http://www.test-url.com/projects/foo/builds"
             )
           end
         end
@@ -360,7 +361,8 @@ describe Kubernetes::TemplateFiller do
           add_init_container a: 1, "samson/dockerfile": 'Foo'
           e = assert_raises(Samson::Hooks::UserError) { init_containers[0] }
           e.message.must_equal(
-            "Did not find build for dockerfile \"Foo\" or image_name nil.\nFound builds: [[\"Dockerfile\", nil]]."
+            "Did not find build for dockerfile \"Foo\".\nFound builds: [[\"Dockerfile\"]].\n"\
+            "Project builds URL: http://www.test-url.com/projects/foo/builds"
           )
         end
 
@@ -377,7 +379,7 @@ describe Kubernetes::TemplateFiller do
           it "fails when build is not found" do
             build.update_column(:image_name, 'nope')
             e = assert_raises(Samson::Hooks::UserError) { container.fetch(:image).must_equal image }
-            e.message.must_include "Did not find build for dockerfile nil or image_name \"truth_service\""
+            e.message.must_include "Did not find build for image_name \"truth_service\""
           end
         end
       end

@@ -51,7 +51,7 @@ module Samson
         possible = possible_builds
         needed.delete_if do |dockerfile, image|
           found = self.class.detect_build_by_selector!(
-            possible, dockerfile, image, fail: (last_try && build_disabled)
+            possible, dockerfile, image, fail: (last_try && build_disabled), project: @job.project
           )
           if found
             all << found
@@ -67,17 +67,20 @@ module Samson
       all
     end
 
-    def self.detect_build_by_selector!(builds, dockerfile, image, fail:)
+    def self.detect_build_by_selector!(builds, dockerfile, image, fail:, project:)
       image_name = image.split('/').last.split(/[:@]/, 2).first if image
       found = builds.detect do |b|
         (image_name && b.image_name == image_name) || (dockerfile && b.dockerfile == dockerfile)
       end
       return found if found || !fail
-
+      builds_for = []
+      builds_for << "dockerfile #{dockerfile.inspect}" if dockerfile
+      builds_for << "image_name #{image_name.inspect}" if image_name
       raise(
         Samson::Hooks::UserError,
-        "Did not find build for dockerfile #{dockerfile.inspect} or image_name #{image_name.inspect}.\n" \
-        "Found builds: #{builds.map { |b| [b.dockerfile, b.image_name] }.uniq.inspect}."
+        "Did not find build for #{builds_for.join(' or ')}.\n" \
+        "Found builds: #{builds.map { |b| [b.dockerfile, b.image_name].compact }.uniq.inspect}.\n"\
+        "Project builds URL: #{Rails.application.routes.url_helpers.project_builds_url(project)}"
       )
     end
 

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative "../../test_helper"
 
-SingleCov.covered! uncovered: 6
+SingleCov.covered!
 
 describe Samson::BuildFinder do
   def setup_using_previous_builds
@@ -69,6 +69,28 @@ describe Samson::BuildFinder do
       out.must_include "Waiting for Build #{build.url} to finish."
     end
 
+    it "stop wait when deploy is cancelled by user" do
+      finder.cancelled!
+      build.class.any_instance.expects(:active?).returns true
+
+      finder.expects(:sleep).never
+
+      assert execute.any?
+    end
+
+    it "continue wait until build became active" do
+      expect_sleep.times(2)
+      done = false
+      build.class.any_instance.expects(:active?).times(3).with do
+        build.class.any_instance.stubs(:docker_repo_digest).returns('some-digest') unless done
+        done = true
+      end.returns(true, true, false)
+
+      assert execute.any?
+
+      out.must_include "Waiting for Build #{build.url} to finish."
+    end
+
     it "fails when build job failed" do
       build.create_docker_job.update_column(:status, 'cancelled')
       build.save!
@@ -91,6 +113,8 @@ describe Samson::BuildFinder do
     end
 
     describe "when build needs to be created" do
+      let(:build_selectors) { [["Dockerfile", nil]] }
+
       before do
         build.update_column(:git_sha, 'something-else')
         Build.any_instance.stubs(:validate_git_reference)
@@ -118,6 +142,17 @@ describe Samson::BuildFinder do
         assert execute.any?
         out.must_include "Creating build for Dockerfile."
         out.must_include "Build #{Build.last.url} is looking good"
+      end
+
+      it "raise when image building disabled" do
+        # detect_build_by_selector itself will raise with image building disabled
+        # should never return nil
+        Samson::BuildFinder.stubs(:detect_build_by_selector!).returns(nil)
+        job.project.update_column(:dockerfiles, nil)
+        job.project.update_column(:docker_image_building_disabled, true)
+        with_env(EXTERNAL_BUILD_WAIT: "0") do
+          assert_raises { execute }
+        end
       end
 
       it "reuses build when told to do so" do
@@ -163,6 +198,15 @@ describe Samson::BuildFinder do
         execute.must_equal [build]
       end
 
+      it "raise with missing dockerfile" do
+        # detect_build_by_selector itself will raise without dockerfile
+        # should never return nil
+        Samson::BuildFinder.stubs(:detect_build_by_selector!).returns(nil)
+        with_env(EXTERNAL_BUILD_WAIT: "0") do
+          assert_raises { execute }
+        end
+      end
+
       it "does not find for different sha" do
         build.update_column(:git_sha, 'other')
         expect_sleep # waiting for external builds to arrive
@@ -187,6 +231,12 @@ describe Samson::BuildFinder do
 
       it "can reuse previous build" do
         setup_using_previous_builds
+        execute.must_equal [build]
+      end
+
+      it "can reuse build and skips if there is no previous build" do
+        job.deploy.update_column(:kubernetes_reuse_build, true)
+        refute job.deploy.previous_deploy
         execute.must_equal [build]
       end
 
@@ -226,7 +276,8 @@ describe Samson::BuildFinder do
 
         e = assert_raises(Samson::Hooks::UserError) { execute }
         e.message.must_equal(
-          "Did not find build for dockerfile \"foobar\" or image_name \"foobar\".\nFound builds: []."
+          "Did not find build for dockerfile \"foobar\" or image_name \"foobar\".\n"\
+          "Found builds: [].\nProject builds URL: http://www.test-url.com/projects/foo/builds"
         )
       end
 
@@ -237,7 +288,8 @@ describe Samson::BuildFinder do
 
         e = assert_raises(Samson::Hooks::UserError) { execute }
         e.message.must_equal(
-          "Did not find build for dockerfile \"Dockerfile\" or image_name \"foo\".\nFound builds: [[\"Mooo\", nil]]."
+          "Did not find build for dockerfile \"Dockerfile\" or image_name \"foo\".\n"\
+          "Found builds: [[\"Mooo\"]].\nProject builds URL: http://www.test-url.com/projects/foo/builds"
         )
       end
 
@@ -265,6 +317,21 @@ describe Samson::BuildFinder do
         end
 
         execute.must_equal [build]
+      end
+
+      describe "removes empty image_name from expection" do
+        let(:build_selectors) { [["foobar", nil]] }
+
+        it "fails if a build does not arrive" do
+          job.project.update_column :dockerfiles, 'foobar'
+          expect_sleep.times(3)
+
+          e = assert_raises(Samson::Hooks::UserError) { execute }
+          e.message.must_equal(
+            "Did not find build for dockerfile \"foobar\".\n"\
+            "Found builds: [].\nProject builds URL: http://www.test-url.com/projects/foo/builds"
+          )
+        end
       end
     end
   end

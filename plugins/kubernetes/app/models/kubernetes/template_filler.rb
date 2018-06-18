@@ -308,7 +308,8 @@ module Kubernetes
     def set_docker_image_for_containers(builds, containers)
       containers.each do |container|
         next unless build_selector = build_selector_for_container(container)
-        build = Samson::BuildFinder.detect_build_by_selector!(builds, *build_selector, fail: true)
+        build = Samson::BuildFinder.detect_build_by_selector!(builds, *build_selector,
+          fail: true, project: project)
         container[:image] = build.docker_repo_digest
       end
     end
