@@ -6,12 +6,6 @@ class Changeset::PullRequest
 
   WEBHOOK_FILTER = /(^|\s)\[samson review\]($|\s)/i
 
-  # Matches a markdown section heading named "Risks".
-  RISKS_SECTION = /^\s*#*\s*Risks?\s*#*\s*\n(?:\s*[-=]*\s*\n)?/i
-
-  # Matches a markdown section heading
-  SECTION_HEADING = /^\s*#*\s*\w+.*\n(?:\s*[-=]*\s*\n)?/i
-
   # Matches URLs to JIRA issues.
   JIRA_ISSUE_URL = %r[https?:\/\/[\da-z\.\-]+\.[a-z\.]{2,6}\/browse\/#{CODE_ONLY}(?=#{PUNCT}|$)]
 
@@ -129,9 +123,17 @@ class Changeset::PullRequest
 
   private
 
+  def section_content(section_title, text)
+    desired_header_regexp = "^(?:\\s*#+\\s*#{section_title}.*|\\s*#{section_title}.*\\n\\s*(?:-{2,}|={2,}))\\n"
+    content_regexp = '([\W\w]*?)'
+    next_header_regexp = '(?=^(?:\s*#+|.*\n\s*(?:-{2,}|={2,}\s*\n))|\z)'
+
+    text[/#{desired_header_regexp}#{content_regexp}#{next_header_regexp}/i, 1]
+  end
+
   def parse_risks(body)
     body_stripped = ActionController::Base.helpers.strip_tags(body)
-    body_stripped.to_s.split(RISKS_SECTION, 2)[1].to_s.strip.split(SECTION_HEADING).first.to_s.strip.presence
+    section_content('Risks', body_stripped).to_s.strip.presence
   end
 
   def parse_jira_issues
