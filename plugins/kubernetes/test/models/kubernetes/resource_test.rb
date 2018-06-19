@@ -313,7 +313,7 @@ describe Kubernetes::Resource do
 
     describe "#client" do
       it "uses the extension client because it is in beta" do
-        resource.send(:client).must_equal deploy_group.kubernetes_cluster.extension_client
+        resource.send(:client).must_equal deploy_group.kubernetes_cluster.client('extensions/v1beta1')
       end
     end
 
@@ -430,7 +430,7 @@ describe Kubernetes::Resource do
 
     describe "#client" do
       it "uses the extension client because it is in beta" do
-        resource.send(:client).must_equal deploy_group.kubernetes_cluster.extension_client
+        resource.send(:client).must_equal deploy_group.kubernetes_cluster.client('extensions/v1beta1')
       end
     end
 
@@ -500,7 +500,7 @@ describe Kubernetes::Resource do
 
     describe "#client" do
       it "uses the apps client because it is in beta" do
-        resource.send(:client).must_equal deploy_group.kubernetes_cluster.apps_client
+        resource.send(:client).must_equal deploy_group.kubernetes_cluster.client('apps/v1beta1')
       end
     end
 
@@ -598,7 +598,7 @@ describe Kubernetes::Resource do
 
     describe "#client" do
       it "uses the extension client because it is in beta" do
-        resource.send(:client).must_equal deploy_group.kubernetes_cluster.batch_client
+        resource.send(:client).must_equal deploy_group.kubernetes_cluster.client('batch/v1')
       end
     end
 

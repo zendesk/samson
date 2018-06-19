@@ -172,7 +172,7 @@ describe Kubernetes::ReleaseDoc do
   end
 
   describe "#deploy" do
-    let(:client) { doc.deploy_group.kubernetes_cluster.extension_client }
+    let(:client) { doc.deploy_group.kubernetes_cluster.client('extensions/v1beta1') }
 
     it "creates" do
       # check and then create service

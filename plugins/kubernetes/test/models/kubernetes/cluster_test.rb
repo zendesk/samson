@@ -62,35 +62,13 @@ describe Kubernetes::Cluster do
     it 'creates a client' do
       cluster.client.must_be_kind_of Kubeclient::Client
     end
-  end
 
-  describe '#extension_client' do
-    it 'creates a client' do
-      cluster.extension_client.must_be_kind_of Kubeclient::Client
+    it 'caches' do
+      cluster.client.object_id.must_equal cluster.client.object_id
     end
-  end
 
-  describe '#autoscaling_client' do
-    it 'creates a client' do
-      cluster.autoscaling_client.must_be_kind_of Kubeclient::Client
-    end
-  end
-
-  describe '#policy_client' do
-    it 'creates a client' do
-      cluster.policy_client.must_be_kind_of Kubeclient::Client
-    end
-  end
-
-  describe '#apps_client' do
-    it 'creates a client' do
-      cluster.apps_client.must_be_kind_of Kubeclient::Client
-    end
-  end
-
-  describe '#batch_client' do
-    it 'creates a client' do
-      cluster.batch_client.must_be_kind_of Kubeclient::Client
+    it 'can build for other types' do
+      cluster.client('policy/v1beta1').api_endpoint.to_s.must_equal 'http://foobar.server/apis'
     end
   end
 
