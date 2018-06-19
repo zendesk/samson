@@ -19,28 +19,8 @@ module Kubernetes
 
     before_destroy :ensure_unused
 
-    def client
-      @client ||= build_client :default
-    end
-
-    def autoscaling_client
-      @autoscaling_client ||= build_client 'autoscaling/v1'
-    end
-
-    def extension_client
-      @extension_client ||= build_client 'extensions/v1beta1'
-    end
-
-    def apps_client
-      @apps_client ||= build_client 'apps/v1beta1'
-    end
-
-    def batch_client
-      @batch_client ||= build_client 'batch/v1'
-    end
-
-    def policy_client
-      @policy_client ||= build_client 'policy/v1beta1'
+    def client(type = :default)
+      (@client ||= {})[type] ||= build_client(type)
     end
 
     def context

@@ -233,7 +233,7 @@ module Kubernetes
       private
 
       def client
-        @deploy_group.kubernetes_cluster.autoscaling_client
+        @deploy_group.kubernetes_cluster.client('autoscaling/v1')
       end
     end
 
@@ -288,7 +288,7 @@ module Kubernetes
       end
 
       def client
-        @deploy_group.kubernetes_cluster.extension_client
+        @deploy_group.kubernetes_cluster.client('extensions/v1beta1')
       end
     end
 
@@ -348,7 +348,7 @@ module Kubernetes
       end
 
       def client
-        @deploy_group.kubernetes_cluster.extension_client
+        @deploy_group.kubernetes_cluster.client('extensions/v1beta1')
       end
 
       def wait_for_termination_of_all_pods
@@ -411,7 +411,7 @@ module Kubernetes
       end
 
       def client
-        @deploy_group.kubernetes_cluster.apps_client
+        @deploy_group.kubernetes_cluster.client('apps/v1beta1')
       end
     end
 
@@ -435,7 +435,7 @@ module Kubernetes
 
       # FYI per docs it is supposed to use batch api, but extension api works
       def client
-        @deploy_group.kubernetes_cluster.batch_client
+        @deploy_group.kubernetes_cluster.client('batch/v1')
       end
     end
 
@@ -460,7 +460,7 @@ module Kubernetes
       private
 
       def client
-        @deploy_group.kubernetes_cluster.policy_client
+        @deploy_group.kubernetes_cluster.client('policy/v1beta1')
       end
     end
 
