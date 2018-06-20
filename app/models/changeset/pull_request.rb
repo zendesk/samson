@@ -105,8 +105,14 @@ class Changeset::PullRequest
   def risks
     return @risks if defined?(@risks)
     @risks = parse_risks(@data.body.to_s)
+    @missing_risks = @risks.nil?
     @risks = nil if @risks&.match?(/\A\s*\-?\s*None\Z/i)
     @risks
+  end
+
+  def missing_risks?
+    risks
+    @missing_risks
   end
 
   def jira_issues
@@ -125,7 +131,7 @@ class Changeset::PullRequest
 
   def section_content(section_title, text)
     desired_header_regexp = "^(?:\\s*#+\\s*#{section_title}.*|\\s*#{section_title}.*\\n\\s*(?:-{2,}|={2,}))\\n"
-    content_regexp = '([\W\w]*?)'
+    content_regexp = '([\W\w]*?)' # capture all section content, including new lines
     next_header_regexp = '(?=^(?:\s*#+|.*\n\s*(?:-{2,}|={2,}\s*\n))|\z)'
 
     text[/#{desired_header_regexp}#{content_regexp}#{next_header_regexp}/i, 1]

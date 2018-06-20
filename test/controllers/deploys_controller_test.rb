@@ -14,6 +14,11 @@ describe DeploysController do
     end
   end
 
+  def changeset(overrides = {})
+    attrs = {commits: [], files: [], pull_requests: [], jira_issues: []}.merge(overrides)
+    stub_everything('Changeset', attrs)
+  end
+
   let(:project) { job.project }
   let(:stage) { stages(:test_staging) }
   let(:admin) { users(:admin) }
@@ -22,7 +27,6 @@ describe DeploysController do
   let(:deploy) { deploys(:succeeded_test) }
   let(:deploy_service) { stub(deploy: nil, cancel: nil) }
   let(:deploy_called) { [] }
-  let(:changeset) { stub_everything(commits: [], files: [], pull_requests: [], jira_issues: []) }
   let(:json) { JSON.parse(@response.body) }
 
   it "routes" do
@@ -417,14 +421,58 @@ describe DeploysController do
     end
 
     describe "#confirm" do
-      before do
-        Deploy.delete_all # triggers more callbacks
-
+      def confirm
         post :confirm, params: {project_id: project.to_param, stage_id: stage.to_param, deploy: {reference: "master"}}
       end
 
+      def pull_request_stub(data_overrides = {})
+        risks = data_overrides.delete(:risks)
+
+        attrs = {
+          number: 1,
+          title: 'Cool Stuff!',
+          additions: 0,
+          deletions: 0,
+        }.merge(data_overrides)
+
+        pr = Changeset::PullRequest.new('foo/bar', Sawyer::Resource.new(Sawyer::Agent.new(''), attrs))
+        pr.stubs(:parse_risks).returns(risks)
+        pr
+      end
+
+      before do
+        Deploy.delete_all # triggers more callbacks
+      end
+
       it "renders the template" do
+        confirm
         assert_template :changeset
+      end
+
+      it 'shows risks' do
+        pr = pull_request_stub(risks: 'The sky is falling!')
+        Deploy.any_instance.stubs(:changeset).returns(changeset(pull_requests: [pr]))
+
+        confirm
+
+        assert_response :success
+
+        assert_select 'h5' do
+          assert_select 'strong', text: '#1'
+          assert_select 'a[href=?]', 'https://github.com/foo/bar/pull/1', text: 'Cool Stuff!'
+        end
+        assert_select 'p', text: 'The sky is falling!'
+      end
+
+      it 'shows warning if risk is not found' do
+        pr = pull_request_stub
+        Deploy.any_instance.stubs(:changeset).returns(changeset(pull_requests: [pr]))
+
+        confirm
+
+        assert_response :success
+
+        assert_select 'i[class=?]', 'glyphicon glyphicon-alert deployment-alert'
       end
     end
 

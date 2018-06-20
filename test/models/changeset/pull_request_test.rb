@@ -487,4 +487,16 @@ describe Changeset::PullRequest do
       end
     end
   end
+
+  describe '#missing_risks?' do
+    it 'returns true if pr has no risks' do
+      pr.risks.must_be_nil
+      pr.missing_risks?.must_equal true
+    end
+
+    it 'returns false if pr has risks' do
+      add_risks
+      pr.missing_risks?.must_equal false
+    end
+  end
 end
