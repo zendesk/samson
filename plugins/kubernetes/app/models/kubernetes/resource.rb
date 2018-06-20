@@ -303,21 +303,29 @@ module Kubernetes
       # only makes sense to call this after deploying / while waiting for pods
       def desired_pod_count
         @desired_pod_count ||= begin
-          desired = resource.dig_fetch :status, :desiredNumberScheduled
-          return desired unless desired.zero?
+          desired = 0
 
-          # in bad state or does not yet know how many it needs
-          loop_sleep
-          expire_cache
+          3.times do |i|
+            if i != 0
+              # last iteration had bad state or does not yet know how many it needs, expire cache
+              loop_sleep
+              expire_cache
+            end
 
-          desired = resource.dig_fetch :status, :desiredNumberScheduled
-          return desired unless desired.zero?
+            desired = resource.dig_fetch :status, :desiredNumberScheduled
+            break if desired != 0
+          end
 
-          raise(
-            Samson::Hooks::UserError,
-            "Unable to find desired number of pods for daemonset #{name}\n" \
-            "delete it manually and make sure there is at least 1 node scheduleable."
-          )
+          # check if we still failed on the last try
+          if desired == 0
+            raise(
+              Samson::Hooks::UserError,
+              "Unable to find desired number of pods for daemonset #{name} on #{@deploy_group.name}\n" \
+              "delete it manually and make sure there is at least 1 node scheduleable."
+            )
+          end
+
+          desired
         end
       end
 
