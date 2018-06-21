@@ -222,14 +222,16 @@ module ApplicationHelper
     link_to "History#{count}", audits_path(search: {auditable_id: resource.id, auditable_type: resource.class.name})
   end
 
-  def additional_info(text)
+  def additional_info(text, overrides = {})
     data_attrs = if text.html_safe?
       {content: h(h(text).to_str), html: true}
     else
       {content: text}
     end.merge(BOOTSTRAP_TOOLTIP_PROPS)
 
-    content_tag :i, '', class: "glyphicon glyphicon-info-sign", data: data_attrs
+    options = {class: 'glyphicon glyphicon-info-sign'}.merge(overrides)
+
+    content_tag :i, '', **options, data: data_attrs
   end
 
   def page_title(content = nil, in_tab: false, &block)

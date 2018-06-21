@@ -401,6 +401,28 @@ describe Changeset::PullRequest do
       pr.risks.must_be_nil
     end
 
+    it "finds risks ignoring case" do
+      body.replace(+<<~BODY)
+        # risks
+          - Planes
+      BODY
+      pr.risks.must_equal "- Planes"
+    end
+
+    it "finds risks with new lines" do
+      body.replace(+<<~BODY)
+        # Risks
+
+        None
+
+        But wait!
+
+        Just kidding, none.
+      BODY
+
+      pr.risks.must_equal "None\n\nBut wait!\n\nJust kidding, none."
+    end
+
     it "finds risks with underline style markdown headers" do
       body.replace(+<<~BODY)
         Risks
@@ -463,6 +485,18 @@ describe Changeset::PullRequest do
         add_risks
         pr.risks.must_be_nil
       end
+    end
+  end
+
+  describe '#missing_risks?' do
+    it 'returns true if pr has no risks' do
+      pr.risks.must_be_nil
+      pr.missing_risks?.must_equal true
+    end
+
+    it 'returns false if pr has risks' do
+      add_risks
+      pr.missing_risks?.must_equal false
     end
   end
 end

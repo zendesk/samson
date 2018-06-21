@@ -439,6 +439,11 @@ describe ApplicationHelper do
         %(<i class="glyphicon glyphicon-info-sign" data-content="&amp;lt;em&amp;gt;foo&amp;lt;/em&amp;gt;" data-html="true" #{always_attributes}></i>)
       )
     end
+
+    it 'allows option overrides' do
+      expected_html = %(<i class="glyphicon glyphicon-alert barfoo" data-content="foo" #{always_attributes}></i>)
+      additional_info('foo', class: 'glyphicon glyphicon-alert barfoo').must_equal expected_html
+    end
   end
 
   describe "#link_to_history" do
