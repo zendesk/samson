@@ -325,14 +325,14 @@ module Kubernetes
     end
 
     def required_env
-      ((annotations || {})[:"samson/required_env"] || "").strip.split(/[\s,]/)
+      ((annotations || {})[:"samson/required_env"] || "").strip.split(/[\s,]+/)
     end
 
     def verify_env
       return unless missing_env # save work when there will be nothing to do
       set_env
       return unless missing = missing_env
-      raise Samson::Hooks::UserError, "Missing env variables #{missing.join(", ")}"
+      raise Samson::Hooks::UserError, "Missing env variables #{missing.inspect}"
     end
 
     # helpful env vars, also useful for log tagging
