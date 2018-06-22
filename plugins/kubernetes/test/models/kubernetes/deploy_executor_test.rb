@@ -219,7 +219,7 @@ describe Kubernetes::DeployExecutor do
         e = assert_raises Samson::Hooks::UserError do
           refute execute
         end
-        e.message.must_include "Missing env variables FOO, BAR"
+        e.message.must_include "Missing env variables [\"FOO\", \"BAR\"]"
       end
 
       it "fails before building when role config is missing" do

@@ -756,12 +756,23 @@ describe Kubernetes::TemplateFiller do
     end
 
     describe "when something is required" do
-      before { raw_template[:spec][:template][:metadata][:annotations] = {"samson/required_env": 'FOO'} }
+      let(:annotations) { raw_template[:spec][:template][:metadata][:annotations] = {} }
+
+      before { annotations[:"samson/required_env"] = 'FOO' }
 
       it "fails when value is missing" do
-        assert_raises Samson::Hooks::UserError do
+        e = assert_raises Samson::Hooks::UserError do
           template.send(:verify_env)
         end
+        e.message.must_equal "Missing env variables [\"FOO\"]"
+      end
+
+      it "fails when multiple values are missing" do
+        annotations[:"samson/required_env"] = 'FOO BAR,BAZ,  FOO2    FOO3'
+        e = assert_raises Samson::Hooks::UserError do
+          template.send(:verify_env)
+        end
+        e.message.must_include "Missing env variables [\"FOO\", \"BAR\", \"BAZ\", \"FOO2\", \"FOO3\"]"
       end
 
       it "passes when missing value is filled out" do
