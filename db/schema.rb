@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_06_11_172637) do
+ActiveRecord::Schema.define(version: 2018_06_16_002028) do
 
   create_table "audits" do |t|
     t.integer "auditable_id", null: false
@@ -141,6 +141,7 @@ ActiveRecord::Schema.define(version: 2018_06_11_172637) do
     t.string "parent_type", null: false
     t.integer "scope_id"
     t.string "scope_type"
+    t.text "description"
     t.index ["parent_id", "parent_type", "name", "scope_type", "scope_id"], name: "environment_variables_unique_scope", unique: true, length: { parent_type: 191, name: 191, scope_type: 191 }
   end
 
