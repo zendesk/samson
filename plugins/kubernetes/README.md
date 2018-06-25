@@ -63,12 +63,6 @@ Each [Kubernetes role](#kubernetes-roles) is read from a file in the project's r
 then augments the definitions by adding docker repo digest, labels, annotations, resource limits, 
 environment variables, secrets, etc and then sends them to the Kubernetes API.  
 
-To deploy to Kubernetes, Samson reads in configuration file from the project
-repository. That file is expected to contain the definition of a Deployment/Daemonset/Service/Job/etc.
-Samson will read in that file from the project repository, make some
-changes (like updating the Docker image and adding labels), and send that
-to the Kubernetes API.
-
 Multiple roles will likely be similar, but have different commands or liveness probes.
 ([kucodiff](https://github.com/grosser/kucodiff) can be used to make sure they stay in sync).
 
