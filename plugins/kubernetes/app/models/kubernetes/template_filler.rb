@@ -10,7 +10,7 @@ module Kubernetes
 
     def initialize(release_doc, template, index:)
       @doc = release_doc
-      @deploy_group = DeployGroup.with_deleted{ @doc.deploy_group }
+      @deploy_group = DeployGroup.with_deleted { @doc.deploy_group }
       @template = template
       @index = index
     end

@@ -49,7 +49,7 @@ module Kubernetes
     def clients
       scopes = release_docs.map do |release_doc|
         release_id = resource_release_id(release_doc)
-        deploy_group = DeployGroup.with_deleted{ release_doc.deploy_group }
+        deploy_group = DeployGroup.with_deleted { release_doc.deploy_group }
         [
           deploy_group,
           {
