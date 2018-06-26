@@ -18,6 +18,7 @@ class Project < ActiveRecord::Base
   has_soft_deletion default_scope: true unless self < SoftDeletion::Core
   audited
 
+  include Lockable
   include Permalinkable
   include Searchable
   include SoftDeleteWithDestroy

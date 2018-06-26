@@ -755,4 +755,62 @@ describe Stage do
       stage.url.must_equal "http://www.test-url.com/projects/foo/stages/staging"
     end
   end
+
+  describe "#locked_by?" do
+    def lock(overrides = {})
+      @lock ||= Lock.create!({user: user, resource: stage}.merge(overrides))
+    end
+
+    let(:user) { users(:deployer) }
+
+    it "returns true for stage lock" do
+      lock # trigger creation
+      Lock.send :all_cached
+      assert_sql_queries 0 do
+        stage.locked_by?(lock).must_equal true
+      end
+    end
+
+    it "returns false for different stage's lock" do
+      lock(resource: stages(:test_production))
+      Lock.send :all_cached
+      assert_sql_queries 0 do
+        stage.locked_by?(lock).must_equal false
+      end
+    end
+
+    describe "with environments" do
+      before do
+        DeployGroup.stubs(enabled?: true)
+        stage # load stage
+        DeployGroupsStage.first # load column information
+      end
+
+      it "returns true if finds environment lock on stage" do
+        lock(resource: environments(:staging))
+        Lock.send :all_cached
+        assert_sql_queries 3 do # deploy-groups -> deploy-groups-stages -> environments
+          stage.locked_by?(lock).must_equal true
+        end
+      end
+
+      it "does not check environments on non-environment locks" do
+        lock(resource: stages(:test_production))
+        Lock.send :all_cached
+        assert_sql_queries 0 do
+          stage.locked_by?(lock).must_equal false
+        end
+      end
+    end
+
+    describe "with projects" do
+      it "finds project lock on stage" do
+        lock(resource: projects(:test))
+        Lock.send :all_cached
+        assert_sql_queries 1 do
+          stage.locked_by?(lock).must_equal true
+        end
+      end
+    end
+  end
 end

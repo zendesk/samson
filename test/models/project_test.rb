@@ -631,4 +631,26 @@ describe Project do
       end
     end
   end
+
+  describe "#locked_by?" do
+    def lock(overrides = {})
+      @lock ||= Lock.create!({user: author, resource: project}.merge(overrides))
+    end
+
+    it 'returns true for project lock' do
+      lock # trigger lock creation
+      Lock.send :all_cached
+      assert_sql_queries 0 do
+        project.locked_by?(lock).must_equal true
+      end
+    end
+
+    it 'returns false for different project lock' do
+      lock(resource: projects(:other))
+      Lock.send :all_cached
+      assert_sql_queries 0 do
+        project.locked_by?(lock).must_equal false
+      end
+    end
+  end
 end

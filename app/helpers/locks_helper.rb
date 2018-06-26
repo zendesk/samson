@@ -25,12 +25,12 @@ module LocksHelper
   end
 
   def render_lock(resource)
-    lock = (resource == :global ? global_lock : Lock.for_resource(resource).first)
+    lock = (resource == :global ? global_lock : Lock.for_resource?(resource).first)
     render '/locks/lock', lock: lock if lock
   end
 
   def resource_lock_icon(resource)
-    return unless lock = Lock.for_resource(resource).first
+    return unless lock = Lock.for_resource?(resource).first
     text = (lock.warning? ? "#{warning_icon} Warning" : "#{lock_icon} Locked")
     content_tag :span, text.html_safe, class: "label label-warning", title: strip_tags(lock.summary)
   end
