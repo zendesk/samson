@@ -136,6 +136,16 @@ describe AccessControl do
     end
 
     describe :write do
+      describe "project" do
+        it "allows admins to update" do
+          assert can?(project_admin, :write, project)
+        end
+
+        it "forbids deployers to update" do
+          refute can?(deployer, :write, project)
+        end
+      end
+
       describe "stage" do
         it "allows deployers to update" do
           assert can?(project_deployer, :write, stage)

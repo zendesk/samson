@@ -63,4 +63,28 @@ describe Environment do
       refute env.template_stages.empty?
     end
   end
+
+  describe "#locked_by?" do
+    def lock(overrides = {})
+      @lock ||= Lock.create!({user: users(:deployer), resource: environment}.merge(overrides))
+    end
+
+    let(:environment) { environments(:staging) }
+
+    it 'returns true for environment lock' do
+      lock # trigger lock creation
+      Lock.send :all_cached
+      assert_sql_queries 0 do
+        environment.locked_by?(lock).must_equal true
+      end
+    end
+
+    it 'returns false for different project lock' do
+      lock(resource: projects(:other))
+      Lock.send :all_cached
+      assert_sql_queries 0 do
+        environment.locked_by?(lock).must_equal false
+      end
+    end
+  end
 end

@@ -1,5 +1,7 @@
 <% page_title @project.name %>
 
+<%= render_lock @project %>
+
 <%= render 'projects/header', project: @project, tab: "stages" %>
 
 <section class="clearfix tabs">

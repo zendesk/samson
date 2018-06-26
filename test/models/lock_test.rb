@@ -5,6 +5,7 @@ SingleCov.covered!
 
 describe Lock do
   let(:user) { users(:deployer) }
+  let(:project) { projects(:test) }
   let(:stage) { stages(:test_staging) }
   let(:environment) { environments(:production) }
   let(:lock) { Lock.create!(user: user, resource: stage) }
@@ -72,6 +73,11 @@ describe Lock do
       lock.affected.must_equal "Production"
     end
 
+    it "is project name for Project" do
+      lock.resource = project
+      lock.affected.must_equal "Foo"
+    end
+
     it "is stage for stage" do
       lock.resource = stage
       lock.affected.must_equal "stage"
@@ -118,7 +124,7 @@ describe Lock do
   end
 
   describe "#expire_summary" do
-    it "is emppty when not deleting" do
+    it "is empty when not deleting" do
       lock.expire_summary.must_be_nil
     end
 
@@ -200,49 +206,7 @@ describe Lock do
       stage # trigger find
       Lock.send :all_cached
       assert_sql_queries 0 do
-        Lock.for_resource(stage).must_equal []
-      end
-    end
-
-    it "finds stage lock" do
-      lock # trigger creation
-      Lock.send :all_cached
-      assert_sql_queries 0 do
-        Lock.for_resource(stage).must_equal [lock]
-      end
-    end
-
-    describe "with environments active" do
-      let!(:lock) { Lock.create!(resource: environments(:staging), user: user) }
-
-      before do
-        DeployGroup.stubs(enabled?: true)
-        stage # load stage
-        DeployGroupsStage.first # load column information
-      end
-
-      it "finds environment lock on stage" do
-        Lock.send :all_cached
-        assert_sql_queries 3 do # deploy-groups -> deploy-groups-stages -> environments
-          Lock.for_resource(stage).must_equal [lock]
-        end
-      end
-
-      it "does not check environments on non-environment locks" do
-        lock.update_attributes!(resource: stages(:test_production))
-        Lock.send :all_cached
-        assert_sql_queries 0 do
-          Lock.for_resource(stage).must_equal []
-        end
-      end
-    end
-
-    it "finds environment lock" do
-      env = environments(:production)
-      lock = Lock.create!(resource: env, user: user).reload
-      Lock.send :all_cached
-      assert_sql_queries 0 do
-        Lock.for_resource(env).must_equal [lock]
+        Lock.for_resource?(stage).must_equal []
       end
     end
 
@@ -251,21 +215,21 @@ describe Lock do
       lock = Lock.create!(user: user)
       Lock.send :all_cached
       assert_sql_queries 0 do
-        Lock.for_resource(stage).must_equal [lock]
+        Lock.for_resource?(stage).must_equal [lock]
       end
     end
 
-    describe "with multiple logs" do
+    describe "with multiple locks" do
       let!(:global) { Lock.create!(user: user) }
       before { lock } # trigger create
 
       it "combines locks" do
-        Lock.for_resource(stage).must_equal [lock, global]
+        Lock.for_resource?(stage).must_equal [lock, global]
       end
 
       it "sorts locks for display, so .first will be the highest priority" do
         lock.update_column(:warning, true)
-        Lock.for_resource(stage).must_equal [global, lock]
+        Lock.for_resource?(stage).must_equal [global, lock]
       end
     end
   end

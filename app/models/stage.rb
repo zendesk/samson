@@ -4,6 +4,7 @@ class Stage < ActiveRecord::Base
 
   has_soft_deletion default_scope: true unless self < SoftDeletion::Core
 
+  include Lockable
   include Permalinkable
 
   audited except: [:order]
@@ -204,6 +205,10 @@ class Stage < ActiveRecord::Base
     Rails.application.routes.url_helpers.project_stage_url(project, self)
   end
 
+  def locked_by?(lock)
+    super || environment_lock?(lock) || project_lock?(lock)
+  end
+
   private
 
   def audited_changes
@@ -253,5 +258,13 @@ class Stage < ActiveRecord::Base
     new_command = project.commands.new(command: @command)
     previous = stage_commands.map(&:position).max || 0
     stage_commands.build(command: new_command, position: previous + 1)
+  end
+
+  def environment_lock?(lock)
+    lock.resource_type == "Environment" && environments.any? { |e| lock.resource_equal?(e) }
+  end
+
+  def project_lock?(lock)
+    lock.resource_type == "Project" && lock.resource_equal?(project)
   end
 end
