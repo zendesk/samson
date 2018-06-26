@@ -2,6 +2,7 @@
 module Kubernetes
   class DeployGroupRole < ActiveRecord::Base
     MAX_LIMITS_TO_REQUESTS_RATIO = 10
+    NO_CPU_LIMIT_ALLOWED = Samson::EnvCheck.set?("KUBERNETES_NO_CPU_LIMIT_ALLOWED")
 
     self.table_name = 'kubernetes_deploy_group_roles'
 

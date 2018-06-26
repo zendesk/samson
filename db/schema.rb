@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_06_11_172637) do
+ActiveRecord::Schema.define(version: 2018_06_26_154722) do
 
   create_table "audits" do |t|
     t.integer "auditable_id", null: false
@@ -221,6 +221,7 @@ ActiveRecord::Schema.define(version: 2018_06_11_172637) do
     t.decimal "requests_cpu", precision: 6, scale: 2, null: false
     t.integer "requests_memory", null: false
     t.boolean "delete_resource", default: false, null: false
+    t.boolean "no_cpu_limit", default: false, null: false
     t.index ["deploy_group_id"], name: "index_kubernetes_deploy_group_roles_on_deploy_group_id"
     t.index ["project_id", "deploy_group_id", "kubernetes_role_id"], name: "index_kubernetes_deploy_group_roles_on_project_dg_kr", unique: true
   end
@@ -238,6 +239,7 @@ ActiveRecord::Schema.define(version: 2018_06_11_172637) do
     t.decimal "requests_cpu", precision: 6, scale: 2, null: false
     t.integer "requests_memory", null: false
     t.boolean "delete_resource", default: false, null: false
+    t.boolean "no_cpu_limit", default: false, null: false
     t.index ["kubernetes_release_id"], name: "index_kubernetes_release_docs_on_kubernetes_release_id"
     t.index ["kubernetes_role_id"], name: "index_kubernetes_release_docs_on_kubernetes_role_id"
   end

@@ -172,9 +172,11 @@ class Kubernetes::DeployGroupRolesController < ApplicationController
   end
 
   def deploy_group_role_params(scope: params.require(:kubernetes_deploy_group_role))
-    scope.permit(
+    allowed = [
       :kubernetes_role_id, :requests_memory, :requests_cpu, :limits_memory, :limits_cpu,
       :replicas, :project_id, :deploy_group_id, :delete_resource
-    )
+    ]
+    allowed << :no_cpu_limit if Kubernetes::DeployGroupRole::NO_CPU_LIMIT_ALLOWED
+    p scope.permit(*allowed)
   end
 end

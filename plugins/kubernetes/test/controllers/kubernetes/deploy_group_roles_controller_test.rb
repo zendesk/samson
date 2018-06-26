@@ -148,6 +148,27 @@ describe Kubernetes::DeployGroupRolesController do
         post :create, params: params
         assert_response :unauthorized
       end
+
+      describe "with no_cpu_limit" do
+        before do
+          deploy_group_role.destroy!
+          params[:kubernetes_deploy_group_role][:no_cpu_limit] = 'true'
+        end
+
+        it "cannot assign" do
+          assert_raises ActionController::UnpermittedParameters do
+            post :create, params: params
+          end
+        end
+
+        it "can assign when enabled" do
+          stub_const Kubernetes::DeployGroupRole, :NO_CPU_LIMIT_ALLOWED, true do
+            post :create, params: params
+            assert_response :redirect
+            assert Kubernetes::DeployGroupRole.last.no_cpu_limit
+          end
+        end
+      end
     end
 
     describe "#edit" do

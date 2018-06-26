@@ -153,3 +153,7 @@ Users can opt-out by setting `samson/minAvailable: disabled`.
 Can be enabled per role, it then starts a new isolated deployment shifting between blue and green sufixes, 
 switching service selectors if successfully deployed and deleting previous resources.
 All active resources must be deleted manually when switching this.
+
+### Resources without cpu limits
+
+Set `KUBERNETES_NO_CPU_LIMIT_ALLOWED=1`, see [#2820](https://github.com/zendesk/samson/issues/2820) for why this can be useful.
