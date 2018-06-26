@@ -34,6 +34,13 @@
   $(function() {
     var $localCommands = $('#commands pre.local:not(.no_access)');
 
+    function notify_warning(event, message){
+      var $warning = $('<div class="cannot-edit">' + message + '</div>')
+      $(event).after($warning);
+      $warning.fadeOut(3000);
+      return false;
+    }
+
     $('#commands').sortable();
     $.fn.editableform.buttons = <%= render('commands/buttons').inspect.html_safe %>;
 
@@ -62,17 +69,11 @@
     });
 
     $('#commands pre.global').dblclick(function(){
-      var $warning = $('<div class="cannot-edit">Global commands cannot be edited inline, use the Admin UI.</div>')
-      $(this).after($warning);
-      $warning.fadeOut(3000);
-      return false;
+      notify_warning(this, 'Global commands cannot be edited inline, use the Admin UI.');
     });
 
-    $('#commands pre.no_access').dblclick(function(){
-      var $warning = $('<div class="cannot-edit">Need admin access for the project, that owns this command.</div>')
-      $(this).after($warning);
-      $warning.fadeOut(3000);
-      return false;
+    $('#commands pre.no_access:not(.global)').dblclick(function(){
+      notify_warning(this, 'Need admin access for the project, that owns this command.');
     });
 
     $('#commands').on('click', '.editable-destroy', function(event) {
