@@ -95,6 +95,7 @@ module Kubernetes
             requests_memory: dgr.requests_memory,
             limits_cpu: dgr.limits_cpu,
             limits_memory: dgr.limits_memory,
+            no_cpu_limit: dgr.no_cpu_limit,
             delete_resource: dgr.delete_resource
           )
         end

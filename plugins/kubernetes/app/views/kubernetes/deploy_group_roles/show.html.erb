@@ -32,7 +32,10 @@
   <div class="form-group">
     <label class="col-lg-2 control-label">CPU</label>
     <div class="col-lg-4">
-      <p class="form-control-static"><%= @deploy_group_role.requests_cpu %> to <%= @deploy_group_role.limits_cpu %></p>
+      <p class="form-control-static">
+        <%= @deploy_group_role.requests_cpu %> to <%= @deploy_group_role.limits_cpu %>
+        <%= "(Not enforced)" if @deploy_group_role.no_cpu_limit?  %>
+      </p>
     </div>
   </div>
 

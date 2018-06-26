@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative "../../test_helper"
 
-SingleCov.covered! uncovered: 2
+SingleCov.covered!
 
 describe Kubernetes::TemplateFiller do
   def add_init_container(container)
@@ -126,6 +126,11 @@ describe Kubernetes::TemplateFiller do
       template.to_hash[:metadata][:namespace].must_equal 'kube-system'
     end
 
+    it "can verify without builds" do
+      doc.kubernetes_release.builds = []
+      template.to_hash(verification: true)
+    end
+
     describe "unqiue deployments" do
       let(:labels) do
         hash = template.to_hash
@@ -208,6 +213,11 @@ describe Kubernetes::TemplateFiller do
       it "does not override with blank service name" do
         doc.kubernetes_role.update_column(:service_name, '') # user left field empty
         template.to_hash[:metadata][:name].must_equal 'some-project-rc'
+      end
+
+      it "fills name" do
+        doc.kubernetes_role.update_column(:service_name, 'custom')
+        template.to_hash[:metadata][:name].must_equal 'custom'
       end
 
       it "fails when trying to fill for a generated service" do
@@ -447,6 +457,19 @@ describe Kubernetes::TemplateFiller do
         )
       end
 
+      it "does not set cpu limit when using no_cpu_limit" do
+        doc.no_cpu_limit = true
+        container.fetch(:resources).must_equal(
+          requests: {
+            cpu: 0.5,
+            memory: "50M"
+          },
+          limits: {
+            memory: "100M"
+          }
+        )
+      end
+
       it "fills then environment with string values" do
         env = container.fetch(:env)
         env.map { |x| x.fetch(:name) }.sort.must_equal(
@@ -509,10 +532,7 @@ describe Kubernetes::TemplateFiller do
       let(:template_env) { template.to_hash[:spec][:template][:spec][:containers].first[:env] }
 
       around do |test|
-        klass = Kubernetes::TemplateFiller
-        silence_warnings { klass.const_set(:SECRET_PULLER_IMAGE, "docker-registry.example.com/foo:bar") }
-        test.call
-        silence_warnings { klass.const_set(:SECRET_PULLER_IMAGE, nil) }
+        stub_const Kubernetes::TemplateFiller, :SECRET_PULLER_IMAGE, "docker-registry.example.com/foo:bar", &test
       end
 
       before do

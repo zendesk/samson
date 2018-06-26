@@ -296,6 +296,7 @@ module Kubernetes
         requests: {cpu: @doc.requests_cpu.to_f, memory: "#{@doc.requests_memory}M"},
         limits: {cpu: @doc.limits_cpu.to_f, memory: "#{@doc.limits_memory}M"}
       }
+      containers.first[:resources][:limits].delete(:cpu) if @doc.no_cpu_limit
     end
 
     # To not break previous workflows for sidecars we do not pick the default Dockerfile

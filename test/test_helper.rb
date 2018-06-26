@@ -215,6 +215,14 @@ ActiveSupport::TestCase.class_eval do
   ensure
     Thread.report_on_exception = old
   end
+
+  def stub_const(base, name, value)
+    old = base.const_get(name)
+    silence_warnings { base.const_set(name, value) }
+    yield
+  ensure
+    silence_warnings { base.const_set(name, old) }
+  end
 end
 
 # Helpers for controller tests
