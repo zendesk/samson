@@ -34,9 +34,9 @@
   $(function() {
     var $localCommands = $('#commands pre.local:not(.no_access)');
 
-    function notify_warning(event, message){
+    function notify_warning(target, message){
       var $warning = $('<div class="cannot-edit">' + message + '</div>')
-      $(event).after($warning);
+      $(target).after($warning);
       $warning.fadeOut(3000);
       return false;
     }
