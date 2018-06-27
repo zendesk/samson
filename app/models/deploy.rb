@@ -48,7 +48,7 @@ class Deploy < ActiveRecord::Base
     deploy_details = "#{short_reference} to#{project_name} #{stage&.name}"
     if ["cancelled", "cancelling"].include?(status)
       canceller_name = job.canceller&.name || "Samson"
-      "#{canceller_name} #{summary_action} #{job.user.name}`s deploy#{deploy_buddy} of #{deploy_details}"
+      "#{canceller_name} #{summary_action} #{job.user.name}'s deploy#{deploy_buddy} of #{deploy_details}"
     else
       "#{job.user.name}#{deploy_buddy} #{summary_action} #{deploy_details}"
     end
