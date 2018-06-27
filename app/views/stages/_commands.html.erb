@@ -4,6 +4,7 @@
 
   <div id="commands">
     <% usage_ids = Command.usage_ids %>
+    <% administrated = current_user.administrated_projects.pluck(:id) %>
     <%= form.collection_check_boxes(:command_ids, Command.for_stage(form.object), :id, :command) do |b| %>
       <% command = b.object %>
       <% others = usage_ids.count(command.id) - (b.check_box.include?('checked') && form.object.persisted? ? 1 : 0) %>
@@ -14,7 +15,7 @@
           <%= b.check_box %>
         </div>
         <div class="col-lg-8">
-          <% klass = "pre-command pre-inline #{command.global? ? 'global' : 'local'} #{'others' if others_warning}" %>
+          <% klass = "pre-command pre-inline #{command.global? ? 'global' : 'local'} #{'others' if others_warning} #{'no_access' unless administrated.include?(command.project_id)}" %>
           <pre data-type="textarea" data-others-warning="<%= others_warning %>" data-url="<%= command_path(b.value) %>" class="<%= klass %>"><%= b.text %></pre>
         </div>
         <%= edit_command_link command %>
@@ -31,7 +32,14 @@
 
 <script>
   $(function() {
-    var $localCommands = $('#commands pre.local');
+    var $localCommands = $('#commands pre.local:not(.no_access)');
+
+    function notify_warning(target, message){
+      var $warning = $('<div class="cannot-edit">' + message + '</div>')
+      $(target).after($warning);
+      $warning.fadeOut(3000);
+      return false;
+    }
 
     $('#commands').sortable();
     $.fn.editableform.buttons = <%= render('commands/buttons').inspect.html_safe %>;
@@ -61,10 +69,11 @@
     });
 
     $('#commands pre.global').dblclick(function(){
-      var $warning = $('<div class="cannot-edit">Global commands cannot be edited inline, use the Admin UI.</div>')
-      $(this).after($warning);
-      $warning.fadeOut(3000);
-      return false;
+      notify_warning(this, 'Global commands cannot be edited inline, use the Admin UI.');
+    });
+
+    $('#commands pre.no_access:not(.global)').dblclick(function(){
+      notify_warning(this, 'Need admin access for the project, that owns this command.');
     });
 
     $('#commands').on('click', '.editable-destroy', function(event) {

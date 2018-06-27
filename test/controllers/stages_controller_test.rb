@@ -248,6 +248,22 @@ describe StagesController do
         end
       end
 
+      describe "moving projects" do
+        let(:echo_command) { commands(:echo) }
+        before do
+          other_project = project.dup
+          other_project.update_attributes(name: 'duplicate', permalink: 'duplicate')
+
+          echo_command.project_id = other_project.id
+          echo_command.save!
+        end
+
+        it 'has no_access css class for commands when no admin for both' do
+          get :edit, params: {project_id: subject.project.to_param, id: subject.to_param}
+          assert_select '.no_access', echo_command.command
+        end
+      end
+
       it 'checks the appropriate next_stage_ids checkbox' do
         next_stage = Stage.create!(name: 'food', project: subject.project)
         subject.next_stage_ids = [next_stage.id]
