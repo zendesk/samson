@@ -15,7 +15,7 @@ class LocksController < ApplicationController
     new_lock = Lock.new(lock_params)
     if new_lock.save
       respond_to do |format|
-        format.html { redirect_back notice: 'Locked', fallback_location: root_path }
+        format.html { redirect_back notice: (new_lock.warning? ? 'Warned' : 'Locked'), fallback_location: root_path }
         format.json { render json: {lock: new_lock} }
       end
     else
