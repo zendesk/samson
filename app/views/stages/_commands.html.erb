@@ -25,63 +25,99 @@
 
   <hr />
 
-  <p>Add a command which is specific to your project</p>
-  <%= form.text_area :command, class: "form-control", rows: 4, value: nil, placeholder: 'cap production deploy' %>
+  <% if @stage.persisted? %>
+    <p>Add a command which is specific to your project</p>
+    <%= text_area_tag :command, '', class: "form-control", rows: 4, value: nil, placeholder: 'cap production deploy' %>
+    <%= button_tag(
+          'Create Stage Command',
+          class: 'btn btn-primary stage-command-button',
+          type: 'button',
+          data: {url:  create_command_project_stage_path(@project, @stage)}
+        )
+    %>
+  <% end %>
 </fieldset>
 
 <script>
   $(function() {
-    var $localCommands = $('#commands pre.local');
+    var $commandsContainer = $('#commands');
+    var $stageCommandTextField = $("#command");
 
-    $('#commands').sortable();
+    $commandsContainer.sortable();
     $.fn.editableform.buttons = <%= render('commands/buttons').inspect.html_safe %>;
 
-    $localCommands.editable({
-      mode: 'inline',
-      send: 'always',
-      toggle: 'dblclick',
-      highlight: false,
-      params: function(params) {
-        return { command: { command: params.value } };
-      },
-      ajaxOptions: {
-        type: 'PATCH',
-        dataType: 'json'
+    attachCommandEventListeners();
+
+    $('.stage-command-button').click(function(event) {
+      var $button = $(this);
+      var command = $stageCommandTextField.val(), url = event.target.dataset.url;
+
+      $button.prop('disabled', true);
+      if(command) {
+        $.post(url, { command: command }, function(data) {
+          var $lastChecked = $commandsContainer.find('.row:has(:checked)').last();
+
+          $lastChecked.after(data.body);
+          $stageCommandTextField.val('');
+
+          attachCommandEventListeners();
+        }, 'json')
+          .always(function() {
+            $button.prop('disabled', false);
+          });
       }
     });
 
-    $localCommands.filter(".others").dblclick(function(){
-      alert("Editing for " + $(this).data('others-warning') + ". If you do not want this, make a copy.");
-      $($($(this).get(0)).siblings().get(0)).find('.editable-destroy').hide();
-    });
+    function attachCommandEventListeners() {
+      var $localCommands = $('#commands pre.local');
 
-    $('#commands pre').dblclick(function(){
-      var $textarea = $($($(this).get(0)).siblings().get(0)).find('textarea');
-      $textarea.attr('rows', ($(this).text().match(/\n/g) || []).length + 1);
-    });
+      $localCommands.editable({
+        mode: 'inline',
+        send: 'always',
+        toggle: 'dblclick',
+        highlight: false,
+        params: function(params) {
+          return { command: { command: params.value } };
+        },
+        ajaxOptions: {
+          type: 'PATCH',
+          dataType: 'json'
+        }
+      });
 
-    $('#commands pre.global').dblclick(function(){
-      var $warning = $('<div class="cannot-edit">Global commands cannot be edited inline, use the Admin UI.</div>')
-      $(this).after($warning);
-      $warning.fadeOut(3000);
-      return false;
-    });
+      $localCommands.filter(".others").dblclick(function(){
+        alert("Editing for " + $(this).data('others-warning') + ". If you do not want this, make a copy.");
+        $($($(this).get(0)).siblings().get(0)).find('.editable-destroy').hide();
+      });
 
-    $('#commands').on('click', '.editable-destroy', function(event) {
-      var editable = $(this).closest('div.col-lg-8').children('.pre-command');
+      $('#commands pre').dblclick(function(){
+        var $textarea = $($($(this).get(0)).siblings().get(0)).find('textarea');
+        $textarea.attr('rows', ($(this).text().match(/\n/g) || []).length + 1);
+      });
 
-      if(confirm('Are you sure you would like to remove this command from all stages?')) {
-        $.ajax({
-          method: 'DELETE',
-          dataType: 'json',
-          url: editable.data('url'),
-          success: function() {
-            editable.closest('.row').fadeOut();
-          }
-        });
-      }
+      $('#commands pre.global').dblclick(function(){
+        var $warning = $('<div class="cannot-edit">Global commands cannot be edited inline, use the Admin UI.</div>')
+        $(this).after($warning);
+        $warning.fadeOut(3000);
+        return false;
+      });
 
-      event.preventDefault();
-    });
+      $commandsContainer.on('click', '.editable-destroy', function(event) {
+        var editable = $(this).closest('div.col-lg-8').children('.pre-command');
+
+        if(confirm('Are you sure you would like to remove this command from all stages?')) {
+          $.ajax({
+            method: 'DELETE',
+            dataType: 'json',
+            url: editable.data('url'),
+            success: function() {
+              editable.closest('.row').fadeOut();
+            }
+          });
+        }
+
+        event.preventDefault();
+      });
+    }
   });
 </script>

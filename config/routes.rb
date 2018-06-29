@@ -33,6 +33,7 @@ Samson::Application.routes.draw do
 
       member do
         match :clone, via: [:get, :post]
+        post :create_command
       end
 
       resources :deploys, only: [:new, :create] do

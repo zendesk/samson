@@ -6,7 +6,7 @@ class StagesController < ApplicationController
 
   before_action :authorize_resource!
   before_action :check_token, if: :badge?
-  before_action :find_stage, only: [:show, :edit, :update, :destroy, :clone]
+  before_action :find_stage, except: [:index, :new, :create, :reorder]
 
   def index
     @stages = @project.stages
@@ -92,6 +92,15 @@ class StagesController < ApplicationController
     end
   end
 
+  def create_command
+    if command_text = params[:command].presence
+      command = @stage.append_new_command(command_text)
+      render json: {body: render_to_string(partial: 'command', locals: {command: command})}
+    else
+      head :unprocessable_entity
+    end
+  end
+
   private
 
   def badge_safe(string)
@@ -121,7 +130,6 @@ class StagesController < ApplicationController
   def stage_permitted_params
     [
       :name,
-      :command,
       :confirm,
       :permalink,
       :dashboard,

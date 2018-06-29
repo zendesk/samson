@@ -37,7 +37,6 @@ class Stage < ActiveRecord::Base
   validate :validate_not_auto_deploying_without_buddy
 
   before_create :ensure_ordering
-  before_save :append_new_command
   after_destroy :destroy_deploy_groups_stages
   after_soft_delete :destroy_deploy_groups_stages
 
@@ -180,11 +179,6 @@ class Stage < ActiveRecord::Base
     stage_commands.sort_by(&:position).map(&:command).compact
   end
 
-  def command=(c)
-    @script_was ||= script
-    @command = c
-  end
-
   def influencing_stage_ids
     deploy_group_ids = deploy_groups_stages.reorder(nil).pluck(:deploy_group_id)
     stage_ids = DeployGroupsStage.reorder(nil).where(deploy_group_id: deploy_group_ids).
@@ -209,6 +203,20 @@ class Stage < ActiveRecord::Base
     super || environment_lock?(lock) || project_lock?(lock)
   end
 
+  def append_new_command(command)
+    @script_was ||= script
+
+    new_command = project.commands.new(command: command)
+    next_position = stage_commands.map(&:position).max + 1 || 1
+    created_command = stage_commands.create(command: new_command, position: next_position).command
+
+    if created_command.persisted?
+      # manually update audit
+      update_script_audit
+      created_command
+    end
+  end
+
   private
 
   def audited_changes
@@ -220,6 +228,10 @@ class Stage < ActiveRecord::Base
     script_is = script
     return {} if script_is == @script_was
     {"script" => [@script_was, script_is]}
+  end
+
+  def update_script_audit
+    write_audit(action: 'update', audited_changes: script_changes)
   end
 
   def permalink_base
@@ -250,14 +262,6 @@ class Stage < ActiveRecord::Base
     if deploy_on_release? && deploy_requires_approval?
       errors.add(:deploy_on_release, "cannot be used for a stage the requires approval")
     end
-  end
-
-  # has to be done after command_ids assignment is done
-  def append_new_command
-    return if @command.blank?
-    new_command = project.commands.new(command: @command)
-    previous = stage_commands.map(&:position).max || 0
-    stage_commands.build(command: new_command, position: previous + 1)
   end
 
   def environment_lock?(lock)

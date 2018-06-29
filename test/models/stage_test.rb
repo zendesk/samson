@@ -436,23 +436,6 @@ describe Stage do
     end
   end
 
-  describe "#command=" do
-    it 'add new command to the end' do
-      stage.update_attributes!(
-        command: 'test',
-        command_ids: [commands(:echo).id]
-      )
-      stage.reload
-      stage.script.must_equal "#{commands(:echo).command}\ntest"
-    end
-
-    it "can add a single command" do
-      stage.send(:stage_commands).delete_all
-      stage.update_attributes!(command: 'test')
-      stage.script.must_equal "test"
-    end
-  end
-
   describe '#command_ids=' do
     let!(:sample_commands) do
       ['foo', 'bar', 'baz'].map { |c| Command.create!(command: c) }
@@ -504,12 +487,6 @@ describe Stage do
       stage.audits.size.must_equal 0
     end
 
-    it "tracks command addition" do
-      stage.update_attributes!(command: "Foo")
-      stage.audits.size.must_equal 1
-      stage.audits.first.audited_changes.must_equal "script" => ["echo hello", "echo hello\nFoo"]
-    end
-
     it "tracks selecting an existing command" do
       old = stage.command_ids
       new = old + [commands(:global).id]
@@ -518,24 +495,15 @@ describe Stage do
       stage.audits.first.audited_changes.must_equal "script" => ["echo hello", "echo hello\necho global"]
     end
 
+    it "does not track when commands do not change" do
+      stage.update_attributes!(command_ids: stage.command_ids.map(&:to_s))
+      stage.audits.size.must_equal 0
+    end
+
     it "tracks command removal" do
       stage.update_attributes!(command_ids: [])
       stage.audits.size.must_equal 1
       stage.audits.first.audited_changes.must_equal "script" => ["echo hello", ""]
-    end
-
-    it "does not track when command does not change" do
-      stage.update_attributes!(command_ids: stage.command_ids.map(&:to_s), command: "")
-      stage.audits.size.must_equal 0
-    end
-
-    it "tracks simulatanous command and command_ids change" do
-      stage.update_attributes!(name: 'Foobar', command_ids: Command.pluck(:id), command: "foo")
-      stage.audits.size.must_equal 1
-      stage.audits.first.audited_changes.must_equal(
-        "name" => ["Staging", "Foobar"],
-        "script" => ["echo hello", "echo hello\necho global\nfoo"]
-      )
     end
 
     it "tracks command_ids reorder" do
@@ -547,18 +515,13 @@ describe Stage do
       )
     end
 
-    it "tracks external command change" do
-      stage.send(:stage_commands).first.command.update_attributes!(command: "NEW")
-      stage.audits.first.audited_changes.must_equal "script" => ["echo hello", "NEW"]
-    end
-
     it "does not trigger multiple times when destroying" do
       stage.destroy!
       stage.audits.size.must_equal 1
     end
 
     it "does not trigger multiple times when creating" do
-      stage = Stage.create!(name: 'Foobar', project: projects(:test), command_ids: Command.pluck(:id), command: "foo")
+      stage = Stage.create!(name: 'Foobar', project: projects(:test), command_ids: Command.pluck(:id))
       stage.audits.size.must_equal 1
     end
   end
@@ -594,21 +557,6 @@ describe Stage do
         other.update_column(:no_code_deployed, true)
         stage.influencing_stage_ids.sort.must_equal [stage.id]
       end
-    end
-  end
-
-  describe '#build_new_project_command' do
-    it "adds new command to the end of commands" do
-      stage.command = "yep"
-      stage.save!
-      stage.script.must_equal "echo hello\nyep"
-      Command.last.project_id.must_equal stage.project_id
-    end
-
-    it "does not add an empty command" do
-      stage.command = ""
-      stage.save!
-      stage.script.must_equal "echo hello"
     end
   end
 
@@ -811,6 +759,40 @@ describe Stage do
           stage.locked_by?(lock).must_equal true
         end
       end
+    end
+  end
+
+  describe "#append_new_command" do
+    it 'creates new command for stage' do
+      assert_difference 'Command.count' do
+        assert_difference 'StageCommand.count' do
+          stage.append_new_command('echo foobar')
+        end
+      end
+    end
+
+    it 'updates audit if command is created' do
+      assert_difference 'Audited::Audit.count', +2 do # new command and script update
+        stage.append_new_command('echo foobar')
+      end
+
+      stage.audits.size.must_equal 1
+      stage.audits.first.audited_changes.must_equal "script" => ["echo hello", "echo hello\necho foobar"]
+    end
+
+    it 'does not update audit if command is not created' do
+      assert_no_difference 'Audited::Audit.count' do
+        stage.append_new_command(nil)
+      end
+      stage.audits.size.must_equal 0
+    end
+
+    it 'returns command if created successfully' do
+      stage.append_new_command('echo foobar').command.must_equal 'echo foobar'
+    end
+
+    it 'returns nil if command creation is unsuccessful' do
+      stage.append_new_command(nil).must_be_nil
     end
   end
 end

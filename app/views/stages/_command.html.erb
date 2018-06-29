@@ -1,0 +1,10 @@
+<div class="row stage-bar bar">
+  <div data-id="<%= command.id %>" class="col-lg-offset-2 col-lg-2 command-checkbox">
+    <%= check_box(:stage, :command_ids, {multiple: true, include_hidden: false}, command.id) %>
+  </div>
+  <div class="col-lg-8">
+    <% klass = "pre-command pre-inline local" %>
+    <pre data-type="textarea" data-url="<%= command_path(command.id) %>" class="<%= klass %>"><%= command.command %></pre>
+  </div>
+  <%= edit_command_link command %>
+</div>

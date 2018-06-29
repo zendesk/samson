@@ -65,6 +65,7 @@ describe StagesController do
     unauthorized :delete, :destroy, project_id: :foo, id: 1
     unauthorized :patch, :reorder, project_id: :foo, id: 1
     unauthorized :get, :clone, project_id: :foo, id: 1
+    unauthorized :post, :create_command, project_id: :foo, id: 1
 
     describe '#show' do
       describe 'valid' do
@@ -158,6 +159,7 @@ describe StagesController do
     unauthorized :patch, :reorder, project_id: :foo, id: 1
     unauthorized :get, :clone, project_id: :foo, id: 1
     unauthorized :post, :clone, project_id: :foo, id: 1
+    unauthorized :post, :create_command, project_id: :foo, id: 1
   end
 
   as_a_project_admin do
@@ -194,7 +196,6 @@ describe StagesController do
             project_id: project.to_param,
             stage: {
               name: 'test',
-              command: 'test command',
               command_ids: [commands(:echo).id, new_command.id]
             }
           }
@@ -205,7 +206,7 @@ describe StagesController do
         it 'is created' do
           subject.persisted?.must_equal(true)
           subject.command_ids.must_include(commands(:echo).id)
-          subject.script.must_equal(commands(:echo).command + "\ntest2 command\ntest command")
+          subject.script.must_equal(commands(:echo).command + "\ntest2 command")
         end
 
         it 'redirects' do
@@ -284,7 +285,6 @@ describe StagesController do
         describe 'valid attributes' do
           let(:attributes) do
             {
-              command: 'test command',
               name: 'Hello',
               dashboard: '<p>Some text</p>',
               email_committers_on_automated_deploy_failure: true,
@@ -301,11 +301,6 @@ describe StagesController do
 
           it 'redirects' do
             assert_redirected_to project_stage_path(subject.project, subject)
-          end
-
-          it 'adds a command' do
-            command = subject.commands.last
-            command.command.must_equal('test command')
           end
         end
 
@@ -386,6 +381,41 @@ describe StagesController do
 
       it 'succeeds' do
         assert_response :success
+      end
+    end
+
+    describe "#create_command" do
+      def create_command(overrides = {})
+        params = {project_id: project, id: subject.to_param, command: 'echo ding!'}.merge(overrides)
+
+        post :create_command, params: params
+      end
+
+      it "creates command" do
+        assert_difference "Command.count" do
+          assert_difference "StageCommand.count" do
+            create_command
+          end
+        end
+
+        assert_response :success
+      end
+
+      it "renders command on succcess" do
+        create_command
+
+        body = JSON.parse(response.body)['body']
+
+        assert_response :success
+
+        body.must_include '<div class="row'
+        body.must_include 'echo ding!'
+      end
+
+      it "returns 422 if no command text is given" do
+        create_command(command: '')
+
+        assert_response :unprocessable_entity
       end
     end
   end
