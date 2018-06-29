@@ -32,8 +32,7 @@ Samson::Application.routes.draw do
       end
 
       member do
-        get :clone, to: 'stages#clone'
-        post :clone, to: 'stages#clone'
+        match :clone, via: [:get, :post]
       end
 
       resources :deploys, only: [:new, :create] do
