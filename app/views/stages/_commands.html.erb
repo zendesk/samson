@@ -22,12 +22,15 @@
         <%= content_tag :span, others, title: others_warning + " use this. Click edit for details.", class: 'glyphicon glyphicon-lock' if others_warning %>
       </div>
     <% end %>
+    <div class="row stage-bar bar">
+      <div class="col-lg-2">
+        New command
+      </div>
+      <div class="col-lg-8">
+        <%= text_area_tag 'stage[command_ids][]', '', class: "form-control", rows: 4, value: nil, placeholder: 'cap production deploy' %>
+      </div>
+    </div>
   </div>
-
-  <hr />
-
-  <p>Add a command which is specific to your project</p>
-  <%= form.text_area :command, class: "form-control", rows: 4, value: nil, placeholder: 'cap production deploy' %>
 </fieldset>
 
 <script>
