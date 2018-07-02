@@ -8,6 +8,7 @@ class Deploy < ActiveRecord::Base
   belongs_to :project
   belongs_to :job
   belongs_to :buddy, -> { unscope(where: "deleted_at") }, class_name: 'User', optional: true
+  has_many :triggered_deploys, class_name: 'Deploy', foreign_key: 'triggering_deploy_id', dependent: :destroy
 
   default_scope { order(id: :desc) }
 
