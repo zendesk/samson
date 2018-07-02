@@ -677,6 +677,17 @@ describe Deploy do
     end
   end
 
+  describe "#triggered_deploys" do
+    it 'can destroy triggered deploys' do
+      triggered_deploy = create_deploy!(triggering_deploy_id: deploy.id)
+      deploy.triggered_deploys.must_equal [triggered_deploy]
+
+      assert_difference 'Deploy.count', -2 do
+        deploy.destroy!
+      end
+    end
+  end
+
   def create_deploy!(attrs = {})
     default_attrs = {
       reference: "baz",
