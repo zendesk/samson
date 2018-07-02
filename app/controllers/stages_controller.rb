@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 class StagesController < ApplicationController
   include CurrentProject
 
@@ -121,7 +122,6 @@ class StagesController < ApplicationController
   def stage_permitted_params
     [
       :name,
-      :command,
       :confirm,
       :permalink,
       :dashboard,

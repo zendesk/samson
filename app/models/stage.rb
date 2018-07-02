@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 class Stage < ActiveRecord::Base
   AUTOMATED_NAME = 'Automated Deploys'
 
@@ -37,7 +38,6 @@ class Stage < ActiveRecord::Base
   validate :validate_not_auto_deploying_without_buddy
 
   before_create :ensure_ordering
-  before_save :append_new_command
   after_destroy :destroy_deploy_groups_stages
   after_soft_delete :destroy_deploy_groups_stages
 
@@ -159,30 +159,21 @@ class Stage < ActiveRecord::Base
     DeployGroup.enabled? ? deploy_groups.map(&:environment).uniq : []
   end
 
-  def command_ids=(new_command_ids)
-    new_command_ids = new_command_ids.reject(&:blank?).map(&:to_i)
-    @script_was ||= script
-
-    # ordering set here is not kept, so we have to still sort_by(&:position) when using
-    self.stage_commands = new_command_ids.each_with_index.map do |command_id, index|
-      stage_command = stage_commands.detect { |sc| sc.command_id == command_id } ||
-        stage_commands.new(command_id: command_id)
-      stage_command.position = index
-      stage_command
-    end
+  def commands
+    stage_commands.sort_by(&:position).map(&:command).compact
   end
 
   def command_ids
     stage_commands.sort_by(&:position).map(&:command_id)
   end
 
-  def commands
-    stage_commands.sort_by(&:position).map(&:command).compact
-  end
-
-  def command=(c)
+  # reconcile new commands and positioning from command checkboxes
+  def command_ids=(new_commands_or_ids)
     @script_was ||= script
-    @command = c
+
+    self.stage_commands = new_commands_or_ids.reject(&:blank?).map.with_index do |command_or_id, position|
+      find_or_create_stage_command(command_or_id, position)
+    end
   end
 
   def influencing_stage_ids
@@ -252,19 +243,26 @@ class Stage < ActiveRecord::Base
     end
   end
 
-  # has to be done after command_ids assignment is done
-  def append_new_command
-    return if @command.blank?
-    new_command = project.commands.new(command: @command)
-    previous = stage_commands.map(&:position).max || 0
-    stage_commands.build(command: new_command, position: previous + 1)
-  end
-
   def environment_lock?(lock)
     lock.resource_type == "Environment" && environments.any? { |e| lock.resource_equal?(e) }
   end
 
   def project_lock?(lock)
     lock.resource_type == "Project" && lock.resource_equal?(project)
+  end
+
+  def find_or_create_stage_command(command_or_id, position)
+    command_or_id = command_or_id.to_s
+
+    if command_or_id.match?(/\A\d+\z/) && Command.pluck(:id).include?(Integer(command_or_id))
+      command_id = Integer(command_or_id)
+      if stage_command = stage_commands.detect { |sc| sc.command_id == command_id }
+        stage_command
+      else
+        StageCommand.new(command_id: command_id)
+      end
+    else
+      StageCommand.new(command: Command.new(command: command_or_id, project: project))
+    end.tap { |stage_command| stage_command.position = position }
   end
 end
