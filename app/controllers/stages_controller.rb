@@ -64,7 +64,18 @@ class StagesController < ApplicationController
   end
 
   def update
-    if @stage.update_attributes(stage_params)
+    p = stage_params
+    p[:stage_commands] = p.delete(:command_ids).reject(&:blank?).each_with_index.map do |id, i|
+      sc = if id =~ /\A\d+\z/
+        @stage.send(:stage_commands).detect { |sc| sc.command_id == Integer(id) }
+      else
+        StageCommand.new(command: Command.new(command: id))
+      end
+      sc.position = i
+      sc
+    end
+
+    if @stage.update_attributes(p)
       redirect_to [@project, @stage]
     else
       render :edit
@@ -121,7 +132,6 @@ class StagesController < ApplicationController
   def stage_permitted_params
     [
       :name,
-      :command,
       :confirm,
       :permalink,
       :dashboard,

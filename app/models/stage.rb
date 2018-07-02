@@ -21,7 +21,7 @@ class Stage < ActiveRecord::Base
   has_one :lock, as: :resource
 
   has_many :stage_commands, autosave: true, dependent: :destroy
-  private :stage_commands, :stage_commands= # must use ordering via script/command_ids/command_ids=
+  # TODO: make private writer that preserves position and then make stage_commands private again
 
   has_many :deploy_groups_stages, dependent: :destroy
   has_many :deploy_groups, through: :deploy_groups_stages
@@ -37,7 +37,6 @@ class Stage < ActiveRecord::Base
   validate :validate_not_auto_deploying_without_buddy
 
   before_create :ensure_ordering
-  before_save :append_new_command
   after_destroy :destroy_deploy_groups_stages
   after_soft_delete :destroy_deploy_groups_stages
 
@@ -159,30 +158,12 @@ class Stage < ActiveRecord::Base
     DeployGroup.enabled? ? deploy_groups.map(&:environment).uniq : []
   end
 
-  def command_ids=(new_command_ids)
-    new_command_ids = new_command_ids.reject(&:blank?).map(&:to_i)
-    @script_was ||= script
-
-    # ordering set here is not kept, so we have to still sort_by(&:position) when using
-    self.stage_commands = new_command_ids.each_with_index.map do |command_id, index|
-      stage_command = stage_commands.detect { |sc| sc.command_id == command_id } ||
-        stage_commands.new(command_id: command_id)
-      stage_command.position = index
-      stage_command
-    end
+  def commands
+    stage_commands.sort_by(&:position).map(&:command)
   end
 
   def command_ids
     stage_commands.sort_by(&:position).map(&:command_id)
-  end
-
-  def commands
-    stage_commands.sort_by(&:position).map(&:command).compact
-  end
-
-  def command=(c)
-    @script_was ||= script
-    @command = c
   end
 
   def influencing_stage_ids
@@ -250,14 +231,6 @@ class Stage < ActiveRecord::Base
     if deploy_on_release? && deploy_requires_approval?
       errors.add(:deploy_on_release, "cannot be used for a stage the requires approval")
     end
-  end
-
-  # has to be done after command_ids assignment is done
-  def append_new_command
-    return if @command.blank?
-    new_command = project.commands.new(command: @command)
-    previous = stage_commands.map(&:position).max || 0
-    stage_commands.build(command: new_command, position: previous + 1)
   end
 
   def environment_lock?(lock)
