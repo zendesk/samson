@@ -182,6 +182,14 @@ describe StagesController do
     end
 
     describe '#create' do
+      def create_stage(overrides = {})
+        params = {project_id: project.to_param}.merge(overrides)
+
+        post :create, params: params
+
+        subject.reload
+      end
+
       let(:project) { projects(:test) }
 
       describe 'valid' do
@@ -190,22 +198,13 @@ describe StagesController do
         before do
           new_command = Command.create!(command: 'test2 command')
 
-          post :create, params: {
-            project_id: project.to_param,
-            stage: {
-              name: 'test',
-              command: 'test command',
-              command_ids: [commands(:echo).id, new_command.id]
-            }
-          }
-
-          subject.reload
+          create_stage(stage: {name: 'test', command_ids: [commands(:echo).id, new_command.id]})
         end
 
         it 'is created' do
           subject.persisted?.must_equal(true)
           subject.command_ids.must_include(commands(:echo).id)
-          subject.script.must_equal(commands(:echo).command + "\ntest2 command\ntest command")
+          subject.script.must_equal(commands(:echo).command + "\ntest2 command")
         end
 
         it 'redirects' do
@@ -215,7 +214,7 @@ describe StagesController do
 
       describe 'invalid attributes' do
         before do
-          post :create, params: {project_id: project.to_param, stage: {name: nil}}
+          create_stage(stage: {name: nil, command_ids: ['echo foobar']})
         end
 
         it 'renders' do
@@ -300,7 +299,6 @@ describe StagesController do
         describe 'valid attributes' do
           let(:attributes) do
             {
-              command: 'test command',
               name: 'Hello',
               dashboard: '<p>Some text</p>',
               email_committers_on_automated_deploy_failure: true,
@@ -317,11 +315,6 @@ describe StagesController do
 
           it 'redirects' do
             assert_redirected_to project_stage_path(subject.project, subject)
-          end
-
-          it 'adds a command' do
-            command = subject.commands.last
-            command.command.must_equal('test command')
           end
         end
 
