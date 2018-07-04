@@ -1,7 +1,7 @@
 <%= page_title "Profile" %>
 
 <section>
-  <%= form_for @user, url: profile_path, html: { :class => "form-horizontal", "ng-controller" => "ProfileCtrl" } do |form| %>
+  <%= form_for @user, url: profile_path, html: { :class => "form-horizontal" } do |form| %>
     <%= form.input :name, required: true %>
     <%= form.input :email %>
     <%= form.input :time_format do %>
@@ -10,11 +10,6 @@
         <%= form.label :time_format, "#{time_format.capitalize}", value: time_format %>
       <% end %>
     <% end %>
-    <%= form.input :desktop_notify,
-          as: :check_box, label: "Desktop notifications",
-        input_html: { 'ng-click': 'toggleNotify($event)' },
-        help: 'Show popups on your desktop when deploys are finishing.'
-    %>
 
     <% if display_access_request_link? %>
       <div class="form-group">

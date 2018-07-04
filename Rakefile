@@ -61,30 +61,6 @@ namespace :test do
     sh "npm run-script jshint"
     sh "npm run-script jshint:plugins"
   end
-
-  task js: [:asset_compilation_environment, :environment] do
-    with_tmp_karma_config do |config|
-      sh "./node_modules/karma/bin/karma start #{config} --single-run"
-    end
-  end
-
-  private
-
-  def with_tmp_karma_config
-    Tempfile.open('karma.js') do |f|
-      f.write ERB.new(File.read('test/karma.conf.js')).result(binding)
-      f.flush
-      yield f.path
-    end
-  end
-
-  # TODO: make a standalone binding
-  # clunky asset finder ... see https://github.com/rails/sprockets-rails/issues/237 for more
-  # jquery.js -> <GEM_HOME>/ruby/2.3.0/gems/rails-assets-jquery-2.2.1/app/assets/javascripts/jquery.js
-  def resolve_javascript(file)
-    paths = Gem::Specification.stubs.map(&:full_gem_path)
-    Dir.glob("{#{paths.join(",")}}/app/assets/javascripts/#{file}").first || raise("Could not find #{file}")
-  end
 end
 
 desc "'Run brakeman, use `bundle exec brakeman --add-engine-path 'plugins/*' -I` to add or remove obsolete ignores"

@@ -6,7 +6,7 @@ class JobExecution
 
   cattr_accessor(:cancel_timeout, instance_writer: false) { 15.seconds }
 
-  attr_reader :output, :reference, :job, :viewers, :executor
+  attr_reader :output, :reference, :job, :executor
 
   delegate :id, to: :job
   delegate :pid, :pgid, to: :executor
@@ -14,8 +14,6 @@ class JobExecution
   def initialize(reference, job, env: {}, output: OutputBuffer.new, &block)
     @output = output
     @executor = TerminalExecutor.new(@output, verbose: true, deploy: job.deploy, project: job.project)
-    @viewers = JobViewers.new(@output)
-
     @start_callbacks = []
     @finish_callbacks = []
     @env = env
@@ -27,6 +25,14 @@ class JobExecution
 
     @repository = @job.project.repository
     @repository.executor = @executor
+
+    on_start do
+      Thread.new do
+        ActiveRecord::Base.connection_pool.with_connection do
+          JobOutputsChannel.stream @job, @output
+        end
+      end
+    end
 
     on_finish do
       Rails.logger.info("Calling finish callback for Job Execution #{id}")
