@@ -1,3 +1,12 @@
+GIT
+  remote: git@github.com:robzdc/omniauth-bitbucket.git
+  revision: 688c5e564aa53402d73a207fe37e7cdfc54989e9
+  specs:
+    omniauth-bitbucket (0.0.2)
+      multi_json (~> 1.7)
+      omniauth (~> 1.1)
+      omniauth-oauth2 (>= 1.1.1, < 2.0)
+
 PATH
   remote: plugins/airbrake_hook
   specs:
@@ -341,7 +350,6 @@ GEM
     nio4r (2.3.0)
     nokogiri (1.8.2)
       mini_portile2 (~> 2.3.0)
-    oauth (0.5.3)
     oauth2 (1.1.0)
       faraday (>= 0.8, < 0.10)
       jwt (~> 1.0, < 1.5.2)
@@ -353,10 +361,6 @@ GEM
     omniauth (1.6.1)
       hashie (>= 3.4.6, < 3.6.0)
       rack (>= 1.6.2, < 3)
-    omniauth-bitbucket (0.0.2)
-      multi_json (~> 1.7)
-      omniauth (~> 1.1)
-      omniauth-oauth (~> 1.0)
     omniauth-github (1.1.2)
       omniauth (~> 1.0)
       omniauth-oauth2 (~> 1.1)
@@ -373,9 +377,6 @@ GEM
       omniauth (~> 1.0)
       pyu-ruby-sasl (~> 0.0.3.2)
       rubyntlm (~> 0.3.4)
-    omniauth-oauth (1.1.0)
-      oauth
-      omniauth (~> 1.0)
     omniauth-oauth2 (1.4.0)
       oauth2 (~> 1.0)
       omniauth (~> 1.2)
@@ -579,7 +580,7 @@ DEPENDENCIES
   ngannotate-rails
   octokit
   omniauth
-  omniauth-bitbucket
+  omniauth-bitbucket!
   omniauth-github
   omniauth-gitlab
   omniauth-google-oauth2
@@ -647,4 +648,4 @@ RUBY VERSION
    ruby 2.5.1p57
 
 BUNDLED WITH
-   1.16.1
+   1.16.2
