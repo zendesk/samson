@@ -49,7 +49,6 @@ gem 'diffy'
 gem 'validates_lengths_from_database'
 gem 'large_object_store'
 gem 'parallel'
-gem 'sse-rails-engine'
 
 # treat included plugins like gems
 Dir[File.join(Bundler.root, 'plugins/*/')].each { |f| gemspec path: f }
@@ -67,7 +66,6 @@ group :sqlite do
 end
 
 group :assets do
-  gem 'ngannotate-rails'
   gem 'sass-rails'
   gem 'uglifier'
   gem 'bootstrap-sass'
@@ -75,9 +73,6 @@ group :assets do
   gem 'bootstrap3-datetimepicker-rails'
 
   source 'https://rails-assets.org' do
-    gem 'rails-assets-angular'
-    gem 'rails-assets-angular-mocks'
-    gem 'rails-assets-angular-scenario'
     gem 'rails-assets-bootstrap-select'
     gem 'rails-assets-jquery'
     gem 'rails-assets-jquery-ui'

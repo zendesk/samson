@@ -162,8 +162,6 @@ Samson::Application.routes.draw do
 
   resources :access_requests, only: [:new, :create]
 
-  mount SseRailsEngine::Engine, at: '/streaming' if ENV["SERVER_MODE"]
-
   use_doorkeeper # adds oauth/* routes
   resources :oauth_test, only: [:index, :show] if %w[development test].include?(Rails.env)
 end
