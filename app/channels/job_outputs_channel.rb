@@ -10,9 +10,7 @@ class JobOutputsChannel < ActionCable::Channel::Base
       @job = job
     end
 
-    private
-
-    def payload(data, event)
+    def payload(event, data)
       case event
       when :started, :finished
         status_response(event)
@@ -22,6 +20,8 @@ class JobOutputsChannel < ActionCable::Channel::Base
         render_log(data)
       end
     end
+
+    private
 
     def status_response(event)
       # Need to reload data, as background thread updated the records on a separate DB connection,
@@ -53,15 +53,19 @@ class JobOutputsChannel < ActionCable::Channel::Base
     end
 
     def render_to_body(args)
-      ApplicationController.renderer.render_to_body(args)
+      puts "SEND #{User.first}"
+      p(ApplicationController.render(
+        assigns: {job: @job, deploy: @deploy, project: @project, current_user: User.first},
+        inline: File.read("/Users/mgrosser/Code/zendesk/samson/app/views/jobs/_header.html.erb")
+      ))
     end
   end
 
   def self.stream(job, output)
     Thread.new do
       builder = EventBuilder.new(job)
-      output.each do |data, event|
-        ActionCable.server.broadcast "#{name}/#{job.id}", builder.payload(data, event)
+      output.each do |event, data|
+        ActionCable.server.broadcast "#{name}/#{job.id}", event: event, data: builder.payload(event, data)
       end
       # TODO: unsubscribe all ?
     end

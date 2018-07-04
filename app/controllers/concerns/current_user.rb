@@ -10,6 +10,8 @@ module CurrentUser
   private
 
   def current_user
+    puts "USER #{@current_user} -- #{@deploy}"
+
     @current_user ||= warden.user
   end
 

@@ -62,8 +62,13 @@ function startStream(id){
   }
 
   App.cable.subscriptions.create({channel: "JobOutputsChannel", id: id}, {
-    received: function(data) {
-      handlers[data.event](data.data)
+    received: function(payload) {
+      var func = handlers[payload.event];
+      if(func){
+        func(payload.data)
+      } else {
+        alert("Handler not found for " + payload.toString());
+      }
     }
   });
 }
