@@ -1,0 +1,13 @@
+# samson runs as a single server process, so we don't need redis
+# TODO: investigate if async adapter has advantages
+test:
+  adapter: inline
+
+development:
+  adapter: inline
+
+staging:
+  adapter: inline
+
+production:
+  adapter: inline

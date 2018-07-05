@@ -1,7 +1,7 @@
 <%= page_title "Current Deploys" %>
 
 <% if params[:debug].blank? %>
-  <section class="tabs" ng-controller="currentDeploysCtrl">
+  <section id="deploys-active" class="tabs">
     <%= render 'deploys/table' %>
   </section>
   <%= link_to 'job execution debug info', '?debug=1' %>

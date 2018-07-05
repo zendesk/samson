@@ -9,7 +9,7 @@ branches:
   only: master
 env:
   matrix:
-    - TASK='test:prepare_js test:js'
+    - TASK='test:prepare_js'
     - TASK='assets:precompile'
     - TASK='brakeman'
     - TASK='rubocop'

@@ -21,7 +21,7 @@ describe DeployService do
 
   describe "#deploy!" do
     it "starts a deploy" do
-      SseRailsEngine.expects(:send_event).twice
+      DeployNotificationsChannel.expects(:broadcast).with(1).times(2)
       assert_difference "Job.count", +1 do
         assert_difference "Deploy.count", +1 do
           service.deploy(stage, reference: reference)
@@ -243,8 +243,8 @@ describe DeployService do
       end
 
       it "does not fail all callbacks when 1 callback fails" do
-        service.stubs(:send_sse_deploy_update)
-        service.expects(:send_sse_deploy_update).with('finish', anything).raises # first callback
+        service.stubs(:send_deploy_update) # other callbacks
+        service.expects(:send_deploy_update).with(:finished).raises # last callback
         ErrorNotifier.expects(:notify)
         DeployMailer.expects(:deploy_email).returns(stub(deliver_now: true))
         run_deploy
