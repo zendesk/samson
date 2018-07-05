@@ -15,9 +15,9 @@
 
   <body class="<%= controller_action %>" ng-app="samson">
     <div class="wrap">
-      <%= render "shared/header" %>
+      <%= render "layouts/header" %>
       <div class="container">
-        <%= render "shared/alerts" %>
+        <%= render "layouts/alerts" %>
 
         <% unless github_ok? %>
           <div class="alert alert-warning alert-dismissable">
@@ -30,6 +30,6 @@
         <%= yield %>
       </div>
     </div>
-    <%= render "shared/footer" %>
+    <%= render "layouts/footer" %>
   </body>
 </html>
