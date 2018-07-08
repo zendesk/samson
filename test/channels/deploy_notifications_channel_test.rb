@@ -4,6 +4,8 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe DeployNotificationsChannel do
+  let(:channel) { DeployNotificationsChannel.new stub(identifiers: []), nil }
+
   describe '.broadcast' do
     it "sends to self" do
       ActionCable.server.expects(:broadcast).with("DeployNotificationsChannel", count: 5)
@@ -13,9 +15,15 @@ describe DeployNotificationsChannel do
 
   describe "#subscribed" do
     it "subscribes to self" do
-      channel = DeployNotificationsChannel.new stub(identifiers: []), nil
       channel.expects(:stream_from).with("DeployNotificationsChannel")
       channel.subscribed
+    end
+  end
+
+  describe "#unsubscribed" do
+    it "unsubscribes" do
+      channel.expects(:stop_all_streams)
+      channel.unsubscribed
     end
   end
 end
