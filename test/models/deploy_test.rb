@@ -579,11 +579,10 @@ describe Deploy do
         prod_deploy.job.user.soft_delete!(validate: false)
         prod_deploy.buddy.soft_delete!(validate: false)
         prod_deploy.stage.deploy_groups.first.environment.soft_delete!(validate: false)
-        # next 3 are false soft_deletions: there are dependent destroys that would result in
+        # next 2 are false soft_deletions: there are dependent destroys that would result in
         # deploy_groups_stages to be cleared which would make this test condition to likely
         # never occur in production but could exist
         prod_deploy.stage.project.update_attribute(:deleted_at, Time.new(2016, 1, 1))
-        prod_deploy.stage.deploy_groups.first.update_attribute(:deleted_at, Time.now)
         prod_deploy.stage.update_attribute(:deleted_at, Time.now)
         prod_deploy.reload
       end
@@ -593,59 +592,51 @@ describe Deploy do
         prod.update_attribute(:production, false) # make sure response is from environment
 
         # the with_deleted calls would be done in CsvJob
-        Stage.with_deleted do
-          Project.with_deleted do
-            DeployGroup.with_deleted do
-              Environment.with_deleted do
-                prod_deploy.csv_line.must_equal [
-                  prod_deploy.id,
-                  project.name,
-                  prod_deploy.summary,
-                  prod_deploy.commit,
-                  job.status,
-                  prod_deploy.updated_at,
-                  prod_deploy.start_time,
-                  deployer.name,
-                  deployer.email,
-                  other_user.name,
-                  other_user.email,
-                  prod.name,
-                  environment.production,
-                  !prod.no_code_deployed, # Inverted because report is reporting as code deployed
-                  project.deleted_at,
-                  prod.deploy_group_names.join('|')
-                ]
-              end
-            end
-          end
+        CsvExportJob.new(nil).send(:with_deleted) do
+          prod_deploy.csv_line.must_equal [
+            prod_deploy.id,
+            project.name,
+            prod_deploy.summary,
+            prod_deploy.commit,
+            job.status,
+            prod_deploy.updated_at,
+            prod_deploy.start_time,
+            deployer.name,
+            deployer.email,
+            other_user.name,
+            other_user.email,
+            prod.name,
+            environment.production,
+            !prod.no_code_deployed, # Inverted because report is reporting as code deployed
+            project.deleted_at,
+            prod.deploy_group_names.join('|')
+          ]
         end
       end
 
       it "returns array with deleted object values without DeployGroups" do
         DeployGroup.stubs(enabled?: false)
 
-        # the with_deleted calls would be done in CsvJob
-        Stage.with_deleted do
-          Project.with_deleted do
-            prod_deploy.csv_line.must_equal [
-              prod_deploy.id,
-              project.name,
-              prod_deploy.summary,
-              prod_deploy.commit,
-              job.status,
-              prod_deploy.updated_at,
-              prod_deploy.start_time,
-              deployer.name,
-              deployer.email,
-              other_user.name,
-              other_user.email,
-              prod.name,
-              prod.production,
-              !prod.no_code_deployed, # Inverted because report is reporting as code deployed
-              project.deleted_at,
-              ''
-            ]
-          end
+        # the with_deleted as done in CsvExportJob
+        CsvExportJob.new(nil).send(:with_deleted) do
+          prod_deploy.csv_line.must_equal [
+            prod_deploy.id,
+            project.name,
+            prod_deploy.summary,
+            prod_deploy.commit,
+            job.status,
+            prod_deploy.updated_at,
+            prod_deploy.start_time,
+            deployer.name,
+            deployer.email,
+            other_user.name,
+            other_user.email,
+            prod.name,
+            prod.production,
+            !prod.no_code_deployed, # Inverted because report is reporting as code deployed
+            project.deleted_at,
+            ''
+          ]
         end
       end
     end
