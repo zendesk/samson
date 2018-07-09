@@ -9,6 +9,8 @@ module Kubernetes
   # and see what it does internally ... simple create/update/delete requests or special magic ?
   module Resource
     class Base
+      UNSETTABLE_METADATA = [:selfLink, :uid, :resourceVersion, :generation, :creationTimestamp].freeze
+
       def initialize(template, deploy_group, autoscaled:, delete_resource:)
         @template = template
         @deploy_group = deploy_group
@@ -47,6 +49,10 @@ module Kubernetes
 
       def revert(previous)
         if previous
+          # Avoid "the object has been modified" / "Precondition failed: UID in precondition" error
+          # by removing internal attributes kubernetes adds
+          previous = previous.deep_dup
+          previous[:metadata].except! *UNSETTABLE_METADATA
           self.class.new(previous, @deploy_group, autoscaled: @autoscaled, delete_resource: false).deploy
         else
           delete
@@ -254,17 +260,6 @@ module Kubernetes
     end
 
     class Deployment < Base
-      # Avoid "the object has been modified" error by removing internal attributes kubernetes adds
-      def revert(previous)
-        if previous
-          previous = previous.deep_dup
-          previous[:metadata].except! :selfLink, :uid, :resourceVersion, :generation, :creationTimestamp
-        end
-        super
-      end
-
-      private
-
       def request_delete
         # Make kubernetes kill all the pods by scaling down
         restore_template do
