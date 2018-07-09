@@ -56,6 +56,13 @@ describe Environment do
     end
   end
 
+  describe "#soft_delete!" do
+    it "also deletes deploy groups" do
+      environments(:production).soft_delete!
+      assert DeployGroup.with_deleted { DeployGroup.find(deploy_groups(:pod1).id) }.deleted_at
+    end
+  end
+
   describe '#template_stages' do
     let(:env) { environments(:staging) }
 

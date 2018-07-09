@@ -40,17 +40,7 @@ class CsvExportJob
 
   # Helper method to removes the default soft_deletion scope for these models for the report
   def remove_deleted_scope_and_create_report(csv_export)
-    Deploy.with_deleted do
-      Stage.with_deleted do
-        Project.with_deleted do
-          DeployGroup.with_deleted do
-            Environment.with_deleted do
-              deploy_csv_export(csv_export)
-            end
-          end
-        end
-      end
-    end
+    with_deleted { deploy_csv_export(csv_export) }
   end
 
   def deploy_csv_export(csv_export)
@@ -100,5 +90,17 @@ class CsvExportJob
 
   def create_export_folder(csv_export)
     FileUtils.mkdir_p(File.dirname(csv_export.path_file))
+  end
+
+  def with_deleted(&block)
+    Deploy.with_deleted do
+      Stage.with_deleted do
+        Project.with_deleted do
+          DeployGroup.with_deleted do
+            Environment.with_deleted &block
+          end
+        end
+      end
+    end
   end
 end

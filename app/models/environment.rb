@@ -6,7 +6,7 @@ class Environment < ActiveRecord::Base
   include Lockable
   include Permalinkable
 
-  has_many :deploy_groups
+  has_many :deploy_groups, dependent: :destroy
   has_many :template_stages, -> { where(is_template: true) }, through: :deploy_groups, class_name: 'Stage'
 
   validates_presence_of :name
