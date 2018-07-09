@@ -27,6 +27,7 @@
 //= require bootstrap-select
 //= require bootstrap-datetimepicker
 //= require x-editable/dist/bootstrap3-editable/js/bootstrap-editable
+//= require cable
 //= require app
 //= require underscore_mixins
 //= require jstimezonedetect

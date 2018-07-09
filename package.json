@@ -8,14 +8,9 @@
     "url": "git://github.com/zendesk/samson.git"
   },
   "devDependencies": {
-    "jasmine-core": "^2.4.1",
-    "jshint": "~2.9.2",
-    "karma": "~1.1.1",
-    "karma-jasmine": "~1.0.2",
-    "karma-phantomjs-launcher": "~1.0.1"
+    "jshint": "~2.9.2"
   },
   "scripts": {
-    "test": "bundle exec rake test:js",
     "jshint": "./node_modules/.bin/jshint app/assets/javascripts/*",
     "jshint:plugins": "./node_modules/.bin/jshint plugins/*/app/assets/javascripts/*"
   }

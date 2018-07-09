@@ -11,7 +11,7 @@ class DeployService
     deploy = stage.create_deploy(user, attributes)
 
     if deploy.persisted?
-      send_sse_deploy_update('new')
+      send_deploy_update
 
       if stage.cancel_queued_deploys?
         stage.deploys.pending.prior_to(deploy).for_user(user).each do |deploy|
@@ -43,7 +43,7 @@ class DeployService
 
     JobQueue.perform_later(job_execution, queue: deploy.job_execution_queue_name)
 
-    send_sse_deploy_update('start')
+    send_deploy_update
   end
 
   private
@@ -103,7 +103,7 @@ class DeployService
 
   def send_after_notifications(deploy)
     Samson::Hooks.fire(:after_deploy, deploy, deploy.buddy)
-    execute_and_log_errors(deploy) { send_sse_deploy_update('finish') }
+    execute_and_log_errors(deploy) { send_deploy_update finished: true }
     execute_and_log_errors(deploy) { send_deploy_email(deploy) }
     execute_and_log_errors(deploy) { send_failed_deploy_email(deploy) }
     execute_and_log_errors(deploy) { notify_outbound_webhooks(deploy) }
@@ -131,7 +131,9 @@ class DeployService
     deploy.stage.outbound_webhooks.each { |webhook| webhook.deliver(deploy) }
   end
 
-  def send_sse_deploy_update(type)
-    SseRailsEngine.send_event('deploys', type: type)
+  def send_deploy_update(finished: false)
+    count = Deploy.active_count
+    count -= 1 if finished # deploy is still active, so we substract one
+    DeployNotificationsChannel.broadcast(count)
   end
 end

@@ -76,8 +76,6 @@ group :assets do
 
   source 'https://rails-assets.org' do
     gem 'rails-assets-angular'
-    gem 'rails-assets-angular-mocks'
-    gem 'rails-assets-angular-scenario'
     gem 'rails-assets-bootstrap-select'
     gem 'rails-assets-jquery'
     gem 'rails-assets-jquery-ui'
