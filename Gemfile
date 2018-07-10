@@ -67,7 +67,6 @@ group :sqlite do
 end
 
 group :assets do
-  gem 'ngannotate-rails'
   gem 'sass-rails'
   gem 'uglifier'
   gem 'bootstrap-sass'
@@ -75,7 +74,6 @@ group :assets do
   gem 'bootstrap3-datetimepicker-rails'
 
   source 'https://rails-assets.org' do
-    gem 'rails-assets-angular'
     gem 'rails-assets-bootstrap-select'
     gem 'rails-assets-jquery'
     gem 'rails-assets-jquery-ui'
