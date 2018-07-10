@@ -22,7 +22,9 @@ describe Kubernetes::ClusterDeployGroup do
     it "is invalid when namespace lookup fails" do
       assert_request(:get, "http://foobar.server/api/v1/namespaces", to_return: {status: 404}) do
         refute_valid group
-        group.errors.full_messages.must_equal ["Namespace error looking up namespaces"]
+        group.errors.full_messages.any? do |m|
+          m.must_include "Namespace error looking up namespaces"
+        end
       end
     end
 

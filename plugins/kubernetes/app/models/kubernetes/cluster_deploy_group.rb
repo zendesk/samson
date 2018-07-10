@@ -21,8 +21,8 @@ module Kubernetes
         unless namespaces.include?(namespace)
           errors.add(:namespace, "named '#{namespace}' does not exist, found: #{namespaces.join(", ")}")
         end
-      rescue *SamsonKubernetes.connection_errors
-        errors.add(:namespace, "error looking up namespaces")
+      rescue *SamsonKubernetes.connection_errors => e
+        errors.add(:namespace, "error looking up namespaces. Cause: #{e.message}")
       end
     end
   end
