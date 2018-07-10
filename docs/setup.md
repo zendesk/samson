@@ -7,8 +7,7 @@ docker-compose up
 open http://localhost:3000
 ```
 
-When docker is running on virtualbox the `3000` port forwarding should be configured.
-
+When running on virtual the `3000` port forwarding should be configured in virtualbox (Settings -> Network -> Advanced -> Port Forwarding).
 When running on virtual `192.168.42.45` use `.env.virtualbox` from `docker-compose.yml`.
 When running on neither localhost nor `192.168.42.45` create your own credentials and load them from `docker-compose.yml`.
 
