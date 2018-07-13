@@ -10,6 +10,7 @@ on EKS, or GKE.
 
 Workflow:
 1. Enable the Docker feature by adding `DOCKER_FEATURE=1` to your `.env` file
+1. Enable the [Deploy Group](/docs/extra_features.md) feature by adding `DEPLOY_GROUP_FEATURE=1` to your `.env` file
 1. Configure Kubernetes cluster(s) on `/kubernetes/clusters`
 1. Create a project containing a `Dockerfile`
 1. Add [Kubernetes role files](#kubernetes-roles) to your project repository
