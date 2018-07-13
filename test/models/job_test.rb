@@ -53,24 +53,6 @@ describe Job do
     end
   end
 
-  describe "#can_be_cancelled_by?" do
-    it "can be cancelled by user that started the job" do
-      job.can_be_cancelled_by?(job.user).must_equal true
-    end
-
-    it "can be cancelled by admin " do
-      job.can_be_cancelled_by?(user).must_equal true
-    end
-
-    it "can be cancelled by admin of this project" do
-      job.can_be_cancelled_by?(users(:project_admin)).must_equal true
-    end
-
-    it "cannot be cancelled by other users" do
-      job.can_be_cancelled_by?(users(:viewer)).must_equal false
-    end
-  end
-
   describe "#commands" do
     it "splits the commands" do
       job.command = "a\rb\r\nc\nd"

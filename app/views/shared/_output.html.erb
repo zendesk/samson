@@ -10,9 +10,7 @@
       <button class="btn btn-default only-finished" id="output-expand-toggle">Expand</button>
       <%= link_to "Download log", [@project, deployable, {format: :text}], class: "btn btn-primary only-finished" %>
 
-      <% if deployable.can_be_cancelled_by?(current_user) %>
-        <%= cancel_button deploy: deployable, project: @project, class: "btn btn-danger only-active" %>
-      <% end %>
+      <%= cancel_button deploy: deployable, project: @project, class: "btn btn-danger only-active" %>
     </div>
   </div>
 

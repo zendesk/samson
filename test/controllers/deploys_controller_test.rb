@@ -502,22 +502,8 @@ describe DeploysController do
           delete :destroy, params: {project_id: project.to_param, id: deploy.to_param}
         end
 
-        it "cancels a deploy" do
-          flash[:error].must_be_nil
-        end
-      end
-
-      describe "with a deploy not owned by the user" do
-        before do
-          deploy_service.expects(:cancel).never
-          Deploy.any_instance.stubs(:started_by?).returns(false)
-          User.any_instance.stubs(:admin?).returns(false)
-
-          delete :destroy, params: {project_id: project.to_param, id: deploy.to_param}
-        end
-
-        it "doesn't cancel the deloy" do
-          flash[:error].wont_be_nil
+        it "redirects to project page" do
+          assert_redirected_to "/projects/foo/deploys/#{deploy.id}"
         end
       end
     end

@@ -60,10 +60,6 @@ class Job < ActiveRecord::Base
     updated_at - created_at
   end
 
-  def can_be_cancelled_by?(user)
-    started_by?(user) || user.admin? || user.admin_for?(project)
-  end
-
   def commands
     commands = []
     raw = command.split(/\r?\n|\r/)
