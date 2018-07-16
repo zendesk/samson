@@ -106,8 +106,9 @@ class JobExecution
   end
 
   def error!(exception)
-    puts_if_present report_error(exception)
     puts_if_present "JobExecution failed: #{exception.message}"
+    error_url = report_error(exception)
+    @output.puts "Error URL: #{error_url}" if error_url
     puts_if_present render_backtrace(exception)
     @job.errored! if @job.active?
   end
