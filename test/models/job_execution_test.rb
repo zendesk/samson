@@ -385,6 +385,7 @@ describe JobExecution do
         ErrorNotifier.expects(:notify).with { |_e, o| assert o.key?(:sync) }.returns('foo')
         job.expects(:running!).raises("Oh boy")
         perform
+        execution.output.to_s.must_include "Error URL: foo"
       end
     end
   end
