@@ -22,7 +22,7 @@ module RollbarDashboards
     end
 
     def item_link(item_title, item_id, dashboard_setting)
-      if account_and_project_name = dashboard_setting.account_and_project_name
+      if account_and_project_name = dashboard_setting.account_and_project_name.presence
         # Removes path and handles https://api.rollbar.com cases
         domain = URI.join(dashboard_setting.base_url, '/').to_s.sub('://api.', '://')
 

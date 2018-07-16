@@ -39,6 +39,10 @@ describe RollbarDashboards::DashboardsHelper do
       item_link('title', '123', setting(account_and_project_name: nil)).must_equal 'title'
     end
 
+    it 'returns item title if account_and_project_name is empty string' do
+      item_link('title', '123', setting(account_and_project_name: '')).must_equal 'title'
+    end
+
     it 'handles api subdomain' do
       setting(account_and_project_name: 'Account/Cool-Project', base_url: 'https://api.rollbar.com')
       item_link('title', '123', setting).must_equal <<~HTML.delete("\n")
