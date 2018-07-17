@@ -80,8 +80,8 @@ function refStatusTypeahead(options){
 
   initializeTypeahead();
 
-  // TODO: clean up by wrapping this in a limiter function
-  $reference.on('input', function() {
+  // Continuously polling for change to account for autofill which does not trigger input/change events
+  $reference.pollForChange(100, function() {
     $ref_status_container.addClass("hidden");
     $tag_form_group.removeClass("has-success has-warning has-error");
 
