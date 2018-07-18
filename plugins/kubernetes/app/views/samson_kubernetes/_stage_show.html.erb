@@ -27,10 +27,7 @@
         <tr>
           <td><%= link_to role.name, [@project, role] %></td>
           <% if dg_role %>
-            <td>
-              <%= dg_role.replicas %>
-              <%= icon_tag :scale, title: "Replicas managed externally, actual count might not match this" if role.autoscaled? %>
-            </td>
+            <td><%= kubernetes_deploy_group_role_replica role, dg_role %></td>
             <td>
               <%= dg_role.requests_cpu %> to <%= dg_role.limits_cpu %>
               <%= "(Not enforced)" if dg_role.no_cpu_limit?  %>

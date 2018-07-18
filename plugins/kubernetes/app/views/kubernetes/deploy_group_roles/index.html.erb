@@ -40,7 +40,7 @@
           <td><%= link_to deploy_group_role.kubernetes_role.name, [deploy_group_role.project, deploy_group_role.kubernetes_role] %></td>
           <td><%= deploy_group_role.requests_cpu %> to <%= deploy_group_role.limits_cpu %></td>
           <td><%= deploy_group_role.requests_memory %> to <%= deploy_group_role.limits_memory %></td>
-          <td><%= deploy_group_role.replicas %></td>
+          <td><%= kubernetes_deploy_group_role_replica deploy_group_role.kubernetes_role, deploy_group_role %></td>
           <td>
             <% if current_user.admin_for?(deploy_group_role.project) %>
               <%= link_to 'Edit', edit_kubernetes_deploy_group_role_path(deploy_group_role) %>
