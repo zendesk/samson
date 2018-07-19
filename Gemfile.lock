@@ -234,7 +234,7 @@ GEM
     dogstatsd-ruby (3.0.0)
     domain_name (0.5.20170404)
       unf (>= 0.0.5, < 1.0.0)
-    doorkeeper (4.3.0)
+    doorkeeper (4.4.0)
       railties (>= 4.2)
     dotenv (2.2.1)
     encryptor (3.0.0)
