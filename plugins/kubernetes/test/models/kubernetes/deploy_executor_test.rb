@@ -199,16 +199,16 @@ describe Kubernetes::DeployExecutor do
       end
 
       it "fails before building when secrets are not configured in the backend" do
-        Kubernetes::TemplateFiller.any_instance.stubs(:needs_secret_puller?).returns(true)
+        stub_const Kubernetes::TemplateFiller, :SECRET_PULLER_IMAGE, 'foo' do
+          # overriding the stubbed value
+          template = Kubernetes::ReleaseDoc.new.send(:raw_template)[0]
+          template[:spec][:template][:metadata][:annotations] = {"secret/foo": "bar"}
 
-        # overriding the stubbed value
-        template = Kubernetes::ReleaseDoc.new.send(:raw_template)[0]
-        template[:spec][:template][:metadata][:annotations] = {"secret/foo": "bar"}
-
-        e = assert_raises Samson::Hooks::UserError do
-          refute execute
+          e = assert_raises Samson::Hooks::UserError do
+            refute execute
+          end
+          e.message.must_include "Failed to resolve secret keys:\n\tbar"
         end
-        e.message.must_include "Failed to resolve secret keys:\n\tbar"
       end
 
       it "fails before building when env is not configured" do

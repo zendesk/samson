@@ -619,6 +619,10 @@ describe Kubernetes::TemplateFiller do
       end
 
       describe "converting secrets in env to annotations" do
+        def secret_annotations(hash)
+          hash[:spec][:template][:metadata][:annotations].select { |k, _| k.match?("secret") }
+        end
+
         with_env SECRET_ENV_AS_ANNOTATIONS: 'true'
 
         before do
@@ -631,7 +635,7 @@ describe Kubernetes::TemplateFiller do
           hash = template.to_hash
 
           # secrets got resolved?
-          hash[:spec][:template][:metadata][:annotations].select { |k, _| k.match?("secret") }.must_equal(
+          secret_annotations(hash).must_equal(
             "secret/FOO": "global/global/global/bar",
             "secret/BAR": "global/global/global/foo"
           )
@@ -657,7 +661,7 @@ describe Kubernetes::TemplateFiller do
           hash = template.to_hash
 
           # secrets got resolved?
-          hash[:spec][:template][:metadata][:annotations].select { |k, _| k.match?("secret") }.must_equal(
+          secret_annotations(hash).must_equal(
             "secret/FOO": "global/global/global/bar",
             "secret/BAR": "global/global/global/foo"
           )
@@ -667,6 +671,13 @@ describe Kubernetes::TemplateFiller do
           envs.each do |env|
             env.select { |e| ["BAR", "BAZ"].include?(e[:name]) }.must_equal [{name: "BAZ", value: "nope-secret://foo"}]
           end
+        end
+
+        it "works when no other secret annotation was set" do
+          raw_template[:spec][:template][:metadata][:annotations].clear
+          secret_annotations(template.to_hash).must_equal(
+            "secret/BAR": "global/global/global/foo"
+          )
         end
       end
     end
