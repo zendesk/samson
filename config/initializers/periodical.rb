@@ -43,3 +43,7 @@ if ENV['SERVER_MODE']
     Samson::Periodical.run
   end
 end
+
+Samson::Periodical.register :report_process_stats, "Report process stats" do
+  Samson::ProcessUtils.report_to_statsd
+end
