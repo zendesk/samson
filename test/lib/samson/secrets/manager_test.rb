@@ -4,6 +4,17 @@ require_relative '../../../test_helper'
 SingleCov.covered!
 
 describe Samson::Secrets::Manager do
+  def create_sercret_with_cache_bypass
+    Samson::Secrets::DbBackend::Secret.create!(
+      id: 'production/foo/pod2/hello',
+      value: 'MY-SECRET',
+      visible: false,
+      comment: 'this is secret',
+      updater_id: users(:admin).id,
+      creator_id: users(:admin).id
+    )
+  end
+
   let(:secret) { create_secret 'production/foo/pod2/hello' }
 
   describe ".allowed_project_prefixes" do
@@ -230,17 +241,7 @@ describe Samson::Secrets::Manager do
   end
 
   describe ".ids" do
-    # raw insert to bypass cache
-    let(:secret) do
-      Samson::Secrets::DbBackend::Secret.create!(
-        id: 'production/foo/pod2/hello',
-        value: 'MY-SECRET',
-        visible: false,
-        comment: 'this is secret',
-        updater_id: users(:admin).id,
-        creator_id: users(:admin).id
-      )
-    end
+    let(:secret) { create_sercret_with_cache_bypass }
 
     it "lists ids" do
       secret # trigger creation
@@ -288,6 +289,18 @@ describe Samson::Secrets::Manager do
       with_env SECRET_STORAGE_SHARING_GRANTS: 'true' do
         assert Samson::Secrets::Manager.sharing_grants?
       end
+    end
+  end
+
+  describe ".expire_lookup_cache" do
+    it "expires the cache" do
+      Samson::Secrets::Manager.ids
+
+      create_sercret_with_cache_bypass
+      Samson::Secrets::Manager.ids.must_equal []
+
+      Samson::Secrets::Manager.expire_lookup_cache
+      Samson::Secrets::Manager.ids.must_equal ["production/foo/pod2/hello"]
     end
   end
 end

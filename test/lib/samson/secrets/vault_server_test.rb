@@ -130,6 +130,22 @@ describe Samson::Secrets::VaultServer do
     end
   end
 
+  describe "#expire_secrets_cache" do
+    let!(:server) { create_vault_server(name: 'pod0') }
+
+    before { server.stubs(:validate_connection) }
+
+    it "expires the secrets cache so keys from the new server get added/removed" do
+      Samson::Secrets::Manager.expects(:expire_lookup_cache)
+      server.update_attributes!(address: "http://foo")
+    end
+
+    it "does not expire when unimportant attributes changes" do
+      Samson::Secrets::Manager.expects(:expire_lookup_cache).never
+      server.update_attributes!(name: "Foo")
+    end
+  end
+
   # testing our added method
   describe "#list_recursive" do
     it "iterates through all keys" do
