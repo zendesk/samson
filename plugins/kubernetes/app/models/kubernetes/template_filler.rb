@@ -392,9 +392,10 @@ module Kubernetes
     end
 
     def set_secrets
-      return unless needs_secret_puller?
-      set_secret_puller
+      return unless SECRET_PULLER_IMAGE
       convert_secret_env_to_annotations if secret_env_as_annotations?
+      return unless secret_annotations.any?
+      set_secret_puller
       expand_secret_annotations
     end
 
@@ -402,8 +403,8 @@ module Kubernetes
       ENV["SECRET_ENV_AS_ANNOTATIONS"]
     end
 
-    # storing secrets as env vars makes them visible in the deploy docs and when inspecting deployments, avoid it
-    # we replace all secrtes from the env here and they are expanded by expand_secret_annotations later
+    # storing secrets as env vars makes them visible in the deploy docs and when inspecting deployments, to avoid it
+    # we replace all secrets from the env here and they are expanded by expand_secret_annotations later
     def convert_secret_env_to_annotations
       converted = []
       containers.each do |c|
@@ -460,10 +461,6 @@ module Kubernetes
       return if docker_credentials.empty?
 
       pod_template.fetch(:spec)[:imagePullSecrets] = docker_credentials
-    end
-
-    def needs_secret_puller?
-      SECRET_PULLER_IMAGE && secret_annotations.any?
     end
 
     def set_pre_stop
