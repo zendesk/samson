@@ -122,6 +122,10 @@ module Samson
           SECRET_LOOKUP_CACHE_MUTEX.synchronize { fetch_lookup_cache }
         end
 
+        def expire_lookup_cache
+          cache.delete(SECRET_LOOKUP_CACHE)
+        end
+
         private
 
         def fetch_lookup_cache

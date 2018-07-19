@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 require 'vault'
 
-# replace once https://github.com/hashicorp/vault-ruby/pull/118 is released
-# using a monkey patch so `vault_action :list_recursive` works nicely in the backend
+# Add recursive listing which was rejected by vault-ruby see https://github.com/hashicorp/vault-ruby/pull/118
+# using a monkey patch so `vault_action :list_recursive` works in the backend
 Vault::Logical.class_eval do
   def list_recursive(path, root = true)
     keys = list(path).flat_map do |p|
@@ -22,6 +22,7 @@ module Samson
   module Secrets
     class VaultServer < ActiveRecord::Base
       PREFIX = ENV['VAULT_PREFIX'] || 'secret/apps/'
+      NON_CONNECTION_ATTRIBUTES = ["name", "updated_at", "created_at"].freeze
 
       audited
       include AttrEncryptedSupport
@@ -47,6 +48,7 @@ module Samson
       validate :validate_connection
 
       after_save :refresh_vault_clients
+      after_save :expire_secrets_cache
 
       def cert_store
         return unless ca_cert.present?
@@ -100,6 +102,11 @@ module Samson
       end
 
       private
+
+      def expire_secrets_cache
+        return if (previous_changes.keys - NON_CONNECTION_ATTRIBUTES).empty?
+        Samson::Secrets::Manager.expire_lookup_cache
+      end
 
       def validate_cert
         cert_store
