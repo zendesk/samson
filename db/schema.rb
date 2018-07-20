@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_06_26_154722) do
+ActiveRecord::Schema.define(version: 2018_07_19_171414) do
 
   create_table "audits" do |t|
     t.integer "auditable_id", null: false
@@ -342,6 +342,7 @@ ActiveRecord::Schema.define(version: 2018_06_26_154722) do
     t.string "scopes", default: "", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "confidential", default: true, null: false
     t.index ["uid"], name: "index_oauth_applications_on_uid", unique: true, length: 191
   end
 

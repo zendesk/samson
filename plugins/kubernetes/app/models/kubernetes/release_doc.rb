@@ -112,7 +112,8 @@ module Kubernetes
         [replica_target - 1, Integer(min_available)].min
       end
       target = 0 if target < 0
-
+      annotations = (resource.dig(:metadata, :annotations) || {}).dup
+      annotations[:"samson/updateTimestamp"] = Time.now.utc.iso8601
       budget = {
         apiVersion: "policy/v1beta1",
         kind: "PodDisruptionBudget",
@@ -120,7 +121,7 @@ module Kubernetes
           name: kubernetes_role.resource_name,
           namespace: resource.dig(:metadata, :namespace),
           labels: resource.dig_fetch(:metadata, :labels).dup,
-          annotations: (resource.dig(:metadata, :annotations) || {}).dup
+          annotations: annotations
         },
         spec: {
           minAvailable: target,
