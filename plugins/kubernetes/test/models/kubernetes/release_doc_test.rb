@@ -81,10 +81,12 @@ describe Kubernetes::ReleaseDoc do
 
     describe "PodDisruptionBudget" do
       it "adds relative PodDisruptionBudget when requested" do
+        Time.stubs(:now).returns(Time.parse("2018-01-01"))
         template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '30%'}
         budget = create!.resource_template[2]
         budget[:spec][:minAvailable].must_equal 1
         budget[:metadata][:namespace].must_equal 'pod1'
+        budget[:metadata][:annotations][:"samson/updateTimestamp"].must_equal "2018-01-01T00:00:00Z"
         refute budget.key?(:delete)
       end
 
