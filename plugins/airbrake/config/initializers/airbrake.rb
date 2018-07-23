@@ -12,7 +12,7 @@ if key = ENV['AIRBRAKE_API_KEY']
 
     config.app_version = Rails.application.config.samson.version&.first(7)
     raise 'This must run after config/initializers/ ' if Rails.application.config.filter_parameters.empty?
-    config.blacklist_keys = Rails.application.config.filter_parameters + ['HTTP_AUTHORIZATION']
+    config.blacklist_keys = Rails.application.config.filter_parameters
 
     # send correct errors even when something blows up during initialization
     config.environment = Rails.env

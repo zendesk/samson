@@ -14,7 +14,6 @@ if token = ENV['ROLLBAR_ACCESS_TOKEN']
     config.code_version = Rails.application.config.samson.version&.first(7)
     config.populate_empty_backtraces = true
     config.logger = Rails.logger
-    config.scrub_fields |= Rails.application.config.filter_parameters + ['HTTP_AUTHORIZATION']
 
     # ignore errors we do not want to send to Rollbar
     config.before_process << proc do |options|
