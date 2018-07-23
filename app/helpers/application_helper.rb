@@ -330,4 +330,22 @@ module ApplicationHelper
     end
     html
   end
+
+  def check_box_section(section_title, help_text, object, method, collection)
+    content_tag(:fieldset) do
+      result = ''.html_safe
+
+      result << content_tag(:legend, section_title)
+      result << content_tag(:p, help_text, class: 'col-lg-offset-2')
+      result << content_tag(:div, class: 'col-lg-4 col-lg-offset-2') do
+        check_boxes = ''.html_safe
+        check_boxes << collection_check_boxes(object, method, collection, :id, :name) do |b|
+          box = ''.html_safe
+          box << b.check_box + ' '
+          box << b.label
+          box << tag(:br)
+        end
+      end
+    end
+  end
 end

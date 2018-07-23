@@ -707,5 +707,31 @@ describe ApplicationHelper do
       html.must_equal "<span class=\"label label-warning release-stage\">Staging</span> "
     end
   end
+
+  describe "#check_box_section" do
+    let(:project) { projects(:test) }
+    it 'creates a section of checkboxes from a collection' do
+      project.stages.each_with_index { |s, i| s.stubs(:id).returns(i) }
+
+      expected_result = <<~HTML.gsub /^\s+|\n/, ""
+        <fieldset>
+          <legend>Project Stages</legend>
+          <p class="col-lg-offset-2">Pick some of them stages!</p>
+          <div class="col-lg-4 col-lg-offset-2">
+            <input type="hidden" name="project[stages][]" value="" />
+            <input type="checkbox" value="0" name="project[stages][]" id="project_stages_0" /> <label for="project_stages_0">Staging</label>
+            <br />
+            <input type="checkbox" value="1" name="project[stages][]" id="project_stages_1" /> <label for="project_stages_1">Production</label>
+            <br />
+            <input type="checkbox" value="2" name="project[stages][]" id="project_stages_2" /> <label for="project_stages_2">Production Pod</label>
+            <br />
+          </div>
+        </fieldset>
+      HTML
+
+      result = check_box_section 'Project Stages', 'Pick some of them stages!', :project, :stages, project.stages
+      result.must_equal expected_result
+    end
+  end
 end
 # rubocop:enable Metrics/LineLength
