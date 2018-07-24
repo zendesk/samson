@@ -2,7 +2,7 @@
 # rubocop:disable Metrics/LineLength
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 2
+SingleCov.covered! uncovered: 1
 
 describe ApplicationHelper do
   include LocksHelper
@@ -627,19 +627,35 @@ describe ApplicationHelper do
     let(:items) { %w[foo bar baz] }
 
     it 'only shows `display_limit` records' do
-      tag = list_with_show_more(items, 2, content_tag(:li, 'More')) do |item|
-        content_tag(:li, item)
+      tag = unordered_list(items, display_limit: 2, show_more_tag: content_tag(:li, 'More')) do |item|
+        item
       end
 
       tag.must_equal '<ul><li>foo</li><li>bar</li><li>More</li></ul>'
     end
 
-    it 'passes through any HTML options' do
-      tag = list_with_show_more(items, 2, content_tag(:li, 'More'), class: 'show-more') do |item|
-        content_tag(:li, item)
+    it 'shows all records if there is no display limit' do
+      tag = unordered_list(items) do |item|
+        item
       end
 
-      tag.must_equal '<ul class="show-more"><li>foo</li><li>bar</li><li>More</li></ul>'
+      tag.must_equal '<ul><li>foo</li><li>bar</li><li>baz</li></ul>'
+    end
+
+    it 'passes through any HTML options' do
+      tag = unordered_list(
+        items,
+        display_limit: 2,
+        show_more_tag: content_tag(:li, 'More'),
+        ul_options: {class: 'show-more'},
+        li_options: {class: 'sparkles'}
+      ) do |item|
+        item
+      end
+
+      expected_html = '<ul class="show-more"><li class="sparkles">foo</li><li class="sparkles">bar</li>' \
+        '<li>More</li></ul>'
+      tag.must_equal expected_html
     end
   end
 

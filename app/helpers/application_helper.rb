@@ -289,11 +289,12 @@ module ApplicationHelper
     result
   end
 
-  def list_with_show_more(items, display_limit, show_more_tag, ul_options = {}, &block)
-    li_tags = items.first(display_limit).map { |i| capture(i, &block) }
-    li_tags << show_more_tag if items.size > display_limit
+  def unordered_list(items, display_limit: nil, show_more_tag: nil, ul_options: {}, li_options: {}, &block)
+    shown_items = items.first(display_limit || items.size)
+    li_tags = shown_items.map { |item| content_tag(:li, nil, li_options) { capture(item, &block) } }
+    li_tags << show_more_tag if display_limit && items.size > display_limit
 
-    content_tag(:ul, li_tags.join.html_safe, ul_options)
+    content_tag(:ul, safe_join(li_tags), ul_options)
   end
 
   # See https://developers.google.com/chart/image/docs/chart_params
