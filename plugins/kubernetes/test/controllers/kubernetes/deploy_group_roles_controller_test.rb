@@ -244,6 +244,14 @@ describe Kubernetes::DeployGroupRolesController do
         error.must_equal "<p>Roles failed to seed, fill them in manually.\n<br />app-server for Pod1: foo</p>"
         assert error.html_safe?
       end
+
+      it "does not overflow cookies when trying to seed too many roles that all fail because of limit violations" do
+        deploy_group_role.errors.add :base, 'foo'
+        deploy_group_role.stubs(persisted?: false)
+        Kubernetes::DeployGroupRole.expects(:seed!).returns Array.new(10).fill(deploy_group_role)
+        post :seed, params: {stage_id: stage.id}
+        flash[:alert].scan("app-server for Pod1").size.must_equal 3
+      end
     end
 
     describe "#edit_many" do

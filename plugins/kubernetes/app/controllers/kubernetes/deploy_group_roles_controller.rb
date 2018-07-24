@@ -89,7 +89,10 @@ class Kubernetes::DeployGroupRolesController < ApplicationController
         errors.concat(created.map do |dgr|
           "#{dgr.kubernetes_role.name} for #{dgr.deploy_group.name}: #{dgr.errors.full_messages.to_sentence}"
         end)
-        {alert: view_context.simple_format(errors.join("\n"))}
+        max = 4 # header + 3
+        message = errors.first(max).join("\n")
+        message << " ..." if errors.size > max
+        {alert: view_context.simple_format(message)}
       end
     redirect_to [@stage.project, @stage], options
   end
