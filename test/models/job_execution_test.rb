@@ -213,7 +213,7 @@ describe JobExecution do
   it 'fails when on start callback fails' do
     execute_job('master', on_start: -> { raise(Samson::Hooks::UserError, 'failure') })
 
-    assert job.output.include?('failed')
+    job.output.must_include 'failed'
     assert_equal 'errored', job.status
   end
 
@@ -222,7 +222,7 @@ describe JobExecution do
     output = execution.output
     execution.send(:run)
 
-    assert output.include?(:started, '')
+    assert output.include?(:started, '') # cannot use must_include
     assert output.include?(:finished, '')
   end
 
