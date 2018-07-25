@@ -32,6 +32,7 @@ Available plugins:
  - [Rollbar notifications on deploy](https://github.com/zendesk/samson/tree/master/plugins/rollbar_hook)
  - [Rollbar dashboards](https://github.com/zendesk/samson/tree/master/plugins/rollbar_dashboards)
  - [Assertible notifications on deploy](https://github.com/zendesk/samson/tree/master/plugins/assertible)
+ - [Prerequisite stages](https://github.com/zendesk/samson/tree/master/plugins/prerequisite_stages)
  - Add yours here!
 
 To create your own plugin run:

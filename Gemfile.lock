@@ -95,6 +95,11 @@ PATH
     samson_pipelines (0.0.0)
 
 PATH
+  remote: plugins/prerequisite_stages
+  specs:
+    samson_prerequisite_stages (0.0.0)
+
+PATH
   remote: plugins/rollbar_dashboards
   specs:
     samson_rollbar_dashboards (0.0.0)
@@ -613,6 +618,7 @@ DEPENDENCIES
   samson_ledger!
   samson_new_relic!
   samson_pipelines!
+  samson_prerequisite_stages!
   samson_rollbar!
   samson_rollbar_dashboards!
   samson_rollbar_hook!

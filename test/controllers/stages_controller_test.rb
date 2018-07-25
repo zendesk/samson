@@ -269,9 +269,7 @@ describe StagesController do
         subject.save!
 
         get :edit, params: {project_id: subject.project.to_param, id: subject.to_param}
-
-        checkbox = css_select('#stage_next_stage_ids_').
-            detect { |node| node.attribute('value')&.value == next_stage.id.to_s }
+        checkbox = css_select("#stage_next_stage_ids_#{next_stage.id}")
         assert_equal 'checked', checkbox.attribute('checked').value
       end
 
