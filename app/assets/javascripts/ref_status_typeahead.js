@@ -6,6 +6,7 @@ function refStatusTypeahead(options){
   var $ref_problem_list = $("#ref-problem-list");
   var status_check_timeout = null;
   var $tag_form_group = $reference.parent();
+  var $submit_button = $ref_status_container.closest('form').find(':submit');
   if(!$reference.get(0)) { return; }
 
   function initializeTypeahead() {
@@ -36,8 +37,12 @@ function refStatusTypeahead(options){
     });
   }
 
-  function show_status_problems(status_list) {
+  function show_status_problems(status_list, isDanger) {
     $ref_status_container.removeClass("hidden");
+console.log(isDanger);
+    $ref_status_container.toggleClass('alert-danger', isDanger);
+    $ref_status_container.toggleClass('alert-warning', !isDanger);
+
     $ref_problem_list.empty();
     $.each(status_list, function(idx, status) {
       if (status.state != "success") {
@@ -52,6 +57,8 @@ function refStatusTypeahead(options){
   }
 
   function check_status(ref) {
+    $submit_button.prop("disabled", false);
+
     $.ajax({
       url: $("#new_deploy").data("commit-status-url"),
       data: { ref: ref },
@@ -63,12 +70,17 @@ function refStatusTypeahead(options){
             break;
           case "pending":
             $tag_form_group.addClass("has-warning");
-            show_status_problems(response.status_list);
+            show_status_problems(response.status_list, false);
             break;
           case "failure":
           case "error":
             $tag_form_group.addClass("has-error");
-            show_status_problems(response.status_list);
+            show_status_problems(response.status_list, false);
+            break;
+          case "fatal":
+            $tag_form_group.addClass("has-error");
+            $submit_button.prop("disabled", true);
+            show_status_problems(response.status_list, true);
             break;
           default:
             alert("Unexpected response: " + response.toString());

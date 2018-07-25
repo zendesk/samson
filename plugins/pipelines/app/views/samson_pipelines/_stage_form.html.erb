@@ -1,24 +1,2 @@
-<fieldset>
-  <legend>Pipelining</legend>
-  <p class="col-lg-offset-2">Set the stages that will get automatically deployed after this one.</p>
-  <div class="col-lg-4 col-lg-offset-2">
-    <%= hidden_field_tag "#{form.object_name}[next_stage_ids][]" %>
-    <table>
-      <% (@project.stages - [@stage]).each do |next_stage| %>
-        <tr>
-          <td>
-            <%= label_tag do %>
-              <%= check_box_tag(
-                    "#{form.object_name}[next_stage_ids][]",
-                    next_stage.id,
-                    (@stage && @stage.next_stage_ids.include?(next_stage.id))
-                  )
-              %>
-              <%= next_stage.name %>
-            <% end %>
-          </td>
-        </tr>
-      <% end %>
-    </table>
-  </div>
-</fieldset>
+<% help_text = 'Set the stages that will get automatically deployed after this one.' %>
+<%= check_box_section('Pipelining', help_text, :stage, :next_stage_ids, @project.stages - [@stage]) %>

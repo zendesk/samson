@@ -160,31 +160,41 @@ describe CommitStatus do
     end
   end
 
-  describe '#ref_status' do
+  describe '#ref_statuses' do
     let(:production_stage) { stages(:test_production) }
 
     it 'returns nothing if stage is not production' do
-      status.send(:ref_status).must_be_nil
+      status.send(:ref_statuses).must_equal []
     end
 
     it 'returns nothing if ref has been deployed to non-production stage' do
       production_stage.project.expects(:deployed_reference_to_non_production_stage?).returns(true)
 
-      status(stage_param: production_stage).send(:ref_status).must_be_nil
+      status(stage_param: production_stage).send(:ref_statuses).must_equal []
     end
 
     it 'returns status if ref has not been deployed to non-production stage' do
       production_stage.project.expects(:deployed_reference_to_non_production_stage?).returns(false)
 
-      expected_hash = {
-        state: "pending",
-        statuses: [{
-          state: "Production Only Reference",
-          description: "master has not been deployed to a non-production stage."
-        }]
-      }
+      expected_hash = [
+        {
+          state: "pending",
+          statuses: [
+            {
+              state: "Production Only Reference",
+              description: "master has not been deployed to a non-production stage."
+            }
+          ]
+        }
+      ]
 
-      status(stage_param: production_stage).send(:ref_status).must_equal expected_hash
+      status(stage_param: production_stage).send(:ref_statuses).must_equal expected_hash
+    end
+
+    it 'includes plugin statuses' do
+      Samson::Hooks.expects(:fire).with(:ref_status, stage, reference).returns([{foo: :bar}])
+
+      status.send(:ref_statuses).must_equal [{foo: :bar}]
     end
   end
 end

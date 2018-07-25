@@ -1,11 +1,13 @@
 # frozen_string_literal: true
 # Used to display all warnings/failures before user actually deploys
 class CommitStatus
+  # See ref_status_typeahead.js for how statuses are handled
   STATUS_PRIORITY = {
     success: 0,
     pending: 1,
     failure: 2,
-    error: 3
+    error: 3,
+    fatal: 4
   }.freeze
 
   def initialize(stage, reference)
@@ -34,7 +36,8 @@ class CommitStatus
 
   def combined_status
     @combined_status ||= begin
-      statuses = [github_status, release_status, ref_status]
+      statuses = [github_status, release_status, *ref_statuses]
+
       statuses.each_with_object({}) { |status, merged_statuses| merge(merged_statuses, status) }
     end
   end
@@ -84,10 +87,11 @@ class CommitStatus
     }
   end
 
-  def ref_status
+  def ref_statuses
+    statuses = []
     # Check if ref has been deployed to any non-production stages first if deploying to production
     if @stage.production? && !@stage.project.deployed_reference_to_non_production_stage?(@reference)
-      {
+      statuses << {
         state: "pending",
         statuses: [{
           state: "Production Only Reference",
@@ -95,6 +99,7 @@ class CommitStatus
         }]
       }
     end
+    statuses + Samson::Hooks.fire(:ref_status, @stage, @reference).compact
   end
 
   def version(reference)

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_07_19_171414) do
+ActiveRecord::Schema.define(version: 2018_07_23_163626) do
 
   create_table "audits" do |t|
     t.integer "auditable_id", null: false
@@ -529,6 +529,7 @@ ActiveRecord::Schema.define(version: 2018_07_19_171414) do
     t.boolean "notify_assertible", default: false, null: false
     t.string "notify_email_address"
     t.float "average_deploy_time"
+    t.string "prerequisite_stage_ids"
     t.index ["project_id", "permalink"], name: "index_stages_on_project_id_and_permalink", unique: true, length: { permalink: 191 }
     t.index ["template_stage_id"], name: "index_stages_on_template_stage_id"
   end
