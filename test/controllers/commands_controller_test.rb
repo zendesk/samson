@@ -170,6 +170,8 @@ describe CommandsController do
     end
 
     describe '#destroy' do
+      let(:command) { commands(:echo) }
+
       it "fails with unknown id" do
         assert_raises ActiveRecord::RecordNotFound do
           delete :destroy, params: {id: 123123}
@@ -177,21 +179,58 @@ describe CommandsController do
       end
 
       describe 'valid' do
-        before do
-          StageCommand.delete_all
-          delete :destroy, params: {id: commands(:echo).id, format: format}
-        end
-
         describe 'html' do
           let(:format) { 'html' }
 
+          def delete_command(param_overrides = {})
+            params = {id: command.id, format: format}.merge(param_overrides)
+            delete :destroy, params: params
+          end
+
           it 'redirects' do
+            StageCommand.delete_all
+
+            delete_command
+
             flash[:notice].wont_be_nil
             assert_redirected_to commands_path
           end
 
           it 'removes the command' do
-            Command.exists?(commands(:echo).id).must_equal(false)
+            StageCommand.delete_all
+
+            delete_command
+
+            Command.exists?(command.id).must_equal(false)
+          end
+
+          it 'removes stage command and command if stage is passed' do
+            stage = stages(:test_staging)
+            stage_command = stage_commands(:test_staging_echo)
+
+            command.stage_commands = [stage_command]
+
+            assert_difference 'StageCommand.count', -1 do
+              assert_difference 'Command.count', -1 do
+                delete_command(stage_id: stage.id)
+              end
+            end
+
+            StageCommand.exists?(stage_command.id).must_equal false
+            Command.exists?(command.id).must_equal false
+          end
+
+          it 'removes stage command but not command if stage is passed but command is still in use elsewhere' do
+            stage_command_id = stage_commands(:test_staging_echo).id
+
+            assert_difference 'StageCommand.count', -1 do
+              assert_no_difference 'Command.count' do
+                delete_command(stage_id: stages(:test_staging).id)
+              end
+            end
+
+            StageCommand.exists?(stage_command_id).must_equal false
+            Command.exists?(command.id).must_equal true
           end
         end
 
@@ -205,7 +244,7 @@ describe CommandsController do
       end
 
       describe 'invalid' do
-        before { delete :destroy, params: {id: commands(:echo).id, format: format} }
+        before { delete :destroy, params: {id: command.id, format: format} }
 
         describe 'html' do
           let(:format) { 'html' }
@@ -215,7 +254,7 @@ describe CommandsController do
           end
 
           it 'did not remove the command' do
-            Command.exists?(commands(:echo).id).must_equal(true)
+            Command.exists?(command.id).must_equal(true)
           end
         end
 
