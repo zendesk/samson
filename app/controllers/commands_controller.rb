@@ -54,7 +54,7 @@ class CommandsController < ApplicationController
 
   def destroy
     # Destroy specific stage command usage if `stage_id` is passed in to allow for inline deletion
-    remove_stage_usage if params[:stage_id]
+    remove_stage_usage_if_exists
 
     if @command.destroy
       successful_response('Command removed.')
@@ -107,7 +107,8 @@ class CommandsController < ApplicationController
     end
   end
 
-  def remove_stage_usage
-    StageCommand.find_by!(stage_id: params[:stage_id], command_id: @command.id).destroy
+  def remove_stage_usage_if_exists
+    return if params[:stage_id].nil?
+    StageCommand.find_by(stage_id: params[:stage_id], command_id: @command.id)&.destroy
   end
 end

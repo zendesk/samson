@@ -204,33 +204,43 @@ describe CommandsController do
             Command.exists?(command.id).must_equal(false)
           end
 
-          it 'removes stage command and command if stage is passed' do
-            stage = stages(:test_staging)
-            stage_command = stage_commands(:test_staging_echo)
+          describe 'delete from stage edit' do
+            it 'removes stage command and command if stage is passed' do
+              stage = stages(:test_staging)
+              stage_command = stage_commands(:test_staging_echo)
 
-            command.stage_commands = [stage_command]
+              command.stage_commands = [stage_command]
 
-            assert_difference 'StageCommand.count', -1 do
-              assert_difference 'Command.count', -1 do
-                delete_command(stage_id: stage.id)
+              assert_difference 'StageCommand.count', -1 do
+                assert_difference 'Command.count', -1 do
+                  delete_command(stage_id: stage.id)
+                end
               end
+
+              StageCommand.exists?(stage_command.id).must_equal false
+              Command.exists?(command.id).must_equal false
             end
 
-            StageCommand.exists?(stage_command.id).must_equal false
-            Command.exists?(command.id).must_equal false
-          end
+            it 'removes stage command but not command if stage is passed but command is still in use elsewhere' do
+              stage_command_id = stage_commands(:test_staging_echo).id
 
-          it 'removes stage command but not command if stage is passed but command is still in use elsewhere' do
-            stage_command_id = stage_commands(:test_staging_echo).id
-
-            assert_difference 'StageCommand.count', -1 do
-              assert_no_difference 'Command.count' do
-                delete_command(stage_id: stages(:test_staging).id)
+              assert_difference 'StageCommand.count', -1 do
+                assert_no_difference 'Command.count' do
+                  delete_command(stage_id: stages(:test_staging).id)
+                end
               end
+
+              StageCommand.exists?(stage_command_id).must_equal false
+              Command.exists?(command.id).must_equal true
             end
 
-            StageCommand.exists?(stage_command_id).must_equal false
-            Command.exists?(command.id).must_equal true
+            it 'removes command without stage command (command deselected)' do
+              StageCommand.delete_all
+
+              delete_command(stage_id: stages(:test_staging).id)
+
+              Command.exists?(command.id).must_equal(false)
+            end
           end
         end
 
