@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_07_23_163626) do
+ActiveRecord::Schema.define(version: 2018_08_02_182824) do
 
   create_table "audits" do |t|
     t.integer "auditable_id", null: false
@@ -118,7 +118,7 @@ ActiveRecord::Schema.define(version: 2018_07_23_163626) do
     t.integer "project_id", null: false
     t.boolean "kubernetes_rollback", default: true, null: false
     t.boolean "kubernetes_reuse_build", default: false, null: false
-    t.text "env_state"
+    t.text "env_state", limit: 16777215
     t.integer "triggering_deploy_id"
     t.index ["build_id"], name: "index_deploys_on_build_id"
     t.index ["deleted_at"], name: "index_deploys_on_deleted_at"
