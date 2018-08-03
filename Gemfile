@@ -73,7 +73,7 @@ group :assets do
   gem 'momentjs-rails'
   gem 'bootstrap3-datetimepicker-rails'
 
-  source 'https://rails-assets.org' do
+  source 'http://insecure.rails-assets.org' do
     gem 'rails-assets-bootstrap-select'
     gem 'rails-assets-jquery'
     gem 'rails-assets-jquery-ui'
