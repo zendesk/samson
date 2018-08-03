@@ -135,7 +135,7 @@ PATH
 
 GEM
   remote: https://rubygems.org/
-  remote: https://rails-assets.org/
+  remote: http://insecure.rails-assets.org/
   specs:
     actioncable (5.2.0)
       actionpack (= 5.2.0)
