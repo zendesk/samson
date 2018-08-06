@@ -23,9 +23,11 @@ elsif Samson::EnvCheck.set?("RAILS_LOG_TO_SYSLOG")
     }
   end
 
-  require 'syslog/logger'
   config.logger = Syslog::Logger.new('samson')
+  config.action_cable.logger = Syslog::Logger.new('samson')
+  config.action_cable.logger.formatter = Syslog::Formatters::Json.new
   config.lograge.formatter = Lograge::Formatters::Logstash.new
+
 elsif ENV["SERVER_MODE"] # regular file logger that needs rotating
   # Reopen logfile when we receive a SIGHUP for log-rotation
   # puma normally kills itself with INT if it receives a SIGHUP
