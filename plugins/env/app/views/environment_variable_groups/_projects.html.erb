@@ -3,7 +3,7 @@
 <%# The index page has a limit, but the show page should display all projects %>
 <% if display_limit %>
   <%= unordered_list(projects, display_limit: display_limit, show_more_tag: link_to("+ #{projects.size - display_limit} More")) do |project| %>
-    <li><%= link_to project.name, project %></li>
+    <%= link_to project.name, project %>
   <% end %>
 <% else %>
   <ul>
