@@ -25,7 +25,7 @@ elsif Samson::EnvCheck.set?("RAILS_LOG_TO_SYSLOG")
 
   config.logger = Syslog::Logger.new('samson')
   config.action_cable.logger = Syslog::Logger.new('samson')
-  config.action_cable.logger.formatter = Syslog::Formatters::Json.new
+  config.action_cable.logger.formatter = Samson::SyslogFormatter.new
   config.lograge.formatter = Lograge::Formatters::Logstash.new
 
 elsif ENV["SERVER_MODE"] # regular file logger that needs rotating
