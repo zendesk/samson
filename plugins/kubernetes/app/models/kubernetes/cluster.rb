@@ -71,7 +71,8 @@ module Kubernetes
         type,
         ssl_options: context.ssl_options,
         auth_options: context.auth_options,
-        timeouts: {open: 2, read: 10}
+        timeouts: {open: 2, read: 10},
+        as: :parsed_symbolized
       )
     end
 

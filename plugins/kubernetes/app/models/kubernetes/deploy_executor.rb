@@ -141,9 +141,8 @@ module Kubernetes
     def show_failure_cause(release_docs, statuses)
       release_docs.each { |doc| print_resource_events(doc) }
       log_end_time = Integer(ENV['KUBERNETES_LOG_TIMEOUT'] || '20').seconds.from_now
-
-      statuses.reject(&:live).select(&:pod).each do |status|
-        pod = status.pod
+      debug_pods = statuses.reject(&:live).select(&:pod).group_by(&:role).map { |_, g| g.first.pod }
+      debug_pods.each do |pod|
         @output.puts "\n#{pod_identifier(pod)}:"
         print_pod_events(pod)
         @output.puts
