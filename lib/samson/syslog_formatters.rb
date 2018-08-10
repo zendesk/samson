@@ -8,7 +8,7 @@ module Samson
         severity: severity,
         time: timestamp,
         message: message
-      }
+      }.to_json
     end
   end
 end
