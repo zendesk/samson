@@ -11,7 +11,7 @@ describe Samson::SyslogFormatter do
       logger = Logger.new(output)
       logger.formatter = Samson::SyslogFormatter.new
       logger.info('test')
-      output.string.must_equal "{\"severity\":\"INFO\",\"time\":#{Time.now.to_json},\"message\":\"test\"}"
+      output.string.must_equal({severity: "INFO", time: Time.now, message: "test"}.to_json)
     end
   end
 end
