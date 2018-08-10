@@ -31,10 +31,10 @@ describe Kubernetes::Api::Pod do
       }
     }
   end
-  let(:pod) { Kubernetes::Api::Pod.new(Kubeclient::Resource.new(JSON.parse(pod_attributes.to_json))) }
+  let(:pod) { Kubernetes::Api::Pod.new(pod_attributes) }
   let(:pod_with_client) do
     Kubernetes::Api::Pod.new(
-      Kubeclient::Resource.new(JSON.parse(pod_attributes.to_json)),
+      pod_attributes,
       client: deploy_groups(:pod1).kubernetes_cluster.client
     )
   end
