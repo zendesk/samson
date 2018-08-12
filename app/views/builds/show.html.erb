@@ -74,7 +74,7 @@
   <% if job = @build.docker_build_job %>
     <h2>Docker Build Output</h2>
 
-    <div id="output" data-stream-url="<%= stream_path(job) %>" data-desktop-notify="<%= current_user.desktop_notify? %>">
+    <div id="output" data-desktop-notify="<%= current_user.desktop_notify? %>">
       <%= render partial: 'shared/output', locals: { job: job, deployable: job, hide: false } %>
       <%= render 'shared/output_stream', job: job %>
     </div>

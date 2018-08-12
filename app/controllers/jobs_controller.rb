@@ -13,7 +13,13 @@ class JobsController < ApplicationController
 
   def show
     respond_to do |format|
-      format.html
+      format.html do
+        if params[:header]
+          @deploy = @job.deploy
+          partial = (@deploy ? 'deploys/header' : 'jobs/header')
+          render partial: partial, layout: false
+        end
+      end
       format.text do
         datetime = @job.updated_at.strftime("%Y%m%d_%H%M%Z")
         send_data @job.output,

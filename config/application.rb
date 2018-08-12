@@ -33,10 +33,6 @@ else
   # needed even in dev/test mode
   require 'new_relic/agent/method_tracer'
 end
-
-if ENV["SERVER_MODE"]
-  require 'sse-rails-engine'
-end
 # END Railties
 ###
 
@@ -143,10 +139,6 @@ module Samson
     config.samson.auth.bitbucket = Samson::EnvCheck.set?("AUTH_BITBUCKET")
 
     config.samson.uri = URI(ENV["DEFAULT_URL"] || 'http://localhost:3000')
-
-    if ENV["SERVER_MODE"]
-      config.sse_rails_engine.access_control_allow_origin = config.samson.uri.to_s
-    end
 
     raise if ENV['STREAM_ORIGIN'] || ENV['DEPLOY_ORIGIN'] # alert users with deprecated options, remove 2019-05-01
 
