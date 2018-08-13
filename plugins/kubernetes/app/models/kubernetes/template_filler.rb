@@ -237,8 +237,11 @@ module Kubernetes
       # Kubernetes will ignore it, but having it present makes cluster upgrades a lot easier.
       pod_template.dig_set([:spec, :initContainers], init_containers)
 
+      key = Kubernetes::Api::Pod::INIT_CONTAINER_KEY
       if init_containers_need_annotation?
-        annotations[Kubernetes::Api::Pod::INIT_CONTAINER_KEY] = JSON.pretty_generate(init_containers)
+        annotations[key] = JSON.pretty_generate(init_containers)
+      else
+        annotations.delete(key)
       end
     end
 
