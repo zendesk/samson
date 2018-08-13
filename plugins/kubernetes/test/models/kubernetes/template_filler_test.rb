@@ -405,15 +405,17 @@ describe Kubernetes::TemplateFiller do
 
         let(:spec_init_containers) { result.dig(:spec, :template, :spec, :initContainers) || [] }
 
-        it 'sets init containers in annotations if using < 1.6.0 k8s server version' do
+        it 'sets init containers both formats if using < 1.6.0 k8s server version' do
           add_init_container("samson/dockerfile": 'Dockerfile')
+
+          spec_init_containers[0].must_equal('samson/dockerfile': "Dockerfile", image: image)
           spec_annotation_containers[0].must_equal("samson/dockerfile" => "Dockerfile", "image" => image)
         end
 
-        it 'sets init containers using updated syntax to old syntax if using < 1.6.0 k8s server version' do
+        it 'sets init containers using updated syntax to both formats if using < 1.6.0 k8s server version' do
           add_init_contnainer_new_syntax('samson/dockerfile': 'Dockerfile')
 
-          spec_init_containers.must_equal([])
+          spec_init_containers[0].must_equal('samson/dockerfile': "Dockerfile", image: image)
           spec_annotation_containers[0].must_equal("samson/dockerfile" => "Dockerfile", "image" => image)
         end
 
