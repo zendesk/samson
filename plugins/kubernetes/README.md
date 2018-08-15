@@ -153,7 +153,7 @@ Users can opt-out by setting `samson/minAvailable: disabled`.
 
 Can be enabled per role, it then starts a new isolated deployment shifting between blue and green sufixes, 
 switching service selectors if successfully deployed and deleting previous resources.
-All active resources must be deleted manually when switching this.
+All active resources must be deleted manually when switching to blue/green from regular deployment.
 
 ### Resources without cpu limits
 
