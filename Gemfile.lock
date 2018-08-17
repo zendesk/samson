@@ -335,7 +335,7 @@ GEM
     multi_json (1.13.1)
     multi_xml (0.6.0)
     multipart-post (2.0.0)
-    mysql2 (0.4.5)
+    mysql2 (0.4.10)
     net-http-persistent (2.9.4)
     net-ldap (0.16.1)
     netrc (0.11.0)
