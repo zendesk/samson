@@ -72,28 +72,13 @@
 
   <%= Samson::Hooks.render_views(:deploy_group_show, self) %>
 
-  <div class="form-group">
-    <% if DeployGroup.enabled? %>
-      <div class="col-lg-offset-2 col-lg-10" style="display: none" id="mass_rollout">
+  <% if DeployGroup.enabled? %>
+    <div class="form-group" id="mass_stage_creation" style="display: none">
+      <label class="col-lg-2 control-label">Mass Stage Creation</label>
+      <div class="col-lg-10">
         <%= link_to "Create Stages ...",
             new_deploy_group_mass_rollouts_path(@deploy_group),
             class: "btn btn-default"
-        %>
-        <%= link_to "Deploy All Projects",
-            deploy_deploy_group_mass_rollouts_path(@deploy_group),
-            class: "btn btn-default",
-            data: {
-              method: "post",
-              confirm: "Deploys will be started for all stages."
-            }
-        %>
-        <%= link_to "Deploy Missing Projects",
-            deploy_deploy_group_mass_rollouts_path(@deploy_group, missing_only: "true"),
-            class: "btn btn-default",
-            data: {
-              method: "post",
-              confirm: "Deploys will be started for any stages that haven't yet been deployed or have failed all their deploys."
-            }
         %>
         <% cloned_stage_count = @deploy_group.stages.cloned.count %>
         <%= link_to "Merge #{cloned_stage_count} Cloned Stages",
@@ -114,13 +99,68 @@
             }
         %>
       </div>
-    <% end %>
-    <br>
+    </div>
+    <div class="form-group" id="mass_rollout" style="display: none">
+      <label class="col-lg-2 control-label">Mass Rollout</label>
+      <div class="col-lg-10">
+        <%= form_tag deploy_deploy_group_mass_rollouts_path(@deploy_group) do %>
+
+          <% if defined?(SamsonKubernetes::Engine) %>
+          <div class="form-group">
+            <div class="col-lg-8">
+              <label>Stage Type</label>
+
+              <div class="form-group">
+                <div class="col-lg-5 checkbox">
+                  <%= label_tag do %>
+                    <%= check_box_tag :kubernetes, true, :checked %>
+                    Kubernetes stages
+                  <% end %>
+                </div>
+
+                <div class="col-lg-5 checkbox">
+                  <%= label_tag do %>
+                    <%= check_box_tag :non_kubernetes, true, :checked%>
+                    Non-Kubernetes stages
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          </div>
+          <% end %>
+
+          <div class="form-group">
+            <div class="col-lg-8">
+              <label>Stage Filter</label>
+              <div class="form-group">
+                <div class="col-lg-5 checkbox">
+                  <%= label_tag do %>
+                    <%= check_box_tag :successful, true, :checked %>
+                    Previously successful stages
+                  <% end %>
+                </div>
+                <div class="col-lg-5 checkbox">
+                  <%= label_tag do %>
+                    <%= check_box_tag :missing, true, :checked %>
+                    <abbr title="Any stages that haven't yet been deployed or have failed all their deploys">Missing</abbr> stages
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          </div>
+          <%= submit_tag "Start Deploys", class: "btn btn-default", data: { confirm: "Deploys will be started for all stages matching the checkboxes selected", disable_with: "Deploying..." } %>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="form-group">
     <div class="col-lg-offset-2 col-lg-10" style="margin-top: 10px;">
       <%= link_to "Edit", edit_deploy_group_path(@deploy_group), class: "btn btn-primary" %>
       <%= render "locks/button", lock: @deploy_group.lock, resource: @deploy_group %>
       | <%= link_to_history @deploy_group %>
       | <%= link_to "Deploys", deploys_path(search: {group: "DeployGroup-#{@deploy_group.id}"}) %>
+      | <%= link_to "Mass stage creation", "#", data: {target: "#mass_stage_creation"}, class: 'toggle' if DeployGroup.enabled? %>
       | <%= link_to "Mass rollout", "#", data: {target: "#mass_rollout"}, class: 'toggle' if DeployGroup.enabled? %>
       | <%= link_to "Missing config", missing_config_deploy_group_path(@deploy_group) %>
     </div>

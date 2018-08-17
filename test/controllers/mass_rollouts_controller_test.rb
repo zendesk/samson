@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 7
+SingleCov.covered! uncovered: 9
 
 describe MassRolloutsController do
   def create_stages
@@ -47,59 +47,109 @@ describe MassRolloutsController do
     end
 
     describe "#deploy" do
-      it "deploys all stages for this deploy_group" do
-        post :deploy, params: {deploy_group_id: deploy_group}
-        deploy = stage.deploys.order('created_at desc').first.id
-        assert_redirected_to "/deploys?ids%5B%5D=#{deploy}"
-      end
+      describe "deploy for successful deploys" do
+        let(:env) { environments(:staging) }
+        let(:pod100) { DeployGroup.create!(name: 'Pod 100', environment: env) }
+        let(:pod101) { DeployGroup.create!(name: 'Pod 101', environment: env) }
+        let(:stage100) { Stage.create!(name: 'Staging 100', project: Project.first, deploy_groups: [pod100]) }
+        let(:stage101) { Stage.create!(name: 'Staging 101', project: Project.first, deploy_groups: [pod101], template_stage: stage100) }
 
-      it 'ignores template_stages that have not been deployed yet' do
-        Deploy.delete_all
+        before do
+          DeployGroup.delete_all
+          Deploy.delete_all
 
-        post :deploy, params: {deploy_group_id: deploy_group}
-        assert_redirected_to "/deploys" # with no ids  present.
-      end
+          stage100.deploys.create!(
+            reference: 'v123',
+            project: stage100.project,
+            job: Job.create!(
+              project: stage100.project,
+              user: User.first,
+              status: "succeeded",
+              command: 'blah'
+            )
+          )
 
-      it 'ignores template_stages with only a failed deploy' do
-        Job.update_all(status: :failed)
+          stage101.deploys.create!(
+            reference: 'master',
+            project: stage101.project,
+            job: Job.create!(
+              project: stage101.project,
+              user: User.first,
+              status: "succeeded",
+              command: 'blah'
+            )
+          )
 
-        post :deploy, params: {deploy_group_id: deploy_group}
-        assert_redirected_to "/deploys" # with no ids  present.
-      end
+          stage101.deploys.create!(
+            reference: 'v123',
+            project: stage101.project,
+            job: Job.create!(
+              project: stage101.project,
+              user: User.first,
+              status: "failed",
+              command: 'blah'
+            )
+          )
+        end
 
-      it 'ignores failed deploy and takes last successful deploy' do
-        stage = deploy_group.stages.first
+        it 'deploys all stages with successful deploys for this deploy_group' do
+          assert_difference 'Deploy.count', 1 do
+            post :deploy, params: {deploy_group_id: pod100, successful: true, non_kubernetes: true}
+          end
 
-        # verify the test is setup correctly.
-        assert stage.last_deploy.failed?
-        last_successful_deploy = stage.last_successful_deploy
-        assert last_successful_deploy.succeeded?
+          deploy = stage100.deploys.order('created_at desc').first
+          assert_redirected_to "/deploys?ids%5B%5D=#{deploy.id}"
+        end
 
-        post :deploy, params: {deploy_group_id: deploy_group}
-        assert_equal Deploy.last.reference, last_successful_deploy.reference
-      end
+        it 'redeploys the same reference as the last successful deploy' do
+          assert_equal 'master', stage101.last_successful_deploy.reference
 
-      it 'ignores stages with no deploy groups' do
-        DeployGroupsStage.delete_all
+          assert_difference 'Deploy.count', 1 do
+            post :deploy, params: {deploy_group_id: pod101, successful: true, non_kubernetes: true}
+          end
+          deploy = Deploy.order('created_at desc').first
+          assert_equal 'master', deploy.reference
+        end
 
-        post :deploy, params: {deploy_group_id: deploy_group}
-        assert_redirected_to "/deploys" # with no ids  present.
-      end
+        it 'ignores stages that have not been deployed yet' do
+          stage100.deploys.delete_all
 
-      it 'ignores stages that include only other deploy groups' do
-        env = environments(:staging)
-        new_dp = DeployGroup.create!(name: "foo", environment: env)
-        DeployGroupsStage.update_all(deploy_group_id: new_dp.id)
+          post :deploy, params: {deploy_group_id: pod100, successful: true, non_kubernetes: true}
+          assert_redirected_to "/deploys" # with no ids present.
+        end
 
-        post :deploy, params: {deploy_group_id: deploy_group}
-        assert_redirected_to "/deploys" # with no ids  present.
-      end
+        it 'ignores stages with only a failed deploy' do
+          Job.where(id: stage100.deploys.pluck(:job_id)).update_all(status: :failed)
 
-      it 'ignores projects with no template for this environment' do
-        Stage.update_all(is_template: false)
+          post :deploy, params: {deploy_group_id: pod100, successful: true, non_kubernetes: true}
+          assert_redirected_to "/deploys" # with no ids present.
+        end
 
-        post :deploy, params: {deploy_group_id: deploy_group}
-        assert_redirected_to "/deploys" # with no ids  present.
+        it 'ignores failed deploy and takes last successful deploy' do
+          # verify the test is setup correctly.
+          assert stage101.last_deploy.failed?
+          assert stage101.last_successful_deploy
+
+          post :deploy, params: {deploy_group_id: pod101, successful: true, non_kubernetes: true}
+          deploy = stage101.deploys.order('created_at desc').first
+          assert_equal deploy.reference, stage101.last_successful_deploy.reference
+        end
+
+        it 'ignores stages with no deploy groups' do
+          DeployGroupsStage.delete_all
+
+          post :deploy, params: {deploy_group_id: pod100, successful: true, non_kubernetes: true}
+          assert_redirected_to "/deploys" # with no ids  present.
+        end
+
+        it 'ignores stages that include only other deploy groups' do
+          env = environments(:staging)
+          new_dp = DeployGroup.create!(name: "foo", environment: env)
+          DeployGroupsStage.update_all(deploy_group_id: new_dp.id)
+
+          post :deploy, params: {deploy_group_id: pod100, successful: true, non_kubernetes: true}
+          assert_redirected_to "/deploys" # with no ids  present.
+        end
       end
     end
 
@@ -128,21 +178,108 @@ describe MassRolloutsController do
         deploy_group.stages.first.deploys.delete_all
 
         assert_difference 'Deploy.count', 1 do
-          post :deploy, params: {deploy_group_id: deploy_group, missing_only: "true"}
+          post :deploy, params: {deploy_group_id: deploy_group, missing: true, non_kubernetes: true }
         end
       end
 
-      it "deploys 'failed deploy' stage" do
+      it "deploys 'failed deploy' stage with the template_stage reference" do
         deploy_group.stages.first.deploys.last.job.update_column(:status, "failed")
+        refute_nil Stage.find(deploy_group.stages.first.template_stage_id).last_successful_deploy
 
         assert_difference 'Deploy.count', 1 do
-          post :deploy, params: {deploy_group_id: deploy_group, missing_only: "true"}
+          post :deploy, params: {deploy_group_id: deploy_group, missing: true, non_kubernetes: true}
         end
+      end
+
+      it 'ignores template_stages that have not been deployed yet' do
+        Deploy.delete_all
+
+        post :deploy, params: {deploy_group_id: deploy_group, missing: true, non_kubernetes: true}
+        assert_redirected_to "/deploys" # with no ids  present.
+      end
+
+      it 'ignores template_stages with only a failed deploy' do
+        Job.update_all(status: :failed)
+
+        post :deploy, params: {deploy_group_id: deploy_group, missing: true, non_kubernetes: true}
+        assert_redirected_to "/deploys" # with no ids  present.
+      end
+
+      it 'ignores template_stages not marked as template stages' do
+        deploy_group.environment.template_stages.update_all(is_template: false)
+
+        post :deploy, params: {deploy_group_id: deploy_group, missing: true, non_kubernetes: true}
+        assert_redirected_to "/deploys" # with no ids  present.
+      end
+
+      it 'ignores projects with no template stage for this environment' do
+        Stage.update_all(template_stage_id: nil)
+
+        post :deploy, params: {deploy_group_id: deploy_group, missing: true, non_kubernetes: true}
+        assert_redirected_to "/deploys" # with no ids  present.
       end
 
       it "ignores 'successfully deployed' stage" do
         refute_difference 'Deploy.count' do
-          post :deploy, params: {deploy_group_id: deploy_group, missing_only: "true"}
+          post :deploy, params: {deploy_group_id: deploy_group, missing: true, non_kubernetes: true}
+        end
+      end
+
+      describe 'deploy for kubernetes stages' do
+        let(:cluster) { kubernetes_clusters(:test_cluster) }
+        let(:template_stage) { deploy_group.stages.first }
+        let(:k8s_stage) do
+          Stage.create!(
+            name: 'Staging K8s',
+            project: template_stage.project,
+            template_stage: template_stage,
+            kubernetes: true,
+            deploy_groups: [deploy_group]
+          )
+        end
+
+        before do
+          Kubernetes::Cluster.any_instance.stubs(connection_valid?: true, namespaces: ['staging'])
+          Kubernetes::ClusterDeployGroup.create!(cluster: cluster, deploy_group: deploy_group, namespace: 'staging')
+
+          template_stage.update(is_template: true)
+          k8s_stage.save!
+        end
+
+        it 'deploys already deployed k8s stages' do
+          k8s_stage.deploys.create!(
+            reference: 'v123',
+            project: stage.project,
+            job: Job.create!(
+              project: stage.project,
+              user: User.first,
+              status: "succeeded",
+              command: 'blah'
+            )
+          )
+
+          assert_difference 'Deploy.count', 1 do
+            post :deploy, params: {deploy_group_id: deploy_group, successful: true, kubernetes: true}
+          end
+
+          deploy = k8s_stage.deploys.order('created_at desc').first
+          assert_redirected_to "/deploys?ids%5B%5D=#{deploy.id}"
+        end
+
+        it 'deploys missing k8s stages' do
+          assert_difference 'Deploy.count', 1 do
+            post :deploy, params: {deploy_group_id: deploy_group, missing: true, kubernetes: true}
+          end
+
+          deploy = k8s_stage.deploys.order('created_at desc').first
+          assert_redirected_to "/deploys?ids%5B%5D=#{deploy.id}"
+          assert_equal template_stage.last_successful_deploy.reference, deploy.reference
+        end
+
+        it 'ignores non-kubernetes stages' do
+          refute_difference 'Deploy.count' do
+            post :deploy, params: {deploy_group_id: deploy_group, successful: true, kubernetes: true}
+          end
         end
       end
     end

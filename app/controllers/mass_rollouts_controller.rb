@@ -16,23 +16,37 @@ class MassRolloutsController < ApplicationController
   end
 
   def deploy
-    environment = deploy_group.environment
-    template_stages = environment.template_stages.all
-    missing_only = params[:missing_only] == "true"
-    stages_to_deploy = missing_only ? deploy_group.stages.reject(&:last_successful_deploy) : deploy_group.stages
-    deploys = stages_to_deploy.map do |stage|
-      template_stage = template_stages.detect { |ts| ts.project_id == stage.project.id }
-      next unless template_stage
+    successful, missing = deploy_group.stages.partition(&:last_successful_deploy)
+    stages_to_deploy = []
 
-      last_success_deploy = template_stage.last_successful_deploy
-      next unless last_success_deploy
+    if params[:successful] == "true"
+      stages_to_deploy += successful.map { |stage| [stage, stage.last_successful_deploy.reference] }
+    end
 
+    if params[:missing] == "true"
+      stages_to_deploy += missing.map do |stage|
+        ref = stage.template_stage.last_successful_deploy&.reference if stage.template_stage&.is_template?
+        [stage, ref] if ref
+      end.compact
+    end
+
+    if defined?(SamsonKubernetes::Engine)
+      if params[:kubernetes] != "true"
+        stages_to_deploy.reject! { |stage, _| stage.kubernetes? }
+      end
+
+      if params[:non_kubernetes] != "true"
+        stages_to_deploy.select! { |stage, _| stage.kubernetes? }
+      end
+    end
+
+    deploys = stages_to_deploy.map do |stage, reference|
       deploy_service = DeployService.new(current_user)
-      deploy_service.deploy(stage, reference: last_success_deploy.reference)
-    end.compact
+      deploy_service.deploy(stage, reference: reference)
+    end
 
     if deploys.empty?
-      flash[:error] = "There were no stages ready for deploy."
+      flash[:error] = "There were no stages that matched the mass rollout deploy criteria."
       redirect_to deploys_path
     else
       redirect_to deploys_path(ids: deploys.map(&:id))
