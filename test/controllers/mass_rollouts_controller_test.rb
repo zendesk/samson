@@ -51,8 +51,12 @@ describe MassRolloutsController do
         let(:env) { environments(:staging) }
         let(:pod100) { DeployGroup.create!(name: 'Pod 100', environment: env) }
         let(:pod101) { DeployGroup.create!(name: 'Pod 101', environment: env) }
-        let(:stage100) { Stage.create!(name: 'Staging 100', project: Project.first, deploy_groups: [pod100], is_template: true) }
-        let(:stage101) { Stage.create!(name: 'Staging 101', project: Project.first, deploy_groups: [pod101], template_stage: stage100) }
+        let(:stage100) do
+          Stage.create!(name: 'Staging 100', project: Project.first, deploy_groups: [pod100], is_template: true)
+        end
+        let(:stage101) do
+          Stage.create!(name: 'Staging 101', project: Project.first, deploy_groups: [pod101], template_stage: stage100)
+        end
 
         before do
           DeployGroup.delete_all
@@ -195,7 +199,7 @@ describe MassRolloutsController do
         deploy_group.stages.first.deploys.delete_all
 
         assert_difference 'Deploy.count', 1 do
-          post :deploy, params: {deploy_group_id: deploy_group, missing: true, non_kubernetes: true }
+          post :deploy, params: {deploy_group_id: deploy_group, missing: true, non_kubernetes: true}
         end
       end
 
