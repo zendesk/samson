@@ -37,4 +37,69 @@ describe SamsonNewRelic do
       end
     end
   end
+
+  describe ".tracer_enabled?" do
+    it "is disabled when env was not set" do
+      refute SamsonNewRelic.tracer_enabled?
+    end
+
+    it "is enabled when env was set" do
+      with_env NEW_RELIC_LICENSE_KEY: "1" do
+        assert SamsonNewRelic.tracer_enabled?
+      end
+    end
+  end
+
+  describe ".trace_method_execution_scope" do
+    it "skips method trace when tracer disabled" do
+      NewRelic::Agent::MethodTracerHelpers.expects(:trace_execution_scoped).never
+      SamsonNewRelic.trace_method_execution_scope("test") { "without tracer" }
+    end
+
+    it "trace execution scope when enabled" do
+      with_env NEW_RELIC_LICENSE_KEY: "1" do
+        NewRelic::Agent::MethodTracerHelpers.expects(:trace_execution_scoped)
+        SamsonNewRelic.trace_method_execution_scope("test") { "with tracer" }
+      end
+    end
+  end
+
+  class Klass
+    include ::Samson::PerformanceTracer
+    def with_role
+    end
+    add_method_tracers :with_role
+  end
+
+  describe "#performance_tracer" do
+    it "triggers method tracer when enabled" do
+      with_env NEW_RELIC_LICENSE_KEY: "1" do
+        Klass.expects(:add_method_tracer)
+        Samson::Hooks.fire :performance_tracer, Klass, [:with_role]
+      end
+    end
+
+    it "skips method tracer when disabled" do
+      with_env NEW_RELIC_LICENSE_KEY: nil do
+        Klass.expects(:add_method_tracer).never
+        Samson::Hooks.fire :performance_tracer, Klass, [:with_role]
+      end
+    end
+  end
+
+  describe "#asynchronous_performance_tracer" do
+    it "triggers asynchronous tracer when enabled" do
+      with_env NEW_RELIC_LICENSE_KEY: "1" do
+        Klass.expects(:add_transaction_tracer)
+        Samson::Hooks.fire :asynchronous_performance_tracer, Klass, [:with_role]
+      end
+    end
+
+    it "skips asynchronous tracer when disabled" do
+      with_env NEW_RELIC_LICENSE_KEY: nil do
+        Klass.expects(:add_transaction_tracer).never
+        Samson::Hooks.fire :asynchronous_performance_tracer, Klass, [:with_role]
+      end
+    end
+  end
 end

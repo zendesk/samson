@@ -8,6 +8,20 @@ module SamsonNewRelic
   def self.enabled?
     KEY
   end
+
+  def self.tracer_enabled?
+    !!ENV['NEW_RELIC_LICENSE_KEY']
+  end
+
+  def self.trace_method_execution_scope(scope_name)
+    if tracer_enabled?
+      NewRelic::Agent::MethodTracerHelpers.trace_execution_scoped("Custom/Hooks/#{scope_name}") do
+        yield
+      end
+    else
+      yield
+    end
+  end
 end
 
 Samson::Hooks.view :stage_form, "samson_new_relic/fields"
@@ -23,4 +37,24 @@ Samson::Hooks.callback :stage_clone do |old_stage, new_stage|
     app.attributes.except("id", "updated_at", "created_at")
   end
   new_stage.new_relic_applications.build(old_applications)
+end
+
+Samson::Hooks.callback :performance_tracer do |klass, methods|
+  if SamsonNewRelic.tracer_enabled?
+    klass.is_a?(Class) && klass.class_eval do
+      include ::NewRelic::Agent::MethodTracer
+      methods.each do |method|
+        add_method_tracer method
+      end
+    end
+  end
+end
+
+Samson::Hooks.callback :asynchronous_performance_tracer do |klass, method, options|
+  if SamsonNewRelic.tracer_enabled?
+    klass.is_a?(Class) && klass.class_eval do
+      include ::NewRelic::Agent::Instrumentation::ControllerInstrumentation
+      add_transaction_tracer method, options
+    end
+  end
 end
