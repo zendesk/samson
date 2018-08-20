@@ -45,10 +45,13 @@ module Kubernetes
     validates :resource_name,
       uniqueness: {scope: :deleted_at, allow_nil: true},
       format: Kubernetes::RoleValidator::VALID_LABEL
+    validates :manual_deletion_acknowledged, presence: {message: "must be set"}, if: :manual_deletion_required?
 
     scope :not_deleted, -> { where(deleted_at: nil) }
 
     after_soft_delete :delete_kubernetes_deploy_group_roles
+
+    attr_accessor :manual_deletion_acknowledged
 
     # create initial roles for a project by reading kubernetes/*{.yml,.yaml,json} files into roles
     def self.seed!(project, git_ref)
@@ -135,6 +138,10 @@ module Kubernetes
       rescue Samson::Hooks::UserError
         nil
       end
+    end
+
+    def manual_deletion_required?
+      resource_name_change&.first || service_name_change&.first
     end
 
     private
