@@ -38,7 +38,7 @@ class MassRolloutsController < ApplicationController
     end
 
     if deploys.empty?
-      flash[:error] = "There were no stages that matched the mass rollout deploy criteria."
+      flash[:error] = "No deployable stages found."
       redirect_to deploys_path
     else
       redirect_to deploys_path(ids: deploys.map(&:id))
