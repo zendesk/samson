@@ -19,28 +19,20 @@ class MassRolloutsController < ApplicationController
     successful, missing = deploy_group.stages.partition(&:last_successful_deploy)
     stages_to_deploy = []
 
-    if params[:successful] == "true"
-      stages_to_deploy += successful.map { |stage| [stage, stage.last_successful_deploy.reference] }
-    end
-
-    if params[:missing] == "true"
-      stages_to_deploy += missing.map do |stage|
-        ref = stage.template_stage.last_successful_deploy&.reference if stage.template_stage&.is_template?
-        [stage, ref] if ref
-      end.compact
-    end
+    stages_to_deploy += successful if params[:successful] == "true"
+    stages_to_deploy += missing if params[:missing] == "true"
 
     if defined?(SamsonKubernetes::Engine)
-      if params[:kubernetes] != "true"
-        stages_to_deploy.reject! { |stage, _| stage.kubernetes? }
-      end
-
-      if params[:non_kubernetes] != "true"
-        stages_to_deploy.select! { |stage, _| stage.kubernetes? }
-      end
+      stages_to_deploy.reject!(&:kubernetes?) if params[:kubernetes] != "true"
+      stages_to_deploy.select!(&:kubernetes?) if params[:non_kubernetes] != "true"
     end
 
-    deploys = stages_to_deploy.map do |stage, reference|
+    deploy_references = stages_to_deploy.map do |stage|
+      reference = get_reference_from_template_stage(stage)
+      [stage, reference] if reference
+    end.compact
+
+    deploys = deploy_references.map do |stage, reference|
       deploy_service = DeployService.new(current_user)
       deploy_service.deploy(stage, reference: reference)
     end
@@ -160,6 +152,11 @@ class MassRolloutsController < ApplicationController
     end
 
     stage
+  end
+
+  def get_reference_from_template_stage(stage)
+    template_stage = deploy_group.environment.template_stages.find_by(project_id: stage.project_id)
+    template_stage&.last_successful_deploy&.reference
   end
 
   def deploy_group
