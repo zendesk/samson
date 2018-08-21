@@ -79,6 +79,27 @@ describe EnvironmentVariableGroupsController do
       end
     end
 
+    describe "a json GET to #index" do
+      it "succeeds" do
+        get :index, format: :json
+        assert_response :success
+        json_response = JSON.parse response.body
+        json_response.keys.must_include "groups"
+      end
+
+      it "contains variables in groups" do
+        # [{"id"=>27, "name"=>"G1", "comment"=>nil, "variables"=>["X", "Y"]}]
+        get :index, format: :json
+        assert_response :success
+        json_response = JSON.parse response.body
+        first_group = json_response['groups'].first
+        first_group.keys.must_include "name"
+        first_group.keys.must_include "variables"
+        first_group['name'].must_equal "G1"
+        first_group['variables'].must_equal ["X", "Y"]
+      end
+    end
+
     describe "#show" do
       def unauthorized_env_group
         ProjectEnvironmentVariableGroup.create!(environment_variable_group: env_group, project: other_project)
