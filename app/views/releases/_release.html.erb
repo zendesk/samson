@@ -3,15 +3,7 @@
     <%= release_label(@project, release) %>
   </td>
   <td>
-    <% if release.github_status.success? %>
-      <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
-    <% elsif release.github_status.pending? %>
-      <span class="glyphicon glyphicon-hourglass text-primary" aria-hidden="true"></span>
-    <% elsif release.github_status.missing? %>
-      <span class="glyphicon glyphicon-minus text-muted" aria-hidden="true"></span>
-    <% elsif release.github_status.failure? %>
-      <span class="glyphicon glyphicon-remove text-danger" aria-hidden="true"></span>
-    <% end %>
+    <%= render partial: "release_status", locals: { status: release.github_status } %>
   </td>
   <td><%= deployed_or_running_list @stages, release.version %></td>
   <td><%= relative_time(release.created_at) %></td>
