@@ -26,6 +26,10 @@ Kubernetes::ClusterDeployGroup.new(
   namespace: 'default'
 ).save!(validate: false)
 
+# rails 5.2.1 bug that runs validations again
+# TODO: report issue or remove and see if test/integration/tasks_test.rb still fails
+groupk = groupk.class.find(groupk.id)
+
 Stage.new(
   name: 'Master',
   project: project,
