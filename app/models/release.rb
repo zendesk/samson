@@ -32,6 +32,10 @@ class Release < ActiveRecord::Base
     version
   end
 
+  def github_status
+    @github_status ||= GithubStatus.new(project.repository_path, commit)
+  end
+
   def self.find_by_param!(version)
     if number = version[VERSION_REGEX, 1]
       find_by_number!(number)
