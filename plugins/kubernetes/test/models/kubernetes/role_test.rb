@@ -73,6 +73,8 @@ describe Kubernetes::Role do
     end
 
     describe "resource_name" do
+      before { role.manual_deletion_acknowledged = true }
+
       it "is invalid when blank" do
         role.resource_name = ""
         refute_valid role
@@ -86,6 +88,19 @@ describe Kubernetes::Role do
       it "is invalid when it cannot be used in kubernetes" do
         role.resource_name = "sfsdf__F"
         refute_valid role
+      end
+    end
+
+    describe "manual_deletion_acknowledged" do
+      before { role.resource_name = 'XXX' }
+
+      it "is invalid when not acknowledged" do
+        refute_valid role
+      end
+
+      it "is valid when acknowledged" do
+        role.manual_deletion_acknowledged = true
+        assert_valid role
       end
     end
   end
@@ -393,6 +408,27 @@ describe Kubernetes::Role do
       role.config_file = ' whoops '
       role.save!
       role.config_file.must_equal 'whoops'
+    end
+  end
+
+  describe "#manual_deletion_required?" do
+    it "is not required when new" do
+      refute Kubernetes::Role.new(service_name: "foo").manual_deletion_required?
+    end
+
+    it "is not required when adding" do
+      role.service_name = "xxx"
+      refute role.manual_deletion_required?
+    end
+
+    it "required when changing" do
+      role.resource_name = "xxx"
+      assert role.manual_deletion_required?
+    end
+
+    it "required when removing" do
+      role.resource_name = nil
+      assert role.manual_deletion_required?
     end
   end
 end

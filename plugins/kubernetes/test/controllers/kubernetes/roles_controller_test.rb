@@ -117,6 +117,8 @@ describe Kubernetes::RolesController do
     end
 
     describe "#update" do
+      before { role_params[:manual_deletion_acknowledged] = true }
+
       it "updates" do
         put :update, params: {project_id: project, id: role.id, kubernetes_role: role_params}
         assert_redirected_to "/projects/foo/kubernetes/roles"
