@@ -16,6 +16,13 @@
   <label>Created</label>
   <%= relative_time(@release.created_at) %>
 
+  <legend>Github Status</legend>
+  <p>
+    <% @release.github_status.statuses.each do |status| %>
+      <%= status_glyphicon(status.state) %> <b><%= status.context %>:</b> <%= link_to status.description, status.url %><br/>
+    <% end %>
+  </p>
+
   <% if @changeset.empty? %>
     <p>This release contains no changes.</p>
   <% else %>

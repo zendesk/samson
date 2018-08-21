@@ -1,15 +1,27 @@
 class GithubStatus
   class Status < Struct.new(:context, :latest_status)
+    def state
+      latest_status.state
+    end
+
+    def description
+      latest_status.description
+    end
+
+    def url
+      latest_status.target_url
+    end
+
     def success?
-      latest_status.state == "success"
+      state == "success"
     end
 
     def failure?
-      latest_status.state == "failure"
+      state == "failure"
     end
 
     def pending?
-      latest_status.state == "pending"
+      state == "pending"
     end
   end
 

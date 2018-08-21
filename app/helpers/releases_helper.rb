@@ -8,6 +8,17 @@ module ReleasesHelper
     )
   end
 
+  def status_glyphicon(status_state)
+    icon, text = case status_state
+           when "success" then ["ok", "success"]
+           when "failure" then ["remove", "danger"]
+           when "missing" then ["minus", "muted"]
+           when "pending" then ["hourglass", "primary"]
+           end
+
+    %(<span class="glyphicon glyphicon-#{icon} text-#{text}" aria-hidden="true"></span>).html_safe
+  end
+
   def link_to_deploy_stage(stage, release)
     deploy_params = {reference: release.version}
 
