@@ -77,26 +77,16 @@ describe EnvironmentVariableGroupsController do
         get :index
         assert_response :success
       end
-    end
 
-    describe "a json GET to #index" do
-      it "succeeds" do
+      it "renders json" do
         get :index, format: :json
         assert_response :success
         json_response = JSON.parse response.body
-        json_response.keys.must_include "groups"
-      end
-
-      it "contains variables in groups" do
-        # [{"id"=>27, "name"=>"G1", "comment"=>nil, "variables"=>["X", "Y"]}]
-        get :index, format: :json
-        assert_response :success
-        json_response = JSON.parse response.body
-        first_group = json_response['groups'].first
+        first_group = json_response['environment_variable_groups'].first
         first_group.keys.must_include "name"
-        first_group.keys.must_include "variables"
+        first_group.keys.must_include "variable_names"
         first_group['name'].must_equal "G1"
-        first_group['variables'].must_equal ["X", "Y"]
+        first_group['variable_names'].must_equal ["X", "Y"]
       end
     end
 

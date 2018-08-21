@@ -16,4 +16,12 @@ class EnvironmentVariableGroup < ActiveRecord::Base
   has_many :projects, through: :project_environment_variable_groups
 
   validates :name, presence: true
+
+  def variable_names
+    environment_variables.sort_by(&:id).map(&:name).uniq
+  end
+
+  def as_json
+    super(methods: [:variable_names])
+  end
 end

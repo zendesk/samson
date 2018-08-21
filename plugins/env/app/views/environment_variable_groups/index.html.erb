@@ -25,7 +25,7 @@
     </tr>
     </thead>
     <% @groups.each do |group| %>
-      <% sorted_vars = group.environment_variables.sort_by(&:id).map(&:name).uniq %>
+      <% sorted_vars = group.variable_names %>
       <tr>
         <td>
           <%= link_to group.name, group %>

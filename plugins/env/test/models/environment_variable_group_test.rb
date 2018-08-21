@@ -32,5 +32,11 @@ describe EnvironmentVariableGroup do
         ]
       )
     end
+
+    describe "#as_json" do
+      it "includes variable names" do
+        group.as_json.fetch("variable_names").must_equal ["A"]
+      end
+    end
   end
 end
