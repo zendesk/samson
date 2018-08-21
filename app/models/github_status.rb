@@ -3,6 +3,14 @@ class GithubStatus
     def success?
       latest_status.state == "success"
     end
+
+    def failure?
+      latest_status.state == "failure"
+    end
+
+    def pending?
+      latest_status.state == "pending"
+    end
   end
 
   def initialize(repo, ref, github: GITHUB)
@@ -12,7 +20,19 @@ class GithubStatus
   end
 
   def success?
-    statuses.all?(&:success?)
+    !missing? && statuses.all?(&:success?)
+  end
+
+  def failure?
+    statuses.any?(&:failure?)
+  end
+
+  def pending?
+    statuses.any?(&:pending?)
+  end
+
+  def missing?
+    statuses.none?
   end
 
   def statuses
