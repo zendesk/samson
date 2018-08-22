@@ -3,7 +3,11 @@
     <%= release_label(@project, release) %>
   </td>
   <td>
-    <%= status_glyphicon release.github_status.state %>
+    <% if github_ok? %>
+      <%= status_glyphicon release.github_status.state %>
+    <% else %>
+      <%= status_glyphicon "missing" %>
+    <% end %>
   </td>
   <td><%= deployed_or_running_list @stages, release.version %></td>
   <td><%= relative_time(release.created_at) %></td>
