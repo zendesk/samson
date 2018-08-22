@@ -9,7 +9,7 @@
       <%= status_glyphicon "missing" %>
     <% end %>
   </td>
-  <td><%= deployed_or_running_list @stages, release.version %></td>
+  <td width="100%"><%= deployed_or_running_list @stages, release.version %></td>
   <td><%= relative_time(release.created_at) %></td>
   <td>
     <% if deployer_for_project? %>
