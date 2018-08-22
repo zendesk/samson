@@ -5,14 +5,14 @@ module ReleasesHelper
     "failure" => "remove",
     "missing" => "minus",
     "pending" => "hourglass"
-  }
+  }.freeze
 
   STATUS_TEXT_LABELS = {
     "success" => "success",
     "failure" => "danger",
     "missing" => "muted",
     "pending" => "primary"
-  }
+  }.freeze
 
   def release_label(project, release)
     link_to(

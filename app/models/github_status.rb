@@ -1,5 +1,6 @@
+# frozen_string_literal: true
 class GithubStatus
-  class Status < Struct.new(:context, :latest_status)
+  Status = Struct.new(:context, :latest_status) do
     def state
       latest_status.state
     end
@@ -57,7 +58,7 @@ class GithubStatus
       return [] if status_response.nil?
 
       status_response.statuses.group_by(&:context).map do |context, statuses|
-        Status.new(context, statuses.max_by {|status| status.created_at.to_i })
+        Status.new(context, statuses.max_by { |status| status.created_at.to_i })
       end
     end
   end
