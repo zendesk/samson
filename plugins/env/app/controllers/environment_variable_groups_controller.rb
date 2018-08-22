@@ -4,7 +4,13 @@ class EnvironmentVariableGroupsController < ApplicationController
   before_action :group, only: [:show]
 
   def index
-    @groups = EnvironmentVariableGroup.all
+    @groups = EnvironmentVariableGroup.all.includes(:environment_variables)
+    respond_to do |format|
+      format.html
+      format.json do
+        render_as_json :environment_variable_groups, @groups
+      end
+    end
   end
 
   def new

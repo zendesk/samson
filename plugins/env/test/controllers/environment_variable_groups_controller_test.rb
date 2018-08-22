@@ -77,6 +77,17 @@ describe EnvironmentVariableGroupsController do
         get :index
         assert_response :success
       end
+
+      it "renders json" do
+        get :index, format: :json
+        assert_response :success
+        json_response = JSON.parse response.body
+        first_group = json_response['environment_variable_groups'].first
+        first_group.keys.must_include "name"
+        first_group.keys.must_include "variable_names"
+        first_group['name'].must_equal "G1"
+        first_group['variable_names'].must_equal ["X", "Y"]
+      end
     end
 
     describe "#show" do
