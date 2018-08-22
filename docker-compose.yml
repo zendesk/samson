@@ -4,8 +4,9 @@ services:
     image: zendesk/samson:latest
     ports:
       - "3000:9080"
+    volumes:
+      - .:/app/
     environment:
-      DATABASE_URL: "sqlite3://db/development.sqlite"
+      DATABASE_URL: "sqlite3:///app/db/development.sqlite3"
       RAILS_LOG_TO_STDOUT: 1
-    # to use .env.virtualbox with 192.168.42.45 host prefix ./bin/decode_dot_env .env.virtualbox && source <(sed -E -n 's/[^#]+/export &/ p' .env.virtualbox) &&
-    command: ["bash", "-c", "rake db:setup && bundle exec puma -C config/puma.rb"]
+    command: ["./script/docker_dev_server"]

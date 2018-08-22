@@ -7,6 +7,7 @@ docker-compose up
 open http://localhost:3000
 ```
 
+The local project directory will be mounted into the container, so your changes will be reflected immediately by the server.
 When running on virtual the `3000` port forwarding should be configured in virtualbox (Settings -> Network -> Advanced -> Port Forwarding).
 When running on virtual `192.168.42.45` use `.env.virtualbox` from `docker-compose.yml`.
 When running on neither localhost nor `192.168.42.45` create your own credentials and load them from `docker-compose.yml`.
@@ -42,7 +43,7 @@ Set up a production block in database.yml with the settings to connect to your D
 
 ## Webserver
 
-Configure `config/puma.rb` as you need. See [puma's documentation](https://github.com/puma/puma/) for details. 
+Configure `config/puma.rb` as you need. See [puma's documentation](https://github.com/puma/puma/) for details.
 You can start the server using this file by doing `bundle exec puma -C config/puma.rb`.
 To restart the server use `kill -USR1 <pid>` which makes it restart without losing any downtime (lost requests).
 
