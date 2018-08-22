@@ -25,8 +25,9 @@ module ReleasesHelper
   def status_glyphicon(status_state)
     icon = STATUS_ICONS.fetch(status_state)
     text = STATUS_TEXT_LABELS.fetch(status_state)
+    title = "Github status: #{status_state}"
 
-    icon_tag icon, class: "text-#{text}"
+    icon_tag icon, class: "text-#{text}", 'data-toggle': "tooltip", 'data-placement': "right", title: title
   end
 
   def link_to_deploy_stage(stage, release)
