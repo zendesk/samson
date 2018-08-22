@@ -1,5 +1,19 @@
 # frozen_string_literal: true
 module ReleasesHelper
+  STATUS_ICONS = {
+    "success" => "ok",
+    "failure" => "remove",
+    "missing" => "minus",
+    "pending" => "hourglass"
+  }
+
+  STATUS_TEXT_LABELS = {
+    "success" => "success",
+    "failure" => "danger",
+    "missing" => "muted",
+    "pending" => "primary"
+  }
+
   def release_label(project, release)
     link_to(
       release.version,
@@ -9,12 +23,8 @@ module ReleasesHelper
   end
 
   def status_glyphicon(status_state)
-    icon, text = case status_state
-           when "success" then ["ok", "success"]
-           when "failure" then ["remove", "danger"]
-           when "missing" then ["minus", "muted"]
-           when "pending" then ["hourglass", "primary"]
-           end
+    icon = STATUS_ICONS.fetch(status_state)
+    text = STATUS_TEXT_LABELS.fetch(status_state)
 
     %(<span class="glyphicon glyphicon-#{icon} text-#{text}" aria-hidden="true"></span>).html_safe
   end
