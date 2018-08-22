@@ -15,6 +15,26 @@ describe ReleasesHelper do
     end
   end
 
+  describe "#status_glyphicon" do
+    include ApplicationHelper
+
+    it "renders an icon for success" do
+      status_glyphicon("success").must_equal %(<i class="glyphicon glyphicon-ok text-success" data-toggle="tooltip" data-placement="right" title="Github status: success"></i>)
+    end
+
+    it "renders an icon for failure" do
+      status_glyphicon("failure").must_equal %(<i class="glyphicon glyphicon-remove text-danger" data-toggle="tooltip" data-placement="right" title="Github status: failure"></i>)
+    end
+
+    it "renders an icon for missing status" do
+      status_glyphicon("missing").must_equal %(<i class="glyphicon glyphicon-minus text-muted" data-toggle="tooltip" data-placement="right" title="Github status: missing"></i>)
+    end
+
+    it "renders an icon for pending status" do
+      status_glyphicon("pending").must_equal %(<i class="glyphicon glyphicon-hourglass text-primary" data-toggle="tooltip" data-placement="right" title="Github status: pending"></i>)
+    end
+  end
+
   describe "#link_to_deploy_stage" do
     let(:stage) { stages(:test_staging) }
     let(:release) { Release.new }
