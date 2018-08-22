@@ -66,8 +66,10 @@ class GithubStatus
   private
 
   def status_response
-    @status_response ||= @github.combined_status(@repo, @ref)
-  rescue Octokit::Error
-    nil
+    @status_response ||= begin
+      @github.combined_status(@repo, @ref)
+    rescue Octokit::Error
+      nil
+    end
   end
 end
