@@ -26,8 +26,9 @@ class GithubStatus
     end
   end
 
-  def initialize(repo, ref, github: GITHUB)
+  def initialize(repo, ref, github: GITHUB, cache: Rails.cache)
     @github = github
+    @cache = cache
     @repo = repo
     @ref = ref
     @state = nil
@@ -68,10 +69,19 @@ class GithubStatus
   def status_response
     return @status_response if defined?(@status_response)
 
-    @status_response = begin
+    cache_key = [self.class.to_s, @repo, @ref]
+
+    @status_response = @cache.read(cache_key)
+
+    # Fetch the data if the cache returned nil.
+    @status_response ||= begin
       @github.combined_status(@repo, @ref)
     rescue Octokit::Error
       nil
     end
+
+    @cache.write(cache_key, @status_response)
+
+    @status_response
   end
 end
