@@ -3,7 +3,7 @@
     <%= release_label(@project, release) %>
   </td>
   <td>
-    <%= render partial: "release_status", locals: { status: release.github_status } %>
+    <%= status_glyphicon release.github_status.state %>
   </td>
   <td><%= deployed_or_running_list @stages, release.version %></td>
   <td><%= relative_time(release.created_at) %></td>

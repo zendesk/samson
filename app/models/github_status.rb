@@ -29,6 +29,11 @@ class GithubStatus
     @github = github
     @repo = repo
     @ref = ref
+    @state = nil
+  end
+
+  def state
+    status_response ? status_response.state : "missing"
   end
 
   def success?
@@ -49,16 +54,19 @@ class GithubStatus
 
   def statuses
     @statuses ||= begin
-      statuses = @github.combined_status(@repo, @ref).statuses
+      return [] if status_response.nil?
 
-      return [] if statuses.nil?
-
-      statuses.group_by(&:context).map do |context, statuses|
+      status_response.statuses.group_by(&:context).map do |context, statuses|
         Status.new(context, statuses.max_by {|status| status.created_at.to_i })
       end
     end
+  end
+
+  private
+
+  def status_response
+    @status_response ||= @github.combined_status(@repo, @ref)
   rescue Octokit::Error
-    # In case of error, fall back to not listing the statuses.
-    []
+    nil
   end
 end

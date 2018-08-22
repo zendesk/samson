@@ -26,7 +26,7 @@ module ReleasesHelper
     icon = STATUS_ICONS.fetch(status_state)
     text = STATUS_TEXT_LABELS.fetch(status_state)
 
-    %(<span class="glyphicon glyphicon-#{icon} text-#{text}" aria-hidden="true"></span>).html_safe
+    icon_tag icon, class: "text-#{text}"
   end
 
   def link_to_deploy_stage(stage, release)
