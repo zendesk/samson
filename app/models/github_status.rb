@@ -38,19 +38,19 @@ class GithubStatus
   end
 
   def success?
-    !missing? && statuses.all?(&:success?)
+    state == "success"
   end
 
   def failure?
-    statuses.any?(&:failure?)
+    state == "failure"
   end
 
   def pending?
-    statuses.any?(&:pending?)
+    state == "pending"
   end
 
   def missing?
-    statuses.none?
+    state == "missing"
   end
 
   def statuses
