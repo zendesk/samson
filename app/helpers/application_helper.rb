@@ -146,10 +146,13 @@ module ApplicationHelper
   end
 
   def icon_tag(type, options = {})
-    # Prepend the CSS classes to the existing `css` option if present.
-    css_class = ["glyphicon glyphicon-#{type}", options.fetch(:class, "")].join(" ")
+    css_classes = "glyphicon glyphicon-#{type}"
 
-    content_tag :i, '', options.merge(class: css_class)
+    if klass = options[:class]
+      css_classes += " #{klass}"
+    end
+
+    content_tag :i, '', options.merge(class: css_classes)
   end
 
   def link_to_delete(path, options = {})
