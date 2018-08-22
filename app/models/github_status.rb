@@ -48,9 +48,7 @@ class GithubStatus
   end
 
   def statuses
-    response = @github.combined_status(@repo, @ref)
-
-    statuses = response.statuses
+    statuses = @github.combined_status(@repo, @ref).statuses
 
     return [] if statuses.nil?
 
