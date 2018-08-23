@@ -16,7 +16,7 @@ describe GithubStatus do
     end
 
     it "returns the Github state from the response" do
-      stub_api({ state: "party", statuses: [] }, 200)
+      stub_api({state: "party", statuses: []}, 200)
       status.state.must_equal "party"
     end
   end
@@ -27,12 +27,12 @@ describe GithubStatus do
     it "returns a single status per context" do
       # The most recent status is used.
       statuses = [
-        { context: "A", created_at: 1, state: "pending" },
-        { context: "B", created_at: 1, state: "success" },
-        { context: "A", created_at: 2, state: "failure" },
+        {context: "A", created_at: 1, state: "pending"},
+        {context: "B", created_at: 1, state: "success"},
+        {context: "A", created_at: 2, state: "failure"},
       ]
 
-      stub_api({ state: "pending", statuses: statuses }, 200)
+      stub_api({state: "pending", statuses: statuses}, 200)
 
       status.statuses.count.must_equal 2
 
@@ -45,10 +45,10 @@ describe GithubStatus do
 
     it "includes the state of each status" do
       statuses = [
-        { context: "A", created_at: 1, state: "pending", state: "pending" },
+        {context: "A", created_at: 1, state: "pending", state: "pending"},
       ]
 
-      stub_api({ state: "pending", statuses: statuses }, 200)
+      stub_api({state: "pending", statuses: statuses}, 200)
 
       status.statuses.first.state.must_equal "pending"
 
@@ -59,20 +59,20 @@ describe GithubStatus do
 
     it "includes the URL of each status" do
       statuses = [
-        { context: "A", created_at: 1, state: "pending", target_url: "http://acme.com/123" },
+        {context: "A", created_at: 1, state: "pending", target_url: "http://acme.com/123"},
       ]
 
-      stub_api({ state: "pending", statuses: statuses }, 200)
+      stub_api({state: "pending", statuses: statuses}, 200)
 
       status.statuses.first.url.must_equal "http://acme.com/123"
     end
 
     it "includes the description of each status" do
       statuses = [
-        { context: "A", created_at: 1, state: "pending", description: "hello" },
+        {context: "A", created_at: 1, state: "pending", description: "hello"},
       ]
 
-      stub_api({ state: "pending", statuses: statuses }, 200)
+      stub_api({state: "pending", statuses: statuses}, 200)
 
       status.statuses.first.description.must_equal "hello"
     end
