@@ -45,7 +45,7 @@ describe GithubStatus do
 
     it "includes the state of each status" do
       statuses = [
-        {context: "A", created_at: 1, state: "pending", state: "pending"},
+        {context: "A", created_at: 1, state: "pending"},
       ]
 
       stub_api({state: "pending", statuses: statuses}, 200)
