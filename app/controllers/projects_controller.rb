@@ -82,6 +82,18 @@ class ProjectsController < ApplicationController
     render json: deploy_group_versions
   end
 
+  def find_via_repository_url
+    repository_url = params.require(:url)
+    projects = Project.where(
+      Project.arel_table[:repository_url].matches("%#{ActiveRecord::Base.send(:sanitize_sql_like, repository_url)}%")
+    )
+    if projects.present?
+      render json: projects.as_json, status: :ok
+    else
+      render json: {}, status: :not_found
+    end
+  end
+
   protected
 
   def project_params

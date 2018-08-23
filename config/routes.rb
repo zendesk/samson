@@ -122,6 +122,7 @@ Samson::Application.routes.draw do
   delete '/locks', to: 'locks#destroy_via_resource'
   delete '/api/locks', to: 'locks#destroy_via_resource'
   get '/api/projects', to: 'projects#index'
+  get '/api/projects/:url', to: 'projects#find_via_repository_url'
   post '/api/projects/:project_id/automated_deploys', to: 'automated_deploys#create'
   get '/api/deploys/active_count', to: 'deploys#active_count'
   get '/api/deploys/:id', to: 'deploys#show'
