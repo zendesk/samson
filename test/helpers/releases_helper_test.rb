@@ -19,19 +19,31 @@ describe ReleasesHelper do
     include ApplicationHelper
 
     it "renders an icon for success" do
-      status_glyphicon("success").must_equal %(<i class="glyphicon glyphicon-ok text-success" data-toggle="tooltip" data-placement="right" title="Github status: success"></i>)
+      html = status_glyphicon("success")
+      html.must_include "glyphicon-ok"
+      html.must_include "text-success"
+      html.must_include "Github status: success"
     end
 
     it "renders an icon for failure" do
-      status_glyphicon("failure").must_equal %(<i class="glyphicon glyphicon-remove text-danger" data-toggle="tooltip" data-placement="right" title="Github status: failure"></i>)
+      html = status_glyphicon("failure")
+      html.must_include "glyphicon-remove"
+      html.must_include "text-danger"
+      html.must_include "Github status: failure"
     end
 
     it "renders an icon for missing status" do
-      status_glyphicon("missing").must_equal %(<i class="glyphicon glyphicon-minus text-muted" data-toggle="tooltip" data-placement="right" title="Github status: missing"></i>)
+      html = status_glyphicon("missing")
+      html.must_include "glyphicon-minus"
+      html.must_include "text-muted"
+      html.must_include "Github status: missing"
     end
 
     it "renders an icon for pending status" do
-      status_glyphicon("pending").must_equal %(<i class="glyphicon glyphicon-hourglass text-primary" data-toggle="tooltip" data-placement="right" title="Github status: pending"></i>)
+      html = status_glyphicon("pending")
+      html.must_include "glyphicon-hourglass"
+      html.must_include "text-primary"
+      html.must_include "Github status: pending"
     end
   end
 
