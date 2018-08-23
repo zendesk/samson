@@ -102,9 +102,12 @@ describe Integrations::BaseController do
         INFO: Branch master is release branch: true
         INFO: Deploying to 0 stages
       LOG
+
       result.fetch(:log).must_equal log
       result.fetch(:response_code).must_equal 200
-      result.fetch(:response_body).must_equal log
+      JSON.parse(result.fetch(:response_body), symbolize_names: true).must_equal(
+        deploy_ids: [], messages: log
+      )
       result.fetch(:request_params).must_equal("token" => "[FILTERED]", "foo" => "bar")
     end
 
@@ -133,6 +136,7 @@ describe Integrations::BaseController do
     it "fails with invalid token" do
       post :create, params: {test_route: true, token: token + 'x'}
       assert_response :unauthorized
+      JSON.parse(response.body, symbolize_names: true).must_equal(deploy_ids: [], messages: 'Invalid token')
     end
 
     it 'does not blow up when creating docker image if a release was not created' do
@@ -153,15 +157,41 @@ describe Integrations::BaseController do
     end
 
     describe "when deploy hooks are setup" do
+      let(:deploy1) { deploys(:succeeded_test) }
+      let(:deploy2) { deploys(:succeeded_production_test) }
+
       before do
         project.webhooks.create!(branch: 'master', stage: stage, source: 'any')
         project.webhooks.create!(branch: 'master', stage: stages(:test_production), source: 'any')
       end
 
-      it "stops deploy to further stages when first fails" do
+      it 'returns the deploy ids if they are successful' do
+        DeployService.any_instance.expects(:deploy).times(2).returns(deploy1, deploy2)
+
+        post :create, params: {test_route: true, token: token}
+
+        expected_messages = <<~MESSAGES
+          INFO: Branch master is release branch: true
+          INFO: Deploying to 2 stages
+        MESSAGES
+
+        assert_response :success
+        JSON.parse(response.body, symbolize_names: true).
+          must_equal(deploy_ids: [deploy1.id, deploy2.id], messages: expected_messages)
+      end
+
+      it 'stops deploy to further stages when first fails' do
         DeployService.any_instance.expects(:deploy).times(1).returns(Deploy.new)
         post :create, params: {test_route: true, token: token}
+
+        expected_messages = <<~MESSAGES
+          INFO: Branch master is release branch: true
+          ERROR: Deploy to Staging failed: []
+          ERROR: Failed to start deploy to Staging
+        MESSAGES
+
         assert_response :unprocessable_entity
+        JSON.parse(response.body, symbolize_names: true).must_equal(deploy_ids: [], messages: expected_messages)
       end
 
       it 'uses the release version to make the deploy easy to understand' do
