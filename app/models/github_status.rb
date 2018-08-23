@@ -81,7 +81,7 @@ class GithubStatus
     end
 
     # Don't cache pending statuses, since we expect updates soon.
-    unless @status_response.nil? || @status_response.state == "pending"
+    unless @status_response&.state == "pending"
       @cache.write(cache_key, @status_response, expires_in: 1.hour)
     end
 
