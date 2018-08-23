@@ -11,11 +11,13 @@ describe ReleasesController do
     status_response = {
       state: "success",
       statuses: [
-        state: "success",
-        context: "oompa/loompa",
-        target_url: "https://chocolate-factory.com/test/wonka",
-        description: "Ooompa Loompa!",
-        created_at: Time.now.iso8601
+        {
+          state: "success",
+          context: "oompa/loompa",
+          target_url: "https://chocolate-factory.com/test/wonka",
+          description: "Ooompa Loompa!",
+          created_at: Time.now.iso8601
+        }
       ]
     }
 
