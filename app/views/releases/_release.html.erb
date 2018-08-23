@@ -4,9 +4,9 @@
   </td>
   <td>
     <% if github_ok? %>
-      <%= status_glyphicon release.github_status.state %>
+      <%= github_commit_status_icon release.github_status.state %>
     <% else %>
-      <%= status_glyphicon "missing" %>
+      <%= github_commit_status_icon "missing" %>
     <% end %>
   </td>
   <td width="100%"><%= deployed_or_running_list @stages, release.version %></td>

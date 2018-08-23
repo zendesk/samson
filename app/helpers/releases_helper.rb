@@ -22,7 +22,7 @@ module ReleasesHelper
     )
   end
 
-  def status_glyphicon(status_state)
+  def github_commit_status_icon(status_state)
     icon = STATUS_ICONS.fetch(status_state)
     text = STATUS_TEXT_LABELS.fetch(status_state)
     title = "Github status: #{status_state}"
