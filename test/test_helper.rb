@@ -51,6 +51,7 @@ Dir["test/support/*"].each { |f| require File.expand_path(f) }
 
 # Helpers for all tests
 ActiveSupport::TestCase.class_eval do
+  include ApplicationHelper
   include Warden::Test::Helpers
 
   fixtures :all

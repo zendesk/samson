@@ -126,7 +126,8 @@ class Integrations::BaseController < ApplicationController
   end
 
   def service_name
-    @service_name ||= self.class.name.demodulize.sub('Controller', '').downcase
+    # keep in sync with lib/samson/integration.rb regex
+    @service_name ||= self.class.name.demodulize.sub('Controller', '').underscore
   end
 
   def create_docker_images
