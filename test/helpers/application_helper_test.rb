@@ -689,6 +689,11 @@ describe ApplicationHelper do
       html.must_equal "<i title=\"bar\" class=\"glyphicon glyphicon-foo\"></i>"
       assert html.html_safe?
     end
+
+    it "allows passing in custom CSS classes" do
+      html = icon_tag("foo", class: "yolo")
+      html.must_equal "<i class=\"glyphicon glyphicon-foo yolo\"></i>"
+    end
   end
 
   describe "#deployed_or_running_list" do
