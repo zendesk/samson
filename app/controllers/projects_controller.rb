@@ -9,19 +9,25 @@ class ProjectsController < ApplicationController
   before_action :authorize_resource!, except: [:deploy_group_versions, :edit]
 
   def index
+    projects = projects_for_user
+
     respond_to do |format|
       format.html do
-        @pagy, @projects = projects_for_user
+        per_page = 9 # 3 or 1 column layout depending on size
+        # Workaround with pagy internals for https://github.com/rails/rails/issues/33719
+        count = projects.reorder(nil).count(:all) # count on joined query with ordering does not work
+        count = count.count if count.is_a?(Hash) # fix for the AR grouping count inconsistency (Hash instead of Integer)
+        @pagy = Pagy.new(count: count, page: page, items: per_page)
+        @projects = pagy_get_items(projects, @pagy)
       end
 
       format.json do
-        projects = Project.ordered_for_user(current_user).all
         render json: {projects: projects_as_json(projects)}
       end
 
       format.csv do
         datetime = Time.now.strftime "%Y-%m-%d_%H-%M"
-        send_data projects_as_csv(Project.all), type: :csv, filename: "Projects_#{datetime}.csv"
+        send_data projects_as_csv(projects), type: :csv, filename: "Projects_#{datetime}.csv"
       end
     end
   end
@@ -103,17 +109,15 @@ class ProjectsController < ApplicationController
     )
   end
 
+  # TODO: rename ... not user anymore
   def projects_for_user
-    per_page = 9 # 3 or 1 column layout depending on size
-    scope = Project.alphabetical
-    if query = params.dig(:search, :query).presence
-      scope = scope.search(query)
-    elsif ids = current_user.starred_project_ids.presence
-      # fake association sorting since order by array is hard to support in mysql+postgres+sqlite
-      array = scope.all.sort_by { |p| ids.include?(p.id) ? 0 : 1 }
-      return pagy_array(array, page: page, items: per_page)
-    end
-    pagy(scope.order(id: :desc), page: page, items: per_page)
+    scope =
+      if query = params.dig(:search, :query).presence
+        Project.search(query)
+      else
+        Project.ordered_for_user(current_user) # TODO: wasteful to use join when just doing counts
+      end
+    scope.alphabetical.order(id: :desc)
   end
 
   # Overriding require_project from CurrentProject
