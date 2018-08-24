@@ -4,7 +4,7 @@ cache:
   directories:
     - tmp/rubocop_cache
     - node_modules
-sudo: false
+sudo: required
 branches:
   only: master
 env:
