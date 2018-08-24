@@ -4,9 +4,9 @@ require 'csv'
 class ProjectsController < ApplicationController
   include CurrentProject
 
-  skip_before_action :require_project, only: [:index, :new, :create]
+  skip_before_action :require_project, only: [:index, :new, :create, :find_via_repository_url]
 
-  before_action :authorize_resource!, except: [:deploy_group_versions, :edit]
+  before_action :authorize_resource!, except: [:deploy_group_versions, :edit, :find_via_repository_url]
 
   def index
     projects = projects_for_user
@@ -86,6 +86,18 @@ class ProjectsController < ApplicationController
       hash[id] = deploy.as_json
     end
     render json: deploy_group_versions
+  end
+
+  def find_via_repository_url
+    repository_url = params.require(:url)
+    projects = Project.where(
+      Project.arel_table[:repository_url].matches("%#{ActiveRecord::Base.send(:sanitize_sql_like, repository_url)}%")
+    )
+    if projects.present?
+      render json: projects.as_json, status: :ok
+    else
+      render json: {}, status: :not_found
+    end
   end
 
   protected
