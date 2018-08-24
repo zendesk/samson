@@ -25,3 +25,13 @@ before_script:
   - mysql -u root -e 'set GLOBAL innodb_file_format = "barracuda"'
   - mysql -u root -e 'GRANT ALL ON *.* TO 'travis'@'localhost';'
 script: bundle exec rake $TASK
+jobs:
+  include:
+    - stage: fossa
+      before_script: curl -H 'Cache-Control:no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install.sh | bash
+      script:
+        - fossa init
+        - fossa analyze --branch master
+      env: ""
+      services: ""
+      addons: ""
