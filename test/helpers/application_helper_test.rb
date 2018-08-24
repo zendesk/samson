@@ -705,9 +705,21 @@ describe ApplicationHelper do
       assert html.html_safe?
     end
 
-    it "renders succeeded deploys" do
+    it "renders current, succeeded deploys" do
       html = deployed_or_running_list(stage_list, "staging")
       html.must_equal "<span class=\"label label-success release-stage\">Staging</span> "
+    end
+
+    it "renders past, succeeded deploys" do
+      # This deploy will be newer.
+      stages(:test_staging).deploys.create!(
+        project: projects(:test),
+        reference: "asdfjkadfsjk",
+        job: jobs(:succeeded_test),
+      )
+
+      html = deployed_or_running_list(stage_list, "staging")
+      html.must_equal "<span class=\"label label-default release-stage\">Staging</span> "
     end
 
     it "ignores failed deploys" do

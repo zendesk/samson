@@ -326,16 +326,19 @@ module ApplicationHelper
   def deployed_or_running_list(stages, reference)
     html = "".html_safe
     stages.each do |stage|
-      next unless deploy = stage.deploys.where(reference: reference).last
+      # The first deploy is the most recent one.
+      next unless deploy = stage.deploys.where(reference: reference).first
 
-      label = if deploy == stage.last_successful_deploy
-        "label-success"
+      if deploy == stage.last_successful_deploy
+        label = "label-success"
       elsif deploy == stage.active_deploy
-        "label-warning"
+        label = "label-warning"
       elsif deploy.succeeded?
         # Deploy is neither active nor is it the last successful one, but it
         # succeeded in the past.
-        "label-default"
+        label = "label-default"
+      else
+        next
       end
 
       text = "".html_safe
