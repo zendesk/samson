@@ -49,7 +49,7 @@ class GithubStatus
     return new("missing", []) if response.nil?
 
     # Don't cache pending statuses, since we expect updates soon.
-    unless response&.state == "pending"
+    unless response.state == "pending"
       Rails.cache.write(cache_key, response, expires_in: 1.hour)
     end
 
