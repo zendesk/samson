@@ -4,9 +4,9 @@ require 'csv'
 class ProjectsController < ApplicationController
   include CurrentProject
 
-  skip_before_action :require_project, only: [:index, :new, :create]
+  skip_before_action :require_project, only: [:index, :new, :create, :find_via_repository_url]
 
-  before_action :authorize_resource!, except: [:deploy_group_versions, :edit]
+  before_action :authorize_resource!, except: [:deploy_group_versions, :edit, :find_via_repository_url]
 
   def index
     respond_to do |format|

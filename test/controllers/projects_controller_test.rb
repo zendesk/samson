@@ -150,6 +150,21 @@ describe ProjectsController do
         deploy_ids.include?(old.id).must_equal true
       end
     end
+
+    describe "#find_via_repository_url" do
+      it "is json" do
+        get :find_via_repository_url, params: {url: project.repository_url}
+        assert_response :success
+        project = JSON.parse(response.body).first
+        project['name'].must_equal 'Foo'
+        project['repository_path'].must_equal 'bar/foo'
+      end
+
+      it "not found response with unknown URL" do
+        get :find_via_repository_url, params: {url: "xyz"}
+        assert_response :not_found
+      end
+    end
   end
 
   as_a_deployer do
@@ -298,26 +313,6 @@ describe ProjectsController do
         it "renders new template" do
           assert_template :new
         end
-      end
-    end
-
-    describe "#find_via_repository_url" do
-      let(:token) { Doorkeeper::AccessToken.create!(resource_owner_id: user.id, scopes: 'default') }
-      before do
-        auth!("Bearer #{token.token}")
-      end
-
-      it "is json" do
-        get :find_via_repository_url, params: { url: project.repository_url }
-        assert_response :success
-        project = JSON.parse(response.body).first
-        project['name'].must_equal 'Foo'
-        project['repository_path'].must_equal 'bar/foo'
-      end
-
-      it "not found response with unknown URL" do
-        get :find_via_repository_url, params: { url: "xyz" }
-        assert_response :not_found
       end
     end
   end
