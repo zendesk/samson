@@ -4,10 +4,6 @@
 
 <% cache [@project, @pagy.page, deployer_for_project?] do %>
   <section class="clearfix tabs">
-    <p class="pull-right">
-      <%= link_to "Create release manually", new_project_release_path(@project), class: "btn btn-default" %>
-    </p>
-
     <% if @project.release_branch.blank? %>
       <div class="alert alert-warning">
         <p>Configure a <%= link_to "release branch", edit_project_path(@project, anchor: "project_release_branch") %> to automatically create releases whenever a branch is pushed to.</p>
@@ -31,6 +27,10 @@
       </table>
 
       <%= paginate @pagy %>
+
+      <p class="pull-right">
+        <%= link_to "Create release manually", new_project_release_path(@project), class: "btn btn-default" %>
+      </p>
     <% elsif @project.release_branch.present? %>
       <div class="alert alert-warning">
         <p>No release created from release branch <%= @project.release_branch %>.</p>
