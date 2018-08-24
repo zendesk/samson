@@ -28,6 +28,11 @@ class Release < ActiveRecord::Base
     super || NullUser.new(author_id)
   end
 
+  # The people who contributed code to the release.
+  def code_authors
+    changeset.authors
+  end
+
   def to_param
     version
   end
