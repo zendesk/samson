@@ -112,8 +112,22 @@ class ProjectsController < ApplicationController
   # TODO: rename ... not user anymore
   def projects_for_user
     scope =
-      if query = params.dig(:search, :query).presence
-        Project.search(query)
+      if search = params.dig(:search).presence
+        scope = Project
+        if query = search[:query]
+          scope = scope.search(query)
+        end
+        if url = search[:url]
+          # we store urls as git@github.com:foo/bar.git or https://github.com/foo/bar.git
+          # but support search with either and also https://github.com/foo/bar
+          _, path = url.split(/\.[a-z]+[\/:]/, 2)
+          raise "Invalid url #{url}" unless path
+          path.sub!(/\.git$/, '')
+          condition = Project.arel_table[:repository_url].
+            matches("%#{ActiveRecord::Base.send(:sanitize_sql_like, path)}.git")
+          scope = scope.where(condition)
+        end
+        scope
       else
         Project.ordered_for_user(current_user) # TODO: wasteful to use join when just doing counts
       end

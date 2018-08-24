@@ -34,10 +34,31 @@ describe ProjectsController do
         assigns(:projects).map(&:name).must_equal [starred_project.name, "Foo"]
       end
 
-      it "can search" do
-        Project.create!(name: "a", repository_url: "a")
-        get :index, params: {search: {query: "o"}}
-        assigns(:projects).map(&:name).must_equal ["Foo"]
+      describe "can search" do
+        before do
+          Project.create!(name: "a", repository_url: "git@github.com/foo/bar.git")
+          Project.create!(name: "b", repository_url: "https://github.com/foo/bar.git")
+        end
+        it "query in params" do
+          get :index, params: {search: {query: "a"}}
+          assigns(:projects).map(&:name).must_equal ["a"]
+        end
+
+        it "url in params" do
+          get :index, params: {search: {url: "git@github.com/foo/bar.git"}}
+          assigns(:projects).map(&:name).must_equal ["a", "b"]
+        end
+
+        it "both query and url in params" do
+          get :index, params: {search: {query: "b", url: "https://github.com/foo/bar.git"}}
+          assigns(:projects).map(&:name).must_equal ["b"]
+        end
+
+        it "raises with invalid URL" do
+          assert_raises do
+            get :index, params: {search: {url: "a"}}
+          end
+        end
       end
 
       it "renders json" do
