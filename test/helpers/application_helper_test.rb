@@ -698,6 +698,15 @@ describe ApplicationHelper do
 
   describe "#deployed_or_running_list" do
     let(:stage_list) { [stages(:test_staging)] }
+    let!(:deploy) { create_deploy "v1" }
+
+    def create_deploy(reference)
+      stages(:test_staging).deploys.create!(
+        project: projects(:test),
+        reference: reference,
+        job: jobs(:succeeded_test),
+      )
+    end
 
     it "produces safe output" do
       html = deployed_or_running_list([], "foo")
@@ -706,37 +715,32 @@ describe ApplicationHelper do
     end
 
     it "renders current, succeeded deploys" do
-      html = deployed_or_running_list(stage_list, "staging")
+      html = deployed_or_running_list(stage_list, "v1")
       html.must_equal "<span class=\"label label-success release-stage\">Staging</span> "
     end
 
     it "renders past, succeeded deploys" do
       # This deploy will be newer.
-      stages(:test_staging).deploys.create!(
-        project: projects(:test),
-        reference: "asdfjkadfsjk",
-        job: jobs(:succeeded_test),
-      )
+      create_deploy "v2"
 
-      html = deployed_or_running_list(stage_list, "staging")
+      html = deployed_or_running_list(stage_list, "v1")
       html.must_equal "<span class=\"label label-default release-stage\">Staging</span> "
     end
 
     it "ignores failed deploys" do
-      deploys(:succeeded_test).job.update_column(:status, 'failed')
-      html = deployed_or_running_list(stage_list, "staging")
+      deploys(:succeeded_test).job.update_column(:status, "failed")
+      html = deployed_or_running_list(stage_list, "v1")
       html.must_equal ""
     end
 
     it "ignores non-matching deploys" do
-      deploys(:succeeded_test).update_column(:reference, 'nope')
-      html = deployed_or_running_list(stage_list, "staging")
+      html = deployed_or_running_list(stage_list, "yolo")
       html.must_equal ""
     end
 
     it "shows active deploys" do
       deploys(:succeeded_test).job.update_column(:status, 'running')
-      html = deployed_or_running_list(stage_list, "staging")
+      html = deployed_or_running_list(stage_list, "v1")
       html.must_equal "<span class=\"label label-warning release-stage\">Staging</span> "
     end
   end
