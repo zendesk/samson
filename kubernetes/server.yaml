@@ -1,0 +1,65 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: samson
+  labels:
+    project: samson
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      project: samson
+  template:
+    metadata:
+      labels:
+        project: samson
+    spec:
+      containers:
+      - name: samson
+        image: zendesk/samson
+        imagePullPolicy: Always
+        ports:
+          - name: samson
+            containerPort: 9080
+        env:
+          - name: DATABASE_URL
+            valueFrom:
+              secretKeyRef:
+                name: mysql
+                key: url
+          - name: RAILS_ENV
+            value: "production"
+          - name: SECRET_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: mysql
+                key: url
+          - name: DEFAULT_URL
+            value: "https://samson.zd-pod.com"
+          - name: GITHUB_CLIENT_ID
+            valueFrom:
+              secretKeyRef:
+                name: github
+                key: client_id
+          - name: GITHUB_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: github
+                key: secret
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: samson
+  labels:
+    project: samson
+spec:
+  selector:
+    project: samson
+  ports:
+    - name: http
+      port: 80
+      targetPort: samson
+  type: LoadBalancer
