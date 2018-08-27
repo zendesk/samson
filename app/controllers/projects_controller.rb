@@ -118,14 +118,17 @@ class ProjectsController < ApplicationController
           scope = scope.search(query)
         end
         if url = search[:url]
-          # we store urls as git@github.com:foo/bar.git or https://github.com/foo/bar.git
-          # but support search with either and also https://github.com/foo/bar
-          path = url.split(/\.[a-z]+[\/:]/, 2)[1]
-          raise "Invalid url #{url}" unless path
-          path.sub!(/\.git$/, '')
-          condition = Project.arel_table[:repository_url].
-            matches("%#{ActiveRecord::Base.send(:sanitize_sql_like, path)}.git")
-          scope = scope.where(condition)
+          # users can pass in git@ or https:// with or without .git
+          # database has git@ or https:// urls with .git
+          uri = URI.parse(url.sub(/\.git$/, '').sub(':', '/').sub('git@', 'https://'))
+          git = "git@#{uri.host}#{uri.path.sub('/', ':')}.git"
+          urls = [
+            url, # make sure the exact query always matches
+            git,
+            "ssh://#{git}",
+            "https://#{uri.host}#{uri.path}.git"
+          ]
+          scope = scope.where(repository_url: urls)
         end
         scope
       else

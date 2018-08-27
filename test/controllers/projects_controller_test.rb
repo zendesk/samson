@@ -45,7 +45,7 @@ describe ProjectsController do
         end
 
         it "can search via url" do
-          get :index, params: {search: {url: "git@github.com/bar/foo.git"}}
+          get :index, params: {search: {url: "git@example.com:bar/foo.git"}}
           assigns(:projects).map(&:name).must_equal ["Foo"]
         end
 
