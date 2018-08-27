@@ -58,12 +58,6 @@ describe ProjectsController do
           get :index, params: {search: {url: "https://github.com/test.git"}}
           assigns(:projects).map(&:name).must_be_empty
         end
-
-        it "raises with invalid URL" do
-          assert_raises do
-            get :index, params: {search: {url: "a"}}
-          end
-        end
       end
 
       it "renders json" do
