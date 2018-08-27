@@ -324,33 +324,33 @@ module ApplicationHelper
 
   # Show which stages this reference has been or is currently being deployed to.
   def deployed_or_running_list(stages, reference)
-    html = "".html_safe
-    stages.each do |stage|
+    pieces = stages.map do |stage|
       # The first deploy is the most recent one.
       deploy = stage.deploys.where(reference: reference).first
 
-      next if deploy.nil?
-
-      if deploy.running?
-        label = "label-warning"
+      label = if deploy.nil?
+        nil
+      elsif deploy.running?
+        "label-warning"
       elsif deploy.succeeded?
         if deploy == stage.last_deploy
-          label = "label-success"
+          "label-success"
         else
           # Deploy is neither active nor is it the last successful one, but it
           # succeeded in the past.
-          label = "label-default"
+          "label-default"
         end
       else
-        next
+        nil
       end
 
-      text = "".html_safe
-      text << stage.name
-      html << content_tag(:span, text, class: "label #{label} release-stage")
-      html << " "
+      if label.present?
+        text = stage.name.html_safe
+        content_tag(:span, text, class: "label #{label} release-stage")
+      end
     end
-    html
+
+    safe_join(pieces, " ")
   end
 
   def check_box_section(section_title, help_text, object, method, collection)
