@@ -322,21 +322,25 @@ module ApplicationHelper
     link_to icon_tag('signal'), url, target: :blank
   end
 
-  # show which stages this reference is deploy(ed+ing) to
+  # Show which stages this reference has been or is currently being deployed to.
   def deployed_or_running_list(stages, reference)
     html = "".html_safe
     stages.each do |stage|
       # The first deploy is the most recent one.
-      next unless deploy = stage.deploys.where(reference: reference).first
+      deploy = stage.deploys.where(reference: reference).first
 
-      if deploy == stage.last_successful_deploy
-        label = "label-success"
-      elsif deploy == stage.active_deploy
+      next if deploy.nil?
+
+      if deploy.running?
         label = "label-warning"
       elsif deploy.succeeded?
-        # Deploy is neither active nor is it the last successful one, but it
-        # succeeded in the past.
-        label = "label-default"
+        if deploy == stage.last_deploy
+          label = "label-success"
+        else
+          # Deploy is neither active nor is it the last successful one, but it
+          # succeeded in the past.
+          label = "label-default"
+        end
       else
         next
       end
