@@ -120,7 +120,7 @@ class ProjectsController < ApplicationController
         if url = search[:url]
           # we store urls as git@github.com:foo/bar.git or https://github.com/foo/bar.git
           # but support search with either and also https://github.com/foo/bar
-          _, path = url.split(/\.[a-z]+[\/:]/, 2)
+          path = url.split(/\.[a-z]+[\/:]/, 2)[1]
           raise "Invalid url #{url}" unless path
           path.sub!(/\.git$/, '')
           condition = Project.arel_table[:repository_url].

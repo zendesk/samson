@@ -34,24 +34,29 @@ describe ProjectsController do
         assigns(:projects).map(&:name).must_equal [starred_project.name, "Foo"]
       end
 
-      describe "can search" do
+      describe "search" do
         before do
-          Project.create!(name: "a", repository_url: "git@github.com/foo/bar.git")
-          Project.create!(name: "b", repository_url: "https://github.com/foo/bar.git")
-        end
-        it "query in params" do
-          get :index, params: {search: {query: "a"}}
-          assigns(:projects).map(&:name).must_equal ["a"]
+          Project.create!(name: "https_url", repository_url: "https://github.com/foo/bar.git")
         end
 
-        it "url in params" do
-          get :index, params: {search: {url: "git@github.com/foo/bar.git"}}
-          assigns(:projects).map(&:name).must_equal ["a", "b"]
+        it "can search via query" do
+          get :index, params: {search: {query: "foo"}}
+          assigns(:projects).map(&:name).must_equal ["Foo"]
         end
 
-        it "both query and url in params" do
-          get :index, params: {search: {query: "b", url: "https://github.com/foo/bar.git"}}
-          assigns(:projects).map(&:name).must_equal ["b"]
+        it "can search via url" do
+          get :index, params: {search: {url: "git@github.com/bar/foo.git"}}
+          assigns(:projects).map(&:name).must_equal ["Foo"]
+        end
+
+        it "can combine query and url" do
+          get :index, params: {search: {query: "https_url", url: "https://github.com/foo/bar.git"}}
+          assigns(:projects).map(&:name).must_equal ["https_url"]
+        end
+
+        it "does not find when url does not match" do
+          get :index, params: {search: {url: "https://github.com/test.git"}}
+          assigns(:projects).map(&:name).must_be_empty
         end
 
         it "raises with invalid URL" do
