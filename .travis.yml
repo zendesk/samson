@@ -4,7 +4,7 @@ cache:
   directories:
     - tmp/rubocop_cache
     - node_modules
-sudo: required
+sudo: false
 branches:
   only: master
 env:
@@ -25,13 +25,12 @@ before_script:
   - mysql -u root -e 'set GLOBAL innodb_file_format = "barracuda"'
   - mysql -u root -e 'GRANT ALL ON *.* TO 'travis'@'localhost';'
 script: bundle exec rake $TASK
+
+# make sure we can release as apache v2
 jobs:
   include:
     - stage: fossa
-      before_script: curl -H 'Cache-Control:no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install.sh | bash
-      script:
-        - fossa init
-        - fossa analyze --branch master
-      env: ""
-      services: ""
-      addons: ""
+      before_script:
+        - curl -H 'Cache-Control:no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install.sh | sed 's/askRoot mv/#askRoot mv/' | sed 's/trap cleanup/#/' | bash # https://github.com/fossas/fossa-cli/issues/232
+        - /tmp/install-fossa-cli/fossa init
+      script: /tmp/install-fossa-cli/fossa analyze # will fail to upload when missing api key
