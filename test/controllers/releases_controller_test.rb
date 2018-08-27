@@ -7,6 +7,28 @@ describe ReleasesController do
   let(:project) { projects(:test) }
   let(:release) { releases(:test) }
 
+  before do
+    status_response = {
+      state: "success",
+      statuses: [
+        {
+          state: "success",
+          context: "oompa/loompa",
+          target_url: "https://chocolate-factory.com/test/wonka",
+          description: "Ooompa Loompa!",
+          created_at: Time.now.iso8601
+        }
+      ]
+    }
+
+    headers = {
+      "Content-Type" => "application/json",
+    }
+
+    stub_request(:get, "https://api.github.com/repos/bar/foo/commits/abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd/status").
+      to_return(status: 200, body: status_response.to_json, headers: headers)
+  end
+
   as_a_viewer do
     unauthorized :get, :new, project_id: :foo
     unauthorized :post, :create, project_id: :foo

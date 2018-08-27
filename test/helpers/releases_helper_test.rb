@@ -15,6 +15,38 @@ describe ReleasesHelper do
     end
   end
 
+  describe "#github_commit_status_icon" do
+    include ApplicationHelper
+
+    it "renders an icon for success" do
+      html = github_commit_status_icon("success")
+      html.must_include "glyphicon-ok"
+      html.must_include "text-success"
+      html.must_include "Github status: success"
+    end
+
+    it "renders an icon for failure" do
+      html = github_commit_status_icon("failure")
+      html.must_include "glyphicon-remove"
+      html.must_include "text-danger"
+      html.must_include "Github status: failure"
+    end
+
+    it "renders an icon for missing status" do
+      html = github_commit_status_icon("missing")
+      html.must_include "glyphicon-minus"
+      html.must_include "text-muted"
+      html.must_include "Github status: missing"
+    end
+
+    it "renders an icon for pending status" do
+      html = github_commit_status_icon("pending")
+      html.must_include "glyphicon-hourglass"
+      html.must_include "text-primary"
+      html.must_include "Github status: pending"
+    end
+  end
+
   describe "#link_to_deploy_stage" do
     let(:stage) { stages(:test_staging) }
     let(:release) { Release.new }

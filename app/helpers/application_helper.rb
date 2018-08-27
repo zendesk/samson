@@ -146,7 +146,13 @@ module ApplicationHelper
   end
 
   def icon_tag(type, options = {})
-    content_tag :i, '', options.merge(class: "glyphicon glyphicon-#{type}")
+    css_classes = "glyphicon glyphicon-#{type}"
+
+    if klass = options[:class]
+      css_classes += " #{klass}"
+    end
+
+    content_tag :i, '', options.merge(class: css_classes)
   end
 
   def link_to_delete(path, options = {})

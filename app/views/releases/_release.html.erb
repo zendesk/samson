@@ -2,7 +2,14 @@
   <td>
     <%= release_label(@project, release) %>
   </td>
-  <td><%= deployed_or_running_list @stages, release.version %></td>
+  <td>
+    <% if github_ok? %>
+      <%= github_commit_status_icon release.github_status.state %>
+    <% else %>
+      <%= github_commit_status_icon "missing" %>
+    <% end %>
+  </td>
+  <td width="100%"><%= deployed_or_running_list @stages, release.version %></td>
   <td><%= relative_time(release.created_at) %></td>
   <td>
     <% if deployer_for_project? %>
@@ -11,5 +18,5 @@
   </td>
 </tr>
 <tr class="release-info collapse" data-url="<%= url_for [@project, release] %>">
-  <td colspan="4"></td>
+  <td colspan="5"></td>
 </tr>
