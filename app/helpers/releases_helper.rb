@@ -40,11 +40,10 @@ module ReleasesHelper
     end
   end
 
-  def github_user_avatar(user)
-    image_tag user.avatar_url,
-      title: user.login,
-      class: "gravatar",
-      style: "border-radius: .2em",
+  def github_user_avatar(github_user)
+    image_tag github_user.avatar_url,
+      title: github_user.login,
+      class: "gravatar github-user-avatar",
       width: 20,
       height: 20
   end
