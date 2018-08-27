@@ -716,7 +716,7 @@ describe ApplicationHelper do
 
     it "renders current, succeeded deploys" do
       html = deployed_or_running_list(stage_list, "v1")
-      html.must_equal "<span class=\"label label-success release-stage\">Staging</span> "
+      html.must_equal "<span class=\"label label-success release-stage\">Staging</span>"
     end
 
     it "renders past, succeeded deploys" do
@@ -724,7 +724,7 @@ describe ApplicationHelper do
       create_deploy "v2"
 
       html = deployed_or_running_list(stage_list, "v1")
-      html.must_equal "<span class=\"label label-default release-stage\">Staging</span> "
+      html.must_equal "<span class=\"label label-default release-stage\">Staging</span>"
     end
 
     it "ignores failed deploys" do
@@ -741,7 +741,7 @@ describe ApplicationHelper do
     it "shows active deploys" do
       deploy.job.update_column(:status, 'running')
       html = deployed_or_running_list(stage_list, "v1")
-      html.must_equal "<span class=\"label label-warning release-stage\">Staging</span> "
+      html.must_equal "<span class=\"label label-warning release-stage\">Staging</span>"
     end
 
     it "uses 3 queries when the deploy is the most recent one on the stage" do
