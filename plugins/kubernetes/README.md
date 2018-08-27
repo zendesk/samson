@@ -158,3 +158,8 @@ All active resources must be deleted manually when switching to blue/green from 
 ### Resources without cpu limits
 
 Set `KUBERNETES_NO_CPU_LIMIT_ALLOWED=1`, see [#2820](https://github.com/zendesk/samson/issues/2820) for why this can be useful.
+
+### Enforcing team ownership
+
+Knowing which team owns each component is useful, set `KUBERNETES_ENFORCE_TEAMS=true` 
+to make all kubernetes deploys that do not use a `metadata.labels.team` / `spec.teample.metadata.labels.team` fail.

@@ -223,6 +223,42 @@ describe Kubernetes::RoleValidator do
       errors.must_include "Annotation values 1234, true must be strings."
     end
 
+    describe "#validate_team_labels" do
+      with_env KUBERNETES_ENFORCE_TEAMS: "true"
+
+      before do
+        role[0][:metadata][:labels][:team] = "hey"
+        role[1][:metadata][:labels][:team] = "hey"
+        role[0][:spec][:template][:metadata][:labels][:team] = "ho"
+      end
+
+      it "passes when labels are added" do
+        errors.must_be_nil
+      end
+
+      it "passes when spec is not required" do
+        role.delete :spec
+        errors.must_be_nil
+      end
+
+      describe "with missing labels" do
+        before do
+          role[0][:metadata][:labels].delete :team
+          role[0][:spec][:template][:metadata][:labels].delete :team
+        end
+
+        it "fails" do
+          errors.must_equal ["metadata.labels.team must be set", "spec.template.metadata.labels.team must be set"]
+        end
+
+        it "does not fail when disabled" do
+          with_env KUBERNETES_ENFORCE_TEAMS: nil do
+            errors.must_be_nil
+          end
+        end
+      end
+    end
+
     describe "#validate_prerequisites" do
       before do
         role.pop
