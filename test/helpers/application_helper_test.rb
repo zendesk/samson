@@ -704,7 +704,7 @@ describe ApplicationHelper do
       stages(:test_staging).deploys.create!(
         project: projects(:test),
         reference: reference,
-        job: jobs(:succeeded_test),
+        job: jobs(:succeeded_test)
       )
     end
 
