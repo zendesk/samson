@@ -340,8 +340,6 @@ module ApplicationHelper
           # succeeded in the past.
           "label-default"
         end
-      else
-        nil
       end
 
       if label.present?
