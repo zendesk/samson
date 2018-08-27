@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/zendesk/samson.svg?branch=master)](https://travis-ci.org/zendesk/samson)
 [![DockerHub Status](https://img.shields.io/docker/stars/zendesk/samson.svg)](https://hub.docker.com/r/zendesk/samson)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fzendesk%2Fsamson.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fzendesk%2Fsamson?ref=badge_shield)
 
 [Demo](https://samson-demo.herokuapp.com)
 

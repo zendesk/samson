@@ -27,10 +27,12 @@ before_script:
 script: bundle exec rake $TASK
 
 # make sure we can release as apache v2
-jobs:
+matrix:
   include:
-    - stage: fossa
+    - env: TASK=fossa # nice label for UI
       before_script:
         - curl -H 'Cache-Control:no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install.sh | sed 's/askRoot mv/#askRoot mv/' | sed 's/trap cleanup/#/' | bash # https://github.com/fossas/fossa-cli/issues/232
         - /tmp/install-fossa-cli/fossa init
-      script: /tmp/install-fossa-cli/fossa analyze # will fail to upload when missing api key
+      script:
+        - /tmp/install-fossa-cli/fossa analyze # analyze dependencies and upload them (fails when missing api key)
+        - /tmp/install-fossa-cli/fossa test # wait for fossa to analyse the upload and fail if it finds issues
