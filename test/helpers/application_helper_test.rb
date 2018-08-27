@@ -728,7 +728,7 @@ describe ApplicationHelper do
     end
 
     it "ignores failed deploys" do
-      deploys(:succeeded_test).job.update_column(:status, "failed")
+      deploy.job.update_column(:status, "failed")
       html = deployed_or_running_list(stage_list, "v1")
       html.must_equal ""
     end
@@ -739,9 +739,29 @@ describe ApplicationHelper do
     end
 
     it "shows active deploys" do
-      deploys(:succeeded_test).job.update_column(:status, 'running')
+      deploy.job.update_column(:status, 'running')
       html = deployed_or_running_list(stage_list, "v1")
       html.must_equal "<span class=\"label label-warning release-stage\">Staging</span> "
+    end
+
+    it "uses 3 queries when the deploy is the most recent one on the stage" do
+      assert_sql_queries 3 do
+        deployed_or_running_list(stage_list, "v1")
+      end
+    end
+
+    it "uses 2 queries if the deploy is currently running" do
+      deploy.job.update_column(:status, "running")
+
+      assert_sql_queries 2 do
+        deployed_or_running_list(stage_list, "v1")
+      end
+    end
+
+    it "uses 1 query if there have been no deploys of that reference" do
+      assert_sql_queries 1 do
+        deployed_or_running_list(stage_list, "yolo")
+      end
     end
   end
 
