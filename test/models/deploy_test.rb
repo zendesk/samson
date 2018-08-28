@@ -688,7 +688,7 @@ describe Deploy do
       Deploy.of_reference_in_stages("v42", [stage1, stage2]).must_equal expected
     end
 
-    it "uses a single query" do
+    it "uses only two queries" do
       stage1 = create_stage!(name: "stage1")
       stage2 = create_stage!(name: "stage2")
 
@@ -696,7 +696,7 @@ describe Deploy do
       create_deploy!(stage: stage1, reference: "v42")
       create_deploy!(stage: stage2, reference: "v42")
 
-      assert_sql_queries 1 do
+      assert_sql_queries 2 do
         Deploy.of_reference_in_stages("v42", [stage1, stage2])
       end
     end

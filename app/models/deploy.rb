@@ -177,7 +177,17 @@ class Deploy < ActiveRecord::Base
 
   # Returns a Hash of Stage => Deploy for the given reference and stages.
   def self.of_reference_in_stages(reference, stages)
-    where(reference: reference).in_stages(stages).group(:stage_id).map do |deploy|
+    # Group by stage, then select the latest deploy id.
+    deploys_and_stages = where(reference: reference).
+      in_stages(stages).
+      group(:stage_id).
+      select("MAX(id) AS id, stage_id")
+
+    # Fetch the actual deploys.
+    deploys = Deploy.where(id: deploys_and_stages.map(&:id))
+
+    # Map to a hash of stage => deploy entries.
+    deploys.map do |deploy|
       # Don't trigger another query in order to fetch the stage.
       stage = stages.find { |stage| stage.id == deploy.stage_id }
 
