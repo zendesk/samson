@@ -6,9 +6,7 @@
     <% changeset.commits.each do |commit| %>
       <tr>
         <td>
-          <% if url = commit.author&.avatar_url %>
-            <%= image_tag url, width: 20, height: 20 %>
-          <% end %>
+          <%= github_user_avatar(commit.author) %>
         </td>
         <td>
           <% name = commit.author_name.presence || "Unknown" %>

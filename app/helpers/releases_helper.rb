@@ -39,12 +39,4 @@ module ReleasesHelper
       link_to stage.name, project_stage_deploys_path(@project, stage, deploy: deploy_params), method: :post
     end
   end
-
-  def github_user_avatar(github_user)
-    image_tag github_user.avatar_url,
-      title: github_user.login,
-      class: "gravatar github-user-avatar",
-      width: 20,
-      height: 20
-  end
 end
