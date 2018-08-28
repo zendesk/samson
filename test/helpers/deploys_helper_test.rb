@@ -5,6 +5,7 @@ SingleCov.covered!
 
 describe DeploysHelper do
   include StatusHelper
+  include ApplicationHelper
 
   let(:deploy) { deploys(:succeeded_test) }
 
@@ -127,14 +128,8 @@ describe DeploysHelper do
           stub(url: 'barurl', login: 'bar"<script>login', avatar_url: 'baravatar'),
         ]
       )
-      result.must_equal(
-        "<a title=\"foologin\" href=\"foourl\">" \
-          "<img width=\"20\" height=\"20\" src=\"/images/fooavatar\" />" \
-        "</a> " \
-        "<a title=\"bar&quot;&lt;script&gt;login\" href=\"barurl\">" \
-          "<img width=\"20\" height=\"20\" src=\"/images/baravatar\" />" \
-        "</a>"
-      )
+      result.must_include %(title="foologin")
+      result.must_include %(title="bar&quot;&lt;script&gt;login")
       result.html_safe?.must_equal true
     end
 
