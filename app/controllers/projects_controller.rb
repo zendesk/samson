@@ -112,8 +112,25 @@ class ProjectsController < ApplicationController
   # TODO: rename ... not user anymore
   def projects_for_user
     scope =
-      if query = params.dig(:search, :query).presence
-        Project.search(query)
+      if search = params.dig(:search).presence
+        scope = Project
+        if query = search[:query]
+          scope = scope.search(query)
+        end
+        if url = search[:url]
+          # users can pass in git@ or https:// with or without .git
+          # database has git@ or https:// urls with .git
+          uri = URI.parse(url.sub(/\.git$/, '').sub(':', '/').sub('git@', 'https://'))
+          git = "git@#{uri.host}#{uri.path.sub('/', ':')}.git"
+          urls = [
+            url, # make sure the exact query always matches
+            git,
+            "ssh://#{git}",
+            "https://#{uri.host}#{uri.path}.git"
+          ]
+          scope = scope.where(repository_url: urls)
+        end
+        scope
       else
         Project.ordered_for_user(current_user) # TODO: wasteful to use join when just doing counts
       end
