@@ -1,5 +1,7 @@
 <%= page_title @deploy_group.name %>
 
+<%= render_lock @deploy_group %>
+
 <section class="form-horizontal">
   <div class="form-group">
     <label class="col-lg-2 control-label">$DEPLOY_GROUPS value</label>
@@ -116,6 +118,7 @@
     <br>
     <div class="col-lg-offset-2 col-lg-10" style="margin-top: 10px;">
       <%= link_to "Edit", edit_deploy_group_path(@deploy_group), class: "btn btn-primary" %>
+      <%= render "locks/button", lock: @deploy_group.lock, resource: @deploy_group %>
       | <%= link_to_history @deploy_group %>
       | <%= link_to "Deploys", deploys_path(search: {group: "DeployGroup-#{@deploy_group.id}"}) %>
       | <%= link_to "Mass rollout", "#", data: {target: "#mass_rollout"}, class: 'toggle' if DeployGroup.enabled? %>

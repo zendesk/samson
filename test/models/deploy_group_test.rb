@@ -177,4 +177,29 @@ describe DeployGroup do
       queries.first.wont_include "JOIN"
     end
   end
+
+  describe "#locked_by?" do
+    before { deploy_group }
+
+    it "is not locked by other" do
+      project = Project.first
+      assert_sql_queries 0 do
+        refute deploy_group.locked_by?(Lock.new(resource: project))
+      end
+    end
+
+    it "is locked by self" do
+      assert_sql_queries 0 do
+        assert deploy_group.locked_by?(Lock.new(resource: deploy_group))
+      end
+    end
+
+    it "is locked by own environment" do
+      assert deploy_group.locked_by?(Lock.new(resource: environment))
+    end
+
+    it "is not by locked other environment" do
+      refute deploy_group.locked_by?(Lock.new(resource: environments(:staging)))
+    end
+  end
 end
