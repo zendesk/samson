@@ -342,8 +342,9 @@ module ApplicationHelper
         end
       end
 
-      if label.present?
-        text = stage.name.html_safe
+      if label
+        text = "".html_safe
+        text << stage.name
         content_tag(:span, text, class: "label #{label} release-stage")
       end
     end
