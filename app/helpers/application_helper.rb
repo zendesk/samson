@@ -324,9 +324,10 @@ module ApplicationHelper
 
   # Show which stages this reference has been or is currently being deployed to.
   def deployed_or_running_list(stages, reference)
+    deploys = Deploy.of_reference_in_stages(reference, stages)
+
     pieces = stages.map do |stage|
-      # The first deploy is the most recent one.
-      deploy = stage.deploys.where(reference: reference).first
+      deploy = deploys[stage]
 
       label = if deploy.nil?
         nil

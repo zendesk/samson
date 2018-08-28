@@ -656,6 +656,52 @@ describe Deploy do
     end
   end
 
+  describe "#in_stages" do
+    it "shows only deploys in the specified stages" do
+      stage1 = create_stage!(name: "stage1")
+      stage2 = create_stage!(name: "stage2")
+
+      deploy1 = create_deploy!(stage: stage1)
+      deploy2 = create_deploy!(stage: stage2)
+      deploy3 = create_deploy!(stage: stage1)
+
+      Deploy.in_stages([stage1]).pluck(:id).sort.must_equal [deploy1.id, deploy3.id].sort
+    end
+  end
+
+  describe "#of_reference_in_stages" do
+    it "returns the latest deploy with the given reference in the specified stages" do
+      stage1 = create_stage!(name: "stage1")
+      stage2 = create_stage!(name: "stage2")
+      stage3 = create_stage!(name: "stage3")
+
+      deploy1 = create_deploy!(stage: stage1, reference: "v42")
+      deploy2 = create_deploy!(stage: stage1, reference: "v42")
+      deploy3 = create_deploy!(stage: stage2, reference: "v42")
+      deploy4 = create_deploy!(stage: stage3, reference: "v42")
+
+      expected = {
+        stage1 => deploy2,
+        stage2 => deploy3
+      }
+
+      Deploy.of_reference_in_stages("v42", [stage1, stage2]).must_equal expected
+    end
+
+    it "uses a single query" do
+      stage1 = create_stage!(name: "stage1")
+      stage2 = create_stage!(name: "stage2")
+
+      create_deploy!(stage: stage1, reference: "v42")
+      create_deploy!(stage: stage1, reference: "v42")
+      create_deploy!(stage: stage2, reference: "v42")
+
+      assert_sql_queries 1 do
+        Deploy.of_reference_in_stages("v42", [stage1, stage2])
+      end
+    end
+  end
+
   describe "#as_json" do
     it "includes simple methods status" do
       deploy.as_json.fetch("status").must_equal "succeeded"
@@ -689,5 +735,14 @@ describe Deploy do
     }
 
     Job.create!(default_attrs.merge(attrs))
+  end
+
+  def create_stage!(attrs = {})
+    default_attrs = {
+      project: project,
+      name: "some-stage"
+    }
+
+    Stage.create!(default_attrs.merge(attrs))
   end
 end

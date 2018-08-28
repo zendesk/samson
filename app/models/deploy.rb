@@ -171,6 +171,20 @@ class Deploy < ActiveRecord::Base
     where("#{table_name}.id > ?", deploy.id)
   end
 
+  def self.in_stages(stages)
+    where(stage_id: stages.map(&:id))
+  end
+
+  # Returns a Hash of Stage => Deploy for the given reference and stages.
+  def self.of_reference_in_stages(reference, stages)
+    where(reference: reference).in_stages(stages).group(:stage_id).map do |deploy|
+      # Don't trigger another query in order to fetch the stage.
+      stage = stages.find { |stage| stage.id == deploy.stage_id }
+
+      [stage, deploy]
+    end.to_h
+  end
+
   def self.expired
     threshold = BuddyCheck.time_limit.ago
     stale = where(buddy_id: nil).joins(:job).where(jobs: {status: 'pending'}).where("jobs.created_at < ?", threshold)
