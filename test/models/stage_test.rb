@@ -712,25 +712,18 @@ describe Stage do
   end
 
   describe "#locked_by?" do
-    def lock(overrides = {})
-      @lock ||= Lock.create!({user: user, resource: stage}.merge(overrides))
-    end
+    before { stage } # cache
 
-    let(:user) { users(:deployer) }
-
-    it "returns true for stage lock" do
-      lock # trigger creation
-      Lock.send :all_cached
+    it "returns true for self lock" do
       assert_sql_queries 0 do
-        stage.locked_by?(lock).must_equal true
+        assert stage.locked_by?(Lock.new(resource: stage))
       end
     end
 
     it "returns false for different stage's lock" do
-      lock(resource: stages(:test_production))
-      Lock.send :all_cached
+      lock = Lock.new(resource: stages(:test_production))
       assert_sql_queries 0 do
-        stage.locked_by?(lock).must_equal false
+        refute stage.locked_by?(lock)
       end
     end
 
@@ -742,28 +735,40 @@ describe Stage do
       end
 
       it "returns true if finds environment lock on stage" do
-        lock(resource: environments(:staging))
-        Lock.send :all_cached
+        lock = Lock.new(resource: environments(:staging))
         assert_sql_queries 3 do # deploy-groups -> deploy-groups-stages -> environments
-          stage.locked_by?(lock).must_equal true
+          assert stage.locked_by?(lock)
         end
       end
 
       it "does not check environments on non-environment locks" do
-        lock(resource: stages(:test_production))
-        Lock.send :all_cached
         assert_sql_queries 0 do
-          stage.locked_by?(lock).must_equal false
+          assert stage.locked_by?(Lock.new(resource: stage))
         end
       end
     end
 
     describe "with projects" do
       it "finds project lock on stage" do
-        lock(resource: projects(:test))
-        Lock.send :all_cached
+        lock = Lock.new(resource: projects(:test))
         assert_sql_queries 1 do
-          stage.locked_by?(lock).must_equal true
+          assert stage.locked_by?(lock)
+        end
+      end
+    end
+
+    describe "with deploy groups" do
+      it "is locked by own groups" do
+        lock = Lock.new(resource: deploy_groups(:pod100))
+        assert_sql_queries 2 do # deploy-groups -> deploy-groups-stages
+          assert stage.locked_by?(lock)
+        end
+      end
+
+      it "is not locked by other groups" do
+        lock = Lock.new(resource: deploy_groups(:pod1))
+        assert_sql_queries 2 do # deploy-groups -> deploy-groups-stages
+          refute stage.locked_by?(lock)
         end
       end
     end

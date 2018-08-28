@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 class Lock < ActiveRecord::Base
   include ActionView::Helpers::DateHelper
-  RESOURCE_TYPES = ['Stage', 'Project', 'Environment', nil].freeze # sorted by specificity
+  RESOURCE_TYPES = ['Stage', 'Project', 'DeployGroup', 'Environment', nil].freeze # sorted by specificity
   CACHE_KEY = 'lock-cache-key'
   ALL_CACHE_KEY = 'lock-all'
 

@@ -198,7 +198,16 @@ class Stage < ActiveRecord::Base
   end
 
   def locked_by?(lock)
-    super || environment_lock?(lock) || project_lock?(lock)
+    super || begin
+      resources =
+        case lock.resource_type
+        when "Environment" then environments
+        when "DeployGroup" then deploy_groups
+        when "Project" then [project]
+        else []
+        end
+      resources.any? { |r| lock.resource_equal?(r) }
+    end
   end
 
   private
@@ -242,14 +251,6 @@ class Stage < ActiveRecord::Base
     if deploy_on_release? && deploy_requires_approval?
       errors.add(:deploy_on_release, "cannot be used for a stage the requires approval")
     end
-  end
-
-  def environment_lock?(lock)
-    lock.resource_type == "Environment" && environments.any? { |e| lock.resource_equal?(e) }
-  end
-
-  def project_lock?(lock)
-    lock.resource_type == "Project" && lock.resource_equal?(project)
   end
 
   def find_or_create_stage_command(command_or_id, position)

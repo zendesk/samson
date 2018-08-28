@@ -4,6 +4,7 @@ class DeployGroup < ActiveRecord::Base
   audited
 
   include Permalinkable
+  include Lockable
 
   belongs_to :environment
   belongs_to :vault_server, class_name: 'Samson::Secrets::VaultServer', optional: true
@@ -34,6 +35,10 @@ class DeployGroup < ActiveRecord::Base
   # faster alternative to stage_ids way of getting stage_ids
   def pluck_stage_ids
     deploy_groups_stages.pluck(:stage_id)
+  end
+
+  def locked_by?(lock)
+    super || (lock.resource_type == "Environment" && lock.resource_equal?(environment))
   end
 
   private

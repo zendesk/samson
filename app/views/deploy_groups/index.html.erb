@@ -16,7 +16,10 @@
       <tbody>
         <% @deploy_groups.each do |deploy_group| %>
           <tr>
-            <td><%= link_to deploy_group.name, deploy_group %></td>
+            <td>
+              <%= link_to deploy_group.name, deploy_group %>
+              <%= resource_lock_icon deploy_group %>
+            </td>
             <td><%= link_to deploy_group.environment.name, deploy_group.environment %></td>
             <td><%= deploy_group.env_value %></td>
             <%= Samson::Hooks.render_views(:deploy_group_table_cell, self, deploy_group: deploy_group) %>
