@@ -45,13 +45,13 @@ describe ProjectsController do
         end
 
         it "can search via url" do
-          get :index, params: {search: {url: "git@example.com:bar/foo.git"}}
-          assigns(:projects).map(&:name).must_equal ["Foo"]
+          get :index, params: {search: {url: "https://github.com/foo/bar.git"}}
+          assigns(:projects).map(&:name).must_equal ["https_url"]
         end
 
         it "can combine query and url" do
-          get :index, params: {search: {query: "https_url", url: "https://github.com/foo/bar.git"}}
-          assigns(:projects).map(&:name).must_equal ["https_url"]
+          get :index, params: {search: {query: "foo", url: "git@example.com:bar/foo.git"}}
+          assigns(:projects).map(&:name).must_equal ["Foo"]
         end
 
         it "does not find when url does not match" do
