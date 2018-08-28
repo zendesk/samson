@@ -675,14 +675,14 @@ describe Deploy do
       stage2 = create_stage!(name: "stage2")
       stage3 = create_stage!(name: "stage3")
 
+      create_deploy!(stage: stage1, reference: "v42")
       deploy1 = create_deploy!(stage: stage1, reference: "v42")
-      deploy2 = create_deploy!(stage: stage1, reference: "v42")
-      deploy3 = create_deploy!(stage: stage2, reference: "v42")
-      deploy4 = create_deploy!(stage: stage3, reference: "v42")
+      deploy2 = create_deploy!(stage: stage2, reference: "v42")
+      create_deploy!(stage: stage3, reference: "v42")
 
       expected = {
-        stage1 => deploy2,
-        stage2 => deploy3
+        stage1 => deploy1,
+        stage2 => deploy2
       }
 
       Deploy.of_reference_in_stages("v42", [stage1, stage2]).must_equal expected
