@@ -338,6 +338,14 @@ module ApplicationHelper
     html
   end
 
+  def github_user_avatar(github_user)
+    image_tag github_user.avatar_url,
+      title: github_user.login,
+      class: "gravatar github-user-avatar",
+      width: 20,
+      height: 20
+  end
+
   def check_box_section(section_title, help_text, object, method, collection)
     content_tag(:fieldset) do
       result = ''.html_safe

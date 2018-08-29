@@ -45,15 +45,8 @@ module DeploysHelper
   end
 
   def github_users(github_users)
-    github_users.map { |github_user| github_user_avatar(github_user) }.join(" ").html_safe
-  end
-
-  def github_user_avatar(github_user)
-    return if github_user.nil?
-
-    link_to github_user.url, title: github_user.login do
-      image_tag github_user.avatar_url, width: 20, height: 20
-    end
+    avatars = github_users.map { |github_user| github_user_avatar(github_user) if github_user }
+    safe_join avatars, " "
   end
 
   def syntax_highlight(code, language = :ruby)

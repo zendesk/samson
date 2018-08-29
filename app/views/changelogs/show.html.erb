@@ -30,7 +30,7 @@
           <td><%= link_to pr.reference, pr.url %></td>
           <td>
             <% pr.users.each do |user| %>
-              <img class="circular" title="<%= user.identifier %>" src="<%= user.avatar_url(50) %>" />
+              <%= github_user_avatar(user) %>
             <% end %>
           </td>
           <td>

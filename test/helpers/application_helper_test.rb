@@ -38,6 +38,15 @@ describe ApplicationHelper do
     end
   end
 
+  describe "#github_user_avatar" do
+    it "renders an avatar for a Github user" do
+      user = stub(login: "willy_wonka", avatar_url: "http://wonka.com/me.gif")
+      html = github_user_avatar(user)
+
+      html.must_include %(title="willy_wonka")
+    end
+  end
+
   describe "#autolink" do
     it "converts urls with hash to links" do
       result = autolink("foo http://bar.com#123 baz")
