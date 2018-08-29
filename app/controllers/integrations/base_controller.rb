@@ -11,7 +11,7 @@ class Integrations::BaseController < ApplicationController
   def create
     if !deploy? || skip?
       record_log :info, "Request is not supposed to trigger a deploy"
-      return render plain: @recorded_log.to_s
+      return render json: {deploy_ids: [], messages: @recorded_log.to_s}
     end
 
     if branch
@@ -27,14 +27,18 @@ class Integrations::BaseController < ApplicationController
     end
 
     stages = project.webhook_stages_for(branch, service_type, service_name)
-    failed = deploy_to_stages(release, stages)
+    deploy_results = deploy_to_stages(release, stages)
 
-    if failed
+    if failed = deploy_results[:failed_stage]
       record_log :error, "Failed to start deploy to #{failed.name}"
     else
       record_log :info, "Deploying to #{stages.size} stages"
     end
-    render plain: @recorded_log.to_s, status: (failed ? :unprocessable_entity : :ok)
+
+    render(
+      json: {deploy_ids: deploy_results[:deploy_ids], messages: @recorded_log.to_s},
+      status: (failed ? :unprocessable_entity : :ok)
+    )
   end
 
   protected
@@ -63,14 +67,18 @@ class Integrations::BaseController < ApplicationController
     ReleaseService.new(project).release(release_params)
   end
 
-  # returns stage that failed to deploy or nil
+  # returns failed stage and any successfully started deploy ids
   def deploy_to_stages(release, stages)
     deploy_service = DeployService.new(user)
-    stages.detect do |stage|
+    stages.each_with_object(failed_stage: nil, deploy_ids: []) do |stage, result_hash|
       deploy = deploy_service.deploy(stage, reference: release&.version || commit)
-      if deploy.new_record?
+
+      if deploy.persisted?
+        result_hash[:deploy_ids] << deploy.id
+      else
         record_log :error, "Deploy to #{stage.name} failed: #{deploy.errors.full_messages}"
-        true
+        result_hash[:failed_stage] = stage
+        break result_hash
       end
     end
   end
@@ -105,7 +113,7 @@ class Integrations::BaseController < ApplicationController
   end
 
   def validate_token
-    project || render(plain: "Invalid token", status: :unauthorized)
+    project || render(json: {deploy_ids: [], messages: 'Invalid token'}, status: :unauthorized)
   end
 
   def hide_token
@@ -118,7 +126,8 @@ class Integrations::BaseController < ApplicationController
   end
 
   def service_name
-    @service_name ||= self.class.name.demodulize.sub('Controller', '').downcase
+    # keep in sync with lib/samson/integration.rb regex
+    @service_name ||= self.class.name.demodulize.sub('Controller', '').underscore
   end
 
   def create_docker_images

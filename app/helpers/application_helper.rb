@@ -230,7 +230,7 @@ module ApplicationHelper
 
   def additional_info(text, overrides = {})
     data_attrs = if text.html_safe?
-      {content: h(h(text).to_str), html: true}
+      {content: ERB::Util.h(ERB::Util.h(text).to_str), html: true}
     else
       {content: text}
     end.merge(BOOTSTRAP_TOOLTIP_PROPS)

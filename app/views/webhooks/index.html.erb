@@ -13,7 +13,9 @@
   <dl>
     <% Samson::Integration::SOURCES.each do |source| %>
       <dt>
-        <%= source.titleize %>:</dt><dd><%= send("integrations_#{source}_deploy_url", @project.token) %>
+        <%= source.titleize %><%= webhook_help_text source %>
+      </dt>
+      <dd><%= send("integrations_#{source}_deploy_url", @project.token) %>
         <% if source == 'github' && token = Integrations::GithubController.secret_token %>
           <br/>
           <% if current_user.admin_for?(@project) %>
