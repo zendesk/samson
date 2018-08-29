@@ -718,6 +718,16 @@ describe Kubernetes::TemplateFiller do
       end
     end
 
+    describe "cronjob" do
+      before do
+        raw_template.replace(YAML.safe_load(read_kubernetes_sample_file('kubernetes_cron_job.yml')).deep_symbolize_keys)
+      end
+
+      it "works" do
+        template.to_hash
+      end
+    end
+
     describe "preStop" do
       it "adds preStop to avoid 502 errors when server addresses are cached for a few seconds" do
         template.to_hash.dig_fetch(:spec, :template, :spec, :containers, 0, :lifecycle).must_equal(

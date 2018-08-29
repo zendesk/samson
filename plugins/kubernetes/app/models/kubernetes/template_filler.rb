@@ -91,12 +91,14 @@ module Kubernetes
       template.dig_set([:spec, :template, :metadata, :labels, :blue_green], blue_green_color)
     end
 
+    # TODO: unify into with label verification logic in role_validator
     def set_project_labels
       [
         [:metadata, :labels],
         [:spec, :selector],
         [:spec, :selector, :matchLabels],
-        [:spec, :template, :metadata, :labels]
+        [:spec, :template, :metadata, :labels],
+        [:spec, :jobTemplate, :spec, :template, :metadata, :labels]
       ].each do |path|
         template.dig(*path)[:project] = project.permalink if template.dig(*path, :project)
       end
@@ -174,7 +176,11 @@ module Kubernetes
     end
 
     def pod_template
-      template[:kind] == 'Pod' ? template : template.dig_fetch(:spec, :template)
+      case template[:kind]
+      when 'Pod' then template
+      when 'CronJob' then template.dig_fetch(:spec, :jobTemplate, :spec, :template)
+      else template.dig_fetch(:spec, :template)
+      end
     end
 
     def set_contact_info

@@ -640,6 +640,30 @@ describe Kubernetes::Resource do
     end
   end
 
+  describe Kubernetes::Resource::CronJob do
+    let(:kind) { 'CronJob' }
+    let(:url) { "#{origin}/apis/batch/v1beta1/namespaces/pod1/cronjobs/some-project" }
+
+    describe "#client" do
+      it "uses the batch client" do
+        resource.send(:client).must_equal deploy_group.kubernetes_cluster.client('batch/v1beta1')
+      end
+    end
+
+    describe "#deploy" do
+      let(:client) { resource.send(:client) }
+      before { template[:spec] = {template: {spec: {}}} }
+
+      it "creates when missing" do
+        assert_request(:get, url, to_return: {status: 404}) do
+          assert_request(:post, base_url, to_return: {body: "{}"}) do
+            resource.deploy
+          end
+        end
+      end
+    end
+  end
+
   describe Kubernetes::Resource::Service do
     describe "#deploy" do
       let(:old) { {metadata: {resourceVersion: "A", foo: "B"}, spec: {clusterIP: "C"}} }

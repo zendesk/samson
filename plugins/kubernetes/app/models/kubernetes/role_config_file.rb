@@ -7,8 +7,7 @@ module Kubernetes
     attr_reader :path, :elements
 
     DEPLOY_KINDS = ['Deployment', 'DaemonSet', 'StatefulSet'].freeze
-    JOB_KINDS = ['Job'].freeze
-    PRIMARY_KINDS = (DEPLOY_KINDS + JOB_KINDS + ['Pod']).freeze
+    PRIMARY_KINDS = (DEPLOY_KINDS + ['Job', 'CronJob', 'Pod']).freeze
     SERVICE_KINDS = ['Service'].freeze
     PREREQUISITE = [:metadata, :annotations, :'samson/prerequisite'].freeze
 

@@ -9,6 +9,7 @@ module Kubernetes
       ['Deployment', 'Service'],
       ['Service', 'StatefulSet'],
       ['Job'],
+      ['CronJob'],
       ['Pod'],
     ].freeze
 
@@ -87,8 +88,8 @@ module Kubernetes
     # spec actually allows this, but blows up when used
     def validate_numeric_limits
       [:requests, :limits].each do |scope|
-        base = [:spec, :template, :spec, :containers, :resources, scope, :cpu]
-        types = map_attributes(base).flatten(1).map(&:class)
+        base = [:spec, :containers, :resources, scope, :cpu]
+        types = map_attributes(base, elements: templates).flatten(1).map(&:class)
         next if (types - [NilClass, String]).none?
         @errors << "Numeric cpu resources are not supported"
       end
@@ -97,8 +98,7 @@ module Kubernetes
     def validate_project_and_role_consistent
       labels = @elements.flat_map do |resource|
         kind = resource[:kind]
-
-        label_paths =
+        label_paths = metadata_paths(resource).map { |p| p + [:labels] } +
           case kind
           when 'Service'
             [
@@ -110,21 +110,14 @@ module Kubernetes
             ]
           when *RoleConfigFile::DEPLOY_KINDS
             [
-              [:spec, :template, :metadata, :labels],
               [:spec, :selector, :matchLabels],
-            ]
-          when *RoleConfigFile::JOB_KINDS
-            [
-              [:spec, :template, :metadata, :labels]
             ]
           else
             [] # ignore unknown / unsupported types
           end
 
-        label_paths.unshift [:metadata, :labels]
-
         label_paths.map do |path|
-          labels = path.inject(resource) { |r, k| r[k] || {} }
+          labels = resource.dig(*path) || {}
 
           # role and project from all used labels
           wanted = [:project, :role]
@@ -161,9 +154,7 @@ module Kubernetes
     def validate_team_labels
       return unless ENV["KUBERNETES_ENFORCE_TEAMS"]
       @elements.each do |element|
-        required = [[:metadata, :labels, :team]]
-        required << [:spec, :template, :metadata, :labels, :team] if element.dig(:spec, :template)
-        required.each do |path|
+        metadata_paths(element).map { |p| p + [:labels, :team] }.each do |path|
           @errors << "#{path.join(".")} must be set" unless element.dig(*path)
         end
       end
@@ -187,8 +178,9 @@ module Kubernetes
       primary_kinds = RoleConfigFile::PRIMARY_KINDS
       containered = templates.select { |t| primary_kinds.include?(t[:kind]) }
       containers = map_attributes([:spec, :containers], elements: containered)
-      return if containers.all? { |c| c.is_a?(Array) && c.size >= 1 }
-      @errors << "#{primary_kinds.join("/")} need at least 1 container"
+      bad = containers.select { |c| !c.is_a?(Array) || c.empty? }
+      return if bad.empty?
+      @errors << "#{containered.map { |r| r[:kind] }.join("/")} needs at least 1 container"
     end
 
     def validate_container_name
@@ -202,10 +194,14 @@ module Kubernetes
 
     def validate_job_restart_policy
       allowed = ['Never', 'OnFailure']
-      path = [:spec, :template, :spec, :restartPolicy]
-      names = map_attributes(path, elements: jobs)
-      return if names - allowed == []
-      @errors << "Job #{path.join('.')} must be one of #{allowed.join('/')}"
+      [
+        ["Job", [:spec, :template, :spec, :restartPolicy]],
+        ["CronJob", [:spec, :jobTemplate, :spec, :template, :spec, :restartPolicy]]
+      ].each do |kind, path|
+        names = map_attributes(path, elements: @elements.select { |e| e[:kind] == kind })
+        next if names - allowed == []
+        @errors << "#{kind} #{path.join('.')} must be one of #{allowed.join('/')}"
+      end
     end
 
     def validate_pod_disruption_budget
@@ -219,8 +215,7 @@ module Kubernetes
     end
 
     def validate_annotations
-      path = [:metadata, :annotations]
-      annotations = (map_attributes(path, elements: templates) + map_attributes(path)).compact
+      annotations = @elements.flat_map { |e| metadata_paths(e).map { |path| e.dig(*(path + [:annotations])) }.compact }
       if annotations.any? { |a| !a.is_a?(Hash) }
         @errors << "Annotations must be a hash"
       else
@@ -269,19 +264,29 @@ module Kubernetes
       @elements.detect { |t| t[:kind] == "StatefulSet" }
     end
 
-    def jobs
-      @elements.select { |e| RoleConfigFile::JOB_KINDS.include?(e[:kind]) }
-    end
-
     def templates
       @elements.map do |e|
         kind = e[:kind]
-        if kind != 'Pod'
-          e = e.dig(:spec, :template) || {}
-          e[:kind] = kind
+        if kind == "Pod"
+          e
+        else
+          template = e.dig(:spec, :template) || e.dig(:spec, :jobTemplate, :spec, :template) || {}
+          template[:kind] = kind
+          template
         end
-        e
       end
+    end
+
+    def metadata_paths(e)
+      [[:metadata]] +
+        case e[:kind]
+        when "CronJob"
+          [[:spec, :jobTemplate, :metadata], [:spec, :jobTemplate, :spec, :template, :metadata]]
+        when "Job", *RoleConfigFile::DEPLOY_KINDS
+          [[:spec, :template, :metadata]]
+        else
+          []
+        end
     end
 
     def map_attributes(path, elements: @elements)

@@ -14,6 +14,9 @@ describe Kubernetes::RoleValidator do
     let(:job_role) do
       [YAML.safe_load(read_kubernetes_sample_file('kubernetes_job.yml')).deep_symbolize_keys]
     end
+    let(:cron_job_role) do
+      [YAML.safe_load(read_kubernetes_sample_file('kubernetes_cron_job.yml')).deep_symbolize_keys]
+    end
     let(:pod_role) do
       [{kind: 'Pod', metadata: {name: 'my-map', labels: labels}, spec: {containers: [{name: "foo"}]}}]
     end
@@ -133,6 +136,11 @@ describe Kubernetes::RoleValidator do
       errors.must_be_nil
     end
 
+    it "allows only CronJob" do
+      role.replace(cron_job_role)
+      errors.must_be_nil
+    end
+
     it "reports missing name" do
       role.first[:metadata].delete(:name)
       errors.must_equal ["Needs a metadata.name"]
@@ -155,7 +163,7 @@ describe Kubernetes::RoleValidator do
 
     it "reports missing containers" do
       role.first[:spec][:template][:spec].delete(:containers)
-      errors.must_include "Deployment/DaemonSet/StatefulSet/Job/Pod need at least 1 container"
+      errors.must_include "Deployment needs at least 1 container"
     end
 
     it "ignores unknown types" do
@@ -220,7 +228,7 @@ describe Kubernetes::RoleValidator do
         foo: 'XYZ_PORT',
         bar: 1234
       }
-      errors.must_include "Annotation values 1234, true must be strings."
+      errors.must_include "Annotation values true, 1234 must be strings."
     end
 
     describe "#validate_team_labels" do
@@ -294,7 +302,7 @@ describe Kubernetes::RoleValidator do
 
       it "fails without containers" do
         role[0][:spec][:containers].clear
-        errors.must_equal ["Deployment/DaemonSet/StatefulSet/Job/Pod need at least 1 container"]
+        errors.must_equal ["Pod needs at least 1 container"]
       end
 
       it "fails without name" do
@@ -315,6 +323,12 @@ describe Kubernetes::RoleValidator do
       it "reports bad restart policy" do
         spec[:restartPolicy] = 'Always'
         errors.must_equal expected
+      end
+
+      it "reports bad restart policy for CronJob" do
+        role.replace(cron_job_role)
+        role[0][:spec][:jobTemplate][:spec][:template][:spec][:restartPolicy] = 'Always'
+        errors.must_equal ["CronJob spec.jobTemplate.spec.template.spec.restartPolicy must be one of Never/OnFailure"]
       end
     end
 
