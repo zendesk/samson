@@ -465,6 +465,7 @@ module Kubernetes
 
     def set_pre_stop
       containers.each do |container|
+        next if container[:"samson/preStop"] == "disabled"
         (container[:lifecycle] ||= {})[:preStop] ||= {exec: {command: ["sleep", "3"]}}
       end
     end
