@@ -14,7 +14,11 @@
       <%= github_user_avatar(user) %>
     <% end %>
   </td>
-  <td width="100%"><%= deployed_or_running_list @stages, release.version %></td>
+  <td width="100%">
+    <% cache ["deployed-stages", release, @stages] do %>
+      <%= deployed_or_running_list @stages, release.version %>
+    <% end %>
+  </td>
   <td><%= relative_time(release.created_at) %></td>
   <td>
     <% if deployer_for_project? %>
