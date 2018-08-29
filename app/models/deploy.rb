@@ -171,15 +171,11 @@ class Deploy < ActiveRecord::Base
     where("#{table_name}.id > ?", deploy.id)
   end
 
-  def self.in_stages(stages)
-    where(stage_id: stages.map(&:id))
-  end
-
   # Returns a Hash of Stage => Deploy for the given reference and stages.
   def self.of_reference_in_stages(reference, stages)
     # Group by stage, then select the latest deploy id.
     deploys_and_stages = where(reference: reference).
-      in_stages(stages).
+      where(stage_id: stages.map(&:id)).
       group(:stage_id).
       select("MAX(id) AS id, stage_id")
 

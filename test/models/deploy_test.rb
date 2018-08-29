@@ -656,19 +656,6 @@ describe Deploy do
     end
   end
 
-  describe "#in_stages" do
-    it "shows only deploys in the specified stages" do
-      stage1 = create_stage!(name: "stage1")
-      stage2 = create_stage!(name: "stage2")
-
-      deploy1 = create_deploy!(stage: stage1)
-      deploy2 = create_deploy!(stage: stage2)
-      deploy3 = create_deploy!(stage: stage1)
-
-      Deploy.in_stages([stage1]).pluck(:id).sort.must_equal [deploy1.id, deploy3.id].sort
-    end
-  end
-
   describe "#of_reference_in_stages" do
     it "returns the latest deploy with the given reference in the specified stages" do
       stage1 = create_stage!(name: "stage1")
