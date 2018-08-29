@@ -10,7 +10,7 @@
     <% end %>
   </td>
   <td>
-    <% release.code_authors.take(8).each do |user| %>
+    <% release.changeset.authors.take(8).each do |user| %>
       <%= github_user_avatar(user) %>
     <% end %>
   </td>
