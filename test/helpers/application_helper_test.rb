@@ -744,22 +744,22 @@ describe ApplicationHelper do
       html.must_equal "<span class=\"label label-warning release-stage\">Staging</span>"
     end
 
-    it "uses 3 queries when the deploy is the most recent one on the stage" do
+    it "uses 4 queries when the deploy is the most recent one on the stage" do
+      assert_sql_queries 4 do
+        deployed_or_running_list(stage_list, "v1")
+      end
+    end
+
+    it "uses 3 queries if the deploy is currently running" do
+      deploy.job.update_column(:status, "running")
+
       assert_sql_queries 3 do
         deployed_or_running_list(stage_list, "v1")
       end
     end
 
-    it "uses 2 queries if the deploy is currently running" do
-      deploy.job.update_column(:status, "running")
-
+    it "uses 2 queries if there have been no deploys of that reference" do
       assert_sql_queries 2 do
-        deployed_or_running_list(stage_list, "v1")
-      end
-    end
-
-    it "uses 1 query if there have been no deploys of that reference" do
-      assert_sql_queries 1 do
         deployed_or_running_list(stage_list, "yolo")
       end
     end
