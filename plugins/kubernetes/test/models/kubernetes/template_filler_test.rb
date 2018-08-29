@@ -731,6 +731,11 @@ describe Kubernetes::TemplateFiller do
           preStop: "OLD"
         )
       end
+
+      it "does not add preStop when opted out" do
+        raw_template.dig_fetch(:spec, :template, :spec, :containers, 0)[:"samson/preStop"] = "disabled"
+        refute template.to_hash.dig_fetch(:spec, :template, :spec, :containers, 0).key?(:lifecycle)
+      end
     end
 
     describe "HorizontalPodAutoscaler" do
