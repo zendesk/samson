@@ -61,7 +61,12 @@ class ProjectsController < ApplicationController
   def show
     respond_to do |format|
       format.html { @stages = @project.stages }
-      format.json { render json: @project.as_json }
+      format.json do
+        render_as_json :project, @project, allowed_includes: [
+          :environment_variable_groups,
+          :environment_variables_with_scope,
+        ]
+      end
     end
   end
 

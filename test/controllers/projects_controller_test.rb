@@ -134,11 +134,27 @@ describe ProjectsController do
         it "is json and does not include :token" do
           get :show, params: {id: project.permalink, format: :json}
           assert_response :success
-          project = JSON.parse(response.body)
+          result = JSON.parse(response.body)
+          result.keys.must_include "project"
+          project = result["project"]
           project['name'].must_equal 'Foo'
           project['repository_path'].must_equal 'bar/foo'
           refute project.key?('deleted_at')
           refute project.key?('token')
+        end
+
+        it "renders with envionment_variable_groups if present" do
+          get :show, params: {id: project.to_param, includes: "environment_variable_groups", format: :json}
+          assert_response :success
+          project = JSON.parse(response.body)
+          project.keys.must_include "environment_variable_groups"
+        end
+
+        it "renders with environment_variables_with_scope if present" do
+          get :show, params: {id: project.to_param, includes: "environment_variables_with_scope", format: :json}
+          assert_response :success
+          project = JSON.parse(response.body)
+          project.keys.must_include "environment_variables_with_scope"
         end
       end
     end

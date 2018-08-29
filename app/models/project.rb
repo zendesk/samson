@@ -194,8 +194,22 @@ class Project < ActiveRecord::Base
     Rails.application.routes.url_helpers.project_url(self)
   end
 
-  def as_json
-    super(except: [:token, :deleted_at], methods: [:repository_path])
+  def environment_variables_with_scope
+    scopes = Environment.env_deploy_group_array
+    EnvironmentVariable.sort_by_scopes(
+      environment_variables, scopes
+    )
+  end
+
+  def as_json(options = {})
+    super(
+      {
+        except: [:token, :deleted_at],
+        methods: [
+          :repository_path,
+        ]
+      }.merge(options)
+    )
   end
 
   def docker_image_building_disabled?
