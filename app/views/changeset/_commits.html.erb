@@ -6,7 +6,9 @@
     <% changeset.commits.each do |commit| %>
       <tr>
         <td>
-          <%= github_user_avatar(commit.author) %>
+          <% if author = commit.author %>
+            <%= github_user_avatar(author) %>
+          <% end %>
         </td>
         <td>
           <% name = commit.author_name.presence || "Unknown" %>
