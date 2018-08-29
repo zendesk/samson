@@ -48,13 +48,13 @@ class GithubStatus
     # Fall back to a "missing" status.
     return new("missing", []) if response.nil?
 
-    # Don't cache pending statuses, since we expect updates soon.
-    unless response.state == "pending"
-      Rails.cache.write(cache_key, response, expires_in: 1.hour)
-    end
-
     statuses = response.statuses.group_by(&:context).map do |context, statuses|
       Status.new(context, statuses.max_by { |status| status.created_at.to_i })
+    end
+
+    # Don't cache pending statuses, since we expect updates soon.
+    unless statuses.any?(&:pending?)
+      Rails.cache.write(cache_key, response, expires_in: 1.hour)
     end
 
     new(response.state, statuses)
