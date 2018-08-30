@@ -47,11 +47,11 @@ class Changeset
   end
 
   def authors
-    commits.map(&:author).uniq
+    commits.map(&:author).compact.uniq
   end
 
   def author_names
-    commits.map(&:author_name).uniq
+    commits.map(&:author_name).compact.uniq
   end
 
   def empty?
