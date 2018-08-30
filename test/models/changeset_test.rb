@@ -134,6 +134,17 @@ describe Changeset do
       )
       changeset.authors.must_equal ["foo", "bar"]
     end
+
+    it "does not include nil authors" do
+      changeset.expects(:commits).returns(
+        [
+          stub("c1", author: "foo"),
+          stub("c2", author: "bar"),
+          stub("c3", author: nil)
+        ]
+      )
+      changeset.authors.must_equal ["foo", "bar"]
+    end
   end
 
   describe "#author_names" do
@@ -143,6 +154,17 @@ describe Changeset do
           stub("c1", author_name: "foo"),
           stub("c2", author_name: "foo"),
           stub("c3", author_name: "bar")
+        ]
+      )
+      changeset.author_names.must_equal ["foo", "bar"]
+    end
+
+    it "doesnot include nil author names" do
+      changeset.expects(:commits).returns(
+        [
+          stub("c1", author_name: "foo"),
+          stub("c2", author_name: "bar"),
+          stub("c3", author_name: nil)
         ]
       )
       changeset.author_names.must_equal ["foo", "bar"]
