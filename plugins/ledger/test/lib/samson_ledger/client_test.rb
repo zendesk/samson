@@ -29,6 +29,7 @@ describe SamsonLedger::Client do
       stub_github_api("repos/bar/foo/compare/abcabcaaabcabcaaabcabcaaabcabcaaabcabca1...staging", "x" => "y")
       GITHUB.stubs(:compare).with("bar/foo", "abcabcaaabcabcaaabcabcaaabcabcaaabcabca1", "staging").returns(comparison)
       Changeset::PullRequest.stubs(:find).with("bar/foo", 42).returns(pull_request)
+      GITHUB.stubs(:pull_requests).with("bar/foo", head: "bar:staging").returns([])
 
       request_lambda = ->(request) do
         results << JSON.parse(request.body)['events'].first

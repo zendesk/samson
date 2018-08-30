@@ -88,15 +88,46 @@ describe Changeset do
     it "finds pull requests mentioned in merge commits" do
       comparison = Sawyer::Resource.new(sawyer_agent, commits: [commit1, commit2])
       GITHUB.stubs(:compare).with("foo/bar", "a", "b").returns(comparison)
+      GITHUB.stubs(:pull_requests).with("foo/bar", head: "foo:b").returns([])
 
       Changeset::PullRequest.stubs(:find).with("foo/bar", 42).returns("yeah!")
 
       changeset.pull_requests.must_equal ["yeah!"]
     end
 
+    it "finds pull requests open for a branch" do
+      comparison = Sawyer::Resource.new(sawyer_agent, commits: [commit2])
+      GITHUB.stubs(:compare).with("foo/bar", "a", "b").returns(comparison)
+      GITHUB.stubs(:pull_requests).with("foo/bar", head: "foo:b").returns(["yeah!"])
+
+      changeset.pull_requests.must_equal ["yeah!"]
+    end
+
+    it "does not fail if fetching pull request from Github fails" do
+      comparison = Sawyer::Resource.new(sawyer_agent, commits: [commit2])
+      GITHUB.stubs(:compare).with("foo/bar", "a", "b").returns(comparison)
+      GITHUB.stubs(:pull_requests).with("foo/bar", head: "foo:b").raises(Octokit::Error)
+
+      changeset.pull_requests.must_equal []
+    end
+
+    it "skips fetching pull request for non PR branches" do
+      comparison = Sawyer::Resource.new(sawyer_agent, commits: [commit2])
+      stub_github_api("repos/foo/bar/branches/master", commit: {sha: "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"})
+      GITHUB.stubs(:compare).returns(comparison)
+      find_pr_stub = stub_github_api("repos/foo/bar/pulls", []).with(query: hash_including({}))
+
+      %w[abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd master v123].each do |reference|
+        changeset = Changeset.new("foo/bar", "a", reference)
+        changeset.pull_requests
+        assert_not_requested(find_pr_stub)
+      end
+    end
+
     it "ignores invalid pull request numbers" do
       comparison = Sawyer::Resource.new(sawyer_agent, commits: [commit1])
       GITHUB.stubs(:compare).with("foo/bar", "a", "b").returns(comparison)
+      GITHUB.stubs(:pull_requests).with("foo/bar", head: "foo:b").returns([])
 
       Changeset::PullRequest.stubs(:find).with("foo/bar", 42).returns(nil)
 
