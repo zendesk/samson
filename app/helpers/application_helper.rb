@@ -343,7 +343,8 @@ module ApplicationHelper
       title: github_user.login,
       class: "gravatar github-user-avatar",
       width: 20,
-      height: 20
+      height: 20,
+      'data-toggle': "tooltip"
   end
 
   def check_box_section(section_title, help_text, object, method, collection)
