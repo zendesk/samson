@@ -1,0 +1,31 @@
+---
+# https://kubernetes.io/docs/tasks/job/automated-tasks-with-cron-jobs/
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: hello
+  labels:
+    project: some-project
+    role: job-role
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    metadata:
+      labels:
+        project: some-project
+        role: job-role
+    spec:
+      template:
+        metadata:
+          labels:
+            project: some-project
+            role: job-role
+        spec:
+          containers:
+          - name: hello
+            image: busybox
+            args:
+            - /bin/sh
+            - -c
+            - date; echo Hello from the Kubernetes cluster
+          restartPolicy: OnFailure

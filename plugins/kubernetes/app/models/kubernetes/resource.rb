@@ -436,9 +436,16 @@ module Kubernetes
         delete_pods { super }
       end
 
-      # FYI per docs it is supposed to use batch api, but extension api works
       def client
         @deploy_group.kubernetes_cluster.client('batch/v1')
+      end
+    end
+
+    class CronJob < Base
+      private
+
+      def client
+        @deploy_group.kubernetes_cluster.client('batch/v1beta1')
       end
     end
 

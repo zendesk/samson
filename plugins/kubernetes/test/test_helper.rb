@@ -125,6 +125,12 @@ class ActiveSupport::TestCase
         {"name" => "jobs", "namespaced" => true, "kind" => "Job"}
       ]
     },
+    "batch/v1beta1" => {
+      "kind" => "APIResourceList",
+      "resources" => [
+        {"name" => "cronjobs", "namespaced" => true, "kind" => "CronJob"}
+      ]
+    },
     "apps/v1beta1" => {
       "kind" => "APIResourceList",
       "resources" => [
