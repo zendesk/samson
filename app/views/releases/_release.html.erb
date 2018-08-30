@@ -10,9 +10,11 @@
     <% end %>
   </td>
   <td>
-    <% release.changeset.authors.take(8).each do |user| %>
-      <%= github_user_avatar(user) %>
-    <% end %>
+    <span style="white-space: nowrap">
+      <% release.changeset.authors.take(8).each do |user| %>
+        <%= github_user_avatar(user) %>
+      <% end %>
+    </span>
   </td>
   <td width="100%">
     <% cache ["deployed-stages", release, @stages] do %>
