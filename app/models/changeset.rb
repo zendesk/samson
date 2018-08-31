@@ -84,11 +84,26 @@ class Changeset
 
   def find_pull_requests
     numbers = commits.map(&:pull_request_number).compact
-    numbers.map { |num| PullRequest.find(repo, num) }.compact
+    numbers.map { |num| PullRequest.find(repo, num) }.
+      compact.
+      concat(find_pull_requests_for_branch)
   end
 
   def cache_key
     [self.class, repo, previous_commit, commit].join('-')
+  end
+
+  def find_pull_requests_for_branch
+    return [] if not_pr_branch?
+    org = repo.split("/", 2).first
+    GITHUB.pull_requests(repo, head: "#{org}:#{commit}")
+  rescue Octokit::Error, Faraday::ConnectionFailed => e
+    Rails.logger.warn "Failed fetching pull requests for branch #{commit}:\n#{e}"
+    []
+  end
+
+  def not_pr_branch?
+    commit =~ Build::SHA1_REGEX || commit =~ Release::VERSION_REGEX
   end
 
   class NullComparison
