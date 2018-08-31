@@ -8,6 +8,7 @@ class Stage < ActiveRecord::Base
 
   include Lockable
   include Permalinkable
+  include SoftDeleteWithDestroy
 
   audited except: [:order]
 
