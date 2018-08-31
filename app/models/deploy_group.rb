@@ -5,6 +5,7 @@ class DeployGroup < ActiveRecord::Base
 
   include Permalinkable
   include Lockable
+  include SoftDeleteWithDestroy
 
   belongs_to :environment
   belongs_to :vault_server, class_name: 'Samson::Secrets::VaultServer', optional: true
