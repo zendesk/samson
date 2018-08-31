@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 class Webhook < ActiveRecord::Base
   has_soft_deletion default_scope: true
+  include SoftDeleteWithDestroy
+
   validates :branch, uniqueness: {
     scope: [:stage_id],
     conditions: -> { where("deleted_at IS NULL") },
