@@ -9,6 +9,7 @@ class User < ActiveRecord::Base
   TIME_FORMATS = ['local', 'utc', 'relative'].freeze
 
   has_soft_deletion default_scope: true
+  include SoftDeleteWithDestroy
 
   audited except: [:last_seen_at, :last_login_at]
 
