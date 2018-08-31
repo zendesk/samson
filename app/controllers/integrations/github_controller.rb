@@ -14,6 +14,8 @@ class Integrations::GithubController < Integrations::BaseController
   def create
     if github_event_type == "status"
       handle_commit_status_event
+
+      render plain: "OK", status: 200
     else
       super
     end
