@@ -4,14 +4,16 @@ module ReleasesHelper
     "success" => "ok",
     "failure" => "remove",
     "missing" => "minus",
-    "pending" => "hourglass"
+    "pending" => "hourglass",
+    "error" => "exclamation-sign"
   }.freeze
 
   GITHUB_STATUS_TEXT_LABELS = {
     "success" => "success",
     "failure" => "danger",
     "missing" => "muted",
-    "pending" => "primary"
+    "pending" => "primary",
+    "error" => "warning"
   }.freeze
 
   def release_label(project, release)
