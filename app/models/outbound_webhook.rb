@@ -4,6 +4,7 @@ require 'faraday'
 
 class OutboundWebhook < ActiveRecord::Base
   has_soft_deletion default_scope: true
+  include SoftDeleteWithDestroy
 
   belongs_to :project
   belongs_to :stage
