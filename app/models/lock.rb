@@ -9,6 +9,8 @@ class Lock < ActiveRecord::Base
 
   has_soft_deletion default_scope: true
 
+  include SoftDeleteWithDestroy
+
   belongs_to :resource, polymorphic: true, optional: true
   belongs_to :user
   belongs_to :environment, optional: true
