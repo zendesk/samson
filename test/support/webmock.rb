@@ -42,4 +42,16 @@ ActiveSupport::TestCase.class_eval do
       headers: {'Content-Type' => 'application/json'}
     )
   end
+
+  # def stub_gitlab_api(project_id, from, to, response = {}, status = 200)
+  def stub_gitlab_api(url, headers={}, response = {}, status = 200)
+    url = "https://gitlab.com/api/v4" + url
+    stub_request(:get, url).
+      with(headers: headers).
+      to_return(
+        status: status,
+        body: JSON.dump(response),
+        headers: { 'Content-Type' => 'application/json', }
+      )
+  end
 end

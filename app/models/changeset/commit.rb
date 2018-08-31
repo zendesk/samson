@@ -3,17 +3,22 @@ class Changeset::Commit
   PULL_REQUEST_MERGE_MESSAGE = /\AMerge pull request #(\d+)/
   PULL_REQUEST_SQUASH_MESSAGE = /\A.*\(#(\d+)\)$/
 
-  def initialize(repo, data)
+  attr_reader :github
+
+  def initialize(repo, data, github=true)
     @repo = repo
     @data = data
+    @github = github
   end
 
   def author_name
-    @data.commit.author.name
+    return @data.commit.author.name if github
+    @data.commit.author_name
   end
 
   def author_email
-    @data.commit.author.email
+    return @data.commit.author.email if github
+    @data.commit.author_email
   end
 
   def author
@@ -21,12 +26,17 @@ class Changeset::Commit
   end
 
   def summary
-    summary = @data.commit.message.split("\n").first
+    summary = if github
+                @data.commit.message.split("\n").first
+              else
+                @data.commit.title.split("\n").first
+              end
     summary.truncate(80)
   end
 
   def sha
-    @data.sha
+    return @data.sha if github
+    @data.commit.id
   end
 
   def short_sha
@@ -40,6 +50,7 @@ class Changeset::Commit
   end
 
   def url
-    "#{Rails.application.config.samson.github.web_url}/#{@repo}/commit/#{sha}"
+    return "#{Rails.application.config.samson.github.web_url}/#{@repo}/commit/#{sha}" if github
+    "#{Rails.application.config.samson.gitlab.web_url}/#{@repo}/commit/#{sha}"
   end
 end
