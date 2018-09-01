@@ -27,6 +27,8 @@ module Kubernetes
     has_soft_deletion
     audited
 
+    include SoftDeleteWithDestroy
+
     belongs_to :project, inverse_of: :kubernetes_roles
     has_many :kubernetes_deploy_group_roles,
       class_name: 'Kubernetes::DeployGroupRole',
@@ -48,8 +50,6 @@ module Kubernetes
     validates :manual_deletion_acknowledged, presence: {message: "must be set"}, if: :manual_deletion_required?
 
     scope :not_deleted, -> { where(deleted_at: nil) }
-
-    after_soft_delete :delete_kubernetes_deploy_group_roles
 
     attr_accessor :manual_deletion_acknowledged
 
@@ -153,10 +153,6 @@ module Kubernetes
     def parse_resource_value(v, possible)
       return unless v.to_s =~ /^(\d+(?:\.\d+)?)(#{possible.keys.join('|')})$/
       $1.to_f * possible.fetch($2)
-    end
-
-    def delete_kubernetes_deploy_group_roles
-      kubernetes_deploy_group_roles.destroy_all
     end
 
     def strip_config_file

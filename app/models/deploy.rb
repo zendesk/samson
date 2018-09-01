@@ -1,7 +1,10 @@
 # frozen_string_literal: true
 class Deploy < ActiveRecord::Base
   include Samson::BumpTouch
+
   has_soft_deletion default_scope: true
+
+  include SoftDeleteWithDestroy
 
   belongs_to :stage, touch: true
   belongs_to :build, optional: true

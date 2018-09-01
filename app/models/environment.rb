@@ -5,6 +5,7 @@ class Environment < ActiveRecord::Base
 
   include Lockable
   include Permalinkable
+  include SoftDeleteWithDestroy
 
   has_many :deploy_groups, dependent: :destroy
   has_many :template_stages, -> { where(is_template: true) }, through: :deploy_groups, class_name: 'Stage'
