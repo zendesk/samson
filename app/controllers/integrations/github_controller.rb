@@ -15,7 +15,7 @@ class Integrations::GithubController < Integrations::BaseController
     if github_event_type == "status"
       handle_commit_status_event
 
-      render plain: "OK", status: 200
+      render json: {deploy_ids: [], messages: "status event received"}, status: :ok
     else
       super
     end
