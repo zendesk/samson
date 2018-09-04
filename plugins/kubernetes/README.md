@@ -97,12 +97,12 @@ Kubernetes::Release
 
 ### Docker Images
 
-(To opt out of this feature set `samson/dockerfile: none`)
+(To opt out of this feature set `containers[].samson/dockerfile: none`)
 
 For each container (including init containers) Samson finds or creates a matching Docker image for the Git SHA that is being deployed. 
 Samson always sets the Docker digest, and not a tag, to make deployments immutable.
 
-Samson matches builds to containers by looking at the `samson/dockerfile` attribute or the 
+Samson matches builds to containers by looking at the `containers[].samson/dockerfile` attribute or the 
 base image name (part after the last `/`), if the project has enabled `Docker images built externally`.
 
 Images can be built locally via `docker build`, or via `gcloud` CLI (see Gcloud plugin), or externally and then sent to Samson via the
@@ -120,7 +120,7 @@ Via [Template filler](/plugins/kubernetes/app/models/kubernetes/template_filler.
 
 ### Migrations
 
-Add a role with only a `Pod`, the annotation `samson/prerequisite: true`, and command to run a migrations.
+Add a role with only a `Pod`, `metadata.annotations.samson/prerequisite: true`, and command to run a migrations.
 It will be executed before the rest is deployed.
 
 ### StatefulSet
