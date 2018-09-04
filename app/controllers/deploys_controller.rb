@@ -108,12 +108,7 @@ class DeploysController < ApplicationController
   end
 
   def destroy
-    if @deploy.can_be_cancelled_by?(current_user)
-      @deploy.cancel(current_user)
-    else
-      flash[:error] = "You do not have privileges to cancel this deploy."
-    end
-
+    @deploy.cancel(current_user)
     redirect_to [current_project, @deploy]
   end
 

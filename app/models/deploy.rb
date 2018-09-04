@@ -19,7 +19,7 @@ class Deploy < ActiveRecord::Base
   validate :validate_stage_uses_deploy_groups_properly, on: :create
 
   delegate(
-    :started_by?, :can_be_cancelled_by?, :cancel, :status, :user, :output,
+    :started_by?, :cancel, :status, :user, :output,
     :active?, :pending?, :running?, :cancelling?, :cancelled?, :succeeded?,
     :finished?, :errored?, :failed?,
     to: :job
