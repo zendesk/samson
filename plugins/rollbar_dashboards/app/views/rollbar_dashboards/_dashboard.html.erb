@@ -5,11 +5,11 @@
   </div>
   <% items = dashboard_data.second %>
   <% if items.present? %>
-    <table class="table">
+    <table class="table rollbar-table">
       <tr>
-        <th>Count</th>
-        <th>Title</th>
-        <th>Environment</th>
+        <th class="rollbar-table__count">Count</th>
+        <th class="rollbar-table__title">Title</th>
+        <th class="rollbar-table__env">Environment</th>
       </tr>
       <%= render partial: 'rollbar_dashboards/item', collection: items, locals: {dashboard_setting: dashboard_data.first} %>
     </table>
