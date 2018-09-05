@@ -2,7 +2,7 @@
 class Changeset
   attr_reader :repo, :previous_commit, :commit
   BRANCH_TAGS = ["master", "develop"].freeze
-  ATTRIBUTE_TABS = %w[files commits pull_requests risks jira_issues].freeze
+  ATTRIBUTE_TABS = %w[files commits pull_requests statuses risks jira_issues].freeze
 
   def initialize(repo, previous_commit, commit)
     @repo = repo
