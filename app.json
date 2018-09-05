@@ -68,6 +68,10 @@
     "RAILS_LOG_TO_STDOUT": {
       "description": "Log to stdout so heroku can display logs",
       "value": "true"
+    },
+    "CACHE_STORE": {
+      "description": "Caching backend",
+      "value": "memcached"
     }
   },
   "scripts": {
