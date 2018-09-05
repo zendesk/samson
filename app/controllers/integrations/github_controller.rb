@@ -11,7 +11,18 @@ class Integrations::GithubController < Integrations::BaseController
     ENV['GITHUB_HOOK_SECRET']
   end
 
+  def create
+    handle_commit_status_event if github_event_type == "status"
+
+    super
+  end
+
   protected
+
+  def handle_commit_status_event
+    # Touch all releases of the sha in the project.
+    project.releases.where(commit: params[:sha].to_s).each(&:touch)
+  end
 
   def payload
     if payload = params[:payload]
@@ -69,7 +80,11 @@ class Integrations::GithubController < Integrations::BaseController
   end
 
   def webhook_handler
-    WEBHOOK_HANDLERS[request.headers['X-Github-Event']]
+    WEBHOOK_HANDLERS[github_event_type]
+  end
+
+  def github_event_type
+    request.headers['X-Github-Event']
   end
 
   def signature

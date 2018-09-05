@@ -88,6 +88,36 @@ describe Integrations::GithubController do
     end
   end
 
+  describe 'with a commit status event' do
+    it 'updates all releases of that commit' do
+      sha = "dc395381e650f3bac18457909880829fc20e34ba"
+
+      release = project.releases.create!(
+        commit: sha,
+        author: users(:deployer)
+      )
+
+      # Fast forward the clock.
+      later = 1.minute.from_now
+      Time.stubs(:now).returns later
+
+      payload = {
+        token: project.token,
+        sha: sha
+      }
+
+      request.headers['X-Github-Event'] = 'status'
+      post :create, params: payload
+
+      assert_response :success
+
+      # Time objects can't be reliably compared due to the use of floating
+      # point numbers in their representation, so we convert to Integer before
+      # comparing.
+      release.reload.updated_at.to_i.must_equal later.to_i
+    end
+  end
+
   describe 'with a pull issue comment' do
     let(:payload) do
       {
