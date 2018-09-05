@@ -12,17 +12,13 @@
       "value": "all",
       "required": true
     },
-    "DEFAULT_URL": {
-      "description": "https://xyz.herokuapp.com",
-      "required": true
-    },
     "SECRET_TOKEN": {
       "description": "Token used to generate session secret",
       "generator": "secret",
       "required": true
     },
     "GITHUB_TOKEN": {
-      "description": "Token to fetch commit diff / PR status / create tags",
+      "description": "Token to fetch commit diff / PR status / create tags (Settings > Developer Settings > Personal Access Token), does not need any permissions",
       "required": true
     },
     "AUTH_GITHUB": {
