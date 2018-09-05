@@ -12,13 +12,17 @@ When running on virtual the `3000` port forwarding should be configured in virtu
 When running on virtual `192.168.42.45` use `.env.virtualbox` from `docker-compose.yml`.
 When running on neither localhost nor `192.168.42.45` create your own credentials and load them from `docker-compose.yml`.
 
-### Local
+### Local machine
 ```bash
 sudo apt-get install mysql-dev pg-dev nodejs
 bin/setup # Run the setup script to use the test credentials.
 rails s
 open http://localhost:3000
 ```
+
+### Heroku
+
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/zendesk/samson)
 
 ### Setup
  - Add a new project http://localhost:3000/projects/new
@@ -164,5 +168,3 @@ Needs to generate assets before running in production or it will show `not prese
 ## Advanced features
 
 For more settings that enable advanced features see the [Extra features page](extra_features.md).
-
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/zendesk/samson)

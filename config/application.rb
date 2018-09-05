@@ -138,7 +138,11 @@ module Samson
     config.samson.auth.gitlab = Samson::EnvCheck.set?("AUTH_GITLAB")
     config.samson.auth.bitbucket = Samson::EnvCheck.set?("AUTH_BITBUCKET")
 
-    config.samson.uri = URI(ENV["DEFAULT_URL"] || 'http://localhost:3000')
+    config.samson.uri = URI(
+      ENV["DEFAULT_URL"] ||
+      ((app = ENV["HEROKU_APP_NAME"]) && "https://#{app}.herokuapp.com") ||
+      'http://localhost:3000'
+    )
 
     raise if ENV['STREAM_ORIGIN'] || ENV['DEPLOY_ORIGIN'] # alert users with deprecated options, remove 2019-05-01
 
