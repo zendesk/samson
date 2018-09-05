@@ -12,13 +12,9 @@ class Integrations::GithubController < Integrations::BaseController
   end
 
   def create
-    if github_event_type == "status"
-      handle_commit_status_event
+    handle_commit_status_event if github_event_type == "status"
 
-      render json: {deploy_ids: [], messages: "status event received"}, status: :ok
-    else
-      super
-    end
+    super
   end
 
   protected
