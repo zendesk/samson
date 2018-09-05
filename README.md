@@ -3,11 +3,7 @@
 [![Build Status](https://travis-ci.org/zendesk/samson.svg?branch=master)](https://travis-ci.org/zendesk/samson)
 [![DockerHub Status](https://img.shields.io/docker/stars/zendesk/samson.svg)](https://hub.docker.com/r/zendesk/samson)
 
-[Demo](https://samson-demo.herokuapp.com)
-
-### What?
-
-A web interface for deployments.
+Samson is a web interface for deployments. [Live Demo](https://samson-demo.herokuapp.com)
 
 **View the current status of all your projects:**
 
@@ -21,7 +17,7 @@ A web interface for deployments.
 
 ![](http://cl.ly/image/270l1e3s2e1p/Samson.png)
 
-### Workflow
+### Deployment Workflow
 
 Create a project and 1 or more stages (staging/production etc),
 then selects a version and start the deploy.
