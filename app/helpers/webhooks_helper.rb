@@ -20,7 +20,7 @@ module WebhooksHelper
 
   def webhook_help_text(source)
     case source
-    when 'ci_pipeline'
+    when 'generic'
       help_text = <<~HTML.html_safe
         Generic endpoint to start deploys, expects payload in the form of:
         <br>
