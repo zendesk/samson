@@ -98,12 +98,12 @@ module Kubernetes
     def validate_project_and_role_consistent
       labels = @elements.flat_map do |resource|
         kind = resource[:kind]
+        allow_cross_match = resource.dig(:metadata, :annotations, :"samson/service_selector_across_roles") == "true"
+
         label_paths = metadata_paths(resource).map { |p| p + [:labels] } +
           case kind
           when 'Service'
-            [
-              [:spec, :selector]
-            ]
+            allow_cross_match ? [] : [[:spec, :selector]]
           when 'PodDisruptionBudget'
             [
               [:spec, :selector, :matchLabels]
