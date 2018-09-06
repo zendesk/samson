@@ -146,6 +146,8 @@ Samson::Application.routes.draw do
     end
   end
 
+  post "/github/status/:token" => "github_status_updates#create", as: :github_status
+
   namespace :integrations do
     post "/circleci/:token" => "circleci#create", as: :circleci_deploy
     post "/travis/:token" => "travis#create", as: :travis_deploy
