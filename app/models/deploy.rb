@@ -21,7 +21,7 @@ class Deploy < ActiveRecord::Base
   delegate(
     :started_by?, :cancel, :status, :user, :output,
     :active?, :pending?, :running?, :cancelling?, :cancelled?, :succeeded?,
-    :finished?, :errored?, :failed?,
+    :finished?, :errored?, :failed?, :commit,
     to: :job
   )
   delegate :production?, to: :stage
@@ -68,11 +68,6 @@ class Deploy < ActiveRecord::Base
 
   def references?(ref)
     reference == ref || (ref =~ Build::SHA1_REGEX && job&.commit == ref)
-  end
-
-  # TODO: remove this an delegate to job directly, a commit is not a reference
-  def commit
-    job&.commit.presence || reference
   end
 
   def short_reference

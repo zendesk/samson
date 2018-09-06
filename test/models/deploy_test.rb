@@ -134,9 +134,10 @@ describe Deploy do
       deploy.commit.must_equal "abcdef"
     end
 
-    it "falls back to deploys reference" do
+    it "commit doesn't falls back to deploys reference" do
       deploy.job.commit = nil
-      deploy.commit.must_equal "staging"
+      deploy.commit.must_equal nil
+      deploy.reference.must_equal "staging"
     end
   end
 
