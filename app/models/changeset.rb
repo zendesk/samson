@@ -96,7 +96,9 @@ class Changeset
   def find_pull_requests_for_branch
     return [] if not_pr_branch?
     org = repo.split("/", 2).first
-    GITHUB.pull_requests(repo, head: "#{org}:#{commit}")
+    GITHUB.pull_requests(repo, head: "#{org}:#{commit}").map do |github_pr|
+      Changeset::PullRequest.new(repo, github_pr)
+    end
   rescue Octokit::Error, Faraday::ConnectionFailed => e
     Rails.logger.warn "Failed fetching pull requests for branch #{commit}:\n#{e}"
     []
