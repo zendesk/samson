@@ -84,23 +84,31 @@ describe Changeset do
     let(:commit2) { Sawyer::Resource.new(sawyer_agent, commit: message2) }
     let(:message1) { Sawyer::Resource.new(sawyer_agent, message: 'Merge pull request #42') }
     let(:message2) { Sawyer::Resource.new(sawyer_agent, message: 'Fix typo') }
+    let(:pr_from_coolcommitter) do
+      Sawyer::Resource.new(sawyer_agent, user: {
+        login: 'coolcommitter'
+      })
+    end
+    let(:pr_from_coolcommitter_wrapped) { Changeset::PullRequest.new("foo/bar", pr_from_coolcommitter) }
 
     it "finds pull requests mentioned in merge commits" do
       comparison = Sawyer::Resource.new(sawyer_agent, commits: [commit1, commit2])
       GITHUB.stubs(:compare).with("foo/bar", "a", "b").returns(comparison)
       GITHUB.stubs(:pull_requests).with("foo/bar", head: "foo:b").returns([])
 
-      Changeset::PullRequest.stubs(:find).with("foo/bar", 42).returns("yeah!")
+      Changeset::PullRequest.stubs(:find).with("foo/bar", 42).returns(pr_from_coolcommitter_wrapped)
 
-      changeset.pull_requests.must_equal ["yeah!"]
+      changeset.pull_requests.size.must_equal 1
+      changeset.pull_requests.first.users.first.login.must_equal 'coolcommitter'
     end
 
     it "finds pull requests open for a branch" do
       comparison = Sawyer::Resource.new(sawyer_agent, commits: [commit2])
       GITHUB.stubs(:compare).with("foo/bar", "a", "b").returns(comparison)
-      GITHUB.stubs(:pull_requests).with("foo/bar", head: "foo:b").returns(["yeah!"])
+      GITHUB.stubs(:pull_requests).with("foo/bar", head: "foo:b").returns([pr_from_coolcommitter])
 
-      changeset.pull_requests.must_equal ["yeah!"]
+      changeset.pull_requests.size.must_equal 1
+      changeset.pull_requests.first.users.first.login.must_equal 'coolcommitter'
     end
 
     it "does not fail if fetching pull request from Github fails" do
