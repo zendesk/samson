@@ -33,7 +33,7 @@ class Release < ActiveRecord::Base
   end
 
   def github_status
-    @github_status ||= GithubStatus.fetch(project.repository_path, commit)
+    @github_status ||= GithubStatus.fetch(self)
   end
 
   def self.find_by_param!(version)

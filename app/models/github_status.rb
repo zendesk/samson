@@ -33,8 +33,12 @@ class GithubStatus
     @statuses = statuses
   end
 
-  def self.fetch(repo, ref)
-    cache_key = [name, repo, ref]
+  def self.fetch(release)
+    repo, ref = release.project.repository_path, release.commit
+
+    # Base the cache key on the Release, so that an update to it effectively
+    # clears the cache.
+    cache_key = [name, release]
 
     response = Rails.cache.read(cache_key)
 
