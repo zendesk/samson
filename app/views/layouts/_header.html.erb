@@ -13,16 +13,18 @@
               </a>
             </li>
             <li class="divider"></li>
-            <% Project.ordered_for_user(current_user).each do |project| %>
-              <li class="filtered-projects">
-                <%= link_to project do %>
-                  <% starred = current_user.starred_project?(project) %>
-                  <span class="glyphicon <%= 'glyphicon-star star starred' if starred %>">
-                    <%= '&nbsp;'.html_safe unless starred %>
-                  </span>
-                  <%= project.name %>
-                <% end %>
-              </li>
+            <% cache [:header_projects, current_user.id], expires_in: 1.minute do  %>
+              <% Project.ordered_for_user(current_user).each do |project| %>
+                <li class="filtered-projects">
+                  <%= link_to project do %>
+                    <% starred = current_user.starred_project?(project) %>
+                    <span class="glyphicon <%= 'glyphicon-star star starred' if starred %>">
+                      <%= '&nbsp;'.html_safe unless starred %>
+                    </span>
+                    <%= project.name %>
+                  <% end %>
+                </li>
+              <% end %>
             <% end %>
           </ul>
         </li>
