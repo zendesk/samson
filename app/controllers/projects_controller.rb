@@ -13,12 +13,17 @@ class ProjectsController < ApplicationController
 
     respond_to do |format|
       format.html do
-        per_page = 9 # 3 or 1 column layout depending on size
-        # Workaround with pagy internals for https://github.com/rails/rails/issues/33719
-        count = projects.reorder(nil).count(:all) # count on joined query with ordering does not work
-        count = count.count if count.is_a?(Hash) # fix for the AR grouping count inconsistency (Hash instead of Integer)
-        @pagy = Pagy.new(count: count, page: page, items: per_page)
-        @projects = pagy_get_items(projects, @pagy)
+        if params[:partial] == "nav"
+          @projects = projects
+          render partial: "projects/nav", layout: false
+        else
+          per_page = 9 # 3 or 1 column layout depending on size
+          # Workaround with pagy internals for https://github.com/rails/rails/issues/33719
+          count = projects.reorder(nil).count(:all) # count on joined query with ordering does not work
+          count = count.count if count.is_a?(Hash) # fix for AR grouping count inconsistency (Hash instead of Integer)
+          @pagy = Pagy.new(count: count, page: page, items: per_page)
+          @projects = pagy_get_items(projects, @pagy)
+        end
       end
 
       format.json do

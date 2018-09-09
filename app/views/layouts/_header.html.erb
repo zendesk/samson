@@ -5,7 +5,7 @@
     <ul class="nav navbar-nav">
       <% if current_user %>
         <li class="dropdown <%= 'active' if request.path.starts_with?('/projects') %>">
-          <a href="#" class="dropdown-toggle focus-on" data-focus="#project_search" data-toggle="dropdown">Projects <b class="caret"></b></a>
+          <a href="#" class="lazy-load-nav dropdown-toggle focus-on" data-focus="#project_search" data-toggle="dropdown">Projects <b class="caret"></b></a>
           <ul class="dropdown-menu">
             <li>
               <a class="padding-sm">
@@ -13,17 +13,7 @@
               </a>
             </li>
             <li class="divider"></li>
-            <% Project.ordered_for_user(current_user).each do |project| %>
-              <li class="filtered-projects">
-                <%= link_to project do %>
-                  <% starred = current_user.starred_project?(project) %>
-                  <span class="glyphicon <%= 'glyphicon-star star starred' if starred %>">
-                    <%= '&nbsp;'.html_safe unless starred %>
-                  </span>
-                  <%= project.name %>
-                <% end %>
-              </li>
-            <% end %>
+            <%= content_tag :li, "", class: "lazy-load-nav--placeholder", data: {url: projects_path(partial: "nav")} %>
           </ul>
         </li>
         <% if DeployGroup.enabled? %>
