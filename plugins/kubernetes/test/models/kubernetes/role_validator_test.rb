@@ -353,6 +353,12 @@ describe Kubernetes::RoleValidator do
         ]
       end
 
+      it "allows cross-matching services when opted in" do
+        role[1][:spec][:selector].delete(:role)
+        role[1][:metadata][:annotations] = {"samson/service_selector_across_roles": "true"}
+        errors.must_be_nil
+      end
+
       it "reports missing label section" do
         role.first[:spec][:template][:metadata].delete(:labels)
         errors.must_equal [
