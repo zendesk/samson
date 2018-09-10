@@ -109,7 +109,7 @@ describe MassRolloutsController do
 
         it 'deploys all stages with successful deploys for this deploy_group' do
           assert_difference 'Deploy.count', 1 do
-            post :deploy, params: {deploy_group_id: pod100, successful: true, non_kubernetes: true}
+            post :deploy, params: {deploy_group_id: pod100, status: 'successful', type: 'non_kubernetes'}
           end
 
           deploy = stage100.deploys.order('created_at desc').first
@@ -118,7 +118,7 @@ describe MassRolloutsController do
 
         it "redeploys the same reference as the template stage's last successful deploy" do
           assert_difference 'Deploy.count', 1 do
-            post :deploy, params: {deploy_group_id: pod101, successful: true, non_kubernetes: true}
+            post :deploy, params: {deploy_group_id: pod101, status: 'successful', type: 'non_kubernetes'}
           end
           deploy = Deploy.order('created_at desc').first
           assert_equal 'v121', deploy.reference
@@ -128,7 +128,7 @@ describe MassRolloutsController do
           stage100.deploys.delete_all
 
           refute_difference 'Deploy.count' do
-            post :deploy, params: {deploy_group_id: pod100, successful: true, non_kubernetes: true}
+            post :deploy, params: {deploy_group_id: pod100, status: 'successful', type: 'non_kubernetes'}
           end
           assert_redirected_to "/deploys" # with no ids present.
         end
@@ -137,7 +137,7 @@ describe MassRolloutsController do
           Job.where(id: stage100.deploys.pluck(:job_id)).update_all(status: :failed)
 
           refute_difference 'Deploy.count' do
-            post :deploy, params: {deploy_group_id: pod100, successful: true, non_kubernetes: true}
+            post :deploy, params: {deploy_group_id: pod100, status: 'successful', type: 'non_kubernetes'}
           end
           assert_redirected_to "/deploys" # with no ids present.
         end
@@ -148,7 +148,7 @@ describe MassRolloutsController do
           assert stage100.last_successful_deploy
 
           assert_difference 'Deploy.count', 1 do
-            post :deploy, params: {deploy_group_id: pod101, successful: true, non_kubernetes: true}
+            post :deploy, params: {deploy_group_id: pod101, status: 'successful', type: 'non_kubernetes'}
           end
           deploy = stage101.deploys.order('created_at desc').first
           assert_equal stage100.last_successful_deploy.reference, deploy.reference
@@ -157,7 +157,7 @@ describe MassRolloutsController do
         it 'ignores stages with no deploy groups' do
           DeployGroupsStage.delete_all
 
-          post :deploy, params: {deploy_group_id: pod100, successful: true, non_kubernetes: true}
+          post :deploy, params: {deploy_group_id: pod100, status: 'successful', type: 'non_kubernetes'}
           assert_redirected_to "/deploys" # with no ids  present.
         end
 
@@ -167,7 +167,7 @@ describe MassRolloutsController do
           DeployGroupsStage.update_all(deploy_group_id: new_dp.id)
 
           refute_difference 'Deploy.count' do
-            post :deploy, params: {deploy_group_id: pod100, successful: true, non_kubernetes: true}
+            post :deploy, params: {deploy_group_id: pod100, status: 'successful', type: 'non_kubernetes'}
           end
           assert_redirected_to "/deploys" # with no ids  present.
         end
@@ -199,7 +199,7 @@ describe MassRolloutsController do
         deploy_group.stages.first.deploys.delete_all
 
         assert_difference 'Deploy.count', 1 do
-          post :deploy, params: {deploy_group_id: deploy_group, missing: true, non_kubernetes: true}
+          post :deploy, params: {deploy_group_id: deploy_group, status: 'missing', type: 'non_kubernetes'}
         end
       end
 
@@ -208,41 +208,41 @@ describe MassRolloutsController do
         refute_nil Stage.find(deploy_group.stages.first.template_stage_id).last_successful_deploy
 
         assert_difference 'Deploy.count', 1 do
-          post :deploy, params: {deploy_group_id: deploy_group, missing: true, non_kubernetes: true}
+          post :deploy, params: {deploy_group_id: deploy_group, status: 'missing', type: 'non_kubernetes'}
         end
       end
 
       it 'ignores template_stages that have not been deployed yet' do
         Deploy.delete_all
 
-        post :deploy, params: {deploy_group_id: deploy_group, missing: true, non_kubernetes: true}
+        post :deploy, params: {deploy_group_id: deploy_group, status: 'missing', type: 'non_kubernetes'}
         assert_redirected_to "/deploys" # with no ids  present.
       end
 
       it 'ignores template_stages with only a failed deploy' do
         Job.update_all(status: :failed)
 
-        post :deploy, params: {deploy_group_id: deploy_group, missing: true, non_kubernetes: true}
+        post :deploy, params: {deploy_group_id: deploy_group, status: 'missing', type: 'non_kubernetes'}
         assert_redirected_to "/deploys" # with no ids  present.
       end
 
       it 'ignores template_stages not marked as template stages' do
         deploy_group.environment.template_stages.update_all(is_template: false)
 
-        post :deploy, params: {deploy_group_id: deploy_group, missing: true, non_kubernetes: true}
+        post :deploy, params: {deploy_group_id: deploy_group, status: 'missing', type: 'non_kubernetes'}
         assert_redirected_to "/deploys" # with no ids  present.
       end
 
       it 'ignores projects with no template stage for this environment' do
         Stage.update_all(template_stage_id: nil)
 
-        post :deploy, params: {deploy_group_id: deploy_group, missing: true, non_kubernetes: true}
+        post :deploy, params: {deploy_group_id: deploy_group, status: 'missing', type: 'non_kubernetes'}
         assert_redirected_to "/deploys" # with no ids  present.
       end
 
       it "ignores 'successfully deployed' stage" do
         refute_difference 'Deploy.count' do
-          post :deploy, params: {deploy_group_id: deploy_group, missing: true, non_kubernetes: true}
+          post :deploy, params: {deploy_group_id: deploy_group, status: 'missing', type: 'non_kubernetes'}
         end
       end
 
@@ -279,7 +279,7 @@ describe MassRolloutsController do
           )
 
           assert_difference 'Deploy.count', 1 do
-            post :deploy, params: {deploy_group_id: deploy_group, successful: true, kubernetes: true}
+            post :deploy, params: {deploy_group_id: deploy_group, status: 'successful', type: 'kubernetes'}
           end
 
           deploy = k8s_stage.deploys.order('created_at desc').first
@@ -288,7 +288,7 @@ describe MassRolloutsController do
 
         it 'deploys missing k8s stages' do
           assert_difference 'Deploy.count', 1 do
-            post :deploy, params: {deploy_group_id: deploy_group, missing: true, kubernetes: true}
+            post :deploy, params: {deploy_group_id: deploy_group, status: 'missing', type: 'kubernetes'}
           end
 
           deploy = k8s_stage.deploys.order('created_at desc').first
@@ -298,7 +298,7 @@ describe MassRolloutsController do
 
         it 'ignores non-kubernetes stages' do
           refute_difference 'Deploy.count' do
-            post :deploy, params: {deploy_group_id: deploy_group, successful: true, kubernetes: true}
+            post :deploy, params: {deploy_group_id: deploy_group, status: 'successful', type: 'kubernetes'}
           end
         end
       end

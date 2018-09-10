@@ -16,19 +16,34 @@ class MassRolloutsController < ApplicationController
   end
 
   def deploy
-    successful, missing = deploy_group.stages.partition(&:last_successful_deploy)
-    stages_to_deploy = []
+    stages_to_deploy = deploy_group.stages
 
-    stages_to_deploy += successful if params[:successful] == "true"
-    stages_to_deploy += missing if params[:missing] == "true"
+    case params[:status]
+    when ->(type) { type.blank? }
+      # no-op
+    when 'successful'
+      stages_to_deploy.select!(&:last_successful_deploy)
+    when 'missing'
+      stages_to_deploy.reject!(&:last_successful_deploy)
+    else
+      return render status: :bad_request
+    end
 
     if defined?(SamsonKubernetes::Engine)
-      stages_to_deploy.reject!(&:kubernetes?) if params[:kubernetes] != "true"
-      stages_to_deploy.select!(&:kubernetes?) if params[:non_kubernetes] != "true"
+      case params[:type]
+      when ->(type) { type.blank? }
+        # no-op
+      when 'kubernetes'
+        stages_to_deploy.select!(&:kubernetes?)
+      when 'non_kubernetes'
+        stages_to_deploy.reject!(&:kubernetes?)
+      else
+        return render status: :bad_request
+      end
     end
 
     deploy_references = stages_to_deploy.map do |stage|
-      reference = get_reference_from_template_stage(stage)
+      reference = last_successful_template_reference(stage)
       [stage, reference] if reference
     end.compact
 
@@ -154,7 +169,7 @@ class MassRolloutsController < ApplicationController
     stage
   end
 
-  def get_reference_from_template_stage(stage)
+  def last_successful_template_reference(stage)
     template_stage = deploy_group.environment.template_stages.find_by(project_id: stage.project_id)
     template_stage&.last_successful_deploy&.reference
   end

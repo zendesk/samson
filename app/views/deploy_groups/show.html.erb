@@ -106,49 +106,61 @@
         <%= form_tag deploy_deploy_group_mass_rollouts_path(@deploy_group) do %>
 
           <% if defined?(SamsonKubernetes::Engine) %>
-          <div class="form-group">
-            <div class="col-lg-8">
-              <label>Stage Type</label>
+            <div class="form-group">
+              <div class="col-lg-10">
+                <label>Stage Type</label>
 
-              <div class="form-group">
-                <div class="col-lg-5 checkbox">
-                  <%= label_tag do %>
-                    <%= check_box_tag :kubernetes, true, :checked %>
-                    Kubernetes stages
-                  <% end %>
-                </div>
+                <div class="form-group">
+                  <div class="col-lg-4 radio">
+                    <%= label_tag do %>
+                      <%= radio_button_tag :type, '', :checked %>
+                      All
+                    <% end %>
+                  </div>
+                  <div class="col-lg-4 radio">
+                    <%= label_tag do %>
+                      <%= radio_button_tag :type, 'kubernetes' %>
+                      Kubernetes stages only
+                    <% end %>
+                  </div>
 
-                <div class="col-lg-5 checkbox">
-                  <%= label_tag do %>
-                    <%= check_box_tag :non_kubernetes, true, :checked%>
-                    Non-Kubernetes stages
-                  <% end %>
+                  <div class="col-lg-4 radio">
+                    <%= label_tag do %>
+                      <%= radio_button_tag :type, 'non_kubernetes' %>
+                      Non-Kubernetes stages only
+                    <% end %>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
           <% end %>
 
           <div class="form-group">
-            <div class="col-lg-8">
-              <label>Stage Filter</label>
+            <div class="col-lg-10">
+              <label>Stage Status Filter</label>
               <div class="form-group">
-                <div class="col-lg-5 checkbox">
+                <div class="col-lg-4 radio">
                   <%= label_tag do %>
-                    <%= check_box_tag :successful, true, :checked %>
-                    Previously successful stages
+                    <%= radio_button_tag :status, '', :checked %>
+                    All
                   <% end %>
                 </div>
-                <div class="col-lg-5 checkbox">
+                <div class="col-lg-4 radio">
                   <%= label_tag do %>
-                    <%= check_box_tag :missing, true, :checked %>
-                    <abbr title="Any stages that haven't yet been deployed or have failed all their deploys">Missing</abbr> stages
+                    <%= radio_button_tag :status, 'successful' %>
+                    Previously successful stages only
+                  <% end %>
+                </div>
+                <div class="col-lg-4 radio">
+                  <%= label_tag do %>
+                    <%= radio_button_tag :status, 'missing' %>
+                    <abbr title="Any stages that haven't yet been deployed or have failed all their deploys">Missing</abbr> stages only
                   <% end %>
                 </div>
               </div>
             </div>
           </div>
-          <%= submit_tag "Start Deploys", class: "btn btn-default", data: { confirm: "Deploys will be started for all stages matching the checkboxes selected", disable_with: "Deploying..." } %>
+          <%= submit_tag "Start Deploys", class: "btn btn-default", data: { confirm: "Deploys will be started for all matching stages", disable_with: "Deploying..." } %>
         <% end %>
       </div>
     </div>
