@@ -34,6 +34,12 @@ describe ProjectsController do
         assigns(:projects).map(&:name).must_equal [starred_project.name, "Foo"]
       end
 
+      it "renders nav" do
+        get :index, params: {partial: "nav"}
+        assert_template "projects/_nav"
+        response.body.wont_include "<html"
+      end
+
       describe "search" do
         before do
           Project.create!(name: "https_url", repository_url: "https://github.com/foo/bar.git")
