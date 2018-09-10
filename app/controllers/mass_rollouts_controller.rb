@@ -16,30 +16,28 @@ class MassRolloutsController < ApplicationController
   end
 
   def deploy
-    stages_to_deploy = deploy_group.stages
+    stages_to_deploy = deploy_group.stages.to_a
 
-    case params[:status]
-    when ->(type) { type.blank? }
-      # no-op
+    case params[:status].presence
+    when nil # rubocop:disable Lint/EmptyWhen
+      # all
     when 'successful'
       stages_to_deploy.select!(&:last_successful_deploy)
     when 'missing'
       stages_to_deploy.reject!(&:last_successful_deploy)
     else
-      return render status: :bad_request
+      return unsupported_option(:status)
     end
 
-    if defined?(SamsonKubernetes::Engine)
-      case params[:type]
-      when ->(type) { type.blank? }
-        # no-op
-      when 'kubernetes'
-        stages_to_deploy.select!(&:kubernetes?)
-      when 'non_kubernetes'
-        stages_to_deploy.reject!(&:kubernetes?)
-      else
-        return render status: :bad_request
-      end
+    case params[:kubernetes].to_s.presence
+    when nil # rubocop:disable Lint/EmptyWhen
+      # all
+    when 'true'
+      stages_to_deploy.select!(&:kubernetes?)
+    when 'false'
+      stages_to_deploy.reject!(&:kubernetes?)
+    else
+      return unsupported_option(:kubernetes)
     end
 
     deploy_references = stages_to_deploy.map do |stage|
@@ -69,6 +67,10 @@ class MassRolloutsController < ApplicationController
   end
 
   private
+
+  def unsupported_option(option)
+    render status: :bad_request, plain: "Unsupported #{option}"
+  end
 
   def create_all_stages
     _, missing_stages = stages_for_creation

@@ -74,95 +74,10 @@
 
   <% if DeployGroup.enabled? %>
     <div class="form-group" id="mass_stage_creation" style="display: none">
-      <label class="col-lg-2 control-label">Mass Stage Creation</label>
-      <div class="col-lg-10">
-        <%= link_to "Create Stages ...",
-            new_deploy_group_mass_rollouts_path(@deploy_group),
-            class: "btn btn-default"
-        %>
-        <% cloned_stage_count = @deploy_group.stages.cloned.count %>
-        <%= link_to "Merge #{cloned_stage_count} Cloned Stages",
-            merge_deploy_group_mass_rollouts_path(@deploy_group),
-            class: "btn btn-default #{ 'disabled' if cloned_stage_count.zero? }",
-            data: {
-              method: "post",
-              confirm: "Stages will be deleted. Before deleting, each stage will have its Deploy Group added to the stage it was copied from. Stages affected are those cloned from a template stage, have exactly this deploy group, and are on a project that uses include_new_deploy_groups.\n\n" \
-                "Merge #{@deploy_group.stages.cloned.count} cloned stages now?"
-            }
-        %>
-        <%= link_to "Delete #{cloned_stage_count} Cloned Stages",
-            deploy_group_mass_rollouts_path(@deploy_group),
-            class: "btn btn-default #{ 'disabled' if cloned_stage_count.zero? }",
-            data: {
-              method: "delete",
-              confirm: "Cloned stages will be deleted. No stages will be merged into their templates. You will need to create a new stage to deploy the project to this deploy group."
-            }
-        %>
-      </div>
+      <%= render 'mass_stage_creation_form' %>
     </div>
     <div class="form-group" id="mass_rollout" style="display: none">
-      <label class="col-lg-2 control-label">Mass Rollout</label>
-      <div class="col-lg-10">
-        <%= form_tag deploy_deploy_group_mass_rollouts_path(@deploy_group) do %>
-
-          <% if defined?(SamsonKubernetes::Engine) %>
-            <div class="form-group">
-              <div class="col-lg-10">
-                <label>Stage Type</label>
-
-                <div class="form-group">
-                  <div class="col-lg-4 radio">
-                    <%= label_tag do %>
-                      <%= radio_button_tag :type, '', :checked %>
-                      All
-                    <% end %>
-                  </div>
-                  <div class="col-lg-4 radio">
-                    <%= label_tag do %>
-                      <%= radio_button_tag :type, 'kubernetes' %>
-                      Kubernetes stages only
-                    <% end %>
-                  </div>
-
-                  <div class="col-lg-4 radio">
-                    <%= label_tag do %>
-                      <%= radio_button_tag :type, 'non_kubernetes' %>
-                      Non-Kubernetes stages only
-                    <% end %>
-                  </div>
-                </div>
-              </div>
-            </div>
-          <% end %>
-
-          <div class="form-group">
-            <div class="col-lg-10">
-              <label>Stage Status Filter</label>
-              <div class="form-group">
-                <div class="col-lg-4 radio">
-                  <%= label_tag do %>
-                    <%= radio_button_tag :status, '', :checked %>
-                    All
-                  <% end %>
-                </div>
-                <div class="col-lg-4 radio">
-                  <%= label_tag do %>
-                    <%= radio_button_tag :status, 'successful' %>
-                    Previously successful stages only
-                  <% end %>
-                </div>
-                <div class="col-lg-4 radio">
-                  <%= label_tag do %>
-                    <%= radio_button_tag :status, 'missing' %>
-                    <abbr title="Any stages that haven't yet been deployed or have failed all their deploys">Missing</abbr> stages only
-                  <% end %>
-                </div>
-              </div>
-            </div>
-          </div>
-          <%= submit_tag "Start Deploys", class: "btn btn-default", data: { confirm: "Deploys will be started for all matching stages", disable_with: "Deploying..." } %>
-        <% end %>
-      </div>
+      <%= render 'mass_rollout_form' %>
     </div>
   <% end %>
 
