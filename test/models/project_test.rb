@@ -605,6 +605,14 @@ describe Project do
     it "includes repository_path" do
       project.as_json.fetch("repository_path").must_equal "bar/foo"
     end
+
+    it "includes environment variable groups when requested" do
+      project.as_json(include: :environment_variable_groups).keys.must_include "environment_variable_groups"
+    end
+
+    it "includes scoped environment variables when requested" do
+      project.as_json(include: :environment_variables_with_scope).keys.must_include "environment_variables_with_scope"
+    end
   end
 
   describe "#force_external_build?" do
