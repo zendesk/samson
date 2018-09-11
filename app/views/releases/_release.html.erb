@@ -4,9 +4,9 @@
   </td>
   <td>
     <% if github_ok? %>
-      <%= github_commit_status_icon release.github_status.state %>
+      <%= github_commit_status_icon release.github_status %>
     <% else %>
-      <%= github_commit_status_icon "missing" %>
+      <%= github_commit_status_icon GithubStatus.missing %>
     <% end %>
   </td>
   <td>

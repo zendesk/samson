@@ -21,6 +21,10 @@ class GithubStatus
       state == "failure"
     end
 
+    def error?
+      state == "error"
+    end
+
     def pending?
       state == "pending"
     end
@@ -31,6 +35,10 @@ class GithubStatus
   def initialize(state, statuses)
     @state = state
     @statuses = statuses
+  end
+
+  def self.missing
+    @missing ||= new("missing", [])
   end
 
   def self.fetch(repo, ref)
@@ -46,7 +54,7 @@ class GithubStatus
     end
 
     # Fall back to a "missing" status.
-    return new("missing", []) if response.nil?
+    return missing if response.nil?
 
     statuses = response.statuses.group_by(&:context).map do |context, statuses|
       Status.new(context, statuses.max_by { |status| status.created_at.to_i })
@@ -58,6 +66,22 @@ class GithubStatus
     end
 
     new(response.state, statuses)
+  end
+
+  def succeeded
+    statuses.select(&:success?)
+  end
+
+  def failed
+    statuses.select(&:failure?)
+  end
+
+  def errored
+    statuses.select(&:error?)
+  end
+
+  def pending
+    statuses.select(&:pending?)
   end
 
   def success?

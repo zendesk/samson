@@ -24,10 +24,22 @@ module ReleasesHelper
     )
   end
 
-  def github_commit_status_icon(status_state)
-    icon = GITHUB_STATUS_ICONS.fetch(status_state)
-    text = GITHUB_STATUS_TEXT_LABELS.fetch(status_state)
-    title = "Github status: #{status_state}"
+  def github_commit_status_icon(status)
+    failed = status.failed
+    succeeded = status.succeeded
+    errored = status.errored
+    pending = status.pending
+
+    status_counts = []
+    status_counts << "#{failed.count} failed" if failed.any?
+    status_counts << "#{succeeded.count} succeeded" if succeeded.any?
+    status_counts << "#{errored.count} errored" if errored.any?
+    status_counts << "#{pending.count} pending" if pending.any?
+
+    title = "Github status: #{status_counts.join(', ')}"
+
+    icon = GITHUB_STATUS_ICONS.fetch(status.state)
+    text = GITHUB_STATUS_TEXT_LABELS.fetch(status.state)
 
     icon_tag icon, class: "text-#{text}", 'data-toggle': "tooltip", 'data-placement': "right", title: title
   end
