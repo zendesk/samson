@@ -34,7 +34,8 @@ class GithubStatus
   end
 
   def self.fetch(release)
-    repo, ref = release.project.repository_path, release.commit
+    repo = release.project.repository_path
+    ref = release.commit
 
     # Base the cache key on the Release, so that an update to it effectively
     # clears the cache.
