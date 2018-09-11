@@ -6,9 +6,11 @@ SingleCov.covered!
 describe GithubStatus do
   let(:repo) { "oompa/loompa" }
   let(:ref) { "wonka" }
+  let(:project) { stub("project", repository_path: repo) }
+  let(:release) { stub("release", project: project, commit: ref) }
 
   describe "#state" do
-    let(:status) { GithubStatus.fetch(repo, ref) }
+    let(:status) { GithubStatus.fetch(release) }
 
     it "returns `missing` if there's no response from Github" do
       stub_api({}, 401)
@@ -22,7 +24,7 @@ describe GithubStatus do
   end
 
   describe "#statuses" do
-    let(:status) { GithubStatus.fetch(repo, ref) }
+    let(:status) { GithubStatus.fetch(release) }
 
     it "returns a single status per context" do
       # The most recent status is used.
