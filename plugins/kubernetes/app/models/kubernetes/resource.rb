@@ -90,6 +90,10 @@ module Kubernetes
 
       private
 
+      def error_location
+        "#{name} #{namespace} #{@deploy_group.name}"
+      end
+
       # when autoscaling we expect as many pods as we currently have
       def replica_source
         (@autoscaled && resource) || @template
@@ -100,7 +104,7 @@ module Kubernetes
           yield
           sleep wait
         end
-        raise "Unable to #{reason} (#{name} #{namespace})"
+        raise "Unable to #{reason} (#{error_location})"
       end
 
       def request_delete
@@ -197,7 +201,7 @@ module Kubernetes
           rescue Kubeclient::HttpError
             message = $!.message.to_s
             if message.include?(" is invalid:") || message.include?(" no kind ")
-              raise Samson::Hooks::UserError, "Kubernetes error: #{message}"
+              raise Samson::Hooks::UserError, "Kubernetes error #{error_location}: #{message}"
             else
               raise
             end
@@ -315,8 +319,8 @@ module Kubernetes
           if desired == 0
             raise(
               Samson::Hooks::UserError,
-              "Unable to find desired number of pods for daemonset #{name} on #{@deploy_group.name}\n" \
-              "delete it manually and make sure there is at least 1 node scheduleable."
+              "Unable to find desired number of pods for DaemonSet #{error_location}\n" \
+              "delete it manually and make sure there is at least 1 node schedulable."
             )
           end
 
@@ -360,7 +364,11 @@ module Kubernetes
           expire_cache
           return if no_pods_running?
         end
-        raise Samson::Hooks::UserError, "Unable to terminate previous DaemonSet because it still has pods"
+        raise(
+          Samson::Hooks::UserError,
+          "Unable to terminate DaemonSet #{name} #{namespace} #{@deploy_group.name} because it still has pods.\n" \
+          "Delete it manually and redeploy again."
+        )
       end
     end
 

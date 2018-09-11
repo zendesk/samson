@@ -116,7 +116,8 @@ describe Kubernetes::Resource do
       assert_request(:get, url, to_return: {status: 404}) do
         error = '{"message":"Foo.extensions \"app\" is invalid:"}'
         assert_request(:post, base_url, to_return: {body: error, status: 400}) do
-          assert_raises(Samson::Hooks::UserError) { resource.deploy }.message.must_include "Kubernetes error: Foo"
+          e = assert_raises(Samson::Hooks::UserError) { resource.deploy }
+          e.message.must_include "Kubernetes error some-project pod1 Pod1: Foo"
         end
       end
     end
@@ -220,7 +221,7 @@ describe Kubernetes::Resource do
         resource.expects(:sleep).times(tries)
 
         e = assert_raises(RuntimeError) { resource.delete }
-        e.message.must_equal "Unable to delete resource (some-project pod1)"
+        e.message.must_equal "Unable to delete resource (some-project pod1 Pod1)"
       end
     end
   end
@@ -363,7 +364,7 @@ describe Kubernetes::Resource do
         e = assert_raises Samson::Hooks::UserError do
           resource.deploy
         end
-        e.message.must_include "Unable to terminate previous DaemonSet"
+        e.message.must_include "Unable to terminate DaemonSet some-project pod1 Pod1"
       end
     end
 
