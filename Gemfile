@@ -94,6 +94,7 @@ group :development, :test do
   gem 'byebug'
   gem 'bootsnap'
   gem 'pry-rails'
+  gem 'pry-byebug'
   gem 'pry'
   gem 'awesome_print'
   gem 'brakeman'

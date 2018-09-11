@@ -1,0 +1,25 @@
+<label class="col-lg-2 control-label">Mass Stage Creation</label>
+<div class="col-lg-10">
+  <%= link_to "Create Stages ...",
+      new_deploy_group_mass_rollouts_path(@deploy_group),
+      class: "btn btn-default"
+  %>
+  <% cloned_stage_count = @deploy_group.stages.cloned.count %>
+  <%= link_to "Merge #{cloned_stage_count} Cloned Stages",
+      merge_deploy_group_mass_rollouts_path(@deploy_group),
+      class: "btn btn-default #{ 'disabled' if cloned_stage_count.zero? }",
+      data: {
+          method: "post",
+          confirm: "Stages will be deleted. Before deleting, each stage will have its Deploy Group added to the stage it was copied from. Stages affected are those cloned from a template stage, have exactly this deploy group, and are on a project that uses include_new_deploy_groups.\n\n" \
+                "Merge #{@deploy_group.stages.cloned.count} cloned stages now?"
+      }
+  %>
+  <%= link_to "Delete #{cloned_stage_count} Cloned Stages",
+      deploy_group_mass_rollouts_path(@deploy_group),
+      class: "btn btn-default #{ 'disabled' if cloned_stage_count.zero? }",
+      data: {
+          method: "delete",
+          confirm: "Cloned stages will be deleted. No stages will be merged into their templates. You will need to create a new stage to deploy the project to this deploy group."
+      }
+  %>
+</div>

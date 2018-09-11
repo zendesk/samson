@@ -16,23 +16,42 @@ class MassRolloutsController < ApplicationController
   end
 
   def deploy
-    environment = deploy_group.environment
-    template_stages = environment.template_stages.all
-    missing_only = params[:missing_only] == "true"
-    stages_to_deploy = missing_only ? deploy_group.stages.reject(&:last_successful_deploy) : deploy_group.stages
-    deploys = stages_to_deploy.map do |stage|
-      template_stage = template_stages.detect { |ts| ts.project_id == stage.project.id }
-      next unless template_stage
+    stages_to_deploy = deploy_group.stages.to_a
 
-      last_success_deploy = template_stage.last_successful_deploy
-      next unless last_success_deploy
+    case params[:status].presence
+    when nil # rubocop:disable Lint/EmptyWhen
+      # all
+    when 'successful'
+      stages_to_deploy.select!(&:last_successful_deploy)
+    when 'missing'
+      stages_to_deploy.reject!(&:last_successful_deploy)
+    else
+      return unsupported_option(:status)
+    end
 
-      deploy_service = DeployService.new(current_user)
-      deploy_service.deploy(stage, reference: last_success_deploy.reference)
+    case params[:kubernetes].to_s.presence
+    when nil # rubocop:disable Lint/EmptyWhen
+      # all
+    when 'true'
+      stages_to_deploy.select!(&:kubernetes?)
+    when 'false'
+      stages_to_deploy.reject!(&:kubernetes?)
+    else
+      return unsupported_option(:kubernetes)
+    end
+
+    deploy_references = stages_to_deploy.map do |stage|
+      reference = last_successful_template_reference(stage)
+      [stage, reference] if reference
     end.compact
 
+    deploys = deploy_references.map do |stage, reference|
+      deploy_service = DeployService.new(current_user)
+      deploy_service.deploy(stage, reference: reference)
+    end
+
     if deploys.empty?
-      flash[:error] = "There were no stages ready for deploy."
+      flash[:error] = "No deployable stages found."
       redirect_to deploys_path
     else
       redirect_to deploys_path(ids: deploys.map(&:id))
@@ -48,6 +67,10 @@ class MassRolloutsController < ApplicationController
   end
 
   private
+
+  def unsupported_option(option)
+    render status: :bad_request, plain: "Unsupported #{option}"
+  end
 
   def create_all_stages
     _, missing_stages = stages_for_creation
@@ -146,6 +169,11 @@ class MassRolloutsController < ApplicationController
     end
 
     stage
+  end
+
+  def last_successful_template_reference(stage)
+    template_stage = deploy_group.environment.template_stages.find_by(project_id: stage.project_id)
+    template_stage&.last_successful_deploy&.reference
   end
 
   def deploy_group
