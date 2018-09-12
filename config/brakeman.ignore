@@ -1,7 +1,25 @@
 {
   "ignored_warnings": [
-
+    {
+      "warning_type": "Cross-Site Scripting",
+      "warning_code": 4,
+      "fingerprint": "50350274f9c62a91f27562722e2191833e489c5eb093c411425b2472b6b7dbf2",
+      "check_name": "LinkToHref",
+      "message": "Potentially unsafe model attribute in link_to href",
+      "file": "app/views/changeset/_statuses.html.erb",
+      "line": 2,
+      "link": "https://brakemanscanner.org/docs/warning_types/link_to_href",
+      "code": "link_to((Unresolved Model).new.description, (Unresolved Model).new.url)",
+      "render_path": [{"type":"controller","class":"ReleasesController","method":"show","line":10,"file":"app/controllers/releases_controller.rb"},{"type":"template","name":"releases/row_content","line":31,"file":"app/views/releases/row_content.html.erb"}],
+      "location": {
+        "type": "template",
+        "template": "changeset/_statuses"
+      },
+      "user_input": "(Unresolved Model).new.url",
+      "confidence": "Weak",
+      "note": ""
+    }
   ],
-  "updated": "2018-01-12 08:38:04 -0800",
-  "brakeman_version": "4.1.1"
+  "updated": "2018-09-12 16:04:57 +0200",
+  "brakeman_version": "4.3.1"
 }
