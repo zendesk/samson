@@ -28,7 +28,7 @@
   </div>
 
   <div class="tab-pane" id="statuses-<%= @release.version %>">
-    <%= render 'changeset/statuses', github_status: @release.github_status %>
+    <%= render 'changeset/statuses', changeset: @changeset %>
   </div>
 
   <div class="tab-pane" id="risks-<%= @release.version %>">

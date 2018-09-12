@@ -33,16 +33,7 @@ class GithubStatus
     @statuses = statuses
   end
 
-  def self.fetch(release)
-    repo = release.project.repository_path
-    ref = release.commit
-
-    # Base the cache key on the Release, so that an update to it effectively
-    # clears the cache.
-    cache_key = [name, release]
-
-    response = Rails.cache.read(cache_key)
-
+  def self.for_reference(repo, ref)
     # Fetch the data if the cache returned nil.
     response ||= begin
       GITHUB.combined_status(repo, ref)
@@ -57,12 +48,23 @@ class GithubStatus
       Status.new(context, statuses.max_by { |status| status.created_at.to_i })
     end
 
+    new(response.state, statuses)
+  end
+
+  def self.for_release(release)
+    # Base the cache key on the Release, so that an update to it effectively
+    # clears the cache.
+    cache_key = [name, release, "v2"]
+
+    status = Rails.cache.read(cache_key)
+    status ||= for_reference(release.project.repository_path, release.commit)
+
     # Don't cache pending statuses, since we expect updates soon.
-    unless statuses.any?(&:pending?)
-      Rails.cache.write(cache_key, response, expires_in: 1.hour)
+    unless status.statuses.any?(&:pending?)
+      Rails.cache.write(cache_key, status, expires_in: 1.hour)
     end
 
-    new(response.state, statuses)
+    status
   end
 
   def success?

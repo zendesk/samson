@@ -18,7 +18,7 @@
 
   <legend>Commit Status</legend>
   <p>
-    <%= render "changeset/statuses", github_status: @release.github_status %>
+    <%= render "changeset/statuses", changeset: @changeset %>
   </p>
 
   <% if @changeset.empty? %>

@@ -34,6 +34,10 @@ class Changeset
     @pull_requests ||= find_pull_requests
   end
 
+  def github_status
+    @github_status ||= GithubStatus.for_reference(repo, commit)
+  end
+
   def risks?
     risky_pull_requests.any?
   end
