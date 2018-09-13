@@ -424,7 +424,8 @@ module Kubernetes
           if (old = annotations[key]) && old != secret_key
             raise(
               Samson::Hooks::UserError,
-              "Annotation key #{key} is already set to #{old}, cannot set it via environment to #{secret_key}"
+              "Annotation key #{key} is already set to #{old}, cannot set it via environment to #{secret_key}.\n" \
+              "Either delete the environment variable or make them both point to the same key."
             )
           end
           annotations[key] = secret_key

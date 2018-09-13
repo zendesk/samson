@@ -653,7 +653,7 @@ describe Kubernetes::TemplateFiller do
         it "blows up when annotations would be overwritten with a different value" do
           raw_template[:spec][:template][:metadata][:annotations] = {"secret/BAR": 'foo2'}
           e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
-          e.message.must_equal "Annotation key secret/BAR is already set to foo2, cannot set it via environment to foo"
+          e.message.must_include "Annotation key secret/BAR is already set to foo2, cannot set it via environment"
         end
 
         it "does not blow up when using multiple containers with the same env" do
