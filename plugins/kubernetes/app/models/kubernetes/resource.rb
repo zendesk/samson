@@ -374,7 +374,9 @@ module Kubernetes
 
     class StatefulSet < Base
       def patch_replace?
-        [nil, "OnDelete"].include?(@template.dig(:spec, :updateStrategy)) && running?
+        deprecated = @template.dig(:spec, :updateStrategy) # supporting pre 1.9 clusters
+        strategy = (deprecated.is_a?(String) ? deprecated : @template.dig(:spec, :updateStrategy, :type))
+        [nil, "OnDelete"].include?(strategy) && running?
       end
 
       # StatefulSet cannot be updated normally when OnDelete is used or kubernetes <1.7
