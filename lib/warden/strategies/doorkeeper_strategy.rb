@@ -13,13 +13,13 @@ class Warden::Strategies::Doorkeeper < ::Warden::Strategies::Base
     requested_scopes = request.env.fetch('requested_oauth_scopes')
 
     if !token
-      halt_json "Unable to find token"
+      halt_json "Bearer token is invalid"
     elsif !token.accessible?
-      halt_json "Token is expired"
+      halt_json "Bearer token is expired"
     elsif !token.acceptable?(requested_scopes)
-      halt_json "Token needs scope #{requested_scopes.to_sentence(last_word_connector: ', or ')}"
+      halt_json "Bearer token needs scope #{requested_scopes.to_sentence(last_word_connector: ', or ')}"
     elsif !(user = User.find_by_id(token.resource_owner_id))
-      halt_json "Token belongs to deleted user #{token.resource_owner_id}"
+      halt_json "Bearer token belongs to deleted user #{token.resource_owner_id}"
     else
       token.update_column(:last_used_at, Time.now) unless token.last_used_at&.> 1.minutes.ago
       request.session_options[:skip] = true # do not store user in session
