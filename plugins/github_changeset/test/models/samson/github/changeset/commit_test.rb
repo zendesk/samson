@@ -92,7 +92,7 @@ describe Samson::Github::Changeset::Commit do
     end
 
     it 'handles commit not found' do
-      error_response = {state: "failure", statuses: [{"state": "Reference", description: "'foo' does not exist"}]}
+      error_response = {state: "failure", statuses: [{"state": "Reference", description: "'abc123' does not exist for foo"}]}
 
       GITHUB.stubs(:combined_status).raises(Octokit::NotFound)
       Samson::Github::Changeset::Commit.status('foo', 'abc123').must_equal error_response

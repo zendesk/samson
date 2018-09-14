@@ -56,9 +56,19 @@ PATH
     gcloud_image_tagger (0.0.0)
 
 PATH
+  remote: plugins/github_changeset
+  specs:
+    samson_github_changeset (0.0.0)
+
+PATH
   remote: plugins/github
   specs:
     samson_github (0.0.0)
+
+PATH
+  remote: plugins/gitlab_changeset
+  specs:
+    samson_gitlab_changeset (0.0.0)
 
 PATH
   remote: plugins/jenkins_status_checker
@@ -262,6 +272,9 @@ GEM
     forking_test_runner (1.2.0)
       parallel_tests (>= 1.3.7)
     github-markdown (0.6.9)
+    gitlab (4.5.0)
+      httparty (>= 0.14.0)
+      terminal-table (>= 1.5.1)
     globalid (0.4.1)
       activesupport (>= 4.2.0)
     goldiloader (2.1.0)
@@ -562,6 +575,7 @@ DEPENDENCIES
   forking_test_runner
   gcloud_image_tagger!
   github-markdown
+  gitlab
   goldiloader
   large_object_store
   lograge
@@ -614,6 +628,8 @@ DEPENDENCIES
   samson_env!
   samson_flowdock!
   samson_github!
+  samson_github_changeset!
+  samson_gitlab_changeset!
   samson_jenkins!
   samson_jenkins_status_checker!
   samson_kubernetes!
@@ -642,4 +658,4 @@ RUBY VERSION
    ruby 2.5.1p57
 
 BUNDLED WITH
-   1.16.3
+   1.16.4
