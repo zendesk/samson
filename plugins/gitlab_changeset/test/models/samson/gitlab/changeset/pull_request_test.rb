@@ -121,7 +121,7 @@ describe Samson::Gitlab::Changeset::PullRequest do
       mock_user_query.expect(:users, [OpenStruct.new(avatar_url: 'http://plansource.com/avatar', web_url: 'www.plansource.com/user2')], [{:search=>"committer@plansource.com"}])
       Gitlab::Client.stubs(:new).returns(mock_user_query)
 
-      pr.users.map(&:login).must_equal ["www.plansource.com/user1", "www.plansource.com/user2"]
+      pr.users.map(&:login).must_equal ["user1", "user2"]
     end
 
     it "excludes duplicate users" do
@@ -129,7 +129,7 @@ describe Samson::Gitlab::Changeset::PullRequest do
       mock_user_query.expect(:users, [OpenStruct.new(avatar_url: 'http://plansource.com/avatar', web_url: 'www.plansource.com/user')], [{:search=>"author@plansource.com"}])
       mock_user_query.expect(:users, [OpenStruct.new(avatar_url: 'http://plansource.com/avatar', web_url: 'www.plansource.com/user')], [{:search=>"committer@plansource.com"}])
       Gitlab::Client.stubs(:new).returns(mock_user_query)
-      pr.users.map(&:login).must_equal ["www.plansource.com/user"]
+      pr.users.map(&:login).must_equal ["user"]
     end
 
     describe 'nil users' do
@@ -141,7 +141,7 @@ describe Samson::Gitlab::Changeset::PullRequest do
         mock_user_query.expect(:users, [OpenStruct.new(avatar_url: 'http://plansource.com/avatar', web_url: 'www.plansource.com/user')], [{:search=>"committer@plansource.com"}])
         Gitlab::Client.stubs(:new).returns(mock_user_query)
 
-        pr.users.map(&:login).must_equal ["www.plansource.com/user"]
+        pr.users.map(&:login).must_equal ["user"]
       end
     end
   end

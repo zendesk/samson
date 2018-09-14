@@ -9,9 +9,9 @@ module Samson
       def initialize(user_email)
         begin
           users = ::Gitlab.client.users(search: user_email)
-          @data = users.first
+          @data = users.first || empty_user
         rescue StandardError => e
-          @data = OpenStruct.new(avatar_url: '', web_url: '')
+          @data = empty_user
         end
       end
 
@@ -26,16 +26,16 @@ module Samson
           uri.query = URI.encode_www_form(params)
           uri.to_s
         else
-          'https://assets-cdn.github.com/images/gravatars/gravatar-user-420.png'
+          'https://gitlab.com/assets/no_avatar-849f9c04a3a0d0cea2424ae97b27447dc64a7dbfae83c036c45b403392f0e8ba.png'
         end
       end
 
       def url
-        "#{Rails.application.config.samson.github.web_url}/#{login}" if login
+        @data.web_url if login
       end
 
       def login
-        @data.web_url
+        @data.web_url.split('/').last
       end
 
       def identifier
@@ -46,8 +46,15 @@ module Samson
         login == other.login
       end
 
+      # Gitlab doesn't return a hash with a user
       def hash
         login&.hash || 123456789
+      end
+
+      private
+
+      def empty_user
+        OpenStruct.new({web_url: '', avatar_url: nil})
       end
     end
   end
