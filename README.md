@@ -36,13 +36,13 @@ Samson will:
 
 ### Documentation
 
-* [Getting started](https://github.com/zendesk/samson/blob/master/docs/setup.md)
-* [Permissions](https://github.com/zendesk/samson/blob/master/docs/permissions.md)
-* [Continuous Integration](https://github.com/zendesk/samson/blob/master/docs/ci.md)
-* [Extra features](https://github.com/zendesk/samson/blob/master/docs/extra_features.md)
-* [Plugins](https://github.com/zendesk/samson/blob/master/docs/plugins.md)
-* [Statistics](https://github.com/zendesk/samson/blob/master/docs/stats.md)
-* [API](https://github.com/zendesk/samson/blob/master/docs/api.md)
+* [Getting started](/master/docs/setup.md)
+* [Permissions](/master/docs/permissions.md)
+* [Continuous Integration](/master/docs/ci.md)
+* [Extra features](/master/docs/extra_features.md)
+* [Plugins](/master/docs/plugins.md)
+* [Statistics](/blob/master/docs/stats.md)
+* [API](/blob/master/docs/api.md)
 
 ### Contributing
 
