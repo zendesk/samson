@@ -96,9 +96,8 @@ module Samson
       end
 
       def users
-        puts "********* data: #{@data}"
         users = [@data['author_email'], @data['committer_email']]
-        users.compact.map { |user| Changeset::GitlabUser.new(user) }.uniq
+        users.compact.map { |user_email| Changeset::GitlabUser.new(user_email) }.uniq
       end
 
       def risky?

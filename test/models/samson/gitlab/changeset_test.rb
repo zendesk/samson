@@ -64,7 +64,8 @@ describe Samson::Gitlab::Changeset do
 
     # tests config/initializers/octokit.rb Octokit::RedirectAsError
     it "converts a redirect into a NullComparison" do
-      stub_github_api("repos/foo/bar/branches/master", {}, 301)
+      payloads = {compare: OpenStruct.new(files: ['foo', 'bar'], commit: OpenStruct.new(id: 1)), compare_args: [1, 'a', 'b']}
+      ::Gitlab::Client.stubs(:new).returns(mock_client(payloads))
       Samson::Gitlab::Changeset.new("foo/bar", "a", "master").comparison.class.must_equal Samson::Gitlab::Changeset::NullComparison
     end
   end
@@ -77,18 +78,19 @@ describe Samson::Gitlab::Changeset do
 
   describe "#files" do
     it "returns compared files" do
-      payloads = {compare: OpenStruct.new(files: ['foo', 'bar']), compare_args: [1, 'a', 'b']}
+      diff_hash1 = {'old_path' => 'foo', 'new_path' => 'new_path', 'diff' => 'patch', 'renamed_file' => false, 'new_file' => false, 'deleted_file' => false }
+      diff_hash2 = {'old_path' => 'bar', 'new_path' => 'new_path', 'diff' => 'patch', 'renamed_file' => false, 'new_file' => false, 'deleted_file' => false }
+      payloads = {compare: OpenStruct.new(files: ['foo', 'bar'], diffs: [diff_hash1, diff_hash2], commit: OpenStruct.new(id: 1)), compare_args: [1, 'a', 'b']}
       ::Gitlab::Client.stubs(:new).returns(mock_client(payloads))
-      changeset.files.must_equal ["foo", "bar"]
+      changeset.files.count.must_equal 2
+      assert(changeset.files.detect{|file| file.previous_filename == 'foo'}, 'File not found')
+      assert(changeset.files.detect{|file| file.previous_filename == 'bar'}, 'File not found')
     end
   end
 
   describe "#pull_requests" do
-    let(:sawyer_agent) { Sawyer::Agent.new('') }
-    let(:commit1) { Sawyer::Resource.new(sawyer_agent, commit: message1) }
-    let(:commit2) { Sawyer::Resource.new(sawyer_agent, commit: message2) }
-    let(:message1) { Sawyer::Resource.new(sawyer_agent, title: 'Merge pull request #42') }
-    let(:message2) { Sawyer::Resource.new(sawyer_agent, title: 'Fix typo') }
+    let(:commit1) { {'title' => 'Merge pull request #42'} }
+    let(:commit2) { {'title' => 'Fix typo'} }
 
     it "finds pull requests mentioned in merge commits" do
       payloads = {compare: OpenStruct.new(commits: []), compare_args: [1, 'a', 'b'], merge_requests: ['yeah!']}
@@ -160,9 +162,9 @@ describe Samson::Gitlab::Changeset do
     it "returns a list of authors" do
       changeset.expects(:commits).returns(
         [
-          stub("c1", author: "foo"),
-          stub("c2", author: "foo"),
-          stub("c3", author: "bar")
+          stub("c1", author_name: "foo"),
+          stub("c2", author_name: "foo"),
+          stub("c3", author_name: "bar")
         ]
       )
       changeset.authors.must_equal ["foo", "bar"]
@@ -171,9 +173,9 @@ describe Samson::Gitlab::Changeset do
     it "does not include nil authors" do
       changeset.expects(:commits).returns(
         [
-          stub("c1", author: "foo"),
-          stub("c2", author: "bar"),
-          stub("c3", author: nil)
+          stub("c1", author_name: "foo"),
+          stub("c2", author_name: "bar"),
+          stub("c3", author_name: nil)
         ]
       )
       changeset.authors.must_equal ["foo", "bar"]
@@ -242,7 +244,7 @@ describe Samson::Gitlab::Changeset do
     mc.expect(:projects, mock_projects, [per_page: 20])
     mc.expect(:compare, payloads[:compare], payloads[:compare_args])
     mc.expect(:merge_requests, payloads[:merge_requests]  || [], ["foo/bar", head: "foo:b"] )
-    mc.expect(:branch, OpenStruct.new(commit: {id: payloads[:commit_id]}), [1, 'master'])
+    mc.expect(:branch, OpenStruct.new(commit: OpenStruct.new({id: payloads[:commit_id]})), [1, 'master'])
     mc
   end
 

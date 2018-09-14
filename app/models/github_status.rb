@@ -44,16 +44,12 @@ class GithubStatus
     response = Rails.cache.read(cache_key)
 
     # Fetch the data if the cache returned nil.
-    response ||= begin
-      GITHUB.combined_status(repo, ref)
-    rescue Octokit::Error
-      nil
-    end
+    response ||= ChangesetFactory.commit.status(repo, ref)
 
     # Fall back to a "missing" status.
-    return new("missing", []) if response.nil?
+    return new("missing", []) if response.empty?
 
-    statuses = response.statuses.group_by(&:context).map do |context, statuses|
+    statuses = response[:statuses].group_by(&:context).map do |context, statuses|
       Status.new(context, statuses.max_by { |status| status.created_at.to_i })
     end
 
@@ -62,7 +58,7 @@ class GithubStatus
       Rails.cache.write(cache_key, response, expires_in: 1.hour)
     end
 
-    new(response.state, statuses)
+    new(response[:state], statuses)
   end
 
   def success?

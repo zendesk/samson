@@ -21,7 +21,7 @@ describe Samson::Gitlab::Changeset::PullRequest do
   let(:pr) { Samson::Gitlab::Changeset::PullRequest.new("xxx", data) }
   let(:body) { +"" }
   let(:sawyer_agent) { Sawyer::Agent.new('') }
-  let(:data) { Sawyer::Resource.new(sawyer_agent, user: user, merged_by: merged_by, body: body, number: 5566) }
+  let(:data) { Sawyer::Resource.new(sawyer_agent, user: user, merged_by: merged_by, body: body, number: 5566, author_email: 'author@plansource.com', committer_email: 'committer@plansource.com') }
   let(:user) { Sawyer::Resource.new(sawyer_agent, login: 'foo') }
   let(:merged_by) { Sawyer::Resource.new(sawyer_agent, login: 'bar') }
 
@@ -114,20 +114,34 @@ describe Samson::Gitlab::Changeset::PullRequest do
   end
 
   describe "#users" do
+
     it "returns the users associated with the pull request" do
-      pr.users.map(&:login).must_equal ["foo", "bar"]
+      mock_user_query = Minitest::Mock.new
+      mock_user_query.expect(:users, [OpenStruct.new(avatar_url: 'http://plansource.com/avatar', web_url: 'www.plansource.com/user1')], [{:search=>"author@plansource.com"}])
+      mock_user_query.expect(:users, [OpenStruct.new(avatar_url: 'http://plansource.com/avatar', web_url: 'www.plansource.com/user2')], [{:search=>"committer@plansource.com"}])
+      Gitlab::Client.stubs(:new).returns(mock_user_query)
+
+      pr.users.map(&:login).must_equal ["www.plansource.com/user1", "www.plansource.com/user2"]
     end
 
     it "excludes duplicate users" do
-      merged_by.stubs(:login).returns("foo")
-      pr.users.map(&:login).must_equal ["foo"]
+      mock_user_query = Minitest::Mock.new
+      mock_user_query.expect(:users, [OpenStruct.new(avatar_url: 'http://plansource.com/avatar', web_url: 'www.plansource.com/user')], [{:search=>"author@plansource.com"}])
+      mock_user_query.expect(:users, [OpenStruct.new(avatar_url: 'http://plansource.com/avatar', web_url: 'www.plansource.com/user')], [{:search=>"committer@plansource.com"}])
+      Gitlab::Client.stubs(:new).returns(mock_user_query)
+      pr.users.map(&:login).must_equal ["www.plansource.com/user"]
     end
 
     describe 'nil users' do
       let(:merged_by) { nil }
 
       it 'excludes nil users' do
-        pr.users.map(&:login).must_equal ['foo']
+        mock_user_query = Minitest::Mock.new
+        mock_user_query.expect(:users, [OpenStruct.new(avatar_url: 'http://plansource.com/avatar', web_url: 'www.plansource.com/user')], [{:search=>"author@plansource.com"}])
+        mock_user_query.expect(:users, [OpenStruct.new(avatar_url: 'http://plansource.com/avatar', web_url: 'www.plansource.com/user')], [{:search=>"committer@plansource.com"}])
+        Gitlab::Client.stubs(:new).returns(mock_user_query)
+
+        pr.users.map(&:login).must_equal ["www.plansource.com/user"]
       end
     end
   end
@@ -499,4 +513,6 @@ describe Samson::Gitlab::Changeset::PullRequest do
       pr.missing_risks?.must_equal false
     end
   end
+
+  def maxitest_timeout;false;end
 end

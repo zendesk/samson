@@ -7,7 +7,12 @@ module Samson
   module Gitlab
     class Changeset::GitlabUser
       def initialize(user_email)
-        @data = ::Gitlab.client.users(search: user_email).first
+        begin
+          users = ::Gitlab.client.users(search: user_email)
+          @data = users.first
+        rescue StandardError => e
+          @data = OpenStruct.new(avatar_url: '', web_url: '')
+        end
       end
 
       def avatar_url(size = 20)

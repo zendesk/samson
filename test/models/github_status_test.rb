@@ -13,12 +13,12 @@ describe GithubStatus do
     let(:status) { GithubStatus.fetch(release) }
 
     it "returns `missing` if there's no response from Github" do
-      stub_api({}, 401)
+      GITHUB.stubs(:combined_status).returns(nil)
       status.state.must_equal "missing"
     end
 
     it "returns the Github state from the response" do
-      stub_api({state: "party", statuses: []}, 200)
+      GITHUB.stubs(:combined_status).returns({state: 'party', statuses: []})
       status.state.must_equal "party"
     end
   end
@@ -95,4 +95,6 @@ describe GithubStatus do
   def stub_api(body, status = 200)
     stub_github_api "repos/#{repo}/commits/#{ref}/status", body, status
   end
+
+  def maxitest_timeout;false;end
 end
