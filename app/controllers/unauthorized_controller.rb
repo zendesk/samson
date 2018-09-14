@@ -21,7 +21,7 @@ class UnauthorizedController < ActionController::Metal
     message = "You are not #{request.env['warden']&.user ? "authorized to view this page" : "logged in"}."
     respond_to do |format|
       format.json do
-        render json: {error: message}, status: :unauthorized
+        render json: {error: message + " See docs/api.md on how to authenticate."}, status: :unauthorized
       end
       format.html do
         flash[:authorization_error] = message
