@@ -36,13 +36,13 @@ Samson will:
 
 ### Documentation
 
-* [Getting started](/master/docs/setup.md)
-* [Permissions](/master/docs/permissions.md)
-* [Continuous Integration](/master/docs/ci.md)
-* [Extra features](/master/docs/extra_features.md)
-* [Plugins](/master/docs/plugins.md)
-* [Statistics](/blob/master/docs/stats.md)
-* [API](/blob/master/docs/api.md)
+* [Getting started](/docs/setup.md)
+* [Permissions](/docs/permissions.md)
+* [Continuous Integration](/docs/ci.md)
+* [Extra features](/docs/extra_features.md)
+* [Plugins](/docs/plugins.md)
+* [Statistics](/docs/stats.md)
+* [API](/docs/api.md)
 
 ### Contributing
 
