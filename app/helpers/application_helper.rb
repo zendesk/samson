@@ -338,9 +338,9 @@ module ApplicationHelper
     html
   end
 
-  def github_user_avatar(github_user)
-    image_tag github_user.avatar_url,
-      title: github_user.login,
+  def git_user_avatar(git_user)
+    image_tag git_user.avatar_url,
+      title: git_user.login,
       class: "gravatar github-user-avatar",
       width: 20,
       height: 20,

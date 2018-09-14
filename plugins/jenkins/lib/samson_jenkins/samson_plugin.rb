@@ -1,4 +1,6 @@
 # frozen_string_literal: true
+require 'gitlab'
+
 module SamsonJenkins
   class Engine < Rails::Engine
   end

@@ -2,9 +2,9 @@
 class Integrations::GithubController < Integrations::BaseController
   HMAC_DIGEST = OpenSSL::Digest.new('sha1')
   WEBHOOK_HANDLERS = {
-    'push' => Changeset::CodePush,
-    'pull_request' => Changeset::PullRequest,
-    'issue_comment' => Changeset::IssueComment
+    'push' => ChangesetFactory.code_push,
+    'pull_request' => ChangesetFactory.pull_request,
+    'issue_comment' => ChangesetFactory.issue_comment
   }.freeze
 
   def self.secret_token

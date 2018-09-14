@@ -33,6 +33,8 @@ Available plugins:
  - [Rollbar dashboards](https://github.com/zendesk/samson/tree/master/plugins/rollbar_dashboards)
  - [Assertible notifications on deploy](https://github.com/zendesk/samson/tree/master/plugins/assertible)
  - [Prerequisite stages](https://github.com/zendesk/samson/tree/master/plugins/prerequisite_stages)
+ - [Github Changeset](https://github.com/zendesk/samson/tree/master/plugins/github_changeset)
+ - [Gitlab Changeset](https://github.com/zendesk/samson/tree/master/plugins/gitlab_changeset)
  - Add yours here!
 
 To create your own plugin run:

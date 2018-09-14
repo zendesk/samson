@@ -113,4 +113,6 @@ group :test do
   gem 'single_cov'
   gem 'ar_multi_threaded_transactional_tests'
   gem 'bundler-audit', require: false
+  # gem 'debase', '0.2.3.beta2'
+  # gem 'ruby-debug-ide'
 end

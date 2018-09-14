@@ -44,8 +44,8 @@ module DeploysHelper
     content_tag :span, count.to_s, class: "label #{type}" unless count.zero?
   end
 
-  def github_users(github_users)
-    avatars = github_users.map { |github_user| github_user_avatar(github_user) if github_user }
+  def git_users(git_users)
+    avatars = git_users.map { |git_user| git_user_avatar(git_user) if git_user }
     safe_join avatars, " "
   end
 

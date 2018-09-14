@@ -36,7 +36,7 @@ class CommitStatus
 
   def combined_status
     @combined_status ||= begin
-      statuses = [github_status, release_status, *ref_statuses]
+      statuses = [commit_status, release_status, *ref_statuses]
 
       statuses.each_with_object({}) { |status, merged_statuses| merge(merged_statuses, status) }
     end
@@ -55,14 +55,8 @@ class CommitStatus
   end
 
   # need to do weird escape logic since other wise either 'foo/bar' or 'bar[].foo' do not work
-  def github_status
-    escaped_ref = @reference.gsub(/[^a-zA-Z\/\d_-]+/) { |v| CGI.escape(v) }
-    GITHUB.combined_status(@stage.project.repository_path, escaped_ref).to_h
-  rescue Octokit::NotFound
-    {
-      state: "failure",
-      statuses: [{"state": "Reference", description: "'#{@reference}' does not exist"}]
-    }
+  def commit_status
+    ChangesetFactory.commit.status(@stage.project.repository_path, @reference)
   end
 
   # checks if other stages that deploy to the same hosts as this stage have deployed a newer release

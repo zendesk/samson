@@ -108,6 +108,9 @@ module Samson
     # The directory in which repositories should be cached.
     config.samson.cached_repos_dir = Rails.root.join("cached_repos")
 
+    # Choose the remote repository for this Samson implementation.  Options are github or gitlab
+    config.samson.remote_repository = ENV["REMOTE_REPO"] || 'github'
+
     # The Github teams and organizations used for permissions
     config.samson.github = ActiveSupport::OrderedOptions.new
     config.samson.github.organization = ENV["GITHUB_ORGANIZATION"].presence
@@ -128,8 +131,11 @@ module Samson
     config.samson.ldap.bind_dn = ENV["LDAP_BINDDN"].presence
     config.samson.ldap.password = ENV["LDAP_PASSWORD"].presence
 
+    # The Gitlab configuration
     config.samson.gitlab = ActiveSupport::OrderedOptions.new
     config.samson.gitlab.web_url = deprecated_url.call("GITLAB_URL") || 'https://gitlab.com'
+    config.samson.gitlab.api_endpoint = deprecated_url.call("GITLAB_API_ENDPOINT") || 'https://gitlab.com/api/v3'
+    config.samson.gitlab.api_private_token = ENV["GITLAB_API_PRIVATE_TOKEN"].presence
 
     config.samson.auth = ActiveSupport::OrderedOptions.new
     config.samson.auth.github = Samson::EnvCheck.set?("AUTH_GITHUB")

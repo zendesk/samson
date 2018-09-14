@@ -122,7 +122,7 @@ describe DeploysHelper do
 
   describe "#github_users" do
     it "renders users' avatar" do
-      result = github_users(
+      result = git_users(
         [
           stub(url: 'foourl', login: 'foologin', avatar_url: 'fooavatar'),
           stub(url: 'barurl', login: 'bar"<script>login', avatar_url: 'baravatar'),
@@ -134,7 +134,7 @@ describe DeploysHelper do
     end
 
     it "ignores nils" do
-      github_users([nil, nil]).must_equal " "
+      git_users([nil, nil]).must_equal " "
     end
   end
 

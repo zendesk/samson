@@ -1,6 +1,6 @@
 <%# no page_title since this is rendered via ajax %>
 
-<% Changeset::ATTRIBUTE_TABS.each do |tab| %>
+<% ChangesetFactory.attribute_tabs.each do |tab| %>
   <div class="tab-pane changeset-content" id="<%= tab %>">
     <%= render "changeset/#{tab}", changeset: @changeset, type: 'deploy' %>
   </div>

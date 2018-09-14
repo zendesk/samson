@@ -129,7 +129,8 @@ describe Integrations::GithubController do
 
     before do
       request.headers['X-Github-Event'] = 'issue_comment'
-      Changeset::IssueComment.any_instance.expects(:pull_request).at_least_once.returns(stub(sha: 'abc', branch: 'dev'))
+      Samson::Github::Changeset::IssueComment.any_instance.expects(:pull_request).at_least_once.returns(stub(sha: 'abc', branch: 'dev'))
+      #Gitlab::Changeset::IssueComment.any_instance.expects(:pull_request).at_least_once.returns(stub(sha: 'abc', branch: 'dev'))
     end
 
     it_deploys

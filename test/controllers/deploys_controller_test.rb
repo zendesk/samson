@@ -435,7 +435,7 @@ describe DeploysController do
           deletions: 0,
         }.merge(data_overrides)
 
-        pr = Changeset::PullRequest.new('foo/bar', Sawyer::Resource.new(Sawyer::Agent.new(''), attrs))
+        pr = ChangesetFactory.pull_request.new('foo/bar', Sawyer::Resource.new(Sawyer::Agent.new(''), attrs))
         pr.stubs(:parse_risks).returns(risks)
         pr
       end

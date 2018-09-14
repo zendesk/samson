@@ -5,7 +5,7 @@
 
 <% changeset.pull_requests.each do |pr| %>
   <% if pr.risky? %>
-    <h5><strong>#<%= pr.number %></strong> <%= link_to pr.title, pr.url %> <%= github_users(pr.users) %></h5>
+    <h5><strong>#<%= pr.number %></strong> <%= link_to pr.title, pr.url %> <%= git_users(pr.users) %></h5>
     <%= markdown pr.risks %>
   <% elsif pr.missing_risks? %>
     <div>
@@ -14,7 +14,7 @@
             class: 'glyphicon glyphicon-alert deployment-alert'
           )
       %>
-      <h5><strong>#<%= pr.number %></strong> <%= link_to pr.title, pr.url %> <%= github_users(pr.users) %><%= help_icon %></h5>
+      <h5><strong>#<%= pr.number %></strong> <%= link_to pr.title, pr.url %> <%= git_users(pr.users) %><%= help_icon %></h5>
     </div>
   <% end %>
 <% end %>

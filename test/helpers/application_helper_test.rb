@@ -41,7 +41,7 @@ describe ApplicationHelper do
   describe "#github_user_avatar" do
     it "renders an avatar for a Github user" do
       user = stub(login: "willy_wonka", avatar_url: "http://wonka.com/me.gif")
-      html = github_user_avatar(user)
+      html = git_user_avatar(user)
 
       html.must_include %(title="willy_wonka")
     end
@@ -763,5 +763,6 @@ describe ApplicationHelper do
       result.must_equal expected_result
     end
   end
+  def maxitest_timeout;false;end
 end
 # rubocop:enable Metrics/LineLength
