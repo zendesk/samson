@@ -514,5 +514,5 @@ describe Samson::Gitlab::Changeset::PullRequest do
     end
   end
 
-  def maxitest_timeout;false;end
+  #def maxitest_timeout;false;end
 end

@@ -96,5 +96,5 @@ describe GithubStatus do
     stub_github_api "repos/#{repo}/commits/#{ref}/status", body, status
   end
 
-  def maxitest_timeout;false;end
+  #def maxitest_timeout;false;end
 end

@@ -116,5 +116,5 @@ describe Samson::Gitlab::Changeset::Commit do
     end
   end
 
-  def maxitest_timeout;false;end
+  #def maxitest_timeout;false;end
 end

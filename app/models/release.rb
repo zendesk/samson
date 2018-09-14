@@ -59,14 +59,8 @@ class Release < ActiveRecord::Base
   def contains_commit?(other_commit)
     return true if other_commit == commit
     # status values documented here: http://stackoverflow.com/questions/23943855/github-api-to-compare-commits-response-status-is-diverged
-    ['behind', 'identical'].include?(GITHUB.compare(project.repository_path, commit, other_commit).status)
-  rescue Octokit::NotFound
-    false
-  rescue Octokit::Error => e
-    ErrorNotifier.notify(e, parameters: {
-      repository_path: project.repository_path, commit: commit, other_commit: other_commit
-    })
-    false # Err on side of caution and cause a new release to be created.
+    compare = ChangesetFactory.changeset.new(project.repository_path, commit, other_commit).comparison
+    ['behind', 'identical'].include?(compare.status)
   end
 
   private

@@ -115,6 +115,10 @@ module Samson
           @error = error
         end
 
+        def status
+          @error
+        end
+
         def commits
           []
         end

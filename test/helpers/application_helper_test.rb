@@ -763,6 +763,7 @@ describe ApplicationHelper do
       result.must_equal expected_result
     end
   end
-  def maxitest_timeout;false;end
+
+  #def maxitest_timeout;false;end
 end
 # rubocop:enable Metrics/LineLength

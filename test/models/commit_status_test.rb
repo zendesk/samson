@@ -197,5 +197,6 @@ describe CommitStatus do
       status.send(:ref_statuses).must_equal [{foo: :bar}]
     end
   end
-  def maxitest_timeout;false;end
+
+  #def maxitest_timeout;false;end
 end

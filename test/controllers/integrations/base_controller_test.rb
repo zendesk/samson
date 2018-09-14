@@ -47,7 +47,7 @@ describe Integrations::BaseController do
     end
 
     it 'does not create a release when latest already includes the commit' do
-      GITHUB.expects(:compare).returns(stub(status: 'behind'))
+      GITHUB.expects(:compare).returns(OpenStruct.new(status: 'behind'))
       project.releases.create!(commit: sha.sub('d', 'e'), author: users(:admin))
       post :create, params: {test_route: true, token: token}
       assert_response :success
@@ -241,4 +241,6 @@ describe Integrations::BaseController do
     bad.delete('app/controllers/integrations/base_controller.rb')
     bad.must_equal [], "#{bad.join(', ')} include Rails.logger calls, use record_log"
   end
+
+  #def maxitest_timeout;false;end
 end
