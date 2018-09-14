@@ -523,6 +523,15 @@ describe Kubernetes::Resource do
         end
       end
 
+      it "updates when running and using RollingUpdate" do
+        template[:spec][:updateStrategy] = {type: "RollingUpdate"}
+        assert_request(:get, url, to_return: {body: "{}"}) do
+          assert_request(:put, url, to_return: {body: "{}"}) do
+            resource.deploy
+          end
+        end
+      end
+
       it "patches and deletes pods when using OnDelete (default)" do
         set = {
           spec: {
