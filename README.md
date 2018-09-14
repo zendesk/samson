@@ -42,6 +42,7 @@ Samson will:
 * [Extra features](https://github.com/zendesk/samson/blob/master/docs/extra_features.md)
 * [Plugins](https://github.com/zendesk/samson/blob/master/docs/plugins.md)
 * [Statistics](https://github.com/zendesk/samson/blob/master/docs/stats.md)
+* [API](https://github.com/zendesk/samson/blob/master/docs/api.md)
 
 ### Contributing
 
