@@ -85,9 +85,24 @@ describe Changeset do
     let(:message1) { Sawyer::Resource.new(sawyer_agent, message: 'Merge pull request #42') }
     let(:message2) { Sawyer::Resource.new(sawyer_agent, message: 'Fix typo') }
     let(:pr_from_coolcommitter) do
-      Sawyer::Resource.new(sawyer_agent, user: {
+      Sawyer::Resource.new(
+        sawyer_agent,
+        user: {
         login: 'coolcommitter'
-      })
+        },
+        additions: 10
+      )
+    end
+    let(:prs_from_coolcommitter) do
+      [
+        Sawyer::Resource.new(
+          sawyer_agent,
+          user: {
+            login: 'coolcommitter'
+          },
+          number: 5
+        )
+      ]
     end
     let(:pr_from_coolcommitter_wrapped) { Changeset::PullRequest.new("foo/bar", pr_from_coolcommitter) }
 
@@ -105,10 +120,14 @@ describe Changeset do
     it "finds pull requests open for a branch" do
       comparison = Sawyer::Resource.new(sawyer_agent, commits: [commit2])
       GITHUB.stubs(:compare).with("foo/bar", "a", "b").returns(comparison)
-      GITHUB.stubs(:pull_requests).with("foo/bar", head: "foo:b").returns([pr_from_coolcommitter])
+      GITHUB.stubs(:pull_requests).with("foo/bar", head: "foo:b").returns(prs_from_coolcommitter)
+      GITHUB.stubs(:pull_request).with("foo/bar", 5).returns(pr_from_coolcommitter)
 
-      changeset.pull_requests.size.must_equal 1
-      changeset.pull_requests.first.users.first.login.must_equal 'coolcommitter'
+      pull_requests = changeset.pull_requests
+
+      pull_requests.size.must_equal 1
+      pull_requests.first.users.first.login.must_equal 'coolcommitter'
+      pull_requests.first.additions.must_equal 10
     end
 
     it "does not fail if fetching pull request from Github fails" do
