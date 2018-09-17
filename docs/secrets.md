@@ -2,7 +2,7 @@
 
 Samson can manage secrets for commands, environment variables or kubernetes deploys under `/secrets`.
 
-Lookup logic is in [lib/samson/secrets/key_resolver.rb](lib/samson/secrets/key_resolver.rb).
+Lookup logic is in [lib/samson/secrets/key_resolver.rb](/lib/samson/secrets/key_resolver.rb).
 
 Most usage is with `secret://some_key` that will be looked up in the secret store and resolved to the most specific secret,
 for example `some_key` might be resolved to `production/my-project/global/some_key`.
