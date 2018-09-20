@@ -11,7 +11,7 @@ class SlackWebhook < ActiveRecord::Base
     when :buddy_box then buddy_box?
     when :buddy_request then buddy_request?
     when :before_deploy then before_deploy?
-    when :after_deploy then after_deploy? && (!only_on_failure? || !deploy.succeeded?)
+    when :after_deploy then deploy.succeeded? ? on_deploy_success? : on_deploy_failure?
     else raise "Unknown phase #{deploy_phase.inspect}"
     end
   end
@@ -33,7 +33,7 @@ class SlackWebhook < ActiveRecord::Base
   end
 
   def validate_used
-    return if buddy_box || buddy_request || before_deploy || after_deploy
+    return if buddy_box || buddy_request || before_deploy || on_deploy_success || on_deploy_failure
     errors.add :base, "select at least one delivery time"
   end
 end
