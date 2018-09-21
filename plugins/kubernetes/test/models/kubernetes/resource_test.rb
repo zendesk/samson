@@ -396,6 +396,11 @@ describe Kubernetes::Resource do
           end
         end
       end
+
+      it "is 0 when deleted" do
+        delete_resource!
+        resource.desired_pod_count.must_equal 0
+      end
     end
 
     describe "#revert" do
@@ -585,6 +590,16 @@ describe Kubernetes::Resource do
           end
         end
       end
+
+      it "deletes when user requested deletion" do
+        delete_resource!
+        resource.expects(:pods).returns([])
+        assert_request(:get, url, to_return: [{body: "{}"}, {status: 404}]) do
+          assert_request(:delete, url, to_return: {body: "{}"}) do
+            resource.deploy
+          end
+        end
+      end
     end
 
     describe "#delete" do
@@ -598,6 +613,24 @@ describe Kubernetes::Resource do
             end
           end
         end
+      end
+    end
+
+    describe "#patch_replace?" do
+      before { resource.stubs(:running?).returns(true) }
+
+      it "is a replace when replacing existing" do
+        assert resource.patch_replace?
+      end
+
+      it "is not a replace when deleting" do
+        delete_resource!
+        refute resource.patch_replace?
+      end
+
+      it "is not a replace when creating" do
+        resource.stubs(:running?).returns(false)
+        refute resource.patch_replace?
       end
     end
   end
@@ -752,11 +785,11 @@ describe Kubernetes::Resource do
   end
 
   describe Kubernetes::Resource::ConfigMap do
+    let(:kind) { 'ConfigMap' }
+    let(:url) { "#{origin}/api/v1/namespaces/pod1/configmaps/some-project" }
+
     # a simple test to make sure basics work
     describe "#deploy" do
-      let(:kind) { 'ConfigMap' }
-      let(:url) { "#{origin}/api/v1/namespaces/pod1/configmaps/some-project" }
-
       it "creates when missing" do
         assert_request(:get, url, to_return: {status: 404}) do
           assert_request(:post, base_url, to_return: {body: "{}"}) do
@@ -802,11 +835,32 @@ describe Kubernetes::Resource do
           end
         end
       end
+
+      it "deletes the pod when requested for deletion" do
+        delete_resource!
+        assert_request(:get, url, to_return: [{body: "{}"}, {status: 404}]) do
+          assert_request(:delete, url, to_return: {body: "{}"}) do
+            resource.deploy
+          end
+        end
+      end
+
+      it "doesn't delete the pod if it's already deleted" do
+        delete_resource!
+        assert_request(:get, url, to_return: {status: 404}) do
+          resource.deploy
+        end
+      end
     end
 
     describe "#desired_pod_count" do
       it "is 1" do
         resource.desired_pod_count.must_equal 1
+      end
+
+      it "is 0 when pod is deleted" do
+        delete_resource!
+        resource.desired_pod_count.must_equal 0
       end
     end
   end
