@@ -4,6 +4,7 @@
   <li><a href="#pull_requests-<%= @release.version %>" data-toggle="tab">Pull Requests</a></li>
   <li class="active"><a href="#commits-<%= @release.version %>" data-toggle="tab">Commits</a></li>
   <li><a href="#files-<%= @release.version %>" data-toggle="tab">Files</a></li>
+  <li><a href="#statuses-<%= @release.version %>" data-toggle="tab">Statuses</a></li>
   <li><a href="#risks-<%= @release.version %>" data-toggle="tab">Risks</a></li>
   <li><a href="#jira_issues-<%= @release.version %>" data-toggle="tab">JIRA Issues</a></li>
 </ul>
@@ -24,6 +25,10 @@
 
   <div class="tab-pane" id="files-<%= @release.version %>">
     <%= render 'changeset/files', changeset: @changeset %>
+  </div>
+
+  <div class="tab-pane" id="statuses-<%= @release.version %>">
+    <%= render 'changeset/statuses', changeset: @changeset %>
   </div>
 
   <div class="tab-pane" id="risks-<%= @release.version %>">

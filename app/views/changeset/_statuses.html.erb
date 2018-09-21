@@ -1,0 +1,3 @@
+<% changeset.github_status.statuses.each do |status| %>
+  <%= github_commit_status_icon(status.state) %> <b><%= status.context %>:</b> <%= link_to status.description, status.url %><br/>
+<% end %>
