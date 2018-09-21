@@ -47,8 +47,10 @@ class DeploysController < ApplicationController
   end
 
   def new
+    defaults = {reference: @stage.default_reference}
     deploy_params = params.except(:project_id, :stage_id).permit(:reference).merge(stage: @stage)
-    @deploy = current_project.deploys.build(deploy_params)
+
+    @deploy = current_project.deploys.build(defaults.merge(deploy_params))
   end
 
   def create

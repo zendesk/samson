@@ -5,6 +5,7 @@
         label: "Notify after deploy",
         help: "Email addresses to notify of finished deploys, separated by <code>;</code>".html_safe
   %>
+  <%= form.input :default_reference, help: "Default reference to deploy e.g. 'master'" %>
 
   <% if DeployGroup.enabled? %>
     <%= render 'deploy_groups/deploy_group_select', form: form %>
@@ -18,7 +19,8 @@
   <%
     confirm_label = "Confirm before deployment"
     no_code_label = "Does not deploy code"
-    no_ref_label = "When selected with '#{no_code_label}' and disabled '#{confirm_label}' the stage can be directly executed."
+    no_ref_label = "Deploys with either the 'Default Reference' value or 'master'." \
+      " When selected with '#{no_code_label}' and '#{confirm_label}' is disabled the stage can be directly executed."
   %>
 
   <% help = "Bypass " + [("buddy check" if BuddyCheck.enabled?), "release tracking"].compact.to_sentence %>
