@@ -364,7 +364,7 @@ describe Kubernetes::Resource do
         e = assert_raises Samson::Hooks::UserError do
           resource.deploy
         end
-        e.message.must_include "Unable to terminate DaemonSet some-project pod1 Pod1"
+        e.message.must_include "Unable to terminate DaemonSet some-project pod1 Pod1 because it still has 1 pod."
       end
     end
 
