@@ -62,6 +62,12 @@ describe SamsonNewRelic do
         SamsonNewRelic.trace_method_execution_scope("test") { "with tracer" }
       end
     end
+
+    it "trace scope and returns execution result" do
+      with_env NEW_RELIC_LICENSE_KEY: "1" do
+        SamsonNewRelic.trace_method_execution_scope("test") { "with tracer" }.must_equal("with tracer")
+      end
+    end
   end
 
   class Klass
