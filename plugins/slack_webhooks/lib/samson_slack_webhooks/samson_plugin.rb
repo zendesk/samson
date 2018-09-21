@@ -20,7 +20,7 @@ Samson::Hooks.callback :stage_permitted_params do
     slack_webhooks_attributes: [
       :id, :_destroy,
       :webhook_url, :channel,
-      :buddy_box, :buddy_request, :before_deploy, :after_deploy, :only_on_failure
+      :buddy_box, :buddy_request, :before_deploy, :on_deploy_success, :on_deploy_failure
     ]
   }
 end

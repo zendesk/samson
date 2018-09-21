@@ -6,7 +6,14 @@ SingleCov.covered!
 describe SamsonSlackWebhooks do
   let(:deploy) { deploys(:succeeded_test) }
   let(:stage) { deploy.stage }
-  let!(:webhook) { stage.slack_webhooks.build(before_deploy: true, after_deploy: true, buddy_request: true) }
+  let!(:webhook) do
+    stage.slack_webhooks.build(
+      before_deploy: true,
+      on_deploy_success: true,
+      on_deploy_failure: true,
+      buddy_request: true
+    )
+  end
 
   describe :buddy_request do
     it "sends notification" do
@@ -54,7 +61,8 @@ describe SamsonSlackWebhooks do
     end
 
     it "does not send notifications when disabled" do
-      webhook.after_deploy = false
+      webhook.on_deploy_success = false
+      webhook.on_deploy_failure = false
       SlackWebhookNotification.any_instance.expects(:deliver).never
       Samson::Hooks.fire(:after_deploy, deploy, nil)
     end
@@ -62,7 +70,7 @@ describe SamsonSlackWebhooks do
 
   describe :stage_clone do
     it "copies all attributes except id" do
-      stage.slack_webhooks = [SlackWebhook.new(webhook_url: 'http://example.com', after_deploy: true)]
+      stage.slack_webhooks = [SlackWebhook.new(webhook_url: 'http://example.com', on_deploy_success: true)]
       new_stage = Stage.new
       Samson::Hooks.fire(:stage_clone, stage, new_stage)
       new_stage.slack_webhooks.map(&:attributes).must_equal [{
@@ -74,9 +82,9 @@ describe SamsonSlackWebhooks do
         "updated_at" => nil,
         "buddy_request" => false,
         "before_deploy" => false,
-        "after_deploy" => true,
+        "on_deploy_success" => true,
+        "on_deploy_failure" => false,
         "buddy_box" => false,
-        "only_on_failure" => false
       }]
     end
   end
@@ -87,7 +95,7 @@ describe SamsonSlackWebhooks do
         slack_webhooks_attributes: [
           :id, :_destroy,
           :webhook_url, :channel,
-          :buddy_box, :buddy_request, :before_deploy, :after_deploy, :only_on_failure
+          :buddy_box, :buddy_request, :before_deploy, :on_deploy_success, :on_deploy_failure
         ]
       )
     end

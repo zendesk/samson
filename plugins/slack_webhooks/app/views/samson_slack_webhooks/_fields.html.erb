@@ -22,38 +22,38 @@
       </div>
 
       <div class="form-group">
-        <div class="col-lg-2 checkbox">
+        <div class="checkbox">
           <%= slack_field.label :buddy_box do %>
             <%= slack_field.check_box :buddy_box %>
             Buddy Box <%= additional_info "show a Request buddy box on the deploy page that users can click to request a buddy" %>
           <% end %>
         </div>
 
-        <div class="col-lg-2 checkbox">
+        <div class="checkbox">
           <%= slack_field.label :buddy_request do %>
             <%= slack_field.check_box :buddy_request %>
             Buddy Request
           <% end %>
         </div>
 
-        <div class="col-lg-2 checkbox">
+        <div class="checkbox">
           <%= slack_field.label :before_deploy do %>
             <%= slack_field.check_box :before_deploy %>
             Before Deploy
           <% end %>
         </div>
 
-        <div class="col-lg-2 checkbox">
-          <%= slack_field.label :after_deploy do %>
-            <%= slack_field.check_box :after_deploy %>
-            After Deploy
+        <div class="checkbox">
+          <%= slack_field.label :on_deploy_success do %>
+            <%= slack_field.check_box :on_deploy_success %>
+            On Deploy Success
           <% end %>
         </div>
 
-        <div class="col-lg-3 checkbox">
-          <%= slack_field.label :only_on_failure do %>
-            <%= slack_field.check_box :only_on_failure %>
-            Only on failure <%= additional_info "... for After Deploy" %>
+        <div class="checkbox">
+          <%= slack_field.label :on_deploy_failure do %>
+            <%= slack_field.check_box :on_deploy_failure %>
+            On Deploy Failure
           <% end %>
         </div>
       </div>
