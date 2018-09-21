@@ -82,7 +82,7 @@ ActiveSupport::TestCase.class_eval do
   # record hook and their arguments called during a given block
   def record_hooks(callback, &block)
     called = []
-    Samson::Hooks.with_callback(callback, lambda { |*args| called << args }, &block)
+    Samson::Hooks.with_callback(callback, ->(*args) { called << args }, &block)
     called
   end
 

@@ -51,7 +51,7 @@ describe Integrations::BuildkiteController do
   end
 
   context 'when the buildkite_release_params hook gets trigger' do
-    let(:buildkite_build_number) { lambda { |_, _| [[:number, 9]] } }
+    let(:buildkite_build_number) { ->(_, _) { [[:number, 9]] } }
     before do
       project.releases.destroy_all
       project.builds.destroy_all
