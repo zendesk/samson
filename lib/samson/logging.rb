@@ -10,7 +10,7 @@ elsif Samson::EnvCheck.set?("RAILS_LOG_TO_SYSLOG")
   # log 1 message per request to syslog in json format
   config.lograge.enabled = true
 
-  config.lograge.custom_options = lambda do |event|
+  config.lograge.custom_options = ->(event) do
     # show params for every request
     unwanted_keys = %w[format action controller]
     params = event.payload[:params].reject { |key, _| unwanted_keys.include? key }

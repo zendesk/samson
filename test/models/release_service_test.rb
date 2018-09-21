@@ -68,7 +68,7 @@ describe ReleaseService do
       let!(:stage) { project.stages.create!(name: "production", deploy_on_release: true) }
 
       it 'does not deploy if the release_deploy_condition check is false' do
-        deployable_condition_check = lambda { |_, _| false }
+        deployable_condition_check = ->(_, _) { false }
 
         Samson::Hooks.with_callback(:release_deploy_conditions, deployable_condition_check) do |_|
           service.release(commit: commit, author: author)
@@ -78,7 +78,7 @@ describe ReleaseService do
       end
 
       it 'does deploy if the release_deploy_condition check is true' do
-        deployable_condition_check = lambda { |_, _| true }
+        deployable_condition_check = ->(_, _) { true }
 
         Samson::Hooks.with_callback(:release_deploy_conditions, deployable_condition_check) do |_|
           release = service.release(commit: commit, author: author)

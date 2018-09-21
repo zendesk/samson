@@ -15,7 +15,7 @@ DeployGroup.class_eval do
     :cluster_deploy_group,
     allow_destroy: true,
     update_only: true,
-    reject_if: lambda { |h| h[:kubernetes_cluster_id].blank? }
+    reject_if: ->(h) { h[:kubernetes_cluster_id].blank? }
   )
 
   def kubernetes_namespace

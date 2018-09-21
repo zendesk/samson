@@ -31,7 +31,7 @@ module Kubernetes
       end
 
       def restarted?
-        @pod.dig(:status, :containerStatuses)&.any? { |s| s.fetch(:restartCount).positive? }
+        @pod.dig(:status, :containerStatuses)&.any? { |s| s.fetch(:restartCount) > 0 }
       end
 
       def phase

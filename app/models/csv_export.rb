@@ -9,7 +9,7 @@ class CsvExport < ActiveRecord::Base
   validates :status, inclusion: {in: STATUS_VALUES}
   delegate :email, to: :user, allow_nil: true
 
-  scope :old, lambda {
+  scope :old, -> {
     end_date = Rails.application.config.samson.export_job.downloaded_age.seconds.ago
     timeout_date = Rails.application.config.samson.export_job.max_age.seconds.ago
     where("(status = 'downloaded' AND updated_at <= :end_date) OR created_at <= :timeout_date",

@@ -6,20 +6,14 @@ AllCops:
     - tmp/**/*
     - node_modules/**/*
 
-LineLength:
+Metrics/LineLength:
   Max: 120
 
-ClassLength:
-  Enabled: false
-
-Layout/CommentIndentation:
+Metrics/ClassLength:
   Enabled: false
 
 Style/StringLiterals:
   Enabled: false
-
-HashSyntax:
-   EnforcedStyle: ruby19
 
 Style/SignalException:
   Enabled: false
@@ -31,8 +25,9 @@ Layout/SpaceInsideHashLiteralBraces:
 Lint/AmbiguousOperator:
   Enabled: false
 
+# Always use `->`
 Style/Lambda:
-  Enabled: false
+  EnforcedStyle: literal
 
 Style/SpecialGlobalVars:
   Enabled: false
@@ -55,14 +50,15 @@ Style/StringLiteralsInInterpolation:
 Style/NumericLiterals:
   Enabled: false
 
+# prefer simpler `a == 0` over `a.zero?`
 Style/NumericPredicate:
-  Enabled: false
+  EnforcedStyle: comparison
 
 Layout/FirstParameterIndentation:
   Enabled: false
 
 Layout/IndentHash:
-  Enabled: false
+  EnforcedStyle: consistent
 
 Layout/AlignParameters:
   EnforcedStyle: with_fixed_indentation
@@ -92,7 +88,7 @@ Metrics/CyclomaticComplexity:
   Enabled: false
 
 Layout/MultilineMethodCallIndentation:
-  Enabled: false
+  Enabled: false # none of the EnforcedStyle options allow for consistent 2-space indent
 
 Lint/AmbiguousRegexpLiteral:
   Enabled: false
@@ -103,14 +99,7 @@ Layout/DotPosition:
 Style/ClassAndModuleChildren:
   Enabled: false
 
-# %w[] shows that it will return an array
-Style/PercentLiteralDelimiters:
-  PreferredDelimiters:
-    '%i': '[]'
-    '%w': '[]'
-    '%W': '[]'
-
-# for single `/` more readable
+# often single `/` is more readable as `/a\/b/`
 Style/RegexpLiteral:
   Enabled: false
 
@@ -138,6 +127,7 @@ Metrics/ParameterLists:
 Metrics/BlockLength:
   Enabled: false
 
+# Allow use of `if a = b(1, 2)` for simplified control flow
 Lint/AssignmentInCondition:
   Enabled: false
 

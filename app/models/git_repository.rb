@@ -106,7 +106,7 @@ class GitRepository
   # @returns [block result, false on lock timeout]
   def exclusive(timeout: 10.minutes)
     log_wait = proc do |owner|
-      if Rails.env.test? || (Time.now.to_i % 10).zero?
+      if Rails.env.test? || (Time.now.to_i % 10) == 0
         executor.output.write("Waiting for repository lock for #{owner}\n")
       end
     end

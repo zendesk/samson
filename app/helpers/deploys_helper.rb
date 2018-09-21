@@ -41,7 +41,7 @@ module DeploysHelper
   end
 
   def file_changes_label(count, type)
-    content_tag :span, count.to_s, class: "label #{type}" unless count.zero?
+    content_tag :span, count.to_s, class: "label #{type}" unless count == 0
   end
 
   def github_users(github_users)

@@ -280,7 +280,7 @@ module Kubernetes
           # $ kubectl scale deployment {DEPLOYMENT_NAME} --replicas 0
           # "replicas" key is actually removed from "status" map
           # $ {"status":{"conditions":[...],"observedGeneration":2}}
-          break if fetch_resource.dig(:status, :replicas).to_i.zero?
+          break if fetch_resource.dig(:status, :replicas).to_i == 0
         end
 
         # delete the actual deployment
