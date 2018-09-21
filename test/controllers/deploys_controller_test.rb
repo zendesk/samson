@@ -368,6 +368,20 @@ describe DeploysController do
         deploy.stage.must_equal stage
         deploy.reference.must_equal "abcd"
       end
+
+      describe "with default reference" do
+        before { stage.update_column(:default_reference, 'pandas4lyfe') }
+
+        it "sets default reference" do
+          get :new, params: {project_id: project.to_param, stage_id: stage.to_param}
+          assigns(:deploy).reference.must_equal 'pandas4lyfe'
+        end
+
+        it "sets passed in reference over default reference" do
+          get :new, params: {project_id: project.to_param, stage_id: stage.to_param, reference: "abcd"}
+          assigns(:deploy).reference.must_equal "abcd"
+        end
+      end
     end
 
     describe "#create" do

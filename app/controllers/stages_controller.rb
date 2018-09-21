@@ -121,22 +121,23 @@ class StagesController < ApplicationController
 
   def stage_permitted_params
     [
-      :name,
+      :builds_in_environment,
+      :cancel_queued_deploys,
       :confirm,
-      :permalink,
       :dashboard,
-      :production,
-      :notify_email_address,
+      :default_reference,
       :deploy_on_release,
       :email_committers_on_automated_deploy_failure,
-      :static_emails_on_automated_deploy_failure,
-      :no_code_deployed,
       :is_template,
-      :run_in_parallel,
-      :cancel_queued_deploys,
-      :periodical_deploy,
+      :name,
+      :no_code_deployed,
       :no_reference_selection,
-      :builds_in_environment,
+      :notify_email_address,
+      :periodical_deploy,
+      :permalink,
+      :production,
+      :run_in_parallel,
+      :static_emails_on_automated_deploy_failure,
       {
         deploy_group_ids: [],
         command_ids: []
