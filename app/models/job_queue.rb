@@ -139,7 +139,7 @@ class JobQueue
   end
 
   def staggering_enabled?
-    ENV['SERVER_MODE'] && !stagger_interval.zero?
+    ENV['SERVER_MODE'] && stagger_interval != 0
   end
 
   def stagger_interval

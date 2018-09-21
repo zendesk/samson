@@ -107,7 +107,7 @@ class MassRolloutsController < ApplicationController
 
     return "has no template stage to merge into" unless template_stage
     return "is a template stage" if stage.is_template
-    return "has no deploy groups" if stage.deploy_groups.count.zero?
+    return "has no deploy groups" if stage.deploy_groups.count == 0
     return "has more than one deploy group" if stage.deploy_groups.count > 1
     return "commands in template stage differ" if stage.script != template_stage.script
 

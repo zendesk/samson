@@ -50,8 +50,9 @@ Style/StringLiteralsInInterpolation:
 Style/NumericLiterals:
   Enabled: false
 
+# prefer simpler `a == 0` over `a.zero?`
 Style/NumericPredicate:
-  Enabled: false
+  EnforcedStyle: comparison
 
 Layout/FirstParameterIndentation:
   Enabled: false

@@ -251,7 +251,7 @@ module Samson
       emails.select! { |e| e.include?('@') }
       emails.map! { |x| Mail::Address.new(x) }
       if restricted_domain = ENV["EMAIL_DOMAIN"]
-        emails.select! { |x| x.domain.casecmp(restricted_domain).zero? }
+        emails.select! { |x| x.domain.casecmp(restricted_domain) == 0 }
       end
       emails.map(&:address).uniq.join(",")
     end

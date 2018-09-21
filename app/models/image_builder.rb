@@ -92,7 +92,7 @@ class ImageBuilder
       digest = nil
 
       DockerRegistry.all.each_with_index do |registry, i|
-        primary = i.zero?
+        primary = i == 0
         repo = build.project.docker_repo(registry, build.dockerfile)
 
         if override_tag
