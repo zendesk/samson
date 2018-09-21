@@ -6,18 +6,18 @@ SingleCov.covered!
 describe SamsonDatadogTracer do
   describe ".enabled?" do
     before(:all) do
-      ENV.delete('STATSD_TRACER')
+      ENV.delete('DATADOG_TRACER')
     end
     context "in any environment" do
       it "is false by default" do
         refute SamsonDatadogTracer.enabled?
       end
 
-      it "is true when STATSD_TRACER env var is set" do
-        with_env STATSD_TRACER: "1" do
+      it "is true when DATADOG_TRACER env var is set" do
+        with_env DATADOG_TRACER: "1" do
           assert SamsonDatadogTracer.enabled?
         end
-        with_env STATSD_TRACER: nil do
+        with_env DATADOG_TRACER: nil do
           refute SamsonDatadogTracer.enabled?
         end
       end
@@ -27,7 +27,7 @@ describe SamsonDatadogTracer do
   describe "#performance_tracer" do
     describe "when enabled" do
       it "triggers Datadog tracer method" do
-        with_env STATSD_TRACER: "1" do
+        with_env DATADOG_TRACER: "1" do
           class Klass
             include ::Samson::PerformanceTracer
             def with_role
@@ -39,7 +39,7 @@ describe SamsonDatadogTracer do
         end
       end
       it "skips tracer with missing method" do
-        with_env STATSD_TRACER: "1" do
+        with_env DATADOG_TRACER: "1" do
           helper = SamsonDatadogTracer::APM::Helpers
           method = :with_role
           Samson::Hooks.fire :performance_tracer, User, [method]
@@ -49,7 +49,7 @@ describe SamsonDatadogTracer do
     end
 
     it "skips Datadog tracer when disabled" do
-      with_env STATSD_TRACER: nil do
+      with_env DATADOG_TRACER: nil do
         User.expects(:trace_method).never
         Samson::Hooks.fire :performance_tracer, User, [:with_role]
       end

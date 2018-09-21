@@ -4,13 +4,13 @@ module SamsonDatadogTracer
   end
 
   def self.enabled?
-    !!ENV['STATSD_TRACER']
+    !!ENV['DATADOG_TRACER']
   end
 end
 
 Samson::Hooks.callback :performance_tracer do |klass, methods|
   if SamsonDatadogTracer.enabled?
-    klass.is_a?(Class) && klass.class_eval do
+    klass.class_eval do
       include SamsonDatadogTracer::APM
 
       helper = SamsonDatadogTracer::APM::Helpers

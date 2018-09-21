@@ -18,14 +18,14 @@ describe SamsonDatadogTracer::APM do
 
   describe ".trace_method_execution_scope" do
     it "skips tracer when disabled" do
-      with_env STATSD_TRACER: nil do
+      with_env DATADOG_TRACER: nil do
         Datadog.expects(:tracer).never
         SamsonDatadogTracer::APM.trace_method_execution_scope("test") { "without tracer" }
       end
     end
 
     it "trigger tracer when enabled" do
-      with_env STATSD_TRACER: "1" do
+      with_env DATADOG_TRACER: "1" do
         Rails.stubs(:env).returns("staging")
         Datadog.expects(:tracer).returns(DDTracer)
         SamsonDatadogTracer::APM.trace_method_execution_scope("test") { "with tracer" }
@@ -52,7 +52,7 @@ describe SamsonDatadogTracer::APM do
     end
   end
 
-  ENV.store("STATSD_TRACER", "1")
+  ENV.store("DATADOG_TRACER", "1")
   class TestKlass2
     include SamsonDatadogTracer::APM
     SamsonDatadogTracer::APM.module_eval { include Datadog }

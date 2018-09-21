@@ -11,14 +11,21 @@ module Samson
       end
 
       def trace_execution_scoped(scope_name)
-        plugins = TRACER_PLUGINS.map(&:safe_constantize).compact
-        using_plugins plugins, scope_name do
+        # Tracing the scope is restricted to avoid into slow startup
+        # Refer Samson::BootCheck
+        if ['staging', 'production'].include?(Rails.env)
+          plugins = TRACER_PLUGINS.map(&:safe_constantize).compact
+          execution = using_plugins plugins, scope_name do
+            yield
+          end
+          execution.call
+        else
           yield
         end
       end
 
       def using_plugins(plugins, scope_name, &block)
-        plugins.inject(block) { |inner, plugin| plugin.trace_method_execution_scope(scope_name) { inner } }[]
+        plugins.inject(block) { |inner, plugin| plugin.trace_method_execution_scope(scope_name) { inner } }
       end
     end
 

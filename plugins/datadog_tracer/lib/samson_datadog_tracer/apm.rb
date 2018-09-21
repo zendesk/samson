@@ -7,7 +7,7 @@ module SamsonDatadogTracer
       end
 
       def trace_method_execution_scope(scope_name)
-        if SamsonDatadogTracer.enabled? && ['staging', 'production'].include?(Rails.env)
+        if SamsonDatadogTracer.enabled?
           Datadog.tracer.trace("Custom/Hooks/#{scope_name}") do
             yield
           end
@@ -21,7 +21,7 @@ module SamsonDatadogTracer
       def trace_method(method)
         return unless SamsonDatadogTracer.enabled?
 
-        @__apm_module ||= begin
+        @apm_module ||= begin
           mod = Module.new
           mod.extend(SamsonDatadogTracer::APM::Helpers)
           prepend(mod)
@@ -31,8 +31,8 @@ module SamsonDatadogTracer
           _add_wrapped_method_to_module(method)
         end
 
-        @__traced_methods ||= []
-        @__traced_methods << method
+        @traced_methods ||= []
+        @traced_methods << method
       end
 
       private
@@ -40,7 +40,7 @@ module SamsonDatadogTracer
       def _add_wrapped_method_to_module(method)
         klass = self
 
-        @__apm_module.module_eval do
+        @apm_module.module_eval do
           _wrap_method(method, klass)
         end
       end

@@ -18,11 +18,27 @@ describe Samson::PerformanceTracer do
       end
     end
 
+    describe '.trace_execution_scoped' do
+      it 'add tracer for scope' do
+        Rails.stubs(:env).returns("staging")
+        trace_scope = proc {}
+        SamsonNewRelic.expects(:trace_method_execution_scope).returns(trace_scope)
+        SamsonDatadogTracer::APM.expects(:trace_method_execution_scope).returns(trace_scope)
+        Samson::PerformanceTracer.trace_execution_scoped('test_scope') { :scoped }
+      end
+
+      it 'skips scope tracing' do
+        SamsonNewRelic.expects(:trace_method_execution_scope).never
+        SamsonDatadogTracer::APM.expects(:trace_method_execution_scope).never
+        Samson::PerformanceTracer.trace_execution_scoped('test_scope') { :scoped }.must_equal(:scoped)
+      end
+    end
+
     describe '.add_method_tracers' do
       it 'add method tracer from performance_tracer hook' do
         methods = [:pub_method1, :pub_method2]
         performance_tracer_callback = lambda { |_, _| true }
-
+        Rails.stubs(:env).returns("staging")
         Samson::Hooks.with_callback(:performance_tracer, performance_tracer_callback) do
           assert TestKlass.add_method_tracers(methods)
         end

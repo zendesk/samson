@@ -3,7 +3,7 @@ if SamsonDatadogTracer.enabled?
 
   SamsonDatadogTracer::IGNORED_URLS = Set[
     '/ping',
-    '/streams',
+    '/cable',
   ].freeze
 
   require 'ddtrace'
@@ -13,7 +13,6 @@ if SamsonDatadogTracer.enabled?
       hostname:                ENV['STATSD_HOST'] || '127.0.0.1',
       tags: {
         env:                   ENV['RAILS_ENV'],
-        pod:                   ENV['ZENDESK_POD_ID'],
         'rails.version':       Rails.version,
         'ruby.version':        RUBY_VERSION
       }
