@@ -3,7 +3,7 @@ require 'bundler/setup'
 
 raise "ENV clearing failed" if File.expand_path(ENV.fetch("BUNDLE_GEMFILE")) != File.expand_path("Gemfile")
 
-ENV["RAILS_ENV"] = "test" if ARGV[0] == "test" # configure test env early when running `bundle exec rails test some_test.rb`
+ENV["RAILS_ENV"] = "test" if ARGV[0] == "test" # configure test env early for `bundle exec rails test some_test.rb`
 require_relative 'dotenv'
 
 rails_env = ENV['RAILS_ENV'] || ENV['RACK_ENV'] || 'development'
