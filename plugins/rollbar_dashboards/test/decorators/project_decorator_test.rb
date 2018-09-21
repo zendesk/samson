@@ -12,7 +12,7 @@ describe Project do
     it "assigns rollbar dashboard attributes" do
       project.attributes = {
         rollbar_dashboards_settings_attributes: {0 => {read_token: '123', base_url: 'https://foobar.org'}}
-        }
+      }
       project.rollbar_dashboards_settings.size.must_equal 1
     end
 

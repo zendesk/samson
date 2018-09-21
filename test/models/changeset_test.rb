@@ -87,9 +87,7 @@ describe Changeset do
     let(:pr_from_coolcommitter) do
       Sawyer::Resource.new(
         sawyer_agent,
-        user: {
-        login: 'coolcommitter'
-        },
+        user: {login: 'coolcommitter'},
         additions: 10
       )
     end

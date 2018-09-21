@@ -58,7 +58,7 @@ Layout/FirstParameterIndentation:
   Enabled: false
 
 Layout/IndentHash:
-  Enabled: false
+  EnforcedStyle: consistent
 
 Layout/AlignParameters:
   EnforcedStyle: with_fixed_indentation
