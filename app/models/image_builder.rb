@@ -86,6 +86,7 @@ class ImageBuilder
       executor.output.puts("Docker push failed: #{e.message}\n")
       nil
     end
+    add_tracer :push_image
 
     def push_image_to_registries(image_id, build, executor, tag:, override_tag:)
       digest = nil
@@ -136,6 +137,5 @@ class ImageBuilder
     def read_docker_version
       `docker -v 2>/dev/null`
     end
-    add_method_tracers :push_image
   end
 end

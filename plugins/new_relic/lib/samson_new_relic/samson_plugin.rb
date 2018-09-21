@@ -39,13 +39,11 @@ Samson::Hooks.callback :stage_clone do |old_stage, new_stage|
   new_stage.new_relic_applications.build(old_applications)
 end
 
-Samson::Hooks.callback :performance_tracer do |klass, methods|
+Samson::Hooks.callback :performance_tracer do |klass, method|
   if SamsonNewRelic.tracer_enabled?
-    klass.is_a?(Class) && klass.class_eval do
+    klass.class_eval do
       include ::NewRelic::Agent::MethodTracer
-      methods.each do |method|
-        add_method_tracer method
-      end
+      add_method_tracer method
     end
   end
 end

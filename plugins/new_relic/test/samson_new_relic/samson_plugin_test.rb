@@ -74,7 +74,7 @@ describe SamsonNewRelic do
     include ::Samson::PerformanceTracer
     def with_role
     end
-    add_method_tracers :with_role
+    add_tracer :with_role
   end
 
   describe "#performance_tracer" do

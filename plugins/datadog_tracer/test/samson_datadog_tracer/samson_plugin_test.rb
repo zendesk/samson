@@ -32,17 +32,17 @@ describe SamsonDatadogTracer do
             include ::Samson::PerformanceTracer
             def with_role
             end
-            add_method_tracers :with_role
+            add_tracer :with_role
           end
           Klass.expects(:trace_method)
-          Samson::Hooks.fire :performance_tracer, Klass, [:with_role]
+          Samson::Hooks.fire :performance_tracer, Klass, :with_role
         end
       end
       it "skips tracer with missing method" do
         with_env DATADOG_TRACER: "1" do
           helper = SamsonDatadogTracer::APM::Helpers
           method = :with_role
-          Samson::Hooks.fire :performance_tracer, User, [method]
+          Samson::Hooks.fire :performance_tracer, User, method
           refute User.method_defined?(helper.tracer_method_name(method))
         end
       end
@@ -51,7 +51,7 @@ describe SamsonDatadogTracer do
     it "skips Datadog tracer when disabled" do
       with_env DATADOG_TRACER: nil do
         User.expects(:trace_method).never
-        Samson::Hooks.fire :performance_tracer, User, [:with_role]
+        Samson::Hooks.fire :performance_tracer, User, :with_role
       end
     end
   end

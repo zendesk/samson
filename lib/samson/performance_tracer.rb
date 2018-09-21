@@ -31,8 +31,8 @@ module Samson
 
     # Common class methods for Newrelic and Datadog.
     module ClassMethods
-      def add_method_tracers(*methods)
-        Samson::Hooks.fire(:performance_tracer, self, methods)
+      def add_tracer(method)
+        Samson::Hooks.fire(:performance_tracer, self, method)
       end
 
       # TODO: Add asynchronous tracer for Datadog.

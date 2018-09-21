@@ -25,6 +25,7 @@ class MultiLock
       end
       false
     end
+    add_tracer :wait_for_lock
 
     def try_lock(id, holder)
       mutex.synchronize do
@@ -42,6 +43,5 @@ class MultiLock
         locks.delete(id)
       end
     end
-    add_method_tracers :wait_for_lock
   end
 end
