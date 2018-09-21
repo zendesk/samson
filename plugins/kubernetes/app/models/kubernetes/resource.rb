@@ -43,7 +43,7 @@ module Kubernetes
             update
           end
         else
-          create unless @delete_resource
+          create
         end
       end
 
@@ -118,6 +118,7 @@ module Kubernetes
 
       # TODO: remove the expire_cache and assign @resource but that breaks a bunch of deploy_executor tests
       def create
+        return if @delete_resource
         restore_template do
           @template[:metadata].delete(:resourceVersion)
           request(:create, @template)
@@ -302,6 +303,8 @@ module Kubernetes
       # only makes sense to call this after deploying / while waiting for pods
       def desired_pod_count
         @desired_pod_count ||= begin
+          return 0 if @delete_resource
+
           desired = 0
 
           3.times do |i|
@@ -374,9 +377,10 @@ module Kubernetes
 
     class StatefulSet < Base
       def patch_replace?
+        return false if @delete_resource || !running?
         deprecated = @template.dig(:spec, :updateStrategy) # supporting pre 1.9 clusters
         strategy = (deprecated.is_a?(String) ? deprecated : @template.dig(:spec, :updateStrategy, :type))
-        [nil, "OnDelete"].include?(strategy) && running?
+        [nil, "OnDelete"].include?(strategy)
       end
 
       # StatefulSet cannot be updated normally when OnDelete is used or kubernetes <1.7
@@ -466,7 +470,7 @@ module Kubernetes
       end
 
       def desired_pod_count
-        1
+        @delete_resource ? 0 : 1
       end
     end
 
@@ -474,7 +478,7 @@ module Kubernetes
       # cannot be updated `Forbidden: updates to poddisruptionbudget spec are forbidden`
       def deploy
         delete
-        create unless @template[:delete] # allow deletion
+        create unless @template[:delete] # allow deletion through release_doc logic
       end
 
       private
