@@ -23,19 +23,6 @@ if ['development', 'staging'].include?(Rails.env) && ENV["SERVER_MODE"]
   Rack::MiniProfiler.config.authorization_mode = :allow_all
 end
 
-if ['staging', 'production'].include?(Rails.env)
-  require 'newrelic_rpm'
-else
-  # avoids circular dependencies warning
-  # https://discuss.newrelic.com/t/circular-require-in-ruby-agent-lib-new-relic-agent-method-tracer-rb/42737
-  require 'new_relic/control'
-
-  # needed even in dev/test mode
-  require 'new_relic/agent/method_tracer'
-end
-# END Railties
-###
-
 require_relative "../lib/samson/env_check"
 # other requires should live at the bottom of the file
 

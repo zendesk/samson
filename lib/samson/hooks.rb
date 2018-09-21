@@ -164,9 +164,7 @@ module Samson
 
       # use
       def fire(name, *args)
-        NewRelic::Agent::MethodTracerHelpers.trace_execution_scoped("Custom/Hooks/#{name}") do
-          hooks(name).map { |hook| hook.call(*args) }
-        end
+        hooks(name).map { |hook| hook.call(*args) }
       end
 
       def render_views(name, view, *args)

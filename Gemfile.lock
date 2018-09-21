@@ -85,11 +85,6 @@ PATH
       faraday
 
 PATH
-  remote: plugins/new_relic
-  specs:
-    samson_new_relic (0.0.0)
-
-PATH
   remote: plugins/pipelines
   specs:
     samson_pipelines (0.0.0)
@@ -339,7 +334,6 @@ GEM
     net-http-persistent (2.9.4)
     net-ldap (0.16.1)
     netrc (0.11.0)
-    newrelic_rpm (4.1.0.333)
     nio4r (2.3.1)
     nokogiri (1.8.4)
       mini_portile2 (~> 2.3.0)
@@ -573,7 +567,6 @@ DEPENDENCIES
   momentjs-rails
   mysql2
   net-http-persistent
-  newrelic_rpm
   octokit
   omniauth
   omniauth-bitbucket
@@ -618,7 +611,6 @@ DEPENDENCIES
   samson_jenkins_status_checker!
   samson_kubernetes!
   samson_ledger!
-  samson_new_relic!
   samson_pipelines!
   samson_prerequisite_stages!
   samson_rollbar!
@@ -642,4 +634,4 @@ RUBY VERSION
    ruby 2.5.1p57
 
 BUNDLED WITH
-   1.16.3
+   1.16.5

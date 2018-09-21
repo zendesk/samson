@@ -24,7 +24,6 @@ Available plugins:
  - [Kubernetes](https://github.com/zendesk/samson/tree/master/plugins/kubernetes)
  - [Ledger](https://github.com/zendesk/samson/tree/master/plugins/ledger)
  - [Release Number From CI](https://github.com/redbubble/samson-release-number-from-ci)
- - [NewRelic monitoring](https://github.com/zendesk/samson/tree/master/plugins/new_relic)
  - [Pipelined deploys](https://github.com/zendesk/samson/tree/master/plugins/pipelines)
  - [Slack deploys](https://github.com/zendesk/samson/tree/master/plugins/slack_app)
  - [Slack notifications](https://github.com/zendesk/samson/tree/master/plugins/slack_webhooks)

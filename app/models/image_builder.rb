@@ -6,8 +6,6 @@ class ImageBuilder
   class << self
     DIGEST_SHA_REGEX = /Digest:.*(sha256:[0-9a-f]{64})/i
 
-    include ::NewRelic::Agent::MethodTracer
-
     def build_image(dir, build, executor, tag_as_latest:, **args)
       if DockerRegistry.all.empty?
         raise Samson::Hooks::UserError, "Need at least one DOCKER_REGISTRIES to push images"
