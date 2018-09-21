@@ -66,7 +66,7 @@ module Kubernetes
         return true unless running?
         request_delete
         backoff_wait([0.0, 0.1, 0.2, 0.5, 1, 2, 4, 8, 16], "delete resource") do
-          expire_cache
+          expire_resource_cache
           return true unless running?
         end
       end
@@ -109,10 +109,10 @@ module Kubernetes
 
       def request_delete
         request(:delete, name, namespace)
-        expire_cache
+        expire_resource_cache
       end
 
-      def expire_cache
+      def expire_resource_cache
         remove_instance_variable(:@resource) if defined?(@resource)
       end
 
@@ -123,14 +123,14 @@ module Kubernetes
           @template[:metadata].delete(:resourceVersion)
           request(:create, @template)
         end
-        expire_cache
+        expire_resource_cache
       end
 
       # TODO: remove the expire_cache and assign @resource but that breaks a bunch of deploy_executor tests
       def update
         ensure_not_updating_match_labels
         request(:update, template_for_update)
-        expire_cache
+        expire_resource_cache
       end
 
       def ensure_not_updating_match_labels
@@ -311,7 +311,7 @@ module Kubernetes
             if i != 0
               # last iteration had bad state or does not yet know how many it needs, expire cache
               loop_sleep
-              expire_cache
+              expire_resource_cache
             end
 
             desired = resource.dig_fetch :status, :desiredNumberScheduled
@@ -340,7 +340,7 @@ module Kubernetes
       # - waits for current to reach 0
       # - deletes the daemonset
       def request_delete
-        return super if no_pods_running? # delete when already dead from previous deletion try, update would fail
+        return super if pods_running_count == 0 # delete when already dead from previous deletion try, update would fail
 
         # make it match no node
         restore_template do
@@ -352,9 +352,8 @@ module Kubernetes
         super # delete it
       end
 
-      def no_pods_running?
-        resource.dig_fetch(:status, :currentNumberScheduled).zero? &&
-          resource.dig_fetch(:status, :numberMisscheduled).zero?
+      def pods_running_count
+        resource.dig_fetch(:status, :currentNumberScheduled) + resource.dig_fetch(:status, :numberMisscheduled)
       end
 
       def client
@@ -364,12 +363,13 @@ module Kubernetes
       def wait_for_termination_of_all_pods
         30.times do
           loop_sleep
-          expire_cache
-          return if no_pods_running?
+          expire_resource_cache
+          return if pods_running_count == 0
         end
+        count = pods_running_count
         raise(
           Samson::Hooks::UserError,
-          "Unable to terminate DaemonSet #{name} #{namespace} #{@deploy_group.name} because it still has pods.\n" \
+          "Unable to terminate DaemonSet #{error_location} because it still has #{count} #{"pod".pluralize(count)}.\n" \
           "Delete it manually and redeploy again."
         )
       end
