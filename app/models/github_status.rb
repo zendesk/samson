@@ -44,11 +44,12 @@ class GithubStatus
     response = Rails.cache.read(cache_key)
 
     # Fetch the data if the cache returned nil.
-    response ||= begin
-      GITHUB.combined_status(repo, ref)
-    rescue Octokit::Error
-      nil
-    end
+    response ||=
+      begin
+        GITHUB.combined_status(repo, ref)
+      rescue Octokit::Error
+        nil
+      end
 
     # Fall back to a "missing" status.
     return new("missing", []) if response.nil?

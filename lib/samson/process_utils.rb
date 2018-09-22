@@ -20,11 +20,12 @@ module Samson
 
       def report_to_statsd
         ps_list.each do |process|
-          runtime = begin
-            Time.now.to_i - Time.parse(process.fetch('start')).to_i
-          rescue ArgumentError
-            0
-          end
+          runtime =
+            begin
+              Time.now.to_i - Time.parse(process.fetch('start')).to_i
+            rescue ArgumentError
+              0
+            end
           tags = ATTRIBUTES.map { |attr| "#{attr}:#{process.fetch(attr)}" }
           Samson.statsd.gauge("process.runtime", runtime, tags: tags)
         end

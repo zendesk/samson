@@ -126,11 +126,12 @@ class ImageBuilder
 
     # TODO: same as in config/initializers/docker.rb ... dry it up
     def docker_major_version
-      @@docker_major_version ||= begin
-        Timeout.timeout(0.2) { read_docker_version[/(\d+)\.\d+\.\d+/, 1].to_i }
-      rescue Timeout::Error
-        0
-      end
+      @@docker_major_version ||=
+        begin
+          Timeout.timeout(0.2) { read_docker_version[/(\d+)\.\d+\.\d+/, 1].to_i }
+        rescue Timeout::Error
+          0
+        end
     end
 
     # just here to get stubbed
