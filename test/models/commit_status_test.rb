@@ -31,7 +31,9 @@ describe CommitStatus do
 
   let(:stage) { stages(:test_staging) }
   let(:reference) { 'master' }
-  let(:url) { "repos/#{stage.project.repository_path}/commits/#{reference}/status" }
+  let(:url) { "repos/#{stage.project.repository_path}/commits/abcabcabc/status" }
+
+  before { GitRepository.any_instance.stubs(:commit_from_ref).returns("abcabcabc") }
 
   describe "#status" do
     it "returns state" do
@@ -41,6 +43,11 @@ describe CommitStatus do
 
     it "is failure when not found" do
       failure!
+      status.status.must_equal 'failure'
+    end
+
+    it "is failure commit is not found" do
+      GitRepository.any_instance.stubs(:commit_from_ref).returns(nil)
       status.status.must_equal 'failure'
     end
 
@@ -101,16 +108,6 @@ describe CommitStatus do
         deploy.job.update_column(:status, 'faild')
         success!
         status.status.must_equal 'success'
-      end
-    end
-
-    describe "with bad ref" do
-      let(:reference) { '[/r' }
-      let(:url) { "repos/#{stage.project.repository_path}/commits/%255B/r/status" }
-
-      it "escapes the url" do
-        failure!
-        status.status.must_equal 'failure'
       end
     end
   end

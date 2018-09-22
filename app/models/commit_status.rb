@@ -54,10 +54,9 @@ class CommitStatus
     STATUS_PRIORITY[a.to_sym] > STATUS_PRIORITY[b.to_sym] ? a : b
   end
 
-  # need to do weird escape logic since other wise either 'foo/bar' or 'bar[].foo' do not work
   def github_status
-    escaped_ref = @reference.gsub(/[^a-zA-Z\/\d_-]+/) { |v| CGI.escape(v) }
-    GITHUB.combined_status(@stage.project.repository_path, escaped_ref).to_h
+    commit = @stage.project.repository.commit_from_ref(@reference) || raise(Octokit::NotFound)
+    GITHUB.combined_status(@stage.project.repository_path, commit).to_h
   rescue Octokit::NotFound
     {
       state: "failure",
