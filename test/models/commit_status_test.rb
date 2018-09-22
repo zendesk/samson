@@ -26,7 +26,7 @@ describe CommitStatus do
   end
 
   def status(stage_param: stage, reference_param: reference)
-    @status ||= CommitStatus.new(stage_param, reference_param)
+    @status ||= CommitStatus.new(stage_param.project, reference_param, stage: stage_param)
   end
 
   let(:stage) { stages(:test_staging) }
@@ -35,20 +35,27 @@ describe CommitStatus do
 
   before { GitRepository.any_instance.stubs(:commit_from_ref).returns("abcabcabc") }
 
-  describe "#status" do
+  describe "#state" do
     it "returns state" do
       success!
-      status.status.must_equal 'success'
+      status.state.must_equal 'success'
     end
 
     it "is failure when not found" do
       failure!
-      status.status.must_equal 'failure'
+      status.state.must_equal 'failure'
     end
 
     it "is failure commit is not found" do
       GitRepository.any_instance.stubs(:commit_from_ref).returns(nil)
-      status.status.must_equal 'failure'
+      status.state.must_equal 'failure'
+    end
+
+    it "works without stage" do
+      success!
+      s = status
+      s.instance_variable_set(:@stage, nil)
+      s.state.must_equal "success"
     end
 
     describe "when deploying a previous release" do
@@ -57,7 +64,7 @@ describe CommitStatus do
       it "warns" do
         success!
         assert_sql_queries 10 do
-          status.status.must_equal 'error'
+          status.state.must_equal 'error'
         end
       end
 
@@ -66,13 +73,13 @@ describe CommitStatus do
         deploys(:succeeded_test).update_column(:reference, 'v4.1') # old is lower
         deploy.update_column(:reference, 'v4.3') # new is higher
         success!
-        status.status.must_equal 'error'
+        status.state.must_equal 'error'
       end
 
       it "ignores when previous deploy was the same or lower" do
         deploy.update_column(:reference, reference)
         success!
-        status.status.must_equal 'success'
+        status.state.must_equal 'success'
       end
 
       describe "when previous deploy was higher numerically" do
@@ -80,8 +87,8 @@ describe CommitStatus do
 
         it "warns" do
           success!
-          status.status.must_equal 'error'
-          status.status_list[1][:description].must_equal(
+          status.state.must_equal 'error'
+          status.statuses[1][:description].must_equal(
             "v4.10 was deployed to deploy groups in this stage by Production"
           )
         end
@@ -91,8 +98,8 @@ describe CommitStatus do
           other.update_column(:reference, 'v4.9')
 
           success!
-          status.status.must_equal 'error'
-          status.status_list[1][:description].must_equal(
+          status.state.must_equal 'error'
+          status.statuses[1][:description].must_equal(
             "v4.9, v4.10 was deployed to deploy groups in this stage by Staging, Production"
           )
         end
@@ -101,33 +108,33 @@ describe CommitStatus do
       it "ignores when previous deploy was not a version" do
         deploy.update_column(:reference, 'master')
         success!
-        status.status.must_equal 'success'
+        status.state.must_equal 'success'
       end
 
       it "ignores when previous deploy was failed" do
         deploy.job.update_column(:status, 'faild')
         success!
-        status.status.must_equal 'success'
+        status.state.must_equal 'success'
       end
     end
   end
 
-  describe "#status_list" do
+  describe "#statuses" do
     it "returns list" do
       success!
-      status.status_list.must_equal [{foo: "bar"}]
+      status.statuses.must_equal [{foo: "bar"}]
     end
 
     it "shows that github is waiting for statuses to come when non has arrived yet ... or none are set up" do
       stub_github_api(url, statuses: [], state: "pending")
-      list = status.status_list
+      list = status.statuses
       list.map { |s| s[:state] }.must_equal ["pending"]
       list.first[:description].must_include "No status was reported"
     end
 
     it "returns failure on Reference when not found list for consistent status display" do
       failure!
-      status.status_list.map { |s| s[:state] }.must_equal ["Reference"]
+      status.statuses.map { |s| s[:state] }.must_equal ["Reference"]
     end
 
     describe "when deploying a previous release" do
@@ -135,7 +142,7 @@ describe CommitStatus do
 
       it "merges" do
         success!
-        status.status_list.must_equal [
+        status.statuses.must_equal [
           {foo: "bar"},
           {state: "Old Release", description: "v4.3 was deployed to deploy groups in this stage by Production"}
         ]
@@ -150,10 +157,6 @@ describe CommitStatus do
 
     it 'picks the second state if it has higher priority' do
       status.send(:pick_highest_state, 'success', 'error').must_equal 'error'
-    end
-
-    it 'returns second state if first state is nil' do
-      status.send(:pick_highest_state, nil, 'pending').must_equal 'pending'
     end
   end
 

@@ -1,14 +1,11 @@
 <div class="row deploy-check">
-  <% if status = CommitStatus.new(@deploy.stage, @deploy.reference) rescue nil %>
-    <p>
-      Commit status for <%= short_sha @deploy.reference %>: <%= status.status %><br/>
-      <% status.status_list.each do |info| %>
-        <%= info.fetch(:state) %>: <%= info.fetch(:description) %><br/>
-      <% end %>
-    </p>
-  <% else %>
-    <p>Error fetching commit status.</p>
-  <% end %>
+  <% commit_status = CommitStatus.new(@deploy.stage.project, @deploy.reference, stage: @deploy.stage) %>
+  <p>
+    Commit status for <%= short_sha @deploy.reference %>: <%= commit_status.state %><br/>
+    <% commit_status.statuses.each do |info| %>
+      <%= info.fetch(:state) %>: <%= info.fetch(:description) %><br/>
+    <% end %>
+  </p>
   <br/><br/>
 
   <% if @deploy.started_by?(current_user) %>

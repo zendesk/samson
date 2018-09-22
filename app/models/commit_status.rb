@@ -2,7 +2,7 @@
 # Used to display all warnings/failures before user actually deploys
 class CommitStatus
   # See ref_status_typeahead.js for how statuses are handled
-  STATUS_PRIORITY = {
+  STATE_PRIORITY = {
     success: 0,
     pending: 1,
     failure: 2,
@@ -10,16 +10,17 @@ class CommitStatus
     fatal: 4
   }.freeze
 
-  def initialize(stage, reference)
-    @stage = stage
+  def initialize(project, reference, stage: nil)
+    @project = project
     @reference = reference
+    @stage = stage
   end
 
-  def status
+  def state
     combined_status.fetch(:state)
   end
 
-  def status_list
+  def statuses
     list = combined_status.fetch(:statuses).map(&:to_h)
     if list.empty?
       list << {
@@ -36,27 +37,25 @@ class CommitStatus
 
   def combined_status
     @combined_status ||= begin
-      statuses = [github_status, release_status, *ref_statuses]
-
-      statuses.each_with_object({}) { |status, merged_statuses| merge(merged_statuses, status) }
+      statuses = [github_status]
+      statuses += [release_status, *ref_statuses].compact if @stage
+      statuses[1..-1].each_with_object(statuses[0]) { |status, merged| merge(merged, status) }
     end
   end
 
   def merge(a, b)
-    return a unless b
-    a[:state] = pick_highest_state(a[:state], b.fetch(:state))
-    (a[:statuses] ||= []).concat b.fetch(:statuses)
+    a[:state] = [a.fetch(:state), b.fetch(:state)].max_by { |state| STATE_PRIORITY.fetch(state.to_sym) }
+    a.fetch(:statuses).concat b.fetch(:statuses)
   end
 
   # picks the state with the higher priority
   def pick_highest_state(a, b)
-    return b if a.nil?
-    STATUS_PRIORITY[a.to_sym] > STATUS_PRIORITY[b.to_sym] ? a : b
+    STATE_PRIORITY[a.to_sym] > STATE_PRIORITY[b.to_sym] ? a : b
   end
 
   def github_status
-    commit = @stage.project.repository.commit_from_ref(@reference) || raise(Octokit::NotFound)
-    GITHUB.combined_status(@stage.project.repository_path, commit).to_h
+    commit = @project.repository.commit_from_ref(@reference) || raise(Octokit::NotFound)
+    GITHUB.combined_status(@project.repository_path, commit).to_h
   rescue Octokit::NotFound
     {
       state: "failure",
