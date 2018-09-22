@@ -31,9 +31,7 @@ describe CommitStatus do
 
   let(:stage) { stages(:test_staging) }
   let(:reference) { 'master' }
-  let(:url) { "repos/#{stage.project.repository_path}/commits/abcabcabc/status" }
-
-  before { GitRepository.any_instance.stubs(:commit_from_ref).returns("abcabcabc") }
+  let(:url) { "repos/#{stage.project.repository_path}/commits/#{reference}/status" }
 
   describe "#state" do
     it "returns state" do
@@ -46,11 +44,6 @@ describe CommitStatus do
       status.state.must_equal 'missing'
     end
 
-    it "is missing commit is not found" do
-      GitRepository.any_instance.stubs(:commit_from_ref).returns(nil)
-      status.state.must_equal 'missing'
-    end
-
     it "works without stage" do
       success!
       s = status
@@ -58,7 +51,16 @@ describe CommitStatus do
       s.state.must_equal "success"
     end
 
-    describe "caching" do
+    it "does not cache changing references" do
+      request = success!
+      status.state.must_equal 'success'
+      status.state.must_equal 'success'
+      assert_requested request, times: 2
+    end
+
+    describe "caching static references" do
+      let(:reference) { 'v4.2' }
+
       it "caches github state accross instances" do
         request = success!
         status.state.must_equal 'success'
@@ -69,7 +71,7 @@ describe CommitStatus do
       it "can expire cache" do
         request = success!
         status.state.must_equal 'success'
-        status.expire_cache 'abcabcabc'
+        status.expire_cache reference
         status.state.must_equal 'success'
         assert_requested request, times: 2
       end
@@ -207,19 +209,25 @@ describe CommitStatus do
     end
   end
 
-  describe "#cache_fetch" do
+  describe "#cache_fetch_if" do
     it "fetches old" do
       Rails.cache.write('a', 1)
-      status.send(:cache_fetch, 'a', write_if: :raise) { 2 }.must_equal 1
+      status.send(:cache_fetch_if, true, 'a', write_if: :raise) { 2 }.must_equal 1
+    end
+
+    it "does not cache when not requested" do
+      Rails.cache.write('a', 1)
+      status.send(:cache_fetch_if, false, 'a', write_if: :raise) { 2 }.must_equal 2
+      Rails.cache.read('a').must_equal 1
     end
 
     it "writes new when ok" do
-      status.send(:cache_fetch, 'a', write_if: ->(_) { true }) { 2 }.must_equal 2
+      status.send(:cache_fetch_if, true, 'a', write_if: ->(_) { true }) { 2 }.must_equal 2
       Rails.cache.read('a').must_equal 2
     end
 
     it "does not write new when not ok" do
-      status.send(:cache_fetch, 'a', write_if: ->(_) { false }) { 2 }.must_equal 2
+      status.send(:cache_fetch_if, true, 'a', write_if: ->(_) { false }) { 2 }.must_equal 2
       Rails.cache.read('a').must_equal nil
     end
   end

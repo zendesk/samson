@@ -51,10 +51,10 @@ class CommitStatus
   end
 
   def github_status
-    commit = @project.repository.commit_from_ref(@reference) || raise(Octokit::NotFound)
+    static = @reference.match?(Build::SHA1_REGEX) || @reference.match?(Release::VERSION_REGEX)
     write_if = ->(s) { s.fetch(:statuses).none? { |s| UNDETERMINED.include?(s[:state]) } }
-    cache_fetch cache_key(commit), expires_in: 1.hour, write_if: write_if do
-      GITHUB.combined_status(@project.repository_path, commit).to_h
+    cache_fetch_if static, cache_key(@reference), expires_in: 1.hour, write_if: write_if do
+      GITHUB.combined_status(@project.repository_path, @reference).to_h
     end
   rescue Octokit::NotFound
     {
@@ -71,7 +71,9 @@ class CommitStatus
     ['commit-status', @project.id, commit]
   end
 
-  def cache_fetch(key, options)
+  def cache_fetch_if(condition, key, options)
+    return yield unless condition
+
     old = Rails.cache.read(key)
     return old if old
 
