@@ -311,7 +311,7 @@ describe CsvExportsController do
       it "with production blank filter does not have stages.production filter" do
         post :create, params: {production: ""}
         csv_filter = CsvExport.last.filters
-        refute csv_filter.keys.include? "stages.production"
+        refute csv_filter.key?("stages.production")
       end
 
       it "raises for invalid params" do
