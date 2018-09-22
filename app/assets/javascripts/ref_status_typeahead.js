@@ -39,7 +39,6 @@ function refStatusTypeahead(options){
 
   function show_status_problems(status_list, isDanger) {
     $ref_status_container.removeClass("hidden");
-console.log(isDanger);
     $ref_status_container.toggleClass('alert-danger', isDanger);
     $ref_status_container.toggleClass('alert-warning', !isDanger);
 
@@ -69,6 +68,7 @@ console.log(isDanger);
             $tag_form_group.addClass("has-success");
             break;
           case "pending":
+          case "missing":
             $tag_form_group.addClass("has-warning");
             show_status_problems(response.statuses, false);
             break;

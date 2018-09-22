@@ -45,6 +45,13 @@ describe ReleasesHelper do
       html.must_include "text-primary"
       html.must_include "Github status: pending"
     end
+
+    it "renders an icon for pending status" do
+      html = github_commit_status_icon("pending")
+      html.must_include "glyphicon-hourglass"
+      html.must_include "text-primary"
+      html.must_include "Github status: pending"
+    end
   end
 
   describe "#link_to_deploy_stage" do

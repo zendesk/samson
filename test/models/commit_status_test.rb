@@ -41,14 +41,14 @@ describe CommitStatus do
       status.state.must_equal 'success'
     end
 
-    it "is failure when not found" do
+    it "is missing when not found" do
       failure!
-      status.state.must_equal 'failure'
+      status.state.must_equal 'missing'
     end
 
-    it "is failure commit is not found" do
+    it "is missing commit is not found" do
       GitRepository.any_instance.stubs(:commit_from_ref).returns(nil)
-      status.state.must_equal 'failure'
+      status.state.must_equal 'missing'
     end
 
     it "works without stage" do
@@ -151,9 +151,9 @@ describe CommitStatus do
       list.first[:description].must_include "No status was reported"
     end
 
-    it "returns failure on Reference when not found list for consistent status display" do
+    it "returns Reference context for release/show display" do
       failure!
-      status.statuses.map { |s| s[:state] }.must_equal ["Reference"]
+      status.statuses.map { |s| s[:context] }.must_equal ["Reference"]
     end
 
     describe "when deploying a previous release" do
@@ -166,16 +166,6 @@ describe CommitStatus do
           {state: "Old Release", description: "v4.3 was deployed to deploy groups in this stage by Production"}
         ]
       end
-    end
-  end
-
-  describe "#resolve_states" do
-    it 'picks the first state if it has higher priority' do
-      status.send(:pick_highest_state, 'error', 'success').must_equal 'error'
-    end
-
-    it 'picks the second state if it has higher priority' do
-      status.send(:pick_highest_state, 'success', 'error').must_equal 'error'
     end
   end
 

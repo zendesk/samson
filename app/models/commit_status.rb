@@ -3,8 +3,10 @@
 class CommitStatus
   # See ref_status_typeahead.js for how statuses are handled
   # See https://developer.github.com/v3/repos/statuses for api details
-  # fatal is our own state that blocks deploys
-  STATE_PRIORITY = [:success, :pending, :failure, :error, :fatal].freeze
+  # - fatal is our own state that blocks deploys
+  # - missing is our own state that means we could not determine the status
+  STATE_PRIORITY = [:success, :pending, :missing, :failure, :error, :fatal].freeze
+  UNDETERMINED = ["pending", "missing"].freeze
 
   def initialize(project, reference, stage: nil)
     @project = project
@@ -50,14 +52,18 @@ class CommitStatus
 
   def github_status
     commit = @project.repository.commit_from_ref(@reference) || raise(Octokit::NotFound)
-    write_if = ->(s) { s.fetch(:statuses).none? { |s| s.fetch(:state) == "pending" } }
+    write_if = ->(s) { s.fetch(:statuses).none? { |s| UNDETERMINED.include?(s[:state]) } }
     cache_fetch cache_key(commit), expires_in: 1.hour, write_if: write_if do
       GITHUB.combined_status(@project.repository_path, commit).to_h
     end
   rescue Octokit::NotFound
     {
-      state: "failure",
-      statuses: [{"state": "Reference", description: "'#{@reference}' does not exist"}]
+      state: "missing",
+      statuses: [{
+        context: "Reference", # for releases/show.html.erb
+        state: "missing",
+        description: "'#{@reference}' does not exist"
+      }]
     }
   end
 

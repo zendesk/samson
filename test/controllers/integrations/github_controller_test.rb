@@ -89,32 +89,12 @@ describe Integrations::GithubController do
   end
 
   describe 'with a commit status event' do
-    it 'updates all releases of that commit' do
-      sha = "dc395381e650f3bac18457909880829fc20e34ba"
+    before { request.headers['X-Github-Event'] = 'status' }
 
-      release = project.releases.create!(
-        commit: sha,
-        author: users(:deployer)
-      )
-
-      # Fast forward the clock.
-      later = 1.minute.from_now
-      Time.stubs(:now).returns later
-
-      payload = {
-        token: project.token,
-        sha: sha
-      }
-
-      request.headers['X-Github-Event'] = 'status'
-      post :create, params: payload
-
+    it 'expires github status' do
+      Rails.cache.expects(:delete).with(['commit-status', project.id, 'dc395381e650f3bac18457909880829fc20e34ba'])
+      post :create, params: {token: project.token, sha: "dc395381e650f3bac18457909880829fc20e34ba"}
       assert_response :success
-
-      # Time objects can't be reliably compared due to the use of floating
-      # point numbers in their representation, so we convert to Integer before
-      # comparing.
-      release.reload.updated_at.to_i.must_equal later.to_i
     end
   end
 
