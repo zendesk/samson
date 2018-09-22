@@ -2,13 +2,9 @@
 # Used to display all warnings/failures before user actually deploys
 class CommitStatus
   # See ref_status_typeahead.js for how statuses are handled
-  STATE_PRIORITY = {
-    success: 0,
-    pending: 1,
-    failure: 2,
-    error: 3,
-    fatal: 4
-  }.freeze
+  # See https://developer.github.com/v3/repos/statuses for api details
+  # fatal is our own state that blocks deploys
+  STATE_PRIORITY = [:success, :pending, :failure, :error, :fatal].freeze
 
   def initialize(project, reference, stage: nil)
     @project = project
@@ -48,13 +44,8 @@ class CommitStatus
   end
 
   def merge(a, b)
-    a[:state] = [a.fetch(:state), b.fetch(:state)].max_by { |state| STATE_PRIORITY.fetch(state.to_sym) }
+    a[:state] = [a.fetch(:state), b.fetch(:state)].max_by { |state| STATE_PRIORITY.index(state.to_sym) }
     a.fetch(:statuses).concat b.fetch(:statuses)
-  end
-
-  # picks the state with the higher priority
-  def pick_highest_state(a, b)
-    STATE_PRIORITY[a.to_sym] > STATE_PRIORITY[b.to_sym] ? a : b
   end
 
   def github_status
