@@ -20,7 +20,8 @@ module SamsonDatadogTracer
     module ClassMethods
       def trace_method(method)
         return unless SamsonDatadogTracer.enabled?
-
+        # Wrap the helper methods and alias method into the module.
+        # prepend the wraped module to base class
         @apm_module ||= begin
           mod = Module.new
           mod.extend(SamsonDatadogTracer::APM::Helpers)
@@ -49,7 +50,7 @@ module SamsonDatadogTracer
     module Helpers
       class << self
         def sanitize_name(name)
-          name.to_s.tr_s('^a-zA-Z0-9', '_')
+          name.to_s.parameterize.tr('-', '_')
         end
 
         def tracer_method_name(method_name)

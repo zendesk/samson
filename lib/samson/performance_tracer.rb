@@ -29,7 +29,7 @@ module Samson
       end
     end
 
-    # Common class methods for Newrelic and Datadog.
+    # for Newrelic and Datadog -> for tracer plugins.
     module ClassMethods
       def add_tracer(method)
         Samson::Hooks.fire(:performance_tracer, self, method)
