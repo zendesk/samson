@@ -2,8 +2,6 @@
 require 'shellwords'
 
 class JobExecution
-  include ::NewRelic::Agent::Instrumentation::ControllerInstrumentation
-
   cattr_accessor(:cancel_timeout, instance_writer: false) { 15.seconds }
 
   attr_reader :output, :reference, :job, :viewers, :executor

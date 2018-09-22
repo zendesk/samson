@@ -2,8 +2,6 @@
 require 'docker'
 
 class DockerBuilderService
-  include ::NewRelic::Agent::MethodTracer
-
   def initialize(build)
     @build = build
     @output = OutputBuffer.new
@@ -61,7 +59,6 @@ class DockerBuilderService
     Samson::Hooks.fire(:before_docker_build, tmp_dir, @build, @output)
     execute_build_command(tmp_dir, @build.project.build_command)
   end
-  add_method_tracer :before_docker_build
 
   def build_image(tmp_dir, tag_as_latest:)
     File.write("#{tmp_dir}/REVISION", @build.git_sha)
@@ -83,5 +80,4 @@ class DockerBuilderService
       tmp_dir, @build, @execution.executor, tag_as_latest: tag_as_latest, cache_from: cache
     )
   end
-  add_method_tracer :build_image
 end

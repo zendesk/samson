@@ -4,8 +4,6 @@ class MultiLock
   cattr_accessor(:locks) { {} }
 
   class << self
-    include ::NewRelic::Agent::MethodTracer
-
     def lock(id, holder, options)
       locked = wait_for_lock(id, holder, options)
       yield if locked
