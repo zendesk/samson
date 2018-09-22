@@ -36,7 +36,7 @@ describe Samson::PerformanceTracer do
 
     describe '.add_tracer' do
       it 'add method tracer from performance_tracer hook' do
-        performance_tracer_callback = lambda { |_, _| true }
+        performance_tracer_callback = ->(_, _) { true }
         Rails.stubs(:env).returns("staging")
         Samson::Hooks.with_callback(:performance_tracer, performance_tracer_callback) do
           assert TestKlass.add_tracer(:pub_method1)
@@ -45,7 +45,7 @@ describe Samson::PerformanceTracer do
       end
 
       it 'raises with invalid arguments' do
-        performance_tracer_callback = lambda { |_| true }
+        performance_tracer_callback = ->(_) { true }
         assert_raises ArgumentError do
           Samson::Hooks.with_callback(:performance_tracer, performance_tracer_callback) do
             assert TestKlass.add_tracer(:pub_method1)
@@ -57,7 +57,7 @@ describe Samson::PerformanceTracer do
     describe '.add_asynchronous_tracer' do
       it 'add asynchronous tracer from asynchronous_performance_tracer hook' do
         methods = [:pub_method1, :pub_method2]
-        asyn_tracer_callback = lambda { |_, _, _| true }
+        asyn_tracer_callback = ->(_, _, _) { true }
 
         Samson::Hooks.with_callback(:asynchronous_performance_tracer, asyn_tracer_callback) do
           assert TestKlass.add_asynchronous_tracer(methods, {})
@@ -66,7 +66,7 @@ describe Samson::PerformanceTracer do
 
       it 'raises with invalid arguments' do
         methods = [:pub_method1]
-        asyn_tracer_callback = lambda { |_, _| true }
+        asyn_tracer_callback = ->(_, _) { true }
         assert_raises ArgumentError do
           Samson::Hooks.with_callback(:asynchronous_performance_tracer, asyn_tracer_callback) do
             assert TestKlass.add_asynchronous_tracer(methods, {})

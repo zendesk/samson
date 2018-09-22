@@ -124,7 +124,7 @@ describe SamsonDatadogTracer::APM do
 
   describe "#Helpers" do
     it "returns sanitize name" do
-      SamsonDatadogTracer::APM::Helpers.sanitize_name("Test@123").must_equal("Test_123")
+      SamsonDatadogTracer::APM::Helpers.sanitize_name("Test@123").must_equal("test_123")
     end
 
     it "returns tracer method name" do
