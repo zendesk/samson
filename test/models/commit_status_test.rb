@@ -26,7 +26,7 @@ describe CommitStatus do
   end
 
   def status(stage_param: stage, reference_param: reference)
-    @status ||= CommitStatus.new(stage_param.project, reference_param, stage: stage_param)
+    CommitStatus.new(stage_param.project, reference_param, stage: stage_param)
   end
 
   let(:stage) { stages(:test_staging) }
@@ -58,6 +58,23 @@ describe CommitStatus do
       s.state.must_equal "success"
     end
 
+    describe "caching" do
+      it "caches github state accross instances" do
+        request = success!
+        status.state.must_equal 'success'
+        status.state.must_equal 'success'
+        assert_requested request, times: 1
+      end
+
+      it "can expire cache" do
+        request = success!
+        status.state.must_equal 'success'
+        status.expire_cache 'abcabcabc'
+        status.state.must_equal 'success'
+        assert_requested request, times: 2
+      end
+    end
+
     describe "when deploying a previous release" do
       deploying_a_previous_release
 
@@ -87,6 +104,7 @@ describe CommitStatus do
 
         it "warns" do
           success!
+          status = status()
           status.state.must_equal 'error'
           status.statuses[1][:description].must_equal(
             "v4.10 was deployed to deploy groups in this stage by Production"
@@ -98,6 +116,7 @@ describe CommitStatus do
           other.update_column(:reference, 'v4.9')
 
           success!
+          status = status()
           status.state.must_equal 'error'
           status.statuses[1][:description].must_equal(
             "v4.9, v4.10 was deployed to deploy groups in this stage by Staging, Production"
@@ -195,6 +214,23 @@ describe CommitStatus do
       Samson::Hooks.expects(:fire).with(:ref_status, stage, reference).returns([{foo: :bar}])
 
       status.send(:ref_statuses).must_equal [{foo: :bar}]
+    end
+  end
+
+  describe "#cache_fetch" do
+    it "fetches old" do
+      Rails.cache.write('a', 1)
+      status.send(:cache_fetch, 'a', write_if: :raise) { 2 }.must_equal 1
+    end
+
+    it "writes new when ok" do
+      status.send(:cache_fetch, 'a', write_if: ->(_) { true }) { 2 }.must_equal 2
+      Rails.cache.read('a').must_equal 2
+    end
+
+    it "does not write new when not ok" do
+      status.send(:cache_fetch, 'a', write_if: ->(_) { false }) { 2 }.must_equal 2
+      Rails.cache.read('a').must_equal nil
     end
   end
 end

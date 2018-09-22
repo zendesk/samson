@@ -20,8 +20,9 @@ class Integrations::GithubController < Integrations::BaseController
   protected
 
   def handle_commit_status_event
-    # Touch all releases of the sha in the project.
-    project.releases.where(commit: params[:sha].to_s).each(&:touch)
+    commit = params[:sha].to_s
+    CommitStatus.new(project, commit).expire_cache(commit)
+    project.releases.where(commit: commit).each(&:touch)
   end
 
   def payload

@@ -33,6 +33,10 @@ class CommitStatus
     list
   end
 
+  def expire_cache(commit)
+    Rails.cache.delete(cache_key(commit))
+  end
+
   private
 
   def combined_status
@@ -55,12 +59,28 @@ class CommitStatus
 
   def github_status
     commit = @project.repository.commit_from_ref(@reference) || raise(Octokit::NotFound)
-    GITHUB.combined_status(@project.repository_path, commit).to_h
+    write_if = ->(s) { s.fetch(:statuses).none? { |s| s.fetch(:state) == "pending" } }
+    cache_fetch cache_key(commit), expires_in: 1.hour, write_if: write_if do
+      GITHUB.combined_status(@project.repository_path, commit).to_h
+    end
   rescue Octokit::NotFound
     {
       state: "failure",
       statuses: [{"state": "Reference", description: "'#{@reference}' does not exist"}]
     }
+  end
+
+  def cache_key(commit)
+    ['commit-status', @project.id, commit]
+  end
+
+  def cache_fetch(key, options)
+    old = Rails.cache.read(key)
+    return old if old
+
+    current = yield
+    Rails.cache.write(key, current, options) if options[:write_if].call(current)
+    current
   end
 
   # checks if other stages that deploy to the same hosts as this stage have deployed a newer release
