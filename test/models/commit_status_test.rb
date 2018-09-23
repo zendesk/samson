@@ -18,7 +18,7 @@ describe CommitStatus do
   end
 
   def success!
-    stub_github_api(url, statuses: [{foo: "bar"}], state: "success")
+    stub_github_api(url, statuses: [{foo: "bar", updated_at: 1.day.ago}], state: "success")
   end
 
   def failure!
@@ -143,7 +143,7 @@ describe CommitStatus do
   describe "#statuses" do
     it "returns list" do
       success!
-      status.statuses.must_equal [{foo: "bar"}]
+      status.statuses.map { |s| s[:foo] }.must_equal ["bar"]
     end
 
     it "shows that github is waiting for statuses to come when non has arrived yet ... or none are set up" do
@@ -163,7 +163,7 @@ describe CommitStatus do
 
       it "merges" do
         success!
-        status.statuses.must_equal [
+        status.statuses.each { |s| s.delete(:updated_at) }.must_equal [
           {foo: "bar"},
           {state: "Old Release", description: "v4.3 was deployed to deploy groups in this stage by Production"}
         ]
@@ -212,23 +212,35 @@ describe CommitStatus do
   describe "#cache_fetch_if" do
     it "fetches old" do
       Rails.cache.write('a', 1)
-      status.send(:cache_fetch_if, true, 'a', write_if: :raise) { 2 }.must_equal 1
+      status.send(:cache_fetch_if, true, 'a', expires_in: :raise) { 2 }.must_equal 1
     end
 
     it "does not cache when not requested" do
       Rails.cache.write('a', 1)
-      status.send(:cache_fetch_if, false, 'a', write_if: :raise) { 2 }.must_equal 2
+      status.send(:cache_fetch_if, false, 'a', expires_in: :raise) { 2 }.must_equal 2
       Rails.cache.read('a').must_equal 1
     end
 
-    it "writes new when ok" do
-      status.send(:cache_fetch_if, true, 'a', write_if: ->(_) { true }) { 2 }.must_equal 2
+    it "caches with expiration" do
+      status.send(:cache_fetch_if, true, 'a', expires_in: ->(_) { 1 }) { 2 }.must_equal 2
       Rails.cache.read('a').must_equal 2
     end
+  end
 
-    it "does not write new when not ok" do
-      status.send(:cache_fetch_if, true, 'a', write_if: ->(_) { false }) { 2 }.must_equal 2
-      Rails.cache.read('a').must_equal nil
+  describe "#cache_duration" do
+    it "is short when we do not know if the commit is new or old" do
+      status.send(:cache_duration, statuses: []).must_equal 5.minutes
+    end
+
+    it "is long when we do not expect new updates" do
+      status.send(:cache_duration, statuses: [{updated_at: 1.day.ago}]).must_equal 1.day
+    end
+
+    it "is short when we expect updates shortly" do
+      status.send(:cache_duration, statuses: [{updated_at: 10.minutes.ago, state: "pending"}]).must_equal 1.minute
+    end
+    it "is medium when some status might still be changing or coming in late" do
+      status.send(:cache_duration, statuses: [{updated_at: 10.minutes.ago, state: "success"}]).must_equal 10.minutes
     end
   end
 end

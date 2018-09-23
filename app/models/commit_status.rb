@@ -50,10 +50,11 @@ class CommitStatus
     a.fetch(:statuses).concat b.fetch(:statuses)
   end
 
+  # NOTE: reply is an api object that does not support .fetch
   def github_status
     static = @reference.match?(Build::SHA1_REGEX) || @reference.match?(Release::VERSION_REGEX)
-    write_if = ->(s) { s.fetch(:statuses).none? { |s| UNDETERMINED.include?(s[:state]) } }
-    cache_fetch_if static, cache_key(@reference), expires_in: 1.hour, write_if: write_if do
+    expires_in = ->(reply) { cache_duration(reply) }
+    cache_fetch_if static, cache_key(@reference), expires_in: expires_in do
       GITHUB.combined_status(@project.repository_path, @reference).to_h
     end
   rescue Octokit::NotFound
@@ -67,18 +68,31 @@ class CommitStatus
     }
   end
 
+  def cache_duration(github_status)
+    statuses = github_status[:statuses]
+    if statuses.empty? # does not have any statuses, chances are commit is new
+      5.minutes # NOTE: could fetch commit locally without pulling to check it's age
+    elsif (Time.now - statuses.map { |s| s[:updated_at] }.max) > 1.hour # no new updates expected
+      1.day
+    elsif statuses.any? { |s| UNDETERMINED.include?(s[:state]) } # expecting update shortly
+      1.minute
+    else # user might re-run test or success changes into failure when new status arrives
+      10.minutes
+    end
+  end
+
   def cache_key(commit)
     ['commit-status', @project.id, commit]
   end
 
-  def cache_fetch_if(condition, key, options)
+  def cache_fetch_if(condition, key, expires_in:)
     return yield unless condition
 
     old = Rails.cache.read(key)
     return old if old
 
     current = yield
-    Rails.cache.write(key, current, options) if options[:write_if].call(current)
+    Rails.cache.write(key, current, expires_in: expires_in.call(current))
     current
   end
 
