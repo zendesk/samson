@@ -58,9 +58,9 @@ class GithubStatus
       Status.new(context, statuses.max_by { |status| status.created_at.to_i })
     end
 
-    # Don't cache pending statuses, since we expect updates soon.
-    unless statuses.any?(&:pending?)
-      Rails.cache.write(cache_key, response, expires_in: 1.hour)
+    # If the release is more than an hour old, cache the result.
+    if release.updated_at < 1.hour.ago
+      Rails.cache.write(cache_key, response, expires_in: 1.day)
     end
 
     new(response.state, statuses)
