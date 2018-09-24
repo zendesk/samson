@@ -57,7 +57,9 @@ module Samson
       :ref_status,
       :release_deploy_conditions,
       :stage_clone,
-      :stage_permitted_params
+      :stage_permitted_params,
+      :performance_tracer,
+      :asynchronous_performance_tracer
     ].freeze
 
     KNOWN = VIEW_HOOKS + EVENT_HOOKS
@@ -164,7 +166,7 @@ module Samson
 
       # use
       def fire(name, *args)
-        NewRelic::Agent::MethodTracerHelpers.trace_execution_scoped("Custom/Hooks/#{name}") do
+        Samson::PerformanceTracer.trace_execution_scoped("Custom/Hooks/#{name}") do
           hooks(name).map { |hook| hook.call(*args) }
         end
       end

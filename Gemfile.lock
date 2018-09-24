@@ -22,6 +22,12 @@ PATH
       aws-sdk-ecr
 
 PATH
+  remote: plugins/datadog_tracer
+  specs:
+    samson_datadog_tracer (0.0.1)
+      ddtrace
+
+PATH
   remote: plugins/datadog
   specs:
     samson_datadog (0.0.0)
@@ -230,6 +236,8 @@ GEM
       safe_yaml (~> 1.0.0)
     crass (1.0.4)
     dalli (2.7.6)
+    ddtrace (0.14.2)
+      msgpack
     diffy (3.2.0)
     docker-api (1.33.6)
       excon (>= 0.38.0)
@@ -611,6 +619,7 @@ DEPENDENCIES
   samson_assertible!
   samson_aws_ecr!
   samson_datadog!
+  samson_datadog_tracer!
   samson_deploy_env_vars!
   samson_docker_binary_builder!
   samson_env!
