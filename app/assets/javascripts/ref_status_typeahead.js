@@ -39,7 +39,6 @@ function refStatusTypeahead(options){
 
   function show_status_problems(status_list, isDanger) {
     $ref_status_container.removeClass("hidden");
-console.log(isDanger);
     $ref_status_container.toggleClass('alert-danger', isDanger);
     $ref_status_container.toggleClass('alert-warning', !isDanger);
 
@@ -63,24 +62,25 @@ console.log(isDanger);
       url: $("#new_deploy").data("commit-status-url"),
       data: { ref: ref },
       success: function(response) {
-        switch(response.status) {
+        switch(response.state) {
           case "success":
             $ref_status_container.addClass("hidden");
             $tag_form_group.addClass("has-success");
             break;
           case "pending":
+          case "missing":
             $tag_form_group.addClass("has-warning");
-            show_status_problems(response.status_list, false);
+            show_status_problems(response.statuses, false);
             break;
           case "failure":
           case "error":
             $tag_form_group.addClass("has-error");
-            show_status_problems(response.status_list, false);
+            show_status_problems(response.statuses, false);
             break;
           case "fatal":
             $tag_form_group.addClass("has-error");
             $submit_button.prop("disabled", true);
-            show_status_problems(response.status_list, true);
+            show_status_problems(response.statuses, true);
             break;
           default:
             alert("Unexpected response: " + response.toString());

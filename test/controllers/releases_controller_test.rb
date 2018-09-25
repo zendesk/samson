@@ -16,6 +16,7 @@ describe ReleasesController do
           context: "oompa/loompa",
           target_url: "https://chocolate-factory.com/test/wonka",
           description: "Ooompa Loompa!",
+          updated_at: Time.now.iso8601,
           created_at: Time.now.iso8601
         }
       ]

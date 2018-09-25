@@ -18,7 +18,7 @@ describe CommitStatus do
   end
 
   def success!
-    stub_github_api(url, statuses: [{foo: "bar"}], state: "success")
+    stub_github_api(url, statuses: [{foo: "bar", updated_at: 1.day.ago}], state: "success")
   end
 
   def failure!
@@ -26,22 +26,55 @@ describe CommitStatus do
   end
 
   def status(stage_param: stage, reference_param: reference)
-    @status ||= CommitStatus.new(stage_param, reference_param)
+    CommitStatus.new(stage_param.project, reference_param, stage: stage_param)
   end
 
   let(:stage) { stages(:test_staging) }
   let(:reference) { 'master' }
   let(:url) { "repos/#{stage.project.repository_path}/commits/#{reference}/status" }
 
-  describe "#status" do
+  describe "#state" do
     it "returns state" do
       success!
-      status.status.must_equal 'success'
+      status.state.must_equal 'success'
     end
 
-    it "is failure when not found" do
+    it "is missing when not found" do
       failure!
-      status.status.must_equal 'failure'
+      status.state.must_equal 'missing'
+    end
+
+    it "works without stage" do
+      success!
+      s = status
+      s.instance_variable_set(:@stage, nil)
+      s.state.must_equal "success"
+    end
+
+    it "does not cache changing references" do
+      request = success!
+      status.state.must_equal 'success'
+      status.state.must_equal 'success'
+      assert_requested request, times: 2
+    end
+
+    describe "caching static references" do
+      let(:reference) { 'v4.2' }
+
+      it "caches github state accross instances" do
+        request = success!
+        status.state.must_equal 'success'
+        status.state.must_equal 'success'
+        assert_requested request, times: 1
+      end
+
+      it "can expire cache" do
+        request = success!
+        status.state.must_equal 'success'
+        status.expire_cache reference
+        status.state.must_equal 'success'
+        assert_requested request, times: 2
+      end
     end
 
     describe "when deploying a previous release" do
@@ -50,7 +83,7 @@ describe CommitStatus do
       it "warns" do
         success!
         assert_sql_queries 10 do
-          status.status.must_equal 'error'
+          status.state.must_equal 'error'
         end
       end
 
@@ -59,13 +92,13 @@ describe CommitStatus do
         deploys(:succeeded_test).update_column(:reference, 'v4.1') # old is lower
         deploy.update_column(:reference, 'v4.3') # new is higher
         success!
-        status.status.must_equal 'error'
+        status.state.must_equal 'error'
       end
 
       it "ignores when previous deploy was the same or lower" do
         deploy.update_column(:reference, reference)
         success!
-        status.status.must_equal 'success'
+        status.state.must_equal 'success'
       end
 
       describe "when previous deploy was higher numerically" do
@@ -73,8 +106,9 @@ describe CommitStatus do
 
         it "warns" do
           success!
-          status.status.must_equal 'error'
-          status.status_list[1][:description].must_equal(
+          status = status()
+          status.state.must_equal 'error'
+          status.statuses[1][:description].must_equal(
             "v4.10 was deployed to deploy groups in this stage by Production"
           )
         end
@@ -84,8 +118,9 @@ describe CommitStatus do
           other.update_column(:reference, 'v4.9')
 
           success!
-          status.status.must_equal 'error'
-          status.status_list[1][:description].must_equal(
+          status = status()
+          status.state.must_equal 'error'
+          status.statuses[1][:description].must_equal(
             "v4.9, v4.10 was deployed to deploy groups in this stage by Staging, Production"
           )
         end
@@ -94,43 +129,33 @@ describe CommitStatus do
       it "ignores when previous deploy was not a version" do
         deploy.update_column(:reference, 'master')
         success!
-        status.status.must_equal 'success'
+        status.state.must_equal 'success'
       end
 
       it "ignores when previous deploy was failed" do
         deploy.job.update_column(:status, 'faild')
         success!
-        status.status.must_equal 'success'
-      end
-    end
-
-    describe "with bad ref" do
-      let(:reference) { '[/r' }
-      let(:url) { "repos/#{stage.project.repository_path}/commits/%255B/r/status" }
-
-      it "escapes the url" do
-        failure!
-        status.status.must_equal 'failure'
+        status.state.must_equal 'success'
       end
     end
   end
 
-  describe "#status_list" do
+  describe "#statuses" do
     it "returns list" do
       success!
-      status.status_list.must_equal [{foo: "bar"}]
+      status.statuses.map { |s| s[:foo] }.must_equal ["bar"]
     end
 
     it "shows that github is waiting for statuses to come when non has arrived yet ... or none are set up" do
       stub_github_api(url, statuses: [], state: "pending")
-      list = status.status_list
+      list = status.statuses
       list.map { |s| s[:state] }.must_equal ["pending"]
       list.first[:description].must_include "No status was reported"
     end
 
-    it "returns failure on Reference when not found list for consistent status display" do
+    it "returns Reference context for release/show display" do
       failure!
-      status.status_list.map { |s| s[:state] }.must_equal ["Reference"]
+      status.statuses.map { |s| s[:context] }.must_equal ["Reference"]
     end
 
     describe "when deploying a previous release" do
@@ -138,25 +163,11 @@ describe CommitStatus do
 
       it "merges" do
         success!
-        status.status_list.must_equal [
+        status.statuses.each { |s| s.delete(:updated_at) }.must_equal [
           {foo: "bar"},
           {state: "Old Release", description: "v4.3 was deployed to deploy groups in this stage by Production"}
         ]
       end
-    end
-  end
-
-  describe "#resolve_states" do
-    it 'picks the first state if it has higher priority' do
-      status.send(:pick_highest_state, 'error', 'success').must_equal 'error'
-    end
-
-    it 'picks the second state if it has higher priority' do
-      status.send(:pick_highest_state, 'success', 'error').must_equal 'error'
-    end
-
-    it 'returns second state if first state is nil' do
-      status.send(:pick_highest_state, nil, 'pending').must_equal 'pending'
     end
   end
 
@@ -195,6 +206,41 @@ describe CommitStatus do
       Samson::Hooks.expects(:fire).with(:ref_status, stage, reference).returns([{foo: :bar}])
 
       status.send(:ref_statuses).must_equal [{foo: :bar}]
+    end
+  end
+
+  describe "#cache_fetch_if" do
+    it "fetches old" do
+      Rails.cache.write('a', 1)
+      status.send(:cache_fetch_if, true, 'a', expires_in: :raise) { 2 }.must_equal 1
+    end
+
+    it "does not cache when not requested" do
+      Rails.cache.write('a', 1)
+      status.send(:cache_fetch_if, false, 'a', expires_in: :raise) { 2 }.must_equal 2
+      Rails.cache.read('a').must_equal 1
+    end
+
+    it "caches with expiration" do
+      status.send(:cache_fetch_if, true, 'a', expires_in: ->(_) { 1 }) { 2 }.must_equal 2
+      Rails.cache.read('a').must_equal 2
+    end
+  end
+
+  describe "#cache_duration" do
+    it "is short when we do not know if the commit is new or old" do
+      status.send(:cache_duration, statuses: []).must_equal 5.minutes
+    end
+
+    it "is long when we do not expect new updates" do
+      status.send(:cache_duration, statuses: [{updated_at: 1.day.ago}]).must_equal 1.day
+    end
+
+    it "is short when we expect updates shortly" do
+      status.send(:cache_duration, statuses: [{updated_at: 10.minutes.ago, state: "pending"}]).must_equal 1.minute
+    end
+    it "is medium when some status might still be changing or coming in late" do
+      status.send(:cache_duration, statuses: [{updated_at: 10.minutes.ago, state: "success"}]).must_equal 10.minutes
     end
   end
 end

@@ -12,16 +12,15 @@ class Integrations::GithubController < Integrations::BaseController
   end
 
   def create
-    handle_commit_status_event if github_event_type == "status"
-
+    expire_commit_status if github_event_type == "status"
     super
   end
 
   protected
 
-  def handle_commit_status_event
-    # Touch all releases of the sha in the project.
-    project.releases.where(commit: params[:sha].to_s).each(&:touch)
+  def expire_commit_status
+    commit = params[:sha].to_s
+    CommitStatus.new(project, commit).expire_cache(commit)
   end
 
   def payload

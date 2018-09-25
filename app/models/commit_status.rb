@@ -2,24 +2,23 @@
 # Used to display all warnings/failures before user actually deploys
 class CommitStatus
   # See ref_status_typeahead.js for how statuses are handled
-  STATUS_PRIORITY = {
-    success: 0,
-    pending: 1,
-    failure: 2,
-    error: 3,
-    fatal: 4
-  }.freeze
+  # See https://developer.github.com/v3/repos/statuses for api details
+  # - fatal is our own state that blocks deploys
+  # - missing is our own state that means we could not determine the status
+  STATE_PRIORITY = [:success, :pending, :missing, :failure, :error, :fatal].freeze
+  UNDETERMINED = ["pending", "missing"].freeze
 
-  def initialize(stage, reference)
-    @stage = stage
+  def initialize(project, reference, stage: nil)
+    @project = project
     @reference = reference
+    @stage = stage
   end
 
-  def status
+  def state
     combined_status.fetch(:state)
   end
 
-  def status_list
+  def statuses
     list = combined_status.fetch(:statuses).map(&:to_h)
     if list.empty?
       list << {
@@ -32,37 +31,69 @@ class CommitStatus
     list
   end
 
+  def expire_cache(commit)
+    Rails.cache.delete(cache_key(commit))
+  end
+
   private
 
   def combined_status
     @combined_status ||= begin
-      statuses = [github_status, release_status, *ref_statuses]
-
-      statuses.each_with_object({}) { |status, merged_statuses| merge(merged_statuses, status) }
+      statuses = [github_status]
+      statuses += [release_status, *ref_statuses].compact if @stage
+      statuses[1..-1].each_with_object(statuses[0]) { |status, merged| merge(merged, status) }
     end
   end
 
   def merge(a, b)
-    return a unless b
-    a[:state] = pick_highest_state(a[:state], b.fetch(:state))
-    (a[:statuses] ||= []).concat b.fetch(:statuses)
+    a[:state] = [a.fetch(:state), b.fetch(:state)].max_by { |state| STATE_PRIORITY.index(state.to_sym) }
+    a.fetch(:statuses).concat b.fetch(:statuses)
   end
 
-  # picks the state with the higher priority
-  def pick_highest_state(a, b)
-    return b if a.nil?
-    STATUS_PRIORITY[a.to_sym] > STATUS_PRIORITY[b.to_sym] ? a : b
-  end
-
-  # need to do weird escape logic since other wise either 'foo/bar' or 'bar[].foo' do not work
+  # NOTE: reply is an api object that does not support .fetch
   def github_status
-    escaped_ref = @reference.gsub(/[^a-zA-Z\/\d_-]+/) { |v| CGI.escape(v) }
-    GITHUB.combined_status(@stage.project.repository_path, escaped_ref).to_h
+    static = @reference.match?(Build::SHA1_REGEX) || @reference.match?(Release::VERSION_REGEX)
+    expires_in = ->(reply) { cache_duration(reply) }
+    cache_fetch_if static, cache_key(@reference), expires_in: expires_in do
+      GITHUB.combined_status(@project.repository_path, @reference).to_h
+    end
   rescue Octokit::NotFound
     {
-      state: "failure",
-      statuses: [{"state": "Reference", description: "'#{@reference}' does not exist"}]
+      state: "missing",
+      statuses: [{
+        context: "Reference", # for releases/show.html.erb
+        state: "missing",
+        description: "'#{@reference}' does not exist"
+      }]
     }
+  end
+
+  def cache_duration(github_status)
+    statuses = github_status[:statuses]
+    if statuses.empty? # does not have any statuses, chances are commit is new
+      5.minutes # NOTE: could fetch commit locally without pulling to check it's age
+    elsif (Time.now - statuses.map { |s| s[:updated_at] }.max) > 1.hour # no new updates expected
+      1.day
+    elsif statuses.any? { |s| UNDETERMINED.include?(s[:state]) } # expecting update shortly
+      1.minute
+    else # user might re-run test or success changes into failure when new status arrives
+      10.minutes
+    end
+  end
+
+  def cache_key(commit)
+    ['commit-status', @project.id, commit]
+  end
+
+  def cache_fetch_if(condition, key, expires_in:)
+    return yield unless condition
+
+    old = Rails.cache.read(key)
+    return old if old
+
+    current = yield
+    Rails.cache.write(key, current, expires_in: expires_in.call(current))
+    current
   end
 
   # checks if other stages that deploy to the same hosts as this stage have deployed a newer release
