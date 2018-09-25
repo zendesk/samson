@@ -116,7 +116,6 @@ module Samson
     config.samson.github.web_url = deprecated_url.call("GITHUB_WEB_URL") || 'https://github.com'
     config.samson.github.api_url = deprecated_url.call("GITHUB_API_URL") || 'https://api.github.com'
     config.samson.github.status_url = deprecated_url.call("GITHUB_STATUS_URL") || 'https://status.github.com'
-    config.samson.references_cache_ttl = ENV['REFERENCES_CACHE_TTL'].presence || 10.minutes
 
     # Configuration for LDAP
     config.samson.ldap = ActiveSupport::OrderedOptions.new
