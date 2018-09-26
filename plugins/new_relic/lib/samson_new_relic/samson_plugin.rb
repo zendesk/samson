@@ -41,6 +41,10 @@ module SamsonNewRelic
       yield
     end
   end
+
+  def self.include_once(klass, mod)
+    klass.include mod unless klass.include?(mod)
+  end
 end
 
 # Railties need to be loaded before the application is initialized
@@ -65,18 +69,14 @@ end
 
 Samson::Hooks.callback :performance_tracer do |klass, method|
   if SamsonNewRelic.tracer_enabled?
-    klass.class_eval do
-      include ::NewRelic::Agent::MethodTracer
-      add_method_tracer method
-    end
+    SamsonNewRelic.include_once klass, ::NewRelic::Agent::MethodTracer
+    klass.add_method_tracer method
   end
 end
 
 Samson::Hooks.callback :asynchronous_performance_tracer do |klass, method, options|
   if SamsonNewRelic.tracer_enabled?
-    klass.class_eval do
-      include ::NewRelic::Agent::Instrumentation::ControllerInstrumentation
-      add_transaction_tracer method, options
-    end
+    SamsonNewRelic.include_once klass, ::NewRelic::Agent::Instrumentation::ControllerInstrumentation
+    klass.add_transaction_tracer method, options
   end
 end

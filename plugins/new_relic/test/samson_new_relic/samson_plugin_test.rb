@@ -106,6 +106,21 @@ describe SamsonNewRelic do
     end
   end
 
+  describe ".include_once" do
+    it "includes once" do
+      calls = 0
+      a = Class.new
+      b = Module.new do
+        (class << self; self; end).define_method :included do |_|
+          calls += 1
+        end
+      end
+      SamsonNewRelic.include_once a, b
+      SamsonNewRelic.include_once a, b
+      calls.must_equal 1
+    end
+  end
+
   class Klass
     extend ::Samson::PerformanceTracer::Tracers
     def with_role
