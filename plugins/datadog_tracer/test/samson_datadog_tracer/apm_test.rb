@@ -4,7 +4,7 @@ require_relative "../test_helper"
 SingleCov.covered!
 
 describe SamsonDatadogTracer::APM do
-  module DDTracer
+  module FakeTracer
     def self.trace(*)
       yield
     end
@@ -12,7 +12,7 @@ describe SamsonDatadogTracer::APM do
 
   module Datadog
     def self.tracer
-      DDTracer
+      FakeTracer
     end
   end
 
@@ -27,7 +27,7 @@ describe SamsonDatadogTracer::APM do
     it "trigger tracer when enabled" do
       with_env DATADOG_TRACER: "1" do
         Rails.stubs(:env).returns("staging")
-        Datadog.expects(:tracer).returns(DDTracer)
+        Datadog.expects(:tracer).returns(FakeTracer)
         SamsonDatadogTracer::APM.trace_method_execution_scope("test") { "with tracer" }
       end
     end
