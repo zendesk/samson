@@ -53,19 +53,19 @@ describe SamsonNewRelic do
   describe ".trace_method_execution_scope" do
     it "skips method trace when tracer disabled" do
       NewRelic::Agent::MethodTracerHelpers.expects(:trace_execution_scoped).never
-      SamsonNewRelic.trace_method_execution_scope("test") { "without tracer" }
+      SamsonNewRelic.trace_execution_scoped("test") { "without tracer" }
     end
 
     it "trace execution scope when enabled" do
       with_env NEW_RELIC_LICENSE_KEY: "1" do
         NewRelic::Agent::MethodTracerHelpers.expects(:trace_execution_scoped)
-        SamsonNewRelic.trace_method_execution_scope("test") { "with tracer" }
+        SamsonNewRelic.trace_execution_scoped("test") { "with tracer" }
       end
     end
 
     it "trace scope and returns execution result" do
       with_env NEW_RELIC_LICENSE_KEY: "1" do
-        SamsonNewRelic.trace_method_execution_scope("test") { "with tracer" }.must_equal("with tracer")
+        SamsonNewRelic.trace_execution_scoped("test") { "with tracer" }.must_equal("with tracer")
       end
     end
   end
@@ -132,14 +132,14 @@ describe SamsonNewRelic do
     it "triggers method tracer when enabled" do
       with_env NEW_RELIC_LICENSE_KEY: "1" do
         Klass.expects(:add_method_tracer)
-        Samson::Hooks.fire :performance_tracer, Klass, [:with_role]
+        Samson::Hooks.fire :trace_method, Klass, [:with_role]
       end
     end
 
     it "skips method tracer when disabled" do
       with_env NEW_RELIC_LICENSE_KEY: nil do
         Klass.expects(:add_method_tracer).never
-        Samson::Hooks.fire :performance_tracer, Klass, [:with_role]
+        Samson::Hooks.fire :trace_method, Klass, [:with_role]
       end
     end
   end

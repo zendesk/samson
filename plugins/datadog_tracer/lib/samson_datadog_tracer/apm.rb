@@ -2,7 +2,7 @@
 module SamsonDatadogTracer
   module APM
     class << self
-      def trace_method_execution_scope(scope_name, &block)
+      def trace_execution_scoped(scope_name, &block)
         if SamsonDatadogTracer.enabled?
           Datadog.tracer.trace("Custom/Hooks/#{scope_name}", &block)
         else

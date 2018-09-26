@@ -32,11 +32,9 @@ module SamsonNewRelic
     !!ENV['NEW_RELIC_LICENSE_KEY'] # same key as the newrelic_rpm gem uses
   end
 
-  def self.trace_method_execution_scope(scope_name)
+  def self.trace_execution_scoped(scope_name, &block)
     if tracer_enabled?
-      NewRelic::Agent::MethodTracerHelpers.trace_execution_scoped("Custom/Hooks/#{scope_name}") do
-        yield
-      end
+      NewRelic::Agent::MethodTracerHelpers.trace_execution_scoped("Custom/Hooks/#{scope_name}", &block)
     else
       yield
     end
@@ -67,7 +65,7 @@ Samson::Hooks.callback :stage_clone do |old_stage, new_stage|
   new_stage.new_relic_applications.build(old_applications)
 end
 
-Samson::Hooks.callback :performance_tracer do |klass, method|
+Samson::Hooks.callback :trace_method do |klass, method|
   if SamsonNewRelic.tracer_enabled?
     SamsonNewRelic.include_once klass, ::NewRelic::Agent::MethodTracer
     klass.add_method_tracer method

@@ -20,13 +20,13 @@ describe SamsonDatadogTracer do
     it "triggers Datadog tracer method when enabled" do
       with_env DATADOG_TRACER: "1" do
         SamsonDatadogTracer::APM.expects(:trace_method)
-        Samson::Hooks.fire :performance_tracer, User, :with_role
+        Samson::Hooks.fire :trace_method, User, :with_role
       end
     end
 
     it "skips Datadog tracer when disabled" do
       SamsonDatadogTracer::APM.expects(:trace_method).never
-      Samson::Hooks.fire :performance_tracer, User, :with_role
+      Samson::Hooks.fire :trace_method, User, :with_role
     end
   end
 end

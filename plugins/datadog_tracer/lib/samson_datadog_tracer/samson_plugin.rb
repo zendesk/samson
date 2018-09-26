@@ -10,12 +10,12 @@ end
 
 require 'samson_datadog_tracer/apm'
 require 'samson/performance_tracer'
-
-# TODO: turn this into a hook
 Samson::PerformanceTracer.handlers << SamsonDatadogTracer::APM
 
-Samson::Hooks.callback :performance_tracer do |klass, method|
+Samson::Hooks.callback :trace_method do |klass, method|
   if SamsonDatadogTracer.enabled?
     SamsonDatadogTracer::APM.trace_method klass, method
   end
 end
+
+# TODO: support :asynchronous_performance_tracer hook, see lib/samson/performance_tracer.rb
