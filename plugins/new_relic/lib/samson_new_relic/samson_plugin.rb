@@ -74,7 +74,7 @@ end
 
 Samson::Hooks.callback :asynchronous_performance_tracer do |klass, method, options|
   if SamsonNewRelic.tracer_enabled?
-    klass.is_a?(Class) && klass.class_eval do
+    klass.class_eval do
       include ::NewRelic::Agent::Instrumentation::ControllerInstrumentation
       add_transaction_tracer method, options
     end
