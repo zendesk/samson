@@ -94,6 +94,7 @@ PATH
   remote: plugins/new_relic
   specs:
     samson_new_relic (0.0.0)
+      newrelic_rpm
 
 PATH
   remote: plugins/pipelines
@@ -583,7 +584,6 @@ DEPENDENCIES
   momentjs-rails
   mysql2
   net-http-persistent
-  newrelic_rpm
   octokit
   omniauth
   omniauth-bitbucket

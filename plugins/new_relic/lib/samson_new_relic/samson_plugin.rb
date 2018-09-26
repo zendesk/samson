@@ -3,14 +3,15 @@ module SamsonNewRelic
   class Engine < Rails::Engine
   end
 
-  KEY = ENV['NEWRELIC_API_KEY'].presence
+  API_KEY = ENV['NEW_RELIC_API_KEY'].presence
+  raise "Use NEW_RELIC_API_KEY, not NEWRELIC_API_KEY" if ENV['NEWRELIC_API_KEY'] && !API_KEY
 
   def self.enabled?
-    KEY
+    API_KEY
   end
 
   def self.tracer_enabled?
-    !!ENV['NEW_RELIC_LICENSE_KEY']
+    !!ENV['NEW_RELIC_LICENSE_KEY'] # same key as the newrelic_rpm gem uses
   end
 
   def self.trace_method_execution_scope(scope_name)
