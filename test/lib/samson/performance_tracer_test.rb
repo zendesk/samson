@@ -19,11 +19,38 @@ describe Samson::PerformanceTracer do
   end
 
   describe '.trace_execution_scoped' do
-    it 'add tracer for scope' do
-      trace_scope = proc {}
-      SamsonNewRelic.expects(:trace_execution_scoped).returns(trace_scope)
-      SamsonDatadogTracer.expects(:trace_execution_scoped).returns(trace_scope)
-      Samson::PerformanceTracer.trace_execution_scoped('test_scope') { :scoped }
+    let(:custom_tracer) do
+      Class.new do
+        def self.order
+          @order ||= []
+        end
+
+        def self.trace_execution_scoped(scope)
+          order << scope
+          yield
+        ensure
+          order << :after
+        end
+      end
+    end
+
+    it 'calls all tracers' do
+      SamsonDatadogTracer.expects(:enabled?)
+      SamsonNewRelic.expects(:tracer_enabled?)
+      Samson::PerformanceTracer.trace_execution_scoped('test_scope') { :scoped }.must_equal :scoped
+    end
+
+    it "calls tracer in correct order" do
+      begin
+        Samson::PerformanceTracer.handlers << custom_tracer
+        Samson::PerformanceTracer.trace_execution_scoped('test_scope') do
+          custom_tracer.order << :inner
+          :scoped
+        end.must_equal :scoped
+        custom_tracer.order.must_equal ['test_scope', :inner, :after]
+      ensure
+        Samson::PerformanceTracer.handlers.pop
+      end
     end
   end
 

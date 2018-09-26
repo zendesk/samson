@@ -7,9 +7,8 @@ module Samson
         @handlers ||= []
       end
 
-      # TODO: caching the stack would be nice
       def trace_execution_scoped(scope_name, &block)
-        handlers.inject(block) { |inner, plugin| plugin.trace_execution_scoped(scope_name) { inner } }.call
+        handlers.inject(block) { |inner, plugin| -> { plugin.trace_execution_scoped(scope_name, &inner) } }.call
       end
     end
 
