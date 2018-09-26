@@ -87,7 +87,7 @@ describe SamsonDatadogTracer do
         e = assert_raise RuntimeError do
           SamsonDatadogTracer.trace_method instance.class, method
         end
-        e.message.must_include "Tracer already defined for #{method}"
+        e.message.must_include "apm_tracer wrapper already defined for #{method}"
       end
     end
 
@@ -115,14 +115,15 @@ describe SamsonDatadogTracer do
   describe "trace_method hook" do
     it "triggers Datadog tracer method when enabled" do
       with_env DATADOG_TRACER: "1" do
+        Datadog.expects(:tracer).returns(fake_tracer) # hook fire triggers tracing too
         SamsonDatadogTracer.expects(:trace_method)
-        Samson::Hooks.fire :trace_method, User, :with_role
+        Samson::Hooks.fire :trace_method, User, :foobar
       end
     end
 
     it "skips Datadog tracer when disabled" do
       SamsonDatadogTracer.expects(:trace_method).never
-      Samson::Hooks.fire :trace_method, User, :with_role
+      Samson::Hooks.fire :trace_method, User, :foobar
     end
   end
 end
