@@ -7,16 +7,9 @@ module Samson
         @handlers ||= []
       end
 
+      # TODO: caching the stack would be nice
       def trace_execution_scoped(scope_name, &block)
-        # TODO: recheck Tracing the scope is restricted to avoid into slow startup
-        # Refer Samson::BootCheck
-        if ['staging', 'production'].include?(Rails.env)
-          # TODO: caching this would be nice
-          stack = handlers.inject(block) { |inner, plugin| plugin.trace_execution_scoped(scope_name) { inner } }
-          stack.call
-        else
-          yield
-        end
+        handlers.inject(block) { |inner, plugin| plugin.trace_execution_scoped(scope_name) { inner } }.call
       end
     end
 

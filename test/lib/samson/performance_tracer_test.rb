@@ -20,17 +20,10 @@ describe Samson::PerformanceTracer do
 
   describe '.trace_execution_scoped' do
     it 'add tracer for scope' do
-      Rails.stubs(:env).returns("staging")
       trace_scope = proc {}
       SamsonNewRelic.expects(:trace_execution_scoped).returns(trace_scope)
-      SamsonDatadogTracer::APM.expects(:trace_execution_scoped).returns(trace_scope)
+      SamsonDatadogTracer.expects(:trace_execution_scoped).returns(trace_scope)
       Samson::PerformanceTracer.trace_execution_scoped('test_scope') { :scoped }
-    end
-
-    it 'skips scope tracing' do
-      SamsonNewRelic.expects(:trace_execution_scoped).never
-      SamsonDatadogTracer::APM.expects(:trace_execution_scoped).never
-      Samson::PerformanceTracer.trace_execution_scoped('test_scope') { :scoped }.must_equal(:scoped)
     end
   end
 
