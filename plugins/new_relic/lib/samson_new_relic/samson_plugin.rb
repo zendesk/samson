@@ -3,8 +3,26 @@ module SamsonNewRelic
   class Engine < Rails::Engine
   end
 
-  API_KEY = ENV['NEW_RELIC_API_KEY'].presence
-  raise "Use NEW_RELIC_API_KEY, not NEWRELIC_API_KEY" if ENV['NEWRELIC_API_KEY'] && !API_KEY
+  def self.find_api_key
+    api_key = ENV['NEW_RELIC_API_KEY'].presence
+    raise "Use NEW_RELIC_API_KEY, not NEWRELIC_API_KEY" if ENV['NEWRELIC_API_KEY'] && !api_key
+    api_key
+  end
+
+  def self.setup_initializers
+    if ['staging', 'production'].include?(Rails.env)
+      require 'newrelic_rpm'
+    else
+      # avoids circular dependencies warning
+      # https://discuss.newrelic.com/t/circular-require-in-ruby-agent-lib-new-relic-agent-method-tracer-rb/42737
+      require 'new_relic/control'
+
+      # needed even in dev/test mode
+      require 'new_relic/agent/method_tracer'
+    end
+  end
+
+  API_KEY = find_api_key
 
   def self.enabled?
     API_KEY
@@ -24,6 +42,9 @@ module SamsonNewRelic
     end
   end
 end
+
+# Railties need to be loaded before the application is initialized
+SamsonNewRelic.setup_initializers
 
 Samson::Hooks.view :stage_form, "samson_new_relic/fields"
 Samson::Hooks.view :deploy_tab_nav, "samson_new_relic/deploy_tab_nav"

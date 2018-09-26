@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 1
+SingleCov.covered!
 
 describe SamsonNewRelic do
   describe :stage_permitted_params do
@@ -67,6 +67,42 @@ describe SamsonNewRelic do
       with_env NEW_RELIC_LICENSE_KEY: "1" do
         SamsonNewRelic.trace_method_execution_scope("test") { "with tracer" }.must_equal("with tracer")
       end
+    end
+  end
+
+  describe ".find_api_key" do
+    it "finds no key" do
+      SamsonNewRelic.find_api_key.must_be_nil
+    end
+
+    it "finds new key" do
+      with_env NEW_RELIC_API_KEY: 'foo' do
+        SamsonNewRelic.find_api_key.must_equal 'foo'
+      end
+    end
+
+    it "finds new key when old is set too (for easy transition)" do
+      with_env NEW_RELIC_API_KEY: 'foo', NEWRELIC_API_KEY: 'foo' do
+        SamsonNewRelic.find_api_key.must_equal 'foo'
+      end
+    end
+
+    it "alerts when using only old key" do
+      with_env NEWRELIC_API_KEY: 'foo' do
+        e = assert_raises(RuntimeError) { SamsonNewRelic.find_api_key }
+        e.message.must_equal "Use NEW_RELIC_API_KEY, not NEWRELIC_API_KEY"
+      end
+    end
+  end
+
+  describe ".setup_initializers" do
+    it "loads basics in test mode" do
+      SamsonNewRelic.setup_initializers
+    end
+
+    it "loads everything in staging" do
+      Rails.expects(:env).returns('production')
+      SamsonNewRelic.setup_initializers # no side-effects, but coverage will be 100%
     end
   end
 
