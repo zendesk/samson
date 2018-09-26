@@ -4,7 +4,7 @@ class MultiLock
   cattr_accessor(:locks) { {} }
 
   class << self
-    include ::Samson::PerformanceTracer
+    extend ::Samson::PerformanceTracer::Tracers
 
     def lock(id, holder, options)
       locked = wait_for_lock(id, holder, options)

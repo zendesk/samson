@@ -45,6 +45,8 @@ end
 
 # Railties need to be loaded before the application is initialized
 SamsonNewRelic.setup_initializers
+require 'samson/performance_tracer'
+Samson::PerformanceTracer.handlers << SamsonNewRelic
 
 Samson::Hooks.view :stage_form, "samson_new_relic/fields"
 Samson::Hooks.view :deploy_tab_nav, "samson_new_relic/deploy_tab_nav"

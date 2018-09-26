@@ -2,7 +2,7 @@
 require 'shellwords'
 
 class JobExecution
-  include ::Samson::PerformanceTracer
+  extend ::Samson::PerformanceTracer::Tracers
 
   cattr_accessor(:cancel_timeout, instance_writer: false) { 15.seconds }
 

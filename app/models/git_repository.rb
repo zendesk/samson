@@ -2,7 +2,7 @@
 # Responsible for all git knowledge of a repo
 # Caches a local mirror (not a full checkout) and creates a workspace when deploying
 class GitRepository
-  include ::Samson::PerformanceTracer
+  extend ::Samson::PerformanceTracer::Tracers
 
   attr_accessor :executor # others set this to listen in on commands being executed
 

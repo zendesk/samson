@@ -8,6 +8,10 @@ module SamsonDatadogTracer
   end
 end
 
+require 'samson_datadog_tracer/apm'
+require 'samson/performance_tracer'
+Samson::PerformanceTracer.handlers << SamsonDatadogTracer::APM
+
 Samson::Hooks.callback :performance_tracer do |klass, method|
   if SamsonDatadogTracer.enabled?
     klass.class_eval do

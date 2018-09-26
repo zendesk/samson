@@ -107,7 +107,7 @@ describe SamsonNewRelic do
   end
 
   class Klass
-    include ::Samson::PerformanceTracer
+    extend ::Samson::PerformanceTracer::Tracers
     def with_role
     end
     add_tracer :with_role

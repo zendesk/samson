@@ -29,7 +29,7 @@ describe SamsonDatadogTracer do
       it "triggers Datadog tracer method" do
         with_env DATADOG_TRACER: "1" do
           class Klass
-            include ::Samson::PerformanceTracer
+            extends ::Samson::PerformanceTracer::Tracers
             def with_role
             end
             add_tracer :with_role

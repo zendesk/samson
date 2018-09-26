@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 class DeployService
-  include ::Samson::PerformanceTracer
+  extend ::Samson::PerformanceTracer::Tracers
   attr_reader :user
 
   def initialize(user)
