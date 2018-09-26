@@ -12,9 +12,9 @@ describe SamsonDatadogTracer::APM do
     end
   end
 
-  with_env DATADOG_TRACER: '1'
-
   describe ".trace_method_execution_scope" do
+    with_env DATADOG_TRACER: '1'
+
     it "skips tracer when disabled" do
       with_env DATADOG_TRACER: nil do
         Datadog.expects(:tracer).never
@@ -61,6 +61,22 @@ describe SamsonDatadogTracer::APM do
       instance.send(:pub_method).must_equal(:pub)
       instance.send(:pro_method).must_equal(:pro)
       instance.send(:pri_method).must_equal(:pri)
+    end
+
+    it "refuses to add the same wrapper twice since that would lead to infinite loops" do
+      e = assert_raise RuntimeError do
+        SamsonDatadogTracer::APM.trace_method instance.class, :pub_method
+      end
+      e.message.must_include "Tracer already defined for pub_method"
+    end
+
+    [:pub_method, :pro_method, :pri_method].each do |method|
+      it "refuses to add the same wrapper twice for #{method}" do
+        e = assert_raise RuntimeError do
+          SamsonDatadogTracer::APM.trace_method instance.class, method
+        end
+        e.message.must_include "Tracer already defined for #{method}"
+      end
     end
 
     it "fails with undefined method" do

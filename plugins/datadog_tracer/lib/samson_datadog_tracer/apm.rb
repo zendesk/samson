@@ -2,21 +2,21 @@
 module SamsonDatadogTracer
   module APM
     class << self
-      def trace_method_execution_scope(scope_name)
+      def trace_method_execution_scope(scope_name, &block)
         if SamsonDatadogTracer.enabled?
-          Datadog.tracer.trace("Custom/Hooks/#{scope_name}") do
-            yield
-          end
+          Datadog.tracer.trace("Custom/Hooks/#{scope_name}", &block)
         else
           yield
         end
       end
 
-      # TODO: blow up when adding twice
       # We are not using super to make running newrelic (which uses alias) and datadog possible
       def trace_method(klass, method)
         visibility = method_visibility(klass, method)
         without = "without_apm_tracer_#{method}"
+        if klass.method_defined?(without) || klass.private_method_defined?(without)
+          raise "Tracer already defined for #{method}"
+        end
         klass.alias_method without, method
         klass.define_method(method) do |*args, &block|
           Datadog.tracer.trace("#{klass}###{method}") do

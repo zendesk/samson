@@ -10,6 +10,8 @@ end
 
 require 'samson_datadog_tracer/apm'
 require 'samson/performance_tracer'
+
+# TODO: turn this into a hook
 Samson::PerformanceTracer.handlers << SamsonDatadogTracer::APM
 
 Samson::Hooks.callback :performance_tracer do |klass, method|
