@@ -79,7 +79,7 @@ describe SamsonDatadogTracer do
       e = assert_raise RuntimeError do
         SamsonDatadogTracer.trace_method instance.class, :pub_method
       end
-      e.message.must_include "Tracer already defined for pub_method"
+      e.message.must_include "apm_tracer wrapper already defined for pub_method"
     end
 
     [:pub_method, :pro_method, :pri_method].each do |method|
