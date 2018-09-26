@@ -132,7 +132,7 @@ class GitRepository
   def create_workspace(temp_dir)
     executor.execute "git clone #{repo_cache_dir} #{temp_dir}"
   end
-  add_tracer :create_workspace!
+  add_tracer :create_workspace
 
   def update!
     executor.execute("cd #{repo_cache_dir}", 'git fetch -p')
