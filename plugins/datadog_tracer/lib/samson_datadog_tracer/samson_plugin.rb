@@ -18,11 +18,8 @@ Samson::Hooks.callback :performance_tracer do |klass, method|
       include SamsonDatadogTracer::APM
       helper = SamsonDatadogTracer::APM::Helpers
       trace_method method
-
-      if method_defined?(method) || private_method_defined?(method)
-        alias_method helper.untracer_method_name(method), method
-        alias_method method, helper.tracer_method_name(method)
-      end
+      alias_method helper.untracer_method_name(method), method
+      alias_method method, helper.tracer_method_name(method)
     end
   end
 end
