@@ -33,8 +33,9 @@ describe DeployService do
       before { BuddyCheck.stubs(:enabled?).returns(true) }
       let(:deploy) { deploys(:succeeded_production_test) }
 
-      def create_previous_deploy(ref, stage, successful: true, bypassed: false)
-        job = project.jobs.create!(user: user, command: "foo", status: successful ? "succeeded" : 'failed')
+      def create_previous_deploy(ref, stage, successful: true, bypassed: false, commit: nil)
+        status = successful ? "succeeded" : 'failed'
+        job = project.jobs.create!(user: user, command: "foo", status: status, commit: commit)
         buddy = bypassed ? user : other_user
         Deploy.create!(job: job, reference: ref, stage: stage, buddy: buddy, started_at: Time.now, project: project)
       end
@@ -82,6 +83,15 @@ describe DeployService do
           create_previous_deploy(ref1, stage_production_1, bypassed: true)
           service.expects(:confirm_deploy).never
           service.deploy(stage_production_2, reference: ref1)
+        end
+      end
+
+      describe "similar deploy reference with different commit sha" do
+        it "does not start the deploy" do
+          create_previous_deploy(ref1, stage_production_1, commit: 'xyz')
+          Changeset.any_instance.expects(:commits).returns(['xyz'])
+          service.expects(:confirm_deploy).never
+          service.deploy(stage_production_1, reference: ref1)
         end
       end
 
