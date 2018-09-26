@@ -33,7 +33,7 @@ describe DeployService do
       before { BuddyCheck.stubs(:enabled?).returns(true) }
       let(:deploy) { deploys(:succeeded_production_test) }
 
-      def create_previous_deploy(ref, stage, successful: true, bypassed: false, commit: '')
+      def create_previous_deploy(ref, stage, successful: true, bypassed: false, commit: nil)
         status = successful ? "succeeded" : 'failed'
         job = project.jobs.create!(user: user, command: "foo", status: status, commit: commit)
         buddy = bypassed ? user : other_user
