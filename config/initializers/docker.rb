@@ -16,6 +16,7 @@ if !Rails.env.test? && !ENV['PRECOMPILE'] && ENV['DOCKER_FEATURE']
     end
   rescue
     warn "Unable to verify local docker!"
-    ErrorNotifier.notify($!, sync: true) # sync to avoid background threads breaking boot_check.rb thread checker
+    # errors and hooks they trigger cause background threads, that would break boot_check.rb thread checker
+    ErrorNotifier.notify($!) unless Rails.env.development?
   end
 end
