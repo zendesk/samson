@@ -130,7 +130,6 @@ class StagesController < ApplicationController
       :email_committers_on_automated_deploy_failure,
       :is_template,
       :name,
-      :no_code_deployed,
       :no_reference_selection,
       :notify_email_address,
       :periodical_deploy,
@@ -142,6 +141,9 @@ class StagesController < ApplicationController
         deploy_group_ids: [],
         command_ids: []
       }
-    ] + Samson::Hooks.fire(:stage_permitted_params).flatten
+    ].tap do |params|
+      params << :no_code_deployed if current_user.admin?
+      params << Samson::Hooks.fire(:stage_permitted_params)
+    end.flatten
   end
 end

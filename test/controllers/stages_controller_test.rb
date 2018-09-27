@@ -172,6 +172,12 @@ describe StagesController do
         it 'adds no commands by default' do
           assigns(:stage).command_ids.must_equal []
         end
+
+        it 'disabled to alter `does not deploy code`' do
+          assert_select "#stage_no_code_deployed" do |input|
+            assert input.attr("disabled").present?
+          end
+        end
       end
 
       it 'fails for non-existent project' do
@@ -393,6 +399,28 @@ describe StagesController do
 
       it 'succeeds' do
         assert_response :success
+      end
+    end
+  end
+
+  as_an_admin do
+    describe '#new' do
+      it 'can alter `does not deploy code`' do
+        get :new, params: {project_id: subject.project.to_param}
+        assert_select "#stage_no_code_deployed" do |input|
+          refute input.attr("disabled").present?
+        end
+      end
+    end
+
+    describe '#create' do
+      subject { assigns(:stage) }
+      it 'permits `no_code_deployed` as params' do
+        params = {project_id: projects(:test).to_param, stage: {name: 'test', no_code_deployed: true}}
+        post :create, params: params
+        subject.reload
+        subject.persisted?.must_equal(true)
+        assert subject.no_code_deployed
       end
     end
   end
