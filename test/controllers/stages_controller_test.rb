@@ -11,6 +11,13 @@ describe StagesController do
   unauthorized :get, :show, project_id: :foo, id: 1, token: Rails.application.config.samson.badge_token
   unauthorized :get, :index, project_id: :foo, token: Rails.application.config.samson.badge_token, format: :svg
 
+  def stage_no_code_deployed_disabled
+    get :new, params: {project_id: subject.project.to_param}
+    assert_select "#stage_no_code_deployed" do |input|
+      return input.attr("disabled").present?
+    end
+  end
+
   describe 'GET to :show with svg' do
     let(:valid_params) do
       {
@@ -174,9 +181,7 @@ describe StagesController do
         end
 
         it 'disabled to alter `does not deploy code`' do
-          assert_select "#stage_no_code_deployed" do |input|
-            assert input.attr("disabled").present?
-          end
+          assert stage_no_code_deployed_disabled
         end
       end
 
@@ -225,6 +230,12 @@ describe StagesController do
 
         it 'renders' do
           assert_template :new
+        end
+      end
+
+      it "fails with `no_code_deployed` in params" do
+        assert_raises ActionController::UnpermittedParameters do
+          create_stage(stage: {name: "test", no_code_deployed: true})
         end
       end
 
@@ -406,20 +417,16 @@ describe StagesController do
   as_an_admin do
     describe '#new' do
       it 'can alter `does not deploy code`' do
-        get :new, params: {project_id: subject.project.to_param}
-        assert_select "#stage_no_code_deployed" do |input|
-          refute input.attr("disabled").present?
-        end
+        refute stage_no_code_deployed_disabled
       end
     end
 
     describe '#create' do
       subject { assigns(:stage) }
-      it 'permits `no_code_deployed` as params' do
+      it 'permits `no_code_deployed` in params' do
         params = {project_id: projects(:test).to_param, stage: {name: 'test', no_code_deployed: true}}
         post :create, params: params
         subject.reload
-        subject.persisted?.must_equal(true)
         assert subject.no_code_deployed
       end
     end

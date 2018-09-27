@@ -24,9 +24,9 @@
   %>
 
   <% help = "Bypass " + [("buddy check" if BuddyCheck.enabled?), "release tracking"].compact.to_sentence \
-      + (", Only global admin can alter." if !current_user.admin?).to_s
+      + ". Must be a global admin to change"
   %>
-  <%= form.input :no_code_deployed, as: :check_box, label: no_code_label, help: help, input_html: {disabled: !current_user.admin?} %>
+  <%= form.input :no_code_deployed, as: :check_box, label: no_code_label, help: help, input_html: {disabled: !can_change_no_code_deployed?} %>
 
   <%= form.input :run_in_parallel, as: :check_box, label: "Can run in parallel", help: "Deploys are not queued. Executed immediately" %>
 
