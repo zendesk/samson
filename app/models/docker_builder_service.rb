@@ -2,7 +2,7 @@
 require 'docker'
 
 class DockerBuilderService
-  include ::Samson::PerformanceTracer
+  extend ::Samson::PerformanceTracer::Tracers
 
   def initialize(build)
     @build = build

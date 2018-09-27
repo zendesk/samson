@@ -25,7 +25,7 @@ describe NewRelicController do
       end
 
       it "requires a NewReclic api key" do
-        silence_warnings { SamsonNewRelic::KEY = nil }
+        silence_warnings { SamsonNewRelic::API_KEY = nil }
         get :show, params: {project_id: projects(:test), stage_id: stages(:test_staging)}
         assert_response :precondition_failed
       end

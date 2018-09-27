@@ -4,55 +4,126 @@ require_relative "../test_helper"
 SingleCov.covered!
 
 describe SamsonDatadogTracer do
-  describe ".enabled?" do
-    before(:all) do
-      ENV.delete('DATADOG_TRACER')
-    end
-    context "in any environment" do
-      it "is false by default" do
-        refute SamsonDatadogTracer.enabled?
-      end
-
-      it "is true when DATADOG_TRACER env var is set" do
-        with_env DATADOG_TRACER: "1" do
-          assert SamsonDatadogTracer.enabled?
-        end
-        with_env DATADOG_TRACER: nil do
-          refute SamsonDatadogTracer.enabled?
-        end
+  let(:fake_tracer) do
+    Class.new do
+      def self.trace(*)
+        yield
       end
     end
   end
 
-  describe "#performance_tracer" do
-    describe "when enabled" do
-      it "triggers Datadog tracer method" do
-        with_env DATADOG_TRACER: "1" do
-          class Klass
-            include ::Samson::PerformanceTracer
-            def with_role
-            end
-            add_tracer :with_role
-          end
-          Klass.expects(:trace_method)
-          Samson::Hooks.fire :performance_tracer, Klass, :with_role
-        end
+  describe ".enabled?" do
+    it "is false by default" do
+      refute SamsonDatadogTracer.enabled?
+    end
+
+    it "is true when DATADOG_TRACER env var is set" do
+      with_env DATADOG_TRACER: "1" do
+        assert SamsonDatadogTracer.enabled?
       end
-      it "skips tracer with missing method" do
-        with_env DATADOG_TRACER: "1" do
-          helper = SamsonDatadogTracer::APM::Helpers
-          method = :with_role
-          Samson::Hooks.fire :performance_tracer, User, method
-          refute User.method_defined?(helper.tracer_method_name(method))
+    end
+  end
+
+  describe ".trace_method_execution_scope" do
+    with_env DATADOG_TRACER: '1'
+
+    it "skips tracer when disabled" do
+      with_env DATADOG_TRACER: nil do
+        Datadog.expects(:tracer).never
+        SamsonDatadogTracer.trace_execution_scoped("test") { "without tracer" }
+      end
+    end
+
+    it "trigger tracer when enabled" do
+      Rails.stubs(:env).returns("staging")
+      Datadog.expects(:tracer).returns(fake_tracer)
+      SamsonDatadogTracer.trace_execution_scoped("test") { "with tracer" }
+    end
+  end
+
+  describe ".trace_method" do
+    let(:instance) do
+      Class.new do
+        include SamsonDatadogTracer
+
+        def pub_method
+          :pub
         end
+
+        protected
+
+        def pro_method
+          :pro
+        end
+
+        private
+
+        def pri_method
+          :pri
+        end
+
+        SamsonDatadogTracer.trace_method self, :pub_method
+        SamsonDatadogTracer.trace_method self, :pri_method
+        SamsonDatadogTracer.trace_method self, :pro_method
+      end.new
+    end
+
+    it "wraps methods in a trace call" do
+      Datadog.expects(:tracer).times(3).returns(fake_tracer)
+      instance.send(:pub_method).must_equal(:pub)
+      instance.send(:pro_method).must_equal(:pro)
+      instance.send(:pri_method).must_equal(:pri)
+    end
+
+    it "refuses to add the same wrapper twice since that would lead to infinite loops" do
+      e = assert_raise RuntimeError do
+        SamsonDatadogTracer.trace_method instance.class, :pub_method
+      end
+      e.message.must_include "apm_tracer wrapper already defined for pub_method"
+    end
+
+    [:pub_method, :pro_method, :pri_method].each do |method|
+      it "refuses to add the same wrapper twice for #{method}" do
+        e = assert_raise RuntimeError do
+          SamsonDatadogTracer.trace_method instance.class, method
+        end
+        e.message.must_include "apm_tracer wrapper already defined for #{method}"
+      end
+    end
+
+    it "fails with undefined method" do
+      e = assert_raise NameError do
+        SamsonDatadogTracer.trace_method instance.class, :no_method
+      end
+      e.message.must_include "undefined method `no_method'"
+    end
+
+    it "preserves method visibility" do
+      instance.public_methods.must_include :pub_method
+      instance.public_methods.wont_include :pri_method
+      instance.protected_methods.must_include :pro_method
+      instance.private_methods.must_include :pri_method
+    end
+
+    it "defines alias methods for without" do
+      instance.public_methods.must_include :without_apm_tracer_pub_method
+      instance.protected_methods.must_include :without_apm_tracer_pro_method
+      instance.private_methods.must_include :without_apm_tracer_pri_method
+    end
+  end
+
+  describe "trace_method hook" do
+    it "triggers Datadog tracer method when enabled" do
+      with_env DATADOG_TRACER: "1" do
+        Datadog.expects(:tracer).returns(fake_tracer) # hook fire triggers tracing too
+        SamsonDatadogTracer.expects(:trace_method)
+        Samson::Hooks.fire :trace_method, User, :foobar
       end
     end
 
     it "skips Datadog tracer when disabled" do
-      with_env DATADOG_TRACER: nil do
-        User.expects(:trace_method).never
-        Samson::Hooks.fire :performance_tracer, User, :with_role
-      end
+      SamsonDatadogTracer.expects(:trace_method).never
+      Samson::Hooks.fire :trace_method, User, :foobar
     end
   end
 end

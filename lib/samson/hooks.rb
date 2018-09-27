@@ -58,7 +58,7 @@ module Samson
       :release_deploy_conditions,
       :stage_clone,
       :stage_permitted_params,
-      :performance_tracer,
+      :trace_method,
       :asynchronous_performance_tracer
     ].freeze
 

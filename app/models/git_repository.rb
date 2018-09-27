@@ -2,7 +2,7 @@
 # Responsible for all git knowledge of a repo
 # Caches a local mirror (not a full checkout) and creates a workspace when deploying
 class GitRepository
-  include ::Samson::PerformanceTracer
+  extend ::Samson::PerformanceTracer::Tracers
 
   attr_accessor :executor # others set this to listen in on commands being executed
 
@@ -132,7 +132,7 @@ class GitRepository
   def create_workspace(temp_dir)
     executor.execute "git clone #{repo_cache_dir} #{temp_dir}"
   end
-  add_tracer :create_workspace!
+  add_tracer :create_workspace
 
   def update!
     executor.execute("cd #{repo_cache_dir}", 'git fetch -p')

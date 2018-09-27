@@ -3,26 +3,52 @@ module SamsonNewRelic
   class Engine < Rails::Engine
   end
 
-  KEY = ENV['NEWRELIC_API_KEY'].presence
+  def self.find_api_key
+    api_key = ENV['NEW_RELIC_API_KEY'].presence
+    raise "Use NEW_RELIC_API_KEY, not NEWRELIC_API_KEY" if ENV['NEWRELIC_API_KEY'] && !api_key
+    api_key
+  end
+
+  def self.setup_initializers
+    if ['staging', 'production'].include?(Rails.env)
+      require 'newrelic_rpm'
+    else
+      # avoids circular dependencies warning
+      # https://discuss.newrelic.com/t/circular-require-in-ruby-agent-lib-new-relic-agent-method-tracer-rb/42737
+      require 'new_relic/control'
+
+      # needed even in dev/test mode
+      require 'new_relic/agent/method_tracer'
+    end
+  end
+
+  API_KEY = find_api_key
 
   def self.enabled?
-    KEY
+    API_KEY
   end
 
   def self.tracer_enabled?
-    !!ENV['NEW_RELIC_LICENSE_KEY']
+    !!ENV['NEW_RELIC_LICENSE_KEY'] # same key as the newrelic_rpm gem uses
   end
 
-  def self.trace_method_execution_scope(scope_name)
+  def self.trace_execution_scoped(scope_name, &block)
     if tracer_enabled?
-      NewRelic::Agent::MethodTracerHelpers.trace_execution_scoped("Custom/Hooks/#{scope_name}") do
-        yield
-      end
+      NewRelic::Agent::MethodTracerHelpers.trace_execution_scoped("Custom/Hooks/#{scope_name}", &block)
     else
       yield
     end
   end
+
+  def self.include_once(klass, mod)
+    klass.include mod unless klass.include?(mod)
+  end
 end
+
+# Railties need to be loaded before the application is initialized
+SamsonNewRelic.setup_initializers
+require 'samson/performance_tracer'
+Samson::PerformanceTracer.handlers << SamsonNewRelic
 
 Samson::Hooks.view :stage_form, "samson_new_relic/fields"
 Samson::Hooks.view :deploy_tab_nav, "samson_new_relic/deploy_tab_nav"
@@ -39,20 +65,16 @@ Samson::Hooks.callback :stage_clone do |old_stage, new_stage|
   new_stage.new_relic_applications.build(old_applications)
 end
 
-Samson::Hooks.callback :performance_tracer do |klass, method|
+Samson::Hooks.callback :trace_method do |klass, method|
   if SamsonNewRelic.tracer_enabled?
-    klass.class_eval do
-      include ::NewRelic::Agent::MethodTracer
-      add_method_tracer method
-    end
+    SamsonNewRelic.include_once klass, ::NewRelic::Agent::MethodTracer
+    klass.add_method_tracer method
   end
 end
 
 Samson::Hooks.callback :asynchronous_performance_tracer do |klass, method, options|
   if SamsonNewRelic.tracer_enabled?
-    klass.is_a?(Class) && klass.class_eval do
-      include ::NewRelic::Agent::Instrumentation::ControllerInstrumentation
-      add_transaction_tracer method, options
-    end
+    SamsonNewRelic.include_once klass, ::NewRelic::Agent::Instrumentation::ControllerInstrumentation
+    klass.add_transaction_tracer method, options
   end
 end
