@@ -22,6 +22,11 @@ PATH
       aws-sdk-ecr
 
 PATH
+  remote: plugins/aws_sts
+  specs:
+    samson_aws_sts (0.0.0)
+
+PATH
   remote: plugins/datadog
   specs:
     samson_datadog (0.0.0)
@@ -608,6 +613,7 @@ DEPENDENCIES
   samson_airbrake_hook!
   samson_assertible!
   samson_aws_ecr!
+  samson_aws_sts!
   samson_datadog!
   samson_deploy_env_vars!
   samson_docker_binary_builder!
@@ -642,4 +648,4 @@ RUBY VERSION
    ruby 2.5.1p57
 
 BUNDLED WITH
-   1.16.3
+   1.16.5

@@ -1,0 +1,16 @@
+<fieldset>
+  <legend>AWS STS</legend>
+  <div class="col-lg-offset-2">
+    <div class="form-group">
+      <div class="col-lg-6">
+        <%= form.text_field :aws_sts_iam_role_arn, class: "form-control", placeholder: "AWS IAM Role ARN", value: "arn:aws:iam::123456789012:role/S3Access" %>
+        <span class="help-block">
+          AWS IAM Role ARN that should be assumed by the stage. This will create the following environment variables which can be used by stage commands:<br>
+          STS_AWS_ACCESS_KEY_ID<br>
+          STS_AWS_SECRET_ACCESS_KEY<br>
+          STS_AWS_SESSION_TOKEN<br>
+        </span>
+      </div>
+    </div>
+  </div>
+</fieldset>
