@@ -94,11 +94,11 @@ class StagesController < ApplicationController
     end
   end
 
+  private
+
   def can_change_no_code_deployed?
     current_user.admin?
   end
-
-  private
 
   def badge_safe(string)
     CGI.escape(string).
