@@ -8,14 +8,6 @@ module SamsonDatadogTracer
       !!ENV['DATADOG_TRACER']
     end
 
-    def trace_execution_scoped(scope_name, &block)
-      if enabled?
-        Datadog.tracer.trace("Custom/Hooks/#{scope_name}", &block)
-      else
-        yield
-      end
-    end
-
     # We are not using super to make running newrelic (which uses alias) and datadog possible
     def trace_method(klass, method)
       wrap_method klass, method, "apm_tracer" do |&block|
@@ -51,8 +43,11 @@ module SamsonDatadogTracer
   end
 end
 
-require 'samson/performance_tracer'
-Samson::PerformanceTracer.handlers << SamsonDatadogTracer
+Samson::Hooks.callback :trace_scope do |scope|
+  if SamsonDatadogTracer.enabled?
+    ->(&block) { Datadog.tracer.trace("Custom/Hooks/#{scope}", &block) }
+  end
+end
 
 Samson::Hooks.callback :trace_method do |klass, method|
   if SamsonDatadogTracer.enabled?
