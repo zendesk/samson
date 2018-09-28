@@ -125,4 +125,16 @@ describe Samson::Hooks do
       assert html.html_safe?
     end
   end
+
+  describe ".traced" do
+    it "traces when using a traced hook" do
+      Samson::PerformanceTracer.expects(:trace_execution_scoped).yields
+      Samson::Hooks.send(:traced, :after_deploy) { 1 }
+    end
+
+    it "traces when using a traced hook" do
+      Samson::PerformanceTracer.expects(:trace_execution_scoped).never
+      Samson::Hooks.send(:traced, :deploy_group_permitted_params) { 1 }.must_equal 1
+    end
+  end
 end
