@@ -24,20 +24,20 @@
   %>
 
   <% help = "Bypass " + [("buddy check" if BuddyCheck.enabled?), "release tracking"].compact.to_sentence \
-      + ". Must be a global admin to change"
+      + ". Must be a global admin to change."
   %>
   <%= form.input :no_code_deployed, as: :check_box, label: no_code_label, help: help, input_html: {disabled: !can_change_no_code_deployed?} %>
 
-  <%= form.input :run_in_parallel, as: :check_box, label: "Can run in parallel", help: "Deploys are not queued. Executed immediately" %>
+  <%= form.input :run_in_parallel, as: :check_box, label: "Can run in parallel", help: "Deploys are not queued. Executed immediately." %>
 
   <%= form.input :cancel_queued_deploys, as: :check_box, label: "Max 1 queued deploy per user", help: "When a new deploy is created for a user. Any queued deploys for that user are cancelled. This most useful when trying to not deploy every push for frequently updated projects." %>
 
-  <%= form.input :confirm, as: :check_box, label: confirm_label, help: "Show a review page before starting a deploy" %>
+  <%= form.input :confirm, as: :check_box, label: confirm_label, help: "Show a review page before starting a deploy." %>
 
   <%= form.input :no_reference_selection, as: :check_box, label: "Disable reference selection", help: no_ref_label %>
 
   <% if interval = Samson::Periodical.interval(:periodical_deploy) %>
-    <%= form.input :periodical_deploy, as: :check_box, help: "Deploy every #{distance_of_time_in_words(interval)} if last deploy succeeded, enable automated deploy failure email to be alerted " %>
+    <%= form.input :periodical_deploy, as: :check_box, help: "Deploy every #{distance_of_time_in_words(interval)} if last deploy succeeded, enable automated deploy failure email to be alerted. " %>
   <% end %>
 
   <% if @project.releases.any? %>
