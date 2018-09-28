@@ -340,7 +340,7 @@ module Kubernetes
       # - waits for current to reach 0
       # - deletes the daemonset
       def request_delete
-        return super if pods_running_count == 0 # delete when already dead from previous deletion try, update would fail
+        return super if pods_count == 0 # delete when already dead from previous deletion try, update would fail
 
         # make it match no node
         restore_template do
@@ -348,11 +348,12 @@ module Kubernetes
           update
         end
 
-        wait_for_termination_of_all_pods
+        delete_pods { wait_for_termination_of_all_pods }
+
         super # delete it
       end
 
-      def pods_running_count
+      def pods_count
         resource.dig_fetch(:status, :currentNumberScheduled) + resource.dig_fetch(:status, :numberMisscheduled)
       end
 
@@ -364,14 +365,8 @@ module Kubernetes
         30.times do
           loop_sleep
           expire_resource_cache
-          return if pods_running_count == 0
+          return if pods_count == 0
         end
-        count = pods_running_count
-        raise(
-          Samson::Hooks::UserError,
-          "Unable to terminate DaemonSet #{error_location} because it still has #{count} #{"pod".pluralize(count)}.\n" \
-          "Delete it manually and redeploy again."
-        )
       end
     end
 
