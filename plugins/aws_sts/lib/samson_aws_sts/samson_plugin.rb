@@ -8,6 +8,12 @@ end
 # - Add this line to this file, note the lack of leading underscore and extension:
 Samson::Hooks.view :stage_form, 'samson_aws_sts/fields'
 
+Samson::Hooks.callback :stage_permitted_params do
+  [
+    :aws_sts_iam_role_arn
+  ]
+end
+
 #Samson::Hooks.view :stage_form, '<view path>'
 
 #Samson::Hooks.view :stage_show, '<view path>'
