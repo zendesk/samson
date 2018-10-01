@@ -84,13 +84,7 @@ class JobExecution
   def base_commands(dir, env = {})
     artifact_cache_dir = File.join(@job.project.repository.repo_cache_dir, "artifacts")
     FileUtils.mkdir_p(artifact_cache_dir)
-
-    env = {
-      PROJECT_NAME: @job.project.name,
-      PROJECT_PERMALINK: @job.project.permalink,
-      PROJECT_REPOSITORY: @job.project.repository_url,
-      CACHE_DIR: artifact_cache_dir
-    }.merge(env)
+    env[:CACHE_DIR] = artifact_cache_dir
 
     commands = env.map do |key, value|
       "export #{key}=#{value.to_s.shellescape}"
@@ -214,13 +208,16 @@ class JobExecution
       REFERENCE: @reference,
       REVISION: @job.commit,
       TAG: (@job.tag || @job.commit)
-    }.merge(@env)
+    }.merge!(@env)
 
     env.merge!(make_builds_available) if stage&.builds_in_environment
 
-    if deploy = @job.deploy
-      env[:COMMIT_RANGE] = deploy.changeset.commit_range
-    end
+    # for shared notification scripts
+    env.merge!(
+      PROJECT_NAME: @job.project.name,
+      PROJECT_PERMALINK: @job.project.permalink,
+      PROJECT_REPOSITORY: @job.project.repository_url
+    )
 
     env.merge!(Hash[*Samson::Hooks.fire(:job_additional_vars, @job).compact])
 
