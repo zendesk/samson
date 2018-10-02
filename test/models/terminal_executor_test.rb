@@ -129,8 +129,8 @@ describe TerminalExecutor do
     end
 
     it "does not log cursor movement ... special output coming from docker builds" do
-      assert subject.execute("ruby -e 'puts \"Hello\\r\e[1B\\nWorld\\n\"'")
-      output.string.must_equal "Hello\rWorld\r\n"
+      assert subject.execute("ruby -e 'puts \"Hello\\r\e[1B\\nWorld\\n\e[1K\"'")
+      output.string.must_equal "Hello\rWorld\r\n\r\n"
     end
 
     describe "with script-executor" do
