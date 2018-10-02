@@ -1,0 +1,18 @@
+<fieldset>
+  <legend>
+    AWS STS
+  </legend>
+
+  <div class="col-lg-offset-2">
+    <div class="form-group">
+      <div class="col-lg-6">
+        <%= form.text_field :aws_sts_iam_role_arn, class: "form-control", placeholder: "IAM Role ARN" %>
+
+        <span class="help-block">
+          Will expose the following ENV variables...
+        </span>
+      </div>
+    </div>
+  </div>
+
+</fieldset>
