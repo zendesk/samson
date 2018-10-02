@@ -219,8 +219,7 @@ class JobExecution
       PROJECT_REPOSITORY: @job.project.repository_url
     )
 
-    env.merge!(Hash[*Samson::Hooks.fire(:job_additional_vars, @job).compact])
-
+    Samson::Hooks.fire(:job_additional_vars, @job).compact.inject(env, :merge!)
     base_commands(dir, env) + @job.commands
   end
 

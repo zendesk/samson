@@ -139,10 +139,15 @@ describe JobExecution do
   it "tests additional exports hook" do
     freeze_time
     job.update(command: 'env | sort')
-    Samson::Hooks.with_callback(:job_additional_vars, ->(_job) { {ADDITIONAL_EXPORT: "yes"} }) do
+    Samson::Hooks.with_callback(
+      :job_additional_vars,
+      ->(_job) { {ADDITIONAL_EXPORT1: "yes"} },
+      ->(_job) { {ADDITIONAL_EXPORT2: "yes"} }
+    ) do
       execute_job
       lines = job.output.split "\n"
-      lines.must_include "[04:05:06] ADDITIONAL_EXPORT=yes"
+      lines.must_include "[04:05:06] ADDITIONAL_EXPORT1=yes"
+      lines.must_include "[04:05:06] ADDITIONAL_EXPORT2=yes"
     end
   end
 
