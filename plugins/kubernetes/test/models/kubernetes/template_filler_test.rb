@@ -502,6 +502,12 @@ describe Kubernetes::TemplateFiller do
         end
       end
 
+      it "adds env from deploy_env hook" do
+        Samson::Hooks.with_callback(:deploy_env, ->(d) { {FromEnv: "$FOO secret://noooo #{d.user.name}"} }) do
+          container.fetch(:env).must_include(name: 'FromEnv', value: '$FOO secret://noooo Super Admin')
+        end
+      end
+
       it "overrides container env with deploy_group_env so samson can modify env variables" do
         raw_template[:spec][:template][:spec][:containers].first[:env] = [{name: 'FromEnv', value: 'THIS-IS-BAD'}]
         # plugins can return string or symbol keys, we should be prepared for both

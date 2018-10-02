@@ -17,37 +17,16 @@ describe SamsonDeployEnvVars do
     end
   end
 
-  describe :job_additional_vars do
-    context "if the job does not have a deploy" do
-      let(:user) { users(:admin) }
-      let(:project) { projects(:test) }
-      let(:job) { project.jobs.create!(command: 'cat foo', user: user, project: project) }
-
-      it "returns nil" do
-        Samson::Hooks.fire(:job_additional_vars, job).must_equal([nil])
-      end
+  describe :deploy_env do
+    it "returns an empty hash" do
+      Samson::Hooks.fire(:deploy_env, deploy).must_equal([{}])
     end
 
-    context "if the job does have a deploy" do
-      let(:job) { jobs(:succeeded_test) }
-
-      context "if the deploy does not have any env variables" do
-        it "returns an empty hash" do
-          Samson::Hooks.fire(:job_additional_vars, job).must_equal([{}])
-        end
-      end
-
-      context "if the deploy has environment variables" do
-        before do
-          job.deploy.environment_variables.create!(name: "TWO", value: "2")
-        end
-
-        it "returns a hash with the deploy environment variables" do
-          Samson::Hooks.fire(:job_additional_vars, job).must_equal([{
-            "TWO" => "2"
-          }])
-        end
-      end
+    it "returns a hash with the deploy environment variables" do
+      deploy.environment_variables.create!(name: "TWO", value: "2")
+      Samson::Hooks.fire(:deploy_env, deploy).must_equal([{
+        "TWO" => "2"
+      }])
     end
   end
 end

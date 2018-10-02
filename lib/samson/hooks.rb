@@ -50,7 +50,7 @@ module Samson
       :ensure_build_is_successful,
       :error,
       :ignore_error,
-      :job_additional_vars,
+      :deploy_env,
       :link_parts_for_resource,
       :project_docker_build_method_options,
       :project_permitted_params,

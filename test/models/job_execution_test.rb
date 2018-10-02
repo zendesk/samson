@@ -136,11 +136,11 @@ describe JobExecution do
     assert_equal '[04:05:06] zebra', last_line_of_output
   end
 
-  it "tests additional exports hook" do
+  it "can add deploy env vars" do
     freeze_time
     job.update(command: 'env | sort')
     Samson::Hooks.with_callback(
-      :job_additional_vars,
+      :deploy_env,
       ->(_job) { {ADDITIONAL_EXPORT1: "yes"} },
       ->(_job) { {ADDITIONAL_EXPORT2: "yes"} }
     ) do
