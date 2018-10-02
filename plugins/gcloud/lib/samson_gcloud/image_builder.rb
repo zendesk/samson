@@ -39,7 +39,7 @@ module SamsonGcloud
           #{tag_list}
         YAML
 
-        prevent_upload_of_ignored_files(dir)
+        prevent_upload_of_ignored_files(dir, build)
 
         command = [
           "gcloud", "container", "builds", "submit", ".",
@@ -59,14 +59,22 @@ module SamsonGcloud
 
       private
 
-      def prevent_upload_of_ignored_files(dir)
+      def prevent_upload_of_ignored_files(dir, build)
         ignore = "#{dir}/.gcloudignore"
         unless File.exist?(ignore)
+          dockerignore = "#{dir}/.dockerignore"
+          dockerignore_exists = File.exist?(dockerignore)
+
+          # ignoring the dockerfile leads to a weird error message, so avoid it
+          if dockerignore_exists
+            File.write(dockerignore, File.read(dockerignore).sub(/^#{Regexp.escape(build.dockerfile)}$/, ''))
+          end
+
           File.write(
             ignore,
             [
               ("#!include:.gitignore" if File.exist?("#{dir}/.gitignore")),
-              (File.exist?("#{dir}/.dockerignore") ? "#!include:.dockerignore" : ".git")
+              (dockerignore_exists ? "#!include:.dockerignore" : ".git")
             ].compact.join("\n")
           )
         end

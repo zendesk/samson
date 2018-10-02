@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/zendesk/samson.svg?branch=master)](https://travis-ci.org/zendesk/samson)
 [![DockerHub Status](https://img.shields.io/docker/stars/zendesk/samson.svg)](https://hub.docker.com/r/zendesk/samson)
-[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fzendesk%2Fsamson.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fzendesk%2Fsamson?ref=badge_shield)
+[![FOSSA Status](https://app.fossa.io/api/projects/custom%2B4071%2Fgit%40github.com%3Azendesk%2Fsamson.git.svg?type=shield)](https://app.fossa.io/projects/custom%2B4071%2Fgit%40github.com%3Azendesk%2Fsamson.git?ref=badge_shield)
 
 Samson is a web interface for deployments. [Live Demo](https://samson-demo.herokuapp.com)
 

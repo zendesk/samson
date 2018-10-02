@@ -2,13 +2,9 @@
 module Samson
   module PerformanceTracer
     class << self
-      # NOTE: this cannot be a hook since it is used from Hooks#fire
-      def handlers
-        @handlers ||= []
-      end
-
-      def trace_execution_scoped(scope_name, &block)
-        handlers.inject(block) { |inner, plugin| -> { plugin.trace_execution_scoped(scope_name, &inner) } }.call
+      def trace_execution_scoped(scope, &block)
+        tracers = Samson::Hooks.fire(:trace_scope, scope).compact
+        tracers.inject(block) { |inner, tracer| -> { tracer.call(&inner) } }.call
       end
     end
 

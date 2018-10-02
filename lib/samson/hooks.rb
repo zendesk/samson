@@ -59,8 +59,24 @@ module Samson
       :stage_clone,
       :stage_permitted_params,
       :trace_method,
+      :trace_scope,
       :asynchronous_performance_tracer
     ].freeze
+
+    # Hooks that are slow and we want performance info on
+    TRACED = [
+      :after_deploy,
+      :after_deploy_setup,
+      :after_docker_build,
+      :after_job_execution,
+      :before_deploy,
+      :before_docker_build,
+      :before_docker_repository_usage,
+      :ensure_build_is_successful,
+      :ref_status,
+      :stage_clone
+    ].freeze
+    (TRACED & EVENT_HOOKS).sort == TRACED.sort || raise("Unknown hook in traced")
 
     KNOWN = VIEW_HOOKS + EVENT_HOOKS
 
@@ -166,9 +182,7 @@ module Samson
 
       # use
       def fire(name, *args)
-        Samson::PerformanceTracer.trace_execution_scoped("Custom/Hooks/#{name}") do
-          hooks(name).map { |hook| hook.call(*args) }
-        end
+        traced(name) { hooks(name).map { |hook| hook.call(*args) } }
       end
 
       def render_views(name, view, *args)
@@ -222,6 +236,14 @@ module Samson
       end
 
       private
+
+      def traced(name, &block)
+        if TRACED.include?(name)
+          Samson::PerformanceTracer.trace_execution_scoped("Custom/Hooks/#{name}", &block)
+        else
+          yield
+        end
+      end
 
       def render_assets(view, folder, file, method)
         Samson::Hooks.plugins.each do |plugin|

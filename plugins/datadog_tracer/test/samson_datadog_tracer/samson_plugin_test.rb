@@ -24,23 +24,6 @@ describe SamsonDatadogTracer do
     end
   end
 
-  describe ".trace_method_execution_scope" do
-    with_env DATADOG_TRACER: '1'
-
-    it "skips tracer when disabled" do
-      with_env DATADOG_TRACER: nil do
-        Datadog.expects(:tracer).never
-        SamsonDatadogTracer.trace_execution_scoped("test") { "without tracer" }
-      end
-    end
-
-    it "trigger tracer when enabled" do
-      Rails.stubs(:env).returns("staging")
-      Datadog.expects(:tracer).returns(fake_tracer)
-      SamsonDatadogTracer.trace_execution_scoped("test") { "with tracer" }
-    end
-  end
-
   describe ".trace_method" do
     let(:instance) do
       Class.new do
@@ -115,7 +98,6 @@ describe SamsonDatadogTracer do
   describe "trace_method hook" do
     it "triggers Datadog tracer method when enabled" do
       with_env DATADOG_TRACER: "1" do
-        Datadog.expects(:tracer).returns(fake_tracer) # hook fire triggers tracing too
         SamsonDatadogTracer.expects(:trace_method)
         Samson::Hooks.fire :trace_method, User, :foobar
       end
@@ -124,6 +106,20 @@ describe SamsonDatadogTracer do
     it "skips Datadog tracer when disabled" do
       SamsonDatadogTracer.expects(:trace_method).never
       Samson::Hooks.fire :trace_method, User, :foobar
+    end
+  end
+
+  describe "trace_scope hook" do
+    it "skips tracer when disabled" do
+      Datadog.expects(:tracer).never
+      Samson::PerformanceTracer.trace_execution_scoped(:foo) { 1 }.must_equal 1
+    end
+
+    it "trigger tracer when enabled" do
+      with_env DATADOG_TRACER: "1" do
+        Datadog.expects(:tracer).returns(fake_tracer)
+        Samson::PerformanceTracer.trace_execution_scoped(:foo) { 1 }.must_equal 1
+      end
     end
   end
 end

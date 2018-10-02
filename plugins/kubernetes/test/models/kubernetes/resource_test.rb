@@ -301,8 +301,11 @@ describe Kubernetes::Resource do
         },
         spec: {
           template: {
+            metadata: {
+              labels: {release_id: 123, deploy_group_id: 234}
+            },
             spec: {
-              'nodeSelector=' => nil
+              nodeSelector: nil
             }
           }
         }
@@ -350,21 +353,14 @@ describe Kubernetes::Resource do
         client.expects(:delete_daemon_set)
         client.expects(:create_daemon_set)
 
-        resource.deploy
+        assert_pods_lookup do
+          assert_pod_deletion do
+            resource.deploy
+          end
+        end
 
         # reverts changes to template so create is clean
         refute template[:spec][:template][:spec].key?(:nodeSelector)
-      end
-
-      it "tells the user what is wrong when the pods never get terminated" do
-        client.expects(:update_daemon_set).returns(daemonset_stub(0, 1))
-        client.expects(:get_daemon_set).times(31).returns(daemonset_stub(0, 1))
-        client.expects(:delete_daemon_set).never
-        client.expects(:create_daemon_set).never
-        e = assert_raises Samson::Hooks::UserError do
-          resource.deploy
-        end
-        e.message.must_include "Unable to terminate DaemonSet some-project pod1 Pod1 because it still has 1 pod."
       end
     end
 

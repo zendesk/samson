@@ -43,9 +43,10 @@ class DockerBuilderService
   private
 
   # In development, memcache can be down and we don't want that to stop builds
+  # Note: we need raw: true because of https://github.com/rails/rails/pull/34026
   def same_build_in_progress?
     !Rails.env.development? &&
-      !Rails.cache.write("build-service-#{@build.id}", true, unless_exist: true, expires_in: 10.seconds)
+      !Rails.cache.write("build-service-#{@build.id}", true, unless_exist: true, expires_in: 10.seconds, raw: true)
   end
 
   def execute_build_command(tmp_dir, command)

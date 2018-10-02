@@ -32,14 +32,6 @@ module SamsonNewRelic
     !!ENV['NEW_RELIC_LICENSE_KEY'] # same key as the newrelic_rpm gem uses
   end
 
-  def self.trace_execution_scoped(scope_name, &block)
-    if tracer_enabled?
-      NewRelic::Agent::MethodTracerHelpers.trace_execution_scoped("Custom/Hooks/#{scope_name}", &block)
-    else
-      yield
-    end
-  end
-
   def self.include_once(klass, mod)
     klass.include mod unless klass.include?(mod)
   end
@@ -47,8 +39,6 @@ end
 
 # Railties need to be loaded before the application is initialized
 SamsonNewRelic.setup_initializers
-require 'samson/performance_tracer'
-Samson::PerformanceTracer.handlers << SamsonNewRelic
 
 Samson::Hooks.view :stage_form, "samson_new_relic/fields"
 Samson::Hooks.view :deploy_tab_nav, "samson_new_relic/deploy_tab_nav"
@@ -69,6 +59,12 @@ Samson::Hooks.callback :trace_method do |klass, method|
   if SamsonNewRelic.tracer_enabled?
     SamsonNewRelic.include_once klass, ::NewRelic::Agent::MethodTracer
     klass.add_method_tracer method
+  end
+end
+
+Samson::Hooks.callback :trace_scope do |scope|
+  if SamsonNewRelic.tracer_enabled?
+    ->(&block) { NewRelic::Agent::MethodTracerHelpers.trace_execution_scoped("Custom/Hooks/#{scope}", &block) }
   end
 end
 

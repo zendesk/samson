@@ -138,6 +138,12 @@ describe SamsonGcloud::ImageBuilder do
       File.read("some-dir/.gcloudignore").must_equal "#!include:.gitignore\n#!include:.dockerignore"
     end
 
+    it "ignores Dockerfile if Dockerfile is in dockerignore" do
+      File.write("some-dir/.dockerignore", "foo\nDockerfile\nbar")
+      build_image
+      File.read("some-dir/.dockerignore").must_equal "foo\n\nbar"
+    end
+
     it "does not include missing files and ignores .git by default" do
       build_image
       File.read("some-dir/.gcloudignore").must_equal ".git"
