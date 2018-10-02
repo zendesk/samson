@@ -15,6 +15,7 @@ require 'pty'
 #
 class TerminalExecutor
   SECRET_PREFIX = "secret://"
+  CURSOR = /\e\[\d*[ABCDK]/
 
   attr_reader :pid, :pgid, :output, :timeout
 
@@ -104,11 +105,17 @@ class TerminalExecutor
   def stream(from:, to:)
     from.each(256) do |chunk|
       chunk.scrub!
-      chunk = chunk.gsub(/\r\e\[\d+[ABCD]\r\n/, "\r") # ignore cursor movement http://ascii-table.com/ansi-escape-sequences.php
+      ignore_cursor_movement!(chunk)
       to.write chunk
     end
   rescue Errno::EIO
     nil # output was closed ... only happens on linux
+  end
+
+  # http://ascii-table.com/ansi-escape-sequences.php
+  def ignore_cursor_movement!(chunk)
+    chunk.gsub!(/\r#{CURSOR}\r\n/, "\r")
+    chunk.gsub!(CURSOR, "")
   end
 
   def script(commands)
