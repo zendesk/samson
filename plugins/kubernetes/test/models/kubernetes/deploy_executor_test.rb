@@ -348,6 +348,8 @@ describe Kubernetes::DeployExecutor do
       out.must_include "CANCELLED"
     end
 
+    # NOTE: randomly fails in CI ... must be something with the version info not getting turned into methods correctly
+    # the version reply from plugins/kubernetes/test/test_helper.rb seems ok though
     it "waits when deploy is not running" do
       pod_status[:phase] = "Pending"
       pod_status.delete(:conditions)
