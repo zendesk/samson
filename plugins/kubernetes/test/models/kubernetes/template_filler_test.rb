@@ -831,6 +831,12 @@ describe Kubernetes::TemplateFiller do
         EnvironmentVariable.create!(parent: projects(:test), name: 'FOO', value: 'BAR')
         template.send(:verify_env)
       end
+
+      it "works without a deploy when doing template verification" do
+        EnvironmentVariable.create!(parent: projects(:test), name: 'FOO', value: 'BAR')
+        doc.kubernetes_release.deploy = nil
+        template.send(:verify_env)
+      end
     end
   end
 
