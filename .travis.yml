@@ -34,4 +34,4 @@ matrix:
         - export BINDIR=$(pwd) && curl -H 'Cache-Control:no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install.sh | bash
       script:
         - ./fossa analyze --config config/fossa.yml # analyze dependencies and upload them (fails when missing api key)
-        - ./fossa test --config config/fossa.yml # wait for fossa to analyse the upload and fail if it finds issues, to add ignores contact legal@zendesk.com with subject "FOSSA ignore <NAME> in samson"
+        - travis_wait 20 ./fossa test --config config/fossa.yml # wait for fossa to analyse the upload and fail if it finds issues, to add ignores contact legal@zendesk.com with subject "FOSSA ignore <NAME> in samson"
