@@ -50,7 +50,7 @@ module Samson
       :ensure_build_is_successful,
       :error,
       :ignore_error,
-      :job_additional_vars,
+      :deploy_env,
       :link_parts_for_resource,
       :project_docker_build_method_options,
       :project_permitted_params,
@@ -161,9 +161,9 @@ module Samson
       end
 
       # temporarily add a hook for testing
-      def with_callback(name, hook_block)
+      def with_callback(name, *hook_blocks)
         original_hooks = @hooks[name].dup
-        @hooks[name] = [hook_block]
+        @hooks[name] = hook_blocks
         yield
       ensure
         @hooks[name] = original_hooks

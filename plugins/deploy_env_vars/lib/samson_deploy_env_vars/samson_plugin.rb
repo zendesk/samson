@@ -13,11 +13,8 @@ Samson::Hooks.callback :deploy_permitted_params do
   AcceptsEnvironmentVariables::ASSIGNABLE_ATTRIBUTES
 end
 
-# Injects specific environment variables for the deploy if any
-Samson::Hooks.callback :job_additional_vars do |job|
-  if job.deploy
-    job.deploy.environment_variables.each_with_object({}) do |var, collection|
-      collection[var.name] = var.value
-    end
-  end
+# Injects specific environment variables for the deploy when they were set in the form
+# NOTE: does not resolve secrets or dollar variables on purpose
+Samson::Hooks.callback :deploy_env do |deploy|
+  deploy.environment_variables.each_with_object({}) { |var, h| h[var.name] = var.value }
 end

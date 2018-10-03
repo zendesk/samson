@@ -180,6 +180,6 @@ class Kubernetes::DeployGroupRolesController < ApplicationController
       :replicas, :project_id, :deploy_group_id, :delete_resource
     ]
     allowed << :no_cpu_limit if Kubernetes::DeployGroupRole::NO_CPU_LIMIT_ALLOWED
-    p scope.permit(*allowed)
+    scope.permit(*allowed)
   end
 end

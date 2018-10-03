@@ -308,7 +308,7 @@ module Kubernetes
     def create_release
       release = Kubernetes::Release.create_release(
         builds: @builds,
-        deploy_id: @job.deploy.id,
+        deploy: @job.deploy,
         grouped_deploy_group_roles: grouped_deploy_group_roles,
         git_sha: @job.commit,
         git_ref: @reference,
@@ -444,7 +444,12 @@ module Kubernetes
 
     def temp_release_docs
       @temp_release_docs ||= begin
-        release = Kubernetes::Release.new(project: @job.project, git_sha: @job.commit, git_ref: 'master')
+        release = Kubernetes::Release.new(
+          project: @job.project,
+          git_sha: @job.commit,
+          git_ref: 'master',
+          deploy: @job.deploy
+        )
         grouped_deploy_group_roles.flatten.map do |deploy_group_role|
           Kubernetes::ReleaseDoc.new(
             kubernetes_release: release,
