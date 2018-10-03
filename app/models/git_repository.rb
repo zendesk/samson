@@ -24,9 +24,8 @@ class GitRepository
     executor.output.write("# Beginning git repo setup\n")
 
     ensure_mirror_current &&
-    create_workspace(work_dir) &&
-    checkout(git_reference, work_dir) &&
-    checkout_submodules(work_dir)
+      checkout(git_reference, work_dir) &&
+      checkout_submodules(work_dir)
   end
 
   # @return [nil, sha1]
@@ -91,6 +90,11 @@ class GitRepository
     exclusive { (mirrored? ? update! : clone!) }
   end
 
+  # clear worktrees that are deleted
+  def prune_worktree
+    executor.execute("cd #{repo_cache_dir}", "git worktree prune")
+  end
+
   private
 
   attr_reader :repository_url, :repository_directory
@@ -129,11 +133,6 @@ class GitRepository
   end
   add_tracer :clone!
 
-  def create_workspace(temp_dir)
-    executor.execute "git clone #{repo_cache_dir} #{temp_dir}"
-  end
-  add_tracer :create_workspace
-
   def update!
     executor.execute("cd #{repo_cache_dir}", 'git fetch -p')
   end
@@ -143,23 +142,21 @@ class GitRepository
     !!capture_stdout("git", "cat-file", "-t", sha)
   end
 
-  def checkout(git_reference, pwd)
-    executor.execute("cd #{pwd}", "git checkout --quiet #{git_reference.shellescape}")
+  def checkout(git_reference, work_dir)
+    executor.execute(
+      "cd #{repo_cache_dir}",
+      "git worktree add #{work_dir.shellescape} #{git_reference.shellescape} --force"
+    )
   end
 
   def checkout_submodules(pwd)
     return true unless File.exist? "#{pwd}/.gitmodules"
 
-    recursive_flag = " --recursive" if git_supports_recursive_flag?
     executor.execute(
       "cd #{pwd}",
-      "git submodule sync#{recursive_flag}",
+      "git submodule sync --recursive",
       "git submodule update --init --recursive"
     )
-  end
-
-  def git_supports_recursive_flag?
-    Samson::GitInfo.version >= Gem::Version.new("1.8.1")
   end
 
   def mirrored?

@@ -22,25 +22,6 @@ describe GitRepository do
     repository.send(:repository_directory).must_equal project.repository_directory
   end
 
-  describe "#create_workspace" do
-    it 'clones a repository' do
-      Dir.mktmpdir do |dir|
-        create_repo_without_tags
-        FileUtils.mv(repo_temp_dir, repository.repo_cache_dir)
-
-        repository.send(:create_workspace, dir).must_equal true
-        Dir.exist?("#{dir}/.git").must_equal true
-      end
-    end
-
-    it "returns false when clone fails" do
-      Dir.mktmpdir do |dir|
-        repository.send(:create_workspace, dir).must_equal false
-        Dir.exist?("#{dir}/.git").must_equal false
-      end
-    end
-  end
-
   describe "#ensure_mirror_current" do
     def call
       repository.send(:ensure_mirror_current)
@@ -95,21 +76,11 @@ describe GitRepository do
       public = file.split(/^  private$/).first
       methods = public.scan(/^  def ([a-z_\?\!]+)(.*?)^  end/m)
       methods.size.must_be :>, 5 # making sure the logic is sound
-      methods.delete_if { |method, _| method == "update_mirror" }
+      methods.delete_if { |method, _| ["update_mirror", "prune_worktree"].include?(method) }
       methods.each do |name, body|
         next if ["initialize", "repo_cache_dir", "clean!", "valid_url?"].include?(name)
         body.must_include "ensure_mirror_current", "Expected #{name} to update the repo with ensure_mirror_current"
       end
-    end
-  end
-
-  describe "#checkout" do
-    it 'switches to a different branch' do
-      create_repo_with_an_additional_branch
-      repository.send(:checkout, 'master', repo_temp_dir).must_equal(true)
-      Dir.chdir(repo_temp_dir) { current_branch.must_equal('master') }
-      repository.send(:checkout, 'test_user/test_branch', repo_temp_dir).must_equal(true)
-      Dir.chdir(repo_temp_dir) { current_branch.must_equal('test_user/test_branch') }
     end
   end
 
