@@ -85,7 +85,7 @@ module Kubernetes
       end
 
       def desired_pod_count
-        replica_source.dig_fetch(:spec, :replicas)
+        @delete_resource ? 0 : replica_source.dig(:spec, :replicas) || 1
       end
 
       private
@@ -462,10 +462,6 @@ module Kubernetes
       def deploy
         delete
         create
-      end
-
-      def desired_pod_count
-        @delete_resource ? 0 : 1
       end
     end
 

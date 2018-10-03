@@ -282,6 +282,16 @@ describe Kubernetes::Resource do
         resource.desired_pod_count.must_equal 2
       end
     end
+
+    it "is 1 when not set" do
+      template[:spec].delete :replicas
+      resource.desired_pod_count.must_equal 1
+    end
+
+    it "is 0 when pod is deleted" do
+      delete_resource!
+      resource.desired_pod_count.must_equal 0
+    end
   end
 
   describe "#loop_sleep" do
@@ -846,17 +856,6 @@ describe Kubernetes::Resource do
         assert_request(:get, url, to_return: {status: 404}) do
           resource.deploy
         end
-      end
-    end
-
-    describe "#desired_pod_count" do
-      it "is 1" do
-        resource.desired_pod_count.must_equal 1
-      end
-
-      it "is 0 when pod is deleted" do
-        delete_resource!
-        resource.desired_pod_count.must_equal 0
       end
     end
   end

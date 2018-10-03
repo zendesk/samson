@@ -34,7 +34,11 @@ module Kubernetes
             set_history_limit
           end
 
-          set_replica_target unless ['DaemonSet', 'Pod'].include?(kind)
+          if ['StatefulSet', 'Deployment'].include?(kind)
+            set_replica_target
+          else
+            validate_replica_target_is_supported
+          end
 
           make_stateful_set_match_service if kind == 'StatefulSet'
           set_pre_stop if kind == 'Deployment'
@@ -260,6 +264,14 @@ module Kubernetes
 
     def set_replica_target
       template.dig_set [:spec, :replicas], @doc.replica_target
+    end
+
+    def validate_replica_target_is_supported
+      return if @doc.replica_target == 1 || (@doc.replica_target == 0 && @doc.delete_resource)
+      raise(
+        Samson::Hooks::UserError,
+        "A #{template[:kind]} can either have 1 replica or be marked for deletion."
+      )
     end
 
     def set_name

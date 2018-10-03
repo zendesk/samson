@@ -692,6 +692,7 @@ describe Kubernetes::TemplateFiller do
       before do
         raw_template[:kind] = 'DaemonSet'
         raw_template[:spec].delete(:replicas)
+        doc.replica_target = 1
       end
 
       it "does not add replicas since they are not supported" do
@@ -707,6 +708,7 @@ describe Kubernetes::TemplateFiller do
         raw_template[:metadata].merge!(original_metadata)
         raw_template[:kind] = "Pod"
         raw_template[:spec].delete :replicas
+        doc.replica_target = 1
       end
 
       it "fills out everything" do
@@ -722,11 +724,26 @@ describe Kubernetes::TemplateFiller do
         result = template.to_hash
         refute result[:spec].key?(:replicas)
       end
+
+      it "complains on invalid replica settings" do
+        doc.replica_target = 0
+        assert_raises(Samson::Hooks::UserError) { template.to_hash }
+
+        doc.replica_target = 2
+        assert_raises(Samson::Hooks::UserError) { template.to_hash }
+      end
+
+      it "allows deletion" do
+        doc.replica_target = 0
+        doc.delete_resource = true
+        template.to_hash
+      end
     end
 
     describe "cronjob" do
       before do
         raw_template.replace(YAML.safe_load(read_kubernetes_sample_file('kubernetes_cron_job.yml')).deep_symbolize_keys)
+        doc.replica_target = 1
       end
 
       it "works" do
