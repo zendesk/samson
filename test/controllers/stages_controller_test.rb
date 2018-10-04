@@ -233,7 +233,7 @@ describe StagesController do
         end
       end
 
-      it "fails with `no_code_deployed` in params" do
+      it "fails when trying to set no code deployed" do
         assert_raises ActionController::UnpermittedParameters do
           create_stage(stage: {name: "test", no_code_deployed: true})
         end
