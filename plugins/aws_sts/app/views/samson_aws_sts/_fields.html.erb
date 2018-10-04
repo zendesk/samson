@@ -1,0 +1,45 @@
+<fieldset>
+  <legend>AWS STS Tokens</legend>
+  <div class="col-lg-offset-2">
+    <div class="form-group">
+      <div class="col-lg-6">
+        <p>Tokens will be requested using the following user: <%= SamsonAwsSts::Client.new(SamsonAwsSts.sts_client).caller_user_id rescue "error connecting to aws, check SAMSON_STS_AWS_* env vars" %></p>
+        <span class="help-block">
+          Use the following samson environment variables to change which user to authenticate with:
+          <ul>
+            <li>SAMSON_STS_AWS_ACCESS_KEY_ID</li>
+            <li>SAMSON_STS_AWS_SECRET_ACCESS_KEY</li>
+            <li>SAMSON_STS_AWS_REGION</li>
+          </ul>
+        </span>
+      </div>
+    </div>
+    <div class="form-group">
+      <div class="col-lg-6">
+        <p>AWS IAM Role ARN that should be assumed by the stage:</p>
+        <%= form.text_field :aws_sts_iam_role_arn, class: "form-control", placeholder: "e.g. arn:aws:iam::123456789012:role/S3Access" %>
+        <span class="help-block">
+          This will create the following environment variables which can be used by stage commands:
+          <ul>
+            <li>STS_AWS_ACCESS_KEY_ID</li>
+            <li>STS_AWS_SECRET_ACCESS_KEY</li>
+            <li>STS_AWS_SESSION_TOKEN</li>
+          </ul>
+        </span>
+      </div>
+    </div>
+    <div class="form-group">
+      <div class="col-lg-6">
+        <p>The duration, in seconds, that the credentials should remain valid:</p>
+        <%= form.number_field :aws_sts_iam_role_session_duration, class: "form-control", placeholder: 900 %>
+        <span class="help-block">
+          Optional. Defaults to <%= SamsonAwsSts::SESSION_DURATION_MIN %>.
+          <ul>
+            <li>Min: <%= SamsonAwsSts::SESSION_DURATION_MIN %> (<%= SamsonAwsSts::SESSION_DURATION_MIN / 60%> minutes)</li>
+            <li>Max: <%= SamsonAwsSts::SESSION_DURATION_MAX %> (<%= SamsonAwsSts::SESSION_DURATION_MAX / 60%> minutes)</li>
+          </ul>
+        </span>
+      </div>
+    </div>
+  </div>
+</fieldset>

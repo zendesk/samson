@@ -171,6 +171,13 @@ describe TerminalExecutor do
         subject.execute('sh -c "echo 111"')
         output.string.must_equal("» sh -c \"echo 111\"\r\n111\r\n")
       end
+
+      describe 'hidden env vars' do
+        it 'replaces hidden value with "HIDDEN", removes hidden prefix' do
+          subject.execute('echo "export MY_VAR=hidden://some_value"')
+          output.string.must_equal %(» echo "export MY_VAR=HIDDEN"\r\nexport MY_VAR=some_value\r\n)
+        end
+      end
     end
 
     describe 'with secrets' do
