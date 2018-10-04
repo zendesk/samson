@@ -8,6 +8,7 @@ class StagesController < ApplicationController
   before_action :authorize_resource!
   before_action :check_token, if: :badge?
   before_action :find_stage, only: [:show, :edit, :update, :destroy, :clone]
+  helper_method :can_change_no_code_deployed?
 
   def index
     @stages = @project.stages
@@ -95,6 +96,10 @@ class StagesController < ApplicationController
 
   private
 
+  def can_change_no_code_deployed?
+    current_user.admin?
+  end
+
   def badge_safe(string)
     CGI.escape(string).
       gsub('+', '%20').
@@ -120,7 +125,7 @@ class StagesController < ApplicationController
   end
 
   def stage_permitted_params
-    [
+    permitted_params = [
       :builds_in_environment,
       :cancel_queued_deploys,
       :confirm,
@@ -130,7 +135,6 @@ class StagesController < ApplicationController
       :email_committers_on_automated_deploy_failure,
       :is_template,
       :name,
-      :no_code_deployed,
       :no_reference_selection,
       :notify_email_address,
       :periodical_deploy,
@@ -142,6 +146,8 @@ class StagesController < ApplicationController
         deploy_group_ids: [],
         command_ids: []
       }
-    ] + Samson::Hooks.fire(:stage_permitted_params).flatten
+    ]
+    permitted_params << :no_code_deployed if can_change_no_code_deployed?
+    permitted_params + Samson::Hooks.fire(:stage_permitted_params).flatten
   end
 end
