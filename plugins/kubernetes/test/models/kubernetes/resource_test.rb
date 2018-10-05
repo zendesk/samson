@@ -26,8 +26,6 @@ describe Kubernetes::Resource do
   end
 
   let(:origin) { "http://foobar.server" }
-  let(:kind) { 'Service' }
-  let(:api_version) { 'v1' }
   let(:template) do
     {
       kind: kind,
@@ -46,262 +44,278 @@ describe Kubernetes::Resource do
   let(:resource) do
     Kubernetes::Resource.build(template, deploy_group, autoscaled: false, delete_resource: false)
   end
-  let(:url) { "#{origin}/api/v1/namespaces/pod1/services/some-project" }
   let(:base_url) { File.dirname(url) }
+  let(:url) do
+    path = (api_version == 'v1' ? "api/#{api_version}" : "apis/#{api_version}")
+    endpoint = "#{origin}/#{path}"
+    "#{endpoint}/namespaces/pod1/#{kind.downcase.pluralize}/some-project"
+  end
 
   before { Kubernetes::Resource::Base.any_instance.expects(:sleep).with { raise }.never }
 
-  it "does not modify passed in template" do
-    content = File.read(File.expand_path("../../../app/models/kubernetes/resource.rb", __dir__))
-    restore_usages = content.scan('restore_template do').size
-    template_modified = content.scan(/@template.*(=|dig_set|delete)/).size
-    template_modified.must_equal restore_usages + 4
-  end
+  describe Kubernetes::Resource::Base do
+    let(:kind) { 'ConfigMap' } # Type that falls back to Base
+    let(:api_version) { 'v1' }
 
-  describe ".build" do
-    it "builds based on kind" do
-      Kubernetes::Resource.build({kind: 'Service'}, deploy_group, autoscaled: false, delete_resource: false).
-        class.must_equal Kubernetes::Resource::Service
+    it "does not modify passed in template" do
+      content = File.read(File.expand_path("../../../app/models/kubernetes/resource.rb", __dir__))
+      restore_usages = content.scan('restore_template do').size
+      template_modified = content.scan(/@template.*(=|dig_set|delete)/).size
+      template_modified.must_equal restore_usages + 4
     end
-  end
 
-  describe "#name" do
-    it "returns the name" do
-      resource.name.must_equal 'some-project'
+    it "falls back to using Base" do
+      Kubernetes::Resource.build({kind: 'ConfigMap'}, deploy_group, autoscaled: false, delete_resource: false).
+        class.must_equal Kubernetes::Resource::Base
     end
-  end
 
-  describe "#namespace" do
-    it "returns the namespace" do
-      resource.namespace.must_equal 'pod1'
-    end
-  end
-
-  describe "#deploy" do
-    let(:kind) { 'Deployment' }
-    let(:api_version) { 'extensions/v1beta1' }
-    let(:url) { "#{origin}/apis/extensions/v1beta1/namespaces/pod1/deployments/some-project" }
-
-    it "creates when missing" do
-      assert_request(:get, url, to_return: [{status: 404}, {body: "{}"}]) do
-        assert_request(:post, base_url, to_return: {body: "{}"}) do
-          resource.deploy
-        end
-
-        # not auto-cached
-        assert resource.running?
-        assert resource.running?
+    describe ".build" do
+      it "builds based on kind" do
+        Kubernetes::Resource.build({kind: 'Service'}, deploy_group, autoscaled: false, delete_resource: false).
+          class.must_equal Kubernetes::Resource::Service
       end
     end
 
-    it "updates existing" do
-      assert_request(:get, url, to_return: {body: "{}"}, times: 2) do
-        assert_request(:put, url, to_return: {body: "{}"}, with: ->(x) { x.body.must_include '"replicas":2'; true }) do
-          resource.deploy
-        end
-
-        # not auto-cached
-        assert resource.running?
-        assert resource.running?
+    describe "#name" do
+      it "returns the name" do
+        resource.name.must_equal 'some-project'
       end
     end
 
-    it "keeps replicase when autoscaled, to not revert autoscaler changes" do
-      assert_request(:get, url, to_return: {body: {spec: {replicas: 5}}.to_json}) do
-        assert_request(:put, url, to_return: {body: "{}"}, with: ->(x) { x.body.must_include '"replicas":5'; true }) do
-          autoscaled!
-          resource.deploy
-        end
+    describe "#namespace" do
+      it "returns the namespace" do
+        resource.namespace.must_equal 'pod1'
       end
     end
 
-    it "shows errors to users when resource was invalid" do
-      assert_request(:get, url, to_return: {status: 404}) do
-        error = '{"message":"Foo.extensions \"app\" is invalid:"}'
-        assert_request(:post, base_url, to_return: {body: error, status: 400}) do
-          e = assert_raises(Samson::Hooks::UserError) { resource.deploy }
-          e.message.must_include "Kubernetes error some-project pod1 Pod1: Foo"
-        end
-      end
-    end
+    describe "#deploy" do
+      let(:kind) { 'Deployment' }
+      let(:api_version) { 'extensions/v1beta1' }
+      let(:url) { "#{origin}/apis/extensions/v1beta1/namespaces/pod1/deployments/some-project" }
 
-    describe "updating matchLabels" do
-      before { template[:spec][:selector] = {matchLabels: {foo: "bar"}} }
+      it "creates when missing" do
+        assert_request(:get, url, to_return: [{status: 404}, {body: "{}"}]) do
+          assert_request(:post, base_url, to_return: {body: "{}"}) do
+            resource.deploy
+          end
 
-      it "explains why it is a bad idea" do
-        old = {spec: {selector: {matchLabels: {foo: "baz"}}}}
-        assert_request(:get, url, to_return: {body: old.to_json}) do
-          e = assert_raises(Samson::Hooks::UserError) { resource.deploy }
-          e.message.must_equal(
-            "Updating spec.selector.matchLabels from {:foo=>\"baz\"} to {:foo=>\"bar\"} " \
-            "can only be done can only be done by deleting and redeploying or old pods would not be deleted."
-          )
+          # not auto-cached
+          assert resource.running?
+          assert resource.running?
         end
       end
 
-      it "allows removing a label" do
-        old = {spec: {selector: {matchLabels: {foo: "bar", bar: "baz"}}}}
-        assert_request(:get, url, to_return: {body: old.to_json}) do
-          assert_request(:put, url, to_return: {body: "{}"}) do
+      it "updates existing" do
+        assert_request(:get, url, to_return: {body: "{}"}, times: 2) do
+          args = ->(x) { x.body.must_include '"replicas":2'; true }
+          assert_request(:put, url, to_return: {body: "{}"}, with: args) do
+            resource.deploy
+          end
+
+          # not auto-cached
+          assert resource.running?
+          assert resource.running?
+        end
+      end
+
+      it "keeps replicase when autoscaled, to not revert autoscaler changes" do
+        assert_request(:get, url, to_return: {body: {spec: {replicas: 5}}.to_json}) do
+          args = ->(x) { x.body.must_include '"replicas":5'; true }
+          assert_request(:put, url, to_return: {body: "{}"}, with: args) do
+            autoscaled!
             resource.deploy
           end
         end
       end
 
-      it "allows it for blue-green deploys" do
-        template[:spec][:selector][:matchLabels][:blue_green] = "blue"
-        assert_request(:get, url, to_return: {body: "{}"}) do
-          assert_request(:put, url, to_return: {body: "{}"}) do
-            resource.deploy
-          end
-        end
-      end
-    end
-
-    describe "delete_resource" do
-      before { delete_resource! }
-
-      it "deletes when delete was requested" do
-        assert_request(:get, url, to_return: {body: "{}"}) do
-          resource.expects(:delete)
-          resource.deploy
-        end
-      end
-
-      it "does nothing when delete was requested but was not running" do
+      it "shows errors to users when resource was invalid" do
         assert_request(:get, url, to_return: {status: 404}) do
-          resource.deploy
+          error = '{"message":"Foo.extensions \"app\" is invalid:"}'
+          assert_request(:post, base_url, to_return: {body: error, status: 400}) do
+            e = assert_raises(Samson::Hooks::UserError) { resource.deploy }
+            e.message.must_include "Kubernetes error some-project pod1 Pod1: Foo"
+          end
+        end
+      end
+
+      describe "updating matchLabels" do
+        before { template[:spec][:selector] = {matchLabels: {foo: "bar"}} }
+
+        it "explains why it is a bad idea" do
+          old = {spec: {selector: {matchLabels: {foo: "baz"}}}}
+          assert_request(:get, url, to_return: {body: old.to_json}) do
+            e = assert_raises(Samson::Hooks::UserError) { resource.deploy }
+            e.message.must_equal(
+              "Updating spec.selector.matchLabels from {:foo=>\"baz\"} to {:foo=>\"bar\"} " \
+              "can only be done can only be done by deleting and redeploying or old pods would not be deleted."
+            )
+          end
+        end
+
+        it "allows removing a label" do
+          old = {spec: {selector: {matchLabels: {foo: "bar", bar: "baz"}}}}
+          assert_request(:get, url, to_return: {body: old.to_json}) do
+            assert_request(:put, url, to_return: {body: "{}"}) do
+              resource.deploy
+            end
+          end
+        end
+
+        it "allows it for blue-green deploys" do
+          template[:spec][:selector][:matchLabels][:blue_green] = "blue"
+          assert_request(:get, url, to_return: {body: "{}"}) do
+            assert_request(:put, url, to_return: {body: "{}"}) do
+              resource.deploy
+            end
+          end
+        end
+      end
+
+      describe "delete_resource" do
+        before { delete_resource! }
+
+        it "deletes when delete was requested" do
+          assert_request(:get, url, to_return: {body: "{}"}) do
+            resource.expects(:delete)
+            resource.deploy
+          end
+        end
+
+        it "does nothing when delete was requested but was not running" do
+          assert_request(:get, url, to_return: {status: 404}) do
+            resource.deploy
+          end
         end
       end
     end
-  end
 
-  describe "#running?" do
-    it "is true when running" do
-      assert_request(:get, url, to_return: {body: "{}"}) do
-        assert resource.running?
+    describe "#running?" do
+      it "is true when running" do
+        assert_request(:get, url, to_return: {body: "{}"}) do
+          assert resource.running?
+        end
+      end
+
+      it "is false when not running" do
+        assert_request(:get, url, to_return: {status: 404}) do
+          refute resource.running?
+        end
+      end
+
+      it "raises when a non 404 exception is raised" do
+        assert_request(:get, url, to_return: {status: 500}, times: 4) do
+          assert_raises(Kubeclient::HttpError) { resource.running? }
+        end
+      end
+
+      it "raises SSL exception is raised" do
+        assert_request(:get, url, to_raise: OpenSSL::SSL::SSLError, times: 4) do
+          assert_raises(OpenSSL::SSL::SSLError) { resource.running? }
+        end
       end
     end
 
-    it "is false when not running" do
-      assert_request(:get, url, to_return: {status: 404}) do
-        refute resource.running?
+    describe "#delete" do
+      around { |t| assert_request(:delete, url, to_return: {body: "{}"}, &t) }
+
+      it "deletes" do
+        assert_request(:get, url, to_return: [{body: "{}"}, {status: 404}]) do
+          resource.delete
+        end
+      end
+
+      it "fetches after deleting" do
+        assert_request(:get, url, to_return: [{body: "{}"}, {status: 404}]) do
+          resource.delete
+          refute resource.running?
+        end
+      end
+
+      it "fails when deletion fails" do
+        tries = 9
+        assert_request(:get, url, to_return: {body: "{}"}, times: tries + 1) do
+          resource.expects(:sleep).times(tries)
+
+          e = assert_raises(RuntimeError) { resource.delete }
+          e.message.must_equal "Unable to delete resource (some-project pod1 Pod1)"
+        end
       end
     end
 
-    it "raises when a non 404 exception is raised" do
-      assert_request(:get, url, to_return: {status: 500}, times: 4) do
-        assert_raises(Kubeclient::HttpError) { resource.running? }
+    describe "#uid" do
+      it "returns the uid of the created resource" do
+        assert_request(:get, url, to_return: {body: {metadata: {uid: 123}}.to_json}) do
+          resource.uid.must_equal 123
+        end
+      end
+
+      it "returns nil when resource is missing" do
+        assert_request(:get, url, to_return: {status: 404}) do
+          resource.uid.must_be_nil
+        end
       end
     end
 
-    it "raises SSL exception is raised" do
-      assert_request(:get, url, to_raise: OpenSSL::SSL::SSLError, times: 4) do
-        assert_raises(OpenSSL::SSL::SSLError) { resource.running? }
+    describe "#prerequisite?" do
+      it "is not a prerequisite by default" do
+        refute resource.prerequisite?
       end
-    end
-  end
 
-  describe "#delete" do
-    around { |t| assert_request(:delete, url, to_return: {body: "{}"}, &t) }
-
-    it "deletes" do
-      assert_request(:get, url, to_return: [{body: "{}"}, {status: 404}]) do
-        resource.delete
+      it "is a prerequisite when labeled" do
+        template[:metadata][:annotations] = {"samson/prerequisite": true}
+        assert resource.prerequisite?
       end
     end
 
-    it "fetches after deleting" do
-      assert_request(:get, url, to_return: [{body: "{}"}, {status: 404}]) do
-        resource.delete
-        refute resource.running?
+    describe "#primary?" do
+      it "is primary when it is a primary resource" do
+        template[:kind] = "Deployment"
+        assert resource.primary?
+      end
+
+      it "is not primary when it is a secondary resource" do
+        template[:kind] = "Service"
+        refute resource.primary?
       end
     end
 
-    it "fails when deletion fails" do
-      tries = 9
-      assert_request(:get, url, to_return: {body: "{}"}, times: tries + 1) do
-        resource.expects(:sleep).times(tries)
-
-        e = assert_raises(RuntimeError) { resource.delete }
-        e.message.must_equal "Unable to delete resource (some-project pod1 Pod1)"
+    describe "#desired_pod_count" do
+      it "reads the value from config" do
+        template[:spec] = {replicas: 3}
+        resource.desired_pod_count.must_equal 3
       end
-    end
-  end
 
-  describe "#uid" do
-    it "returns the uid of the created resource" do
-      assert_request(:get, url, to_return: {body: {metadata: {uid: 123}}.to_json}) do
-        resource.uid.must_equal 123
+      it "expects a constant number of pods when using autoscaling" do
+        assert_request(:get, url, to_return: {body: {spec: {replicas: 4}}.to_json}) do
+          autoscaled!
+          resource.desired_pod_count.must_equal 4
+        end
       end
-    end
 
-    it "returns nil when resource is missing" do
-      assert_request(:get, url, to_return: {status: 404}) do
-        resource.uid.must_be_nil
+      it "uses template amount when creating with autoscaling" do
+        assert_request(:get, url, to_return: {status: 404}) do
+          autoscaled!
+          resource.desired_pod_count.must_equal 2
+        end
       end
-    end
-  end
 
-  describe "#prerequisite?" do
-    it "is not a prerequisite by default" do
-      refute resource.prerequisite?
-    end
+      it "is 1 when not set" do
+        template[:spec].delete :replicas
+        resource.desired_pod_count.must_equal 1
+      end
 
-    it "is a prerequisite when labeled" do
-      template[:metadata][:annotations] = {"samson/prerequisite": true}
-      assert resource.prerequisite?
-    end
-  end
-
-  describe "#primary?" do
-    it "is primary when it is a primary resource" do
-      template[:kind] = "Deployment"
-      assert resource.primary?
-    end
-
-    it "is not primary when it is a secondary resource" do
-      template[:kind] = "Service"
-      refute resource.primary?
-    end
-  end
-
-  describe "#desired_pod_count" do
-    it "reads the value from config" do
-      template[:spec] = {replicas: 3}
-      resource.desired_pod_count.must_equal 3
-    end
-
-    it "expects a constant number of pods when using autoscaling" do
-      assert_request(:get, url, to_return: {body: {spec: {replicas: 4}}.to_json}) do
-        autoscaled!
-        resource.desired_pod_count.must_equal 4
+      it "is 0 when pod is deleted" do
+        delete_resource!
+        resource.desired_pod_count.must_equal 0
       end
     end
 
-    it "uses template amount when creating with autoscaling" do
-      assert_request(:get, url, to_return: {status: 404}) do
-        autoscaled!
-        resource.desired_pod_count.must_equal 2
+    describe "#loop_sleep" do
+      it "sleeps when not in test" do
+        Rails.env.expects(:test?)
+        resource.expects(:sleep)
+        resource.send(:loop_sleep)
       end
-    end
-
-    it "is 1 when not set" do
-      template[:spec].delete :replicas
-      resource.desired_pod_count.must_equal 1
-    end
-
-    it "is 0 when pod is deleted" do
-      delete_resource!
-      resource.desired_pod_count.must_equal 0
-    end
-  end
-
-  describe "#loop_sleep" do
-    it "sleeps when not in test" do
-      Rails.env.expects(:test?)
-      resource.expects(:sleep)
-      resource.send(:loop_sleep)
     end
   end
 
@@ -327,7 +341,6 @@ describe Kubernetes::Resource do
 
     let(:kind) { 'DaemonSet' }
     let(:api_version) { 'extensions/v1beta1' }
-    let(:url) { "#{origin}/apis/extensions/v1beta1/namespaces/pod1/daemonsets/some-project" }
 
     describe "#client" do
       it "uses the extension client because it is in beta" do
@@ -444,7 +457,6 @@ describe Kubernetes::Resource do
 
     let(:kind) { 'Deployment' }
     let(:api_version) { 'extensions/v1beta1' }
-    let(:url) { "#{origin}/apis/extensions/v1beta1/namespaces/pod1/deployments/some-project" }
 
     describe "#client" do
       it "uses the extension client because it is in beta" do
@@ -515,7 +527,6 @@ describe Kubernetes::Resource do
 
     let(:kind) { 'StatefulSet' }
     let(:api_version) { 'apps/v1beta1' }
-    let(:url) { "#{origin}/apis/apps/v1beta1/namespaces/pod1/statefulsets/some-project" }
 
     describe "#client" do
       it "uses the apps client because it is in beta" do
@@ -651,7 +662,6 @@ describe Kubernetes::Resource do
   describe Kubernetes::Resource::Job do
     let(:kind) { 'Job' }
     let(:api_version) { 'batch/v1' }
-    let(:url) { "#{origin}/apis/batch/v1/namespaces/pod1/jobs/some-project" }
 
     describe "#client" do
       it "uses the extension client because it is in beta" do
@@ -697,35 +707,12 @@ describe Kubernetes::Resource do
     end
   end
 
-  describe Kubernetes::Resource::CronJob do
-    let(:kind) { 'CronJob' }
-    let(:api_version) { 'batch/v1beta1' }
-    let(:url) { "#{origin}/apis/batch/v1beta1/namespaces/pod1/cronjobs/some-project" }
-
-    describe "#client" do
-      it "uses the batch client" do
-        resource.send(:client).must_equal deploy_group.kubernetes_cluster.client('batch/v1beta1')
-      end
-    end
-
-    describe "#deploy" do
-      let(:client) { resource.send(:client) }
-      before { template[:spec] = {template: {spec: {}}} }
-
-      it "creates when missing" do
-        assert_request(:get, url, to_return: {status: 404}) do
-          assert_request(:post, base_url, to_return: {body: "{}"}) do
-            resource.deploy
-          end
-        end
-      end
-    end
-  end
-
   describe Kubernetes::Resource::Service do
+    let(:api_version) { 'v1' }
+    let(:kind) { 'Service' }
+
     describe "#deploy" do
       let(:old) { {metadata: {resourceVersion: "A", foo: "B"}, spec: {clusterIP: "C"}} }
-      let(:api_version) { 'v1' }
       let(:expected_body) { template.deep_merge(metadata: {resourceVersion: "A"}, spec: {clusterIP: "C"}) }
 
       it "creates when missing" do
@@ -800,23 +787,6 @@ describe Kubernetes::Resource do
     end
   end
 
-  describe Kubernetes::Resource::ConfigMap do
-    let(:kind) { 'ConfigMap' }
-    let(:api_version) { 'v1' }
-    let(:url) { "#{origin}/api/v1/namespaces/pod1/configmaps/some-project" }
-
-    # a simple test to make sure basics work
-    describe "#deploy" do
-      it "creates when missing" do
-        assert_request(:get, url, to_return: {status: 404}) do
-          assert_request(:post, base_url, to_return: {body: "{}"}) do
-            resource.deploy
-          end
-        end
-      end
-    end
-  end
-
   describe Kubernetes::Resource::Pod do
     let(:kind) { 'Pod' }
     let(:api_version) { 'v1' }
@@ -872,22 +842,6 @@ describe Kubernetes::Resource do
     end
   end
 
-  describe Kubernetes::Resource::HorizontalPodAutoscaler do
-    describe "#deploy" do
-      let(:kind) { 'HorizontalPodAutoscaler' }
-      let(:api_version) { 'autoscaling/v1' }
-      let(:url) { "#{origin}/apis/autoscaling/v1/namespaces/pod1/horizontalpodautoscalers/some-project" }
-
-      it "updates" do
-        assert_request(:get, url, to_return: {body: '{}'}) do
-          assert_request(:put, url, to_return: {body: '{}'}) do
-            resource.deploy
-          end
-        end
-      end
-    end
-  end
-
   describe Kubernetes::Resource::PodDisruptionBudget do
     def assert_create_and_delete_requests(**args, &block)
       assert_request(:get, url, to_return: [{body: '{}'}, {status: 404}]) do
@@ -899,7 +853,6 @@ describe Kubernetes::Resource do
 
     let(:kind) { 'PodDisruptionBudget' }
     let(:api_version) { 'policy/v1beta1' }
-    let(:url) { "#{origin}/apis/policy/v1beta1/namespaces/pod1/poddisruptionbudgets/some-project" }
     let(:create_url) { File.dirname(url) }
 
     describe "#deploy" do

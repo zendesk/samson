@@ -24,7 +24,11 @@ module Kubernetes
 
         case kind
         when 'HorizontalPodAutoscaler'
+          set_name
           set_hpa_scale_target_name
+        when 'ConfigMap' # rubocop:disable Lint/EmptyWhen
+          # referenced in other resources so we cannot change the name
+          # NOTE: may cause multiple projects to override each others ConfigMaps if they chose duplicate names
         when *Kubernetes::RoleConfigFile::SERVICE_KINDS
           set_service_name
           prefix_service_cluster_ip
@@ -53,6 +57,8 @@ module Kubernetes
           set_image_pull_secrets
           set_resource_blue_green if blue_green_color
           set_init_containers
+        else
+          set_name
         end
         template
       end
@@ -121,7 +127,9 @@ module Kubernetes
     end
 
     def generate_service_name(config_name)
+      # when no service name was chosen we use the name from the config, which could lead to duplication
       return config_name unless name = @doc.kubernetes_role.service_name.presence
+
       if name.include?(Kubernetes::Role::GENERATED)
         raise(
           Samson::Hooks::UserError,

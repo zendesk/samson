@@ -35,7 +35,7 @@ describe Kubernetes::RoleConfigFile do
     end
 
     it "blows up on unsupported" do
-      assert content.sub!('Deployment', 'SomethingElse')
+      assert content.sub!('Service', 'Deployment')
       assert_raises(Samson::Hooks::UserError) { config_file }
     end
 

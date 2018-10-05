@@ -138,6 +138,11 @@ describe Kubernetes::TemplateFiller do
         must_equal doc.kubernetes_release.deploy.url
     end
 
+    it "sets name for unknown kinds" do
+      raw_template[:kind] = "foobar"
+      template.to_hash[:metadata][:name].must_equal "test-app-server"
+    end
+
     describe "unqiue deployments" do
       let(:labels) do
         hash = template.to_hash
@@ -751,6 +756,10 @@ describe Kubernetes::TemplateFiller do
 
       it "matches the resource name" do
         template.to_hash.dig_fetch(:spec, :scaleTargetRef, :name).must_equal("test-app-server")
+      end
+
+      it "sets the name" do
+        template.to_hash.dig_fetch(:metadata, :name).must_equal("test-app-server")
       end
     end
 
