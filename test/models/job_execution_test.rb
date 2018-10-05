@@ -38,6 +38,7 @@ describe JobExecution do
     user.name = 'John Doe'
     user.email = 'jdoe@test.com'
     project.repository.send(:clone!)
+    project.repository.stubs(:prune_worktree)
     job.deploy = deploy
     freeze_time
   end
@@ -482,6 +483,15 @@ describe JobExecution do
         FileUtils.rm_rf(dir)
         111
       end.must_equal 111
+    end
+
+    it "removes deleted worktrees" do
+      project.repository.unstub(:prune_worktree)
+      before = `cd #{project.repository.repo_cache_dir} && git worktree list`
+      execution.send(:make_tempdir) do |dir|
+        assert project.repository.checkout_workspace(dir, "master")
+      end
+      `cd #{project.repository.repo_cache_dir} && git worktree list`.must_equal before
     end
   end
 end

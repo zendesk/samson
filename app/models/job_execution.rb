@@ -270,6 +270,7 @@ class JobExecution
     @build_finder ||= Samson::BuildFinder.new(@output, @job, @reference)
   end
 
+  # TODO: @repository.checkout_workspace should manage the tempdir and prune after
   def make_tempdir
     result = nil
     Dir.mktmpdir("samson-#{@job.project.permalink}-#{@job.id}") do |dir|
@@ -278,5 +279,7 @@ class JobExecution
   rescue Errno::ENOTEMPTY, Errno::ENOENT
     ErrorNotifier.notify("Notify: make_tempdir error #{$!.message.split('@').first}")
     result # tempdir ensure sometimes fails ... not sure why ... return normally
+  ensure
+    @repository.prune_worktree
   end
 end
