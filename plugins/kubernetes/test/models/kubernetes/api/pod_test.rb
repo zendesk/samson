@@ -35,7 +35,7 @@ describe Kubernetes::Api::Pod do
   let(:pod_with_client) do
     Kubernetes::Api::Pod.new(
       pod_attributes,
-      client: deploy_groups(:pod1).kubernetes_cluster.client
+      client: deploy_groups(:pod1).kubernetes_cluster.client('v1')
     )
   end
   let(:start_time) { "2017-03-31T22:56:20Z" }

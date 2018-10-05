@@ -211,11 +211,11 @@ module Kubernetes
       end
 
       def client
-        pod_client
+        @deploy_group.kubernetes_cluster.client(@template.fetch(:apiVersion))
       end
 
       def pod_client
-        @deploy_group.kubernetes_cluster.client
+        @deploy_group.kubernetes_cluster.client('v1')
       end
 
       def loop_sleep
@@ -241,11 +241,6 @@ module Kubernetes
     end
 
     class HorizontalPodAutoscaler < Base
-      private
-
-      def client
-        @deploy_group.kubernetes_cluster.client('autoscaling/v1')
-      end
     end
 
     class Service < Base
@@ -285,10 +280,6 @@ module Kubernetes
 
         # delete the actual deployment
         super
-      end
-
-      def client
-        @deploy_group.kubernetes_cluster.client('extensions/v1beta1')
       end
     end
 
@@ -357,10 +348,6 @@ module Kubernetes
         resource.dig_fetch(:status, :currentNumberScheduled) + resource.dig_fetch(:status, :numberMisscheduled)
       end
 
-      def client
-        @deploy_group.kubernetes_cluster.client('extensions/v1beta1')
-      end
-
       def wait_for_termination_of_all_pods
         30.times do
           loop_sleep
@@ -421,10 +408,6 @@ module Kubernetes
       ensure
         client.headers['Content-Type'] = old
       end
-
-      def client
-        @deploy_group.kubernetes_cluster.client('apps/v1beta1')
-      end
     end
 
     class Job < Base
@@ -444,18 +427,9 @@ module Kubernetes
       def request_delete
         delete_pods { super }
       end
-
-      def client
-        @deploy_group.kubernetes_cluster.client('batch/v1')
-      end
     end
 
     class CronJob < Base
-      private
-
-      def client
-        @deploy_group.kubernetes_cluster.client('batch/v1beta1')
-      end
     end
 
     class Pod < Base
@@ -470,12 +444,6 @@ module Kubernetes
       def deploy
         delete
         create unless @template[:delete] # allow deletion through release_doc logic
-      end
-
-      private
-
-      def client
-        @deploy_group.kubernetes_cluster.client('policy/v1beta1')
       end
     end
 

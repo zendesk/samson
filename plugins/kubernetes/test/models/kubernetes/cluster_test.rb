@@ -60,11 +60,11 @@ describe Kubernetes::Cluster do
 
   describe '#client' do
     it 'creates a client' do
-      cluster.client.must_be_kind_of Kubeclient::Client
+      cluster.client('v1').must_be_kind_of Kubeclient::Client
     end
 
     it 'caches' do
-      cluster.client.object_id.must_equal cluster.client.object_id
+      cluster.client('v1').object_id.must_equal cluster.client('v1').object_id
     end
 
     it 'can build for other types' do

@@ -18,7 +18,7 @@ describe Kubernetes::RoleValidator do
       [YAML.safe_load(read_kubernetes_sample_file('kubernetes_cron_job.yml')).deep_symbolize_keys]
     end
     let(:pod_role) do
-      [{kind: 'Pod', metadata: {name: 'my-map', labels: labels}, spec: {containers: [{name: "foo"}]}}]
+      [{kind: 'Pod', apiVersion: 'v1', metadata: {name: 'my-map', labels: labels}, spec: {containers: [{name: "foo"}]}}]
     end
     let(:labels) { {project: "some-project", role: "some-role"} }
     let(:stateful_set_role) do
@@ -26,6 +26,7 @@ describe Kubernetes::RoleValidator do
         deployment_role[1],
         {
           kind: 'StatefulSet',
+          apiVersion: 'extensions/v1beta1',
           metadata: {name: 'my-map', labels: labels},
           spec: {
             serviceName: 'foobar',
@@ -49,7 +50,8 @@ describe Kubernetes::RoleValidator do
     end
 
     it "allows ConfigMap" do
-      role_json[-1...-1] = ", #{{kind: 'ConfigMap', metadata: {name: 'my-map', labels: labels}}.to_json}"
+      map = {kind: 'ConfigMap', apiVersion: 'v1', metadata: {name: 'my-map', labels: labels}}
+      role_json[-1...-1] = ", #{map.to_json}"
       errors.must_equal nil
     end
 
@@ -104,6 +106,7 @@ describe Kubernetes::RoleValidator do
       before do
         role.push(
           kind: 'PodDisruptionBudget',
+          apiVersion: 'policy/v1beta1',
           metadata: {name: 'foo', labels: labels},
           spec: {selector: {matchLabels: labels}}
         )
@@ -229,6 +232,11 @@ describe Kubernetes::RoleValidator do
         bar: 1234
       }
       errors.must_include "Annotation values true, 1234 must be strings."
+    end
+
+    it "fails when apiVersion is missing" do
+      role[1].delete(:apiVersion)
+      errors.must_include "Needs apiVersion specified"
     end
 
     describe "#validate_team_labels" do

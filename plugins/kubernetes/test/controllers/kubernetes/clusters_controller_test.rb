@@ -21,7 +21,7 @@ describe Kubernetes::ClustersController do
       end
 
       it "renders capacity" do
-        stub_request(:get, "http://foobar.server/api/v1/nodes").to_return(body: "[]")
+        stub_request(:get, "http://foobar.server/api/v1/nodes").to_return(body: {items: []}.to_json)
         get :index, params: {capacity: true}
         assert_template :index
       end

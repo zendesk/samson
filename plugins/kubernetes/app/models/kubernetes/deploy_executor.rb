@@ -184,7 +184,7 @@ module Kubernetes
           selector << "involvedObject.uid=#{uid}"
         end
 
-        events = doc.deploy_group.kubernetes_cluster.client.get_events(
+        events = doc.deploy_group.kubernetes_cluster.client('v1').get_events(
           namespace: resource.namespace,
           field_selector: selector.join(',')
         ).fetch(:items)
