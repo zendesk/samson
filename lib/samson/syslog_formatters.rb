@@ -6,12 +6,16 @@ module Samson
     def call(severity, timestamp, _progname, message)
       message_h =
         begin
-          message = message.to_json unless message.is_a?(String)
           # We support only string and hash in log.
-          # JSON also parse's Integer and Arrays, we skip those.
-          (parsed = JSON.parse(message)).is_a?(Hash) ? parsed : raise(JSON::ParserError)
+          if message.is_a?(String) && message.start_with?('{')
+            JSON.parse(message)
+          elsif message.is_a?(Hash)
+            message
+          else
+            raise JSON::ParserError
+          end
         rescue JSON::ParserError
-          {"message": message&.squish}
+          {message: message}
         end
       {
         level: severity,
