@@ -34,6 +34,13 @@ describe Samson::SyslogFormatter do
       end
     end
 
+    it 'returns original message with invalid json' do
+      travel_to Time.parse("2017-05-01 01:00 +0000").utc do
+        message = "{\"content\",\"xyz\",\"data\",\"123\"}"
+        output_matcher(message, message: message)
+      end
+    end
+
     it 'parse and format json messages' do
       travel_to Time.parse("2017-05-01 01:00 +0000").utc do
         message = {content: "xyz"}

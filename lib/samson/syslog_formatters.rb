@@ -5,16 +5,15 @@ module Samson
   class SyslogFormatter < Syslog::Logger::Formatter
     def call(severity, timestamp, _progname, message)
       message_h =
-        begin
-          # We support only string and hash in log.
-          if message.is_a?(String) && message.start_with?('{')
+        if message.is_a?(String) && message.start_with?('{')
+          begin
             JSON.parse(message)
-          elsif message.is_a?(Hash)
-            message
-          else
-            raise JSON::ParserError
+          rescue JSON::ParserError
+            {message: message}
           end
-        rescue JSON::ParserError
+        elsif message.is_a?(Hash)
+          message
+        else
           {message: message}
         end
       {
