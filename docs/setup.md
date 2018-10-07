@@ -146,7 +146,7 @@ Set the following variables in your `.env` file or set them as environment varia
       </td>
     </tr>
     <tr>
-      <td>NEWRELIC_API_KEY</td>
+      <td>NEW_RELIC_API_KEY</td>
       <td></td>
       <td>You may fill in using the instructions below if you would like a dynamic chart of response time and throughput during deploys.
           https://docs.newrelic.com/docs/features/getting-started-with-the-new-relic-rest-api#setup</td>
