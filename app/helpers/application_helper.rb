@@ -10,8 +10,6 @@ module ApplicationHelper
   include DateTimeHelper
   include Pagy::Frontend
 
-  cattr_reader(:github_status_cache_key) { 'github-status-ok' }
-
   def render_log(str)
     escaped = ERB::Util.html_escape(str)
     autolink(ansi_escaped(escaped)).html_safe
@@ -53,28 +51,6 @@ module ApplicationHelper
     title ||= column.titleize
     direction = ((column == params[:sort] && params[:direction] == "asc") ? "desc" : "asc")
     link_to title, sort: column, direction: direction
-  end
-
-  def github_ok?
-    key = github_status_cache_key
-
-    old = Rails.cache.read(key)
-    return old unless old.nil?
-
-    status =
-      begin
-        status_url = Rails.application.config.samson.github.status_url
-        response = Faraday.get("#{status_url}/api/status.json") do |req|
-          req.options.timeout = req.options.open_timeout = 1
-        end
-
-        response.status == 200 && JSON.parse(response.body)['status'] == 'good'
-      rescue Faraday::ClientError
-        false
-      end
-
-    Rails.cache.write(key, status, expires_in: (status ? 5.minutes : 30.seconds))
-    !!status
   end
 
   def breadcrumb(*items)

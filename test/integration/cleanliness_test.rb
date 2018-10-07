@@ -274,4 +274,13 @@ describe "cleanliness" do
       end
     end
   end
+
+  it "uses/recommends consistent PERIODICAL" do
+    values = [
+      File.read('.env.bootstrap')[/PERIODICAL=(.*)/, 1],
+      JSON.parse(File.read('app.json')).dig("env", "PERIODICAL", "value"),
+      File.read('.env.example')[/PERIODICAL=(.*)/, 1],
+    ]
+    values.uniq.size.must_equal 1, "Expected all places to use consistent PERIODICAL value, but found #{values.inspect}"
+  end
 end

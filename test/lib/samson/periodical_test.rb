@@ -196,12 +196,13 @@ describe Samson::Periodical do
   end
 
   it "lists all example periodical tasks in the .env.example" do
-    configureable = File.read('config/initializers/periodical.rb').scan(/\.register.*?:([a-z\d_]+)/)
-    mentioned = File.read('.env.example')[/## Periodical tasks .*^PERIODICAL=/m].scan(/# ([a-z\d_]+):\d+/)
+    configureable = File.read('config/initializers/periodical.rb').scan(/\.register.*?:([a-z\d_]+)/).flatten
+    mentioned = File.read('.env.example')[/## Periodical tasks .*^PERIODICAL=/m].scan(/# ([a-z\d_]+):\d+/).flatten
     configureable.sort.must_equal mentioned.sort
   end
 
   it "runs everything" do
+    stub_request(:get, "https://status.github.com/api/status.json")
     Samson::Periodical.send(:registered).each_key do |task|
       Samson::Periodical.run_once task
     end

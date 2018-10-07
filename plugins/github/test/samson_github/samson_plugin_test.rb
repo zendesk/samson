@@ -58,4 +58,38 @@ describe SamsonDatadog do
       Samson::Hooks.fire(:before_deploy, deploy, nil)
     end
   end
+
+  describe :repo_provider_status do
+    def fire
+      Samson::Hooks.fire(:repo_provider_status)
+    end
+
+    let(:status_url) { "#{SamsonGithub::STATUS_URL}/api/status.json" }
+
+    around { |t| Samson::Hooks.only_callbacks_for_plugin('github', :repo_provider_status, &t) }
+
+    it "reports good response" do
+      assert_request(:get, status_url, to_return: {body: {status: 'good'}.to_json}) do
+        fire.must_equal [nil]
+      end
+    end
+
+    it "reports bad response" do
+      assert_request(:get, status_url, to_return: {body: {status: 'bad'}.to_json}) do
+        fire.to_s.must_include "GitHub may be having problems"
+      end
+    end
+
+    it "reports invalid response" do
+      assert_request(:get, status_url, to_return: {status: 400}) do
+        fire.to_s.must_include "GitHub may be having problems"
+      end
+    end
+
+    it "reports errors" do
+      assert_request(:get, status_url, to_timeout: []) do
+        fire.to_s.must_include "GitHub may be having problems"
+      end
+    end
+  end
 end

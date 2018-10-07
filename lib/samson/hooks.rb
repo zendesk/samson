@@ -60,7 +60,8 @@ module Samson
       :stage_permitted_params,
       :trace_method,
       :trace_scope,
-      :asynchronous_performance_tracer
+      :asynchronous_performance_tracer,
+      :repo_provider_status
     ].freeze
 
     # Hooks that are slow and we want performance info on

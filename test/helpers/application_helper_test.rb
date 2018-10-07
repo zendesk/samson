@@ -169,48 +169,6 @@ describe ApplicationHelper do
     end
   end
 
-  describe "#github_ok?" do
-    let(:status_url) { "#{Rails.application.config.samson.github.status_url}/api/status.json" }
-
-    it "returns cached true" do
-      Rails.cache.write(github_status_cache_key, true)
-      assert github_ok?
-    end
-
-    it "returns cached false" do
-      Rails.cache.write(github_status_cache_key, false)
-      refute github_ok?
-    end
-
-    it "caches good response" do
-      assert_request(:get, status_url, to_return: {body: {status: 'good'}.to_json}) do
-        assert github_ok?
-        Rails.cache.read(github_status_cache_key).must_equal true
-      end
-    end
-
-    it "caches bad response" do
-      assert_request(:get, status_url, to_return: {body: {status: 'bad'}.to_json}) do
-        refute github_ok?
-        Rails.cache.read(github_status_cache_key).must_equal false
-      end
-    end
-
-    it "caches invalid response" do
-      assert_request(:get, status_url, to_return: {status: 400}) do
-        refute github_ok?
-        Rails.cache.read(github_status_cache_key).must_equal false
-      end
-    end
-
-    it "caches timeout" do
-      assert_request(:get, status_url, to_timeout: []) do
-        refute github_ok?
-        Rails.cache.read(github_status_cache_key).must_equal false
-      end
-    end
-  end
-
   describe "#breadcrumb" do
     let(:stage) { stages(:test_staging) }
     let(:project) { projects(:test) }

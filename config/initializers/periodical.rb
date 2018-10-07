@@ -37,13 +37,17 @@ Samson::Periodical.register :periodical_deploy, "Deploy periodical stages", cons
   Samson::PeriodicalDeploy.run
 end
 
+Samson::Periodical.register :report_process_stats, "Report process stats" do
+  Samson::ProcessUtils.report_to_statsd
+end
+
+Samson::Periodical.register :repo_provider_status, "Refresh repo provider status" do
+  Samson::RepoProviderStatus.refresh
+end
+
 if ENV['SERVER_MODE']
   Rails.application.config.after_initialize do
     Samson::Periodical.enabled = true
     Samson::Periodical.run
   end
-end
-
-Samson::Periodical.register :report_process_stats, "Report process stats" do
-  Samson::ProcessUtils.report_to_statsd
 end
