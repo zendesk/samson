@@ -150,10 +150,16 @@ class ActiveSupport::TestCase
         {"name" => "poddisruptionbudgets", "namespaced" => true, "kind" => "PodDisruptionBudget"}
       ]
     },
+    "apiregistration.k8s.io/v1beta1" => {
+      "kind" => "APIResourceList",
+      "resources" => [
+        {"name" => "apiservices", "namespaced" => true, "kind" => "APIService"}
+      ]
+    }
   }.freeze
 
   before do
-    stub_request(:get, %r{http://foobar.server/(api/v1|apis/([a-z]+/[a-z\d]+))$}).to_return do |request|
+    stub_request(:get, %r{http://foobar.server/(api/v1|apis/([a-z.\d]+/[a-z\d]+))$}).to_return do |request|
       version = request.uri.path.split('/', 3).last
       body = KUBERNETES_VERSION_REPLIES[version] || raise("Missing version stub for #{version}")
       {body: body.to_json}
