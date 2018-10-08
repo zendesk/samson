@@ -2,16 +2,7 @@
 module Kubernetes
   class RoleValidator
     VALID_LABEL = /\A[a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?\z/ # also used in js ... cannot use /i
-    IGNORED = ['ConfigMap', 'HorizontalPodAutoscaler', 'PodDisruptionBudget'].freeze
-    SUPPORTED_KINDS = [
-      ['Deployment'],
-      ['DaemonSet'],
-      ['Deployment', 'Service'],
-      ['Service', 'StatefulSet'],
-      ['Job'],
-      ['CronJob'],
-      ['Pod'],
-    ].freeze
+    ALLOWED_DUPLICATE_KINDS = ['ConfigMap', 'Service'].freeze
 
     def initialize(elements)
       @elements = elements.compact
@@ -22,8 +13,9 @@ module Kubernetes
       return ["No content found"] if @elements.blank?
       return ["Only hashes supported"] unless @elements.all? { |e| e.is_a?(Hash) }
       validate_name
+      validate_name_kinds_are_unique
       validate_namespace
-      validate_kinds
+      validate_single_primary_kind
       validate_api_version
       validate_containers
       validate_container_name
@@ -74,16 +66,19 @@ module Kubernetes
       @errors << "Namespaces need to be unique" if map_attributes([:metadata, :namespace]).uniq.size != 1
     end
 
-    def validate_kinds
+    # multiple pods in a single role will make validations misbehave (recommend they all have the same role etc)
+    def validate_single_primary_kind
       kinds = map_attributes([:kind])
-      IGNORED.each { |k| kinds.delete k }
-      uniq_element!(kinds, 'Service') # ignore multiple services
-      kinds.sort_by!(&:to_s)
+      return if kinds.count { |k| RoleConfigFile::PRIMARY_KINDS.include?(k) } < 2
+      @errors << "Only use a maximum of 1 primary kind in a role (#{RoleConfigFile::PRIMARY_KINDS.join(", ")})"
+    end
 
-      return if SUPPORTED_KINDS.include?(kinds)
-      supported = SUPPORTED_KINDS.map { |c| c.join(' + ') }.join(', ')
-      @errors << "Unsupported combination of kinds: #{kinds.join(' + ')}" \
-        ", supported combinations are: #{supported} and #{IGNORED.join(", ")}"
+    # template_filler.rb sets name for everything except for ConfigMaps and Service so we need to make sure
+    # users dont use the same kind otherwise they get a duplicate name
+    def validate_name_kinds_are_unique
+      kinds = map_attributes([:kind]) - ALLOWED_DUPLICATE_KINDS
+      return if kinds.uniq.size == kinds.size
+      @errors << "Only use a maximum of 1 of each kind in a role (except #{ALLOWED_DUPLICATE_KINDS.join(" and ")})"
     end
 
     def validate_api_version
@@ -256,14 +251,6 @@ module Kubernetes
     end
 
     # helpers below
-
-    # [1,2,3,1,4] -> [2,3,4,1]
-    def uniq_element!(array, element)
-      if array.count(element) > 1
-        array.delete(element)
-        array << element
-      end
-    end
 
     def find_stateful_set
       @elements.detect { |t| t[:kind] == "StatefulSet" }

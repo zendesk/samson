@@ -75,9 +75,16 @@ describe Kubernetes::RoleValidator do
       Kubernetes::RoleValidator.new(["bad", {kind: "Good"}]).validate.must_equal ["Only hashes supported"]
     end
 
-    it "reports invalid types" do
+    it "allows invalid types" do
       role.first[:kind] = "Ohno"
-      errors.to_s.must_include "Unsupported combination of kinds: Ohno + Service, supported"
+      refute errors
+    end
+
+    it "does not allow multiple deployables" do
+      role[1][:kind] = "Pod"
+      errors.must_include(
+        "Only use a maximum of 1 primary kind in a role (Deployment, DaemonSet, StatefulSet, Job, CronJob, Pod)"
+      )
     end
 
     describe 'StatefulSet' do
@@ -159,6 +166,12 @@ describe Kubernetes::RoleValidator do
       errors.must_be_nil
     end
 
+    it "allows duplicate ConfigMaps" do
+      role[0][:kind] = "ConfigMap"
+      role << role[0].dup
+      errors.must_be_nil
+    end
+
     it "reports numeric cpu" do
       role.first[:spec][:template][:spec][:containers].first[:resources] = {limits: {cpu: 1}}
       errors.must_include "Numeric cpu resources are not supported"
@@ -182,12 +195,6 @@ describe Kubernetes::RoleValidator do
     it "reports bad container names" do
       spec[:containers][0][:name] = 'foo_bar'
       errors.must_equal ["Container name foo_bar did not match \\A[a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?\\z"]
-    end
-
-    # release_doc does not support that and it would lead to chaos
-    it 'reports job mixed with deploy' do
-      role.concat job_role
-      errors.to_s.must_include "Unsupported combination of kinds: Deployment + Job + Service, supported"
     end
 
     it "reports non-string labels" do
@@ -237,6 +244,12 @@ describe Kubernetes::RoleValidator do
     it "fails when apiVersion is missing" do
       role[1].delete(:apiVersion)
       errors.must_include "Needs apiVersion specified"
+    end
+
+    it "fails when there are duplicate kinds" do
+      role[0][:kind] = "foo"
+      role[1][:kind] = "foo"
+      errors.must_include "Only use a maximum of 1 of each kind in a role (except ConfigMap and Service)"
     end
 
     describe "#validate_team_labels" do

@@ -237,12 +237,6 @@ module Kubernetes
       end
     end
 
-    class ConfigMap < Base
-    end
-
-    class HorizontalPodAutoscaler < Base
-    end
-
     class Service < Base
       private
 
@@ -429,9 +423,6 @@ module Kubernetes
       end
     end
 
-    class CronJob < Base
-    end
-
     class Pod < Base
       def deploy
         delete
@@ -448,7 +439,8 @@ module Kubernetes
     end
 
     def self.build(*args)
-      "Kubernetes::Resource::#{args.first.fetch(:kind)}".constantize.new(*args)
+      klass = "Kubernetes::Resource::#{args.first.fetch(:kind)}".safe_constantize || Base
+      klass.new(*args)
     end
   end
 end
