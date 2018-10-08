@@ -27,9 +27,11 @@ describe Kubernetes::Resource do
 
   let(:origin) { "http://foobar.server" }
   let(:kind) { 'Service' }
+  let(:api_version) { 'v1' }
   let(:template) do
     {
       kind: kind,
+      apiVersion: api_version,
       metadata: {name: 'some-project', namespace: 'pod1'},
       spec: {
         replicas: 2,
@@ -77,6 +79,7 @@ describe Kubernetes::Resource do
 
   describe "#deploy" do
     let(:kind) { 'Deployment' }
+    let(:api_version) { 'extensions/v1beta1' }
     let(:url) { "#{origin}/apis/extensions/v1beta1/namespaces/pod1/deployments/some-project" }
 
     it "creates when missing" do
@@ -323,6 +326,7 @@ describe Kubernetes::Resource do
     end
 
     let(:kind) { 'DaemonSet' }
+    let(:api_version) { 'extensions/v1beta1' }
     let(:url) { "#{origin}/apis/extensions/v1beta1/namespaces/pod1/daemonsets/some-project" }
 
     describe "#client" do
@@ -411,13 +415,14 @@ describe Kubernetes::Resource do
 
     describe "#revert" do
       let(:kind) { 'DaemonSet' }
+      let(:api_version) { 'extensions/v1beta1' }
       let(:base_url) { "#{origin}/apis/extensions/v1beta1/namespaces/bar/daemonsets" }
 
       it "reverts to previous version" do
         # checks if it exists and then creates the old resource
         assert_request(:get, "#{base_url}/foo", to_return: {status: 404}) do
           assert_request(:post, base_url, to_return: {body: "{}"}) do
-            resource.revert(metadata: {name: 'foo', namespace: 'bar'}, kind: kind)
+            resource.revert(metadata: {name: 'foo', namespace: 'bar'}, kind: kind, apiVersion: api_version)
           end
         end
       end
@@ -438,6 +443,7 @@ describe Kubernetes::Resource do
     end
 
     let(:kind) { 'Deployment' }
+    let(:api_version) { 'extensions/v1beta1' }
     let(:url) { "#{origin}/apis/extensions/v1beta1/namespaces/pod1/deployments/some-project" }
 
     describe "#client" do
@@ -481,7 +487,7 @@ describe Kubernetes::Resource do
 
     describe "#revert" do
       it "reverts to previous version" do
-        basic = {kind: 'Deployment', metadata: {name: 'some-project', namespace: 'pod1'}}
+        basic = {kind: 'Deployment', apiVersion: api_version, metadata: {name: 'some-project', namespace: 'pod1'}}
         previous = basic.deep_merge(metadata: {uid: 'UID'}).freeze
 
         with = ->(request) { request.body.must_equal basic.to_json }
@@ -508,6 +514,7 @@ describe Kubernetes::Resource do
     end
 
     let(:kind) { 'StatefulSet' }
+    let(:api_version) { 'apps/v1beta1' }
     let(:url) { "#{origin}/apis/apps/v1beta1/namespaces/pod1/statefulsets/some-project" }
 
     describe "#client" do
@@ -643,6 +650,7 @@ describe Kubernetes::Resource do
 
   describe Kubernetes::Resource::Job do
     let(:kind) { 'Job' }
+    let(:api_version) { 'batch/v1' }
     let(:url) { "#{origin}/apis/batch/v1/namespaces/pod1/jobs/some-project" }
 
     describe "#client" do
@@ -691,6 +699,7 @@ describe Kubernetes::Resource do
 
   describe Kubernetes::Resource::CronJob do
     let(:kind) { 'CronJob' }
+    let(:api_version) { 'batch/v1beta1' }
     let(:url) { "#{origin}/apis/batch/v1beta1/namespaces/pod1/cronjobs/some-project" }
 
     describe "#client" do
@@ -716,6 +725,7 @@ describe Kubernetes::Resource do
   describe Kubernetes::Resource::Service do
     describe "#deploy" do
       let(:old) { {metadata: {resourceVersion: "A", foo: "B"}, spec: {clusterIP: "C"}} }
+      let(:api_version) { 'v1' }
       let(:expected_body) { template.deep_merge(metadata: {resourceVersion: "A"}, spec: {clusterIP: "C"}) }
 
       it "creates when missing" do
@@ -792,6 +802,7 @@ describe Kubernetes::Resource do
 
   describe Kubernetes::Resource::ConfigMap do
     let(:kind) { 'ConfigMap' }
+    let(:api_version) { 'v1' }
     let(:url) { "#{origin}/api/v1/namespaces/pod1/configmaps/some-project" }
 
     # a simple test to make sure basics work
@@ -808,6 +819,7 @@ describe Kubernetes::Resource do
 
   describe Kubernetes::Resource::Pod do
     let(:kind) { 'Pod' }
+    let(:api_version) { 'v1' }
 
     describe "#deploy" do
       let(:url) { "#{origin}/api/v1/namespaces/pod1/pods/some-project" }
@@ -863,6 +875,7 @@ describe Kubernetes::Resource do
   describe Kubernetes::Resource::HorizontalPodAutoscaler do
     describe "#deploy" do
       let(:kind) { 'HorizontalPodAutoscaler' }
+      let(:api_version) { 'autoscaling/v1' }
       let(:url) { "#{origin}/apis/autoscaling/v1/namespaces/pod1/horizontalpodautoscalers/some-project" }
 
       it "updates" do
@@ -885,6 +898,7 @@ describe Kubernetes::Resource do
     end
 
     let(:kind) { 'PodDisruptionBudget' }
+    let(:api_version) { 'policy/v1beta1' }
     let(:url) { "#{origin}/apis/policy/v1beta1/namespaces/pod1/poddisruptionbudgets/some-project" }
     let(:create_url) { File.dirname(url) }
 

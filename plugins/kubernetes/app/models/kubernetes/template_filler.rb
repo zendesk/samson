@@ -471,7 +471,7 @@ module Kubernetes
 
       docker_credentials = Rails.cache.fetch(["docker_credentials", cluster], expires_in: 1.hour) do
         secrets = SamsonKubernetes.retry_on_connection_errors do
-          cluster.client.get_secrets(namespace: template.dig_fetch(:metadata, :namespace)).fetch(:items)
+          cluster.client('v1').get_secrets(namespace: template.dig_fetch(:metadata, :namespace)).fetch(:items)
         end
         secrets.
           select { |secret| docker_configs.include? secret.fetch(:type) }.

@@ -59,7 +59,7 @@ module Kubernetes
         ]
       end
       # avoiding doing a .uniq on clients which might do weird stuff
-      scopes.uniq.map { |group, query| [group.kubernetes_cluster.client, query] }
+      scopes.uniq.map { |group, query| [group.kubernetes_cluster.client('v1'), query] }
     end
 
     def url

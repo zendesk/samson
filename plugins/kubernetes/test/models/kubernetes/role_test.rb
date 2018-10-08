@@ -27,6 +27,7 @@ describe Kubernetes::Role do
   let(:pod) do
     {
       kind: 'Pod',
+      apiVersion: 'v1',
       metadata: {name: 'foo', labels: {role: 'migrate', project: 'bar'}},
       spec: {containers: [{name: 'foo', resources: {limits: {cpu: '0.5', memory: '300M'}}}]}
     }
@@ -273,7 +274,7 @@ describe Kubernetes::Role do
     end
 
     it "raises when a role is invalid so the deploy is cancelled" do
-      assert config_content_yml.sub!('Deployment', 'Broken')
+      assert config_content_yml.sub!('Service', 'Pod')
       write_config role.config_file, config_content_yml
 
       assert_raises Samson::Hooks::UserError do
@@ -327,6 +328,7 @@ describe Kubernetes::Role do
       labels = {project: 'some-project', role: 'some-role'}
       map = {
         kind: 'ConfigMap',
+        apiVersion: 'v1',
         metadata: {name: 'datadog', labels: labels},
         namespace: 'default',
         labels: labels
@@ -380,7 +382,7 @@ describe Kubernetes::Role do
     end
 
     it "ignores when config is invalid" do
-      assert config_content_yml.sub!('Deployment', 'Deploymentx')
+      assert config_content_yml.sub!('Service', 'Deployment')
       refute role.defaults
     end
   end

@@ -269,6 +269,7 @@ describe Kubernetes::DeployExecutor do
         Kubernetes::ReleaseDoc.any_instance.unstub(:raw_template)
         GitRepository.any_instance.stubs(:file_content).with('kubernetes/resque_worker.yml', commit).returns({
           'kind' => 'Job',
+          'apiVersion' => 'batch/v1',
           'spec' => {
             'template' => {
               'metadata' => {'labels' => {'project' => 'foobar', 'role' => 'migrate'}},
@@ -508,6 +509,7 @@ describe Kubernetes::DeployExecutor do
       it "rolls back when previous resource existed" do
         old = {
           kind: 'Service',
+          apiVersion: 'v1',
           metadata: {uid: '123', name: 'some-project', namespace: 'staging', resourceVersion: 'X'},
           spec: {clusterIP: "Y"}
         }

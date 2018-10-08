@@ -24,6 +24,7 @@ module Kubernetes
       validate_name
       validate_namespace
       validate_kinds
+      validate_api_version
       validate_containers
       validate_container_name
       validate_job_restart_policy
@@ -83,6 +84,10 @@ module Kubernetes
       supported = SUPPORTED_KINDS.map { |c| c.join(' + ') }.join(', ')
       @errors << "Unsupported combination of kinds: #{kinds.join(' + ')}" \
         ", supported combinations are: #{supported} and #{IGNORED.join(", ")}"
+    end
+
+    def validate_api_version
+      @errors << "Needs apiVersion specified" if map_attributes([:apiVersion]).any?(&:nil?)
     end
 
     # spec actually allows this, but blows up when used

@@ -107,16 +107,20 @@ class Kubernetes::ClustersController < ApplicationController
     }
 
     if secret_exist?(secret)
-      @cluster.client.update_secret(secret)
+      secrets_client.update_secret(secret)
     else
-      @cluster.client.create_secret(secret)
+      secrets_client.create_secret(secret)
     end
   end
 
   def secret_exist?(secret)
-    @cluster.client.get_secret(secret.fetch(:metadata).fetch(:name), secret.fetch(:metadata).fetch(:namespace))
+    secrets_client.get_secret(secret.fetch(:metadata).fetch(:name), secret.fetch(:metadata).fetch(:namespace))
     true
   rescue *SamsonKubernetes.connection_errors
     false
+  end
+
+  def secrets_client
+    @cluster.client('v1')
   end
 end
