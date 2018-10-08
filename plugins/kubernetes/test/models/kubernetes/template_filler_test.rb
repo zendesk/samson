@@ -131,6 +131,13 @@ describe Kubernetes::TemplateFiller do
       template.to_hash(verification: true)
     end
 
+    it "adds deploy url to resource and templates" do
+      result = template.to_hash
+      result.dig(:metadata, :annotations, :"samson/deploy_url").must_equal doc.kubernetes_release.deploy.url
+      result.dig(:spec, :template, :metadata, :annotations, :"samson/deploy_url").
+        must_equal doc.kubernetes_release.deploy.url
+    end
+
     describe "unqiue deployments" do
       let(:labels) do
         hash = template.to_hash
@@ -161,49 +168,14 @@ describe Kubernetes::TemplateFiller do
       end
     end
 
-    describe "deployer" do
-      let(:result) { template.to_hash.dig_fetch(:spec, :template, :metadata, :annotations, :deployer) }
-
-      it "sets deployer" do
-        result.must_equal "deployer@example.com"
-      end
-
-      it "does not set nil deployer which breaks kubernetes api" do
-        doc.kubernetes_release.user.email = nil
-        result.must_equal ""
-      end
-    end
-
-    describe "owner" do
-      let(:result) { template.to_hash.dig_fetch(:spec, :template, :metadata, :annotations, :owner) }
-
-      it "sets owner" do
-        project.owner = "foo@bar.com"
-        result.must_equal "foo@bar.com"
-      end
-
-      it "does not set nil owner which breaks kubernetes api" do
-        project.owner = nil
-        result.must_equal ""
-      end
-    end
-
-    describe "github-repo" do
-      let(:result) { template.to_hash.dig_fetch(:spec, :template, :metadata, :annotations, :"samson/github-repo") }
-
-      it "sets github-repo" do
-        result.must_equal "bar/foo"
-      end
-    end
-
     describe "configmap" do
       it "only modifies namespace since there is no template" do
         raw_template[:kind] = "ConfigMap"
         raw_template.delete(:spec)
         raw_template[:metadata][:namespace] = 'old'
-        old = raw_template.deep_dup
-        old[:metadata][:namespace] = 'pod1'
-        template.to_hash.must_equal old
+        result = template.to_hash
+        result[:metadata][:namespace].must_equal 'pod1'
+        refute result[:spec]
       end
     end
 
@@ -825,9 +797,9 @@ describe Kubernetes::TemplateFiller do
     end
 
     describe "when something is required" do
-      let(:annotations) { raw_template[:spec][:template][:metadata][:annotations] = {} }
+      let(:pod_annotations) { raw_template[:spec][:template][:metadata][:annotations] = {} }
 
-      before { annotations[:"samson/required_env"] = 'FOO' }
+      before { pod_annotations[:"samson/required_env"] = 'FOO' }
 
       it "fails when value is missing" do
         e = assert_raises Samson::Hooks::UserError do
@@ -837,7 +809,7 @@ describe Kubernetes::TemplateFiller do
       end
 
       it "fails when multiple values are missing" do
-        annotations[:"samson/required_env"] = 'FOO BAR,BAZ,  FOO2    FOO3'
+        pod_annotations[:"samson/required_env"] = 'FOO BAR,BAZ,  FOO2    FOO3'
         e = assert_raises Samson::Hooks::UserError do
           template.send(:verify_env)
         end
