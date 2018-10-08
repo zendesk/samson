@@ -20,6 +20,7 @@ module Kubernetes
 
         set_namespace
         set_project_labels if template.dig(:metadata, :annotations, :"samson/override_project_label")
+        set_deploy_url
 
         case kind
         when 'HorizontalPodAutoscaler'
@@ -44,8 +45,6 @@ module Kubernetes
           set_pre_stop if kind == 'Deployment'
 
           set_name
-          set_contact_info
-          set_repo_info
           set_spec_template_metadata
           set_docker_image unless verification
           set_resource_usage
@@ -82,6 +81,15 @@ module Kubernetes
         [nil, container.fetch(:image)]
       else
         [dockerfile, nil]
+      end
+    end
+
+    def set_deploy_url
+      templates = [template]
+      templates << pod_template if Kubernetes::RoleConfigFile::PRIMARY_KINDS.include?(template[:kind])
+      templates.each do |t|
+        annotations = (t[:metadata][:annotations] ||= {})
+        annotations[:"samson/deploy_url"] = @doc.kubernetes_release.deploy&.url
       end
     end
 
@@ -169,13 +177,14 @@ module Kubernetes
     def expand_secret_annotations
       resolver = Samson::Secrets::KeyResolver.new(project, [@doc.deploy_group])
       secret_annotations.each do |k, v|
+        annotations = pod_annotations
         annotations.delete(k)
         resolver.expand(k, v).each { |k, v| annotations[k.to_sym] = v }
       end
       resolver.verify!
     end
 
-    def annotations
+    def pod_annotations
       pod_template[:metadata][:annotations] ||= {}
     end
 
@@ -187,17 +196,8 @@ module Kubernetes
       end
     end
 
-    def set_contact_info
-      annotations[:deployer] = @doc.kubernetes_release.user&.email.to_s
-      annotations[:owner] = project.owner.to_s
-    end
-
-    def set_repo_info
-      annotations[:"samson/github-repo"] = project.repository_path
-    end
-
     def secret_annotations
-      annotations.select do |annotation_name, _|
+      pod_annotations.select do |annotation_name, _|
         annotation_name.to_s.start_with?(SECRET_PREFIX)
       end
     end
@@ -245,9 +245,9 @@ module Kubernetes
       key = Kubernetes::Api::Pod::INIT_CONTAINER_KEY
       if init_containers_in_beta?
         pod_template.dig_set([:spec, :initContainers], init_containers)
-        annotations.delete(key)
+        pod_annotations.delete(key)
       else
-        annotations[key] = JSON.pretty_generate(init_containers)
+        pod_annotations[key] = JSON.pretty_generate(init_containers)
         pod_template[:spec].delete(:initContainers)
       end
     end
@@ -344,7 +344,7 @@ module Kubernetes
     end
 
     def required_env
-      ((annotations || {})[:"samson/required_env"] || "").strip.split(/[\s,]+/)
+      (pod_annotations[:"samson/required_env"] || "").strip.split(/[\s,]+/)
     end
 
     def verify_env
@@ -434,14 +434,14 @@ module Kubernetes
           converted << value
 
           key = "#{SECRET_PREFIX}#{var.fetch(:name)}".to_sym
-          if (old = annotations[key]) && old != secret_key
+          if (old = pod_annotations[key]) && old != secret_key
             raise(
               Samson::Hooks::UserError,
               "Annotation key #{key} is already set to #{old}, cannot set it via environment to #{secret_key}.\n" \
               "Either delete the environment variable or make them both point to the same key."
             )
           end
-          annotations[key] = secret_key
+          pod_annotations[key] = secret_key
         end
       end
     end
@@ -492,7 +492,7 @@ module Kubernetes
 
     def init_containers
       @init_containers ||=
-        JSON.parse(annotations[Kubernetes::Api::Pod::INIT_CONTAINER_KEY] || '[]', symbolize_names: true) +
+        JSON.parse(pod_annotations[Kubernetes::Api::Pod::INIT_CONTAINER_KEY] || '[]', symbolize_names: true) +
         (pod_template.dig(:spec, :initContainers) || [])
     end
 
