@@ -19,14 +19,14 @@ elsif Samson::EnvCheck.set?("RAILS_LOG_TO_SYSLOG")
     {
       params: params,
       user_id: request.env['warden']&.user&.id,
-      ip: request.remote_ip
+      client_ip: request.remote_ip
     }
   end
 
   config.logger = Syslog::Logger.new('samson')
   config.action_cable.logger = Syslog::Logger.new('samson')
-  config.action_cable.logger.formatter = Samson::SyslogFormatter.new
   config.lograge.formatter = Lograge::Formatters::Logstash.new
+  config.logger.formatter = config.action_cable.logger.formatter = Samson::SyslogFormatter.new
 
 elsif ENV["SERVER_MODE"] # regular file logger that needs rotating
   # Reopen logfile when we receive a SIGHUP for log-rotation
