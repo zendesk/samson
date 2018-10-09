@@ -143,6 +143,11 @@ describe Kubernetes::TemplateFiller do
       template.to_hash[:metadata][:name].must_equal "test-app-server"
     end
 
+    it "does not set override name for resources that follow a fixed naming pattern" do
+      raw_template[:kind] = 'APIService'
+      template.to_hash[:metadata][:name].must_equal "some-project-rc"
+    end
+
     describe "unqiue deployments" do
       let(:labels) do
         hash = template.to_hash
