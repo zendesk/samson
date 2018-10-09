@@ -449,5 +449,13 @@ module Kubernetes
       klass = "Kubernetes::Resource::#{args.first.fetch(:kind)}".safe_constantize || Base
       klass.new(*args)
     end
+
+    class APIService < Base
+      private
+
+      def template_for_update
+        super.deep_merge!(metadata: {resourceVersion: Time.now.to_i.to_s})
+      end
+    end
   end
 end
