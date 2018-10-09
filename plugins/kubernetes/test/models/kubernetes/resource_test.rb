@@ -189,6 +189,14 @@ describe Kubernetes::Resource do
       end
     end
 
+    describe "#create" do
+      it "shows error location when create returns 404" do
+        assert_request(:post, base_url, to_return: {status: 404}) do
+          assert_raises(Samson::Hooks::UserError) { resource.send(:create) }
+        end
+      end
+    end
+
     describe "#running?" do
       it "is true when running" do
         assert_request(:get, url, to_return: {body: "{}"}) do

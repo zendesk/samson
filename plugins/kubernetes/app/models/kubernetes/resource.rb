@@ -124,6 +124,8 @@ module Kubernetes
           request(:create, @template)
         end
         expire_resource_cache
+      rescue Kubeclient::ResourceNotFoundError => e
+        raise_kubernetes_error(e.message)
       end
 
       # TODO: remove the expire_cache and assign @resource but that breaks a bunch of deploy_executor tests
@@ -200,15 +202,19 @@ module Kubernetes
           begin
             method = "#{verb}_#{Kubeclient::ClientMixin.underscore_entity(@template.fetch(:kind))}"
             client.send(method, *args)
-          rescue Kubeclient::HttpError
-            message = $!.message.to_s
+          rescue Kubeclient::HttpError => e
+            message = e.message.to_s
             if message.include?(" is invalid:") || message.include?(" no kind ")
-              raise Samson::Hooks::UserError, "Kubernetes error #{error_location}: #{message}"
+              raise_kubernetes_error(message)
             else
               raise
             end
           end
         end
+      end
+
+      def raise_kubernetes_error(message)
+        raise Samson::Hooks::UserError, "Kubernetes error #{error_location}: #{message}"
       end
 
       def client
