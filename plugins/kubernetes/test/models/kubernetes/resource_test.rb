@@ -86,6 +86,11 @@ describe Kubernetes::Resource do
       it "returns the namespace" do
         resource.namespace.must_equal 'pod1'
       end
+
+      it "does not blow up if namespace is nil" do
+        template[:metadata].delete(:namespace)
+        resource.namespace.must_equal nil
+      end
     end
 
     describe "#deploy" do

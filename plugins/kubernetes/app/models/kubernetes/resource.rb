@@ -23,7 +23,7 @@ module Kubernetes
       end
 
       def namespace
-        @template.dig_fetch(:metadata, :namespace)
+        @template.dig(:metadata, :namespace)
       end
 
       # should it be deployed before all other things get deployed ?
