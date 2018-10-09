@@ -77,8 +77,8 @@ module Kubernetes
     private
 
     def build_selector_for_container(container, first:)
-      dockerfile = container[:"samson/dockerfile"] ||
-        (first && ENV['KUBERNETES_ADDITIONAL_CONTAINERS_WITHOUT_DOCKERFILE'] ? 'none' : 'Dockerfile')
+      dockerfile = samson_container_config(container, :"samson/dockerfile") ||
+        (!first && ENV['KUBERNETES_ADDITIONAL_CONTAINERS_WITHOUT_DOCKERFILE'] ? 'none' : 'Dockerfile')
 
       return if dockerfile == 'none'
 
@@ -90,6 +90,12 @@ module Kubernetes
       else
         [dockerfile, nil]
       end
+    end
+
+    # samson/ keys in containers trigger validation warnings in kubectl, so we allow using annotations too
+    # NOTE: containers always have a name see role_validator.rb
+    def samson_container_config(container, key)
+      pod_annotations[:"container-#{container[:name]}-#{key}"] || container[key]
     end
 
     def set_deploy_url
@@ -495,7 +501,7 @@ module Kubernetes
 
     def set_pre_stop
       containers.each do |container|
-        next if container[:"samson/preStop"] == "disabled"
+        next if samson_container_config(container, :"samson/preStop") == "disabled"
         (container[:lifecycle] ||= {})[:preStop] ||= {exec: {command: ["sleep", "3"]}}
       end
     end

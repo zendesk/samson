@@ -97,7 +97,7 @@ Kubernetes::Release
 
 ### Docker Images
 
-(To opt out of this feature set `containers[].samson/dockerfile: none`)
+(To opt out of this feature set `containers[].samson/dockerfile: none` or `metadata.annotations.container-nameofcontainer-samson/dockerfile: none`)
 
 For each container (including init containers) Samson finds or creates a matching Docker image for the Git SHA that is being deployed. 
 Samson always sets the Docker digest, and not a tag, to make deployments immutable.
@@ -170,4 +170,4 @@ to make all kubernetes deploys that do not use a `metadata.labels.team` / `spec.
 
 Samson automatically adds `container[].lifecycle.preStop` `sleep 3` if a preStop hook is not set and
 `container[].samson/preStop` is not set to `disabled`, to prevent in-flight requests from getting lost when taking a pod
-out of rotation.
+out of rotation (alternatively set `metadata.annoations.container-nameofcontainer-samson/preStop: disabled`).

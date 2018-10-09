@@ -853,6 +853,25 @@ describe Kubernetes::TemplateFiller do
       template.build_selectors.must_equal []
     end
 
+    it "ignores images that should not be built via annotations" do
+      raw_template[:spec][:template][:metadata][:annotations] = {'container-some-project-samson/dockerfile': 'none'}
+      template.build_selectors.must_equal []
+    end
+
+    describe "when user selected to not enforce docker images" do
+      with_env KUBERNETES_ADDITIONAL_CONTAINERS_WITHOUT_DOCKERFILE: 'true'
+
+      it "defaults to no dockerfile for additional containers" do
+        raw_template[:spec][:template][:spec][:containers] << {image: 'baz'}
+        template.build_selectors.must_equal [["Dockerfile", nil]]
+      end
+
+      it "still allows selecting a dockerfile" do
+        raw_template[:spec][:template][:spec][:containers] << {'samson/dockerfile': 'bar', image: 'baz'}
+        template.build_selectors.must_equal [["Dockerfile", nil], ["bar", nil]]
+      end
+    end
+
     describe "when only images are supported" do
       before { project.docker_image_building_disabled = true }
 
