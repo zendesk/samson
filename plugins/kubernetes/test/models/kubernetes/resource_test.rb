@@ -866,6 +866,22 @@ describe Kubernetes::Resource do
     end
   end
 
+  describe Kubernetes::Resource::APIService do
+    let(:kind) { "APIService" }
+    let(:api_version) { "apiregistration.k8s.io/v1beta1" }
+
+    it "copies resourceVersion when updating to satisfy kubernetes validations" do
+      time = Time.now
+      Time.stubs(:now).returns(time)
+      assert_request(:get, url, to_return: {body: {metadata: {resourceVersion: 'old'}}.to_json}) do
+        args = ->(x) { x.body.must_include %("resourceVersion":"#{Time.now.to_i}"); true }
+        assert_request(:put, url, to_return: {body: "{}"}, with: args) do
+          resource.deploy
+        end
+      end
+    end
+  end
+
   describe Kubernetes::Resource::PodDisruptionBudget do
     def assert_create_and_delete_requests(**args, &block)
       assert_request(:get, url, to_return: [{body: '{}'}, {status: 404}]) do
