@@ -195,10 +195,11 @@ module Kubernetes
         end
       end
 
-      def request(method, *args)
+      def request(verb, *args)
         SamsonKubernetes.retry_on_connection_errors do
           begin
-            client.send("#{method}_#{@template.fetch(:kind).underscore}", *args)
+            method = "#{verb}_#{Kubeclient::ClientMixin.underscore_entity(@template.fetch(:kind))}"
+            client.send(method, *args)
           rescue Kubeclient::HttpError
             message = $!.message.to_s
             if message.include?(" is invalid:") || message.include?(" no kind ")

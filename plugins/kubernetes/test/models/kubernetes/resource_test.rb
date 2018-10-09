@@ -784,6 +784,17 @@ describe Kubernetes::Resource do
           end
         end
       end
+
+      it "works with kind APIService" do
+        template[:kind] = "APIService"
+        template[:apiVersion] = "apiregistration.k8s.io/v1beta1"
+        url = "http://foobar.server/apis/apiregistration.k8s.io/v1beta1/namespaces/pod1/apiservices/some-project"
+        assert_request(:get, url, to_return: {body: old.to_json}) do
+          assert_request(:put, url, to_return: {body: "{}"}) do
+            resource.deploy
+          end
+        end
+      end
     end
   end
 
