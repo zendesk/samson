@@ -71,13 +71,15 @@ module Kubernetes
 
     def build_selectors
       all = containers + init_containers
-      all.map { |c| build_selector_for_container(c) }.compact
+      all.each_with_index.map { |c, i| build_selector_for_container(c, first: i == 0) }.compact
     end
 
     private
 
-    def build_selector_for_container(container)
-      dockerfile = container[:"samson/dockerfile"] || 'Dockerfile'
+    def build_selector_for_container(container, first:)
+      dockerfile = container[:"samson/dockerfile"] ||
+        (first && ENV['KUBERNETES_ADDITIONAL_CONTAINERS_WITHOUT_DOCKERFILE'] ? 'none' : 'Dockerfile')
+
       return if dockerfile == 'none'
 
       if project.docker_image_building_disabled?
@@ -333,8 +335,8 @@ module Kubernetes
     end
 
     def set_docker_image_for_containers(builds, containers)
-      containers.each do |container|
-        next unless build_selector = build_selector_for_container(container)
+      containers.each_with_index do |container, i|
+        next unless build_selector = build_selector_for_container(container, first: i == 0)
         build = Samson::BuildFinder.detect_build_by_selector!(builds, *build_selector,
           fail: true, project: project)
         container[:image] = build.docker_repo_digest

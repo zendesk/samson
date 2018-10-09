@@ -102,6 +102,8 @@ Kubernetes::Release
 For each container (including init containers) Samson finds or creates a matching Docker image for the Git SHA that is being deployed. 
 Samson always sets the Docker digest, and not a tag, to make deployments immutable.
 
+If `KUBERNETES_ADDITIONAL_CONTAINERS_WITHOUT_DOCKERFILE=true` is set, it will only enforce this for the first container.
+
 Samson matches builds to containers by looking at the `containers[].samson/dockerfile` attribute or the 
 base image name (part after the last `/`), if the project has enabled `Docker images built externally`.
 
