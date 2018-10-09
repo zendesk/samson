@@ -244,6 +244,13 @@ module Kubernetes
       end
     end
 
+    class Immutable < Base
+      def deploy
+        delete
+        create
+      end
+    end
+
     class Service < Base
       private
 
@@ -411,12 +418,7 @@ module Kubernetes
       end
     end
 
-    class Job < Base
-      def deploy
-        delete
-        create
-      end
-
+    class Job < Immutable
       def revert(_previous)
         delete
       end
@@ -430,32 +432,22 @@ module Kubernetes
       end
     end
 
-    class Pod < Base
-      def deploy
-        delete
-        create
-      end
+    class Pod < Immutable
     end
 
     class PodDisruptionBudget < Base
-      # cannot be updated `Forbidden: updates to poddisruptionbudget spec are forbidden`
       def deploy
         delete
         create unless @template[:delete] # allow deletion through release_doc logic
       end
     end
 
+    class APIService < Immutable
+    end
+
     def self.build(*args)
       klass = "Kubernetes::Resource::#{args.first.fetch(:kind)}".safe_constantize || Base
       klass.new(*args)
-    end
-
-    class APIService < Base
-      private
-
-      def template_for_update
-        super.deep_merge!(metadata: {resourceVersion: Time.now.to_i.to_s})
-      end
     end
   end
 end
