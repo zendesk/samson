@@ -142,6 +142,7 @@ class StagesController < ApplicationController
       :production,
       :run_in_parallel,
       :static_emails_on_automated_deploy_failure,
+      :full_checkout,
       {
         deploy_group_ids: [],
         command_ids: []

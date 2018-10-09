@@ -66,6 +66,12 @@ describe JobExecution do
     assert_equal '[04:05:06] monkey', last_line_of_output
   end
 
+  it 'can do a full checkout when requested' do
+    stage.update_column(:full_checkout, true)
+    execute_job 'master'
+    job.output.to_s.wont_include 'worktree'
+  end
+
   it 'does not fail with nil ENV vars' do
     User.any_instance.expects(:name).at_least_once.returns(nil)
     execution.send(:run)
