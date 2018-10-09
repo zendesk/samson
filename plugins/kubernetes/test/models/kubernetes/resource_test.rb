@@ -25,6 +25,14 @@ describe Kubernetes::Resource do
     resource.instance_variable_set(:@delete_resource, true)
   end
 
+  def assert_create_and_delete_requests(**args, &block)
+    assert_request(:get, url, to_return: [{body: '{}'}, {status: 404}]) do
+      assert_request(:delete, url, to_return: {body: '{}'}) do
+        assert_request(:post, base_url, **args, to_return: {body: '{}'}, &block)
+      end
+    end
+  end
+
   let(:origin) { "http://foobar.server" }
   let(:template) do
     {
@@ -85,6 +93,11 @@ describe Kubernetes::Resource do
     describe "#namespace" do
       it "returns the namespace" do
         resource.namespace.must_equal 'pod1'
+      end
+
+      it "does not blow up if namespace is nil" do
+        template[:metadata].delete(:namespace)
+        resource.namespace.must_equal nil
       end
     end
 
@@ -185,6 +198,14 @@ describe Kubernetes::Resource do
           assert_request(:get, url, to_return: {status: 404}) do
             resource.deploy
           end
+        end
+      end
+    end
+
+    describe "#create" do
+      it "shows error location when create returns 404" do
+        assert_request(:post, base_url, to_return: {status: 404}) do
+          assert_raises(Samson::Hooks::UserError) { resource.send(:create) }
         end
       end
     end
@@ -784,17 +805,6 @@ describe Kubernetes::Resource do
           end
         end
       end
-
-      it "works with kind APIService" do
-        template[:kind] = "APIService"
-        template[:apiVersion] = "apiregistration.k8s.io/v1beta1"
-        url = "http://foobar.server/apis/apiregistration.k8s.io/v1beta1/namespaces/pod1/apiservices/some-project"
-        assert_request(:get, url, to_return: {body: old.to_json}) do
-          assert_request(:put, url, to_return: {body: "{}"}) do
-            resource.deploy
-          end
-        end
-      end
     end
   end
 
@@ -853,18 +863,20 @@ describe Kubernetes::Resource do
     end
   end
 
-  describe Kubernetes::Resource::PodDisruptionBudget do
-    def assert_create_and_delete_requests(**args, &block)
-      assert_request(:get, url, to_return: [{body: '{}'}, {status: 404}]) do
-        assert_request(:delete, url, to_return: {body: '{}'}) do
-          assert_request(:post, create_url, **args, to_return: {body: '{}'}, &block)
-        end
+  describe Kubernetes::Resource::APIService do
+    let(:kind) { "APIService" }
+    let(:api_version) { "apiregistration.k8s.io/v1beta1" }
+
+    it "copies resourceVersion when updating to satisfy kubernetes validations" do
+      assert_create_and_delete_requests do
+        resource.deploy
       end
     end
+  end
 
+  describe Kubernetes::Resource::PodDisruptionBudget do
     let(:kind) { 'PodDisruptionBudget' }
     let(:api_version) { 'policy/v1beta1' }
-    let(:create_url) { File.dirname(url) }
 
     describe "#deploy" do
       it "updates" do
