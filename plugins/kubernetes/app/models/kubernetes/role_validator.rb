@@ -3,6 +3,7 @@ module Kubernetes
   class RoleValidator
     VALID_LABEL = /\A[a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?\z/ # also used in js ... cannot use /i
     ALLOWED_DUPLICATE_KINDS = ['ConfigMap', 'Service'].freeze
+    NAMESPACELESS_KINDS = ['APIService'].freeze
 
     def initialize(elements)
       @elements = elements.compact
@@ -63,7 +64,9 @@ module Kubernetes
     end
 
     def validate_namespace
-      @errors << "Namespaces need to be unique" if map_attributes([:metadata, :namespace]).uniq.size != 1
+      elements = @elements.reject { |e| NAMESPACELESS_KINDS.include? e[:kind] }
+      namespaces = map_attributes([:metadata, :namespace], elements: elements)
+      @errors << "Namespaces need to be unique" if namespaces.uniq.size != 1
     end
 
     # multiple pods in a single role will make validations misbehave (recommend they all have the same role etc)
