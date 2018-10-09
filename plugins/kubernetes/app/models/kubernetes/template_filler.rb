@@ -18,7 +18,7 @@ module Kubernetes
       @to_hash ||= begin
         kind = template[:kind]
 
-        set_namespace
+        set_namespace unless Kubernetes::RoleValidator::NAMESPACELESS_KINDS.include? kind
         set_project_labels if template.dig(:metadata, :annotations, :"samson/override_project_label")
         set_deploy_url
 
