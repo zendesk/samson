@@ -60,6 +60,10 @@
     "CACHE_STORE": {
       "description": "Caching backend",
       "value": "memcached"
+    },
+    "PERIODICAL": {
+      "description": "Tasks to run periodically inside the server process",
+      "value": "stop_expired_deploys:60,remove_expired_locks:60,report_system_stats:60,report_process_stats:60,periodical_deploy:86400,cancel_stalled_builds:3600"
     }
   },
   "scripts": {
