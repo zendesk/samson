@@ -1,1 +1,2 @@
 * @zendesk/bre @grosser
+plugins/kubernetes @zendesk/compute

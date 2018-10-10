@@ -36,6 +36,8 @@
 
   <%= form.input :no_reference_selection, as: :check_box, label: "Disable reference selection", help: no_ref_label %>
 
+  <%= form.input :full_checkout, as: :check_box, label: "Use a full checkout", help: "Samson usually uses a worktree which is a lot faster, pick this option if you want to switch branches during deploy." %>
+
   <% if interval = Samson::Periodical.interval(:periodical_deploy) %>
     <%= form.input :periodical_deploy, as: :check_box, help: "Deploy every #{distance_of_time_in_words(interval)} if last deploy succeeded, enable automated deploy failure email to be alerted. " %>
   <% end %>
