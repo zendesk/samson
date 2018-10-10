@@ -5,6 +5,7 @@ class GitRepository
   extend ::Samson::PerformanceTracer::Tracers
 
   attr_accessor :executor # others set this to listen in on commands being executed
+  attr_accessor :full_checkout
 
   # The directory in which repositories should be cached.
   # TODO: find out and comment why this needs to be settable or make read-only self. method
@@ -143,10 +144,18 @@ class GitRepository
   end
 
   def checkout(git_reference, work_dir)
-    executor.execute(
-      "cd #{repo_cache_dir}",
-      "git worktree add #{work_dir.shellescape} #{git_reference.shellescape} --force"
-    )
+    if full_checkout
+      executor.execute(
+        "git clone #{repo_cache_dir} #{work_dir.shellescape}",
+        "cd #{work_dir.shellescape}",
+        "git checkout --quiet #{git_reference.shellescape}"
+      )
+    else
+      executor.execute(
+        "cd #{repo_cache_dir}",
+        "git worktree add #{work_dir.shellescape} #{git_reference.shellescape} --force"
+      )
+    end
   end
 
   def checkout_submodules(pwd)

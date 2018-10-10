@@ -213,19 +213,25 @@ describe GitRepository do
   describe "#checkout_workspace" do
     before { create_repo_with_an_additional_branch }
 
-    it 'creates a repository' do
-      Dir.mktmpdir do |temp_dir|
-        assert repository.checkout_workspace(temp_dir, 'test_user/test_branch')
-        Dir.chdir(temp_dir) { current_branch.must_equal('test_user/test_branch') }
-      end
-    end
+    [true, false].each do |full_checkout|
+      describe "with full_checkout #{full_checkout}" do
+        before { repository.full_checkout = full_checkout }
 
-    it 'checks out submodules' do
-      add_submodule_to_repo
-      Dir.mktmpdir do |temp_dir|
-        assert repository.checkout_workspace(temp_dir, 'master')
-        Dir.exist?("#{temp_dir}/submodule").must_equal true
-        File.read("#{temp_dir}/submodule/bar").must_equal "banana\n"
+        it 'creates a repository' do
+          Dir.mktmpdir do |temp_dir|
+            assert repository.checkout_workspace(temp_dir, 'test_user/test_branch')
+            Dir.chdir(temp_dir) { current_branch.must_equal('test_user/test_branch') }
+          end
+        end
+
+        it 'checks out submodules' do
+          add_submodule_to_repo
+          Dir.mktmpdir do |temp_dir|
+            assert repository.checkout_workspace(temp_dir, 'master')
+            Dir.exist?("#{temp_dir}/submodule").must_equal true
+            File.read("#{temp_dir}/submodule/bar").must_equal "banana\n"
+          end
+        end
       end
     end
   end

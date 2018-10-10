@@ -27,6 +27,7 @@ class JobExecution
 
     @repository = @job.project.repository
     @repository.executor = @executor
+    @repository.full_checkout = true if stage&.full_checkout
 
     on_finish do
       Rails.logger.info("Calling finish callback for Job Execution #{id}")
