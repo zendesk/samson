@@ -93,7 +93,7 @@ class GitRepository
 
   # clear worktrees that are deleted
   def prune_worktree
-    executor.execute("cd #{repo_cache_dir}", "git worktree prune")
+    capture_stdout "git", "worktree", "prune", dir: repo_cache_dir
   end
 
   private

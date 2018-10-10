@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 7
+SingleCov.covered! uncovered: 6
 
 describe GitRepository do
   include GitRepoTestHelper
@@ -351,6 +351,18 @@ describe GitRepository do
     it "ignores monkey-patching" do
       MultiLock.expects(:lock).yields
       call.must_equal callsite
+    end
+  end
+
+  describe "#prune_worktree" do
+    it "silently prunes" do
+      create_repo_without_tags
+      Dir.mktmpdir do |dir|
+        repository.checkout_workspace dir, 'master'
+      end
+      repository.prune_worktree
+      `cd #{repository.repo_cache_dir} && git worktree list`.split("\n").size.must_equal 1
+      repository.executor.output.string.wont_include "prune"
     end
   end
 end
