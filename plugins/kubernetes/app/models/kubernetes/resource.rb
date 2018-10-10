@@ -435,10 +435,10 @@ module Kubernetes
     class Pod < Immutable
     end
 
-    class PodDisruptionBudget < Base
-      def deploy
-        delete
-        create unless @template[:delete] # allow deletion through release_doc logic
+    class PodDisruptionBudget < Immutable
+      def initialize(*)
+        super
+        @delete_resource ||= @template[:delete] # allow deletion through release_doc logic
       end
     end
 
