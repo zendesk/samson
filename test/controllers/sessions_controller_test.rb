@@ -373,6 +373,72 @@ describe SessionsController do
     end
   end
 
+  describe ".create_or_update_from_hash" do
+    let(:user) { @controller.send(:find_or_create_user_from_hash, auth_hash) }
+
+    describe "with a new user" do
+      let(:auth_hash) do
+        {
+          name: "Test User",
+          email: "test@example.org",
+          role_id: Role::ADMIN.id,
+          external_id: 'strange-bug'
+        }
+      end
+
+      it "creates a new user" do
+        user.persisted?.must_equal(true)
+      end
+
+      it "sets the role_id" do
+        user.role_id.must_equal(Role::ADMIN.id)
+      end
+
+      describe "seeding" do
+        before { User.delete_all }
+
+        describe "without seeded user" do
+          it "creates a super admin for the first user" do
+            user.role_id.must_equal(Role::SUPER_ADMIN.id)
+          end
+        end
+
+        describe "with seeded user" do
+          before { User.create!(name: "Mr.Seed", email: "seed@example.com", external_id: "123") } # same as db/seed.rb
+
+          it "creates a super admin for the first user after seeding" do
+            user.role_id.must_equal(Role::SUPER_ADMIN.id)
+          end
+
+          it "does not make everybody an amdin" do
+            User.create!(name: "Mr.2", email: "2@example.com", external_id: "1232")
+            user.role_id.must_equal(Role::ADMIN.id)
+          end
+        end
+      end
+    end
+
+    describe "with an existing user" do
+      let(:auth_hash) do
+        {
+          name: "Crazy Stuff",
+          email: "foobar@example.org",
+          external_id: 9
+        }
+      end
+
+      let!(:existing_user) { User.create!(name: "Test", external_id: 9, email: "test@example.org") }
+
+      it "does not update the user" do
+        user.name.must_equal("Test")
+      end
+
+      it "is the same user" do
+        existing_user.id.must_equal(user.id)
+      end
+    end
+  end
+
   describe "#failure" do
     before do
       get :failure
