@@ -11,27 +11,27 @@ class SessionsController < ApplicationController
 
   def github
     return show_login_restriction unless role_id = github_authorization.role_id
-    login(role_id: role_id)
+    login(role_id: custom_role_or_default(role_id))
   end
 
   def google
     return show_login_restriction unless allowed_to_login
-    login(role_id: Role::VIEWER.id)
+    login(role_id: custom_role_or_default(Role::VIEWER.id))
   end
 
   def ldap
     return show_login_restriction unless allowed_to_login
-    login(role_id: Role::VIEWER.id)
+    login(role_id: custom_role_or_default(Role::VIEWER.id))
   end
 
   def gitlab
     return show_login_restriction unless allowed_to_login
-    login(role_id: Role::VIEWER.id)
+    login(role_id: custom_role_or_default(Role::VIEWER.id))
   end
 
   def bitbucket
     return show_login_restriction unless allowed_to_login
-    login(role_id: Role::VIEWER.id)
+    login(role_id: custom_role_or_default(Role::VIEWER.id))
   end
 
   def failure
@@ -98,7 +98,7 @@ class SessionsController < ApplicationController
       uid = auth_hash.uid
     end
 
-    user = User.create_or_update_from_hash(options.merge(
+    user = find_or_create_user_from_hash(options.merge(
       external_id: "#{strategy.name}-#{uid}",
       name: auth_hash.info.name,
       email: auth_hash.info.email
@@ -113,5 +113,16 @@ class SessionsController < ApplicationController
     end
 
     redirect_to_origin_or_default
+  end
+
+  def find_or_create_user_from_hash(hash)
+    # first user will be promoted to super admin
+    hash[:role_id] = Role::SUPER_ADMIN.id unless User.where.not(email: 'seed@example.com').exists?
+
+    User.create_with(hash).find_or_create_by(external_id: hash[:external_id].to_s)
+  end
+
+  def custom_role_or_default(default)
+    Integer(ENV.fetch('DEFAULT_USER_ROLE', default))
   end
 end
