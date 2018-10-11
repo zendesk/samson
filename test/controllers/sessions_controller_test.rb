@@ -28,6 +28,7 @@ describe SessionsController do
   end
 
   describe "#github" do
+    let(:env_vars) { {} }
     let(:env) { {} }
     let(:user) { users(:github_viewer) }
     let(:strategy) { stub(name: 'github') }
@@ -55,7 +56,9 @@ describe SessionsController do
       @request.env['omniauth.auth'] = auth_hash
       @request.env['omniauth.strategy'] = strategy
 
-      post :github
+      with_env(env_vars) do
+        post :github
+      end
     end
 
     it 'logs the user in' do
@@ -96,15 +99,25 @@ describe SessionsController do
         assert_redirected_to root_path
       end
     end
+
+    describe 'with default role' do
+      let(:uid) { 123 } # force new user
+      let(:env_vars) { {DEFAULT_USER_ROLE: '2'} }
+
+      it 'uses set default user' do
+        User.find_by(external_id: 'github-123').role_id.must_equal 2
+      end
+    end
   end
 
   describe "#google" do
     let(:env) { {} }
+    let(:uid) { '123' }
     let(:user) { users(:viewer) }
     let(:strategy) { stub(name: 'google') }
     let(:auth_hash) do
       Hashie::Mash.new(
-        uid: '4',
+        uid: uid,
         info: Hashie::Mash.new(
           name: user.name,
           email: user.email
@@ -116,13 +129,18 @@ describe SessionsController do
       @request.env.merge!(env)
       @request.env['omniauth.auth'] = auth_hash
       @request.env['omniauth.strategy'] = strategy
-      user.update_column(:external_id, "#{strategy.name}-#{auth_hash.uid}")
+      user.update_column(:external_id, "#{strategy.name}-123")
     end
 
     describe 'without email restriction' do
+      let(:env_vars) { {} }
+
       before do
         @controller.stubs(:restricted_email_domain).returns(nil)
-        post :google
+
+        with_env(env_vars) do
+          post :google
+        end
       end
 
       it 'logs the user in' do
@@ -131,6 +149,15 @@ describe SessionsController do
 
       it 'redirects to the root path' do
         assert_redirected_to root_path
+      end
+
+      describe 'with default role' do
+        let(:uid) { '312' } # force new user
+        let(:env_vars) { {DEFAULT_USER_ROLE: '2'} }
+
+        it 'uses set default user' do
+          User.find_by(external_id: "google-312").role_id.must_equal 2
+        end
       end
 
       describe 'with an origin' do
@@ -164,11 +191,12 @@ describe SessionsController do
 
   describe "#gitlab" do
     let(:env) { {} }
+    let(:uid) { '123' }
     let(:user) { users(:viewer) }
     let(:strategy) { stub(name: 'gitlab') }
     let(:auth_hash) do
       Hashie::Mash.new(
-        uid: '4',
+        uid: uid,
         info: Hashie::Mash.new(
           name: user.name,
           email: user.email
@@ -180,13 +208,17 @@ describe SessionsController do
       @request.env.merge!(env)
       @request.env['omniauth.auth'] = auth_hash
       @request.env['omniauth.strategy'] = strategy
-      user.update_column(:external_id, "#{strategy.name}-#{auth_hash.uid}")
+      user.update_column(:external_id, "#{strategy.name}-123")
     end
 
     describe 'without email restriction' do
+      let(:env_vars) { {} }
+
       before do
         @controller.stubs(:restricted_email_domain).returns(nil)
-        post :gitlab
+        with_env(env_vars) do
+          post :gitlab
+        end
       end
 
       it 'logs the user in' do
@@ -195,6 +227,15 @@ describe SessionsController do
 
       it 'redirects to the root path' do
         assert_redirected_to root_path
+      end
+
+      describe 'with default role' do
+        let(:uid) { '312' } # force new user
+        let(:env_vars) { {DEFAULT_USER_ROLE: '2'} }
+
+        it 'uses set default user' do
+          User.find_by(external_id: 'gitlab-312').role_id.must_equal 2
+        end
       end
 
       describe 'with an origin' do
@@ -228,12 +269,13 @@ describe SessionsController do
 
   describe "#ldap" do
     let(:env) { {} }
+    let(:uid) { '123' }
     let(:user) { users(:viewer) }
     let(:strategy) { stub(name: 'ldap') }
     let(:auth_hash) do
       Hashie::Mash.new(
         provider: 'ldap',
-        uid: '4',
+        uid: uid,
         info: Hashie::Mash.new(
           name: user.name,
           email: user.email
@@ -250,13 +292,17 @@ describe SessionsController do
       @request.env.merge!(env)
       @request.env['omniauth.auth'] = auth_hash
       @request.env['omniauth.strategy'] = strategy
-      user.update_column(:external_id, "#{strategy.name}-#{auth_hash.uid}")
+      user.update_column(:external_id, "#{strategy.name}-123")
     end
 
     describe 'without email restriction' do
+      let(:env_vars) { {} }
+
       before do
         @controller.stubs(:restricted_email_domain).returns(nil)
-        post :ldap
+        with_env(env_vars) do
+          post :ldap
+        end
       end
 
       it 'logs the user in' do
@@ -265,6 +311,15 @@ describe SessionsController do
 
       it 'redirects to the root path' do
         assert_redirected_to root_path
+      end
+
+      describe 'with default role' do
+        let(:uid) { '321' } # force new user
+        let(:env_vars) { {DEFAULT_USER_ROLE: '2'} }
+
+        it 'uses set default user' do
+          User.find_by(external_id: 'ldap-321').role_id.must_equal 2
+        end
       end
 
       describe 'with an origin' do
@@ -311,11 +366,12 @@ describe SessionsController do
 
   describe "#bitbucket" do
     let(:env) { {} }
+    let(:uid) { '123' }
     let(:user) { users(:viewer) }
     let(:strategy) { stub(name: 'bitbucket') }
     let(:auth_hash) do
       Hashie::Mash.new(
-        uid: '4',
+        uid: uid,
         info: Hashie::Mash.new(
           name: user.name,
           email: user.email
@@ -327,13 +383,17 @@ describe SessionsController do
       @request.env.merge!(env)
       @request.env['omniauth.auth'] = auth_hash
       @request.env['omniauth.strategy'] = strategy
-      user.update_column(:external_id, "#{strategy.name}-#{auth_hash.uid}")
+      user.update_column(:external_id, "#{strategy.name}-123")
     end
 
     describe 'without email restriction' do
+      let(:env_vars) { {} }
+
       before do
         @controller.stubs(:restricted_email_domain).returns(nil)
-        post :bitbucket
+        with_env(env_vars) do
+          post :bitbucket
+        end
       end
 
       it 'logs the user in' do
@@ -342,6 +402,15 @@ describe SessionsController do
 
       it 'redirects to the root path' do
         assert_redirected_to root_path
+      end
+
+      describe 'with default role' do
+        let(:uid) { '321' } # force new user
+        let(:env_vars) { {DEFAULT_USER_ROLE: '2'} }
+
+        it 'uses set default user' do
+          User.find_by(external_id: 'bitbucket-321').role_id.must_equal 2
+        end
       end
 
       describe 'with an origin' do
@@ -369,6 +438,72 @@ describe SessionsController do
 
       it "sets a flash error" do
         request.flash[:error].wont_be_nil
+      end
+    end
+  end
+
+  describe ".create_or_update_from_hash" do
+    let(:user) { @controller.send(:find_or_create_user_from_hash, auth_hash) }
+
+    describe "with a new user" do
+      let(:auth_hash) do
+        {
+          name: "Test User",
+          email: "test@example.org",
+          role_id: Role::ADMIN.id,
+          external_id: 'strange-bug'
+        }
+      end
+
+      it "creates a new user" do
+        user.persisted?.must_equal(true)
+      end
+
+      it "sets the role_id" do
+        user.role_id.must_equal(Role::ADMIN.id)
+      end
+
+      describe "seeding" do
+        before { User.delete_all }
+
+        describe "without seeded user" do
+          it "creates a super admin for the first user" do
+            user.role_id.must_equal(Role::SUPER_ADMIN.id)
+          end
+        end
+
+        describe "with seeded user" do
+          before { User.create!(name: "Mr.Seed", email: "seed@example.com", external_id: "123") } # same as db/seed.rb
+
+          it "creates a super admin for the first user after seeding" do
+            user.role_id.must_equal(Role::SUPER_ADMIN.id)
+          end
+
+          it "does not make everybody an amdin" do
+            User.create!(name: "Mr.2", email: "2@example.com", external_id: "1232")
+            user.role_id.must_equal(Role::ADMIN.id)
+          end
+        end
+      end
+    end
+
+    describe "with an existing user" do
+      let(:auth_hash) do
+        {
+          name: "Crazy Stuff",
+          email: "foobar@example.org",
+          external_id: 9
+        }
+      end
+
+      let!(:existing_user) { User.create!(name: "Test", external_id: 9, email: "test@example.org") }
+
+      it "does not update the user" do
+        user.name.must_equal("Test")
+      end
+
+      it "is the same user" do
+        existing_user.id.must_equal(user.id)
       end
     end
   end

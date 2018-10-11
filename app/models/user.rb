@@ -87,29 +87,6 @@ class User < ActiveRecord::Base
     scope
   end
 
-  def self.create_or_update_from_hash(hash)
-    user = User.where(external_id: hash[:external_id].to_s).first || User.new
-
-    # attributes are always a string hash
-    attributes = user.attributes.merge(hash.stringify_keys) do |attribute, old, new|
-      if attribute == 'role_id'
-        if !User.where.not(email: 'seed@example.com').exists?
-          Role::SUPER_ADMIN.id # first user will be promoted to super admin
-        elsif new && (user.new_record? || new >= old)
-          new # existing users can upgrade
-        else
-          old
-        end
-      else
-        old.presence || new
-      end
-    end
-
-    user.attributes = attributes
-    user.save
-    user
-  end
-
   def name
     super.presence || email
   end
