@@ -3,11 +3,7 @@
     <%= release_label(@project, release) %>
   </td>
   <td>
-    <% if github_ok? %>
-      <%= github_commit_status_icon CommitStatus.new(release.project, release.commit).state %>
-    <% else %>
-      <%= github_commit_status_icon "missing" %>
-    <% end %>
+    <%= github_commit_status_icon CommitStatus.new(release.project, release.commit).state %>
   </td>
   <td>
     <span style="white-space: nowrap">

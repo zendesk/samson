@@ -104,7 +104,6 @@ module Samson
     config.samson.github.deploy_team = ENV["GITHUB_DEPLOY_TEAM"].presence
     config.samson.github.web_url = deprecated_url.call("GITHUB_WEB_URL") || 'https://github.com'
     config.samson.github.api_url = deprecated_url.call("GITHUB_API_URL") || 'https://api.github.com'
-    config.samson.github.status_url = deprecated_url.call("GITHUB_STATUS_URL") || 'https://status.github.com'
 
     # Configuration for LDAP
     config.samson.ldap = ActiveSupport::OrderedOptions.new
