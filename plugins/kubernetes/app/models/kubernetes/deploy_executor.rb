@@ -5,8 +5,11 @@ require 'vault'
 
 module Kubernetes
   class DeployExecutor
-    WAIT_FOR_LIVE = ENV.fetch('KUBE_WAIT_FOR_LIVE', 10).to_i.minutes
-    WAIT_FOR_PREREQ = ENV.fetch('KUBE_WAIT_FOR_PREREQ', 10).to_i.minutes
+    if ENV['KUBE_WAIT_FOR_LIVE'] && !ENV["KUBERNETES_WAIT_FOR_LIVE"]
+      raise "Use KUBERNETES_WAIT_FOR_LIVE with seconds instead of KUBE_WAIT_FOR_LIVE"
+    end
+    WAIT_FOR_LIVE = Integer(ENV.fetch('KUBERNETES_WAIT_FOR_LIVE', '600'))
+    WAIT_FOR_PREREQUISITES = Integer(ENV.fetch('KUBERNETES_WAIT_FOR_PREREQUISITES', WAIT_FOR_LIVE))
     STABILITY_CHECK_DURATION = 1.minute
     TICK = 2.seconds
     RESTARTED = "Restarted"
@@ -60,7 +63,7 @@ module Kubernetes
       prerequisites, deploys = @release.release_docs.partition(&:prerequisite?)
       if prerequisites.any?
         @output.puts "First deploying prerequisite ..." if deploys.any?
-        return false unless deploy_and_watch(prerequisites, WAIT_FOR_PREREQ)
+        return false unless deploy_and_watch(prerequisites, WAIT_FOR_PREREQUISITES)
         @output.puts "Now deploying other roles ..." if deploys.any?
       end
       if deploys.any?
