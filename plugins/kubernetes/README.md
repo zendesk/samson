@@ -128,6 +128,10 @@ It will be executed before the rest is deployed.
 For default it waits for 10 minutes before timeout, you can change the timeout
 using KUBE_WAIT_FOR_PREREQ env variable (specified in seconds).
 
+### Deployment timeouts
+
+A deploy will wait for 10 minutes for pods to come alive. You can adjust this
+timeout using KUBE_WAIT_FOR_LIVE.
 
 ### StatefulSet
 
