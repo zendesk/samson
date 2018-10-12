@@ -109,7 +109,7 @@ module Samson
       end
 
       def configs_from_string(string)
-        string.to_s.split(',').each_with_object({}) do |item, h|
+        string.to_s.split(/ ?, ?/).each_with_object({}) do |item, h|
           name, execution_interval = item.split(':', 2)
           config = {active: true}
           config[:execution_interval] = Integer(execution_interval) if execution_interval
