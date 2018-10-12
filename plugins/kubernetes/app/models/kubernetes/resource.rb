@@ -23,7 +23,7 @@ module Kubernetes
       end
 
       def namespace
-        @template.dig_fetch(:metadata, :namespace)
+        @template.dig(:metadata, :namespace)
       end
 
       # should it be deployed before all other things get deployed ?
@@ -124,6 +124,8 @@ module Kubernetes
           request(:create, @template)
         end
         expire_resource_cache
+      rescue Kubeclient::ResourceNotFoundError => e
+        raise_kubernetes_error(e.message)
       end
 
       # TODO: remove the expire_cache and assign @resource but that breaks a bunch of deploy_executor tests
@@ -200,15 +202,19 @@ module Kubernetes
           begin
             method = "#{verb}_#{Kubeclient::ClientMixin.underscore_entity(@template.fetch(:kind))}"
             client.send(method, *args)
-          rescue Kubeclient::HttpError
-            message = $!.message.to_s
+          rescue Kubeclient::HttpError => e
+            message = e.message.to_s
             if message.include?(" is invalid:") || message.include?(" no kind ")
-              raise Samson::Hooks::UserError, "Kubernetes error #{error_location}: #{message}"
+              raise_kubernetes_error(message)
             else
               raise
             end
           end
         end
+      end
+
+      def raise_kubernetes_error(message)
+        raise Samson::Hooks::UserError, "Kubernetes error #{error_location}: #{message}"
       end
 
       def client
@@ -235,6 +241,13 @@ module Kubernetes
         yield
       rescue Kubeclient::ResourceNotFoundError
         nil
+      end
+    end
+
+    class Immutable < Base
+      def deploy
+        delete
+        create
       end
     end
 
@@ -405,12 +418,7 @@ module Kubernetes
       end
     end
 
-    class Job < Base
-      def deploy
-        delete
-        create
-      end
-
+    class Job < Immutable
       def revert(_previous)
         delete
       end
@@ -424,19 +432,17 @@ module Kubernetes
       end
     end
 
-    class Pod < Base
-      def deploy
-        delete
-        create
+    class Pod < Immutable
+    end
+
+    class PodDisruptionBudget < Immutable
+      def initialize(*)
+        super
+        @delete_resource ||= @template[:delete] # allow deletion through release_doc logic
       end
     end
 
-    class PodDisruptionBudget < Base
-      # cannot be updated `Forbidden: updates to poddisruptionbudget spec are forbidden`
-      def deploy
-        delete
-        create unless @template[:delete] # allow deletion through release_doc logic
-      end
+    class APIService < Immutable
     end
 
     def self.build(*args)
