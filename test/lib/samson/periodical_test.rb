@@ -47,6 +47,7 @@ describe Samson::Periodical do
 
   describe ".overdue?" do
     with_env PERIODICAL: 'bar:10'
+
     before do
       Samson::Periodical.register(:foo, 'bar') { 111 }
       Samson::Periodical.register(:bar, 'bar') { 111 }
@@ -142,6 +143,10 @@ describe Samson::Periodical do
 
     it "can configure interval with :" do
       call('foo:123').must_equal(foo: {active: true, execution_interval: 123})
+    end
+
+    it "supports spaces around ," do
+      call('foo ,bar , baz').must_equal(foo: {active: true}, bar: {active: true}, baz: {active: true})
     end
 
     it "does not accept unknown arguments" do
