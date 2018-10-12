@@ -728,7 +728,7 @@ describe Kubernetes::DeployExecutor do
 
       executor.expects(:wait_for_resources_to_complete).returns(true)
       executor.instance_variable_set(:@release, release)
-      assert executor.send(:deploy_and_watch, release.release_docs)
+      assert executor.send(:deploy_and_watch, release.release_docs, 60)
 
       out.must_equal <<~OUT
         Deploying BLUE resources for Pod1 role app-server
@@ -757,7 +757,7 @@ describe Kubernetes::DeployExecutor do
 
       executor.expects(:wait_for_resources_to_complete).returns(true)
       executor.instance_variable_set(:@release, release)
-      assert executor.send(:deploy_and_watch, release.release_docs)
+      assert executor.send(:deploy_and_watch, release.release_docs, 60)
 
       out.must_equal <<~OUT
         Deploying BLUE resources for Pod1 role app-server
@@ -781,7 +781,7 @@ describe Kubernetes::DeployExecutor do
       executor.expects(:wait_for_resources_to_complete).returns([])
       executor.expects(:print_resource_events)
       executor.instance_variable_set(:@release, release)
-      refute executor.send(:deploy_and_watch, release.release_docs)
+      refute executor.send(:deploy_and_watch, release.release_docs, 60)
 
       out.must_equal <<~OUT
         Deploying BLUE resources for Pod1 role app-server
