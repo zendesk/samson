@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative "../../test_helper"
 
-SingleCov.covered! uncovered: 8
+SingleCov.covered! uncovered: 9
 
 describe Kubernetes::DeployExecutor do
   assert_requests
