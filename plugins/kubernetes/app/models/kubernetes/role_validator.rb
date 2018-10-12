@@ -3,7 +3,7 @@ module Kubernetes
   class RoleValidator
     VALID_LABEL = /\A[a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?\z/ # also used in js ... cannot use /i
     ALLOWED_DUPLICATE_KINDS = ['ConfigMap', 'Service'].freeze
-    NAMESPACELESS_KINDS = ['APIService', 'ClusterRoleBinding'].freeze
+    NAMESPACELESS_KINDS = ['APIService', 'ClusterRoleBinding', 'ClusterRole'].freeze
 
     def initialize(elements)
       @elements = elements.compact
