@@ -6,6 +6,7 @@ require 'vault'
 module Kubernetes
   class DeployExecutor
     WAIT_FOR_LIVE = ENV.fetch('KUBE_WAIT_FOR_LIVE', 10).to_i.minutes
+    WAIT_FOR_PREREQ = ENV.fetch('KUBE_WAIT_FOR_PREREQ', 10).to_i.minutes
     STABILITY_CHECK_DURATION = 1.minute
     TICK = 2.seconds
     RESTARTED = "Restarted"
@@ -59,11 +60,11 @@ module Kubernetes
       prerequisites, deploys = @release.release_docs.partition(&:prerequisite?)
       if prerequisites.any?
         @output.puts "First deploying prerequisite ..." if deploys.any?
-        return false unless deploy_and_watch(prerequisites)
+        return false unless deploy_and_watch(prerequisites, WAIT_FOR_PREREQ)
         @output.puts "Now deploying other roles ..." if deploys.any?
       end
       if deploys.any?
-        return false unless deploy_and_watch(deploys)
+        return false unless deploy_and_watch(deploys, WAIT_FOR_LIVE)
       end
       true
     end
@@ -72,7 +73,7 @@ module Kubernetes
 
     # check all pods and see if they are running
     # once they are running check if they are stable (for apps only, since jobs are finished and will not change)
-    def wait_for_resources_to_complete(release_docs)
+    def wait_for_resources_to_complete(release_docs, timeout)
       raise "prerequisites should not check for stability" if @testing_for_stability
       @wait_start_time = Time.now
       @output.puts "Waiting for pods to be created"
@@ -100,7 +101,7 @@ module Kubernetes
             if stopped = not_ready.select(&:stop).presence
               unstable!('one or more pods stopped', stopped)
               return statuses
-            elsif seconds_waiting > WAIT_FOR_LIVE
+            elsif seconds_waiting > timeout
               @output.puts "TIMEOUT, pods took too long to get live"
               return statuses
             end
@@ -388,9 +389,9 @@ module Kubernetes
       Samson::Parallelizer.map(resources, db: true, &:deploy)
     end
 
-    def deploy_and_watch(release_docs)
+    def deploy_and_watch(release_docs, timeout)
       deploy(release_docs)
-      result = wait_for_resources_to_complete(release_docs)
+      result = wait_for_resources_to_complete(release_docs, timeout)
       if result == true
         if blue_green = release_docs.select(&:blue_green_color).presence
           finish_blue_green_deployment(blue_green)
