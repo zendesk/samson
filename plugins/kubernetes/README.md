@@ -174,6 +174,11 @@ Set `KUBERNETES_NO_CPU_LIMIT_ALLOWED=1`, see [#2820](https://github.com/zendesk/
 Knowing which team owns each component is useful, set `KUBERNETES_ENFORCE_TEAMS=true` 
 to make all kubernetes deploys that do not use a `metadata.labels.team` / `spec.template.metadata.labels.team` fail.
 
+### Using custom namespace
+
+Samson always sets a namespace according to the deploygroups `kubernetes_namespace`.
+To override it, set the namespace to either `default` or `kube-system` and set `metadata.kubernetes.io/cluster-service: 'true'`
+
 ### Preventing request loss with preStop
 
 Samson automatically adds `container[].lifecycle.preStop` `sleep 3` if a preStop hook is not set and
