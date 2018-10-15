@@ -42,20 +42,6 @@ Rails.application.config.middleware.use OmniAuth::Builder do
       }
   end
 
-  if Rails.application.config.samson.auth.ldap
-    require 'omniauth-ldap'
-
-    provider OmniAuth::Strategies::LDAP,
-      title: Rails.application.config.samson.ldap.title,
-      host: Rails.application.config.samson.ldap.host,
-      port: Rails.application.config.samson.ldap.port,
-      method: 'plain',
-      base: Rails.application.config.samson.ldap.base,
-      uid: Rails.application.config.samson.ldap.uid,
-      bind_dn: Rails.application.config.samson.ldap.bind_dn,
-      password: Rails.application.config.samson.ldap.password
-  end
-
   if Rails.application.config.samson.auth.bitbucket
     require 'omniauth-bitbucket'
     provider :bitbucket,

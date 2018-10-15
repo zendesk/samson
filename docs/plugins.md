@@ -23,6 +23,7 @@ Available plugins:
  - [Jenkins Status Checker](https://github.com/zendesk/samson/tree/master/plugins/jenkins_status_checker)
  - [Hipchat notification](https://github.com/listia/samson_hipchat)
  - [Kubernetes](https://github.com/zendesk/samson/tree/master/plugins/kubernetes)
+ - [LDAP](https://github.com/zendesk/samson/tree/master/plugins/ldap)
  - [Ledger](https://github.com/zendesk/samson/tree/master/plugins/ledger)
  - [Release Number From CI](https://github.com/redbubble/samson-release-number-from-ci)
  - [NewRelic](https://github.com/zendesk/samson/tree/master/plugins/new_relic)

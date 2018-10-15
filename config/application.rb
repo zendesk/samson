@@ -105,23 +105,12 @@ module Samson
     config.samson.github.web_url = deprecated_url.call("GITHUB_WEB_URL") || 'https://github.com'
     config.samson.github.api_url = deprecated_url.call("GITHUB_API_URL") || 'https://api.github.com'
 
-    # Configuration for LDAP
-    config.samson.ldap = ActiveSupport::OrderedOptions.new
-    config.samson.ldap.title = ENV["LDAP_TITLE"].presence
-    config.samson.ldap.host = ENV["LDAP_HOST"].presence
-    config.samson.ldap.port = ENV["LDAP_PORT"].presence
-    config.samson.ldap.base = ENV["LDAP_BASE"].presence
-    config.samson.ldap.uid = ENV["LDAP_UID"].presence
-    config.samson.ldap.bind_dn = ENV["LDAP_BINDDN"].presence
-    config.samson.ldap.password = ENV["LDAP_PASSWORD"].presence
-
     config.samson.gitlab = ActiveSupport::OrderedOptions.new
     config.samson.gitlab.web_url = deprecated_url.call("GITLAB_URL") || 'https://gitlab.com'
 
     config.samson.auth = ActiveSupport::OrderedOptions.new
     config.samson.auth.github = Samson::EnvCheck.set?("AUTH_GITHUB")
     config.samson.auth.google = Samson::EnvCheck.set?("AUTH_GOOGLE")
-    config.samson.auth.ldap = Samson::EnvCheck.set?("AUTH_LDAP")
     config.samson.auth.gitlab = Samson::EnvCheck.set?("AUTH_GITLAB")
     config.samson.auth.bitbucket = Samson::EnvCheck.set?("AUTH_BITBUCKET")
 

@@ -85,6 +85,12 @@ PATH
       kubeclient (>= 2)
 
 PATH
+  remote: plugins/ldap
+  specs:
+    samson_ldap (0.0.1)
+      omniauth-ldap
+
+PATH
   remote: plugins/ledger
   specs:
     samson_ledger (0.0.1)
@@ -590,7 +596,6 @@ DEPENDENCIES
   omniauth-github
   omniauth-gitlab
   omniauth-google-oauth2
-  omniauth-ldap
   omniauth-oauth2
   pagy
   parallel
@@ -628,6 +633,7 @@ DEPENDENCIES
   samson_jenkins!
   samson_jenkins_status_checker!
   samson_kubernetes!
+  samson_ldap!
   samson_ledger!
   samson_new_relic!
   samson_pipelines!
