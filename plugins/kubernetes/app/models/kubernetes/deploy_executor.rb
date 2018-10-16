@@ -63,11 +63,11 @@ module Kubernetes
       prerequisites, deploys = @release.release_docs.partition(&:prerequisite?)
       if prerequisites.any?
         @output.puts "First deploying prerequisite ..." if deploys.any?
-        return false unless deploy_and_watch(prerequisites, WAIT_FOR_PREREQUISITES)
+        return false unless deploy_and_watch(prerequisites, WAIT_FOR_PREREQUISITES, show_logs_if_requested: true)
         @output.puts "Now deploying other roles ..." if deploys.any?
       end
       if deploys.any?
-        return false unless deploy_and_watch(deploys, WAIT_FOR_LIVE)
+        return false unless deploy_and_watch(deploys, WAIT_FOR_LIVE, show_logs_if_requested: false)
       end
       true
     end
@@ -140,6 +140,20 @@ module Kubernetes
         pods = SamsonKubernetes.retry_on_connection_errors { client.get_pods(query).fetch(:items) }
         pods.map! { |p| Kubernetes::Api::Pod.new(p, client: client) }
       end
+    end
+
+    def show_pods_logs_if_requested
+      log_end_time = 0.seconds.from_now
+      pods = fetch_pods
+      pods.each do |pod|
+        if pod.annotations[:'samson/show_logs_on_deploy'] == 'true'
+          print_pod_logs(pod, log_end_time)
+          @output.puts "\n------------------------------------------\n"
+        end
+      end
+    rescue StandardError
+      info = ErrorNotifier.notify($!, sync: true)
+      @output.puts "Error showing logs: #{info}"
     end
 
     def show_failure_cause(release_docs, statuses)
@@ -392,12 +406,15 @@ module Kubernetes
       Samson::Parallelizer.map(resources, db: true, &:deploy)
     end
 
-    def deploy_and_watch(release_docs, timeout)
+    def deploy_and_watch(release_docs, timeout, show_logs_if_requested:)
       deploy(release_docs)
       result = wait_for_resources_to_complete(release_docs, timeout)
       if result == true
         if blue_green = release_docs.select(&:blue_green_color).presence
           finish_blue_green_deployment(blue_green)
+        end
+        if show_logs_if_requested
+          show_pods_logs_if_requested
         end
         true
       else
