@@ -201,7 +201,15 @@ module Kubernetes
         SamsonKubernetes.retry_on_connection_errors do
           begin
             method = "#{verb}_#{Kubeclient::ClientMixin.underscore_entity(@template.fetch(:kind))}"
-            client.send(method, *args)
+            if client.respond_to? method
+              client.send(method, *args)
+            else
+              raise(
+                Samson::Hooks::UserError,
+                "apiVersion #{@template.fetch(:apiVersion)} does not support #{@template.fetch(:kind)}. " \
+                "Check kubernetes docs for correct apiVersion"
+              )
+            end
           rescue Kubeclient::HttpError => e
             message = e.message.to_s
             if message.include?(" is invalid:") || message.include?(" no kind ")
