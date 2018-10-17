@@ -338,6 +338,21 @@ describe Kubernetes::Resource do
         resource.send(:loop_sleep)
       end
     end
+
+    describe "#request" do
+      it "returns response" do
+        stub_request(:get, "http://foobar.server/api/v1/configmaps/pods").to_return body: '{"foo": "bar"}'
+        resource.send(:request, :get, :pods).must_equal foo: "bar"
+      end
+
+      it "shows nice error message when user uses the wrong apiVersion" do
+        template[:apiVersion] = 'extensions/v1beta1'
+        e = assert_raises(Samson::Hooks::UserError) { resource.send(:request, :get, :pods) }
+        e.message.must_equal(
+          "apiVersion extensions/v1beta1 does not support ConfigMap. Check kubernetes docs for correct apiVersion"
+        )
+      end
+    end
   end
 
   describe Kubernetes::Resource::DaemonSet do
