@@ -770,6 +770,15 @@ describe Kubernetes::TemplateFiller do
       end
     end
 
+    describe "PodDisruptionBudget" do
+      it "modified name" do
+        raw_template[:kind] = 'PodDisruptionBudget'
+        hash = template.to_hash
+        hash.dig_fetch(:metadata, :name).must_equal 'test-app-server'
+        refute hash.dig(:spec, :selector, :matchLabels).key?(:blue_green)
+      end
+    end
+
     describe "blue-green" do
       before do
         doc.kubernetes_role.blue_green = true
@@ -788,6 +797,13 @@ describe Kubernetes::TemplateFiller do
         hash.dig_fetch(:metadata, :labels, :blue_green).must_equal 'green'
         hash.dig_fetch(:spec, :selector, :matchLabels, :blue_green).must_equal 'green'
         hash.dig_fetch(:spec, :template, :metadata, :labels, :blue_green).must_equal 'green'
+      end
+
+      it "modified budgets so we do not get errors when 2 budgets match the same pod" do
+        raw_template[:kind] = 'PodDisruptionBudget'
+        hash = template.to_hash
+        hash.dig_fetch(:metadata, :name).must_equal 'test-app-server-green'
+        hash.dig_fetch(:spec, :selector, :matchLabels, :blue_green).must_equal 'green'
       end
     end
   end

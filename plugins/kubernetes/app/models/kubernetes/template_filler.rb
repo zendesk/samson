@@ -59,6 +59,9 @@ module Kubernetes
           set_image_pull_secrets
           set_resource_blue_green if blue_green_color
           set_init_containers
+        when 'PodDisruptionBudget'
+          set_name
+          set_match_labels_blue_green if blue_green_color
         else
           set_name
         end
@@ -115,8 +118,12 @@ module Kubernetes
 
     def set_resource_blue_green
       template.dig_set([:metadata, :labels, :blue_green], blue_green_color)
-      template.dig_set([:spec, :selector, :matchLabels, :blue_green], blue_green_color)
+      set_match_labels_blue_green
       template.dig_set([:spec, :template, :metadata, :labels, :blue_green], blue_green_color)
+    end
+
+    def set_match_labels_blue_green
+      template.dig_set([:spec, :selector, :matchLabels, :blue_green], blue_green_color)
     end
 
     # TODO: unify into with label verification logic in role_validator
