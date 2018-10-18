@@ -9,7 +9,7 @@ class CommitStatus
   UNDETERMINED = ["pending", "missing"].freeze
   CHECK_STATE = {
     error: ['action_required', 'canceled', 'timed_out'],
-    failure: ['failed'],
+    failure: ['failure', 'failed'],
     success: ['success', 'neutral']
   }.freeze
   NO_STATUSES_REPORTED_RESULT = {
