@@ -143,11 +143,13 @@ describe Kubernetes::TemplateFiller do
       template.to_hash[:metadata][:name].must_equal "test-app-server"
     end
 
-    it "does not set override name for resources that follow a fixed naming pattern" do
-      raw_template[:kind] = 'APIService'
-      raw_template[:metadata].delete(:namespace)
-      template.to_hash[:metadata][:name].must_equal "some-project-rc"
-      template.to_hash[:metadata][:namespace].must_equal nil
+    ['CustomResourceDefinition', 'APIService'].each do |kind|
+      it "does not set override name for #{kind} since it follows a fixed naming pattern" do
+        raw_template[:kind] = kind
+        raw_template[:metadata].delete(:namespace)
+        template.to_hash[:metadata][:name].must_equal "some-project-rc"
+        template.to_hash[:metadata][:namespace].must_equal nil
+      end
     end
 
     describe "unqiue deployments" do
