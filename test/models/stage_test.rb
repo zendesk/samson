@@ -773,4 +773,19 @@ describe Stage do
       end
     end
   end
+
+  describe "restoring a deleted stage" do
+    with_env DEPLOY_GROUP_FEATURE: "1"
+
+    before do
+      stage.soft_delete!(validate: false)
+    end
+
+    it "does not validate selected deploy groups" do
+      Stage.with_deleted do
+        # will raise `ActiveRecord::RecordInvalid: Validation failed: Deploy groups need to be selected` on failure
+        stage.reload.soft_undelete!
+      end
+    end
+  end
 end

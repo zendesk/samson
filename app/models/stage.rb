@@ -36,7 +36,7 @@ class Stage < ActiveRecord::Base
   # n emails separated by ;
   email = '([^\s;]+@[^\s;]+)'
   validates :notify_email_address, format: /\A#{email}((\s*;\s*)?#{email}?)*\z/, allow_blank: true
-  validate :validate_deploy_group_selected
+  validate :validate_deploy_group_selected, unless: :deleted_at
   validate :validate_not_auto_deploying_without_buddy
 
   before_create :ensure_ordering
