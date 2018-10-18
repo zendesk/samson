@@ -17,322 +17,156 @@ describe CommitStatus do
     end
   end
 
+  def success!
+    stub_github_api(url, statuses: [{foo: "bar", updated_at: 1.day.ago}], state: "success")
+  end
+
   def failure!
     stub_github_api(url, nil, 404)
   end
 
-  def build_status(stage_param: stage, reference_param: reference)
+  def status(stage_param: stage, reference_param: reference)
     CommitStatus.new(stage_param.project, reference_param, stage: stage_param)
   end
 
   let(:stage) { stages(:test_staging) }
   let(:reference) { 'master' }
-  let(:status) { build_status }
+  let(:url) { "repos/#{stage.project.repository_path}/commits/#{reference}/status" }
 
-  describe "using state api" do
-    def success!
-      stub_github_api(url, statuses: [{foo: "bar", updated_at: 1.day.ago}], state: "success")
+  describe "#state" do
+    it "returns state" do
+      success!
+      status.state.must_equal 'success'
     end
 
-    def stub_checks_api(commit_status: status)
-      commit_status.stubs(:github_check).returns(state: 'pending', statuses: [])
+    it "is missing when not found" do
+      failure!
+      status.state.must_equal 'missing'
     end
 
-    before { stub_checks_api } # user only using Status API
+    it "works without stage" do
+      success!
+      s = status
+      s.instance_variable_set(:@stage, nil)
+      s.state.must_equal "success"
+    end
 
-    let(:url) { "repos/#{stage.project.repository_path}/commits/#{reference}/status" }
+    it "does not cache changing references" do
+      request = success!
+      status.state.must_equal 'success'
+      status.state.must_equal 'success'
+      assert_requested request, times: 2
+    end
 
-    describe "#state" do
-      it "returns state" do
-        success!
-        status.state.must_equal 'success'
-      end
+    describe "caching static references" do
+      let(:reference) { 'v4.2' }
 
-      it "is missing when not found" do
-        failure!
-        status.state.must_equal 'missing'
-      end
-
-      it "works without stage" do
-        success!
-        s = status
-        s.instance_variable_set(:@stage, nil)
-        s.state.must_equal "success"
-      end
-
-      it "does not cache changing references" do
+      it "caches github state accross instances" do
         request = success!
         status.state.must_equal 'success'
-        new_status = build_status
-        stub_checks_api(commit_status: new_status)
-        new_status.state.must_equal 'success'
+        status.state.must_equal 'success'
+        assert_requested request, times: 1
+      end
+
+      it "can expire cache" do
+        request = success!
+        status.state.must_equal 'success'
+        status.expire_cache reference
+        status.state.must_equal 'success'
         assert_requested request, times: 2
       end
+    end
 
-      describe "caching static references" do
-        let(:reference) { 'v4.2' }
+    describe "when deploying a previous release" do
+      deploying_a_previous_release
 
-        it "caches github state accross instances" do
-          request = success!
-          status.state.must_equal 'success'
-          new_status = build_status
-          stub_checks_api(commit_status: new_status)
-          new_status.state.must_equal 'success'
-          assert_requested request, times: 1
-        end
-
-        it "can expire cache" do
-          request = success!
-          status.state.must_equal 'success'
-          status.expire_cache reference
-          new_status = build_status
-          stub_checks_api(commit_status: new_status)
-          new_status.state.must_equal 'success'
-          assert_requested request, times: 2
+      it "warns" do
+        success!
+        assert_sql_queries 10 do
+          status.state.must_equal 'error'
         end
       end
 
-      describe "when deploying a previous release" do
-        deploying_a_previous_release
+      it "warns when an older deploy has a lower version (grouping + ordering test)" do
+        deploys(:succeeded_test).update_column(:stage_id, deploy.stage_id) # need 2 successful deploys on the same stage
+        deploys(:succeeded_test).update_column(:reference, 'v4.1') # old is lower
+        deploy.update_column(:reference, 'v4.3') # new is higher
+        success!
+        status.state.must_equal 'error'
+      end
+
+      it "ignores when previous deploy was the same or lower" do
+        deploy.update_column(:reference, reference)
+        success!
+        status.state.must_equal 'success'
+      end
+
+      describe "when previous deploy was higher numerically" do
+        before { deploy.update_column(:reference, 'v4.10') }
 
         it "warns" do
           success!
-          assert_sql_queries 10 do
-            status.state.must_equal 'error'
-          end
-        end
-
-        it "warns when an older deploy has a lower version (grouping + ordering test)" do
-          deploys(:succeeded_test).update_column(:stage_id, deploy.stage_id) # need 2 successful deploys on same stage
-          deploys(:succeeded_test).update_column(:reference, 'v4.1') # old is lower
-          deploy.update_column(:reference, 'v4.3') # new is higher
-          success!
+          status = status()
           status.state.must_equal 'error'
+          status.statuses[1][:description].must_equal(
+            "v4.10 was deployed to deploy groups in this stage by Production"
+          )
         end
 
-        it "ignores when previous deploy was the same or lower" do
-          deploy.update_column(:reference, reference)
+        it "warns with multiple higher deploys" do
+          other = deploys(:succeeded_test)
+          other.update_column(:reference, 'v4.9')
+
           success!
-          status.state.must_equal 'success'
-        end
-
-        describe "when previous deploy was higher numerically" do
-          before { deploy.update_column(:reference, 'v4.10') }
-
-          it "warns" do
-            success!
-            status = status()
-            status.state.must_equal 'error'
-            status.statuses[1][:description].must_equal(
-              "v4.10 was deployed to deploy groups in this stage by Production"
-            )
-          end
-
-          it "warns with multiple higher deploys" do
-            other = deploys(:succeeded_test)
-            other.update_column(:reference, 'v4.9')
-
-            success!
-            status = status()
-            status.state.must_equal 'error'
-            status.statuses[1][:description].must_equal(
-              "v4.9, v4.10 was deployed to deploy groups in this stage by Staging, Production"
-            )
-          end
-        end
-
-        it "ignores when previous deploy was not a version" do
-          deploy.update_column(:reference, 'master')
-          success!
-          status.state.must_equal 'success'
-        end
-
-        it "ignores when previous deploy was failed" do
-          deploy.job.update_column(:status, 'faild')
-          success!
-          status.state.must_equal 'success'
+          status = status()
+          status.state.must_equal 'error'
+          status.statuses[1][:description].must_equal(
+            "v4.9, v4.10 was deployed to deploy groups in this stage by Staging, Production"
+          )
         end
       end
-    end
 
-    describe "#statuses" do
-      it "returns list" do
+      it "ignores when previous deploy was not a version" do
+        deploy.update_column(:reference, 'master')
         success!
-        status.statuses.map { |s| s[:foo] }.must_equal ["bar"]
-      end
-
-      it "shows that github is waiting for statuses to come when non has arrived yet ... or none are set up" do
-        stub_github_api(url, statuses: [], state: "pending")
-        list = status.statuses
-        list.map { |s| s[:state] }.must_equal ["pending"]
-        list.first[:description].must_include "No status was reported"
-      end
-
-      it "returns Reference context for release/show display" do
-        failure!
-        status.statuses.map { |s| s[:context] }.must_equal ["Reference"]
-      end
-
-      describe "when deploying a previous release" do
-        deploying_a_previous_release
-
-        it "merges" do
-          success!
-          status.statuses.each { |s| s.delete(:updated_at) }.must_equal [
-            {foo: "bar"},
-            {state: "Old Release", description: "v4.3 was deployed to deploy groups in this stage by Production"}
-          ]
-        end
-      end
-    end
-  end
-
-  describe "using checks api" do
-    let(:check_suite_url) { "repos/#{stage.project.repository_path}/commits/#{reference}/check-suites" }
-    let(:check_run_url) { "repos/#{stage.project.repository_path}/commits/#{reference}/check-runs" }
-
-    before { status.expects(:github_status).returns(state: 'pending', statuses: []) } # user only using Checks API
-
-    describe '#state' do
-      before do
-        stub_github_api(
-          check_run_url,
-          check_runs: [
-            {
-              conclusion: 'success',
-              output: {summary: '<p>Huzzah!</p>'},
-              name: 'Travis CI',
-              html_url: 'https://coolbeans.com',
-              started_at: Time.now,
-            }
-          ]
-        )
-      end
-
-      it 'returns state' do
-        stub_github_api(check_suite_url, check_suites: [{conclusion: 'success'}])
-
         status.state.must_equal 'success'
       end
 
-      it 'returns pending if no check suite exists for reference' do
-        stub_github_api(check_suite_url, check_suites: [])
-
-        status.state.must_equal 'pending'
-      end
-
-      it 'returns pending if check suite does not have conclusion yet' do
-        stub_github_api(check_suite_url, check_suites: [{conclusion: nil}])
-
-        status.state.must_equal 'pending'
-      end
-
-      it 'maps check status to state equivalent' do
-        stub_github_api(check_suite_url, check_suites: [{conclusion: 'action_required'}])
-
-        status.state.must_equal 'error'
-      end
-
-      it 'picks highest priority check conclusion/status equivalent' do
-        stub_github_api(
-          check_suite_url,
-          check_suites: [
-            {conclusion: 'action_required'},
-            {conclusion: 'canceled'},
-            {conclusion: 'timed_out'},
-            {conclusion: 'failed'},
-            {conclusion: 'success'},
-            {conclusion: 'neutral'}
-          ]
-        )
-
-        status.state.must_equal 'error'
-      end
-
-      it 'raises with unknown conclusion' do
-        status.unstub(:github_status)
-
-        stub_github_api(
-          check_suite_url,
-          check_suites: [{conclusion: 'bingbong'}]
-        )
-
-        e = assert_raises RuntimeError do
-          status.state
-        end
-
-        e.message.must_equal "Unknown Check conclusion: bingbong"
-      end
-    end
-
-    describe '#statuses' do
-      before { stub_github_api(check_suite_url, check_suites: []) }
-
-      let(:started_at) { '2018-10-12 20:55:58 UTC'.to_time(:utc) }
-
-      it 'returns list' do
-        stub_github_api(
-          check_run_url, check_runs: [{
-            conclusion: 'success',
-            output: {summary: '<p>Huzzah!</p>'},
-            name: 'Travis CI',
-            html_url: 'https://coolbeans.com',
-            started_at: started_at,
-          }]
-        )
-
-        status.statuses.must_equal(
-          [{
-            state: 'success',
-            description: "<p>Huzzah!</p>\n",
-            target_url: 'https://coolbeans.com',
-            context: 'Travis CI',
-            updated_at: started_at
-          }]
-        )
-      end
-
-      it 'sanitizes output' do
-        stub_github_api(
-          check_run_url, check_runs: [{
-            conclusion: 'success',
-            output: {summary: '<script>alert("Attack!")</script>'},
-            name: 'Travis CI',
-            html_url: 'https://coolbeans.com',
-            started_at: started_at,
-          }]
-        )
-
-        status.statuses.must_equal(
-          [{
-            state: 'success',
-            description: "alert(\"Attack!\")\n",
-            context: 'Travis CI',
-            target_url: 'https://coolbeans.com',
-            updated_at: started_at
-          }]
-        )
-      end
-
-      it 'gives help message when no statuses are present' do
-        stub_github_api(check_run_url, check_runs: [])
-
-        status.statuses.must_equal([{
-          state: 'pending',
-          description: "No status was reported for this commit on GitHub. " \
-          "See https://developer.github.com/v3/checks/ and https://github.com/blog/1227-commit-status-api for details."
-        }])
+      it "ignores when previous deploy was failed" do
+        deploy.job.update_column(:status, 'faild')
+        success!
+        status.state.must_equal 'success'
       end
     end
   end
 
-  describe 'using both status and checks api' do
-    describe '#state' do
-      it 'prioritizes success of one api result over pending of another' do
-        status.expects(:github_check).returns(state: 'pending', statuses: [])
-        status.expects(:github_status).returns(state: 'success', statuses: [{foo: "bar", updated_at: 1.day.ago}])
+  describe "#statuses" do
+    it "returns list" do
+      success!
+      status.statuses.map { |s| s[:foo] }.must_equal ["bar"]
+    end
 
-        status.state.must_equal('success')
+    it "shows that github is waiting for statuses to come when non has arrived yet ... or none are set up" do
+      stub_github_api(url, statuses: [], state: "pending")
+      list = status.statuses
+      list.map { |s| s[:state] }.must_equal ["pending"]
+      list.first[:description].must_include "No status was reported"
+    end
+
+    it "returns Reference context for release/show display" do
+      failure!
+      status.statuses.map { |s| s[:context] }.must_equal ["Reference"]
+    end
+
+    describe "when deploying a previous release" do
+      deploying_a_previous_release
+
+      it "merges" do
+        success!
+        status.statuses.each { |s| s.delete(:updated_at) }.must_equal [
+          {foo: "bar"},
+          {state: "Old Release", description: "v4.3 was deployed to deploy groups in this stage by Production"}
+        ]
       end
     end
   end
@@ -347,7 +181,7 @@ describe CommitStatus do
     it 'returns nothing if ref has been deployed to non-production stage' do
       production_stage.project.expects(:deployed_reference_to_non_production_stage?).returns(true)
 
-      build_status(stage_param: production_stage).send(:ref_statuses).must_equal []
+      status(stage_param: production_stage).send(:ref_statuses).must_equal []
     end
 
     it 'returns status if ref has not been deployed to non-production stage' do
@@ -365,7 +199,7 @@ describe CommitStatus do
         }
       ]
 
-      build_status(stage_param: production_stage).send(:ref_statuses).must_equal expected_hash
+      status(stage_param: production_stage).send(:ref_statuses).must_equal expected_hash
     end
 
     it 'includes plugin statuses' do
@@ -395,7 +229,7 @@ describe CommitStatus do
 
   describe "#cache_duration" do
     it "is short when we do not know if the commit is new or old" do
-      status.send(:cache_duration, CommitStatus::NO_STATUSES_REPORTED_RESULT).must_equal 5.minutes
+      status.send(:cache_duration, statuses: []).must_equal 5.minutes
     end
 
     it "is long when we do not expect new updates" do

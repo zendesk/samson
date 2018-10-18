@@ -7,22 +7,6 @@ class CommitStatus
   # - missing is our own state that means we could not determine the status
   STATE_PRIORITY = [:success, :pending, :missing, :failure, :error, :fatal].freeze
   UNDETERMINED = ["pending", "missing"].freeze
-  CHECK_STATE = {
-    error: ['action_required', 'canceled', 'timed_out'],
-    failure: ['failed'],
-    success: ['success', 'neutral']
-  }.freeze
-  NO_STATUSES_REPORTED_RESULT = {
-    state: 'pending',
-    statuses: [
-      {
-        state: 'pending',
-        description:
-          "No status was reported for this commit on GitHub. See https://developer.github.com/v3/checks/ and " \
-            "https://github.com/blog/1227-commit-status-api for details."
-      }
-    ]
-  }.freeze
 
   def initialize(project, reference, stage: nil)
     @project = project
@@ -35,7 +19,16 @@ class CommitStatus
   end
 
   def statuses
-    combined_status.fetch(:statuses).map(&:to_h)
+    list = combined_status.fetch(:statuses).map(&:to_h)
+    if list.empty?
+      list << {
+        state: 'pending',
+        description:
+          "No status was reported for this commit on GitHub. " \
+          "See https://github.com/blog/1227-commit-status-api for details."
+      }
+    end
+    list
   end
 
   def expire_cache(commit)
@@ -46,78 +39,38 @@ class CommitStatus
 
   def combined_status
     @combined_status ||= begin
-      statuses = [github_state]
+      statuses = [github_status]
       statuses += [release_status, *ref_statuses].compact if @stage
-      merge_statuses(statuses)
+      statuses[1..-1].each_with_object(statuses[0]) { |status, merged| merge(merged, status) }
     end
   end
 
-  # Gets a reference's state, combining results from both the Status and Checks API
+  def merge(a, b)
+    a[:state] = [a.fetch(:state), b.fetch(:state)].max_by { |state| STATE_PRIORITY.index(state.to_sym) }
+    a.fetch(:statuses).concat b.fetch(:statuses)
+  end
+
   # NOTE: reply is an api object that does not support .fetch
-  def github_state
+  def github_status
     static = @reference.match?(Build::SHA1_REGEX) || @reference.match?(Release::VERSION_REGEX)
     expires_in = ->(reply) { cache_duration(reply) }
     cache_fetch_if static, cache_key(@reference), expires_in: expires_in do
-      checks_result = with_octokit_client_error_rescue { github_check }
-      status_result = with_octokit_client_error_rescue { github_status }
-
-      results_with_statuses = [checks_result, status_result].select { |result| result[:statuses].any? }
-
-      results_with_statuses.empty? ? NO_STATUSES_REPORTED_RESULT : merge_statuses(results_with_statuses)
+      GITHUB.combined_status(@project.repository_path, @reference).to_h
     end
+  rescue Octokit::NotFound
+    {
+      state: "missing",
+      statuses: [{
+        context: "Reference", # for releases/show.html.erb
+        state: "missing",
+        description: "'#{@reference}' does not exist"
+      }]
+    }
   end
 
-  # Gets commit statuses using GitHub's check API. Currently parsing it to match status structure to better facilitate
-  # transition to new API. See https://developer.github.com/v3/checks/runs/ and
-  # https://developer.github.com/v3/checks/suites/ for details
-  def github_check
-    base_url = "repos/#{@project.repository_path}/commits/#{CGI.escape(@reference)}"
-    preview_header = {Accept: 'application/vnd.github.antiope-preview+json'}
-
-    check_suites = GITHUB.get("#{base_url}/check-suites", headers: preview_header)[:check_suites]
-    checks = GITHUB.get("#{base_url}/check-runs", headers: preview_header)
-
-    overall_state = check_suites.
-      map { |suite| check_state_equivalent(suite[:conclusion]) }.
-      max_by { |state| STATE_PRIORITY.index(state.to_sym) }
-
-    statuses = checks[:check_runs].map do |check_run|
-      {
-        state: check_state_equivalent(check_run[:conclusion]),
-        description: ApplicationController.helpers.markdown(check_run[:output][:summary]),
-        context: check_run[:name],
-        target_url: check_run[:html_url],
-        updated_at: check_run[:started_at]
-      }
-    end
-
-    {state: overall_state || 'pending', statuses: statuses}
-  end
-
-  def github_status
-    GITHUB.combined_status(@project.repository_path, @reference).to_h
-  end
-
-  def merge_statuses(statuses)
-    statuses[1..-1].each_with_object(statuses[0]) do |status, merged|
-      merged[:state] = [merged.fetch(:state), status.fetch(:state)].max_by { |s| STATE_PRIORITY.index(s.to_sym) }
-      merged.fetch(:statuses).concat(status.fetch(:statuses))
-    end
-  end
-
-  def check_state_equivalent(check_conclusion)
-    case check_conclusion
-    when *CHECK_STATE[:success] then 'success'
-    when *CHECK_STATE[:error] then 'error'
-    when *CHECK_STATE[:failure] then 'failure'
-    when nil then 'pending'
-    else raise "Unknown Check conclusion: #{check_conclusion}"
-    end
-  end
-
-  def cache_duration(github_result)
-    statuses = github_result[:statuses]
-    if github_result == NO_STATUSES_REPORTED_RESULT # does not have any statuses, chances are commit is new
+  def cache_duration(github_status)
+    statuses = github_status[:statuses]
+    if statuses.empty? # does not have any statuses, chances are commit is new
       5.minutes # NOTE: could fetch commit locally without pulling to check it's age
     elsif (Time.now - statuses.map { |s| s[:updated_at] }.max) > 1.hour # no new updates expected
       1.day
@@ -193,18 +146,5 @@ class CommitStatus
 
   def deploy_scope
     @deploy_scope ||= Deploy.reorder(nil).successful.where(stage_id: @stage.influencing_stage_ids).group(:stage_id)
-  end
-
-  def with_octokit_client_error_rescue
-    yield
-  rescue Octokit::ClientError
-    {
-      state: "missing",
-      statuses: [{
-        context: "Reference", # for releases/show.html.erb
-        state: "missing",
-        description: "There was a problem getting the status for reference '#{@reference}': #{$!.message}"
-      }]
-    }
   end
 end

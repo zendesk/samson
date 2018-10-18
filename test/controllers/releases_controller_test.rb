@@ -21,38 +21,13 @@ describe ReleasesController do
         }
       ]
     }
-    check_suite_response = {check_suites: [{conclusion: 'success'}]}
-    check_run_response = {
-      check_runs: [
-        {
-          conclusion: 'success',
-          output: {summary: '<p>Huzzah!</p>'},
-          name: 'Travis CI',
-          html_url: 'https://coolbeans.com',
-          started_at: Time.now.iso8601,
-        }
-      ]
-    }
 
     headers = {
       "Content-Type" => "application/json",
     }
-    preview_headers = {
-      'Accept' => 'application/vnd.github.antiope-preview+json'
-    }
 
     stub_request(:get, "https://api.github.com/repos/bar/foo/commits/abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd/status").
       to_return(status: 200, body: status_response.to_json, headers: headers)
-
-    stub_request(
-      :get,
-      "https://api.github.com/repos/bar/foo/commits/abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd/check-suites"
-    ).to_return(status: 200, body: check_suite_response.to_json, headers: headers.merge(preview_headers))
-
-    stub_request(
-      :get,
-      "https://api.github.com/repos/bar/foo/commits/abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd/check-runs"
-    ).to_return(status: 200, body: check_run_response.to_json, headers: headers.merge(preview_headers))
   end
 
   as_a_viewer do
