@@ -49,6 +49,7 @@ describe CommitStatus do
       end
 
       it "is missing when not found" do
+        ErrorNotifier.expects(:notify)
         failure!
         status.state.must_equal 'missing'
       end
@@ -121,7 +122,6 @@ describe CommitStatus do
 
           it "warns" do
             success!
-            status = status()
             status.state.must_equal 'error'
             status.statuses[1][:description].must_equal(
               "v4.10 was deployed to deploy groups in this stage by Production"
@@ -133,7 +133,6 @@ describe CommitStatus do
             other.update_column(:reference, 'v4.9')
 
             success!
-            status = status()
             status.state.must_equal 'error'
             status.statuses[1][:description].must_equal(
               "v4.9, v4.10 was deployed to deploy groups in this stage by Staging, Production"
@@ -169,6 +168,7 @@ describe CommitStatus do
       end
 
       it "returns Reference context for release/show display" do
+        ErrorNotifier.expects(:notify)
         failure!
         status.statuses.map { |s| s[:context] }.must_equal ["Reference"]
       end
@@ -182,6 +182,41 @@ describe CommitStatus do
             {foo: "bar"},
             {state: "Old Release", description: "v4.3 was deployed to deploy groups in this stage by Production"}
           ]
+        end
+      end
+
+      describe "with client error" do
+        before do
+          GITHUB.expects(:get).raises(Octokit::ClientError)
+          ErrorNotifier.expects(:notify).returns('http://errorurl.com')
+
+          freeze_time
+        end
+
+        it 'rescues not found error' do
+          expected_status = [{
+            context: "Reference", # for releases/show.html.erb
+            state: "missing",
+            description: "There was a problem getting the status for reference 'master'." \
+                         " See http://errorurl.com for details",
+            updated_at: Time.now
+          }]
+
+          status.statuses.must_equal expected_status
+        end
+
+        it 'can cash not found status' do
+          expected_status = [{
+            context: "Reference", # for releases/show.html.erb
+            state: "missing",
+            description: "There was a problem getting the status for reference 'v123'." \
+                         " See http://errorurl.com for details",
+            updated_at: Time.now
+          }]
+
+          status = build_status(stage_param: stage, reference_param: 'v123')
+          stub_checks_api(commit_status: status)
+          status.statuses.must_equal expected_status
         end
       end
     end
@@ -238,9 +273,9 @@ describe CommitStatus do
           check_suite_url,
           check_suites: [
             {conclusion: 'action_required'},
-            {conclusion: 'canceled'},
+            {conclusion: 'cancelled'},
             {conclusion: 'timed_out'},
-            {conclusion: 'failed'},
+            {conclusion: 'failure'},
             {conclusion: 'success'},
             {conclusion: 'neutral'}
           ]
@@ -328,11 +363,22 @@ describe CommitStatus do
 
   describe 'using both status and checks api' do
     describe '#state' do
-      it 'prioritizes success of one api result over pending of another' do
+      it 'prioritizes success of one api result over missing statuses of another' do
         status.expects(:github_check).returns(state: 'pending', statuses: [])
         status.expects(:github_status).returns(state: 'success', statuses: [{foo: "bar", updated_at: 1.day.ago}])
 
         status.state.must_equal('success')
+      end
+
+      describe 'both APIs missing statuses' do
+        before do
+          status.expects(:github_check).returns(state: 'pending', statuses: [])
+          status.expects(:github_status).returns(state: 'pending', statuses: [])
+        end
+
+        it 'correctly handles missing statuses from both APIs' do
+          status.state.must_equal('pending')
+        end
       end
     end
   end

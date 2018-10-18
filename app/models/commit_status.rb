@@ -8,8 +8,8 @@ class CommitStatus
   STATE_PRIORITY = [:success, :pending, :missing, :failure, :error, :fatal].freeze
   UNDETERMINED = ["pending", "missing"].freeze
   CHECK_STATE = {
-    error: ['action_required', 'canceled', 'timed_out'],
-    failure: ['failure', 'failed'],
+    error: ['action_required', 'cancelled', 'timed_out'],
+    failure: ['failure'],
     success: ['success', 'neutral']
   }.freeze
   NO_STATUSES_REPORTED_RESULT = {
@@ -63,7 +63,7 @@ class CommitStatus
 
       results_with_statuses = [checks_result, status_result].select { |result| result[:statuses].any? }
 
-      results_with_statuses.empty? ? NO_STATUSES_REPORTED_RESULT : merge_statuses(results_with_statuses)
+      results_with_statuses.empty? ? NO_STATUSES_REPORTED_RESULT.dup : merge_statuses(results_with_statuses)
     end
   end
 
@@ -198,12 +198,19 @@ class CommitStatus
   def with_octokit_client_error_rescue
     yield
   rescue Octokit::ClientError
+    generate_error_status_and_report($!)
+  end
+
+  def generate_error_status_and_report(exception)
+    error_url = ErrorNotifier.notify(exception, sync: true)
     {
       state: "missing",
       statuses: [{
         context: "Reference", # for releases/show.html.erb
         state: "missing",
-        description: "There was a problem getting the status for reference '#{@reference}': #{$!.message}"
+        description: "There was a problem getting the status for reference '#{@reference}'." \
+                       " See #{error_url} for details",
+        updated_at: Time.now # needed for #cache_duration
       }]
     }
   end
