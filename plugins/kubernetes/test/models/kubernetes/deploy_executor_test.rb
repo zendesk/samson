@@ -272,7 +272,8 @@ describe Kubernetes::DeployExecutor do
           'apiVersion' => 'batch/v1',
           'spec' => {
             'template' => {
-              'metadata' => {'labels' => {'project' => 'foobar', 'role' => 'migrate'}},
+              'metadata' => {'labels' => {'project' => 'foobar', 'role' => 'migrate'},
+                             'annotations' => {'samson/show_logs_on_deploy' => 'true'}},
               'spec' => {
                 'containers' => [{'name' => 'job', 'image' => 'docker-registry.zende.sk/truth_service:latest'}],
                 'restartPolicy' => 'Never'
@@ -317,6 +318,13 @@ describe Kubernetes::DeployExecutor do
         out.must_include "stability" # testing deploy for stability
         out.must_include "deploying prerequisite" # announcing that we deploy prerequisites first
         out.must_include "other roles" # announcing that we have more to deploy
+      end
+
+      it "show logs after prerequisites deploys ends" do
+        assert execute, out
+        out.must_include "deploying prerequisite" # announcing that we deploy prerequisites
+        out.scan(/SUCCESS/).count.must_equal 2 # Nothing fails, so all deployments went fine
+        out.must_include "LOGS:" # and includes a "LOGS:" entry, so logs after prerequisites deploy are shown
       end
 
       it "fails when jobs fail" do
