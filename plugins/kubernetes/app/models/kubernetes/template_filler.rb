@@ -23,8 +23,8 @@ module Kubernetes
         set_deploy_url
 
         case kind
-        when 'APIService' # rubocop:disable Lint/EmptyWhen
-          # api service names have a fixed pattern so we cannot override it.
+        when 'APIService', 'CustomResourceDefinition' # rubocop:disable Lint/EmptyWhen
+          # names have a fixed pattern so we cannot override them
         when 'HorizontalPodAutoscaler'
           set_name
           set_hpa_scale_target_name

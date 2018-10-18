@@ -161,11 +161,13 @@ describe Kubernetes::RoleValidator do
       errors.to_s.must_include "Namespaces need to be unique"
     end
 
-    it "allows resources without namespaces to not have a namespace" do
-      role[0][:metadata].delete(:namespace)
-      role[0][:kind] = 'APIService'
-      role[1][:metadata][:namespace] = 'other'
-      refute errors
+    ['CustomResourceDefinition', 'APIService'].each do |kind|
+      it "allows #{kind} to not have a namespace" do
+        role[0][:metadata].delete(:namespace)
+        role[0][:kind] = kind
+        role[1][:metadata][:namespace] = 'other'
+        refute errors
+      end
     end
 
     it "allows multiple services" do

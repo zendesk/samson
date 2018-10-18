@@ -453,6 +453,9 @@ module Kubernetes
     class APIService < Immutable
     end
 
+    class CustomResourceDefinition < Immutable
+    end
+
     def self.build(*args)
       klass = "Kubernetes::Resource::#{args.first.fetch(:kind)}".safe_constantize || Base
       klass.new(*args)
