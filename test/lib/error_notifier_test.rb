@@ -18,10 +18,16 @@ describe ErrorNotifier do
     end
 
     it 'raises if in the test environment' do
-      exception = ArgumentError
-      assert_raises exception do
+      exception = ArgumentError.new('motherofgod')
+      exception.set_backtrace(["neatbacktraceyougotthere"])
+      e = assert_raises RuntimeError do
         ErrorNotifier.notify(exception)
       end
+
+      expected_message = "ErrorNotifier caught exception: motherofgod. Use use ErrorNotifier.expects(:notify)" \
+        " to silence in tests"
+      e.message.must_equal expected_message
+      e.backtrace.must_equal ['neatbacktraceyougotthere']
     end
 
     it 'logs error if not in test environment' do
