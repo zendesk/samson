@@ -144,8 +144,11 @@ module Kubernetes
 
     def show_pods_logs_if_requested
       log_end_time = 0.seconds.from_now
+      @output.puts "\nXXX\n"
       pods = fetch_pods
       pods.each do |pod|
+        @output.puts "\nXXX: pod iter\n"
+        @output.puts "\n XXX: #{pod.annotations}\n"
         if pod.annotations[:'samson/show_logs_on_deploy'] == 'true'
           print_pod_logs(pod, log_end_time)
           @output.puts "\n------------------------------------------\n"
