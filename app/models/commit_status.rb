@@ -10,7 +10,8 @@ class CommitStatus
   CHECK_STATE = {
     error: ['action_required', 'canceled', 'timed_out'],
     failure: ['failed'],
-    success: ['success', 'neutral']
+    success: ['success', 'neutral'],
+    pending: ['pending']
   }.freeze
   NO_STATUSES_REPORTED_RESULT = {
     state: 'pending',
@@ -110,8 +111,9 @@ class CommitStatus
     when *CHECK_STATE[:success] then 'success'
     when *CHECK_STATE[:error] then 'error'
     when *CHECK_STATE[:failure] then 'failure'
-    when nil then 'pending'
-    else raise "Unknown Check conclusion: #{check_conclusion}"
+    when *CHECK_STATE[:pending] || nil then 'pending'
+    else
+      raise "Unknown Check conclusion: #{check_conclusion}"
     end
   end
 
