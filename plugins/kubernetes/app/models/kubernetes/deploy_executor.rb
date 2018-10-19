@@ -63,11 +63,11 @@ module Kubernetes
       prerequisites, deploys = @release.release_docs.partition(&:prerequisite?)
       if prerequisites.any?
         @output.puts "First deploying prerequisite ..." if deploys.any?
-        return false unless deploy_and_watch(prerequisites, WAIT_FOR_PREREQUISITES, show_logs_if_requested: true)
+        return false unless deploy_and_watch(prerequisites, WAIT_FOR_PREREQUISITES)
         @output.puts "Now deploying other roles ..." if deploys.any?
       end
       if deploys.any?
-        return false unless deploy_and_watch(deploys, WAIT_FOR_LIVE, show_logs_if_requested: false)
+        return false unless deploy_and_watch(deploys, WAIT_FOR_LIVE)
       end
       true
     end
@@ -142,18 +142,18 @@ module Kubernetes
       end
     end
 
-    def show_pods_logs_if_requested
-      log_end_time = 0.seconds.from_now
-      @output.puts "\nXXX\n"
+    def show_logs_on_deploy_if_requested(release_docs)
       pods = fetch_pods
-      pods.each do |pod|
-        @output.puts "\nXXX: pod iter\n"
-        @output.puts "\n XXX: #{pod.annotations}\n"
-        if pod.annotations[:'samson/show_logs_on_deploy'] == 'true'
-          print_pod_logs(pod, log_end_time)
-          @output.puts "\n------------------------------------------\n"
-        end
-      end
+
+      # only pods who opted in
+      pods.select! { |p| p.annotations[:'samson/show_logs_on_deploy'] == 'true' }
+
+      # only pods from given roles
+      role_ids = release_docs.map(&:kubernetes_role_id)
+      pods.select! { |p| role_ids.include? p.role_id }
+
+      # print
+      pods.each { |pod| print_pod_details(pod, Time.now, events: false) }
     rescue StandardError
       info = ErrorNotifier.notify($!, sync: true)
       @output.puts "Error showing logs: #{info}"
@@ -164,15 +164,21 @@ module Kubernetes
       log_end_time = Integer(ENV['KUBERNETES_LOG_TIMEOUT'] || '20').seconds.from_now
       debug_pods = statuses.reject(&:live).select(&:pod).group_by(&:role).map { |_, g| g.first.pod }
       debug_pods.each do |pod|
-        @output.puts "\n#{pod_identifier(pod)}:"
-        print_pod_events(pod)
-        @output.puts
-        print_pod_logs(pod, log_end_time)
-        @output.puts "\n------------------------------------------\n"
+        print_pod_details(pod, log_end_time, events: true)
       end
     rescue
       info = ErrorNotifier.notify($!, sync: true)
       @output.puts "Error showing failure cause: #{info}"
+    end
+
+    def print_pod_details(pod, log_end_time, events:)
+      @output.puts "\n#{pod_identifier(pod)}:"
+      if events
+        print_pod_events(pod)
+        @output.puts
+      end
+      print_pod_logs(pod, log_end_time)
+      @output.puts "\n------------------------------------------\n"
     end
 
     def pod_identifier(pod)
@@ -409,16 +415,14 @@ module Kubernetes
       Samson::Parallelizer.map(resources, db: true, &:deploy)
     end
 
-    def deploy_and_watch(release_docs, timeout, show_logs_if_requested:)
+    def deploy_and_watch(release_docs, timeout)
       deploy(release_docs)
       result = wait_for_resources_to_complete(release_docs, timeout)
       if result == true
         if blue_green = release_docs.select(&:blue_green_color).presence
           finish_blue_green_deployment(blue_green)
         end
-        if show_logs_if_requested
-          show_pods_logs_if_requested
-        end
+        show_logs_on_deploy_if_requested(release_docs)
         true
       else
         show_failure_cause(release_docs, result)
