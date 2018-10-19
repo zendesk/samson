@@ -172,6 +172,12 @@ describe Kubernetes::DeployExecutor do
       end
     end
 
+    it "show logs after successful deploy when requested" do
+      pod_reply[:items][0][:metadata][:annotations] = {'samson/show_logs_on_deploy' => 'true'}
+      assert execute, out
+      out.scan("LOGS:").size.must_equal 1 # shows for first but not for second pod
+    end
+
     describe "invalid configs" do
       before { build.delete } # build needs to be created -> assertion fails
       around { |test| refute_difference('Build.count') { refute_difference('Release.count', &test) } }
@@ -318,13 +324,6 @@ describe Kubernetes::DeployExecutor do
         out.must_include "stability" # testing deploy for stability
         out.must_include "deploying prerequisite" # announcing that we deploy prerequisites first
         out.must_include "other roles" # announcing that we have more to deploy
-      end
-
-      it "show logs after prerequisites deploys ends" do
-        assert execute, out
-        out.must_include "deploying prerequisite" # announcing that we deploy prerequisites
-        out.scan(/SUCCESS/).count.must_equal 2 # Nothing fails, so all deployments went fine
-        out.must_include "LOGS:" # and includes a "LOGS:" entry, so logs after prerequisites deploy are shown
       end
 
       it "fails when jobs fail" do
@@ -684,6 +683,15 @@ describe Kubernetes::DeployExecutor do
     end
   end
 
+  describe "#show_logs_on_deploy_if_requested" do
+    it "prints erros but continues to not block the deploy" do
+      Kubernetes::DeployExecutor.any_instance.stubs(:build_selectors).returns([])
+      ErrorNotifier.expects(:notify).returns("Details")
+      executor.send(:show_logs_on_deploy_if_requested, 123)
+      output.string.must_equal "Error showing logs: Details\n"
+    end
+  end
+
   describe "blue green" do
     def add_service_to_release_doc
       kubernetes_fake_raw_template
@@ -734,7 +742,7 @@ describe Kubernetes::DeployExecutor do
       assert_request(:get, "#{services_url}/some-project", to_return: {status: 404}) # did not exist
       assert_request(:post, services_url, to_return: {body: "{}"}) # blue was created
 
-      executor.expects(:wait_for_resources_to_complete).returns(true)
+      executor.expects(:wait_for_resources_to_complete).returns([true, []])
       executor.instance_variable_set(:@release, release)
       assert executor.send(:deploy_and_watch, release.release_docs, 60)
 
@@ -763,7 +771,7 @@ describe Kubernetes::DeployExecutor do
       assert_request(:put, "#{deployments_url}/test-app-server-green", to_return: {body: "{}"}) # set green to 0
       assert_request(:delete, "#{deployments_url}/test-app-server-green", to_return: {body: "{}"}) # delete green
 
-      executor.expects(:wait_for_resources_to_complete).returns(true)
+      executor.expects(:wait_for_resources_to_complete).returns([true, []])
       executor.instance_variable_set(:@release, release)
       assert executor.send(:deploy_and_watch, release.release_docs, 60)
 
@@ -786,7 +794,7 @@ describe Kubernetes::DeployExecutor do
       assert_request(:put, "#{deployments_url}/test-app-server-blue", to_return: {body: "{}"}) # set blue to 0
       assert_request(:delete, "#{deployments_url}/test-app-server-blue", to_return: {body: "{}"}) # delete blue
 
-      executor.expects(:wait_for_resources_to_complete).returns([])
+      executor.expects(:wait_for_resources_to_complete).returns([false, []])
       executor.expects(:print_resource_events)
       executor.instance_variable_set(:@release, release)
       refute executor.send(:deploy_and_watch, release.release_docs, 60)
