@@ -278,8 +278,7 @@ describe Kubernetes::DeployExecutor do
           'apiVersion' => 'batch/v1',
           'spec' => {
             'template' => {
-              'metadata' => {'labels' => {'project' => 'foobar', 'role' => 'migrate'},
-                             'annotations' => {'samson/show_logs_on_deploy' => 'true'}},
+              'metadata' => {'labels' => {'project' => 'foobar', 'role' => 'migrate'}},
               'spec' => {
                 'containers' => [{'name' => 'job', 'image' => 'docker-registry.zende.sk/truth_service:latest'}],
                 'restartPolicy' => 'Never'

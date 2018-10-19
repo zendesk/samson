@@ -13,9 +13,6 @@ describe Kubernetes::Api::Pod do
         labels: {
           deploy_group_id: '123',
           role_id: '234',
-        },
-        annotations: {
-          'samson/show_logs_on_deploy': 'true'
         }
       },
       status: {
@@ -149,8 +146,15 @@ describe Kubernetes::Api::Pod do
   end
 
   describe "#annotations" do
+    it 'creates when missing' do
+      pod.annotations.must_equal({})
+      pod.annotations[:x] = 1
+      pod.annotations.must_equal(x: 1)
+    end
+
     it 'reads' do
-      pod.annotations[:'samson/show_logs_on_deploy'].must_equal 'true'
+      pod_attributes[:metadata][:annotations] = {x: 1}
+      pod.annotations.must_equal x: 1
     end
   end
 
