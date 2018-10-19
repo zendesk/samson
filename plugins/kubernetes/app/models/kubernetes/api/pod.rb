@@ -18,6 +18,10 @@ module Kubernetes
         @pod.dig(:metadata, :namespace)
       end
 
+      def annotations
+        @pod[:metadata][:annotations] ||= {}
+      end
+
       def live?
         completed? || (phase == 'Running' && ready?)
       end

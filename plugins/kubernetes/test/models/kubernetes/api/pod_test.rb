@@ -13,6 +13,9 @@ describe Kubernetes::Api::Pod do
         labels: {
           deploy_group_id: '123',
           role_id: '234',
+        },
+        annotations: {
+          'samson/show_logs_on_deploy': 'true'
         }
       },
       status: {
@@ -142,6 +145,12 @@ describe Kubernetes::Api::Pod do
   describe "#containers" do
     it 'reads' do
       pod.containers.first[:name].must_equal 'container1'
+    end
+  end
+
+  describe "#annotations" do
+    it 'reads' do
+      pod.annotations[:'samson/show_logs_on_deploy'].must_equal 'true'
     end
   end
 
