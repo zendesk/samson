@@ -85,7 +85,7 @@ module Kubernetes
         statuses = pod_statuses(release_docs)
         if statuses.none?
           @output.puts "No pods were created"
-          return success
+          return success, statuses
         end
         not_ready = statuses.reject(&:live)
 
@@ -93,23 +93,23 @@ module Kubernetes
           if not_ready.any?
             print_statuses(statuses)
             unstable!('one or more pods are not live', not_ready)
-            return statuses
+            return false, statuses
           else
             @output.puts "Testing for stability: #{stable_time_remaining}s"
-            return success if stable?
+            return success, statuses if stable?
           end
         else
           print_statuses(statuses)
           if not_ready.any?
             if stopped = not_ready.select(&:stop).presence
               unstable!('one or more pods stopped', stopped)
-              return statuses
+              return false, statuses
             elsif seconds_waiting > timeout
               @output.puts "TIMEOUT, pods took too long to get live"
-              return statuses
+              return false, statuses
             end
           elsif statuses.all? { |s| s.pod.completed? }
-            return success
+            return success, statuses
           else
             @output.puts "READY, starting stability test"
             @testing_for_stability = Time.now.to_i
@@ -117,7 +117,7 @@ module Kubernetes
         end
 
         sleep TICK
-        return statuses if cancelled?
+        return false, statuses if cancelled?
       end
     end
 
@@ -142,20 +142,34 @@ module Kubernetes
       end
     end
 
+    def show_logs_on_deploy_if_requested(statuses)
+      pods = statuses.map(&:pod).compact.select { |p| p.annotations[:'samson/show_logs_on_deploy'] == 'true' }
+      pods.each { |pod| print_pod_details(pod, Time.now, events: false) }
+    rescue StandardError
+      info = ErrorNotifier.notify($!, sync: true)
+      @output.puts "Error showing logs: #{info}"
+    end
+
     def show_failure_cause(release_docs, statuses)
       release_docs.each { |doc| print_resource_events(doc) }
       log_end_time = Integer(ENV['KUBERNETES_LOG_TIMEOUT'] || '20').seconds.from_now
       debug_pods = statuses.reject(&:live).select(&:pod).group_by(&:role).map { |_, g| g.first.pod }
       debug_pods.each do |pod|
-        @output.puts "\n#{pod_identifier(pod)}:"
-        print_pod_events(pod)
-        @output.puts
-        print_pod_logs(pod, log_end_time)
-        @output.puts "\n------------------------------------------\n"
+        print_pod_details(pod, log_end_time, events: true)
       end
     rescue
       info = ErrorNotifier.notify($!, sync: true)
       @output.puts "Error showing failure cause: #{info}"
+    end
+
+    def print_pod_details(pod, log_end_time, events:)
+      @output.puts "\n#{pod_identifier(pod)}:"
+      if events
+        print_pod_events(pod)
+        @output.puts
+      end
+      print_pod_logs(pod, log_end_time)
+      @output.puts "\n------------------------------------------\n"
     end
 
     def pod_identifier(pod)
@@ -394,14 +408,15 @@ module Kubernetes
 
     def deploy_and_watch(release_docs, timeout)
       deploy(release_docs)
-      result = wait_for_resources_to_complete(release_docs, timeout)
-      if result == true
+      success, statuses = wait_for_resources_to_complete(release_docs, timeout)
+      if success == true
         if blue_green = release_docs.select(&:blue_green_color).presence
           finish_blue_green_deployment(blue_green)
         end
+        show_logs_on_deploy_if_requested(statuses)
         true
       else
-        show_failure_cause(release_docs, result)
+        show_failure_cause(release_docs, statuses)
         rollback(release_docs) if @job.deploy.kubernetes_rollback
         @output.puts "DONE"
         false

@@ -184,3 +184,9 @@ To override it, set the namespace to either `default` or `kube-system` and set `
 Samson automatically adds `container[].lifecycle.preStop` `sleep 3` if a preStop hook is not set and
 `container[].samson/preStop` is not set to `disabled`, to prevent in-flight requests from getting lost when taking a pod
 out of rotation (alternatively set `metadata.annoations.container-nameofcontainer-samson/preStop: disabled`).
+
+### Showing logs on successful deploys
+
+Set `metadata.annoations.samson/show_logs_on_deploy: 'true'` on pods, to see logs when the deploy succeeds.
+This can be useful for Migrations (see above).
+(On failure, samson always shows all pod logs)

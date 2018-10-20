@@ -145,6 +145,19 @@ describe Kubernetes::Api::Pod do
     end
   end
 
+  describe "#annotations" do
+    it 'creates when missing' do
+      pod.annotations.must_equal({})
+      pod.annotations[:x] = 1
+      pod.annotations.must_equal(x: 1)
+    end
+
+    it 'reads' do
+      pod_attributes[:metadata][:annotations] = {x: 1}
+      pod.annotations.must_equal x: 1
+    end
+  end
+
   describe "#reason" do
     it "is unknown when unknown" do
       pod.reason.must_equal "Unknown"
