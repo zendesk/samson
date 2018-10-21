@@ -48,7 +48,7 @@ describe JobOutputsChannel do
   describe "#subscribed" do
     before do
       channel.stubs(:current_user).returns(user)
-      channel.params[:id] = "123"
+      channel.params[:id] = jobs(:succeeded_test).id
     end
 
     it "subscribes to self" do
@@ -59,8 +59,8 @@ describe JobOutputsChannel do
       maxitest_wait_for_extra_threads
     end
 
-    # TODO: should stream job output instead ?
-    it "noops when execution is finished" do
+    it "streams fake output when execution was already finished" do
+      channel.expects(:transmit).times(3) # start, message, finished
       channel.subscribed
     end
   end
