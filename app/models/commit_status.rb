@@ -71,7 +71,7 @@ class CommitStatus
   # transition to new API. See https://developer.github.com/v3/checks/runs/ and
   # https://developer.github.com/v3/checks/suites/ for details
   def github_check
-    base_url = "repos/#{@project.repository_path}/commits/#{CGI.escape(@reference)}"
+    base_url = "repos/#{@project.repository_path}/commits/#{@reference}"
     preview_header = {Accept: 'application/vnd.github.antiope-preview+json'}
 
     check_suites = GITHUB.get("#{base_url}/check-suites", headers: preview_header)[:check_suites]
