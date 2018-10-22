@@ -24,7 +24,7 @@ describe ErrorNotifier do
         ErrorNotifier.notify(exception)
       end
 
-      expected_message = "ErrorNotifier caught exception: motherofgod. Use use ErrorNotifier.expects(:notify)" \
+      expected_message = "ErrorNotifier caught exception: motherofgod. Use ErrorNotifier.expects(:notify)" \
         " to silence in tests"
       e.message.must_equal expected_message
       e.backtrace.must_equal ['neatbacktraceyougotthere']
