@@ -1,6 +1,6 @@
 <%
   uri = URI(ENV['DATABASE_URL'] || 'mysql://root@127.0.0.1:3306')
-  uri.scheme = 'mysql2'
+  uri.scheme = 'mysql2' if uri.scheme == 'mysql'
 %>
 
 development:

@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 
 bundle install --local --quiet --jobs 4 || bundle check
 
