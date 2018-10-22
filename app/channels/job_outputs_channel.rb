@@ -48,22 +48,28 @@ class JobOutputsChannel < ActionCable::Channel::Base
   # When a user subscribes send them all old messages and new messages,
   # each user ends up with their own channel instead of using a broadcast,
   # some kind of buffered broadcast channel would be ideal
-  # TODO: stream finished executions or force reload when user connects late ... check https://github.com/zendesk/samson/pull/2814
   def subscribed
     id = params.fetch(:id)
-    return unless execution = JobQueue.find_by_id(id)
-
-    execution.viewers.push current_user
-
-    Thread.new do
-      ActiveRecord::Base.connection_pool.with_connection do
-        builder = EventBuilder.new(execution.job)
-        execution.output.each do |event, data|
-          transmit event: event, data: builder.payload(event, data)
+    if execution = JobQueue.find_by_id(id)
+      execution.viewers.push current_user
+      Thread.new do
+        ActiveRecord::Base.connection_pool.with_connection do
+          builder = EventBuilder.new(execution.job)
+          execution.output.each do |event, data|
+            transmit event: event, data: builder.payload(event, data)
+          end
+          # TODO: disconnect all listeners so they close their sockets ?
+          # then replace the reloaded/finished/waitUntilEnabled stuff with that
         end
-        # TODO: disconnect all listeners so they close their sockets ?
-        # then replace the reloaded/finished/waitUntilEnabled stuff with that
       end
+    else # job has already stopped ... send fake output (reproduce by deploying a bad ref)
+      job = Job.find(id)
+      builder = EventBuilder.new(job)
+      transmit event: :started, data: builder.payload(:started, nil)
+      job.output.each_line do |line|
+        transmit event: :message, data: builder.payload(:message, line)
+      end
+      transmit event: :finished, data: builder.payload(:finished, nil)
     end
   end
 
