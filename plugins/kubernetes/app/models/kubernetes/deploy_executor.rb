@@ -144,7 +144,8 @@ module Kubernetes
 
     def show_logs_on_deploy_if_requested(statuses)
       pods = statuses.map(&:pod).compact.select { |p| p.annotations[:'samson/show_logs_on_deploy'] == 'true' }
-      pods.each { |pod| print_pod_details(pod, Time.now, events: false) }
+      log_end = Time.now # here to be consistent for all pods
+      pods.each { |pod| print_pod_details(pod, log_end, events: false) }
     rescue StandardError
       info = ErrorNotifier.notify($!, sync: true)
       @output.puts "Error showing logs: #{info}"
