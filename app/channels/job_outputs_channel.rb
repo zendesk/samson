@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 class JobOutputsChannel < ActionCable::Channel::Base
+  MAX_WAIT = 1200 # max seconds to wait for job to start when streaming
+  WAIT_DURATION = 5 # seconds between re-checking
+
   # pretends to be a controller to reuse partials and helpers
   class EventBuilder
     include ApplicationHelper
@@ -50,33 +53,49 @@ class JobOutputsChannel < ActionCable::Channel::Base
   # some kind of buffered broadcast channel would be ideal
   def subscribed
     id = params.fetch(:id)
-    if execution = JobQueue.find_by_id(id)
-      execution.viewers.push current_user
-      Thread.new do
-        ActiveRecord::Base.connection_pool.with_connection do
-          builder = EventBuilder.new(execution.job)
-          execution.output.each do |event, data|
-            transmit event: event, data: builder.payload(event, data)
-          end
-          # TODO: disconnect all listeners so they close their sockets ?
-          # then replace the reloaded/finished/waitUntilEnabled stuff with that
+
+    @thread = Thread.new do
+      ActiveRecord::Base.connection_pool.with_connection do
+        (MAX_WAIT / WAIT_DURATION).times do
+          # running
+          execution = JobQueue.find_by_id(id)
+          break stream_execution(execution) if execution
+
+          # cancelled or we missed it running
+          job = Job.find(id)
+          break stream_finished_output(job) if job.finished?
+
+          # pending
+          sleep WAIT_DURATION
         end
       end
-    else # job has already stopped ... send fake output (reproduce by deploying a bad ref)
-      job = Job.find(id)
-      builder = EventBuilder.new(job)
-      transmit event: :started, data: builder.payload(:started, nil)
-      job.output.each_line do |line|
-        transmit event: :message, data: builder.payload(:message, line)
-      end
-      transmit event: :finished, data: builder.payload(:finished, nil)
     end
   end
 
   def unsubscribed
-    stop_all_streams
+    @thread&.kill
     if execution = JobQueue.find_by_id(params.fetch(:id))
       execution.viewers.delete current_user
     end
+  end
+
+  private
+
+  def stream_execution(execution)
+    execution.viewers.push current_user
+    builder = EventBuilder.new(execution.job)
+    execution.output.each do |event, data|
+      transmit event: event, data: builder.payload(event, data)
+    end
+  end
+
+  # send fake output (reproduce by deploying a bad ref)
+  def stream_finished_output(job)
+    builder = EventBuilder.new(job)
+    transmit event: :started, data: builder.payload(:started, nil)
+    job.output.each_line do |line|
+      transmit event: :message, data: builder.payload(:message, line)
+    end
+    transmit event: :finished, data: builder.payload(:finished, nil)
   end
 end
