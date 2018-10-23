@@ -27,16 +27,16 @@ describe Samson::BuildFinder do
   let(:finder) { Samson::BuildFinder.new(output, job, 'master', build_selectors: build_selectors) }
   let(:project) { build.project }
 
-  before do
-    expect_sleep.with { raise "Unexpected sleep" }.never
-    build.update_column(:docker_repo_digest, nil) # building needs to happen
-    job.update_column(:commit, build.git_sha) # this is normally done by JobExecution
-    GitRepository.any_instance.stubs(:file_content).with('Dockerfile', job.commit).returns "FROM all"
-  end
-
   describe "#ensure_successful_builds" do
     def execute
       finder.ensure_successful_builds
+    end
+
+    before do
+      expect_sleep.with { raise "Unexpected sleep" }.never
+      build.update_column(:docker_repo_digest, nil) # building needs to happen
+      job.update_column(:commit, build.git_sha) # this is normally done by JobExecution
+      GitRepository.any_instance.stubs(:file_content).with('Dockerfile', job.commit).returns "FROM all"
     end
 
     it "fails when the build is not built" do
@@ -333,6 +333,41 @@ describe Samson::BuildFinder do
           )
         end
       end
+    end
+  end
+
+  describe "#possible_builds" do
+    let(:build) { builds(:staging) }
+    let(:previous_deploy) { deploys(:failed_staging_test) }
+
+    before do
+      previous_deploy.update_column(:id, job.deploy.id - 1) # make previous_deploy work
+    end
+
+    it "does not find builds when missing" do
+      finder.send(:possible_builds).must_equal []
+    end
+
+    it "find builds for current sha" do
+      build.update_column(:git_sha, job.commit)
+      finder.send(:possible_builds).must_equal [build]
+    end
+
+    it "find builds from previous deploy when requested" do
+      job.deploy.update_column(:kubernetes_reuse_build, true)
+      build.update_column(:git_sha, previous_deploy.job.commit)
+      finder.send(:possible_builds).must_equal [build]
+    end
+
+    it "find builds from previous real deploy when previous on was also reusing" do
+      job.deploy.update_column(:kubernetes_reuse_build, true)
+      previous_deploy.update_column(:kubernetes_reuse_build, true)
+
+      pre_previous = deploys(:succeeded_production_test)
+      pre_previous.update_columns(stage_id: job.deploy.stage_id, id: previous_deploy.id - 1)
+
+      build.update_column(:git_sha, pre_previous.job.commit)
+      finder.send(:possible_builds).must_equal [build]
     end
   end
 end
