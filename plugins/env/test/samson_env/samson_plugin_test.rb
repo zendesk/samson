@@ -145,4 +145,53 @@ describe SamsonEnv do
       assert call(users(:project_admin), :write, group)
     end
   end
+
+  describe 'view callbacks' do
+    before do
+      view_context.instance_variable_set(:@project, project)
+    end
+
+    let(:view_context) do
+      view_context = ActionView::Base.new(ActionController::Base.view_paths)
+
+      class << view_context
+        include Rails.application.routes.url_helpers
+        include ApplicationHelper
+      end
+
+      view_context.instance_eval do
+        # stub for testing render
+        def protect_against_forgery?
+        end
+      end
+
+      view_context
+    end
+
+    describe 'project_form callback' do
+      def with_form
+        view_context.form_for project do |form|
+          yield form
+        end
+      end
+
+      def render_view
+        with_form do |form|
+          Samson::Hooks.render_views(:project_form, view_context, form: form)
+        end
+      end
+
+      it 'renders use_env_repo checkbox when DEPLOYMENT_ENV_REPO is present' do
+        with_env DEPLOYMENT_ENV_REPO: 'git@github.com:zendesk/test.git' do
+          result = render_view
+          result.must_include %(id="project_use_env_repo" />)
+        end
+      end
+
+      it 'does not render use_env_repo checkbox when DEPLOYMENT_ENV_REPO is nil' do
+        result = render_view
+        result.wont_include %(id="project_use_env_repo" />)
+      end
+    end
+  end
 end

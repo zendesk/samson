@@ -1,10 +1,14 @@
-
 <fieldset>
   <legend>
     Environment Variables
   </legend>
 
-  <%= form.input :use_env_repo, as: :check_box, help: 'Use external repository (set by DEPLOYMENT_ENV_REPO) to store environment configuration' %>
+  <% if ENV['DEPLOYMENT_ENV_REPO'] %>
+    <%= form.input :use_env_repo,
+        as: :check_box,
+        help: 'Use external repository (set by DEPLOYMENT_ENV_REPO) to store environment configuration'
+    %>
+  <% end %>
 
   <% if !@project.use_env_repo? %>
     <h4>Variables</h4>
