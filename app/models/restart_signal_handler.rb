@@ -2,6 +2,7 @@
 # Ensures that we wait for all jobs to finish before shutting down the process during restart.
 # JobQueue locks a mutex, hence the need for a separate SignalHandler thread
 # Self-pipe is also best practice, since signal handlers can themselves be interrupted
+
 class RestartSignalHandler
   class << self
     alias_method :listen, :new

@@ -7,7 +7,7 @@ module ErrorNotifier
     def notify(exception, options = {})
       debug_info = Samson::Hooks.fire(:error, exception, options).compact.detect { |result| result.is_a?(String) }
       if ::Rails.env.test?
-        message = "ErrorNotifier caught exception: #{exception.message}. Use use ErrorNotifier.expects(:notify) to " \
+        message = "ErrorNotifier caught exception: #{exception.message}. Use ErrorNotifier.expects(:notify) to " \
           "silence in tests"
         raise RuntimeError, message, exception.backtrace
       else

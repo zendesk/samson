@@ -80,9 +80,7 @@ describe Samson::Periodical do
       Lock.expects(:remove_expired_locks).raises custom_error
       ErrorNotifier.expects(:notify).
         with(instance_of(custom_error), error_message: "Samson::Periodical remove_expired_locks failed")
-      assert_raises custom_error do
-        Samson::Periodical.run_once(:remove_expired_locks)
-      end
+      Samson::Periodical.run_once(:remove_expired_locks)
     end
   end
 
@@ -111,11 +109,18 @@ describe Samson::Periodical do
       Samson::Periodical.run.must_equal []
     end
 
-    it "sends errors to error notifier XXXX" do
-      ErrorNotifier.expects(:notify).with(instance_of(custom_error), error_message: "Samson::Periodical foo failed")
-      Samson::Periodical.register(:foo, 'bar') { raise custom_error }
+    it "sends errors to error notifier" do
+      ErrorNotifier.expects(:notify).with(instance_of(ArgumentError), error_message: "Samson::Periodical foo failed")
+      Samson::Periodical.register(:foo, 'bar', now: true) { raise ArgumentError }
       tasks = Samson::Periodical.run
       sleep 0.05 # let task execute
+      tasks.first.shutdown
+    end
+
+    it "does not block server boot when initial run is inline and fails" do
+      ErrorNotifier.expects(:notify).with(instance_of(ArgumentError), error_message: "Samson::Periodical foo failed")
+      Samson::Periodical.register(:foo, 'bar') { raise ArgumentError }
+      tasks = Samson::Periodical.run
       tasks.first.shutdown
     end
   end
@@ -178,7 +183,7 @@ describe Samson::Periodical do
 
     it 'counts running tasks' do
       mutex = Mutex.new.lock
-      Samson::Periodical.register(:foo, 'bar', active: true) { mutex.lock }
+      Samson::Periodical.register(:foo, 'bar', active: true, now: true) { mutex.lock }
       tasks = Samson::Periodical.run
       sleep 0.01 # Allow task to start
 
@@ -190,8 +195,9 @@ describe Samson::Periodical do
       tasks.first.shutdown
     end
 
-    it 'counts raising tasks' do
-      Samson::Periodical.register(:foo, 'bar', active: true) { raise }
+    it 'correctly counts down when task raised' do
+      ErrorNotifier.expects(:notify)
+      Samson::Periodical.register(:foo, 'bar', active: true, now: true) { raise }
       tasks = Samson::Periodical.run
       sleep 0.01 # Allow task to finish
 
