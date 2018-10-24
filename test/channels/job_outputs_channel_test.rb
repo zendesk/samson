@@ -46,12 +46,14 @@ describe JobOutputsChannel do
   end
 
   describe "#subscribed" do
+    let(:job) { jobs(:succeeded_test) }
+
     before do
       channel.stubs(:current_user).returns(user)
-      channel.params[:id] = jobs(:succeeded_test).id
+      channel.params[:id] = job.id
     end
 
-    it "subscribes to self" do
+    it "transmits execution output" do
       execution = stub_execution
       channel.expects(:transmit)
       channel.subscribed
@@ -62,6 +64,20 @@ describe JobOutputsChannel do
     it "streams fake output when execution was already finished" do
       channel.expects(:transmit).times(3) # start, message, finished
       channel.subscribed
+      maxitest_wait_for_extra_threads
+    end
+
+    it "waits for job to start when it is pending" do
+      # waiting for job
+      job.update_column(:status, 'pending')
+      channel.stubs(:sleep).with { sleep 0.05 } # make pauses shorter
+      channel.subscribed
+      sleep 0.1
+
+      # start job
+      channel.expects(:transmit).times(3) # start, message, finished
+      job.update_column(:status, 'succeeded')
+      maxitest_wait_for_extra_threads
     end
   end
 
@@ -69,7 +85,6 @@ describe JobOutputsChannel do
     before do
       channel.stubs(:current_user).returns(user)
       channel.params[:id] = "123"
-      channel.expects(:stop_all_streams)
     end
 
     it "unsubscribes" do
