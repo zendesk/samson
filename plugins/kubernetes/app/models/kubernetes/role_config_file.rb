@@ -7,9 +7,27 @@ module Kubernetes
     attr_reader :path, :elements
 
     DEPLOY_KINDS = ['Deployment', 'DaemonSet', 'StatefulSet'].freeze
-    PRIMARY_KINDS = (DEPLOY_KINDS + ['Job', 'CronJob', 'Pod']).freeze
     SERVICE_KINDS = ['Service'].freeze
     PREREQUISITE = [:metadata, :annotations, :'samson/prerequisite'].freeze
+
+    def self.primary?(resource)
+      templates(resource).any?
+    end
+
+    def self.templates(resource)
+      spec = resource[:spec]
+      if !spec
+        []
+      elsif spec[:containers]
+        [resource]
+      else
+        spec.values_at(*template_keys(resource)).flat_map { |r| templates(r) }
+      end
+    end
+
+    def self.template_keys(resource)
+      (resource[:spec] || {}).keys.grep(/template$/i)
+    end
 
     def initialize(content, path)
       @path = path
@@ -30,17 +48,11 @@ module Kubernetes
     end
 
     def primary
-      find_by_kind(PRIMARY_KINDS).first
+      @elements.detect { |e| self.class.primary?(e) }
     end
 
     def services
-      find_by_kind(SERVICE_KINDS)
-    end
-
-    private
-
-    def find_by_kind(kinds)
-      @elements.select { |doc| kinds.include?(doc[:kind]) }
+      @elements.select { |doc| SERVICE_KINDS.include?(doc[:kind]) }
     end
   end
 end

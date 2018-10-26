@@ -274,7 +274,7 @@ describe Kubernetes::Role do
     end
 
     it "raises when a role is invalid so the deploy is cancelled" do
-      assert config_content_yml.sub!('Service', 'Pod')
+      assert config_content_yml.sub!('project: some-project', 'project: project-invalid')
       write_config role.config_file, config_content_yml
 
       assert_raises Samson::Hooks::UserError do

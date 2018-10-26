@@ -2,8 +2,11 @@
 module Kubernetes
   class RoleValidator
     VALID_LABEL = /\A[a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?\z/ # also used in js ... cannot use /i
-    ALLOWED_DUPLICATE_KINDS = ['ConfigMap', 'Service'].freeze
     NAMESPACELESS_KINDS = ['APIService', 'ClusterRoleBinding', 'ClusterRole', 'CustomResourceDefinition'].freeze
+    IMMUTABLE_NAME_KINDS = ['APIService', 'CustomResourceDefinition', 'ConfigMap'].freeze
+
+    # we either generate multiple names or allow custom names
+    ALLOWED_DUPLICATE_KINDS = ((['Service'] + IMMUTABLE_NAME_KINDS)).freeze
 
     def initialize(elements)
       @elements = elements.compact
@@ -70,10 +73,10 @@ module Kubernetes
     end
 
     # multiple pods in a single role will make validations misbehave (recommend they all have the same role etc)
+    # also template filler won't know how to set images/resources
     def validate_single_primary_kind
-      kinds = map_attributes([:kind])
-      return if kinds.count { |k| RoleConfigFile::PRIMARY_KINDS.include?(k) } < 2
-      @errors << "Only use a maximum of 1 primary kind in a role (#{RoleConfigFile::PRIMARY_KINDS.join(", ")})"
+      return if templates.size <= 1
+      @errors << "Only use a maximum of 1 template with containers, found: #{templates.size}"
     end
 
     # template_filler.rb sets name for everything except for ConfigMaps and Service so we need to make sure
@@ -101,20 +104,13 @@ module Kubernetes
     def validate_project_and_role_consistent
       labels = @elements.flat_map do |resource|
         kind = resource[:kind]
-        allow_cross_match = resource.dig(:metadata, :annotations, :"samson/service_selector_across_roles") == "true"
 
+        allow_cross_match = resource.dig(:metadata, :annotations, :"samson/service_selector_across_roles") == "true"
         label_paths = metadata_paths(resource).map { |p| p + [:labels] } +
-          case kind
-          when 'Service'
-            allow_cross_match ? [] : [[:spec, :selector]]
-          when 'PodDisruptionBudget'
-            [
-              [:spec, :selector, :matchLabels]
-            ]
-          when *RoleConfigFile::DEPLOY_KINDS
-            [
-              [:spec, :selector, :matchLabels],
-            ]
+          if resource.dig(:spec, :selector, :matchLabels)
+            [[:spec, :selector, :matchLabels]]
+          elsif resource.dig(:spec, :selector) && !allow_cross_match
+            [[:spec, :selector]]
           else
             [] # ignore unknown / unsupported types
           end
@@ -178,16 +174,13 @@ module Kubernetes
     end
 
     def validate_containers
-      primary_kinds = RoleConfigFile::PRIMARY_KINDS
-      containered = templates.select { |t| primary_kinds.include?(t[:kind]) }
-      containers = map_attributes([:spec, :containers], elements: containered)
-      bad = containers.select { |c| !c.is_a?(Array) || c.empty? }
-      return if bad.empty?
-      @errors << "#{containered.map { |r| r[:kind] }.join("/")} needs at least 1 container"
+      containers = map_attributes([:spec, :containers], elements: templates)
+      return if containers.all? { |c| c.is_a?(Array) && c.any? }
+      @errors << "All templates need spec.containers"
     end
 
     def validate_container_name
-      names = map_attributes([:spec, :containers], elements: templates).compact.flatten(1).map { |c| c[:name] }
+      names = map_attributes([:spec, :containers], elements: templates).flatten(1).map { |c| c[:name] }
       if names.any?(&:nil?)
         @errors << "Containers need a name"
       elsif bad = names.grep_v(VALID_LABEL).presence
@@ -237,8 +230,8 @@ module Kubernetes
 
     def validate_prerequisites
       allowed = ["Job", "Pod"]
-      bad = templates.any? do |t|
-        t.dig(*RoleConfigFile::PREREQUISITE) && !allowed.include?(t[:kind])
+      bad = (@elements + templates).any? do |e|
+        e.dig(*RoleConfigFile::PREREQUISITE) && !allowed.include?(e[:kind])
       end
       @errors << "Only elements with type #{allowed.join(", ")} can be prerequisites." if bad
     end
@@ -259,29 +252,15 @@ module Kubernetes
       @elements.detect { |t| t[:kind] == "StatefulSet" }
     end
 
-    def templates
-      @elements.map do |e|
-        kind = e[:kind]
-        if kind == "Pod"
-          e
-        else
-          template = e.dig(:spec, :template) || e.dig(:spec, :jobTemplate, :spec, :template) || {}
-          template[:kind] = kind
-          template
-        end
-      end
+    def templates(elements = @elements)
+      elements.flat_map { |e| RoleConfigFile.templates(e) }
     end
 
     def metadata_paths(e)
-      [[:metadata]] +
-        case e[:kind]
-        when "CronJob"
-          [[:spec, :jobTemplate, :metadata], [:spec, :jobTemplate, :spec, :template, :metadata]]
-        when "Job", *RoleConfigFile::DEPLOY_KINDS
-          [[:spec, :template, :metadata]]
-        else
-          []
-        end
+      [[:metadata]] + RoleConfigFile.template_keys(e).flat_map do |k|
+        template = e.dig_fetch(:spec, k)
+        metadata_paths(template).map { |p| [:spec, k] + p }
+      end
     end
 
     def map_attributes(path, elements: @elements)

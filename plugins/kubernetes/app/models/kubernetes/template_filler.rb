@@ -22,20 +22,16 @@ module Kubernetes
         set_project_labels if template.dig(:metadata, :annotations, :"samson/override_project_label")
         set_deploy_url
 
-        case kind
-        when 'APIService', 'CustomResourceDefinition' # rubocop:disable Lint/EmptyWhen
+        if RoleValidator::IMMUTABLE_NAME_KINDS.include?(kind)
           # names have a fixed pattern so we cannot override them
-        when 'HorizontalPodAutoscaler'
+        elsif kind == 'HorizontalPodAutoscaler'
           set_name
           set_hpa_scale_target_name
-        when 'ConfigMap' # rubocop:disable Lint/EmptyWhen
-          # referenced in other resources so we cannot change the name
-          # NOTE: may cause multiple projects to override each others ConfigMaps if they chose duplicate names
-        when *Kubernetes::RoleConfigFile::SERVICE_KINDS
+        elsif Kubernetes::RoleConfigFile::SERVICE_KINDS.include?(kind)
           set_service_name
           prefix_service_cluster_ip
           set_service_blue_green if blue_green_color
-        when *Kubernetes::RoleConfigFile::PRIMARY_KINDS
+        elsif Kubernetes::RoleConfigFile.primary?(template)
           if kind != 'Pod'
             set_rc_unique_label_key
             set_history_limit
@@ -59,7 +55,7 @@ module Kubernetes
           set_image_pull_secrets
           set_resource_blue_green if blue_green_color
           set_init_containers
-        when 'PodDisruptionBudget'
+        elsif kind == 'PodDisruptionBudget'
           set_name
           set_match_labels_blue_green if blue_green_color
         else
@@ -104,9 +100,7 @@ module Kubernetes
     end
 
     def set_deploy_url
-      templates = [template]
-      templates << pod_template if Kubernetes::RoleConfigFile::PRIMARY_KINDS.include?(template[:kind])
-      templates.each do |t|
+      [template, pod_template].compact.each do |t|
         annotations = (t[:metadata][:annotations] ||= {})
         annotations[:"samson/deploy_url"] = @doc.kubernetes_release.deploy&.url
       end
@@ -214,11 +208,7 @@ module Kubernetes
     end
 
     def pod_template
-      case template[:kind]
-      when 'Pod' then template
-      when 'CronJob' then template.dig_fetch(:spec, :jobTemplate, :spec, :template)
-      else template.dig_fetch(:spec, :template)
-      end
+      @pod_template ||= RoleConfigFile.templates(template).first
     end
 
     def secret_annotations
