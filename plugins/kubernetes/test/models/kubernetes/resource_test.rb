@@ -295,7 +295,7 @@ describe Kubernetes::Resource do
       end
 
       it "is not primary when it is a secondary resource" do
-        template[:kind] = "Service"
+        template[:spec][:template][:spec].delete :containers
         refute resource.primary?
       end
     end

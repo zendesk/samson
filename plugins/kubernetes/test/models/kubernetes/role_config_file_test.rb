@@ -54,4 +54,30 @@ describe Kubernetes::RoleConfigFile do
       config_file.services.must_equal []
     end
   end
+
+  describe ".primary?" do
+    it "is primary when template has containers" do
+      Kubernetes::RoleConfigFile.primary?(YAML.safe_load(content).with_indifferent_access).must_equal true
+    end
+
+    it "is not primary when template has no containers" do
+      Kubernetes::RoleConfigFile.primary?({}).must_equal false
+    end
+  end
+
+  describe ".templates" do
+    it "is empty when there is no spec" do
+      Kubernetes::RoleConfigFile.templates({}).must_equal []
+    end
+
+    it "finds simple template" do
+      Kubernetes::RoleConfigFile.templates(spec: {containers: 'foo'}).must_equal [{spec: {containers: 'foo'}}]
+    end
+
+    it "finds nested template" do
+      Kubernetes::RoleConfigFile.templates(spec: {fooTemplate: {spec: {containers: 'foo'}}}).must_equal(
+        [{spec: {containers: 'foo'}}]
+      )
+    end
+  end
 end

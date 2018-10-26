@@ -32,7 +32,7 @@ module Kubernetes
       end
 
       def primary?
-        Kubernetes::RoleConfigFile::PRIMARY_KINDS.include?(@template.fetch(:kind))
+        Kubernetes::RoleConfigFile.primary?(@template)
       end
 
       def deploy
