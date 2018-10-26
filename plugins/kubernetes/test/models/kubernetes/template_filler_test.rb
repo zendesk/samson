@@ -144,6 +144,15 @@ describe Kubernetes::TemplateFiller do
       template.to_hash[:metadata][:name].must_equal "test-app-server"
     end
 
+    it "sets replicas for templates" do
+      raw_template[:kind] = "foobar"
+      raw_template[:spec].delete :replicas
+      raw_template[:spec][:template][:spec][:replicas] = 1
+      result = template.to_hash
+      result[:spec][:replicas].must_be_nil
+      result[:spec][:template][:spec][:replicas].must_equal 2
+    end
+
     ['CustomResourceDefinition', 'APIService'].each do |kind|
       it "does not set override name for #{kind} since it follows a fixed naming pattern" do
         raw_template[:kind] = kind

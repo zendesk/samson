@@ -37,11 +37,7 @@ module Kubernetes
             set_history_limit
           end
 
-          if ['StatefulSet', 'Deployment'].include?(kind)
-            set_replica_target
-          else
-            validate_replica_target_is_supported
-          end
+          set_replica_target || validate_replica_target_is_supported
 
           make_stateful_set_match_service if kind == 'StatefulSet'
           set_pre_stop if kind == 'Deployment'
@@ -278,7 +274,17 @@ module Kubernetes
     end
 
     def set_replica_target
-      template.dig_set [:spec, :replicas], @doc.replica_target
+      key = [:spec, :replicas]
+      target =
+        if ['StatefulSet', 'Deployment'].include?(template[:kind])
+          template
+        else
+          # custom resource that has replicas set on itself or it's template
+          containers = [template] + (template[:spec] || {}).values_at(*RoleConfigFile.template_keys(template))
+          containers.detect { |c| c.dig(*key) }
+        end
+
+      target&.dig_set key, @doc.replica_target
     end
 
     def validate_replica_target_is_supported
