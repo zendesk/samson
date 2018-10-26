@@ -825,6 +825,47 @@ describe Kubernetes::TemplateFiller do
         hash.dig_fetch(:spec, :selector, :matchLabels, :blue_green).must_equal 'green'
       end
     end
+
+    describe "set_via_env_json" do
+      let!(:environment) { EnvironmentVariable.create!(parent: project, name: "FOO", value: '"bar"') }
+
+      before do
+        raw_template[:metadata][:annotations] = {
+          "samson/set_via_env_json-spec.foo" => "FOO"
+        }
+      end
+
+      it "sets simple" do
+        template.to_hash[:spec][:foo].must_equal "bar"
+      end
+
+      it "sets in arrays" do
+        raw_template[:metadata][:annotations] = {
+          "samson/set_via_env_json-spec.template.spec.containers.0.foo" => "FOO"
+        }
+        template.to_hash.dig(:spec, :template, :spec, :containers, 0, :foo).must_equal "bar"
+      end
+
+      it "fails nicely when missing" do
+        raw_template[:metadata][:annotations] = {
+          "samson/set_via_env_json-foo.bar.foo" => "FOO"
+        }
+        e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
+        e.message.must_equal "Unable to set key samson/set_via_env_json-foo.bar.foo: key not found: [:foo, :bar]"
+      end
+
+      it "fails nicely with invalid json" do
+        environment.update_column(:value, 'foo')
+        e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
+        e.message.must_equal "Unable to set key samson/set_via_env_json-spec.foo: 765: unexpected token at 'foo'"
+      end
+
+      it "fails nicely with env is missing" do
+        environment.update_column(:name, 'BAR')
+        e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
+        e.message.must_equal "Unable to set key samson/set_via_env_json-spec.foo: key not found: \"FOO\""
+      end
+    end
   end
 
   describe "#verify" do

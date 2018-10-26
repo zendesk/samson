@@ -190,3 +190,13 @@ out of rotation (alternatively set `metadata.annoations.container-nameofcontaine
 Set `metadata.annoations.samson/show_logs_on_deploy: 'true'` on pods, to see logs when the deploy succeeds.
 This can be useful for Migrations (see above).
 (On failure, samson always shows all pod logs)
+
+### Changing templates via ENV
+
+For custom things that need to be different between environments/deploy-groups.
+
+Use an annotation to configure what will to be replaced:
+```
+metadata.annotations.samson/set_via_env_json-metadata.labels.custom: SOME_ENV_VAR
+```
+Then configure an ENV var with that same name and a value that is valid JSON.
