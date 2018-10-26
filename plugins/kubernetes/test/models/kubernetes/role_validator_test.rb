@@ -322,6 +322,12 @@ describe Kubernetes::RoleValidator do
         role.first[:kind] = "Deployment"
         errors.must_include "Only elements with type Job, Pod can be prerequisites."
       end
+
+      it "allows static configuration" do
+        role.first[:kind] = "ServiceAccount"
+        role.first[:spec].delete(:template)
+        refute errors
+      end
     end
 
     describe 'pod' do
