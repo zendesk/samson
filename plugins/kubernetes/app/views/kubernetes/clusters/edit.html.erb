@@ -11,6 +11,7 @@
       <%= form.input :config_filepath, label: 'Config File path', pattern: /\A\/.*\z/, help: 'Absolute paths only', required: true %>
       <%= form.input :config_context, label: 'Context', required: true do %>
         <% if config_contexts.any? %>
+          <% config_contexts.unshift @cluster.config_context unless config_contexts.include?(@cluster.config_context) %>
           <%= form.select :config_context, config_contexts, {}, { class: 'form-control' } %>
         <% else %>
           <%= form.text_field :config_context, class: "form-control" %>
