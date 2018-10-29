@@ -303,7 +303,7 @@ describe Kubernetes::RoleValidator do
         role.pop
         role.first[:kind] = "Job"
         role.first[:spec][:template][:spec][:restartPolicy] = "Never"
-        role.first[:metadata][:annotations] = {"samson/prerequisite": 'true'}
+        role.first[:metadata][:annotations] = {"samson/prerequisite": "true"}
       end
 
       it "does not report valid prerequisites" do
@@ -313,7 +313,7 @@ describe Kubernetes::RoleValidator do
       it "does not report valid prerequisites for pod" do
         assert role.first.delete(:spec)
         role.first[:kind] = "Pod"
-        role.first[:metadata][:annotations] = {"samson/prerequisite": 'true'}
+        role.first[:metadata][:annotations] = {"samson/prerequisite": "true"}
         role.first[:spec] = {containers: [{name: "Foo"}]}
         errors.must_equal nil
       end

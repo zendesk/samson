@@ -120,9 +120,9 @@ Via [Template filler](/plugins/kubernetes/app/models/kubernetes/template_filler.
    KUBERNETES_CLUSTER_NAME, and environment variables defined via [env](/plugins/env) plugin.
  - Secret puller and secret annotations (if secret puller + vault is used)
 
-### Migrations
+### Migrations / Prerequisite
 
-Add a role with only a `Pod`, `metadata.annotations.samson/prerequisite: true`, and command to run a migrations.
+Add a role with only a `Pod`, `metadata.annotations.samson/prerequisite: 'true'`, and command to run a migrations.
 It will be executed before the rest is deployed.
 
 For default it waits for 10 minutes before timeout, you can change the timeout
