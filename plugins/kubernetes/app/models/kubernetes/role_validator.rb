@@ -231,7 +231,7 @@ module Kubernetes
     def validate_prerequisites
       allowed = ["Job", "Pod"]
       bad = (@elements + templates).any? do |e|
-        e.dig(*RoleConfigFile::PREREQUISITE) && !allowed.include?(e[:kind])
+        e.dig(*RoleConfigFile::PREREQUISITE) && !allowed.include?(e[:kind]) && RoleConfigFile.primary?(e)
       end
       @errors << "Only elements with type #{allowed.join(", ")} can be prerequisites." if bad
     end
