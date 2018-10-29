@@ -39,5 +39,5 @@ matrix:
       # Needs to be && joined since otherwise travis does not fail the build when a earlier step fails
       script: |
         ([[ -z "$FOSSA_API_KEY" ]] && [[ "$TRAVIS_PULL_REQUEST" != "false" ]]) || \
-        ./fossa analyze --config config/fossa.yml && \
-        travis_wait 20 ./fossa test --config config/fossa.yml
+        ./fossa analyze --config config/fossa.yml --debug && \
+        travis_wait 20 ./fossa test --config config/fossa.yml --debug
