@@ -240,7 +240,9 @@ class JobExecution
 
     # make repo-digests available to stage commands
     builds.map do |build|
-      ["BUILD_FROM_#{build.dockerfile || build.image_name}", build.docker_repo_digest]
+      name = build.dockerfile || build.image_name
+      name = name.gsub(/[^A-Za-z\d_]/, "_") # IEEE Std 1003.1-2001 A-Z, digits, '_' (+ a-z for backwards compatibility)
+      ["BUILD_FROM_#{name}", build.docker_repo_digest]
     end.to_h
   end
 
