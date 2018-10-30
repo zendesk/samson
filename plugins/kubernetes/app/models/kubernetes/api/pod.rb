@@ -5,6 +5,14 @@ module Kubernetes
       INIT_CONTAINER_KEY = :'pod.beta.kubernetes.io/init-containers'
       INGORED_AUTOSCALE_EVENT_REASONS = %w[FailedGetMetrics FailedRescale].freeze
 
+      def self.init_containers(pod)
+        containers = pod.dig(:spec, :initContainers) || []
+        if json = pod.dig(:metadata, :annotations, Kubernetes::Api::Pod::INIT_CONTAINER_KEY)
+          containers += JSON.parse(json, symbolize_names: true)
+        end
+        containers
+      end
+
       def initialize(api_pod, client: nil)
         @pod = api_pod
         @client = client
@@ -90,8 +98,7 @@ module Kubernetes
       end
 
       def init_containers
-        return [] unless containers = @pod.dig(:metadata, :annotations, INIT_CONTAINER_KEY)
-        JSON.parse(containers, symbolize_names: true)
+        self.class.init_containers(@pod)
       end
 
       private
