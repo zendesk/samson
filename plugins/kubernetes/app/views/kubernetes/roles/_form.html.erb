@@ -5,7 +5,7 @@
   <fieldset>
     <%= form.input :name %>
     <%= form.input :config_file %>
-    <%= form.input :service_name %>
+    <%= form.input :service_name, help: "Override service name with this name. Uses name from yml file if it starts with this name." %>
     <%= form.input :resource_name,
         pattern: Kubernetes::RoleValidator::VALID_LABEL,
         help: "Name for the resource this role will create (service/job), a-Z 0-9 and -"

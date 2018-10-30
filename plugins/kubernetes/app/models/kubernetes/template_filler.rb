@@ -147,6 +147,7 @@ module Kubernetes
 
       # users can only enter a single service-name so for each additional service we make up a name
       # unless the given name already fits the pattern ... slight chance that it might end up being not unique
+      # this is to enable `foo-http` / `foo-grpc` style services
       return config_name if config_name.start_with?(name) && config_name.size > name.size
 
       name += "-#{@index + 1}" if @index > 0
