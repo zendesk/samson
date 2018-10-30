@@ -291,7 +291,8 @@ module Kubernetes
       return if @doc.replica_target == 1 || (@doc.replica_target == 0 && @doc.delete_resource)
       raise(
         Samson::Hooks::UserError,
-        "A #{template[:kind]} can either have 1 replica or be marked for deletion."
+        "#{template[:kind]} #{@doc.kubernetes_role.resource_name} is set to #{@doc.replica_target} replicas, " \
+        "which is not supported. Set it to 1 replica to keep deploying it or marked it for deletion."
       )
     end
 
