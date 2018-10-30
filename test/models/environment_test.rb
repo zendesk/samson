@@ -31,7 +31,7 @@ describe Environment do
           ["All", nil],
           ["Production", "Environment-X"],
           ["Staging", "Environment-X"],
-          ["----", nil],
+          ["----", "disabled"],
           ["Pod1", "DeployGroup-X"],
           ["Pod2", "DeployGroup-X"],
           ["Pod 100", "DeployGroup-X"]
