@@ -8,7 +8,9 @@ class EnvironmentVariableGroupsController < ApplicationController
     respond_to do |format|
       format.html
       format.json do
-        render_as_json :environment_variable_groups, @groups
+        render_as_json :environment_variable_groups, @groups, allowed_includes: [
+          :environment_variables,
+        ]
       end
     end
   end
