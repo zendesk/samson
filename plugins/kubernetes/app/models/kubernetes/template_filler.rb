@@ -514,9 +514,7 @@ module Kubernetes
     end
 
     def init_containers
-      @init_containers ||=
-        JSON.parse(pod_annotations[Kubernetes::Api::Pod::INIT_CONTAINER_KEY] || '[]', symbolize_names: true) +
-        (pod_template.dig(:spec, :initContainers) || [])
+      @init_containers ||= Api::Pod.init_containers(pod_template)
     end
 
     def containers

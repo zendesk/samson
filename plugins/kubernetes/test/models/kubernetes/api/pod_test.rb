@@ -349,7 +349,12 @@ describe Kubernetes::Api::Pod do
       pod.init_containers.must_equal []
     end
 
-    it "finds init containers" do
+    it "finds modern json containers" do
+      pod_attributes[:spec][:initContainers] = [{foo: "bar"}]
+      pod.init_containers.must_equal [{foo: "bar"}]
+    end
+
+    it "finds old json containers" do
       pod_attributes[:metadata][:annotations] = {'pod.beta.kubernetes.io/init-containers': '[{"foo": "bar"}]'}
       pod.init_containers.must_equal [{foo: "bar"}]
     end

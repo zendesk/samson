@@ -181,13 +181,13 @@ module Kubernetes
     def print_pod_logs(pod, end_time)
       @output.puts "LOGS:"
 
-      containers = (pod.containers + pod.init_containers).map { |c| c.fetch(:name) }
-      containers.each do |container|
-        @output.puts "Container #{container}" if containers.size > 1
+      containers_names = (pod.containers + pod.init_containers).map { |c| c.fetch(:name) }.uniq
+      containers_names.each do |container_name|
+        @output.puts "Container #{container_name}" if containers_names.size > 1
 
         # Display the first and last n_lines of the log
         max = Integer(ENV['KUBERNETES_LOG_LINES'] || '50')
-        lines = (pod.logs(container, end_time) || "No logs found").split("\n")
+        lines = (pod.logs(container_name, end_time) || "No logs found").split("\n")
         lines = lines.first(max / 2) + ['...'] + lines.last(max / 2) if lines.size > max
         lines.each { |line| @output.puts "  #{line}" }
       end
