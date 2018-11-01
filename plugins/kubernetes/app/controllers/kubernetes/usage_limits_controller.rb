@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 class Kubernetes::UsageLimitsController < ApplicationController
+  ALL = 'all'
+
   before_action :authorize_admin!, except: [:show, :index]
   before_action :find_usage_limit, only: [:show, :update, :destroy]
 
@@ -26,16 +28,21 @@ class Kubernetes::UsageLimitsController < ApplicationController
       @projects = limits.map(&:project).uniq.compact.sort_by(&:name)
 
       if project_id = params.dig(:search, :project_id).presence
+        project_id = nil if project_id == ALL
         limits = limits.where(project_id: project_id)
       end
 
       if scope_type_and_id = params.dig(:search, :scope_type_and_id).presence
-        scope_type, scope_id = GroupScope.split(scope_type_and_id)
+        if scope_type_and_id == ALL
+          scope_type, scope_id = nil
+        else
+          scope_type, scope_id = GroupScope.split(scope_type_and_id)
+        end
         limits = limits.where(scope_type: scope_type, scope_id: scope_id)
       end
     end
 
-    @env_deploy_group_array = Environment.env_deploy_group_array
+    @env_deploy_group_array = Environment.env_deploy_group_array(include_all: false)
     @usage_limits = limits.sort_by do |l|
       [
         l.project&.name || '',
