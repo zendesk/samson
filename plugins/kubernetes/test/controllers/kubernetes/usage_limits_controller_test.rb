@@ -41,9 +41,19 @@ describe Kubernetes::UsageLimitsController do
         assigns(:usage_limits).map(&:id).must_equal [usage_limit.id]
       end
 
+      it "can find limits that apply to all projects" do
+        get :index, params: {search: {project_id: 'all'}}
+        assigns(:usage_limits).map(&:id).must_equal [other.id]
+      end
+
       it "can find by scope" do
         get :index, params: {search: {scope_type_and_id: "#{usage_limit.scope_type}-#{usage_limit.scope_id}"}}
         assigns(:usage_limits).map(&:id).must_equal [usage_limit.id]
+      end
+
+      it "can find limits that apply to all scopes" do
+        get :index, params: {search: {scope_type_and_id: 'all'}}
+        assigns(:usage_limits).map(&:id).must_equal [other.id]
       end
     end
 
