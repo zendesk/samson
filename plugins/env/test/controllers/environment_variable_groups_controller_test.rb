@@ -88,6 +88,13 @@ describe EnvironmentVariableGroupsController do
         first_group['name'].must_equal "G1"
         first_group['variable_names'].must_equal ["X", "Y"]
       end
+
+      it "renders with envionment_variables if present" do
+        get :index, params: {includes: "environment_variables", format: :json}
+        assert_response :success
+        project = JSON.parse(response.body)
+        project.keys.must_include "environment_variables"
+      end
     end
 
     describe "#show" do

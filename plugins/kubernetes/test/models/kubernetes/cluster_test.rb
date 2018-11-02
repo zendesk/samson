@@ -11,23 +11,37 @@ describe Kubernetes::Cluster do
       assert_valid cluster
     end
 
-    it "is invalid when api version is wrong" do
-      cluster.class.any_instance.unstub(:connection_valid?)
-      assert_request(:get, "http://foobar.server/api", to_return: {body: '{}'}) do
+    describe "test_client_connection" do
+      before { cluster.class.any_instance.unstub(:connection_valid?) }
+
+      it "is valid" do
+        body = {versions: ['v1']}.to_json
+        assert_request(:get, "http://foobar.server/api", to_return: {body: body}) do
+          assert_valid cluster
+        end
+      end
+
+      it "is invalid when api version is wrong" do
+        assert_request(:get, "http://foobar.server/api", to_return: {body: '{}'}) do
+          refute_valid cluster
+        end
+      end
+
+      it "is invalid when api is dead" do
+        assert_request(:get, "http://foobar.server/api", to_return: {status: 404}) do
+          refute_valid cluster
+        end
+      end
+
+      it "is invalid when config file does not exist" do
+        cluster.config_filepath = 'nope'
         refute_valid cluster
       end
-    end
 
-    it "is invalid when api is dead" do
-      cluster.class.any_instance.unstub(:connection_valid?)
-      assert_request(:get, "http://foobar.server/api", to_return: {status: 404}) do
+      it "is invalid when context is not in file" do
+        cluster.config_context = 'nope'
         refute_valid cluster
       end
-    end
-
-    it "is invalid when config file does not exist" do
-      cluster.config_filepath = 'nope'
-      refute_valid cluster
     end
 
     describe "ip_prefix" do

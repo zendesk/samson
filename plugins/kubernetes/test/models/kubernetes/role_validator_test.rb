@@ -81,9 +81,9 @@ describe Kubernetes::RoleValidator do
     end
 
     it "does not allow multiple deployables" do
-      role[1][:kind] = "Pod"
+      role[1][:spec] = {containers: []}
       errors.must_include(
-        "Only use a maximum of 1 primary kind in a role (Deployment, DaemonSet, StatefulSet, Job, CronJob, Pod)"
+        "Only use a maximum of 1 template with containers, found: 2"
       )
     end
 
@@ -177,6 +177,7 @@ describe Kubernetes::RoleValidator do
 
     it "allows duplicate ConfigMaps" do
       role[0][:kind] = "ConfigMap"
+      role[0][:spec][:template][:spec].delete :containers
       role << role[0].dup
       errors.must_be_nil
     end
@@ -186,9 +187,9 @@ describe Kubernetes::RoleValidator do
       errors.must_include "Numeric cpu resources are not supported"
     end
 
-    it "reports missing containers" do
+    it "does not fail on missing containers" do
       role.first[:spec][:template][:spec].delete(:containers)
-      errors.must_include "Deployment needs at least 1 container"
+      errors.must_be_nil
     end
 
     it "ignores unknown types" do
@@ -258,7 +259,7 @@ describe Kubernetes::RoleValidator do
     it "fails when there are duplicate kinds" do
       role[0][:kind] = "foo"
       role[1][:kind] = "foo"
-      errors.must_include "Only use a maximum of 1 of each kind in a role (except ConfigMap and Service)"
+      errors.to_s.must_include "Only use a maximum of 1 of each kind in a role"
     end
 
     describe "#validate_team_labels" do
@@ -302,7 +303,7 @@ describe Kubernetes::RoleValidator do
         role.pop
         role.first[:kind] = "Job"
         role.first[:spec][:template][:spec][:restartPolicy] = "Never"
-        role.first[:spec][:template][:metadata][:annotations] = {"samson/prerequisite": 'true'}
+        role.first[:metadata][:annotations] = {"samson/prerequisite": "true"}
       end
 
       it "does not report valid prerequisites" do
@@ -312,7 +313,7 @@ describe Kubernetes::RoleValidator do
       it "does not report valid prerequisites for pod" do
         assert role.first.delete(:spec)
         role.first[:kind] = "Pod"
-        role.first[:metadata][:annotations] = {"samson/prerequisite": 'true'}
+        role.first[:metadata][:annotations] = {"samson/prerequisite": "true"}
         role.first[:spec] = {containers: [{name: "Foo"}]}
         errors.must_equal nil
       end
@@ -320,6 +321,12 @@ describe Kubernetes::RoleValidator do
       it "reports invalid prerequisites" do
         role.first[:kind] = "Deployment"
         errors.must_include "Only elements with type Job, Pod can be prerequisites."
+      end
+
+      it "allows static configuration" do
+        role.first[:kind] = "ServiceAccount"
+        role.first[:spec].delete(:template)
+        refute errors
       end
     end
 
@@ -332,7 +339,7 @@ describe Kubernetes::RoleValidator do
 
       it "fails without containers" do
         role[0][:spec][:containers].clear
-        errors.must_equal ["Pod needs at least 1 container"]
+        errors.must_equal ["All templates need spec.containers"]
       end
 
       it "fails without name" do

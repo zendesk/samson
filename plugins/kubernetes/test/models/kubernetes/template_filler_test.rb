@@ -138,9 +138,19 @@ describe Kubernetes::TemplateFiller do
         must_equal doc.kubernetes_release.deploy.url
     end
 
-    it "sets name for unknown kinds" do
+    it "sets name for unknown non-primary kinds" do
       raw_template[:kind] = "foobar"
+      raw_template[:spec][:template][:spec].delete(:containers)
       template.to_hash[:metadata][:name].must_equal "test-app-server"
+    end
+
+    it "sets replicas for templates" do
+      raw_template[:kind] = "foobar"
+      raw_template[:spec].delete :replicas
+      raw_template[:spec][:template][:spec][:replicas] = 1
+      result = template.to_hash
+      result[:spec][:replicas].must_be_nil
+      result[:spec][:template][:spec][:replicas].must_equal 2
     end
 
     ['CustomResourceDefinition', 'APIService'].each do |kind|
@@ -171,6 +181,8 @@ describe Kubernetes::TemplateFiller do
 
       it "overrides project label in pod" do
         raw_template.replace(raw_template.dig(:spec, :template).merge(raw_template.slice(:metadata)))
+        raw_template[:kind] = "Pod"
+        doc.replica_target = 1
         raw_template[:spec].delete(:template)
         raw_template[:spec].delete(:selector)
         labels.must_equal ["foo", nil, nil, nil]
@@ -773,8 +785,12 @@ describe Kubernetes::TemplateFiller do
     end
 
     describe "PodDisruptionBudget" do
-      it "modified name" do
+      before do
         raw_template[:kind] = 'PodDisruptionBudget'
+        raw_template[:spec][:template][:spec].delete(:containers)
+      end
+
+      it "modified name" do
         hash = template.to_hash
         hash.dig_fetch(:metadata, :name).must_equal 'test-app-server'
         refute hash.dig(:spec, :selector, :matchLabels).key?(:blue_green)
@@ -803,6 +819,7 @@ describe Kubernetes::TemplateFiller do
 
       it "modified budgets so we do not get errors when 2 budgets match the same pod" do
         raw_template[:kind] = 'PodDisruptionBudget'
+        raw_template[:spec].delete(:template)
         hash = template.to_hash
         hash.dig_fetch(:metadata, :name).must_equal 'test-app-server-green'
         hash.dig_fetch(:spec, :selector, :matchLabels, :blue_green).must_equal 'green'

@@ -91,7 +91,8 @@ module Samson
       commits = [@job.commit]
 
       if defined?(SamsonKubernetes) && @job.deploy.kubernetes_reuse_build
-        previous = @job.deploy.previous_deploy&.job&.commit
+        previous_scope = @job.deploy.stage.deploys.prior_to(@job.deploy).where(kubernetes_reuse_build: false)
+        previous = previous_scope.first&.job&.commit
         commits.unshift previous if previous
       end
 

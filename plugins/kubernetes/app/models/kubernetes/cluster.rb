@@ -23,10 +23,6 @@ module Kubernetes
       (@client ||= {})[type] ||= build_client(type)
     end
 
-    def context
-      @context ||= kubeconfig.context(config_context)
-    end
-
     def namespaces
       client('v1').get_namespaces.fetch(:items).map { |ns| ns.dig(:metadata, :name) } - %w[kube-system]
     end
@@ -59,6 +55,7 @@ module Kubernetes
     end
 
     def build_client(type)
+      context = kubeconfig.context(config_context)
       endpoint = context.api_endpoint
       endpoint += '/apis' unless type.match? /^v\d+/ # TODO: remove by fixing via https://github.com/abonas/kubeclient/issues/284
 
@@ -73,12 +70,19 @@ module Kubernetes
     end
 
     def test_client_connection
-      if File.file?(config_filepath)
-        unless connection_valid?
-          errors.add(:config_context, "Could not connect to API Server")
-        end
-      else
+      unless File.file?(config_filepath)
         errors.add(:config_filepath, "File does not exist")
+        return
+      end
+
+      unless kubeconfig.contexts.include?(config_context)
+        errors.add(:config_context, "Context not found")
+        return
+      end
+
+      unless connection_valid?
+        errors.add(:config_context, "Could not connect to API Server")
+        return
       end
     end
 

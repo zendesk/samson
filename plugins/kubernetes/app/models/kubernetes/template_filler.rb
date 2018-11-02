@@ -22,30 +22,22 @@ module Kubernetes
         set_project_labels if template.dig(:metadata, :annotations, :"samson/override_project_label")
         set_deploy_url
 
-        case kind
-        when 'APIService', 'CustomResourceDefinition' # rubocop:disable Lint/EmptyWhen
+        if RoleValidator::IMMUTABLE_NAME_KINDS.include?(kind)
           # names have a fixed pattern so we cannot override them
-        when 'HorizontalPodAutoscaler'
+        elsif kind == 'HorizontalPodAutoscaler'
           set_name
           set_hpa_scale_target_name
-        when 'ConfigMap' # rubocop:disable Lint/EmptyWhen
-          # referenced in other resources so we cannot change the name
-          # NOTE: may cause multiple projects to override each others ConfigMaps if they chose duplicate names
-        when *Kubernetes::RoleConfigFile::SERVICE_KINDS
+        elsif Kubernetes::RoleConfigFile::SERVICE_KINDS.include?(kind)
           set_service_name
           prefix_service_cluster_ip
           set_service_blue_green if blue_green_color
-        when *Kubernetes::RoleConfigFile::PRIMARY_KINDS
+        elsif Kubernetes::RoleConfigFile.primary?(template)
           if kind != 'Pod'
             set_rc_unique_label_key
             set_history_limit
           end
 
-          if ['StatefulSet', 'Deployment'].include?(kind)
-            set_replica_target
-          else
-            validate_replica_target_is_supported
-          end
+          set_replica_target || validate_replica_target_is_supported
 
           make_stateful_set_match_service if kind == 'StatefulSet'
           set_pre_stop if kind == 'Deployment'
@@ -59,7 +51,7 @@ module Kubernetes
           set_image_pull_secrets
           set_resource_blue_green if blue_green_color
           set_init_containers
-        when 'PodDisruptionBudget'
+        elsif kind == 'PodDisruptionBudget'
           set_name
           set_match_labels_blue_green if blue_green_color
         else
@@ -104,9 +96,7 @@ module Kubernetes
     end
 
     def set_deploy_url
-      templates = [template]
-      templates << pod_template if Kubernetes::RoleConfigFile::PRIMARY_KINDS.include?(template[:kind])
-      templates.each do |t|
+      [template, pod_template].compact.each do |t|
         annotations = (t[:metadata][:annotations] ||= {})
         annotations[:"samson/deploy_url"] = @doc.kubernetes_release.deploy&.url
       end
@@ -157,6 +147,7 @@ module Kubernetes
 
       # users can only enter a single service-name so for each additional service we make up a name
       # unless the given name already fits the pattern ... slight chance that it might end up being not unique
+      # this is to enable `foo-http` / `foo-grpc` style services
       return config_name if config_name.start_with?(name) && config_name.size > name.size
 
       name += "-#{@index + 1}" if @index > 0
@@ -214,11 +205,7 @@ module Kubernetes
     end
 
     def pod_template
-      case template[:kind]
-      when 'Pod' then template
-      when 'CronJob' then template.dig_fetch(:spec, :jobTemplate, :spec, :template)
-      else template.dig_fetch(:spec, :template)
-      end
+      @pod_template ||= RoleConfigFile.templates(template).first
     end
 
     def secret_annotations
@@ -288,14 +275,25 @@ module Kubernetes
     end
 
     def set_replica_target
-      template.dig_set [:spec, :replicas], @doc.replica_target
+      key = [:spec, :replicas]
+      target =
+        if ['StatefulSet', 'Deployment'].include?(template[:kind])
+          template
+        else
+          # custom resource that has replicas set on itself or it's template
+          containers = [template] + (template[:spec] || {}).values_at(*RoleConfigFile.template_keys(template))
+          containers.detect { |c| c.dig(*key) }
+        end
+
+      target&.dig_set key, @doc.replica_target
     end
 
     def validate_replica_target_is_supported
       return if @doc.replica_target == 1 || (@doc.replica_target == 0 && @doc.delete_resource)
       raise(
         Samson::Hooks::UserError,
-        "A #{template[:kind]} can either have 1 replica or be marked for deletion."
+        "#{template[:kind]} #{@doc.kubernetes_role.resource_name} is set to #{@doc.replica_target} replicas, " \
+        "which is not supported. Set it to 1 replica to keep deploying it or marked it for deletion."
       )
     end
 

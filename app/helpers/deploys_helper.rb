@@ -12,7 +12,7 @@ module DeploysHelper
   }.freeze
 
   def deploy_output
-    output = ActiveSupport::SafeBuffer.new
+    output = "".html_safe
 
     if JobQueue.enabled
       output << Samson::Hooks.render_views(:deploy_view, self, deploy: @deploy, project: @project)
