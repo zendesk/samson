@@ -155,6 +155,12 @@ class ActiveSupport::TestCase
       "resources" => [
         {"name" => "apiservices", "namespaced" => true, "kind" => "APIService"}
       ]
+    },
+    "apiextensions.k8s.io/v1beta1" => {
+      "kind" => "APIResourceList",
+      "resources" => [
+        {"name" => "customresourcedefinitions", "namespaced" => true, "kind" => "CustomResourceDefinition"}
+      ]
     }
   }.freeze
 
