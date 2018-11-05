@@ -72,9 +72,9 @@ describe Kubernetes::Resource do
       template_modified.must_equal restore_usages + 4
     end
 
-    it "falls back to using Base" do
+    it "falls back to using VersionedUpdate" do
       Kubernetes::Resource.build({kind: 'ConfigMap'}, deploy_group, autoscaled: false, delete_resource: false).
-        class.must_equal Kubernetes::Resource::Base
+        class.must_equal Kubernetes::Resource::VersionedUpdate
     end
 
     describe ".build" do
@@ -920,7 +920,7 @@ describe Kubernetes::Resource do
     end
   end
 
-  describe Kubernetes::Resource::CustomResourceDefinition do
+  describe Kubernetes::Resource::VersionedUpdate do
     let(:kind) { 'CustomResourceDefinition' }
     let(:api_version) { 'apiextensions.k8s.io/v1beta1' }
 

@@ -463,11 +463,8 @@ module Kubernetes
     class APIService < Immutable
     end
 
-    class CustomResourceDefinition < VersionedUpdate
-    end
-
     def self.build(*args)
-      klass = "Kubernetes::Resource::#{args.first.fetch(:kind)}".safe_constantize || Base
+      klass = "Kubernetes::Resource::#{args.first.fetch(:kind)}".safe_constantize || VersionedUpdate
       klass.new(*args)
     end
   end
