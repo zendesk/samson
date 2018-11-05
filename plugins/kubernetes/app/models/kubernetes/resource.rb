@@ -259,6 +259,16 @@ module Kubernetes
       end
     end
 
+    # normally we don't want to set the resourceVersion since that causes conflicts when our version is out of date
+    # but some resources require it to be set or fail with "metadata.resourceVersion: must be specified for an update"
+    class VersionedUpdate < Base
+      def template_for_update
+        t = super
+        t[:metadata][:resourceVersion] = resource.dig(:metadata, :resourceVersion)
+        t
+      end
+    end
+
     class Service < Base
       private
 
@@ -453,7 +463,7 @@ module Kubernetes
     class APIService < Immutable
     end
 
-    class CustomResourceDefinition < Immutable
+    class CustomResourceDefinition < VersionedUpdate
     end
 
     def self.build(*args)
