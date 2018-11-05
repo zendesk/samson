@@ -4,9 +4,9 @@
   </legend>
 
   <% if ENV['DEPLOYMENT_ENV_REPO'] %>
-    <%= form.input :use_env_repo,
+    <%= form.input :use_env_repo, label: "Use GitHub repository to manage deployment environment variables",
         as: :check_box,
-        help: 'Use external repository (set by DEPLOYMENT_ENV_REPO) to store environment configuration'
+        help: 'Use GitHub repository (set by DEPLOYMENT_ENV_REPO) to store environment configuration'
     %>
   <% end %>
 
