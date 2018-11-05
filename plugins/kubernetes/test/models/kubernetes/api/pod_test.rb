@@ -200,19 +200,41 @@ describe Kubernetes::Api::Pod do
       pod_with_client.logs('some-container', 10.seconds.from_now).must_equal "HELLO\nWORLD\n"
     end
 
-    it "reads previous logs when container restarted so we see why it restarted" do
-      pod_attributes[:status][:containerStatuses].first[:restartCount] = 1
-      stub_request(:get, "#{log_url}&previous=true").
-        and_return(body: "HELLO")
-      pod_with_client.logs('some-container', 10.seconds.from_now).must_equal "HELLO"
-    end
-
     it "fetches previous logs when current logs are not available" do
       stub_request(:get, "#{log_url}&follow=true").
         to_raise(Kubeclient::HttpError.new('a', 'b', 'c'))
       stub_request(:get, "#{log_url}&previous=true").
         and_return(body: "HELLO")
       pod_with_client.logs('some-container', 10.seconds.from_now).must_equal "HELLO"
+    end
+
+    describe "with restarted pod" do
+      def log_url
+        "#{super}&previous=true"
+      end
+
+      before do
+        pod_attributes[:status][:containerStatuses].first[:restartCount] = 1
+        pod_with_client.stubs(:sleep)
+      end
+
+      it "reads previous logs so we see why it restarted" do
+        logs = stub_request(:get, log_url).and_return(body: "HI")
+        pod_with_client.logs('some-container', 10.seconds.from_now).must_equal "HI"
+        assert_requested logs, times: 1
+      end
+
+      it "retries fetching previous logs if they were not yet available" do
+        logs = stub_request(:get, log_url).and_return([{body: "Unable to retrieve container logs foo"}, {body: "HI"}])
+        pod_with_client.logs('some-container', 10.seconds.from_now).must_equal "HI"
+        assert_requested logs, times: 2
+      end
+
+      it "fails fetching previous logs if they are never available" do
+        logs = stub_request(:get, log_url).and_return(body: "Unable to retrieve container logs foo")
+        pod_with_client.logs('some-container', 10.seconds.from_now).must_equal "Unable to retrieve container logs foo"
+        assert_requested logs, times: 3
+      end
     end
 
     it "does not crash when both log endpoints fails with a 404" do

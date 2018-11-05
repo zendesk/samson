@@ -121,7 +121,15 @@ module Kubernetes
       def fetch_logs(container, end_time, previous:)
         if previous
           SamsonKubernetes.retry_on_connection_errors do
-            @client.get_pod_log(name, namespace, container: container, previous: true)
+            tries = 3
+            tries.times do |i|
+              logs = @client.get_pod_log(name, namespace, container: container, previous: true)
+
+              # sometimes the previous containers logs are not yet available, so we have to wait a bit
+              return logs if i + 1 == tries || !logs.start_with?("Unable to retrieve container logs")
+              Rails.logger.error("Unable to find logs, retrying")
+              sleep 1
+            end
           end
         else
           wait = end_time - Time.now
