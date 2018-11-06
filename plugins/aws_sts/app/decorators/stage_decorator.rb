@@ -19,21 +19,23 @@ Stage.class_eval do
     }
   )
 
-  before_validation :set_default_session_duration
   validate :validate_can_assume_role, if: :aws_sts_iam_role_arn?
 
   private
 
-  def set_default_session_duration
-    self.aws_sts_iam_role_session_duration ||= SamsonAwsSts::SESSION_DURATION_MIN
-  end
-
   def validate_can_assume_role
-    SamsonAwsSts::Client.new(SamsonAwsSts.sts_client).assume_role(
-      role_arn: aws_sts_iam_role_arn,
-      role_session_name: "validate_can_assume_role_#{SecureRandom.hex(4)}"
-    )
-  rescue => e
-    errors.add(:aws_sts_iam_role_arn, "Unable to assume role: #{e.message}")
+    if client = SamsonAwsSts.sts_client
+      begin
+        client.assume_role(
+          role_arn: aws_sts_iam_role_arn,
+          role_session_name: "validate_can_assume_role_#{SecureRandom.hex(4)}",
+          duration_seconds: 10
+        )
+      rescue => e
+        errors.add(:aws_sts_iam_role_arn, "Unable to assume role: #{e.message}")
+      end
+    else
+      errors.add(:aws_sts_iam_role_arn, "SAMSON_STS_AWS_* env vars not set")
+    end
   end
 end

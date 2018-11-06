@@ -1,28 +1,28 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 4
-
 describe SamsonAwsSts do
   let(:stage) { stages(:test_staging) }
 
-  def deploy_env_vars(stage)
-    SamsonAwsSts::Client.new(
-      Aws::STS::Client.new(stub_responses: true)
-    ).deploy_env_vars(deploy: stage.deploys.last)
-  end
+  with_env SAMSON_STS_AWS_ACCESS_KEY_ID: 'x', SAMSON_STS_AWS_SECRET_ACCESS_KEY: 'y', SAMSON_STS_AWS_REGION: 'z'
 
   describe '.sts_client' do
+    it 'builds when all env vars are set' do
+      assert SamsonAwsSts.sts_client
+    end
+
     it 'returns nil if env vars are missing' do
-      SamsonAwsSts.sts_client.must_equal nil
+      with_env SAMSON_STS_AWS_ACCESS_KEY_ID: nil do
+        SamsonAwsSts.sts_client.must_equal nil
+      end
     end
   end
 
   describe '#deploy_env_vars' do
     it 'returns a hash of additional env variables' do
       stage.aws_sts_iam_role_arn = "some_arn"
-
-      deploy_env_vars(stage).must_equal(
+      vars = SamsonAwsSts.sts_client.deploy_env_vars(stage.deploys.last)
+      vars.must_equal(
         STS_AWS_ACCESS_KEY_ID:     'hidden://accessKeyIdType',
         STS_AWS_SECRET_ACCESS_KEY: 'hidden://accessKeySecretType',
         STS_AWS_SESSION_TOKEN:     'hidden://tokenType'
@@ -35,19 +35,15 @@ describe SamsonAwsSts do
       Aws::STS::Client.any_instance.expects(:assume_role).with(
         role_arn: 'arn',
         role_session_name: 'session',
-        duration_seconds: 900
+        duration_seconds: 10
       )
-      SamsonAwsSts::Client.new(
-        Aws::STS::Client.new(stub_responses: true)
-      ).assume_role(role_arn: 'arn', role_session_name: 'session')
+      SamsonAwsSts.sts_client.assume_role(role_arn: 'arn', role_session_name: 'session', duration_seconds: 10)
     end
   end
 
   describe '#caller_user_id' do
     it 'returns the user id' do
-      SamsonAwsSts::Client.new(
-        Aws::STS::Client.new(stub_responses: true)
-      ).caller_user_id.must_equal 'userIdType'
+      SamsonAwsSts.sts_client.caller_user_id.must_equal 'userIdType'
     end
   end
 

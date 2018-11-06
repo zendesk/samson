@@ -2,7 +2,7 @@
 
 module SamsonAwsSts
   SESSION_DURATION_MIN = 900 # 15 minutes
-  SESSION_DURATION_MAX = Rails.application.config.samson.deploy_timeout
+  SESSION_DURATION_MAX = [SESSION_DURATION_MIN, Rails.application.config.samson.deploy_timeout].max
 
   class Engine < Rails::Engine
   end
@@ -17,7 +17,7 @@ module SamsonAwsSts
 
     options[:stub_responses] = Rails.env.test?
 
-    Aws::STS::Client.new(options)
+    Client.new(Aws::STS::Client.new(options))
   end
 
   class Client
@@ -26,10 +26,10 @@ module SamsonAwsSts
     end
 
     def caller_user_id
-      sts_client.get_caller_identity[:user_id]
+      @sts_client.get_caller_identity[:user_id]
     end
 
-    def deploy_env_vars(deploy:)
+    def deploy_env_vars(deploy)
       creds = assume_role(
         role_arn: deploy.stage.aws_sts_iam_role_arn,
         role_session_name: session_name(deploy),
@@ -43,8 +43,8 @@ module SamsonAwsSts
       }
     end
 
-    def assume_role(role_arn:, role_session_name:, duration_seconds: SESSION_DURATION_MIN)
-      sts_client.assume_role(
+    def assume_role(role_arn:, role_session_name:, duration_seconds:)
+      @sts_client.assume_role(
         role_arn: role_arn,
         role_session_name: role_session_name,
         duration_seconds: duration_seconds
@@ -52,8 +52,6 @@ module SamsonAwsSts
     end
 
     private
-
-    attr_reader :sts_client
 
     def session_name(deploy)
       project_name = deploy.project.name.parameterize[0..15].tr('_', '-')
@@ -76,5 +74,5 @@ end
 Samson::Hooks.callback :deploy_env do |deploy|
   next {} if deploy.stage.aws_sts_iam_role_arn.blank?
 
-  SamsonAwsSts::Client.new(SamsonAwsSts.sts_client).deploy_env_vars(deploy: deploy)
+  SamsonAwsSts::Client.new(SamsonAwsSts.sts_client).deploy_env_vars(deploy)
 end

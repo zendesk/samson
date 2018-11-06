@@ -3,7 +3,21 @@
   <div class="col-lg-offset-2">
     <div class="form-group">
       <div class="col-lg-6">
-        <p>Tokens will be requested using the following user: <%= SamsonAwsSts::Client.new(SamsonAwsSts.sts_client).caller_user_id rescue "error connecting to aws, check SAMSON_STS_AWS_* env vars" %></p>
+        <p>
+          <% if client = SamsonAwsSts.sts_client %>
+            Tokens will be requested using the following user:
+            <%= Rails.cache.fetch("sts-caller-user-id-#{Process.pid}") do
+              begin
+                client.caller_user_id
+              rescue => e
+                "error connecting to aws, check SAMSON_STS_AWS_* env vars (#{e})"
+              end
+            end
+            %>
+          <% else %>
+            SAMSON_STS_AWS_* env vars not set.
+          <% end %>
+        </p>
         <span class="help-block">
           Use the following samson environment variables to change which user to authenticate with:
           <ul>
@@ -31,7 +45,7 @@
     <div class="form-group">
       <div class="col-lg-6">
         <p>The duration, in seconds, that the credentials should remain valid:</p>
-        <%= form.number_field :aws_sts_iam_role_session_duration, class: "form-control", placeholder: 900 %>
+        <%= form.text_field :aws_sts_iam_role_session_duration, class: "form-control", placeholder: 900 %>
         <span class="help-block">
           Optional. Defaults to <%= SamsonAwsSts::SESSION_DURATION_MIN %>.
           <ul>
