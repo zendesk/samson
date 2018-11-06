@@ -19,9 +19,8 @@ Stage.class_eval do
     }
   )
 
-  validate :validate_can_assume_role, if: -> { aws_sts_iam_role_arn.present? }
-
   before_validation :set_default_session_duration
+  validate :validate_can_assume_role, if: :aws_sts_iam_role_arn?
 
   private
 
