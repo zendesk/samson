@@ -29,7 +29,7 @@ Stage.class_eval do
         client.assume_role(
           role_arn: aws_sts_iam_role_arn,
           role_session_name: "validate_can_assume_role_#{SecureRandom.hex(4)}",
-          duration_seconds: 10
+          duration_seconds: SamsonAwsSts::SESSION_DURATION_MIN
         )
       rescue => e
         errors.add(:aws_sts_iam_role_arn, "Unable to assume role: #{e.message}")

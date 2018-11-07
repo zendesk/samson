@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
+SingleCov.covered! uncovered: 1
+
 describe SamsonAwsSts do
   let(:stage) { stages(:test_staging) }
 
@@ -35,9 +37,13 @@ describe SamsonAwsSts do
       Aws::STS::Client.any_instance.expects(:assume_role).with(
         role_arn: 'arn',
         role_session_name: 'session',
-        duration_seconds: 10
+        duration_seconds: SamsonAwsSts::SESSION_DURATION_MIN
       )
-      SamsonAwsSts.sts_client.assume_role(role_arn: 'arn', role_session_name: 'session', duration_seconds: 10)
+      SamsonAwsSts.sts_client.assume_role(
+        role_arn: 'arn',
+        role_session_name: 'session',
+        duration_seconds: SamsonAwsSts::SESSION_DURATION_MIN
+      )
     end
   end
 
