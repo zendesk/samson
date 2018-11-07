@@ -3,6 +3,12 @@ ENV["RAILS_ENV"] = "test"
 
 require 'bundler/setup'
 
+#Better test reporting
+# https://github.com/kern/minitest-reporters
+# To use the progress reporter MINITEST_REPORTER=ProgressReporter rails test
+require "minitest/reporters"
+Minitest::Reporters.use! Minitest::Reporters::DefaultReporter.new
+
 # anything loaded before coverage will be uncovered
 require 'single_cov'
 SingleCov::APP_FOLDERS << 'decorators' << 'presenters'
