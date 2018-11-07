@@ -18,15 +18,15 @@ describe SamsonDeployEnvVars do
   end
 
   describe :deploy_env do
-    it "returns an empty hash" do
-      Samson::Hooks.fire(:deploy_env, deploy).must_equal([{}])
+    it "returns an array of hashes" do
+      Samson::Hooks.only_callbacks_for_plugin('deploy_env_vars', :deploy_env) do
+        Samson::Hooks.fire(:deploy_env, deploy).must_equal([{}])
+      end
     end
 
-    it "returns a hash with the deploy environment variables" do
+    it "returns an array of hashes containing the deploy environment variables" do
       deploy.environment_variables.create!(name: "TWO", value: "2")
-      Samson::Hooks.fire(:deploy_env, deploy).must_equal([{
-        "TWO" => "2"
-      }])
+      Samson::Hooks.fire(:deploy_env, deploy).must_include("TWO" => "2")
     end
   end
 end

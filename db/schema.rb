@@ -532,6 +532,8 @@ ActiveRecord::Schema.define(version: 2018_10_09_022203) do
     t.string "prerequisite_stage_ids"
     t.string "default_reference"
     t.boolean "full_checkout", default: false, null: false
+    t.string "aws_sts_iam_role_arn"
+    t.integer "aws_sts_iam_role_session_duration"
     t.index ["project_id", "permalink"], name: "index_stages_on_project_id_and_permalink", unique: true, length: { permalink: 191 }
     t.index ["template_stage_id"], name: "index_stages_on_template_stage_id"
   end

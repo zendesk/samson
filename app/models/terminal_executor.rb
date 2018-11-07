@@ -15,6 +15,9 @@ require 'pty'
 #
 class TerminalExecutor
   SECRET_PREFIX = "secret://"
+  HIDDEN_PREFIX = "hidden://"
+  HIDDEN_TXT = "HIDDEN"
+
   CURSOR = /\e\[\d*[ABCDK]/
 
   attr_reader :pid, :pgid, :output, :timeout
@@ -131,7 +134,19 @@ class TerminalExecutor
   end
 
   def print_and_execute(c, resolve: true)
-    "echo » #{c.shellescape}\n#{resolve ? resolve_secrets(c) : c}"
+    print_and_execute_hidden_command(c) ||
+      print_and_execute_raw(c, resolve ? resolve_secrets(c) : c)
+  end
+
+  def print_and_execute_hidden_command(c)
+    # hides secrets by replacing lines like export FOO="hidden://secret" into export FOO="HIDDEN"
+    return unless print_command = c.dup.sub!(/#{HIDDEN_PREFIX}[^"]+/, HIDDEN_TXT)
+    resolved_command = c.sub(/#{HIDDEN_PREFIX}/, '')
+    print_and_execute_raw(print_command, resolved_command)
+  end
+
+  def print_and_execute_raw(print_command, real_command)
+    "echo » #{print_command.shellescape}\n#{real_command}"
   end
 
   def resolve_secrets(command)
