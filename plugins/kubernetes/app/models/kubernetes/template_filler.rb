@@ -18,6 +18,7 @@ module Kubernetes
       @to_hash ||= begin
         kind = template[:kind]
 
+        set_via_env_json
         set_namespace unless Kubernetes::RoleValidator::NAMESPACELESS_KINDS.include? kind
         set_project_labels if template.dig(:metadata, :annotations, :"samson/override_project_label")
         set_deploy_url
@@ -57,6 +58,7 @@ module Kubernetes
         else
           set_name
         end
+
         template
       end
     end
@@ -72,6 +74,19 @@ module Kubernetes
     end
 
     private
+
+    def set_via_env_json
+      (template[:metadata][:annotations] || {}).each do |k, v|
+        next unless path = k[/^samson\/set_via_env_json-(.*)/, 1]
+
+        path = path.split(".").map { |k| k.match?(/^\d+$/) ? Integer(k) : k.to_sym }
+        begin
+          template.dig_set(path, JSON.parse(static_env.fetch(v), symbolize_names: true))
+        rescue KeyError, JSON::ParserError => e
+          raise Samson::Hooks::UserError, "Unable to set key #{k}: #{e.message}"
+        end
+      end
+    end
 
     def build_selector_for_container(container, first:)
       dockerfile = samson_container_config(container, :"samson/dockerfile") ||
@@ -409,28 +424,30 @@ module Kubernetes
     end
 
     def static_env
-      env = {}
+      @static_env ||= begin
+        env = {}
 
-      metadata = release_doc_metadata
-      [:REVISION, :TAG, :DEPLOY_ID, :DEPLOY_GROUP].each do |k|
-        env[k] = metadata.fetch(k.downcase)
+        metadata = release_doc_metadata
+        [:REVISION, :TAG, :DEPLOY_ID, :DEPLOY_GROUP].each do |k|
+          env[k] = metadata.fetch(k.downcase)
+        end
+
+        [:PROJECT, :ROLE].each do |k|
+          env[k] = pod_template.dig_fetch(:metadata, :labels, k.downcase)
+        end
+
+        # name of the cluster
+        kube_cluster_name = DeployGroup.find(metadata[:deploy_group_id]).kubernetes_cluster.name.to_s
+        env[:KUBERNETES_CLUSTER_NAME] = kube_cluster_name
+
+        # blue-green phase
+        env[:BLUE_GREEN] = blue_green_color if blue_green_color
+
+        # env from plugins
+        plugin_envs = Samson::Hooks.fire(:deploy_group_env, project, @doc.deploy_group, resolve_secrets: false)
+        plugin_envs += Samson::Hooks.fire(:deploy_env, @doc.kubernetes_release.deploy) if @doc.kubernetes_release.deploy
+        plugin_envs.compact.inject(env, :merge!)
       end
-
-      [:PROJECT, :ROLE].each do |k|
-        env[k] = pod_template.dig_fetch(:metadata, :labels, k.downcase)
-      end
-
-      # name of the cluster
-      kube_cluster_name = DeployGroup.find(metadata[:deploy_group_id]).kubernetes_cluster.name.to_s
-      env[:KUBERNETES_CLUSTER_NAME] = kube_cluster_name
-
-      # blue-green phase
-      env[:BLUE_GREEN] = blue_green_color if blue_green_color
-
-      # env from plugins
-      plugin_envs = Samson::Hooks.fire(:deploy_group_env, project, @doc.deploy_group, resolve_secrets: false)
-      plugin_envs += Samson::Hooks.fire(:deploy_env, @doc.kubernetes_release.deploy) if @doc.kubernetes_release.deploy
-      plugin_envs.compact.inject(env, :merge!)
     end
 
     def set_secrets
