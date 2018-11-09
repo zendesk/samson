@@ -91,7 +91,9 @@ class CommandsController < ApplicationController
       if action_name == 'create'
         [project_from_params]
       elsif action_name == 'update'
-        [project_from_params, @command.project]
+        projects = [@command.project]
+        projects << project_from_params if command_params.key?(:project_id) # when moving, need to be able to write both
+        projects
       else
         [@command.project]
       end
