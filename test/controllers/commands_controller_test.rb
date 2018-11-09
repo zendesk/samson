@@ -85,7 +85,8 @@ describe CommandsController do
     end
 
     describe '#update' do
-      let(:params) { {id: commands(:echo).id, command: {command: 'echo hi', project_id: project.id}} }
+      let(:command) { commands(:echo) }
+      let(:params) { {id: command.id, command: {command: 'echo hi', project_id: project.id}} }
 
       it "can update html" do
         patch :update, params: params
@@ -102,6 +103,13 @@ describe CommandsController do
         params[:id] = commands(:global).id
         patch :update, params: params
         assert_response :unauthorized
+      end
+
+      it "can update when not changing project" do
+        params[:command].delete(:project_id)
+        patch :update, params: params
+        assert_response :redirect
+        command.reload.project.wont_be_nil
       end
 
       describe "moving projects" do
