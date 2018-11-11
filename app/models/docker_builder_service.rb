@@ -1,5 +1,4 @@
 # frozen_string_literal: true
-require 'docker'
 
 class DockerBuilderService
   extend ::Samson::PerformanceTracer::Tracers
