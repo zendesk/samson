@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+require 'aws-sdk-core'
 
 module SamsonAwsSts
   SESSION_DURATION_MIN = 900 # 15 minutes
