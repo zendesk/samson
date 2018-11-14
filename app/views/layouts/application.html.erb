@@ -4,6 +4,7 @@
     <title><%= content_for(:page_title) || "Samson" %></title>
     <%= csrf_meta_tags %>
     <%=  favicon_link_tag(content_for(:favicon_path) || 'favicons/32x32_light.png', type: 'image/png', id: 'favicon') %>
+    <%= action_cable_meta_tag %>
     <%= stylesheet_link_tag "application", media: "all" %>
     <%= Samson::Hooks.render_stylesheets(self) %>
     <%= javascript_include_tag "application" %>
