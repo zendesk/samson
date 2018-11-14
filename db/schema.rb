@@ -513,7 +513,6 @@ ActiveRecord::Schema.define(version: 2018_10_09_022203) do
     t.string "jenkins_job_names"
     t.string "next_stage_ids"
     t.boolean "no_code_deployed", default: false, null: false
-    t.boolean "docker_binary_plugin_enabled", default: false, null: false
     t.boolean "is_template", default: false, null: false
     t.boolean "notify_airbrake", default: false, null: false
     t.integer "template_stage_id"

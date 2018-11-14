@@ -1,9 +1,0 @@
-<fieldset>
-  <legend>Docker Binary Builder</legend>
-  <p class="col-lg-offset-2">
-    DEPRECATED: Use a stage command or pre-build command to create your own artifacts before deploy/build.
-    <%= link_to "example", "https://github.com/zendesk/samson/blob/master/docs/pre_build_command_example.md" %>
-  </p>
-  <% label = "Use Docker to build/compile artifacts (".html_safe << link_to("docs", "https://github.com/zendesk/samson/tree/master/plugins/docker_binary_builder") << ")" %>
-  <%= form.input :docker_binary_plugin_enabled, as: :check_box, label: label %>
-</fieldset>

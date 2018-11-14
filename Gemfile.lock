@@ -45,12 +45,6 @@ PATH
     samson_deploy_env_vars (0.0.0)
 
 PATH
-  remote: plugins/docker_binary_builder
-  specs:
-    samson_docker_binary_builder (0.0.0)
-      docker-api
-
-PATH
   remote: plugins/env
   specs:
     samson_env (0.0.0)
@@ -571,6 +565,7 @@ DEPENDENCIES
   connection_pool
   dalli
   diffy
+  docker-api
   dogstatsd-ruby
   doorkeeper
   dotenv
@@ -629,7 +624,6 @@ DEPENDENCIES
   samson_datadog!
   samson_datadog_tracer!
   samson_deploy_env_vars!
-  samson_docker_binary_builder!
   samson_env!
   samson_flowdock!
   samson_github!
@@ -661,4 +655,4 @@ RUBY VERSION
    ruby 2.5.3
 
 BUNDLED WITH
-   1.16.5
+   1.17.1

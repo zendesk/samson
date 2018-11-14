@@ -24,6 +24,28 @@ class ImageBuilder
       end
     end
 
+    # store logins in a temp file and make it not accidentally added via `ADD .`
+    def local_docker_login
+      Dir.mktmpdir 'samson-tmp-docker-config' do |docker_config_folder|
+        # copy existing credentials
+        regular_config = File.join(ENV["DOCKER_CONFIG"] || File.expand_path("~/.docker"), "config.json")
+        File.write("#{docker_config_folder}/config.json", File.read(regular_config)) if File.exist?(regular_config)
+
+        # add new temp credentials like ECR ... old docker versions need email and server in last position
+        credentials = DockerRegistry.all.select { |r| r.password && r.username }.map do |r|
+          username = r.username.shellescape
+          password = r.password.shellescape
+          email = (docker_major_version >= 17 ? "" : "--email no@example.com ")
+          "docker login --username #{username} --password #{password} #{email}#{r.host.shellescape}"
+        end
+
+        # run commands and then cleanup after
+        yield ["export DOCKER_CONFIG=#{docker_config_folder.shellescape}", *credentials]
+      end
+    end
+
+    private
+
     def build_image_locally(dir, executor, dockerfile:, tag:, cache_from:)
       local_docker_login do |login_commands|
         tag = " -t #{tag.shellescape}" if tag
@@ -47,28 +69,6 @@ class ImageBuilder
         executor.output.to_s.scan(/Successfully built ([a-f\d]{12,})/).last&.first
       end
     end
-
-    # store logins in a temp file and make it not accidentally added via `ADD .`
-    def local_docker_login
-      Dir.mktmpdir 'samson-tmp-docker-config' do |docker_config_folder|
-        # copy existing credentials
-        regular_config = File.join(ENV["DOCKER_CONFIG"] || File.expand_path("~/.docker"), "config.json")
-        File.write("#{docker_config_folder}/config.json", File.read(regular_config)) if File.exist?(regular_config)
-
-        # add new temp credentials like ECR ... old docker versions need email and server in last position
-        credentials = DockerRegistry.all.select { |r| r.password && r.username }.map do |r|
-          username = r.username.shellescape
-          password = r.password.shellescape
-          email = (docker_major_version >= 17 ? "" : "--email no@example.com ")
-          "docker login --username #{username} --password #{password} #{email}#{r.host.shellescape}"
-        end
-
-        # run commands and then cleanup after
-        yield ["export DOCKER_CONFIG=#{docker_config_folder.shellescape}", *credentials]
-      end
-    end
-
-    private
 
     def push_image(image_id, build, executor, tag_as_latest:)
       tag = build.docker_tag
