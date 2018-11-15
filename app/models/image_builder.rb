@@ -1,5 +1,4 @@
 # frozen_string_literal: true
-require 'docker'
 require 'shellwords'
 
 class ImageBuilder
@@ -19,8 +18,7 @@ class ImageBuilder
       push_image(image_id, build, executor, tag_as_latest: tag_as_latest)
     ensure
       if image_id && !['1', 'true'].include?(ENV["DOCKER_KEEP_BUILT_IMGS"])
-        executor.output.puts("### Deleting local docker image")
-        Docker::Image.get(image_id).remove(force: true)
+        executor.execute(["docker", "rmi", "-f", image_id].shelljoin)
       end
     end
 
@@ -75,16 +73,15 @@ class ImageBuilder
       tag_is_latest = (tag == 'latest')
 
       unless repo_digest = push_image_to_registries(image_id, build, executor, tag: tag, override_tag: tag_is_latest)
-        raise Docker::Error::DockerError, "Unable to get repo digest"
+        executor.output.puts("Docker push failed: Unable to get repo digest")
+        return
       end
 
       if tag_as_latest && !tag_is_latest
         push_image_to_registries image_id, build, executor, tag: 'latest', override_tag: true
       end
+
       repo_digest
-    rescue Docker::Error::DockerError => e
-      executor.output.puts("Docker push failed: #{e.message}\n")
-      nil
     end
     add_tracer :push_image
 

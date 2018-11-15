@@ -81,16 +81,15 @@ describe ImageBuilder do
     end
 
     describe "when building the image worked" do
-      def expect_removal(result)
-        Docker::Image.expects(:get).with(image_id).returns(docker_image)
-        docker_image.expects(:remove).with(force: true).returns(result)
+      def expect_removal
+        TerminalExecutor.any_instance.expects(:execute).with("docker rmi -f #{image_id}")
       end
 
       before { ImageBuilder.expects(:build_image_locally).returns(image_id) }
 
-      it "does not fail when build removal fails" do
+      it "removes when successful" do
         ImageBuilder.expects(:push_image).returns(digest)
-        expect_removal false
+        expect_removal
         call.must_equal digest
       end
 
@@ -103,7 +102,7 @@ describe ImageBuilder do
 
       it "removes build even when pushing failed" do
         ImageBuilder.expects(:push_image).raises
-        expect_removal true
+        expect_removal
         assert_raises { call }
       end
     end
@@ -235,12 +234,6 @@ describe ImageBuilder do
       stub_push primary_repo, tag, true
       assert call
       output.must_include 'Frobinating...'
-    end
-
-    it 'rescues docker error' do
-      ImageBuilder.expects(:push_image_to_registries).raises(Docker::Error::DockerError)
-      refute call, output
-      output.to_s.must_include "Docker push failed: Docker::Error::DockerError"
     end
 
     it 'fails when digest cannot be found' do

@@ -48,7 +48,6 @@ gem 'diffy'
 gem 'validates_lengths_from_database'
 gem 'large_object_store'
 gem 'parallel'
-gem 'docker-api' # TODO: remove usages in image_builder.rb and then remove this
 
 # treat included plugins like gems
 Dir[File.join(Bundler.root, 'plugins/*/')].each { |f| gemspec path: f }

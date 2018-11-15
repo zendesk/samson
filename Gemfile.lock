@@ -240,9 +240,6 @@ GEM
     ddtrace (0.14.2)
       msgpack
     diffy (3.2.0)
-    docker-api (1.33.6)
-      excon (>= 0.38.0)
-      json
     dogapi (1.21.0)
       multi_json
     dogstatsd-ruby (3.0.0)
@@ -254,7 +251,6 @@ GEM
     encryptor (3.0.0)
     erubi (1.7.1)
     erubis (2.7.0)
-    excon (0.57.1)
     execjs (2.7.0)
     faraday (0.9.2)
       multipart-post (>= 1.2, < 3)
@@ -565,7 +561,6 @@ DEPENDENCIES
   connection_pool
   dalli
   diffy
-  docker-api
   dogstatsd-ruby
   doorkeeper
   dotenv
