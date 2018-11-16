@@ -85,6 +85,30 @@
     return rows;
   }
 
+  // let user paste .env files and we parse out everything
+  function parseAndAdd(pasted) {
+    var env = parseEnv(pasted);
+
+    var $row = $(".paste_env_variables").prev().prev();
+    var selectedEnv = $row.find("select").val();
+
+
+    withoutSelectpicker($row, function () {
+      // add and fill new rows while they are not select-pickered
+      // always pass the new row so rows get appended in order
+      return $.map(env, function (v, k) {
+        $row = copyRow($row, function ($raw_new_row) {
+          var inputs = $raw_new_row.find(':input');
+          $(inputs.get(0)).val(k);
+          $(inputs.get(1)).val(v);
+          $(inputs.get(2)).val(selectedEnv);
+        });
+        return $row;
+      });
+    });
+  }
+
+
   $(document).on("click", ".duplicate_previous_row", function(e){
     e.preventDefault();
     var $row = $(this).prev();
@@ -101,30 +125,25 @@
     });
   });
 
-  // let user paste .env files and we parse out everything
-  $(document).on("click", ".paste_env_variables", function(e){
+  $(document).on("click", ".paste_env_variables", function (e) {
     e.preventDefault();
 
-    var pasted = prompt("Paste .env formatted variables here. Fills the form but does not submit. Uses last selected scope.");
-    if(!pasted) { return; }
-    var env = parseEnv(pasted);
-
-    var $row = $(this).prev().prev();
-    var selectedEnv = $row.find("select").val();
-
-    withoutSelectpicker($row, function() {
-      // add and fill new rows while they are not select-pickered
-      // always pass the new row so rows get appended in order
-      return $.map(env, function(v, k) {
-        $row = copyRow($row, function($raw_new_row){
-          var inputs = $raw_new_row.find(':input');
-          $(inputs.get(0)).val(k);
-          $(inputs.get(1)).val(v);
-          $(inputs.get(2)).val(selectedEnv);
-        });
-        return $row;
-      });
+    $("#env_paste_dialog").html("<textarea id='env_var_paste_area' cols='40' rows='8'></textarea>");
+    $("#env_paste_dialog").dialog({
+      autoOpen: true,
+      resizable: true,
+      width: 350,
+      height: 300,
+      modal: true,
+      buttons: {
+        "Parse": function () {
+          var pasted = $("#env_paste_dialog #env_var_paste_area").val();
+          parseAndAdd(pasted);
+          $(this).dialog("close");
+        }
+      }
     });
+
   });
 
   // Display preview link dynamically when env group dropdown changes
