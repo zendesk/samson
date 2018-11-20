@@ -368,6 +368,7 @@ module Kubernetes
         build = Samson::BuildFinder.detect_build_by_selector!(builds, *build_selector,
           fail: true, project: project)
         container[:image] = build.docker_repo_digest
+        container[:imagePullPolicy] = 'IfNotPresent' if container[:imagePullPolicy] == 'Always'
       end
     end
 

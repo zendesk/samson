@@ -374,6 +374,11 @@ describe Kubernetes::TemplateFiller do
           )
         end
 
+        it "overrides Always imagePullPolicy since it does not make sense and slows us down" do
+          add_init_container imagePullPolicy: 'Always'
+          init_containers[0]["imagePullPolicy"].must_equal "IfNotPresent"
+        end
+
         describe "when project does not build images" do
           before do
             project.docker_image_building_disabled = true
