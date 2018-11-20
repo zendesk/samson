@@ -450,6 +450,12 @@ module Kubernetes
       end
     end
 
+    class CronJob < VersionedUpdate
+      def desired_pod_count
+        0 # we don't know when it will run
+      end
+    end
+
     class Pod < Immutable
     end
 

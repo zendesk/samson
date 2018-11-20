@@ -743,6 +743,17 @@ describe Kubernetes::Resource do
     end
   end
 
+  describe Kubernetes::Resource::CronJob do
+    let(:kind) { 'CronJob' }
+    let(:api_version) { 'batch/v1' }
+
+    describe "#desired_pod_count" do
+      it "is 0 since we do not know when it will run" do
+        resource.desired_pod_count.must_equal 0
+      end
+    end
+  end
+
   describe Kubernetes::Resource::Service do
     let(:api_version) { 'v1' }
     let(:kind) { 'Service' }
