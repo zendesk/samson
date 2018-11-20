@@ -19,15 +19,13 @@ class EnvironmentVariable < ActiveRecord::Base
     # but return a value with a helpful message
     # also used by an external plugin
     def env(project, deploy_group, preview: false, resolve_secrets: true)
-      variables = nested_variables(project)
-      variables.sort_by!(&:priority)
-      env = variables.each_with_object({}) do |ev, all|
-        all[ev.name] = ev.value if !all[ev.name] && ev.matches_scope?(deploy_group)
+      env = {}
+      if (env_repo_name = ENV["DEPLOYMENT_ENV_REPO"]) && project.use_env_repo
+        env = env_vars_from_repo(env_repo_name, project, deploy_group)
       end
-
+      env.merge!(env_vars_from_db(project, deploy_group))
       resolve_dollar_variables(env)
       resolve_secrets(project, deploy_group, env, preview: preview) if resolve_secrets
-
       env
     end
 
@@ -46,6 +44,22 @@ class EnvironmentVariable < ActiveRecord::Base
       sorted.map do |var|
         "#{var.name}=#{var.value.inspect} # #{var.scope&.name || "All"}"
       end.join("\n")
+    end
+
+    def env_vars_from_db(project, deploy_group)
+      variables = nested_variables(project)
+      variables.sort_by!(&:priority)
+      variables.each_with_object({}) do |ev, all|
+        all[ev.name] = ev.value if !all[ev.name] && ev.matches_scope?(deploy_group)
+      end
+    end
+
+    def env_vars_from_repo(env_repo_name, project, deploy_group)
+      path = "generated/#{project.permalink}/#{deploy_group.permalink}.env"
+      content = GITHUB.contents(env_repo_name, path: path, headers: {Accept: 'applications/vnd.github.v3.raw'})
+      Dotenv::Parser.call(content)
+    rescue StandardError => e
+      raise Samson::Hooks::UserError, "Cannot download env file #{path} from #{env_repo_name} (#{e.message})"
     end
 
     private

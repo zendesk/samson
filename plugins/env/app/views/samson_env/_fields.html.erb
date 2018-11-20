@@ -1,8 +1,14 @@
 <fieldset>
   <legend>
-    Env variables written to the .env file or added to kubernetes before deploy
+    Environment Variables
     <%= additional_info SamsonEnv::HELP_TEXT %>
   </legend>
+
+  <% if ENV['DEPLOYMENT_ENV_REPO'] %>
+    <%= form.input :use_env_repo, label: "Use GitHub repository to manage deployment environment variables",
+                   as: :check_box
+    %>
+  <% end %>
 
   <% scopes = Environment.env_deploy_group_array %>
   <% sorted_env_vars = EnvironmentVariable.sort_by_scopes(form.object.environment_variables, scopes) %>
