@@ -388,6 +388,7 @@ ActiveRecord::Schema.define(version: 2018_10_09_022203) do
     t.boolean "show_gcr_vulnerabilities", default: false, null: false
     t.boolean "kubernetes_allow_writing_to_root_filesystem", default: false, null: false
     t.boolean "jenkins_status_checker", default: false, null: false
+    t.boolean "use_env_repo", default: false, null: false
     t.index ["build_command_id"], name: "index_projects_on_build_command_id"
     t.index ["permalink"], name: "index_projects_on_permalink", unique: true, length: 191
     t.index ["token"], name: "index_projects_on_token", unique: true, length: 191

@@ -11,8 +11,13 @@ describe SamsonEnv do
   describe :project_permitted_params do
     it "adds params" do
       Samson::Hooks.fire(:project_permitted_params).must_include(
-        environment_variables_attributes: [:name, :value, :scope_type_and_id, :_destroy, :id],
-        environment_variable_group_ids: []
+        [
+          {
+            environment_variables_attributes: [:name, :value, :scope_type_and_id, :_destroy, :id],
+            environment_variable_group_ids: []
+          },
+          :use_env_repo
+        ]
       )
     end
   end
@@ -143,6 +148,57 @@ describe SamsonEnv do
     it "can write groups not used by any projet" do
       group.update_attributes!(projects: [])
       assert call(users(:project_admin), :write, group)
+    end
+  end
+
+  describe 'view callbacks' do
+    before do
+      view_context.instance_variable_set(:@project, project)
+    end
+
+    let(:view_context) do
+      view_context = ActionView::Base.new(ActionController::Base.view_paths)
+
+      class << view_context
+        include Rails.application.routes.url_helpers
+        include ApplicationHelper
+      end
+
+      view_context.instance_eval do
+        # stub for testing render
+        def protect_against_forgery?
+        end
+      end
+
+      view_context
+    end
+
+    describe 'project_form callback' do
+      let(:checkbox) { 'id="project_use_env_repo" />' }
+
+      def with_form
+        view_context.form_for project do |form|
+          yield form
+        end
+      end
+
+      def render_view
+        with_form do |form|
+          Samson::Hooks.render_views(:project_form, view_context, form: form)
+        end
+      end
+
+      it 'renders use_env_repo checkbox when DEPLOYMENT_ENV_REPO is present' do
+        with_env DEPLOYMENT_ENV_REPO: 'zendesk/test.git' do
+          result = render_view
+          result.must_include checkbox
+        end
+      end
+
+      it 'does not render use_env_repo checkbox when DEPLOYMENT_ENV_REPO is nil' do
+        result = render_view
+        result.wont_include checkbox
+      end
     end
   end
 end
