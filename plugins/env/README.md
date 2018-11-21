@@ -13,16 +13,21 @@ _project permalink_ samson deploys.  Within this directory for a project are the
 of the _deploy group permalink_ with a `.env` extension.  For a project with the permalink `data_processor` and 
 the deploy group permalinks `staging1`, `prod1` and `prod2` samson expects to see this directory tree:
 ```bash
-# ls ./
-generated
-# ls generated/
-data_processor
-# ls generated/data_processor
-staging1.env  prod1.env  prod2.env
+.
+├── deploy_groups.yml
+├── generated
+│   └── fake_project
+│       ├── staging1.env
+│       ├── prod1.env
+│       └── prod2.env
+├── projects
+│   └── fake_project.env.erb
+└── shared
+    └── env_three.env.erb
 ```
 The contents of the `.env` file is a sequence of environment variable key and value pairs.
 ```bash
-# cat generated/data_processor/staging1.env
+# cat generated/fake_project/staging1.env
 MAX_RETRY_ATTEMPTS=10
 SECRETE_TOKEN=/secrets/SECRET_TOKEN
 RAILS_THREAD_MIN=3
@@ -32,4 +37,3 @@ RAILS_THREAD_MAX=5
 The generated enviornment variables is the merger of deploy_group env variables, if the samson `deploy_group plugin` is 
 activated, the `project` environment variables in the samson database and the environment variables in the github `repo`.
 The order of precedence for variables with the same key name: `deploy_group` replaces `project` which replaces `repo` variables.
-
