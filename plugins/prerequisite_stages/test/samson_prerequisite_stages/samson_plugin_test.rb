@@ -14,35 +14,26 @@ describe SamsonPrerequisiteStages do
   end
 
   describe SamsonPrerequisiteStages::Engine do
-    describe '.execute_if_unmet_prereq_stages' do
-      it 'yields if there are unmet prereq stages' do
-        stage1.expects(:unmet_prerequisite_stages).with(deploy.reference).returns([stage2])
-        num = 1
-        SamsonPrerequisiteStages::Engine.execute_if_unmet_prereq_stages(stage1, deploy.reference) do |error|
-          num += 1
-
-          error_message = "Reference 'staging' has not been deployed to these prerequisite stages: Production."
-          error.must_equal error_message
-        end
-
-        num.must_equal 2
+    describe '.validate_deployed_to_all_prerequisite_stages' do
+      it 'shows unmet prerequisite stages' do
+        stage1.expects(:undeployed_prerequisite_stages).with(deploy.reference).returns([stage2])
+        error = SamsonPrerequisiteStages.validate_deployed_to_all_prerequisite_stages(stage1, deploy.reference)
+        error.must_equal "Reference 'staging' has not been deployed to these prerequisite stages: Production."
       end
 
-      it 'does not yield if there are no unmet prereqs' do
-        num = 1
-        stage1.expects(:unmet_prerequisite_stages).with(deploy.reference).returns([])
-        SamsonPrerequisiteStages::Engine.execute_if_unmet_prereq_stages(stage1, deploy.reference) do |_error|
-          num += 1
-        end
-        num.must_equal 1
+      it 'is silent when there are no unmet prerequisites' do
+        stage1.expects(:undeployed_prerequisite_stages).with(deploy.reference).returns([])
+        SamsonPrerequisiteStages.validate_deployed_to_all_prerequisite_stages(stage1, deploy.reference).must_be_nil
       end
     end
   end
 
   describe 'event callbacks' do
     describe 'before_deploy callback' do
-      it 'raises if a prereq stage has not been deployed for ref' do
-        stage1.expects(:unmet_prerequisite_stages).with(deploy.reference).returns([stage2])
+      around { |t| Samson::Hooks.only_callbacks_for_plugin("prerequisite_stages", :before_deploy, &t) }
+
+      it 'raises if a prerequisite stage has not been deployed for ref' do
+        stage1.expects(:undeployed_prerequisite_stages).with(deploy.reference).returns([stage2])
 
         error_message = "Reference 'staging' has not been deployed to these prerequisite stages: Production."
         error = assert_raises RuntimeError do
@@ -52,15 +43,17 @@ describe SamsonPrerequisiteStages do
       end
 
       it 'does not raise if ref has not been deployed' do
-        stage1.expects(:unmet_prerequisite_stages).with(deploy.reference).returns([])
+        stage1.expects(:undeployed_prerequisite_stages).with(deploy.reference).returns([])
 
         Samson::Hooks.fire(:before_deploy, deploy, nil)
       end
     end
 
     describe 'ref_status callback' do
-      it 'returns status if stage does not meet prereq' do
-        stage1.expects(:unmet_prerequisite_stages).with(deploy.reference).returns([stage2])
+      around { |t| Samson::Hooks.only_callbacks_for_plugin("prerequisite_stages", :ref_status, &t) }
+
+      it 'returns status if stage does not meet prerequisites' do
+        stage1.expects(:undeployed_prerequisite_stages).with(deploy.reference).returns([stage2])
 
         error_message = "Reference 'staging' has not been deployed to these prerequisite stages: Production."
         expected = {
@@ -72,6 +65,11 @@ describe SamsonPrerequisiteStages do
         }
 
         Samson::Hooks.fire(:ref_status, stage1, deploy.reference).must_include expected
+      end
+
+      it 'returns nil if stage meets prerequisites' do
+        stage1.expects(:undeployed_prerequisite_stages).with(deploy.reference).returns([])
+        Samson::Hooks.fire(:ref_status, stage1, deploy.reference).must_equal [nil]
       end
     end
 
@@ -118,7 +116,7 @@ describe SamsonPrerequisiteStages do
         end
       end
 
-      it 'renders prereq stage checkboxes' do
+      it 'renders prerequisite stage checkboxes' do
         result = render_view
         result.must_include '<legend>Prerequisite Stages</legend>'
         result.must_include %(<input type="checkbox" value="#{stage2.id}")
@@ -137,7 +135,7 @@ describe SamsonPrerequisiteStages do
         result.must_match /<li>\n.*href="\/projects\/foo\/stages\/production"/
       end
 
-      it 'shows nothing if no prereq stages exist' do
+      it 'shows nothing if no prerequisite stages exist' do
         stage1.update_attributes!(prerequisite_stage_ids: [])
         result = render_view
         result.must_equal "\n"
