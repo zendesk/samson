@@ -9,9 +9,9 @@ if [ ! -f .env ]; then
 fi
 
 if [ -f db/development.sqlite3 ]; then
-    bundle exec rake db:migrate
+    bundle exec rake db:migrate 
 else
-    bundle exec rake db:setup
+    bundle exec rake db:setup || bundle exec rake db:migrate
 fi
 
 exec bundle exec puma -C config/puma.rb
