@@ -2,31 +2,30 @@
 
 module SamsonPrerequisiteStages
   class Engine < Rails::Engine
-    def self.execute_if_unmet_prereq_stages(stage, reference)
-      if unmet_prereq_stages = stage.unmet_prerequisite_stages(reference).presence
-        stage_names = unmet_prereq_stages.map(&:name).join(', ')
-        error = "Reference '#{reference}' has not been deployed to these prerequisite stages: #{stage_names}."
-        yield error
-      end
-    end
+  end
+
+  def self.validate_deployed_to_all_prerequisite_stages(stage, reference)
+    return unless missing = stage.undeployed_prerequisite_stages(reference).presence
+    stage_names = missing.map(&:name).join(', ')
+    "Reference '#{reference}' has not been deployed to these prerequisite stages: #{stage_names}."
   end
 
   Samson::Hooks.view :stage_form, 'samson_prerequisite_stages/stage_form'
   Samson::Hooks.view :stage_show, 'samson_prerequisite_stages/stage_show'
 
   Samson::Hooks.callback :before_deploy do |deploy, _buddy|
-    SamsonPrerequisiteStages::Engine.execute_if_unmet_prereq_stages(deploy.stage, deploy.reference) do |error_message|
-      raise error_message
+    if error = SamsonPrerequisiteStages.validate_deployed_to_all_prerequisite_stages(deploy.stage, deploy.reference)
+      raise error
     end
   end
 
   Samson::Hooks.callback :ref_status do |stage, reference|
-    SamsonPrerequisiteStages::Engine.execute_if_unmet_prereq_stages(stage, reference) do |error_message|
-      break {
+    if error = SamsonPrerequisiteStages.validate_deployed_to_all_prerequisite_stages(stage, reference)
+      {
         state: 'fatal',
         statuses: [{
           state: 'Unmet Prerequisite Stages',
-          description: error_message
+          description: error
         }]
       }
     end

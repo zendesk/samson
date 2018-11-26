@@ -24,14 +24,14 @@ describe Stage do
     end
   end
 
-  describe '#unmet_prerequisite_stages' do
+  describe '#undeployed_prerequisite_stages' do
     let(:job) { jobs(:succeeded_test) }
 
     it 'returns empty array if there are no prereq stages' do
       stage1.update_attributes!(prerequisite_stage_ids: [])
 
       assert_sql_queries(0) do
-        stage1.unmet_prerequisite_stages('123').must_equal []
+        stage1.undeployed_prerequisite_stages('123').must_equal []
       end
     end
 
@@ -41,7 +41,7 @@ describe Stage do
       stage1.prerequisite_stages.each { |s| s.deploys.first.update_column(:job_id, job.id) }
 
       assert_sql_queries(2) do
-        stage1.unmet_prerequisite_stages('123').must_equal []
+        stage1.undeployed_prerequisite_stages('123').must_equal []
       end
     end
 
@@ -50,7 +50,7 @@ describe Stage do
       stage2.deploys.first.update_column(:job_id, job.id)
 
       assert_sql_queries(2) do
-        stage1.unmet_prerequisite_stages('123').must_equal [stage3]
+        stage1.undeployed_prerequisite_stages('123').must_equal [stage3]
       end
     end
   end
