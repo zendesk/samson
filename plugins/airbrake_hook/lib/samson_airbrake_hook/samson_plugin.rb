@@ -49,7 +49,7 @@ module SamsonAirbrakeHook
   end
 end
 
-Samson::Hooks.callback :after_deploy do |deploy, _buddy|
+Samson::Hooks.callback :after_deploy do |deploy, _|
   SamsonAirbrakeHook::Notification.deliver_for(deploy)
 end
 

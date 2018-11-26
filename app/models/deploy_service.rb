@@ -33,13 +33,15 @@ class DeployService
     stage = deploy.stage
 
     job_execution = JobExecution.new(deploy.reference, deploy.job, env: construct_env(stage))
-    job_execution.on_start do
-      send_before_notifications(deploy)
-    end
-    job_execution.on_finish do
-      send_after_notifications(deploy)
-      update_average_deploy_time(deploy)
-    end
+    job_execution.on_start { send_before_notifications(deploy, job_execution) }
+
+    # independent so each one can fail and report errors
+    job_execution.on_finish { update_average_deploy_time(deploy) }
+    job_execution.on_finish { send_deploy_update finished: true }
+    job_execution.on_finish { send_deploy_email(deploy) }
+    job_execution.on_finish { send_failed_deploy_email(deploy) }
+    job_execution.on_finish { notify_outbound_webhooks(deploy) }
+    job_execution.on_finish { Samson::Hooks.fire(:after_deploy, deploy, job_execution) }
 
     JobQueue.perform_later(job_execution, queue: deploy.job_execution_queue_name)
 
@@ -93,28 +95,14 @@ class DeployService
       any? { |a| a.audited_changes&.key?("script") }
   end
 
-  def send_before_notifications(deploy)
-    Samson::Hooks.fire(:before_deploy, deploy, deploy.buddy)
+  def send_before_notifications(deploy, job_execution)
+    Samson::Hooks.fire(:before_deploy, deploy, job_execution)
 
     if deploy.bypassed_approval?
       DeployMailer.bypass_email(deploy, user).deliver_now
     end
   end
   add_tracer :send_before_notifications
-
-  def send_after_notifications(deploy)
-    Samson::Hooks.fire(:after_deploy, deploy, deploy.buddy)
-    execute_and_log_errors(deploy) { send_deploy_update finished: true }
-    execute_and_log_errors(deploy) { send_deploy_email(deploy) }
-    execute_and_log_errors(deploy) { send_failed_deploy_email(deploy) }
-    execute_and_log_errors(deploy) { notify_outbound_webhooks(deploy) }
-  end
-  add_tracer :send_after_notifications
-
-  # basically does the same as the hooks would do
-  def execute_and_log_errors(deploy, &block)
-    JobExecutionSubscriber.new(deploy.job, &block).call
-  end
 
   def send_deploy_email(deploy)
     if emails = deploy.stage.notify_email_addresses.presence

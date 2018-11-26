@@ -6,7 +6,7 @@ SingleCov.covered!
 describe SamsonAirbrakeHook::Engine do
   describe :after_deploy do
     def notify
-      Samson::Hooks.fire :after_deploy, deploy, users(:admin)
+      Samson::Hooks.fire :after_deploy, deploy, stub(output: nil)
     end
 
     let(:project) { projects(:test) }

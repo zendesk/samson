@@ -4,11 +4,11 @@ module SamsonPipelines
   end
 
   class << self
-    def start_pipelined_stages(job, success, output)
-      return if !success || !job.deploy || job.deploy.stage.next_stage_ids.empty?
+    def start_pipelined_stages(deploy, output)
+      return unless deploy.succeeded?
 
-      job.deploy.stage.next_stages.each do |next_stage|
-        deploy_to_stage(next_stage, job.deploy, output)
+      deploy.stage.next_stages.each do |next_stage|
+        deploy_to_stage(next_stage, deploy, output)
       end
     end
 
@@ -39,6 +39,6 @@ Samson::Hooks.callback :stage_permitted_params do
   {next_stage_ids: []}
 end
 
-Samson::Hooks.callback :after_job_execution do |job, success, output|
-  SamsonPipelines.start_pipelined_stages(job, success, output)
+Samson::Hooks.callback :after_deploy do |deploy, job_execution|
+  SamsonPipelines.start_pipelined_stages(deploy, job_execution.output)
 end

@@ -161,13 +161,6 @@ describe Job do
     end
   end
 
-  describe "#update_output!" do
-    it "updates output" do
-      job.update_output!("foo")
-      job.output.must_equal "foo"
-    end
-  end
-
   describe "#update_git_references!" do
     it "updates git references" do
       job.update_git_references!(commit: "foo", tag: "bar")
@@ -334,28 +327,6 @@ describe Job do
     it "shows duration" do
       job.updated_at = job.updated_at + 25
       job.duration.must_equal 25
-    end
-  end
-
-  describe "#append_output!" do
-    before { job.update_column(:output, "before") }
-
-    it "adds to empty" do
-      job.update_column(:output, nil)
-      job.append_output!("Hello")
-      job.reload.output.must_equal "Hello"
-    end
-
-    it "adds output" do
-      job.append_output!("Hello")
-      job.reload.output.must_equal "beforeHello"
-    end
-
-    it "adds from different models" do
-      job2 = Job.find(job.id)
-      job.append_output!("Hello")
-      job2.append_output!("World")
-      job.reload.output.must_equal "beforeHelloWorld"
     end
   end
 

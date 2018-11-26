@@ -24,12 +24,12 @@ describe SamsonFlowdock do
     it "sends notification on after hook" do
       stage.stubs(:send_flowdock_notifications?).returns(true)
       FlowdockNotification.any_instance.expects(:deliver)
-      Samson::Hooks.fire(:after_deploy, deploy, nil)
+      Samson::Hooks.fire(:after_deploy, deploy, stub(output: nil))
     end
 
     it "does not send notifications when disabled" do
       FlowdockNotification.any_instance.expects(:deliver).never
-      Samson::Hooks.fire(:after_deploy, deploy, nil)
+      Samson::Hooks.fire(:after_deploy, deploy, stub(output: nil))
     end
   end
 

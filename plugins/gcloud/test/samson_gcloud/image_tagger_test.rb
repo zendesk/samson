@@ -9,7 +9,7 @@ describe SamsonGcloud::ImageTagger do
 
   describe ".tag" do
     def tag
-      SamsonGcloud::ImageTagger.tag(deploy)
+      SamsonGcloud::ImageTagger.tag(deploy, output)
     end
 
     def assert_tagged_with(tag, opts: [])
@@ -22,6 +22,11 @@ describe SamsonGcloud::ImageTagger do
     with_env DOCKER_FEATURE: 'true', GCLOUD_PROJECT: '123', GCLOUD_ACCOUNT: 'acc'
 
     let(:auth_options) { ['--account', 'acc', '--project', '123'] }
+    let(:output) { OutputBuffer.new }
+    let(:output_serialized) do
+      output.close
+      OutputAggregator.new(output).to_s.gsub(/\[.*?\] /, "") # remove timestamps
+    end
 
     before do
       build.update_columns(
@@ -34,14 +39,13 @@ describe SamsonGcloud::ImageTagger do
     it "tags" do
       assert_tagged_with 'stage-staging'
       tag
-      deploy.job.output.must_include "\nOUT\nSUCCESS"
+      output_serialized.must_include "\nOUT\nSUCCESS"
     end
 
     it 'includes timestamp' do
-      freeze_time
       assert_tagged_with 'stage-staging'
       tag
-      deploy.job.output.must_include "[04:05:06] Tagging GCR image:\n"
+      output_serialized.must_include "Tagging GCR image:\n"
     end
 
     it 'does not tag with invalid stage permalink' do
@@ -58,7 +62,7 @@ describe SamsonGcloud::ImageTagger do
 
         tag
 
-        deploy.job.output.must_include "\nOUT\nSUCCESS"
+        output_serialized.must_include "\nOUT\nSUCCESS"
       end
     end
 
@@ -82,7 +86,7 @@ describe SamsonGcloud::ImageTagger do
 
       tag
 
-      deploy.job.output.must_include "\nOUT\nSUCCESS"
+      output_serialized.must_include "\nOUT\nSUCCESS"
     end
 
     it 'does not tag with production if stage does not deploy code' do
@@ -93,7 +97,7 @@ describe SamsonGcloud::ImageTagger do
 
       tag
 
-      deploy.job.output.must_include "\nOUT\nSUCCESS"
+      output_serialized.must_include "\nOUT\nSUCCESS"
     end
 
     it "tags other regions" do
@@ -117,7 +121,7 @@ describe SamsonGcloud::ImageTagger do
     it "shows tagging errors" do
       Samson::CommandExecutor.expects(:execute).returns([false, "NOPE"])
       tag
-      deploy.job.output.must_include "NOPE"
+      output_serialized.must_include "NOPE"
     end
 
     it "includes options from ENV var" do

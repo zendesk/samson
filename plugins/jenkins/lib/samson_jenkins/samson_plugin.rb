@@ -15,6 +15,6 @@ Samson::Hooks.callback :stage_permitted_params do
   ]
 end
 
-Samson::Hooks.callback :after_deploy do |deploy|
+Samson::Hooks.callback :after_deploy do |deploy, _|
   Samson::Jenkins.deployed!(deploy)
 end

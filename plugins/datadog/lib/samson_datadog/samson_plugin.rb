@@ -22,10 +22,10 @@ Samson::Hooks.callback :stage_permitted_params do
   ]
 end
 
-Samson::Hooks.callback :before_deploy do |deploy, _buddy|
+Samson::Hooks.callback :before_deploy do |deploy, _|
   SamsonDatadog.send_notification(deploy, additional_tags: ['started'], now: true)
 end
 
-Samson::Hooks.callback :after_deploy do |deploy, _buddy|
+Samson::Hooks.callback :after_deploy do |deploy, _|
   SamsonDatadog.send_notification(deploy, additional_tags: ['finished'])
 end

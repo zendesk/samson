@@ -16,6 +16,8 @@ describe SamsonDatadog do
   end
 
   describe :after_deploy do
+    around { |t| Samson::Hooks.only_callbacks_for_plugin('github', :after_deploy, &t) }
+
     describe "with github notifications enabled" do
       before { stage.update_github_pull_requests = true }
 
@@ -52,6 +54,8 @@ describe SamsonDatadog do
   end
 
   describe :before_deploy do
+    around { |t| Samson::Hooks.only_callbacks_for_plugin('github', :before_deploy, &t) }
+
     it "creates a github deployment" do
       stage.use_github_deployment_api = true
       GithubDeployment.any_instance.expects(:create)

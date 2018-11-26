@@ -16,17 +16,17 @@ describe "the samson_ledger plugin callback" do
 
   it "successfully fires the before_deploy" do
     SamsonLedger::Client.expects(:post_event)
-    Samson::Hooks.fire(:before_deploy, deploy, nil)
+    Samson::Hooks.fire(:before_deploy, deploy, stub(output: nil))
   end
 
   it "successfully fires the after_deploy" do
     SamsonLedger::Client.expects(:post_event)
-    Samson::Hooks.fire(:after_deploy, deploy, nil)
+    Samson::Hooks.fire(:after_deploy, deploy, stub(output: nil))
   end
 
   it "fails to fires the after_deploy" do
     ENV.delete("LEDGER_TOKEN")
     SamsonLedger::Client.expects(:post_event).never
-    Samson::Hooks.fire(:after_deploy, deploy, nil)
+    Samson::Hooks.fire(:after_deploy, deploy, stub(output: nil))
   end
 end

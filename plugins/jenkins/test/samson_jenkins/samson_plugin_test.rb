@@ -6,7 +6,7 @@ SingleCov.covered!
 describe SamsonJenkins do
   it "calls deployed! on deploy" do
     Samson::Jenkins.expects(:deployed!)
-    Samson::Hooks.fire :after_deploy, deploys(:succeeded_test), users(:admin)
+    Samson::Hooks.fire :after_deploy, deploys(:succeeded_test), stub(output: nil)
   end
 
   describe :stage_permitted_params do

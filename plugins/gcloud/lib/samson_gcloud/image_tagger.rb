@@ -6,7 +6,7 @@ module SamsonGcloud
     class << self
       # Note: not tagging builds from different project since that would be confusing ...
       # ideally do not tag any builds for projects that use shared builds ... but that is hard to know atm
-      def tag(deploy)
+      def tag(deploy, output)
         return unless ENV["DOCKER_FEATURE"]
         return unless deploy.succeeded?
         return unless builds = deploy.project.builds.
@@ -19,7 +19,7 @@ module SamsonGcloud
           next unless digest.match?(/(^|\/|\.)gcr.io\//) # gcr.io or https://gcr.io or region like asia.gcr.io
           base = digest.split('@').first
 
-          tags.each { |tag| tag_image(tag, deploy, base, digest) }
+          tags.each { |tag| tag_image(tag, base, digest, output) }
         end
       end
 
@@ -43,12 +43,12 @@ module SamsonGcloud
         tags.grep(/^[\w][\w.-]{0,127}$/)
       end
 
-      def tag_image(tag, deploy, base, digest)
+      def tag_image(tag, base, digest, job_output)
         command = [
           "gcloud", "container", "images", "add-tag", digest, "#{base}:#{tag}", "--quiet", *SamsonGcloud.cli_options
         ]
         success, output = Samson::CommandExecutor.execute(*command, timeout: 10, whitelist_env: ["PATH"])
-        deploy.job.append_output!(<<~TEXT)
+        job_output.write <<~TEXT
           #{Samson::OutputUtils.timestamp} Tagging GCR image:
           #{command.join(" ")}
           #{output.strip}
