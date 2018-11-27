@@ -3,10 +3,15 @@ class DeployService
   extend ::Samson::PerformanceTracer::Tracers
   attr_reader :user
 
+  # TODO: try to initialize with the stage ?
   def initialize(user)
     @user = user
   end
 
+  # Returns
+  # - running deploy
+  # - pending deploy waiting for approval
+  # - new deploy that failed validations
   def deploy(stage, attributes)
     deploy = stage.create_deploy(user, attributes)
 
@@ -41,6 +46,11 @@ class DeployService
     job_execution.on_finish { send_deploy_email(deploy) }
     job_execution.on_finish { send_failed_deploy_email(deploy) }
     job_execution.on_finish { notify_outbound_webhooks(deploy) }
+    job_execution.on_finish do
+      if deploy.redeploy_previous_when_failed? && deploy.status == "failed"
+        redeploy_previous_successful(deploy, job_execution.output)
+      end
+    end
     job_execution.on_finish { Samson::Hooks.fire(:after_deploy, deploy, job_execution) }
 
     JobQueue.perform_later(job_execution, queue: deploy.job_execution_queue_name)
@@ -49,6 +59,21 @@ class DeployService
   end
 
   private
+
+  def redeploy_previous_successful(failed_deploy, output)
+    unless previous = failed_deploy.previous_successful_deploy
+      output.puts("Deploy failed, cannot find any previous successful deploy")
+      return
+    end
+    reference = failed_deploy.exact_reference
+    attributes = Samson::RedeployParams.new(previous).to_hash.merge(
+      reference: reference,
+      buddy: failed_deploy.buddy, # deploy was approved to be reverted if it fails
+      redeploy_previous_when_failed: false # prevent cascading redeploys
+    )
+    redeploy = deploy(previous.stage, attributes)
+    output.puts("Deploy failed, redeploying previously successful (#{previous.url} #{reference}) with #{redeploy.url}")
+  end
 
   def update_average_deploy_time(deploy)
     stage = deploy.stage

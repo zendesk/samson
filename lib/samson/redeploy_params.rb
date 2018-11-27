@@ -6,10 +6,9 @@ module Samson
     end
 
     # Applies different logic depending on the class of each of the deploy
-    # parameters, so it supports nested paramaters based on object relations
+    # parameters, so it supports nested parameters based on object relations
     def to_hash
-      params = Samson::Hooks.fire(:deploy_permitted_params).flatten(1)
-      params.each_with_object(reference: @deploy.reference) do |param, collection|
+      DeploysController.deploy_permitted_params.each_with_object({}) do |param, collection|
         case param
         when String, Symbol
           collection[param] = @deploy.public_send(param)

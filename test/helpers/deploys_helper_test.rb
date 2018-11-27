@@ -152,9 +152,12 @@ describe DeploysHelper do
     it "generates a link" do
       link = redeploy_button
       link.must_include redeploy_warning # warns about redeploying
-      link.must_include "?deploy%5Bkubernetes_reuse_build%5D=false" \
-        "&amp;deploy%5Bkubernetes_rollback%5D=true&amp;deploy%5Breference%5D=staging\"" # copies params
-      link.must_include "Redeploy"
+      link.must_include(
+        "deploy%5Bkubernetes_reuse_build%5D=false" \
+        "&amp;deploy%5Bkubernetes_rollback%5D=true" \
+        "&amp;deploy%5Bredeploy_previous_when_failed" \
+        "%5D=false&amp;deploy" # copies params
+      )
     end
 
     it 'does not generate a link when deploy is active' do
