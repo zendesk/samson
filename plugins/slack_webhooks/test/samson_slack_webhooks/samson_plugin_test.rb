@@ -44,27 +44,27 @@ describe SamsonSlackWebhooks do
   describe :before_deploy do
     it "sends notification on before hook" do
       SlackWebhookNotification.any_instance.expects(:deliver)
-      Samson::Hooks.fire(:before_deploy, deploy, nil)
+      Samson::Hooks.fire(:before_deploy, deploy, stub(output: nil))
     end
 
     it "does not send notifications when disabled" do
       webhook.before_deploy = false
       SlackWebhookNotification.any_instance.expects(:deliver).never
-      Samson::Hooks.fire(:before_deploy, deploy, nil)
+      Samson::Hooks.fire(:before_deploy, deploy, stub(output: nil))
     end
   end
 
   describe :after_deploy do
     it "sends notification on after hook" do
       SlackWebhookNotification.any_instance.expects(:deliver)
-      Samson::Hooks.fire(:after_deploy, deploy, nil)
+      Samson::Hooks.fire(:after_deploy, deploy, stub(output: nil))
     end
 
     it "does not send notifications when disabled" do
       webhook.on_deploy_success = false
       webhook.on_deploy_failure = false
       SlackWebhookNotification.any_instance.expects(:deliver).never
-      Samson::Hooks.fire(:after_deploy, deploy, nil)
+      Samson::Hooks.fire(:after_deploy, deploy, stub(output: nil))
     end
   end
 

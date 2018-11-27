@@ -15,7 +15,7 @@ Samson::Hooks.callback :stage_permitted_params do
   }
 end
 
-Samson::Hooks.callback :after_deploy do |deploy|
+Samson::Hooks.callback :after_deploy do |deploy, _|
   deploy.stage.rollbar_webhooks.each do |webhook|
     key_resolver = Samson::Secrets::KeyResolver.new(webhook.stage.project, [])
     RollbarNotification.new(

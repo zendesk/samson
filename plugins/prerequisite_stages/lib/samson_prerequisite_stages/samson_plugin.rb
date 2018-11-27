@@ -13,7 +13,7 @@ module SamsonPrerequisiteStages
   Samson::Hooks.view :stage_form, 'samson_prerequisite_stages/stage_form'
   Samson::Hooks.view :stage_show, 'samson_prerequisite_stages/stage_show'
 
-  Samson::Hooks.callback :before_deploy do |deploy, _buddy|
+  Samson::Hooks.callback :before_deploy do |deploy, _|
     if error = SamsonPrerequisiteStages.validate_deployed_to_all_prerequisite_stages(deploy.stage, deploy.reference)
       raise error
     end

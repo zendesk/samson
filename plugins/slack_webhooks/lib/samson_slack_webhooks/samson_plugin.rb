@@ -34,7 +34,7 @@ Samson::Hooks.callback :buddy_request do |deploy|
 end
 
 [:buddy_request, :before_deploy, :after_deploy].each do |callback|
-  Samson::Hooks.callback callback do |deploy, _buddy|
+  Samson::Hooks.callback callback do |deploy, _|
     webhooks = deploy.stage.slack_webhooks.select { |w| w.deliver_for?(callback, deploy) }
     SlackWebhookNotification.new(deploy, webhooks).deliver(callback) if webhooks.any?
   end

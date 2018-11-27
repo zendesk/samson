@@ -10,7 +10,7 @@ describe SamsonGcloud do
     it "tags" do
       with_env GCLOUD_IMAGE_TAGGER: 'true' do
         SamsonGcloud::ImageTagger.expects(:tag)
-        Samson::Hooks.fire(:after_deploy, deploy, deploy.user)
+        Samson::Hooks.fire(:after_deploy, deploy, stub(output: nil))
       end
     end
   end

@@ -117,10 +117,6 @@ class Job < ActiveRecord::Base
     super || ""
   end
 
-  def update_output!(output)
-    update_attribute(:output, output)
-  end
-
   def update_git_references!(commit:, tag:)
     update_columns(commit: commit, tag: tag)
     deploy&.bump_touch
@@ -132,11 +128,6 @@ class Job < ActiveRecord::Base
 
   def pid
     execution.try :pid
-  end
-
-  def append_output!(more)
-    reload
-    update_columns(output: "#{output}#{more}", updated_at: Time.now)
   end
 
   private

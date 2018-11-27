@@ -223,7 +223,7 @@ describe DeployService do
       record_hooks(:before_deploy) do
         service.deploy(stage, reference: reference)
         job_execution.send(:run)
-      end.must_equal [[deploy, nil]]
+      end.map(&:first).must_equal [deploy]
     end
   end
 
@@ -262,7 +262,7 @@ describe DeployService do
     end
 
     it "sends after_deploy hook" do
-      record_hooks(:after_deploy) { run_deploy }.must_equal [[deploy, nil]]
+      record_hooks(:after_deploy) { run_deploy }.map(&:first).must_equal [deploy]
     end
 
     it "email notification for failed deploys" do

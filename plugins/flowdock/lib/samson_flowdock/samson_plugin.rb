@@ -17,7 +17,7 @@ Samson::Hooks.callback :stage_permitted_params do
   {flowdock_flows_attributes: [:id, :name, :token, :_destroy]}
 end
 
-notify = ->(deploy, _buddy) do
+notify = ->(deploy, _) do
   if deploy.stage.send_flowdock_notifications?
     FlowdockNotification.new(deploy).deliver
   end

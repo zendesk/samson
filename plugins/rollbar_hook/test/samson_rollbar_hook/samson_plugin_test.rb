@@ -11,7 +11,7 @@ describe SamsonRollbarHook do
     it "sends notification on after hook" do
       stage.rollbar_webhooks.build(webhook_url: 'https://rollbar.com', access_token: 'token', environment: 'test')
       RollbarNotification.any_instance.expects(:deliver)
-      Samson::Hooks.fire(:after_deploy, deploy, nil)
+      Samson::Hooks.fire(:after_deploy, deploy, stub(output: nil))
     end
   end
 

@@ -1,8 +1,10 @@
 # frozen_string_literal: true
 # Reads and aggregates a stream of terminal output events.
+# TODO: inline into OutputBuffer
 class OutputAggregator
   def initialize(output)
     @output = output
+    raise "Output is still open" unless @output.closed?
   end
 
   def to_s

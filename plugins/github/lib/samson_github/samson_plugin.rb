@@ -15,13 +15,13 @@ Samson::Hooks.callback :stage_permitted_params do
   ]
 end
 
-Samson::Hooks.callback :before_deploy do |deploy, _buddy|
+Samson::Hooks.callback :before_deploy do |deploy, _|
   if deploy.stage.use_github_deployment_api?
     deploy.instance_variable_set(:@deployment, GithubDeployment.new(deploy).create)
   end
 end
 
-Samson::Hooks.callback :after_deploy do |deploy, _buddy|
+Samson::Hooks.callback :after_deploy do |deploy, _|
   if deploy.stage.update_github_pull_requests? && deploy.status == "succeeded"
     GithubNotification.new(deploy).deliver
   end

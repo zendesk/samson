@@ -248,10 +248,12 @@ describe JobExecution do
     assert called_subscriber
   end
 
-  it 'saves job output before calling subscriber' do
-    output = nil
-    execute_job('master', on_finish: -> { output = job.output })
-    assert_equal '[04:05:06] monkey', output.split("\n").last.strip
+  it 'lets subscribers communicate with viewers' do
+    output = OutputBuffer.new
+    execute_job('master', on_finish: -> { output.puts "Hello" }, output: output)
+    output.to_s.must_include "Hello"
+    job.output.must_include "Hello"
+    job.reload.output.must_include "Hello"
   end
 
   it 'errors if job setup fails' do

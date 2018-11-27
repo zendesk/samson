@@ -8,7 +8,7 @@ class JobExecution
 
   attr_reader :output, :reference, :job, :viewers, :executor
 
-  delegate :id, to: :job
+  delegate :id, :deploy, to: :job
   delegate :pid, :pgid, to: :executor
 
   def initialize(reference, job, env: {}, output: OutputBuffer.new, &block)
@@ -28,21 +28,6 @@ class JobExecution
     @repository = @job.project.repository
     @repository.executor = @executor
     @repository.full_checkout = true if stage&.full_checkout
-
-    on_finish do
-      Rails.logger.info("Calling finish callback for Job Execution #{id}")
-      # weird issue we are seeing with docker builds never finishing
-      if !Rails.env.test? && !JobQueue.find_by_id(@job.id) && @job.active?
-        ErrorNotifier.notify("Active but not running job found", job: @job.id)
-        @output.write("Active but not running job found")
-        @job.failed!
-      end
-
-      @output.write('', :finished)
-      @output.close
-
-      @job.update_output!(OutputAggregator.new(@output).to_s)
-    end
   end
 
   def perform
@@ -73,8 +58,16 @@ class JobExecution
     @start_callbacks << block
   end
 
-  def on_finish(&block)
-    @finish_callbacks << JobExecutionSubscriber.new(job, &block)
+  def on_finish
+    @finish_callbacks << -> do
+      begin
+        yield
+      rescue => exception
+        message = "Finish hook failed: #{exception.message}"
+        output.puts message
+        ErrorNotifier.notify(exception, error_message: message, parameters: {job_url: job.url})
+      end
+    end
   end
 
   def descriptor
@@ -142,7 +135,13 @@ class JobExecution
   def finish
     return if @finished
     @finished = true
+
     @finish_callbacks.each(&:call)
+
+    @output.write('', :finished) # TODO: .close should do that
+    @output.close
+
+    @job.update_column :output, OutputAggregator.new(@output).to_s
   end
 
   def execute(dir)
@@ -169,11 +168,10 @@ class JobExecution
         end
     end
 
-    Samson::Hooks.fire(:after_job_execution, @job, payload[:success], @output)
-
     payload[:success]
   end
 
+  # ideally the plugin should handle this, but that was even hackier
   def kubernetes?
     defined?(SamsonKubernetes::Engine) && stage&.kubernetes
   end

@@ -19,7 +19,7 @@ describe SamsonDatadog do
 
     it 'does not send notifications when disabled' do
       DatadogNotification.expects(:new).never
-      Samson::Hooks.fire(:after_deploy, deploy, nil)
+      Samson::Hooks.fire(:after_deploy, deploy, stub(output: nil))
     end
   end
 
@@ -30,6 +30,8 @@ describe SamsonDatadog do
   end
 
   describe :before_deploy do
+    around { |t| Samson::Hooks.only_callbacks_for_plugin("datadog", :before_deploy, &t) }
+
     it 'sends notification on before hook' do
       SamsonDatadog.expects(:send_notification).with(deploy, additional_tags: ['started'], now: true)
       Samson::Hooks.fire(:before_deploy, deploy, nil)
@@ -37,10 +39,12 @@ describe SamsonDatadog do
   end
 
   describe :after_deploy do
+    around { |t| Samson::Hooks.only_callbacks_for_plugin("datadog", :after_deploy, &t) }
+
     it 'sends notification on after hook' do
       stage.stubs(:send_datadog_notifications?).returns(true)
       SamsonDatadog.expects(:send_notification).with(deploy, additional_tags: ['finished'])
-      Samson::Hooks.fire(:after_deploy, deploy, nil)
+      Samson::Hooks.fire(:after_deploy, deploy, stub(output: nil))
     end
   end
 end
