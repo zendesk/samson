@@ -85,62 +85,6 @@ describe OutputBuffer do
     end
   end
 
-  describe "#write_docker_chunk" do
-    it "nicely formats complete chunk" do
-      buffer.write_docker_chunk('{"foo": 1, "bar": 2}').first.must_equal("foo" => 1, "bar" => 2)
-      buffer.to_s.must_equal("[04:05:06] foo: 1 | bar: 2\n")
-    end
-
-    it "ignores blank values" do
-      buffer.write_docker_chunk('{"foo": " ", "bar": null}').first.must_equal("foo" => " ", "bar" => nil)
-      buffer.to_s.must_equal("")
-    end
-
-    it "writes partial chunks" do # ideally piece together multiple partial chunks
-      buffer.write_docker_chunk('{"foo": ').first.must_equal('message' => '{"foo":')
-      buffer.to_s.must_equal "[04:05:06] {\"foo\":\n"
-    end
-
-    it "does not print spammy progressDetail" do
-      buffer.write_docker_chunk('{"progressDetail": 1}').first.must_equal("progressDetail" => 1)
-      buffer.to_s.must_equal ""
-    end
-
-    it "simplifies stream only responses" do
-      buffer.write_docker_chunk('{"stream": 123}').first.must_equal("stream" => 123)
-      buffer.to_s.must_equal("[04:05:06] 123\n")
-    end
-
-    it "coverts dockers ASCII encoding to utf-8 with valid json" do
-      buffer.write_docker_chunk((+'{"foo": "\255"}').force_encoding(Encoding::BINARY))
-      buffer.write_docker_chunk('{"bar": "meh"}')
-      buffer.to_s.must_equal "[04:05:06] foo: 255\n[04:05:06] bar: meh\n"
-    end
-
-    it "coverts dockers ASCII encoding to utf-8 with invalid json" do
-      buffer.write_docker_chunk((+'foo"\255"}').force_encoding(Encoding::BINARY))
-      buffer.write_docker_chunk((+'---\u003e 6c9a006fd38a\n').force_encoding(Encoding::BINARY))
-      buffer.write_docker_chunk('foo"\255"}')
-      buffer.close
-
-      buffer.to_s.must_equal \
-        "[04:05:06] foo\"\\255\"}\n[04:05:06] ---\\u003e 6c9a006fd38a\\n\n[04:05:06] foo\"\\255\"}\n"
-      build_listener.value.map(&:encoding).uniq.must_equal([Encoding::UTF_8])
-      build_listener.value.map(&:valid_encoding?).uniq.must_equal([true])
-    end
-
-    it "handles multiple lines in one chunk" do
-      lines = [
-        {'foo' => 1, 'bar' => 2},
-        {'foo' => 3, 'bar' => 4}
-      ]
-
-      output = lines.map(&:to_json).join("\n")
-      buffer.write_docker_chunk(output).must_equal(lines)
-      buffer.to_s.must_equal "[04:05:06] foo: 1 | bar: 2\n[04:05:06] foo: 3 | bar: 4\n"
-    end
-  end
-
   describe "#include?" do
     before { buffer.write("hello", :message) }
 
