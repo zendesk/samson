@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 1
+SingleCov.covered!
 
 describe OutputBuffer do
   include OutputBufferSupport
@@ -107,6 +107,21 @@ describe OutputBuffer do
       buffer.write(nil, :close)
       buffer.write("world", :message)
       buffer.to_s.must_equal "[04:05:06] hello\n[04:05:06] world"
+    end
+  end
+
+  describe "#close" do
+    it "closes" do
+      refute buffer.closed?
+      buffer.close
+      assert buffer.closed?
+    end
+
+    it "does not fail when closing multiple times by accident" do
+      refute buffer.closed?
+      buffer.close
+      buffer.close
+      assert buffer.closed?
     end
   end
 

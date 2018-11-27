@@ -31,6 +31,7 @@ class OutputBuffer
     @previous = ThreadSafe::Array.new
     @closed = false
     @line_finished = true
+    @mutex = Mutex.new
   end
 
   def puts(line = "")
@@ -44,7 +45,7 @@ class OutputBuffer
         data = data.encode(Encoding::UTF_8, invalid: :replace, undef: :replace)
       end
     end
-    @previous << [event, data] unless event == :close
+    @previous << [event, data]
     @listeners.dup.each { |listener| listener.push([event, data]) }
   end
 
@@ -56,34 +57,36 @@ class OutputBuffer
     @previous.select { |event, _data| event == :message }.map(&:last).join
   end
 
+  # needs a mutex so we never add a new queue after closing since that would hang forever on the .pop
   def close
-    return if closed?
-    @closed = true
-    write(nil, :close)
+    @mutex.synchronize do
+      @closed = true
+      @listeners.each(&:close) # make .pop return nil
+    end
   end
 
   def closed?
     @closed
   end
 
+  # a new listener subscribes ...
   def each(&block)
     # If the buffer is closed, there's no reason to block the listening
-    # thread - just yield all the buffered chunks and return.
-    return @previous.each(&block) if closed?
-
-    begin
-      queue = Queue.new
+    # thread, yield all the buffered chunks and return.
+    queue = Queue.new
+    @mutex.synchronize do
+      return @previous.each(&block) if closed?
       @listeners << queue
-
-      # race condition: possibly duplicate messages when message comes in between adding listener and this
-      @previous.each(&block)
-
-      while (chunk = queue.pop) && chunk.first != :close
-        yield chunk
-      end
-    ensure
-      @listeners.delete(queue)
     end
+
+    # race condition: possibly duplicate messages when message comes in between adding listener and this
+    @previous.each(&block)
+
+    while chunk = queue.pop
+      yield chunk
+    end
+  ensure
+    @listeners.delete(queue)
   end
 
   private
