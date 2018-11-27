@@ -11,7 +11,8 @@ fi
 if [ -f db/development.sqlite3 ]; then
     bundle exec rake db:migrate
 else
-    bundle exec rake db:setup db:migrate
+    # NOTE: db:setup fails when schema is not up to date, so we need to do the create+load instead
+    bundle exec rake db:create db:schema:load db:migrate
 fi
 
 exec bundle exec puma -C config/puma.rb
