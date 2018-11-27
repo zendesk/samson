@@ -83,6 +83,10 @@ class Deploy < ActiveRecord::Base
     end
   end
 
+  def exact_reference
+    reference.match?(Release::VERSION_REGEX) ? reference : commit[0...7]
+  end
+
   def previous_deploy
     stage.deploys.prior_to(self).first
   end

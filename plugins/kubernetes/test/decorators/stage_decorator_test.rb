@@ -28,6 +28,11 @@ describe Stage do
         end
         assert_valid stage
       end
+
+      it "is not valid when using non-kubernetes rollback" do
+        stage.allow_redeploy_previous_when_failed = true
+        refute_valid stage
+      end
     end
   end
 

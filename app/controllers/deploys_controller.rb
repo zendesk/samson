@@ -114,6 +114,10 @@ class DeploysController < ApplicationController
     redirect_to [current_project, @deploy]
   end
 
+  def self.deploy_permitted_params
+    [:reference, :stage_id, :redeploy_previous_when_failed] + Samson::Hooks.fire(:deploy_permitted_params).flatten(1)
+  end
+
   protected
 
   def search
@@ -181,7 +185,7 @@ class DeploysController < ApplicationController
   end
 
   def deploy_permitted_params
-    [:reference, :stage_id] + Samson::Hooks.fire(:deploy_permitted_params)
+    self.class.deploy_permitted_params
   end
 
   def reference

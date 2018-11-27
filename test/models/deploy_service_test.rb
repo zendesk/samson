@@ -13,10 +13,8 @@ describe DeployService do
   let(:deploy) { deploys(:succeeded_test) }
   let(:reference) { deploy.reference }
   let(:job_execution) { JobExecution.new(reference, job) }
-
   let(:stage_production_1) { stages(:test_production) }
   let(:stage_production_2) { stages(:test_production_pod) }
-
   let(:ref1) { "v1" }
 
   describe "#deploy!" do
@@ -208,7 +206,7 @@ describe DeployService do
     end
   end
 
-  describe "before notifications" do
+  describe "start callbacks" do
     before do
       stage.stubs(:create_deploy).returns(deploy)
       deploy.stubs(:persisted?).returns(true)
@@ -227,7 +225,7 @@ describe DeployService do
     end
   end
 
-  describe "after notifications" do
+  describe "finish callbacks" do
     def run_deploy
       service.deploy(stage, reference: reference)
       job_execution.send(:run)
@@ -271,6 +269,45 @@ describe DeployService do
       DeployMailer.expects(:deploy_failed_email).returns(stub("DeployMailer", deliver_now: true))
 
       run_deploy
+    end
+
+    describe "with redeploy_previous_when_failed" do
+      def run_deploy(redeploy)
+        service.deploy(stage, reference: reference)
+        service.expects(:deploy).capture(deploy_args).times(redeploy ? 1 : 0).returns(deploy) # stub to avoid loops
+        job_execution.send(:run)
+      end
+
+      let(:deploy_args) { [] }
+
+      before do
+        service # cache instance
+        deploy.redeploy_previous_when_failed = true
+        deploy.stubs(:previous_successful_deploy).returns(deploys(:succeeded_production_test))
+        Job.any_instance.stubs(:status).returns("failed")
+      end
+
+      it "redeploys previous if deploy failed" do
+        run_deploy true
+        deploy_args.dig(0, 1, :reference).must_equal "abcabca"
+      end
+
+      it "does nothing when it cannot find a previous deploy" do
+        deploy.unstub(:previous_successful_deploy)
+        deploy.expects(:previous_successful_deploy).returns(nil)
+        run_deploy false
+      end
+
+      it "does not deploy previous if deploy succeeds" do
+        Job.any_instance.unstub(:status)
+        run_deploy false
+      end
+
+      it "uses short sha if not a versioned release" do
+        deploy.reference = 'v1'
+        run_deploy true
+        deploy_args.dig(0, 1, :reference).must_equal "v1"
+      end
     end
   end
 

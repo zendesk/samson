@@ -473,6 +473,18 @@ describe Deploy do
     end
   end
 
+  describe "#exact_reference" do
+    it "returns versioned release" do
+      deploy = Deploy.new(reference: "v1", job: Job.new(commit: "abcdefgabcdefg"))
+      deploy.exact_reference.must_equal "v1"
+    end
+
+    it "returns short sha if reference is not exact" do
+      deploy = Deploy.new(reference: "master", job: Job.new(commit: "abcdefgabcdefg"))
+      deploy.exact_reference.must_equal "abcdefg"
+    end
+  end
+
   describe "#references?" do
     before do
       deploy.reference.wont_equal deploy.job.commit

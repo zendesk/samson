@@ -141,6 +141,7 @@ class StagesController < ApplicationController
       :permalink,
       :production,
       :run_in_parallel,
+      :allow_redeploy_previous_when_failed,
       :static_emails_on_automated_deploy_failure,
       :full_checkout,
       {

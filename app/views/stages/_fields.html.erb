@@ -55,6 +55,8 @@
 
   <%= form.input :builds_in_environment, as: :check_box, label: "Builds available in environment", help: "Useful for manual docker deploys or artifact extraction, format is BUILD_FROM_Dockerfile=" %>
 
+  <%= form.input :allow_redeploy_previous_when_failed, as: :check_box, help: 'Enables a new checkbox on the deploy view, that allows marking the deploy to redeploy previous when failed.' %>
+
   <%= Samson::Hooks.render_views(:stage_form_checkbox, self, form: form) %>
 </fieldset>
 
