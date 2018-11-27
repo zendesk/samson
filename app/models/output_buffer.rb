@@ -31,6 +31,7 @@ class OutputBuffer
     @previous = ThreadSafe::Array.new
     @closed = false
     @line_finished = true
+    @mutex = Mutex.new
   end
 
   def puts(line = "")
@@ -41,18 +42,11 @@ class OutputBuffer
     if data.is_a?(String)
       data = inject_timestamp(data)
       if data.encoding != Encoding::UTF_8
-        data = data.dup.force_encoding(Encoding::UTF_8)
+        data = data.encode(Encoding::UTF_8, invalid: :replace, undef: :replace)
       end
     end
-    @previous << [event, data] unless event == :close
+    @previous << [event, data]
     @listeners.dup.each { |listener| listener.push([event, data]) }
-  end
-
-  # TODO: move into binary-builder
-  # chunks can be split in half multi-bytes, so we have to sanitize them
-  def write_docker_chunk(chunk)
-    chunk = chunk.encode(Encoding::UTF_8, chunk.encoding, invalid: :replace, undef: :replace).strip
-    chunk.split("\n").map { |line| write_docker_chunk_line(line) }
   end
 
   def include?(event, data)
@@ -63,34 +57,36 @@ class OutputBuffer
     @previous.select { |event, _data| event == :message }.map(&:last).join
   end
 
+  # needs a mutex so we never add a new queue after closing since that would hang forever on the .pop
   def close
-    return if closed?
-    @closed = true
-    write(nil, :close)
+    @mutex.synchronize do
+      @closed = true
+      @listeners.each(&:close) # make .pop return nil
+    end
   end
 
   def closed?
     @closed
   end
 
+  # a new listener subscribes ...
   def each(&block)
     # If the buffer is closed, there's no reason to block the listening
-    # thread - just yield all the buffered chunks and return.
-    return @previous.each(&block) if closed?
-
-    begin
-      queue = Queue.new
+    # thread, yield all the buffered chunks and return.
+    queue = Queue.new
+    @mutex.synchronize do
+      return @previous.each(&block) if closed?
       @listeners << queue
-
-      # race condition: possibly duplicate messages when message comes in between adding listener and this
-      @previous.each(&block)
-
-      while (chunk = queue.pop) && chunk.first != :close
-        yield chunk
-      end
-    ensure
-      @listeners.delete(queue)
     end
+
+    # race condition: possibly duplicate messages when message comes in between adding listener and this
+    @previous.each(&block)
+
+    while chunk = queue.pop
+      yield chunk
+    end
+  ensure
+    @listeners.delete(queue)
   end
 
   private
@@ -107,26 +103,5 @@ class OutputBuffer
       stamped << "#{Samson::OutputUtils.timestamp} #{line}"
     end
     stamped
-  end
-
-  def write_docker_chunk_line(line)
-    parsed_line = JSON.parse(line)
-
-    # Don't bother printing all the incremental output when pulling images
-    unless parsed_line['progressDetail']
-      if parsed_line.keys == ['stream']
-        puts parsed_line.values.first
-      else
-        values = parsed_line.map { |k, v| "#{k}: #{v}" if v.present? }.compact
-        puts values.join(' | ') if values.any?
-      end
-    end
-
-    parsed_line
-  rescue JSON::ParserError
-    # Sometimes the JSON line is too big to fit in one chunk, so we get
-    # a chunk back that is an incomplete JSON object.
-    puts line
-    {'message' => line}
   end
 end
