@@ -10,8 +10,8 @@ module Kubernetes
     end
     WAIT_FOR_LIVE = Integer(ENV.fetch('KUBERNETES_WAIT_FOR_LIVE', '600'))
     WAIT_FOR_PREREQUISITES = Integer(ENV.fetch('KUBERNETES_WAIT_FOR_PREREQUISITES', WAIT_FOR_LIVE))
-    STABILITY_CHECK_DURATION = 1.minute
-    TICK = 2.seconds
+    STABILITY_CHECK_DURATION = Integer(ENV.fetch('KUBERNETES_STABILITY_CHECK_DURATION', 1.minute))
+    TICK = Integer(ENV.fetch('KUBERNETES_STABILITY_CHECK_TICK', 2.seconds))
     RESTARTED = "Restarted"
 
     # TODO: this logic might be able to go directly into Pod, which would simplify the code here a bit
