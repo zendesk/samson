@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 2
+SingleCov.covered!
 
 describe SamsonGcloud::ImageScanner do
   with_env GCLOUD_ACCOUNT: 'acc', GCLOUD_PROJECT: 'proj'
@@ -9,10 +9,10 @@ describe SamsonGcloud::ImageScanner do
   let(:build) { builds(:docker_build) }
 
   describe ".scan" do
-    def assert_done(done: true)
+    def assert_done(status = "FINISHED_SUCCESS")
       assert_request(
         :get, /DISCOVERY/,
-        to_return: {body: {occurrences: [{discovered: {operation: {done: done}}}]}.to_json}
+        to_return: {body: {occurrences: [{discovered: {analysisStatus: status}}]}.to_json}
       )
     end
 
@@ -47,19 +47,30 @@ describe SamsonGcloud::ImageScanner do
       SamsonGcloud::ImageScanner.scan(build).must_equal SamsonGcloud::ImageScanner::ERROR
     end
 
-    it "returns waiting when build was not yet scanned or in progress" do
-      assert_done(done: false)
+    it "returns waiting when build was not yet scanned" do
+      assert_done "PENDING"
       SamsonGcloud::ImageScanner.scan(build).must_equal SamsonGcloud::ImageScanner::WAITING
     end
 
-    it "returns waiting if we are unable to determine the status" do
-      assert_request(:get, /DISCOVERY/, to_return: {body: "{}"})
+    it "returns waiting when build is in progress" do
+      assert_done "SCANNING"
       SamsonGcloud::ImageScanner.scan(build).must_equal SamsonGcloud::ImageScanner::WAITING
+    end
+
+    it "returns err if we are unable to determine the status" do
+      assert_request(:get, /DISCOVERY/, to_return: {body: "{}"})
+      SamsonGcloud::ImageScanner.scan(build).must_equal SamsonGcloud::ImageScanner::ERROR
     end
 
     it "retries request if error code >= 500" do
       assert_request(:get, /DISCOVERY/, to_return: {status: 500}, times: 3)
       SamsonGcloud::ImageScanner.scan(build).must_equal SamsonGcloud::ImageScanner::ERROR
+    end
+
+    it "supports digests with https prefix (idk if that really happens)" do
+      build.update_column(:docker_repo_digest, "https://#{build.docker_repo_digest}")
+      assert_done "SCANNING"
+      SamsonGcloud::ImageScanner.scan(build).must_equal SamsonGcloud::ImageScanner::WAITING
     end
   end
 
@@ -84,6 +95,14 @@ describe SamsonGcloud::ImageScanner do
 
     it "raises on invalid status" do
       assert_raises { SamsonGcloud::ImageScanner.status(5) }
+    end
+  end
+
+  describe ".token" do
+    it "does not cache errors" do
+      Samson::CommandExecutor.expects(:execute).times(2).returns([false, '1'], [true, '2'])
+      assert_raises { SamsonGcloud::ImageScanner.send(:token) }
+      SamsonGcloud::ImageScanner.send(:token).must_equal '2'
     end
   end
 end

@@ -11,11 +11,17 @@ module SamsonGcloud
     class << self
       # found by inspecting
       # gcloud alpha container images list-tags gcr.io/$PROJECT_ID/base/alpine --show-occurrences --log-http
-      # which has many thousand occurances for very simple images
-      # the occurance with type DISCOVERY tells us if the scan is done, so we do not mark pending as "Nothing found"
+      # which has many thousand occurrence for very simple images
+      # the occurrence with type DISCOVERY tells us the scan status
+      # https://cloud.google.com/container-registry/docs/reference/rest/v1alpha1/projects.occurrences#analysisstatus
       def scan(build)
         return ERROR unless result = request(build, "occurrences", "kind=\"DISCOVERY\"")
-        return WAITING unless result.dig("occurrences", 0, "discovered", "operation", "done")
+
+        status = result.dig("occurrences", 0, "discovered", "analysisStatus")
+        if status != "FINISHED_SUCCESS"
+          return ["PENDING", "SCANNING"].include?(status) ? WAITING : ERROR
+        end
+
         return ERROR unless result = request(build, "occurrences", "kind=\"PACKAGE_VULNERABILITY\"")
         result.empty? ? SUCCESS : FOUND
       end
