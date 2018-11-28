@@ -133,6 +133,11 @@ using KUBERNETES_WAIT_FOR_PREREQUISITES env variable (specified in seconds).
 A deploy will wait for 10 minutes for pods to come alive. You can adjust this
 timeout using KUBERNETES_WAIT_FOR_LIVE (specified in seconds).
 
+### Deployment stability check
+
+A deploy will get checked for stability every 2 seconds for a minute, before being marked as stable.
+These can be configured (in seconds) using `KUBERNETES_STABILITY_CHECK_DURATION` and `KUBERNETES_STABILITY_CHECK_TICK` environment variables.
+
 ### StatefulSet
 
 On kubernetes <1.7 they can only be updated with `OnDelete` updateStrategy,
