@@ -17,7 +17,7 @@ module BuddyCheck
     def bypass_email_addresses
       emails = ENV["BYPASS_EMAIL"].to_s.split(",")
       if jira = ENV["BYPASS_JIRA_EMAIL"]
-        warn "BYPASS_JIRA_EMAIL is deprecated"
+        Rails.logger.warn "BYPASS_JIRA_EMAIL is deprecated"
         emails << jira
       end
       emails

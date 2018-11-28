@@ -83,7 +83,7 @@ describe BuddyCheck do
 
     it "reads BYPASS_JIRA_EMAIL" do
       with_env BYPASS_JIRA_EMAIL: "a@b.com" do
-        BuddyCheck.expects(:warn)
+        Rails.logger.expects(:warn).with("BYPASS_JIRA_EMAIL is deprecated")
         BuddyCheck.bypass_email_addresses.must_equal ["a@b.com"]
       end
     end
