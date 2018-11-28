@@ -9,7 +9,7 @@ require 'rails/test_unit/railtie'
 require 'sprockets/railtie'
 
 if (google_domain = ENV["GOOGLE_DOMAIN"]) && !ENV['EMAIL_DOMAIN']
-  warn "Stop using deprecated GOOGLE_DOMAIN"
+  Rails.logger.warn "Stop using deprecated GOOGLE_DOMAIN"
   ENV["EMAIL_DOMAIN"] = google_domain.sub('@', '')
 end
 

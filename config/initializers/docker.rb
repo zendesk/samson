@@ -15,7 +15,7 @@ if !Rails.env.test? && !ENV['PRECOMPILE'] && ENV['DOCKER_FEATURE']
       abort "Expected docker version to be >= #{min_version}, found client: #{local} server: #{server}"
     end
   rescue
-    warn "Unable to verify local docker!"
+    Rails.logger.warn "Unable to verify local docker!"
     # errors and hooks they trigger cause background threads, that would break boot_check.rb thread checker
     ErrorNotifier.notify($!) unless Rails.env.development?
   end
