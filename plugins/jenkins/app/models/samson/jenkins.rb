@@ -249,6 +249,7 @@ module Samson
         emails.concat(deploy.changeset.commits.map(&:author_email))
       end
 
+      emails.compact!
       emails.select! { |e| e.include?('@') }
       emails.map! { |x| Mail::Address.new(x) }
       if restricted_domain = ENV["EMAIL_DOMAIN"]
