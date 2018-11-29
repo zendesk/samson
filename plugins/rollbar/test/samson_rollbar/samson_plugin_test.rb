@@ -11,13 +11,18 @@ describe SamsonRollbar do
     around { |t| Samson::Hooks.only_callbacks_for_plugin('rollbar', :error, &t) }
 
     it 'reports error' do
-      Rollbar.expects(:error).with(exception, foo: 'bar').returns(123)
+      Rollbar.expects(:error).with(exception, nil, foo: 'bar').returns(123)
       Samson::Hooks.fire(:error, exception, foo: 'bar').must_equal [123]
+    end
+
+    it "can override display message" do
+      Rollbar.expects(:error).with(exception, "hello", foo: 'bar').returns(123)
+      Samson::Hooks.fire(:error, exception, foo: 'bar', message: "hello").must_equal [123]
     end
 
     describe "with sync" do
       it 'returns url' do
-        Rollbar.expects(:error).with(exception, foo: 'bar').returns(uuid: '123')
+        Rollbar.expects(:error).with(exception, nil, foo: 'bar').returns(uuid: '123')
         Samson::Hooks.fire(:error, exception, foo: 'bar', sync: true).must_equal(
           ["https://rollbar.com/instance/uuid?uuid=123"]
         )

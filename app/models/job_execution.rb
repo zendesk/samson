@@ -277,8 +277,8 @@ class JobExecution
     Dir.mktmpdir("samson-#{@job.project.permalink}-#{@job.id}") do |dir|
       result = yield dir
     end
-  rescue Errno::ENOTEMPTY, Errno::ENOENT
-    ErrorNotifier.notify("Notify: make_tempdir error #{$!.message.split('@').first}")
+  rescue Errno::ENOTEMPTY, Errno::ENOENT => e
+    ErrorNotifier.notify(e, message: "Notify: make_tempdir error")
     result # tempdir ensure sometimes fails ... not sure why ... return normally
   ensure
     @repository.prune_worktree

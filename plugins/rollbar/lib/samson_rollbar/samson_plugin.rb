@@ -10,8 +10,9 @@ end
 
 Samson::Hooks.callback :error do |exception, options|
   sync = options[:sync]
-  options = options.without(:sync)
-  data = Rollbar.error(exception, options)
+  message = options[:message]
+  options = options.without(:sync, :message)
+  data = Rollbar.error(exception, message, options)
 
   if sync
     Rollbar::Util.uuid_rollbar_url(data, Rollbar.configuration) if data.is_a?(Hash)
