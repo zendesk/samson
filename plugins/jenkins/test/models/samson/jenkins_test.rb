@@ -85,6 +85,14 @@ describe Samson::Jenkins do
     deploy.stubs(:changeset).returns(changeset)
   end
 
+  def stub_default
+    stub_crumb
+    stub_job_detail
+    stub_build_with_parameters({})
+    stub_build_detail("")
+    stub_get_build_id_from_queue(123)
+  end
+
   let(:deploy) { deploys(:succeeded_test) }
   let(:buddy) { users(:deployer_buddy) }
   let(:jenkins) { Samson::Jenkins.new('test_job', deploy) }
@@ -160,12 +168,7 @@ describe Samson::Jenkins do
 
   describe "#build" do
     it "returns a job number when jenkins starts a build" do
-      stub_crumb
-      stub_job_detail
-      stub_build_with_parameters({})
-      stub_build_detail("")
-      stub_get_build_id_from_queue(123)
-
+      stub_default
       jenkins.build.must_equal 123
     end
 
@@ -177,6 +180,13 @@ describe Samson::Jenkins do
     it "returns an error on api error" do
       stub_request(:get, "http://www.test-url.com/job/test_job/api/json").to_return(status: 500, body: "{}")
       jenkins.build.must_include "Problem while waiting"
+    end
+
+    it "does not fail when a user has no email" do
+      buddy.update_column(:email, nil)
+      deploy.update_column(:buddy_id, buddy.id)
+      stub_default
+      jenkins.build.must_equal 123
     end
 
     describe "with env flags" do
