@@ -57,6 +57,8 @@ class JobOutputsChannel < ActionCable::Channel::Base
     @thread = Thread.new do
       ActiveRecord::Base.connection_pool.with_connection do
         (MAX_WAIT / WAIT_DURATION).times do
+          break if @unsubscribed
+
           # running
           execution = JobQueue.find_by_id(id)
           break stream_execution(execution) if execution
@@ -73,7 +75,7 @@ class JobOutputsChannel < ActionCable::Channel::Base
   end
 
   def unsubscribed
-    @thread&.kill
+    @unsubscribed = true
     if execution = JobQueue.find_by_id(params.fetch(:id))
       execution.viewers.delete current_user
     end
