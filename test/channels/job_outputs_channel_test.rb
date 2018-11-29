@@ -79,6 +79,12 @@ describe JobOutputsChannel do
       job.update_column(:status, 'succeeded')
       maxitest_wait_for_extra_threads
     end
+
+    it "stops when user unsubscribes" do
+      channel.unsubscribed
+      channel.subscribed
+      maxitest_wait_for_extra_threads
+    end
   end
 
   describe "#unsubscribed" do
