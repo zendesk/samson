@@ -13,7 +13,7 @@ describe Kubernetes::DeployExecutor do
   let(:project) { job.project }
   let(:build) { builds(:docker_build) }
   let(:deploy_group) { stage.deploy_groups.first }
-  let(:executor) { Kubernetes::DeployExecutor.new(output, job: job, reference: 'master') }
+  let(:executor) { Kubernetes::DeployExecutor.new(job, output) }
   let(:log_url) { "http://foobar.server/api/v1/namespaces/staging/pods/pod-resque-worker/log?container=container1" }
   let(:commit) { '1a6f551a2ffa6d88e15eef5461384da0bfb1c194' }
   let(:origin) { "http://foobar.server" }
