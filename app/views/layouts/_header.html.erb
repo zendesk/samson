@@ -1,6 +1,6 @@
 <div class="navbar navbar-inverse">
   <div class="container">
-    <%= link_to "Samson", root_path, class: "navbar-brand" %>
+    <%= link_to "Samson", root_path, class: "navbar-brand", style: ("color: lime" unless Rails.env.production?) %>
 
     <ul class="nav navbar-nav">
       <% if current_user %>
