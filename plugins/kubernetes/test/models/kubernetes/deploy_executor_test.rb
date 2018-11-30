@@ -445,12 +445,16 @@ describe Kubernetes::DeployExecutor do
     end
 
     it "fails when pod is failing to boot" do
-      pod_status[:containerStatuses][0][:restartCount] = 1
-      executor.instance_variable_set(:@testing_for_stability, 0)
-      executor.expects(:raise).with("prerequisites should not check for stability") # ignore sanity check
-      refute execute
-      out.must_include "resque-worker: Restarted"
+      good = pod_reply.deep_dup
+      worker_is_unstable
+      stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/pods\?}).
+        to_return([{body: good.to_json}, {body: pod_reply.to_json}])
+
+      refute executor.execute
+
+      out.must_include "READY"
       out.must_include "UNSTABLE"
+      out.must_include "resque-worker: Restarted"
     end
 
     # not sure if this will ever happen ...
@@ -655,19 +659,12 @@ describe Kubernetes::DeployExecutor do
   end
 
   describe "#stable?" do
-    before do
-      Kubernetes::DeployExecutor.any_instance.stubs(:build_selectors).returns([])
-      executor.unstub(:stable?)
-    end
-
     it "is stable when enough time has passed" do
-      executor.instance_variable_set(:@testing_for_stability, 2.minutes.ago.to_i)
-      assert executor.send(:stable?)
+      assert executor.send(:stable?, 0)
     end
 
     it "is unstable when recently deployed" do
-      executor.instance_variable_set(:@testing_for_stability, 10.seconds.ago.to_i)
-      refute executor.send(:stable?)
+      refute executor.send(:stable?, 40)
     end
   end
 

@@ -81,8 +81,8 @@ module Kubernetes
     # check all pods and see if they are running
     # once they are running check if they are stable (for apps only, since jobs are finished and will not change)
     def wait_for_resources_to_complete(release_docs, timeout)
-      raise "prerequisites should not check for stability" if @testing_for_stability
-      @wait_start_time = Time.now
+      waiting_for_ready = true
+      wait_start_time = Time.now.to_i
       @output.puts "Waiting for pods to be created"
 
       loop do
@@ -93,22 +93,13 @@ module Kubernetes
         end
         not_ready = statuses.reject(&:live)
 
-        if @testing_for_stability
-          if not_ready.any?
-            print_statuses(statuses)
-            unstable!('one or more pods are not live', not_ready)
-            return false, statuses
-          else
-            @output.puts "Testing for stability: #{stable_time_remaining}s"
-            return success, statuses if stable?
-          end
-        else
+        if waiting_for_ready
           print_statuses(statuses)
           if not_ready.any?
             if stopped = not_ready.select(&:stop).presence
               unstable!('one or more pods stopped', stopped)
               return false, statuses
-            elsif seconds_waiting > timeout
+            elsif (Time.now.to_i - wait_start_time) > timeout
               @output.puts "TIMEOUT, pods took too long to get live"
               return false, statuses
             end
@@ -116,7 +107,18 @@ module Kubernetes
             return success, statuses
           else
             @output.puts "READY, starting stability test"
-            @testing_for_stability = Time.now.to_i
+            waiting_for_ready = false
+            wait_start_time = Time.now.to_i
+          end
+        else
+          if not_ready.any? # rubocop:disable Style/IfInsideElse
+            print_statuses(statuses)
+            unstable!('one or more pods are not live', not_ready)
+            return false, statuses
+          else
+            remaining = [wait_start_time + STABILITY_CHECK_DURATION - Time.now.to_i, 0].max
+            @output.puts "Testing for stability: #{remaining}s"
+            return success, statuses if stable?(remaining)
           end
         end
 
@@ -125,12 +127,9 @@ module Kubernetes
       end
     end
 
-    def stable?
-      stable_time_remaining == 0
-    end
-
-    def stable_time_remaining
-      [@testing_for_stability + STABILITY_CHECK_DURATION - Time.now.to_i, 0].max
+    # test hook
+    def stable?(remaining)
+      remaining == 0
     end
 
     def pod_statuses(release_docs)
@@ -298,7 +297,7 @@ module Kubernetes
       return if @last_status_output && @last_status_output > 10.seconds.ago
 
       @last_status_output = Time.now
-      @output.puts "Deploy status after #{seconds_waiting} seconds:"
+      @output.puts "Deploy status:"
       status_groups.group_by(&:group).each do |group, statuses|
         statuses.each do |status|
           @output.puts "  #{group} #{status.role}: #{status.details}"
@@ -431,10 +430,6 @@ module Kubernetes
     def success
       @output.puts "SUCCESS"
       true
-    end
-
-    def seconds_waiting
-      (Time.now - @wait_start_time).to_i if @wait_start_time
     end
 
     # find deploy group without extra sql queries
