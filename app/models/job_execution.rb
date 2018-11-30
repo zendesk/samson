@@ -273,14 +273,10 @@ class JobExecution
 
   # TODO: @repository.checkout_workspace should manage the tempdir and prune after
   def make_tempdir
-    result = nil
-    Dir.mktmpdir("samson-#{@job.project.permalink}-#{@job.id}") do |dir|
-      result = yield dir
-    end
-  rescue Errno::ENOTEMPTY, Errno::ENOENT
-    ErrorNotifier.notify("Notify: make_tempdir error #{$!.message.split('@').first}")
-    result # tempdir ensure sometimes fails ... not sure why ... return normally
+    dir = Dir.mktmpdir("samson-#{@job.project.permalink}-#{@job.id}")
+    yield dir
   ensure
+    FileUtils.rm_rf dir # mktmpdir with block often raised errors when tempfolder got removed early
     @repository.prune_worktree
   end
 end
