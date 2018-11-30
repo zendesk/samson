@@ -3,7 +3,7 @@ module Kubernetes
   class RoleValidator
     VALID_LABEL = /\A[a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?\z/ # also used in js ... cannot use /i
     NAMESPACELESS_KINDS = ['APIService', 'ClusterRoleBinding', 'ClusterRole', 'CustomResourceDefinition'].freeze
-    IMMUTABLE_NAME_KINDS = ['APIService', 'CustomResourceDefinition', 'ConfigMap'].freeze
+    IMMUTABLE_NAME_KINDS = ['APIService', 'CustomResourceDefinition', 'ConfigMap', 'Role', 'ClusterRole'].freeze
 
     # we either generate multiple names or allow custom names
     ALLOWED_DUPLICATE_KINDS = ((['Service'] + IMMUTABLE_NAME_KINDS)).freeze
