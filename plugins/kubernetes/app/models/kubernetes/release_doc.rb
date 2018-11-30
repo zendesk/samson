@@ -86,15 +86,9 @@ module Kubernetes
     end
 
     def add_pod_disruption_budget
-      min_available_path = [:metadata, :annotations, :"samson/minAvailable"]
-      match_labels_path = [:spec, :selector, :matchLabels]
+      return unless deployment = raw_template.detect { |r| r[:kind] == "Deployment" }
 
-      return unless resource = (
-        raw_template.detect { |t| t.dig(*min_available_path) } ||
-        raw_template.detect { |t| t.dig(*match_labels_path) }
-      )
-
-      min_available = resource.dig(*min_available_path)
+      min_available = deployment.dig(:metadata, :annotations, :"samson/minAvailable")
       return if min_available == "disabled"
 
       # NOTE: this is a bit of overhead for 0 or 1 replica deployments, but we don't know if a bad budget existed before
@@ -113,7 +107,7 @@ module Kubernetes
       end
       target = 0 if target < 0
 
-      annotations = (resource.dig(:metadata, :annotations) || {}).dup
+      annotations = (deployment.dig(:metadata, :annotations) || {}).dup
       annotations[:"samson/updateTimestamp"] = Time.now.utc.iso8601
 
       budget = {
@@ -121,13 +115,13 @@ module Kubernetes
         kind: "PodDisruptionBudget",
         metadata: {
           name: kubernetes_role.resource_name,
-          namespace: resource.dig(:metadata, :namespace),
-          labels: resource.dig_fetch(:metadata, :labels).dup,
+          namespace: deployment.dig(:metadata, :namespace),
+          labels: deployment.dig_fetch(:metadata, :labels).dup,
           annotations: annotations
         },
         spec: {
           minAvailable: target,
-          selector: {matchLabels: resource.dig_fetch(:spec, :selector, :matchLabels).dup}
+          selector: {matchLabels: deployment.dig_fetch(:spec, :selector, :matchLabels).dup}
         }
       }
       budget[:delete] = true if target == 0
