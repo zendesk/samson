@@ -491,8 +491,6 @@ describe JobExecution do
   describe "#make_tempdir" do
     # the actual issue we saw was Errno::ENOTEMPTY ... but that is harder to reproduce
     it "does not fail when directory cannot be removed" do
-      ErrorNotifier.expects(:notify).with { |e| e.must_include "Notify: make_tempdir error No such" }
-
       execution.send(:make_tempdir) do |dir|
         FileUtils.rm_rf(dir)
         111
