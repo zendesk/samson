@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 # executes a deploy and writes log to job output
-# finishes when cluster is "Ready"
+# finishes when deployed pods are all "Ready"
 require 'vault'
 
 module Kubernetes
@@ -27,36 +27,31 @@ module Kubernetes
       end
     end
 
-    def initialize(output, job:, reference:)
+    def initialize(job, output)
       @output = output
       @job = job
-      @reference = reference
-      @build_finder = Samson::BuildFinder.new(
-        @output,
-        @job,
-        @reference,
-        build_selectors: build_selectors
-      )
+      @reference = job.deploy.reference
     end
 
-    # here to make restart_signal_handler happy
+    # restart_signal_handler.rb calls this to show details about all running job-executions
+    # and show something that identifies the deploy
+    # TODO: change to .details and call that from restart_signal_handler and job_execution
     def pid
       "Kubernetes-deploy-#{object_id}"
     end
 
-    # here to make restart_signal_handler happy
     def pgid
       pid
     end
 
     def cancel(_signal)
-      @build_finder.cancelled!
+      build_finder.cancelled!
       @cancelled = true
     end
 
     def execute(*)
       verify_kubernetes_templates!
-      @builds = @build_finder.ensure_successful_builds
+      @builds = build_finder.ensure_successful_builds
       return false if cancelled?
       @release = create_release
 
@@ -73,6 +68,15 @@ module Kubernetes
     end
 
     private
+
+    def build_finder
+      @build_finder ||= Samson::BuildFinder.new(
+        @output,
+        @job,
+        @reference,
+        build_selectors: build_selectors
+      )
+    end
 
     # check all pods and see if they are running
     # once they are running check if they are stable (for apps only, since jobs are finished and will not change)
