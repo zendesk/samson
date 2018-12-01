@@ -3,7 +3,7 @@ require_relative '../test_helper'
 
 JobQueue.clear
 
-SingleCov.covered! uncovered: 1
+SingleCov.covered!
 
 describe JobQueue do
   fake_job = Class.new do
@@ -409,6 +409,33 @@ describe JobQueue do
       subject.clear
       subject.debug.must_equal [{}, {}]
     end
+
+    it "kills hanging threads directly so user sees what was hanging" do
+      e = nil
+      t =
+        Thread.new do
+          sleep 1
+        rescue RuntimeError
+          sleep 0.1 # make sure it waits
+          e = $!
+        end
+      subject.instance.instance_variable_get(:@threads)[1] = t
+      subject.clear
+      maxitest_wait_for_extra_threads
+      e.class.must_equal RuntimeError
+    end
+
+    it "does not raise on dead threads" do
+      t = Thread.new {}
+      subject.instance.instance_variable_get(:@threads)[1] = t
+      sleep 0.1
+      subject.clear
+    end
+
+    it "raises when used outside of test" do
+      Rails.env.expects(:test?).returns(false)
+      assert_raises(RuntimeError) { subject.clear }
+    end
   end
 
   describe "#wait" do
@@ -431,6 +458,7 @@ describe JobQueue do
           refute subject.wait(job_execution.id, 0.05) # blocks until thread unlocks
         end
         wait_for_jobs_to_finish
+        maxitest_wait_for_extra_threads
         (0.05..0.1).must_include time
       end
     end
@@ -443,26 +471,60 @@ describe JobQueue do
     end
   end
 
-  describe "#kill" do
-    it "kills the job" do
+  describe "#cancel" do
+    it "stops a running thread" do
       with_job_execution do
         called = false
+        job_sleep = 0.2
         time = Benchmark.realtime do
           job_execution.stubs(:perform).with do # cannot use expect since it is killed
             called = true
-            sleep 0.1
+            sleep job_sleep
           end
           subject.perform_later(job_execution)
-          sleep 0.05
-          subject.kill(job_execution.id)
+          sleep job_sleep / 4
+          subject.cancel(job_execution.id)
+          sleep job_sleep / 4
         end
-        time.must_be :<, 0.1
+        time.must_be :<, job_sleep
         assert called
       end
     end
 
-    it "does nothing when job is dead" do
-      subject.kill(123)
+    it "waits for thread to stop so redirected user sees cancellation outcome" do
+      with_job_execution do
+        job_execution.stubs(:perform).with do # cannot use expect since it is killed
+          sleep 0.1
+        rescue JobQueue::Cancel
+          sleep 0.01 # pretend to do slow cleanup
+          raise
+        end
+        subject.perform_later(job_execution)
+        sleep 0.01 # let thread start
+
+        thread = subject.instance.instance_variable_get(:@threads)[job_execution.id]
+        assert thread.alive?
+        subject.cancel(job_execution.id)
+        refute thread.alive?
+      end
+    end
+
+    it "closes AR connection to make sure a bad connection is not returned to the pool" do
+      with_job_execution do
+        job_execution.stubs(:perform).with { sleep 0.1 }
+        subject.perform_later(job_execution)
+
+        Rails.env.expects(:test?).times(2).returns(false, true)
+        ActiveRecord::Base.connection.expects(:close)
+
+        sleep 0.01 # random errors happen without this
+        subject.cancel(job_execution.id)
+        maxitest_wait_for_extra_threads
+      end
+    end
+
+    it "does nothing when thread is dead" do
+      subject.cancel(job_execution.id)
     end
   end
 

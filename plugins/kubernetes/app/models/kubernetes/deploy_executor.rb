@@ -44,26 +44,23 @@ module Kubernetes
       pid
     end
 
-    def cancel(_signal)
-      build_finder.cancelled!
-      @cancelled = true
-    end
-
     def execute(*)
       verify_kubernetes_templates!
       @builds = build_finder.ensure_successful_builds
-      return false if cancelled?
       @release = create_release
 
       prerequisites, deploys = @release.release_docs.partition(&:prerequisite?)
+
       if prerequisites.any?
         @output.puts "First deploying prerequisite ..." if deploys.any?
         return false unless deploy_and_watch(prerequisites, WAIT_FOR_PREREQUISITES)
         @output.puts "Now deploying other roles ..." if deploys.any?
       end
+
       if deploys.any?
         return false unless deploy_and_watch(deploys, WAIT_FOR_LIVE)
       end
+
       true
     end
 
@@ -123,7 +120,6 @@ module Kubernetes
         end
 
         sleep TICK
-        return false, statuses if cancelled?
       end
     end
 
@@ -236,14 +232,6 @@ module Kubernetes
       @output.puts "UNSTABLE: #{reason}"
       bad_release_statuses.select(&:pod).each do |status|
         @output.puts "  #{pod_identifier(status.pod)}: #{status.details}"
-      end
-    end
-
-    # user clicked cancel button in UI
-    def cancelled?
-      if @cancelled
-        @output.puts "CANCELLED"
-        true
       end
     end
 

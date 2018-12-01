@@ -69,15 +69,6 @@ describe Samson::BuildFinder do
       out.must_include "Waiting for Build #{build.url} to finish."
     end
 
-    it "stop wait when deploy is cancelled by user" do
-      finder.cancelled!
-      build.class.any_instance.expects(:active?).returns true
-
-      finder.expects(:sleep).never
-
-      assert execute.any?
-    end
-
     it "continue wait until build became active" do
       expect_sleep.times(2)
       done = false
@@ -175,14 +166,6 @@ describe Samson::BuildFinder do
         end
         e.message.must_equal "Build #{Build.last.url} is cancelled, rerun it."
         out.must_include "Creating build for Dockerfile."
-      end
-
-      it "stops when deploy is cancelled by user" do
-        job.project.update_column :dockerfiles, 'Dockerfile'
-        finder.cancelled!
-        DockerBuilderService.any_instance.expects(:run).returns(true)
-        execute
-        out.scan(/.*build for.*/).must_equal(["Creating build for Dockerfile."])
       end
     end
 
@@ -293,12 +276,6 @@ describe Samson::BuildFinder do
         )
       end
 
-      it "stops when cancelled" do
-        expect_sleep.with { finder.cancelled! }
-
-        execute.must_equal []
-      end
-
       it "does not wait multiple times because builds start simultaneously" do
         expect_sleep.times(3)
 
@@ -368,6 +345,12 @@ describe Samson::BuildFinder do
 
       build.update_column(:git_sha, pre_previous.job.commit)
       finder.send(:possible_builds).must_equal [build]
+    end
+  end
+
+  describe "#wait_for_build_creation" do
+    it "raises when outside code does not stop after last try" do
+      assert_raises(RuntimeError) { finder.send(:wait_for_build_creation) {} }
     end
   end
 end

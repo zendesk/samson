@@ -201,7 +201,7 @@ describe DeployService do
         DeployMailer.expects(bypass_email: stub(deliver_now: true))
         deploy.buddy = user
         service.confirm_deploy(deploy)
-        job_execution.send(:run)
+        job_execution.perform
       end
     end
   end
@@ -220,7 +220,7 @@ describe DeployService do
     it "sends before_deploy hook" do
       record_hooks(:before_deploy) do
         service.deploy(stage, reference: reference)
-        job_execution.send(:run)
+        job_execution.perform
       end.map(&:first).must_equal [deploy]
     end
   end
@@ -228,7 +228,7 @@ describe DeployService do
   describe "finish callbacks" do
     def run_deploy
       service.deploy(stage, reference: reference)
-      job_execution.send(:run)
+      job_execution.perform
     end
 
     before do
@@ -275,7 +275,7 @@ describe DeployService do
       def run_deploy(redeploy)
         service.deploy(stage, reference: reference)
         service.expects(:deploy).capture(deploy_args).times(redeploy ? 1 : 0).returns(deploy) # stub to avoid loops
-        job_execution.send(:run)
+        job_execution.perform
       end
 
       let(:deploy_args) { [] }

@@ -13,7 +13,14 @@ class JobExecution
 
   def initialize(reference, job, env: {}, output: OutputBuffer.new, &block)
     @output = output
-    @executor = TerminalExecutor.new(@output, verbose: true, deploy: job.deploy, project: job.project)
+    @executor = TerminalExecutor.new(
+      @output,
+      verbose: true,
+      deploy: job.deploy,
+      project: job.project,
+      timeout: Rails.application.config.samson.deploy_timeout,
+      cancel_timeout: cancel_timeout
+    )
     @viewers = JobViewers.new(@output)
 
     @start_callbacks = []
@@ -22,7 +29,6 @@ class JobExecution
     @job = job
     @reference = reference
     @execution_block = block
-    @cancelled = false
     @finished = false
 
     @repository = @job.project.repository
@@ -31,27 +37,43 @@ class JobExecution
   end
 
   def perform
-    ActiveRecord::Base.connection_pool.with_connection { run }
+    @output.write('', :started)
+    @start_callbacks.each(&:call)
+    @job.running!
+
+    success = make_tempdir do |dir|
+      return @job.errored! unless setup(dir)
+
+      if @execution_block
+        @execution_block.call(self, dir)
+      else
+        execute(dir)
+      end
+    end
+
+    if success
+      @job.succeeded!
+    else
+      @job.failed!
+    end
+  rescue JobQueue::Cancel
+    @job.cancelling!
+    raise
+  rescue => e
+    error!(e)
+  ensure
+    finish
+    @job.cancelled! if @job.cancelling?
   end
+  add_asynchronous_tracer :perform,
+    category: :task,
+    params: '{ job_id: id, project: job.project.try(:name), reference: reference }'
 
   # Used on queued jobs when shutting down
   # so that the stream sockets are closed
   def close
     @output.write('', :reloaded)
     @output.close
-  end
-
-  def cancel
-    @cancelled = true
-    @job.cancelling!
-    build_finder.cancelled!
-    @executor.cancel 'INT'
-    unless JobQueue.wait(id, cancel_timeout)
-      @executor.cancel 'KILL'
-      JobQueue.wait(id, cancel_timeout) || JobQueue.kill(id)
-    end
-    @job.cancelled!
-    finish
   end
 
   def on_start(&block)
@@ -101,41 +123,7 @@ class JobExecution
     @job.errored! if @job.active?
   end
 
-  def run
-    @output.write('', :started)
-    @start_callbacks.each(&:call)
-    @job.running!
-
-    success = make_tempdir do |dir|
-      return @job.errored! unless setup(dir)
-
-      if @execution_block
-        @execution_block.call(self, dir)
-      else
-        execute(dir)
-      end
-    end
-
-    if success
-      @job.succeeded!
-    else
-      @job.failed!
-    end
-
-  # when thread was killed by 'cancel' it is in a bad state, avoid working
-  rescue => e
-    error!(e) unless @cancelled
-  ensure
-    finish unless @cancelled
-  end
-  add_asynchronous_tracer :run,
-    category: :task,
-    params: '{ job_id: id, project: job.project.try(:name), reference: reference }'
-
   def finish
-    return if @finished
-    @finished = true
-
     @finish_callbacks.each(&:call)
 
     @output.write('', :finished) # TODO: .close should do that
