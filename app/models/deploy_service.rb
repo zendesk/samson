@@ -65,7 +65,7 @@ class DeployService
       output.puts("Deploy failed, cannot find any previous successful deploy")
       return
     end
-    reference = failed_deploy.exact_reference
+    reference = previous.exact_reference
     attributes = Samson::RedeployParams.new(previous).to_hash.merge(
       reference: reference,
       buddy: failed_deploy.buddy, # deploy was approved to be reverted if it fails
