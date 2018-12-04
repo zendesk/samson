@@ -289,7 +289,7 @@ describe DeployService do
 
       it "redeploys previous if deploy failed" do
         run_deploy true
-        deploy_args.dig(0, 1, :reference).must_equal "abcabca"
+        deploy_args.dig(0, 1, :reference).must_equal "v1.0"
       end
 
       it "does nothing when it cannot find a previous deploy" do
@@ -304,9 +304,9 @@ describe DeployService do
       end
 
       it "uses short sha if not a versioned release" do
-        deploy.reference = 'v1'
+        deploys(:succeeded_production_test).update_column(:reference, 'master')
         run_deploy true
-        deploy_args.dig(0, 1, :reference).must_equal "v1"
+        deploy_args.dig(0, 1, :reference).must_equal "abcabca"
       end
     end
   end
