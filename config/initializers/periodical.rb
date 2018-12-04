@@ -10,7 +10,7 @@ Samson::Periodical.register :stop_expired_deploys, "Cancel deploys when buddy ap
 end
 
 Samson::Periodical.register :renew_vault_token, "Renew vault token" do
-  Samson::Secrets::VaultClient.client.renew_token
+  Samson::Secrets::VaultClientManager.instance.renew_token
 end
 
 Samson::Periodical.register :remove_expired_locks, "Remove expired locks" do

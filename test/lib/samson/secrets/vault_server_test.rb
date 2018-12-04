@@ -4,9 +4,9 @@ require_relative '../../../test_helper'
 SingleCov.covered!
 
 describe Samson::Secrets::VaultServer do
-  describe "validations" do
-    let(:server) { Samson::Secrets::VaultServer.new(name: 'abc', address: 'http://vault-land.com', token: "TOKEN") }
+  let(:server) { Samson::Secrets::VaultServer.new(name: 'abc', address: 'http://vault-land.com', token: "TOKEN") }
 
+  describe "validations" do
     before do
       stub_request(:get, "http://vault-land.com/v1/secret/apps/?list=true").
         to_return(headers: {content_type: 'application/json'}, body: {data: {keys: ['abc']}}.to_json)
@@ -63,7 +63,7 @@ describe Samson::Secrets::VaultServer do
   describe "#sync!" do
     let(:from) { create_vault_server(name: 'pod0') }
     let(:to) { create_vault_server(name: 'pod1') }
-    let(:scoped_key) { "secret/apps/staging/foo/pod100/a" }
+    let(:scoped_key) { "staging/foo/pod100/a" }
 
     before do
       to.deploy_groups = [deploy_groups(:pod100)]
@@ -77,16 +77,26 @@ describe Samson::Secrets::VaultServer do
     it "copies global keys" do
       key = "global/global/global/a"
       from.client.logical.expects(:list_recursive).returns([key])
-      from.client.logical.expects(:read).with("secret/apps/#{key}").returns(stub(data: {foo: :bar}))
-      to.client.logical.expects(:write).with("secret/apps/#{key}", foo: :bar)
+      from.client.logical.expects(:read).with(key).returns(stub(data: {foo: :bar}))
+      to.client.logical.expects(:write).with(key, foo: :bar)
+      to.sync!(from)
+    end
+
+    it "copies using respective prefixes" do
+      to.update_column(:versioned_kv, true)
+      key = "global/global/global/a"
+
+      from.client.logical.expects(:list_recursive).returns([key])
+      from.client.logical.expects(:read).with(key).returns(stub(data: {foo: :bar}))
+      to.client.logical.expects(:write).with(key, foo: :bar)
       to.sync!(from)
     end
 
     it "copies keys that this server has access to" do
       key = scoped_key
       from.client.logical.expects(:list_recursive).returns([key])
-      from.client.logical.expects(:read).with("secret/apps/#{key}").returns(stub(data: {foo: :bar}))
-      to.client.logical.expects(:write).with("secret/apps/#{key}", foo: :bar)
+      from.client.logical.expects(:read).with(key).returns(stub(data: {foo: :bar}))
+      to.client.logical.expects(:write).with(key, foo: :bar)
       to.sync!(from)
     end
 
@@ -108,25 +118,25 @@ describe Samson::Secrets::VaultServer do
   end
 
   describe "#refresh_vault_clients" do
-    let(:client) { Samson::Secrets::VaultClient.client }
+    let(:manager) { Samson::Secrets::VaultClientManager.instance }
 
     around do |test|
-      client.expire_clients
+      manager.expire_clients
       test.call
-      client.expire_clients
+      manager.expire_clients
     end
 
     it "adds new clients" do
-      client.send(:clients).size.must_equal 0
+      manager.send(:clients).size.must_equal 0
       create_vault_server(name: 'pod0')
-      client.send(:clients).size.must_equal 1
+      manager.send(:clients).size.must_equal 1
     end
 
     it "updates client attributes" do
       server = create_vault_server(name: 'pod0')
-      client.send(:clients).size.must_equal 1
+      manager.send(:clients).size.must_equal 1
       server.update_attribute(:address, 'http://new.com')
-      client.send(:clients).values.first.address.must_equal 'http://new.com'
+      manager.send(:clients).values.first.address.must_equal 'http://new.com'
     end
   end
 
@@ -143,20 +153,6 @@ describe Samson::Secrets::VaultServer do
     it "does not expire when unimportant attributes changes" do
       Samson::Secrets::Manager.expects(:expire_lookup_cache).never
       server.update_attributes!(name: "Foo")
-    end
-  end
-
-  # testing our added method
-  describe "#list_recursive" do
-    it "iterates through all keys" do
-      stub_request(:get, "http://vault-land.com/v1/secret/apps/?list=true").
-        to_return(headers: {content_type: 'application/json'}, body: {data: {keys: [+'abc/', +'def']}}.to_json)
-      stub_request(:get, "http://vault-land.com/v1/secret/apps/abc/?list=true").
-        to_return(headers: {content_type: 'application/json'}, body: {data: {keys: [+'ghi']}}.to_json)
-
-      server = create_vault_server(name: 'pod0')
-      Samson::Secrets::VaultServer.any_instance.unstub(:validate_connection)
-      server.client.logical.list_recursive("secret/apps/").must_equal ["abc/ghi", "def"]
     end
   end
 end

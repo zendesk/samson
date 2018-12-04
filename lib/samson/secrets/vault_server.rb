@@ -1,27 +1,9 @@
 # frozen_string_literal: true
 require 'vault'
 
-# Add recursive listing which was rejected by vault-ruby see https://github.com/hashicorp/vault-ruby/pull/118
-# using a monkey patch so `vault_action :list_recursive` works in the backend
-Vault::Logical.class_eval do
-  def list_recursive(path, root = true)
-    keys = list(path).flat_map do |p|
-      full = +"#{path}#{p}"
-      if full.end_with?("/")
-        list_recursive(full, false)
-      else
-        full
-      end
-    end
-    keys.each { |k| k.slice!(0, path.size) } if root
-    keys
-  end
-end
-
 module Samson
   module Secrets
     class VaultServer < ActiveRecord::Base
-      PREFIX = ENV['VAULT_PREFIX'] || 'secret/apps/'
       NON_CONNECTION_ATTRIBUTES = ["name", "updated_at", "created_at"].freeze
 
       audited
@@ -68,11 +50,11 @@ module Samson
         allowed_envs = deploy_groups.map(&:environment).map(&:permalink) << 'global'
         allowed_groups = deploy_groups.map(&:permalink) << 'global'
 
-        keys = other.client.logical.list_recursive(PREFIX)
+        keys = other.client.logical.list_recursive
 
         # we can only write the keys that are allowed to live in this server
         keys.select! do |key|
-          scope = Samson::Secrets::Manager.parse_id(key.sub(PREFIX, ''))
+          scope = Samson::Secrets::Manager.parse_id(key)
           allowed_envs.include?(scope.fetch(:environment_permalink)) &&
             allowed_groups.include?(scope.fetch(:deploy_group_permalink))
         end
@@ -83,20 +65,20 @@ module Samson
           local_client = create_client
 
           keys.each do |key|
-            namespaced_key = "#{PREFIX}#{key}"
-            secret = other_client.logical.read(namespaced_key).data
-            local_client.logical.write(namespaced_key, secret)
+            secret = other_client.logical.read(key).data
+            local_client.logical.write(key, secret)
           end
         end
       end
 
       def create_client
-        Vault::Client.new(
+        VaultClientWrapper.new(
           DEFAULT_CLIENT_OPTIONS.merge(
+            address: address,
+            ssl_cert_store: cert_store,
             ssl_verify: tls_verify,
             token: token,
-            address: address,
-            ssl_cert_store: cert_store
+            versioned_kv: versioned_kv?
           )
         )
       end
@@ -116,13 +98,13 @@ module Samson
 
       def validate_connection
         return if errors.any? # no need to blow up / wait if we know things are invalid
-        client.logical.list(PREFIX)
+        client.logical.list
       rescue Vault::VaultError
         errors.add :base, "Unable to connect to server:\n#{$!.message}"
       end
 
       def refresh_vault_clients
-        VaultClient.client.expire_clients
+        VaultClientManager.instance.expire_clients
       end
     end
   end

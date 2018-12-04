@@ -1,3 +1,11 @@
+GIT
+  remote: https://github.com/zendesk/vault-ruby.git
+  revision: a9ca3669f9d6a90ff86aca523c246989dbd5d6db
+  ref: a9ca3669f9d6a90ff86aca523c246989dbd5d6db
+  specs:
+    vault (0.12.0)
+      aws-sigv4
+
 PATH
   remote: plugins/airbrake_hook
   specs:
@@ -521,8 +529,6 @@ GEM
     unicode-display_width (1.4.0)
     validates_lengths_from_database (0.7.0)
       activerecord (>= 3)
-    vault (0.12.0)
-      aws-sigv4
     warden (1.2.7)
       rack (>= 1.0)
     webmock (3.0.1)
@@ -642,7 +648,7 @@ DEPENDENCIES
   sqlite3
   uglifier
   validates_lengths_from_database
-  vault
+  vault!
   warden
   webmock
 

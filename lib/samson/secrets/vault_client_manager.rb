@@ -3,30 +3,29 @@
 module Samson
   module Secrets
     # Vault wrapper that sends requests to all matching vault servers
-    class VaultClient
+    class VaultClientManager
       class VaultServerNotConfigured < StandardError
       end
 
-      def self.client
-        @client ||= new
+      def self.instance
+        @instance ||= new
       end
 
       # responsible servers should have the same data, so read from the first
       def read(id)
-        vault = responsible_clients(id).first
-        with_retries { vault.logical.read(wrap_id(id)) }
+        vault_client = responsible_clients(id).first
+        with_retries { vault_client.logical.read(id) }
       end
 
       # different servers have different ids so combine all
-      def list_recursive(path)
-        path = wrap_id(path)
-        all = Samson::Parallelizer.map(clients.values) do |vault|
+      def list_recursive
+        all = Samson::Parallelizer.map(clients.values) do |vault_client|
           begin
-            with_retries { vault.logical.list_recursive(path) }
+            with_retries { vault_client.logical.list_recursive }
           rescue
             ErrorNotifier.notify(
               $!,
-              error_message: "Error talking to vault server #{vault.address} during list_recursive"
+              error_message: "Error talking to vault server #{vault_client.address} during list_recursive"
             )
             []
           end
@@ -37,16 +36,18 @@ module Samson
 
       # write to servers that need this id
       def write(id, data)
-        Samson::Parallelizer.map(responsible_clients(id)) do |v|
-          with_retries { v.logical.write(wrap_id(id), data) }
+        Samson::Parallelizer.map(responsible_clients(id)) do |vault_client|
+          with_retries do
+            vault_client.logical.write(id, data)
+          end
         end
       end
 
       # delete from all servers that hold this id
       def delete(id, all: false)
         selected_clients = (all ? clients.values : responsible_clients(id))
-        Samson::Parallelizer.map(selected_clients) do |v|
-          with_retries { v.logical.delete(wrap_id(id)) }
+        Samson::Parallelizer.map(selected_clients) do |vault_client|
+          with_retries { vault_client.logical.delete(id) }
         end
       end
 
@@ -73,17 +74,13 @@ module Samson
         unless id = client_map[:deploy_groups][deploy_group_permalink]
           raise VaultServerNotConfigured, "deploy group #{deploy_group_permalink} has no vault server configured"
         end
-        unless client = clients[id]
+        unless vault_client = clients[id]
           raise "no vault server found with id #{id}"
         end
-        client
+        vault_client
       end
 
       private
-
-      def wrap_id(id)
-        "#{VaultServer::PREFIX}#{id}"
-      end
 
       def with_retries(&block)
         Vault.with_retries(Vault::HTTPConnectionError, attempts: 3, &block)

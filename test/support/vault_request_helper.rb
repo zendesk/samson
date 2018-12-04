@@ -2,7 +2,7 @@
 module VaultRequestHelper
   def self.included(base)
     base.before do
-      Samson::Secrets::VaultClient.class_eval { @client = nil } # bust client cache so we build a new one each time
+      Samson::Secrets::VaultClientManager.class_eval { @instance = nil } # build a new manager each time
       deploy_groups(:pod2).update_column(:vault_server_id, create_vault_server.id)
     end
   end

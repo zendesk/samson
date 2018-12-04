@@ -497,7 +497,7 @@ module Kubernetes
     end
 
     def vault_env
-      vault_client = Samson::Secrets::VaultClient.client.client(@doc.deploy_group.permalink)
+      vault_client = Samson::Secrets::VaultClientManager.instance.client(@doc.deploy_group.permalink)
       [
         {name: "VAULT_ADDR", value: vault_client.options.fetch(:address)},
         {name: "VAULT_SSL_VERIFY", value: vault_client.options.fetch(:ssl_verify).to_s}

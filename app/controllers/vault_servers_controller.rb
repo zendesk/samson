@@ -45,7 +45,7 @@ class VaultServersController < ApplicationController
   private
 
   def server_params
-    params.require(:vault_server).permit(:name, :address, :token, :ca_cert, :tls_verify)
+    params.require(:vault_server).permit(:name, :address, :token, :versioned_kv, :ca_cert, :tls_verify)
   end
 
   def find_server
