@@ -510,7 +510,7 @@ module Kubernetes
     end
 
     def set_pre_stop
-      return if ! KUBERNETES_ADD_PRESTOP
+      return unless KUBERNETES_ADD_PRESTOP
       containers.each do |container|
         next if samson_container_config(container, :"samson/preStop") == "disabled"
         (container[:lifecycle] ||= {})[:preStop] ||= {exec: {command: ["sleep", "3"]}}
