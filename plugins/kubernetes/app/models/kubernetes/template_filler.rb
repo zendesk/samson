@@ -6,6 +6,7 @@ module Kubernetes
 
     CUSTOM_UNIQUE_LABEL_KEY = 'rc_unique_identifier'
     SECRET_PULLER_IMAGE = ENV['SECRET_PULLER_IMAGE'].presence
+    KUBERNETES_ADD_PRESTOP = !!(ENV.fetch('KUBERNETES_ADD_PRESTOP', false))
     SECRET_PREFIX = "secret/"
 
     def initialize(release_doc, template, index:)
@@ -509,6 +510,7 @@ module Kubernetes
     end
 
     def set_pre_stop
+      return if ! KUBERNETES_ADD_PRESTOP
       containers.each do |container|
         next if samson_container_config(container, :"samson/preStop") == "disabled"
         (container[:lifecycle] ||= {})[:preStop] ||= {exec: {command: ["sleep", "3"]}}
