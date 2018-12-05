@@ -6,7 +6,7 @@ module Kubernetes
 
     CUSTOM_UNIQUE_LABEL_KEY = 'rc_unique_identifier'
     SECRET_PULLER_IMAGE = ENV['SECRET_PULLER_IMAGE'].presence
-    KUBERNETES_ADD_PRESTOP = !!(ENV.fetch('KUBERNETES_ADD_PRESTOP', false))
+    KUBERNETES_ADD_PRESTOP = ENV['KUBERNETES_ADD_PRESTOP'] == 'true'
     SECRET_PREFIX = "secret/"
 
     def initialize(release_doc, template, index:)
