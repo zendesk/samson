@@ -18,7 +18,7 @@ describe Kubernetes::UsageLimitsController do
     unauthorized :delete, :destroy, id: 1
 
     describe "#index" do
-      let!(:other) { Kubernetes::UsageLimit.create!(cpu: 1, memory: 10) }
+      let!(:other) { Kubernetes::UsageLimit.create!(cpu: 1, memory: 10, scope: environments(:staging)) }
 
       it "renders" do
         get :index
@@ -52,6 +52,7 @@ describe Kubernetes::UsageLimitsController do
       end
 
       it "can find limits that apply to all scopes" do
+        other.update_columns(scope_id: nil, scope_type: nil)
         get :index, params: {search: {scope_type_and_id: 'all'}}
         assigns(:usage_limits).map(&:id).must_equal [other.id]
       end
@@ -67,7 +68,7 @@ describe Kubernetes::UsageLimitsController do
 
   as_an_admin do
     describe "#index" do
-      let!(:other) { Kubernetes::UsageLimit.create!(cpu: 1, memory: 10) }
+      let!(:other) { Kubernetes::UsageLimit.create!(cpu: 1, memory: 10, scope: environments(:production)) }
 
       it "renders" do
         get :index

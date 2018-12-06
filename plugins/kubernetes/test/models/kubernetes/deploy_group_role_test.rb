@@ -151,7 +151,7 @@ describe Kubernetes::DeployGroupRole do
       end
 
       describe "when role would be above limits" do
-        before { Kubernetes::UsageLimit.create!(cpu: 0.1, memory: 20) }
+        before { Kubernetes::UsageLimit.create!(cpu: 0.1, memory: 20, scope: environments(:staging)) }
 
         it "uses limits when role would be invalid" do
           seed!.must_equal []

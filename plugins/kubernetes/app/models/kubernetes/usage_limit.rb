@@ -9,6 +9,7 @@ class Kubernetes::UsageLimit < ActiveRecord::Base
 
   validates :cpu, :memory, presence: true
   validates :scope_id, uniqueness: {scope: [:scope_type, :project_id]}
+  validate :validate_wildcard
 
   def self.most_specific(project, deploy_group)
     all.sort_by(&:priority).detect { |l| l.send(:matches?, project, deploy_group) }
@@ -23,5 +24,11 @@ class Kubernetes::UsageLimit < ActiveRecord::Base
 
   def matches?(project, deploy_group)
     (!project_id || project_id == project.id) && matches_scope?(deploy_group)
+  end
+
+  def validate_wildcard
+    return if ENV["KUBERNETES_ALLOW_WILDCARD_LIMITS"] == "true"
+    return if (cpu == 0 && memory == 0) || scope_id || project_id
+    errors.add :base, "Non-zero limits without scope and project are not allowed"
   end
 end

@@ -42,8 +42,8 @@ describe SamsonKubernetes do
     end
 
     it "links to limit" do
-      limit = Kubernetes::UsageLimit.create!(memory: 10, cpu: 10)
-      link_parts(limit).must_equal ["Limit for  on All", limit]
+      limit = Kubernetes::UsageLimit.create!(memory: 10, cpu: 10, scope: environments(:production))
+      link_parts(limit).must_equal ["Limit for Production on All", limit]
     end
 
     it "links to cluster" do

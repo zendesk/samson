@@ -74,6 +74,10 @@ annotation (space separated).
 
 Samson allows limiting how many resources each project can use per Deploy Group, see `/kubernetes/usage_limits`.
 
+To forbid deployment of anything without a limit, add a `All/All` limit with 0 cpu and memory.
+
+To allow creating limits without scoped or project, set `KUBERNETES_ALLOW_WILDCARD_LIMITS=true`. 
+
 ## Deploying to Kubernetes
 
 Each deploy selects a Git SHA and N deploy groups to deploy to. For this Git SHA Samson finds or creates all builds that 
