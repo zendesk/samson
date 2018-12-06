@@ -15,14 +15,22 @@ module Samson
 
     class ExceptionReporter
       def initialize(task_name)
+        puts "DEBUG:: NEW EXCEPTION REPORTER #{task_name}" if $debug_messages
         @task_name = task_name
       end
 
       def update(time, _result, exception)
+        puts "DEBUG:: IN EXCEPTION REPORTER UPDATE #{exception.inspect}" if $debug_messages
         return unless exception
+        puts "DEBUG:: HAS EXCEPTION #{exception.inspect}" if $debug_messages
         Rails.logger.error "(#{time})  with error #{exception}"
+        puts "DEBUG:: BETWEEN LOGGING" if $debug_messages
         Rails.logger.error exception.backtrace.join("\n")
+        puts "DEBUG:: ABOUT TO CALL NOTIFY WITH EXCEPTION #{exception.inspect} #{exception.message} #{exception.backtrace}" if $debug_messages
         ErrorNotifier.notify(exception, error_message: "Samson::Periodical #{@task_name} failed")
+      rescue
+        puts "DEBUG:: RESCUED IN UPDATE #{$!.inspect}" if $debug_messages
+        raise $!
       end
     end
 
@@ -30,6 +38,7 @@ module Samson
       attr_accessor :enabled
 
       def register(name, description, options = {}, &block)
+        puts "DEBBUG:: REGISTERED #{name}#{description}" if $debug_messages
         registered[name] = TASK_DEFAULTS.
           merge(env_settings(name)).
           merge(block: block, description: description).
@@ -43,21 +52,26 @@ module Samson
       end
 
       def run
+        puts "DEBUG:: IN RUN" if $debug_messages
         registered.map do |name, config|
+          puts "DEBUG:: ITERATING OVER #{name}" if $debug_messages
           next unless config.fetch(:active)
-
+          puts "DEBUG:: IS ACTIVE" if $debug_messages
           # run at startup so we are in a consistent and clean state after a restart
           # not using TimerTask `now` option since then initial constant loading would happen in multiple threads
           # and we run into fun autoload errors like `LoadError: Unable to autoload constant Job` in development/test
           unless config[:now]
             ActiveRecord::Base.connection_pool.with_connection do
+              puts "DEBUG:: RUNNING, NOT NOW #{name}" if $debug_messages
               run_once(name)
             end
           end
 
           with_consistent_start_time(config) do
             Concurrent::TimerTask.new(config) do
+              puts "DEBUG:: RUNNING TIMER TASK FOR #{config}"
               track_running_count do
+                puts "DEBUG:: IS IT ENABLED? #{enabled}" if $debug_messages
                 if enabled
                   ActiveRecord::Base.connection_pool.with_connection { execute_block(config) }
                 end
@@ -65,16 +79,22 @@ module Samson
             end.with_observer(ExceptionReporter.new(name)).execute
           end
         end.compact
+      rescue
+        puts "DEBUG:: RESCUED IN RUN #{$!.message}" if $debug_messages
+        raise $!
       end
 
       # method to test things out on console / testing
       # simulates timeout that Concurrent::TimerTask does and exception reporting
       def run_once(name)
+        puts "DEBUG:: IN RUN ONCE FOR #{name}" if $debug_messages
         config = registered.fetch(name)
         Timeout.timeout(config.fetch(:timeout_interval)) do
+          puts "DEBUG:: IN TIMEOUT FOR #{name}" if $debug_messages
           execute_block(config)
         end
       rescue
+        puts "DEBUG:: RESCUED #{name}" if $debug_messages
         ExceptionReporter.new(name).update(nil, nil, $!)
       end
 
@@ -108,6 +128,7 @@ module Samson
       end
 
       def execute_block(config)
+        puts "DEBUG:: EXECUTING BLOCK FOR #{config}" if $debug_messages
         config.fetch(:block).call # needs a Proc
       end
 

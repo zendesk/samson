@@ -12,7 +12,6 @@ describe Samson::Periodical do
   ensure
     registered[:periodical_deploy].replace old
   end
-  let(:custom_error) { Class.new(StandardError) }
 
   after { maxitest_kill_extra_threads } # concurrent leaves a bunch of threads running
 
@@ -77,10 +76,15 @@ describe Samson::Periodical do
     end
 
     it "sends errors to error notifier" do
-      Lock.expects(:remove_expired_locks).raises custom_error
-      ErrorNotifier.expects(:notify).
-        with(instance_of(custom_error), error_message: "Samson::Periodical remove_expired_locks failed")
-      Samson::Periodical.run_once(:remove_expired_locks)
+      $debug_messages = true
+      puts "######################"
+      puts "sends errors to error notifier .run_once"
+      ErrorNotifier.expects(:notify).with(instance_of(ArgumentError), error_message: "Samson::Periodical foo failed")
+      Samson::Periodical.register(:foo, 'bar') { raise ArgumentError }
+      Samson::Periodical.run_once(:foo)
+    ensure
+      $debug_messages = false
+      puts "######################"
     end
   end
 
@@ -92,7 +96,7 @@ describe Samson::Periodical do
       x = 2
       Samson::Periodical.register(:foo, 'bar') { x = 1 }
       tasks = Samson::Periodical.run
-      sleep 0.05 # let task execute
+      sleep 0.5 # let task execute
       tasks.first.shutdown
       x.must_equal 1
     end
@@ -110,18 +114,36 @@ describe Samson::Periodical do
     end
 
     it "sends errors to error notifier" do
+      $debug_messages = true
+      puts "######################"
+      puts "sends errors to error notifier .run"
       ErrorNotifier.expects(:notify).with(instance_of(ArgumentError), error_message: "Samson::Periodical foo failed")
-      Samson::Periodical.register(:foo, 'bar', now: true) { raise ArgumentError }
+      Samson::Periodical.register(:foo, 'bar', now: true) {
+        puts "RAN"
+        raise ArgumentError
+      }
       tasks = Samson::Periodical.run
-      sleep 0.05 # let task execute
+      sleep 0.5 # let task execute
       tasks.first.shutdown
+    ensure
+      $debug_messages = false
+      puts "######################"
     end
 
     it "does not block server boot when initial run is inline and fails" do
+      puts "######################"
+      $debug_messages = true
+      puts "does not block server boot when initial run is inline and fails"
       ErrorNotifier.expects(:notify).with(instance_of(ArgumentError), error_message: "Samson::Periodical foo failed")
-      Samson::Periodical.register(:foo, 'bar') { raise ArgumentError }
+      Samson::Periodical.register(:foo, 'bar') {
+        puts "RAN"
+        raise ArgumentError
+      }
       tasks = Samson::Periodical.run
       tasks.first.shutdown
+    ensure
+      $debug_messages = false
+      puts "######################"
     end
   end
 
@@ -185,24 +207,32 @@ describe Samson::Periodical do
       mutex = Mutex.new.lock
       Samson::Periodical.register(:foo, 'bar', active: true, now: true) { mutex.lock }
       tasks = Samson::Periodical.run
-      sleep 0.01 # Allow task to start
+      sleep 0.5 # Allow task to start
 
       Samson::Periodical.running_task_count.must_equal 1
       mutex.unlock
-      sleep 0.01 # Allow task to finish
+      sleep 0.5 # Allow task to finish
 
       Samson::Periodical.running_task_count.must_equal 0
       tasks.first.shutdown
     end
 
     it 'correctly counts down when task raised' do
+      $debug_messages = true
+      puts "######################"
+      puts "DEBUG:: correctly counts down when task raised"
       ErrorNotifier.expects(:notify)
-      Samson::Periodical.register(:foo, 'bar', active: true, now: true) { raise }
+      Samson::Periodical.register(:foo, 'bar', active: true, now: true) { puts "DEBUG:: RANNNNNNNNNNN"; raise }
       tasks = Samson::Periodical.run
-      sleep 0.01 # Allow task to finish
+      sleep 0.5 # Allow task to finish
 
       Samson::Periodical.running_task_count.must_equal 0
       tasks.first.shutdown
+    rescue
+      puts "DEBUG:: RESCUED ERROR IN TEST #{$!.message} #{$!.backtrace}"
+    ensure
+      $debug_messages = false
+      puts "######################"
     end
   end
 
