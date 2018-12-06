@@ -190,6 +190,8 @@ To override it, set the namespace to either `default` or `kube-system` and set `
 
 ### Preventing request loss with preStop
 
+To enable the following functionality you need to set `KUBERNETES_ADD_PRESTOP=true`.
+
 Samson automatically adds `container[].lifecycle.preStop` `sleep 3` if a preStop hook is not set and
 `container[].samson/preStop` is not set to `disabled`, to prevent in-flight requests from getting lost when taking a pod
 out of rotation (alternatively set `metadata.annoations.container-nameofcontainer-samson/preStop: disabled`).
