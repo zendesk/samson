@@ -5,6 +5,10 @@ class JobQueue
 
   STAGGER_INTERVAL = Integer(ENV['JOB_STAGGER_INTERVAL'] || '0').seconds
 
+  # NOTE: Inherit from Exception so no random catch-call code swallows it
+  class Cancel < Exception # rubocop:disable Lint/InheritException
+  end
+
   # Whether or not execution is enabled. This allows completely disabling job
   # execution for testing purposes and when restarting samson.
   class << self
@@ -13,7 +17,7 @@ class JobQueue
 
   class << self
     delegate :executing, :executing?, :queued?, :dequeue, :find_by_id, :perform_later, :debug, :clear, :wait, :kill,
-      to: :instance
+      :cancel, to: :instance
   end
 
   def executing
@@ -66,8 +70,10 @@ class JobQueue
 
   def clear
     raise unless Rails.env.test?
-    @threads.each_value(&:kill) # cleans itself ... but we clear for good measure
-    @threads.each_value(&:join)
+    @threads.each_value do |t|
+      t.raise("Killed by JobQueue") if t.alive?
+      sleep 0.05 while t.alive? # wait till it's done handling the exception
+    end
     @threads.clear
     @executing.clear
     @queue.clear
@@ -78,8 +84,10 @@ class JobQueue
     @threads[id]&.join(timeout)
   end
 
-  def kill(id)
-    @threads[id]&.kill
+  def cancel(id)
+    return unless thread = @threads[id]
+    thread.raise(Cancel)
+    thread.join # wait so after redirect user can see job output which is written in `ensure`
   end
 
   private
@@ -104,7 +112,16 @@ class JobQueue
 
     @threads[job_execution.id] = Thread.new do
       begin
-        job_execution.perform
+        ActiveRecord::Base.connection_pool.with_connection do
+          begin
+            job_execution.perform
+          rescue Cancel
+            # throw away the connection since it might be in a bad state
+            # except in test, where all threads uses the same connection
+            # TODO: tests have to reopen the connection if it went bad, but cannot do that without breaking transaction
+            ActiveRecord::Base.connection.close unless Rails.env.test?
+          end
+        end
       ensure
         delete_and_enqueue_next(job_execution, queue)
         @threads.delete(job_execution.id)

@@ -264,12 +264,17 @@ describe Job do
     with_full_job_execution
 
     it "cancels an executing job" do
+      # get the job running
       ex = JobExecution.new('master', job) { sleep 10 }
       JobQueue.perform_later(ex)
       sleep 0.1 # make the job spin up properly
-
       assert JobQueue.executing?(ex.id)
+
+      # cancel it
       job.cancel(user)
+      maxitest_wait_for_extra_threads
+
+      # it is cancelled ?
       assert job.cancelled? # job execution callbacks sets it to cancelled
       job.canceller.must_equal user
     end
@@ -302,6 +307,7 @@ describe Job do
 
       job.cancel(user)
       executing_job.cancel(user)
+      maxitest_wait_for_extra_threads
 
       assert job.cancelled?
       refute JobQueue.queued?(job.id)

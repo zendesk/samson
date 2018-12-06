@@ -77,7 +77,7 @@ class Job < ActiveRecord::Base
     update_attribute(:canceller, canceller) unless self.canceller
 
     if ex
-      ex.cancel # switches job status in the runner thread for consistent status in after_deploy hooks
+      JobQueue.cancel(id) # switches job status in the runner thread for consistent status in after_deploy hooks
     else
       cancelled!
     end

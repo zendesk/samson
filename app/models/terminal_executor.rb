@@ -17,46 +17,45 @@ class TerminalExecutor
   SECRET_PREFIX = "secret://"
   HIDDEN_PREFIX = "hidden://"
   HIDDEN_TXT = "HIDDEN"
+  KILL_TIMEOUT = 1
 
   CURSOR = /\e\[\d*[ABCDK]/
 
   attr_reader :pid, :pgid, :output, :timeout
 
-  def initialize(output, project:, verbose: false, deploy: nil)
+  def initialize(output, project:, verbose: false, deploy: nil, cancel_timeout: 1, timeout: 5)
     @output = output
     @verbose = verbose
     @deploy = deploy
     @project = project
-    @cancelled = false
-    @timeout = Rails.application.config.samson.deploy_timeout
+    @timeout = timeout
+    @cancel_timeout = cancel_timeout
   end
 
   def execute(*commands, timeout: @timeout)
-    return false if @cancelled
-    options = {in: '/dev/null', unsetenv_others: true}
     script_as_executable(script(commands)) do |command|
-      output, input, pid = PTY.spawn(whitelisted_env, command, options)
+      output, _, pid = PTY.spawn(whitelisted_env, command, in: '/dev/null', unsetenv_others: true)
       record_pid(pid) do
-        timeout_execution(timeout) do
-          stream from: output, to: @output
-
-          begin
+        begin
+          Timeout.timeout(timeout) do
+            stream from: output, to: @output
             _pid, status = Process.wait2(pid)
             status.success?
-          rescue Errno::ECHILD
-            @output.puts "#{$!.class}: #{$!.message}"
-            false
-          ensure
-            input.close
           end
+        rescue Timeout::Error
+          @output.puts "Timeout: execution took longer then #{timeout}s and was terminated"
+          cancel timeout: KILL_TIMEOUT
+          false
+        rescue Errno::ECHILD
+          @output.puts "#{$!.class}: #{$!.message}"
+          cancel timeout: KILL_TIMEOUT
+          false
+        rescue JobQueue::Cancel
+          cancel timeout: @cancel_timeout
+          raise
         end
       end
     end
-  end
-
-  def cancel(signal)
-    @cancelled = true
-    system('kill', "-#{signal}", "-#{pgid}") if pgid
   end
 
   # used when only selected commands should be shown to the user
@@ -74,6 +73,20 @@ class TerminalExecutor
   end
 
   private
+
+  def cancel(timeout:)
+    kill "INT"
+    timeout.ceil.times do
+      return unless kill(0) # stop when not running (kill 0 = check if it is running)
+      sleep [timeout, 1].min
+    end
+    kill "KILL"
+  end
+
+  def kill(signal)
+    return unless pgid = pgid() # avoid race to make sure we never call kill with nil
+    pgid && system('kill', "-#{signal}", "-#{pgid}", err: '/dev/null')
+  end
 
   # write script to a file so it cannot be seen via `ps`
   def script_as_executable(script)
@@ -95,14 +108,6 @@ class TerminalExecutor
     yield command
   ensure
     f.unlink
-  end
-
-  def timeout_execution(time, &block)
-    Timeout.timeout(time, &block)
-  rescue Timeout::Error
-    cancel 'INT'
-    @output.puts "Timeout: execution took longer then #{time}s and was terminated"
-    false
   end
 
   def stream(from:, to:)

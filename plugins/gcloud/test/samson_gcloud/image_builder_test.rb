@@ -119,7 +119,7 @@ describe SamsonGcloud::ImageBuilder do
 
     it "uses executor timeout" do
       executor.expects(:execute).with do |*commands|
-        commands.join.must_include("--timeout 7200")
+        commands.join.must_include("--timeout 5")
       end.returns(true)
       build_image
     end

@@ -6,7 +6,6 @@
 # - when no Dockerfile is in the repo and it is the only requested dockerfile (column default value), return no builds
 # - if a build is not found, but the project has as `docker_release_branch` we wait a few seconds and retry
 # - builds can be reused from the previous release if the deployer requested it
-# - if the deploy is cancelled we finish up asap
 # - we find builds across all projects so multiple projects can share them
 module Samson
   class BuildFinder
@@ -16,13 +15,7 @@ module Samson
       @output = output
       @job = job
       @reference = reference
-      @cancelled = false
       @build_selectors = build_selectors
-    end
-
-    # deploy was cancelled, so finish up as fast as possible
-    def cancelled!
-      @cancelled = true
     end
 
     def ensure_successful_builds
@@ -32,7 +25,7 @@ module Samson
         ActiveSupport::Notifications.instrument("wait_for_build.samson", payload) do
           wait_for_build_completion(build)
         end
-        ensure_build_is_successful(build) unless @cancelled
+        ensure_build_is_successful(build)
       end
     end
 
@@ -111,7 +104,7 @@ module Samson
         build = yield last_try
         return build if build
 
-        break if last_try || @cancelled
+        raise if last_try # should never get here
         sleep interval
       end
     end
@@ -158,7 +151,6 @@ module Samson
       end
 
       loop do
-        break if @cancelled
         sleep TICK
         break unless build.reload.active?
       end

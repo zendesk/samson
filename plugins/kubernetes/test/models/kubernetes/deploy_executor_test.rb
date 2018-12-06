@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative "../../test_helper"
 
-SingleCov.covered! uncovered: 9
+SingleCov.covered! uncovered: 8
 
 describe Kubernetes::DeployExecutor do
   assert_requests
@@ -46,7 +46,7 @@ describe Kubernetes::DeployExecutor do
     end
 
     def cancel_after_first_iteration
-      executor.expects(:sleep).with { executor.cancel('FAKE-SGINAL'); true }
+      executor.stubs(:sleep).with { raise JobQueue::Cancel } # cannot use .expect, the raise does not count invocation
     end
 
     # make the first sleep take a long time so we trigger our timeout condition
@@ -348,24 +348,14 @@ describe Kubernetes::DeployExecutor do
       out.must_include "SUCCESS"
     end
 
-    it "stops the loop when cancelling" do
-      executor.cancel('FAKE-SIGNAL')
-      refute execute
-      out.wont_include "SUCCESS"
-      out.must_include "CANCELLED"
-    end
-
-    # NOTE: randomly fails in CI ... must be something with the version info not getting turned into methods correctly
-    # the version reply from plugins/kubernetes/test/test_helper.rb seems ok though
     it "waits when deploy is not running" do
       pod_status[:phase] = "Pending"
       pod_status.delete(:conditions)
 
       cancel_after_first_iteration
-      refute execute
+      assert_raises(JobQueue::Cancel) { execute }
 
       out.must_include "resque-worker: Waiting (Pending, Unknown)\n"
-      out.must_include "CANCELLED"
     end
 
     it "stops when detecting a restart" do
@@ -438,10 +428,9 @@ describe Kubernetes::DeployExecutor do
       pod_status[:conditions][0][:status] = "False"
 
       cancel_after_first_iteration
-      refute execute
+      assert_raises(JobQueue::Cancel) { execute }
 
       out.must_include "resque-worker: Waiting (Running, Unknown)\n"
-      out.must_include "CANCELLED"
     end
 
     it "fails when pod is failing to boot" do
@@ -462,10 +451,9 @@ describe Kubernetes::DeployExecutor do
       pod_reply[:items].clear
 
       cancel_after_first_iteration
-      refute execute
+      assert_raises(JobQueue::Cancel) { execute }
 
       out.must_include "resque-worker: Missing\n"
-      out.must_include "CANCELLED"
     end
 
     describe "an autoscaled role" do
@@ -504,10 +492,9 @@ describe Kubernetes::DeployExecutor do
         pod_status[:conditions][0][:status] = "False"
 
         cancel_after_first_iteration
-        refute execute
+        assert_raises(JobQueue::Cancel) { execute }
 
         out.must_include "resque-worker: Waiting (Running, Unknown)"
-        out.must_include "CANCELLED"
       end
     end
 

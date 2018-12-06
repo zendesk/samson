@@ -2,7 +2,7 @@
 require_relative '../test_helper'
 require 'ar_multi_threaded_transactional_tests'
 
-SingleCov.covered! uncovered: 9
+SingleCov.covered! uncovered: 8
 
 describe JobExecution do
   include GitRepoTestHelper
@@ -11,7 +11,7 @@ describe JobExecution do
     execution = JobExecution.new(branch, job, options)
     execution.on_finish(&on_finish) if on_finish.present?
     execution.on_start(&on_start) if on_start.present?
-    execution.send(:run)
+    execution.perform
   end
 
   def last_line_of_output
@@ -49,7 +49,7 @@ describe JobExecution do
   end
 
   it "clones the project's repository if it's not already cloned" do
-    execution.send(:run)
+    execution.perform
     assert File.directory?(repo_dir)
   end
 
@@ -74,7 +74,7 @@ describe JobExecution do
 
   it 'does not fail with nil ENV vars' do
     User.any_instance.expects(:name).at_least_once.returns(nil)
-    execution.send(:run)
+    execution.perform
   end
 
   it 'checks out the specified remote branch' do
@@ -176,7 +176,7 @@ describe JobExecution do
   it 'works without a deploy' do
     job_without_deploy = project.jobs.create!(command: 'cat foo', user: user, project: project)
     execution = JobExecution.new('master', job_without_deploy)
-    execution.send(:run)
+    execution.perform
     # if you like, pretend there's a wont_raise assertion here
     # this is to make sure we don't add a hard dependency on having a deploy
   end
@@ -231,21 +231,10 @@ describe JobExecution do
   it 'outputs start / stop events' do
     execution = JobExecution.new('master', job)
     output = execution.output
-    execution.send(:run)
+    execution.perform
 
     assert output.include?(:started, '') # cannot use must_include
     assert output.include?(:finished, '')
-  end
-
-  it 'calls subscribers after queued stoppage' do
-    called_subscriber = false
-
-    execution = JobExecution.new('master', job)
-    execution.on_finish { called_subscriber = true }
-    execution.perform
-    execution.cancel
-
-    assert called_subscriber
   end
 
   it 'lets subscribers communicate with viewers' do
@@ -273,7 +262,7 @@ describe JobExecution do
     project.repository.expects(:setup).never
     begin
       MultiLock.send(:try_lock, project.id, 'me')
-      execution.send(:run)
+      execution.perform
     ensure
       MultiLock.send(:unlock, project.id)
     end
@@ -301,7 +290,7 @@ describe JobExecution do
   it 'can run with a block' do
     x = :not_called
     execution = JobExecution.new('master', job) { x = :called }
-    assert execution.send(:run)
+    assert execution.perform
     x.must_equal :called
   end
 
@@ -320,19 +309,19 @@ describe JobExecution do
     end
 
     it "makes builds available via env" do
-      JobExecution.new('master', job).send(:run)
+      JobExecution.new('master', job).perform
       job.output.must_include "export BUILD_FROM_Dockerfile=docker-registry.example.com"
     end
 
     it "creates valid env variables when build name is not valid" do
       build.update_columns(dockerfile: nil, image_name: 'foo-bar-∂-baz')
-      JobExecution.new('master', job).send(:run)
+      JobExecution.new('master', job).perform
       job.output.must_include "export BUILD_FROM_foo_bar___baz=docker-registry.example.com"
     end
 
     it "makes builds without dockerfile available via env" do
       build.update_columns(dockerfile: nil, image_name: 'foo')
-      JobExecution.new('master', job).send(:run)
+      JobExecution.new('master', job).perform
       job.output.must_include "export BUILD_FROM_foo=docker-registry.example.com"
     end
   end
@@ -348,6 +337,50 @@ describe JobExecution do
     it "does not clone the repo" do
       GitRepository.any_instance.expects(:checkout_workspace).never
       execute_job("master")
+    end
+  end
+
+  describe "cancel" do
+    def perform
+      thread =
+        Thread.new do
+          ActiveRecord::Base.connection_pool.with_connection do
+            execution.perform
+          end
+        rescue JobQueue::Cancel
+          :caught
+        end
+      sleep 0.01 # make sure thread starts
+      JobQueue.instance.instance_variable_get(:@threads)[execution.id] = thread
+      thread
+    end
+
+    with_job_cancel_timeout 0.1
+
+    let(:lock) { Mutex.new }
+    let(:execution) { JobExecution.new('master', job) { lock.lock } }
+
+    before do
+      execution.executor.expects(:execute).never # avoid executing any commands
+      execution.stubs(:setup).returns(true) # avoid state from executing git commands
+      lock.lock # pretend things are stalling
+    end
+
+    it "calls on_finish hooks once when killing stuck job" do
+      called = []
+      execution.on_finish { called << 1 }
+
+      perform
+      JobQueue.cancel execution.id
+
+      maxitest_wait_for_extra_threads
+      called.must_equal [1]
+    end
+
+    it "kills the thread" do
+      t = perform
+      JobQueue.cancel execution.id
+      t.value.must_equal :caught
     end
   end
 
@@ -406,74 +439,6 @@ describe JobExecution do
         perform
         execution.output.to_s.must_include "Error URL: foo"
       end
-    end
-  end
-
-  describe "#cancel" do
-    def perform
-      JobQueue.instance.instance_variable_get(:@threads)[execution.id] = Thread.new { execution.perform }
-      Thread.pass # make sure thread starts
-    end
-
-    with_job_cancel_timeout 0.1
-
-    let(:lock) { Mutex.new }
-    let(:execution) { JobExecution.new('master', job) { lock.lock } }
-
-    before do
-      execution.executor.expects(:execute).never # avoid executing any commands
-      execution.stubs(:setup).returns(true) # avoid state from executing git commands
-      lock.lock # pretend things are stalling
-    end
-
-    it "stops the execution with interrupt" do
-      perform
-      TerminalExecutor.any_instance.expects(:cancel).with do |signal|
-        lock.unlock # pretend the command finished
-        signal.must_equal 'INT'
-        true
-      end
-      execution.cancel
-    end
-
-    it "stops the execution with kill if job did not respond to interrupt" do
-      perform
-      TerminalExecutor.any_instance.expects(:cancel).twice.with do |signal|
-        lock.unlock if signal == 'KILL' # pretend the command finished
-        ['KILL', 'INT'].must_include(signal)
-        true
-      end
-      execution.cancel
-    end
-
-    it "calls on_finish hooks once when killing stuck thread" do
-      called = []
-      execution.on_finish { called << 1 }
-      perform
-      execution.cancel
-      called.must_equal [1]
-    end
-
-    it "calls on_finish hooks once when stopping execution with INT" do
-      called = []
-      execution.on_finish { called << 1 }
-      perform
-      TerminalExecutor.any_instance.expects(:cancel).with do |signal|
-        lock.unlock # pretend the command finished
-        signal.must_equal 'INT'
-        true
-      end
-      execution.cancel
-      called.must_equal [1]
-    end
-
-    it "stops the build-finder" do
-      perform
-      Samson::BuildFinder.any_instance.expects(:cancelled!).with do
-        lock.unlock
-        true
-      end
-      execution.cancel
     end
   end
 

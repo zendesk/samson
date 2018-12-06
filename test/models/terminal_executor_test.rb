@@ -5,7 +5,7 @@ SingleCov.covered!
 
 describe TerminalExecutor do
   let(:output) { StringIO.new }
-  subject { TerminalExecutor.new(output, project: projects(:test)) }
+  subject { TerminalExecutor.new(output, project: projects(:test), cancel_timeout: 0.1) }
 
   before { freeze_time }
 
@@ -115,14 +115,6 @@ describe TerminalExecutor do
     end
 
     it "can timeout" do
-      with_config :deploy_timeout, 1 do
-        refute subject.execute('echo hello; sleep 10')
-      end
-      `ps -ef | grep "[s]leep 10"`.wont_include "sleep 10" # process got killed
-      output.string.must_equal("hello\r\nTimeout: execution took longer then 1s and was terminated\n")
-    end
-
-    it "can timeout via argument" do
       refute subject.execute('echo hello; sleep 10', timeout: 1)
       `ps -ef | grep "[s]leep 10"`.wont_include "sleep 10" # process got killed
       output.string.must_equal("hello\r\nTimeout: execution took longer then 1s and was terminated\n")
@@ -133,27 +125,42 @@ describe TerminalExecutor do
       output.string.must_equal "Hello\rWorld\r\n\r\n"
     end
 
-    describe "with script-executor" do
-      before { RbConfig::CONFIG.expects(:[]).with("host_os").returns("darwin-foo") }
+    it "fails quickly when trying to read from stdin" do
+      subject.execute("read line").must_equal false
+      output.string.must_equal ""
+    end
 
-      it "uses script-executor to avoid slowness on osx" do
-        PTY.expects(:spawn).with { |_, command, _| command.must_include("script-executor") }
+    describe "script executor for mac" do
+      def stub_host(host)
+        RbConfig::CONFIG.expects(:[]).with("host_os").returns(host)
+      end
+
+      def assert_executor(host, script)
+        stub_host(host)
+        PTY.expects(:spawn).with do |_, command, _|
+          script ? command.must_include("script-executor") : command.wont_include("script-executor")
+          true
+        end.returns([StringIO.new, StringIO.new, 123])
         TerminalExecutor.any_instance.expects(:record_pid)
         subject.execute('echo "hi"')
       end
 
+      it "uses regular executor on linux" do
+        assert_executor "ubuntu", false
+      end
+
+      it "uses script-executor to avoid slowness on osx" do
+        assert_executor "darwin-foo", true
+      end
+
       it "works while switching directories" do
-        Dir.chdir "/tmp" do
-          assert subject.execute('echo "hi"')
+        ["ubuntu", "darwin-foo"].each do |host|
+          stub_host host
+          Dir.chdir "/tmp" do
+            assert subject.execute('echo "hi"')
+          end
         end
       end
-    end
-
-    it "uses regular executor on linux" do
-      RbConfig::CONFIG.expects(:[]).with("host_os").returns("ubuntu")
-      PTY.expects(:spawn).with { |_, command, _| command.wont_include("script-executor"); true }
-      TerminalExecutor.any_instance.expects(:record_pid)
-      subject.execute('echo "hi"')
     end
 
     describe 'in verbose mode' do
@@ -268,32 +275,44 @@ describe TerminalExecutor do
         output.string.must_equal "#{secret.value}\r\n"
       end
     end
-  end
 
-  describe '#cancel' do
-    def execute_and_cancel(command, signal)
-      thread = Thread.new(subject) do |shell|
-        sleep(0.1) until shell.pgid
-        shell.cancel(signal)
+    describe 'cancel' do
+      let(:sleep_command) { "sleep 100" }
+
+      def execute_and_cancel(command)
+        thread = Thread.new(subject) do |shell|
+          sleep(0.1) until shell.pgid
+          Thread.main.raise JobQueue::Cancel
+        end
+
+        assert_raises(JobQueue::Cancel) do
+          subject.execute(command)
+          thread.join
+        end
+
+        `ps -ef | grep #{sleep_command.shellescape} | grep -v grep`
       end
 
-      result = subject.execute(command)
-      thread.join
-      result
+      it 'kills the execution' do
+        execute_and_cancel(sleep_command).must_equal ""
+      end
+
+      it 'terminates hanging processes with -9' do
+        execute_and_cancel("trap #{sleep_command.shellescape} 2; #{sleep_command}").must_equal ""
+      end
+    end
+  end
+
+  describe "#kill" do
+    it "does not kill when dead" do
+      subject.expects(:system).never
+      subject.send(:kill, "INT")
     end
 
-    it 'properly kills the execution' do
-      execute_and_cancel('sleep 100', 'INT').must_be_nil
-    end
-
-    it 'terminates hanging processes with -9' do
-      execute_and_cancel('trap "sleep 100" 2; sleep 100', 'KILL').must_be_nil
-    end
-
-    it 'stops any further execution so current thread can finish' do
-      subject.execute('echo 1').must_equal true
-      subject.cancel 'INT'
-      subject.execute('echo 1').must_equal false
+    it "checks if it is still running" do # test-coverage for travis where the running check always succeeds
+      subject.instance_variable_set(:@pgid, 123)
+      subject.expects(:system).times(2).returns(true, false)
+      subject.send(:cancel, timeout: 1)
     end
   end
 
