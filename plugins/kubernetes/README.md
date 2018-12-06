@@ -5,7 +5,7 @@ Allows Samson to be able to deploy to [Kubernetes](kubernetes.io), and includes 
 ## Overview
 
 Samson will talk to N Kubernetes clusters via their API.
-Clusters can be running locally (Docker For Mac / Minikube), in a datacenter, 
+Clusters can be running locally (Docker For Mac / Minikube), in a datacenter,
 on EKS, or GKE.
 
 Workflow:
@@ -16,13 +16,13 @@ Workflow:
 1. Add [Kubernetes role files](#kubernetes-roles) to your project repository
 1. Configure "Roles" for the project `/projects/<PROJECT>/kubernetes/roles`
 1. Create a stage that's connected to N deploy groups
-1. Configure how many replicas, CPU, and memory each deploy group should use 
+1. Configure how many replicas, CPU, and memory each deploy group should use
 1. Click 'Deploy' 🎉
 
 ## Configuring the Cluster
 
-Use Samson cluster UI (`/kubernetes/clusters`) to configure where the [kubeconfig file](http://kubernetes.io/v1.0/docs/user-guide/kubeconfig-file.html) 
-for your cluster is and what context (custer/user pair) to use. You need to be a Super Admin to create a cluster. 
+Use Samson cluster UI (`/kubernetes/clusters`) to configure where the [kubeconfig file](http://kubernetes.io/v1.0/docs/user-guide/kubeconfig-file.html)
+for your cluster is and what context (custer/user pair) to use. You need to be a Super Admin to create a cluster.
 
 ### Mapping DeployGroups to Clusters
 
@@ -37,14 +37,14 @@ namespace.
 
 ## Project Configuration
 
-Project pages will have a Kubernetes link (white wheel on a blue background). 
+Project pages will have a Kubernetes link (white wheel on a blue background).
 
 ### Kubernetes Roles
 
 A "role" is not a concept in Kubernetes itself. It is specific to Samson.
 
 It refers to the different ways that a project can be run, that may want to
-be scaled separately. For each role, Samson allows configuring CPU (requests and limits), 
+be scaled separately. For each role, Samson allows configuring CPU (requests and limits),
 memory (requests and limits), and replicas per deploy group.
 
 Each time this project is deployed, it deploys all roles.
@@ -60,14 +60,14 @@ job processing. This project will likely have 4 roles:
 ### Configuration Files
 
 Each [Kubernetes role](#kubernetes-roles) is read from a file in the project's repository
-. It has to contain the definitions of N Deployment/Daemonset/Service/Job/ConfigMap/etc. Samson's `TemplateFiller` 
-then augments the definitions by adding docker repo digest, labels, annotations, resource limits, 
-environment variables, secrets, etc and then sends them to the Kubernetes API.  
+. It has to contain the definitions of N Deployment/Daemonset/Service/Job/ConfigMap/etc. Samson's `TemplateFiller`
+then augments the definitions by adding docker repo digest, labels, annotations, resource limits,
+environment variables, secrets, etc and then sends them to the Kubernetes API.
 
 Multiple roles will likely be similar, but have different commands or liveness probes.
 ([kucodiff](https://github.com/grosser/kucodiff) can be used to make sure they stay in sync).
 
-Samson can be instructed to validate certain environment variables are present by adding a `samson/required_env` 
+Samson can be instructed to validate certain environment variables are present by adding a `samson/required_env`
 annotation (space separated).
 
 ### Limits
@@ -76,11 +76,11 @@ Samson allows limiting how many resources each project can use per Deploy Group,
 
 To forbid deployment of anything without a limit, add a `All/All` limit with 0 cpu and memory.
 
-To allow creating limits without scoped or project, set `KUBERNETES_ALLOW_WILDCARD_LIMITS=true`. 
+To allow creating limits without scoped or project, set `KUBERNETES_ALLOW_WILDCARD_LIMITS=true`.
 
 ## Deploying to Kubernetes
 
-Each deploy selects a Git SHA and N deploy groups to deploy to. For this Git SHA Samson finds or creates all builds that 
+Each deploy selects a Git SHA and N deploy groups to deploy to. For this Git SHA Samson finds or creates all builds that
 were requested in the [Kubernetes role config files](#configuration-files).
 
 ### Record Keeping
@@ -103,12 +103,12 @@ Kubernetes::Release
 
 (To opt out of this feature set `containers[].samson/dockerfile: none` or `metadata.annotations.container-nameofcontainer-samson/dockerfile: none`)
 
-For each container (including init containers) Samson finds or creates a matching Docker image for the Git SHA that is being deployed. 
+For each container (including init containers) Samson finds or creates a matching Docker image for the Git SHA that is being deployed.
 Samson always sets the Docker digest, and not a tag, to make deployments immutable.
 
 If `KUBERNETES_ADDITIONAL_CONTAINERS_WITHOUT_DOCKERFILE=true` is set, it will only enforce this for the first container.
 
-Samson matches builds to containers by looking at the `containers[].samson/dockerfile` attribute or the 
+Samson matches builds to containers by looking at the `containers[].samson/dockerfile` attribute or the
 base image name (part after the last `/`), if the project has enabled `Docker images built externally`.
 
 Images can be built locally via `docker build`, or via `gcloud` CLI (see Gcloud plugin), or externally and then sent to Samson via the
@@ -151,7 +151,7 @@ Prefer `RollingUpdate` if possible instead.
 ### Duplicate deployments
 
 To deploy the same repository multiple times, create separate projects and then set `metadata.annotations.samson/override_project_label: "true"`,
-samson will then override the `project` labels and keep deployments/services unique.  
+samson will then override the `project` labels and keep deployments/services unique.
 
 ### Service updates
 
@@ -170,7 +170,7 @@ Users can opt-out by setting `metadata.annotations.samson/minAvailable: disabled
 
 ### Blue/Green Deployment
 
-Can be enabled per role, it then starts a new isolated deployment shifting between blue and green sufixes, 
+Can be enabled per role, it then starts a new isolated deployment shifting between blue and green sufixes,
 switching service selectors if successfully deployed and deleting previous resources.
 All active resources must be deleted manually when switching to blue/green from regular deployment.
 
@@ -180,7 +180,7 @@ Set `KUBERNETES_NO_CPU_LIMIT_ALLOWED=1`, see [#2820](https://github.com/zendesk/
 
 ### Enforcing team ownership
 
-Knowing which team owns each component is useful, set `KUBERNETES_ENFORCE_TEAMS=true` 
+Knowing which team owns each component is useful, set `KUBERNETES_ENFORCE_TEAMS=true`
 to make all kubernetes deploys that do not use a `metadata.labels.team` / `spec.template.metadata.labels.team` fail.
 
 ### Using custom namespace
@@ -216,3 +216,9 @@ Then configure an ENV var with that same name and a value that is valid JSON.
 
 Set `KUBERNETES_ALLOW_NOT_READY_PERCENT=10` to allow up to 10% of pods being not-ready,
 this is useful when dealing with large deployments that have some random failures.
+
+### Disabling service selector validation
+
+To debug services or to create resources that needs to reference a selector that doesn't include team/role (like a Gateway), you can disable selector validation with:
+
+`metadata.annotations.samson/service_selector_across_roles: "true"`
