@@ -755,6 +755,15 @@ describe Kubernetes::TemplateFiller do
         raw_template.dig_fetch(:spec, :template, :spec, :containers, 0)[:"samson/preStop"] = "disabled"
         refute template.to_hash.dig_fetch(:spec, :template, :spec, :containers, 0).key?(:lifecycle)
       end
+
+      around do |test|
+        stub_const Kubernetes::TemplateFiller, :KUBERNETES_ADD_PRESTOP, false, &test
+      end
+
+      it "does not add preStop when it is disabled to all" do
+        refute template.to_hash.dig_fetch(:spec, :template, :spec, :containers, 0).key?(:lifecycle)
+      end
+
     end
 
     describe "HorizontalPodAutoscaler" do
