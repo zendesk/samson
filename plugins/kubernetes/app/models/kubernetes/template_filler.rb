@@ -6,7 +6,7 @@ module Kubernetes
 
     CUSTOM_UNIQUE_LABEL_KEY = 'rc_unique_identifier'
     SECRET_PULLER_IMAGE = ENV['SECRET_PULLER_IMAGE'].presence
-    KUBERNETES_ADD_PRESTOP = ENV['KUBERNETES_ADD_PRESTOP'] == 'true'
+    KUBERNETES_ADD_PRESTOP = Samson::EnvCheck.set?('KUBERNETES_ADD_PRESTOP')
     SECRET_PREFIX = "secret/"
 
     def initialize(release_doc, template, index:)

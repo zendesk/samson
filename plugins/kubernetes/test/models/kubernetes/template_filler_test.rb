@@ -755,32 +755,31 @@ describe Kubernetes::TemplateFiller do
     end
 
     describe "preStop" do
-      it "adds preStop to avoid 502 errors when server addresses are cached for a few seconds" do
-        template.to_hash.dig_fetch(:spec, :template, :spec, :containers, 0, :lifecycle).must_equal(
-          preStop: {exec: {command: ["sleep", "3"]}}
-        )
-      end
-
-      it "does not add preStop when it was already defined" do
-        raw_template.dig_fetch(:spec, :template, :spec, :containers, 0)[:lifecycle] = {preStop: "OLD"}
-        template.to_hash.dig_fetch(:spec, :template, :spec, :containers, 0, :lifecycle).must_equal(
-          preStop: "OLD"
-        )
-      end
-
-      it "does not add preStop when opted out" do
-        raw_template.dig_fetch(:spec, :template, :spec, :containers, 0)[:"samson/preStop"] = "disabled"
+      it "does not add preStop" do
         refute template.to_hash.dig_fetch(:spec, :template, :spec, :containers, 0).key?(:lifecycle)
       end
 
-      around do |test|
-        stub_const Kubernetes::TemplateFiller, :KUBERNETES_ADD_PRESTOP, false, &test
-      end
+      describe "with preStop enabled" do
+        around { |t| stub_const Kubernetes::TemplateFiller, :KUBERNETES_ADD_PRESTOP, true, &t }
 
-      it "does not add preStop when it is disabled to all" do
-        refute template.to_hash.dig_fetch(:spec, :template, :spec, :containers, 0).key?(:lifecycle)
-      end
+        it "adds preStop to avoid 502 errors when server addresses are cached for a few seconds" do
+          template.to_hash.dig_fetch(:spec, :template, :spec, :containers, 0, :lifecycle).must_equal(
+            preStop: {exec: {command: ["sleep", "3"]}}
+          )
+        end
 
+        it "does not add preStop when it was already defined" do
+          raw_template.dig_fetch(:spec, :template, :spec, :containers, 0)[:lifecycle] = {preStop: "OLD"}
+          template.to_hash.dig_fetch(:spec, :template, :spec, :containers, 0, :lifecycle).must_equal(
+            preStop: "OLD"
+          )
+        end
+
+        it "does not add preStop when opted out" do
+          raw_template.dig_fetch(:spec, :template, :spec, :containers, 0)[:"samson/preStop"] = "disabled"
+          refute template.to_hash.dig_fetch(:spec, :template, :spec, :containers, 0).key?(:lifecycle)
+        end
+      end
     end
 
     describe "HorizontalPodAutoscaler" do
