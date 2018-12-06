@@ -83,7 +83,7 @@ class Job < ActiveRecord::Base
     end
   end
 
-  %w[pending running succeeded cancelling cancelled failed errored].each do |status|
+  VALID_STATUSES.each do |status|
     define_method "#{status}?" do
       self.status == status
     end
