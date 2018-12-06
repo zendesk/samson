@@ -9,6 +9,7 @@ module Kubernetes
   # and see what it does internally ... simple create/update/delete requests or special magic ?
   module Resource
     class Base
+      TICK = 2 # seconds
       UNSETTABLE_METADATA = [:selfLink, :uid, :resourceVersion, :generation, :creationTimestamp].freeze
 
       def initialize(template, deploy_group, autoscaled:, delete_resource:)
@@ -36,7 +37,7 @@ module Kubernetes
       end
 
       def deploy
-        if running?
+        if exist?
           if @delete_resource
             delete
           else
@@ -63,15 +64,15 @@ module Kubernetes
       # - first wait is 0 since the request itself already took a few ms
       # - sum of waits should be ~30s which is the default delete timeout
       def delete
-        return true unless running?
+        return true unless exist?
         request_delete
         backoff_wait([0.0, 0.1, 0.2, 0.5, 1, 2, 4, 8, 16], "delete resource") do
           expire_resource_cache
-          return true unless running?
+          return true unless exist?
         end
       end
 
-      def running?
+      def exist?
         !!resource
       end
 
@@ -233,10 +234,6 @@ module Kubernetes
         @deploy_group.kubernetes_cluster.client('v1')
       end
 
-      def loop_sleep
-        sleep 2 unless Rails.env.test?
-      end
-
       def restore_template
         original = @template
         @template = original.deep_dup
@@ -295,7 +292,7 @@ module Kubernetes
 
         # Wait for there to be zero pods
         loop do
-          loop_sleep
+          sleep TICK
           # prevent cases when status.replicas are missing
           # e.g. running locally on Minikube, after scale replicas to zero
           # $ kubectl scale deployment {DEPLOYMENT_NAME} --replicas 0
@@ -327,7 +324,7 @@ module Kubernetes
           3.times do |i|
             if i != 0
               # last iteration had bad state or does not yet know how many it needs, expire cache
-              loop_sleep
+              sleep TICK
               expire_resource_cache
             end
 
@@ -376,7 +373,7 @@ module Kubernetes
 
       def wait_for_termination_of_all_pods
         30.times do
-          loop_sleep
+          sleep TICK
           expire_resource_cache
           return if pods_count == 0
         end
@@ -385,7 +382,7 @@ module Kubernetes
 
     class StatefulSet < Base
       def patch_replace?
-        return false if @delete_resource || !running?
+        return false if @delete_resource || !exist?
         deprecated = @template.dig(:spec, :updateStrategy) # supporting pre 1.9 clusters
         strategy = (deprecated.is_a?(String) ? deprecated : @template.dig(:spec, :updateStrategy, :type))
         [nil, "OnDelete"].include?(strategy)

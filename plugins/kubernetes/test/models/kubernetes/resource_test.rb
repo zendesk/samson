@@ -59,7 +59,7 @@ describe Kubernetes::Resource do
     "#{endpoint}/namespaces/pod1/#{kind.downcase.pluralize}/some-project"
   end
 
-  before { Kubernetes::Resource::Base.any_instance.expects(:sleep).with { raise }.never }
+  before { Kubernetes::Resource::Base.any_instance.stubs(:sleep) }
 
   describe Kubernetes::Resource::Base do
     let(:kind) { 'ConfigMap' } # Type that falls back to Base
@@ -113,8 +113,8 @@ describe Kubernetes::Resource do
           end
 
           # not auto-cached
-          assert resource.running?
-          assert resource.running?
+          assert resource.exist?
+          assert resource.exist?
         end
       end
 
@@ -126,8 +126,8 @@ describe Kubernetes::Resource do
           end
 
           # not auto-cached
-          assert resource.running?
-          assert resource.running?
+          assert resource.exist?
+          assert resource.exist?
         end
       end
 
@@ -194,7 +194,7 @@ describe Kubernetes::Resource do
           end
         end
 
-        it "does nothing when delete was requested but was not running" do
+        it "does nothing when delete was requested but was not existing" do
           assert_request(:get, url, to_return: {status: 404}) do
             resource.deploy
           end
@@ -210,28 +210,28 @@ describe Kubernetes::Resource do
       end
     end
 
-    describe "#running?" do
-      it "is true when running" do
+    describe "#exist?" do
+      it "is true when existing" do
         assert_request(:get, url, to_return: {body: "{}"}) do
-          assert resource.running?
+          assert resource.exist?
         end
       end
 
-      it "is false when not running" do
+      it "is false when not existing" do
         assert_request(:get, url, to_return: {status: 404}) do
-          refute resource.running?
+          refute resource.exist?
         end
       end
 
       it "raises when a non 404 exception is raised" do
         assert_request(:get, url, to_return: {status: 500}, times: 4) do
-          assert_raises(Kubeclient::HttpError) { resource.running? }
+          assert_raises(Kubeclient::HttpError) { resource.exist? }
         end
       end
 
       it "raises SSL exception is raised" do
         assert_request(:get, url, to_raise: OpenSSL::SSL::SSLError, times: 4) do
-          assert_raises(OpenSSL::SSL::SSLError) { resource.running? }
+          assert_raises(OpenSSL::SSL::SSLError) { resource.exist? }
         end
       end
     end
@@ -248,7 +248,7 @@ describe Kubernetes::Resource do
       it "fetches after deleting" do
         assert_request(:get, url, to_return: [{body: "{}"}, {status: 404}]) do
           resource.delete
-          refute resource.running?
+          refute resource.exist?
         end
       end
 
@@ -331,14 +331,6 @@ describe Kubernetes::Resource do
       end
     end
 
-    describe "#loop_sleep" do
-      it "sleeps when not in test" do
-        Rails.env.expects(:test?)
-        resource.expects(:sleep)
-        resource.send(:loop_sleep)
-      end
-    end
-
     describe "#request" do
       it "returns response" do
         stub_request(:get, "http://foobar.server/api/v1/configmaps/pods").to_return body: '{"foo": "bar"}'
@@ -408,9 +400,9 @@ describe Kubernetes::Resource do
         client.expects(:get_daemon_set).raises(Kubeclient::ResourceNotFoundError.new(404, 'Not Found', {}))
         client.expects(:update_daemon_set).returns(daemonset_stub(1, 1))
         client.expects(:get_daemon_set).times(4).returns(
-          daemonset_stub(1, 1), # running check
-          daemonset_stub(1, 1), # after update check #1 ... still running
-          daemonset_stub(0, 1), # after update check #2 ... still running
+          daemonset_stub(1, 1), # existing check
+          daemonset_stub(1, 1), # after update check #1 ... still existing
+          daemonset_stub(0, 1), # after update check #2 ... still existing
           daemonset_stub(0, 0)  # after update check #3 ... done
         )
         client.expects(:delete_daemon_set)
@@ -449,7 +441,7 @@ describe Kubernetes::Resource do
 
       it "blows up when desired count cannot be found (bad state or no nodes are available)" do
         assert_request(:get, url, to_return: {body: {status: {desiredNumberScheduled: 0}}.to_json}, times: 3) do
-          resource.expects(:loop_sleep).times(2)
+          resource.expects(:sleep).times(2)
           assert_raises Samson::Hooks::UserError do
             resource.desired_pod_count
           end
@@ -579,7 +571,7 @@ describe Kubernetes::Resource do
         end
       end
 
-      it "updates when running and using RollingUpdate" do
+      it "updates when existing and using RollingUpdate" do
         template[:spec][:updateStrategy] = "RollingUpdate"
         assert_request(:get, url, to_return: {body: "{}"}) do
           assert_request(:put, url, to_return: {body: "{}"}) do
@@ -588,7 +580,7 @@ describe Kubernetes::Resource do
         end
       end
 
-      it "updates when running and using RollingUpdate" do
+      it "updates when existing and using RollingUpdate" do
         template[:spec][:updateStrategy] = {type: "RollingUpdate"}
         assert_request(:get, url, to_return: {body: "{}"}) do
           assert_request(:put, url, to_return: {body: "{}"}) do
@@ -677,7 +669,7 @@ describe Kubernetes::Resource do
     end
 
     describe "#patch_replace?" do
-      before { resource.stubs(:running?).returns(true) }
+      before { resource.stubs(:exist?).returns(true) }
 
       it "is a replace when replacing existing" do
         assert resource.patch_replace?
@@ -689,7 +681,7 @@ describe Kubernetes::Resource do
       end
 
       it "is not a replace when creating" do
-        resource.stubs(:running?).returns(false)
+        resource.stubs(:exist?).returns(false)
         refute resource.patch_replace?
       end
     end
