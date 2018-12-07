@@ -264,7 +264,9 @@ class JobExecution
     dir = Dir.mktmpdir("samson-#{@job.project.permalink}-#{@job.id}")
     yield dir
   ensure
-    FileUtils.rm_rf dir # mktmpdir with block often raised errors when tempfolder got removed early
-    @repository.prune_worktree
+    if dir
+      FileUtils.rm_rf dir # mktmpdir with block often raised errors when tempfolder got removed early
+      @repository.prune_worktree
+    end
   end
 end

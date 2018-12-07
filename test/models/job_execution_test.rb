@@ -462,6 +462,11 @@ describe JobExecution do
       end.must_equal 111
     end
 
+    it "does not crash when mktmpdir was interrupted" do
+      Dir.expects(:mktmpdir).raises ArgumentError
+      assert_raises(ArgumentError) { execution.send(:make_tempdir) }
+    end
+
     it "removes deleted worktrees" do
       project.repository.unstub(:prune_worktree)
       before = `cd #{project.repository.repo_cache_dir} && git worktree list`
