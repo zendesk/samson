@@ -46,19 +46,18 @@ module Kubernetes
 
     def execute(*)
       verify_kubernetes_templates!
-      @builds = build_finder.ensure_successful_builds
       @release = create_release
 
       prerequisites, deploys = @release.release_docs.partition(&:prerequisite?)
 
       if prerequisites.any?
         @output.puts "First deploying prerequisite ..." if deploys.any?
-        return false unless deploy_and_watch(prerequisites, WAIT_FOR_PREREQUISITES)
+        return false unless deploy_and_watch(prerequisites, timeout: WAIT_FOR_PREREQUISITES)
         @output.puts "Now deploying other roles ..." if deploys.any?
       end
 
       if deploys.any?
-        return false unless deploy_and_watch(deploys, WAIT_FOR_LIVE)
+        return false unless deploy_and_watch(deploys, timeout: WAIT_FOR_LIVE)
       end
 
       true
@@ -317,7 +316,7 @@ module Kubernetes
     # create a release, storing all the configuration
     def create_release
       release = Kubernetes::Release.create_release(
-        builds: @builds,
+        builds: build_finder.ensure_successful_builds,
         deploy: @job.deploy,
         grouped_deploy_group_roles: grouped_deploy_group_roles,
         git_sha: @job.commit,
@@ -398,10 +397,10 @@ module Kubernetes
       Samson::Parallelizer.map(resources, db: true, &:deploy)
     end
 
-    def deploy_and_watch(release_docs, timeout)
+    def deploy_and_watch(release_docs, timeout:)
       deploy(release_docs)
       success, statuses = wait_for_resources_to_complete(release_docs, timeout)
-      if success == true
+      if success
         if blue_green = release_docs.select(&:blue_green_color).presence
           finish_blue_green_deployment(blue_green)
         end
