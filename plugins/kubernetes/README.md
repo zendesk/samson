@@ -211,3 +211,8 @@ Use an annotation to configure what will to be replaced:
 metadata.annotations.samson/set_via_env_json-metadata.labels.custom: SOME_ENV_VAR
 ```
 Then configure an ENV var with that same name and a value that is valid JSON.
+
+### Allow randomly not-ready pods during redines check
+
+Set `KUBERNETES_ALLOW_NOT_READY_PERCENT=10` to allow up to 10% of pods being not-ready,
+this is useful when dealing with large deployments that have some random failures.

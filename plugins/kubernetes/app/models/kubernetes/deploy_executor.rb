@@ -87,19 +87,21 @@ module Kubernetes
           @output.puts "No pods were created"
           return success, statuses
         end
-        not_ready = statuses.reject(&:live)
+
+        ready_statuses, not_ready_statuses = statuses.partition(&:live)
+        too_many_not_ready = (not_ready_statuses.size > allowed_not_ready(statuses.size))
 
         if waiting_for_ready
           print_statuses(statuses)
-          if not_ready.any?
-            if stopped = not_ready.select(&:stop).presence
+          if too_many_not_ready
+            if stopped = not_ready_statuses.select(&:stop).presence
               unstable!('one or more pods stopped', stopped)
               return false, statuses
             elsif (Time.now.to_i - wait_start_time) > timeout
               @output.puts "TIMEOUT, pods took too long to get live"
               return false, statuses
             end
-          elsif statuses.all? { |s| s.pod.completed? }
+          elsif ready_statuses.all? { |s| s.pod.completed? }
             return success, statuses
           else
             @output.puts "READY, starting stability test"
@@ -107,9 +109,9 @@ module Kubernetes
             wait_start_time = Time.now.to_i
           end
         else
-          if not_ready.any? # rubocop:disable Style/IfInsideElse
+          if too_many_not_ready # rubocop:disable Style/IfInsideElse
             print_statuses(statuses)
-            unstable!('one or more pods are not live', not_ready)
+            unstable!('one or more pods are not live', not_ready_statuses)
             return false, statuses
           else
             remaining = [wait_start_time + STABILITY_CHECK_DURATION - Time.now.to_i, 0].max
@@ -381,9 +383,8 @@ module Kubernetes
       end
     end
 
-    # updates resources via kubernetes api
+    # updates resources via kubernetes api in parallel
     def deploy(release_docs)
-      # We deploy each resource in parallel.
       resources = release_docs.flat_map do |release_doc|
         puts_action "Deploying", release_doc
 
@@ -412,6 +413,12 @@ module Kubernetes
         @output.puts "DONE"
         false
       end
+    end
+
+    def allowed_not_ready(size)
+      return 0 if size == 0
+      percent = Float(ENV["KUBERNETES_ALLOW_NOT_READY_PERCENT"] || "0")
+      (size / 100.0) * percent
     end
 
     def success

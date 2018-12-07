@@ -675,6 +675,26 @@ describe Kubernetes::DeployExecutor do
     end
   end
 
+  describe "#allowed_not_ready" do
+    let(:log_string) { "Ignored" }
+
+    it "allows none when percent is not set" do
+      executor.send(:allowed_not_ready, 10).must_equal 0
+    end
+
+    it "allows given percentage" do
+      with_env KUBERNETES_ALLOW_NOT_READY_PERCENT: "30" do
+        executor.send(:allowed_not_ready, 10).must_equal 3
+      end
+    end
+
+    it "does not blow up on 0" do
+      with_env KUBERNETES_ALLOW_NOT_READY_PERCENT: "50" do
+        executor.send(:allowed_not_ready, 0).must_equal 0
+      end
+    end
+  end
+
   describe "blue green" do
     def add_service_to_release_doc
       kubernetes_fake_raw_template
