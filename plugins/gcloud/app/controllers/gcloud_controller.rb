@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 class GcloudController < ApplicationController
+  class GcloudCommandError < StandardError; end
+
   STATUSMAP = {
     "SUCCESS" => "succeeded",
     "QUEUED" => "pending",
@@ -14,8 +16,8 @@ class GcloudController < ApplicationController
     build = Build.find(params[:id])
     path = [build.project, build]
 
-    if error = update_build(build)
-      redirect_to path, alert: "Failed to sync: #{error}"
+    if (error = update_build(build))
+      redirect_to path, alert: "Failed to sync: #{e}"
     else
       redirect_to path, notice: "Synced!"
     end
@@ -44,7 +46,7 @@ class GcloudController < ApplicationController
       end
     end
 
-    build.save!
+    return "Failed to save build #{build.errors.full_messages}" unless build.save
     nil
   end
 end
