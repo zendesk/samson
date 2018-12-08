@@ -51,6 +51,19 @@ describe GcloudController do
         assert flash[:alert]
       end
 
+      describe "with invalid image name" do
+        let(:image_name) { "gcr.io/foo*baz+bing/#{build.image_name}" }
+
+        it "fails when digest does not pass validations" do
+          Samson::CommandExecutor.expects(:execute).returns([true, result.to_json])
+
+          do_sync
+
+          assert flash[:alert]
+          build.reload.docker_repo_digest.wont_equal repo_digest
+        end
+      end
+
       it "fails when image is not found" do
         result[:results][:images].last[:name] = "gcr.io/other"
         Samson::CommandExecutor.expects(:execute).returns([true, result.to_json])
