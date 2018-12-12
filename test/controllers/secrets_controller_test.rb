@@ -260,6 +260,12 @@ describe SecretsController do
         Rails.logger.expects(:info).with { |message| message.include?("\"value\"=>\"[FILTERED]\"") }
         post :create, params: {secret: attributes}
       end
+
+      it "does not store windows newlines in the backend" do
+        attributes[:value] = "foo\r\nbar\r\nbaz"
+        post :create, params: {secret: attributes}
+        Samson::Secrets::DbBackend::Secret.find('production/foo/pod2/hi').value.must_equal "foo\nbar\nbaz"
+      end
     end
 
     describe '#update' do

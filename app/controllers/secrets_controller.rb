@@ -108,11 +108,15 @@ class SecretsController < ApplicationController
   private
 
   def secret_params
-    @secret_params ||= params.require(:secret).permit(
-      *Samson::Secrets::Manager::ID_PARTS,
-      *UPDATEDABLE_ATTRIBUTES,
-      :allow_duplicates
-    )
+    @secret_params ||= begin
+      sent = params.require(:secret).permit(
+        *Samson::Secrets::Manager::ID_PARTS,
+        *UPDATEDABLE_ATTRIBUTES,
+        :allow_duplicates
+      )
+      sent[:value] = sent[:value].gsub("\r\n", "\n") if sent[:value]
+      sent
+    end
   end
 
   def id
