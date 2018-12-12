@@ -141,6 +141,12 @@ describe Kubernetes::RoleValidator do
       end
     end
 
+    it "allows Gateway" do
+      map = {kind: 'Gateway', apiVersion: 'v1', metadata: {name: 'my-map', labels: labels}, spec: {selector: {a: "b"}}}
+      role_json[-1...-1] = ", #{map.to_json}"
+      errors.must_equal nil
+    end
+
     it "allows only Job" do
       role.replace(job_role)
       errors.must_be_nil
