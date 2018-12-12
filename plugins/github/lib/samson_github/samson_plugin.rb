@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 module SamsonGithub
-  STATUS_URL = ENV["GITHUB_STATUS_URL"] || 'https://status.github.com'
+  STATUS_URL = ENV["GITHUB_STATUS_URL"] || 'https://www.githubstatus.com'
 
   class Engine < Rails::Engine
   end
