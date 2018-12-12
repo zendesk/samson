@@ -93,21 +93,20 @@ class TerminalExecutor
     suffix = +""
     suffix << "-#{@project.permalink}"
     suffix << "-#{@deploy.id}" if @deploy
-    f = Tempfile.new "samson-terminal-executor#{suffix}-"
-    File.chmod(0o700, f.path) # making sure nobody can read it before we add content
-    f.write script
-    f.close
-    command = f.path
+    Tempfile.create("samson-terminal-executor#{suffix}-") do |f|
+      File.chmod(0o700, f.path) # making sure nobody can read it before we add content
+      f.write script
+      f.close
+      command = f.path
 
-    # osx has a 4s startup delay for each new executable, so we keep the executable stable
-    if RbConfig::CONFIG['host_os'].include?('darwin')
-      executor = File.expand_path("../../bin/script-executor", __dir__)
-      command = "export FILE=#{f.path.shellescape} && #{executor.shellescape}"
+      # osx has a 4s startup delay for each new executable, so we keep the executable stable
+      if RbConfig::CONFIG['host_os'].include?('darwin')
+        executor = File.expand_path("../../bin/script-executor", __dir__)
+        command = "export FILE=#{f.path.shellescape} && #{executor.shellescape}"
+      end
+
+      yield command
     end
-
-    yield command
-  ensure
-    f.unlink
   end
 
   def stream(from:, to:)

@@ -3,7 +3,7 @@ require_relative '../../../test/test_helper'
 
 class ActiveSupport::TestCase
   def with_example_kube_config
-    Tempfile.open('config') do |t|
+    Tempfile.create('config') do |t|
       config = {
         'apiVersion' => 'v1',
         'users' => nil,
