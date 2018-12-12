@@ -105,11 +105,10 @@ module Kubernetes
       labels = @elements.flat_map do |resource|
         kind = resource[:kind]
 
-        allow_cross_match = resource.dig(:metadata, :annotations, :"samson/service_selector_across_roles") == "true"
         label_paths = metadata_paths(resource).map { |p| p + [:labels] } +
           if resource.dig(:spec, :selector, :matchLabels)
             [[:spec, :selector, :matchLabels]]
-          elsif resource.dig(:spec, :selector) && !allow_cross_match
+          elsif resource.dig(:spec, :selector) && !allow_selector_cross_match?(resource)
             [[:spec, :selector]]
           else
             [] # ignore unknown / unsupported types
@@ -274,6 +273,11 @@ module Kubernetes
           end
         end
       end
+    end
+
+    def allow_selector_cross_match?(resource)
+      resource[:kind] == "Gateway" ||
+        resource.dig(:metadata, :annotations, :"samson/service_selector_across_roles") == "true"
     end
   end
 end
