@@ -1,7 +1,7 @@
 version: "2"
 services:
   samson:
-    image: zendesk/samson:latest # replace with `build: .` to use Dockerfile
+    image: zendesk/samson:latest # replace with `build: .` to use Dockerfile (--build to rebuild it)
     ports:
       - "3000:9080"
     volumes:
