@@ -1,12 +1,41 @@
+# git history is big, do not add it
 .git
-.env
-tmp
-log
+
+# tests are big and not needed
 test
-.bundle
-config/database.yml
-cached_repos
-node_modules
+
+# user might chose to have local gem installs, they can be quiet big
 vendor/bundle
 
-public/assets
+# editor-specific folders that can be big
+.idea
+
+## copied from .gitignore
+# local environment which users should use to configure their instance
+/.env
+
+# default SQLite database
+/db/*.sqlite3
+/db/*.sqlite3-journal
+
+# all logfiles and tempfiles.
+/log
+/tmp
+
+# database config that is different for each user
+/config/database.yml
+
+# custom setup files (see bin/setup)
+/custom
+
+# npm install
+/node_modules
+
+# rake assets:precompile results
+/public/assets
+
+# app/models/git_repository.rb repository storage
+/cached_repos/
+
+# csv export folder
+/export/

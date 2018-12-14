@@ -283,4 +283,8 @@ describe "cleanliness" do
     ]
     values.uniq.size.must_equal 1, "Expected all places to use consistent PERIODICAL value, but found #{values.inspect}"
   end
+
+  it "has gitignore and dockerignore in sync" do
+    File.read(".dockerignore").must_include File.read(".gitignore")
+  end
 end
