@@ -171,7 +171,7 @@ module Samson
     config.active_support.deprecation = :raise
 
     # avoid permission errors in production and cleanliness test failures in test
-    config.active_record.dump_schema_after_migration = Rails.env.development?
+    config.active_record.dump_schema_after_migration = Rails.env.development? && ENV["RAILS_DUMP_SCHEMA"] != "false"
   end
 
   RELEASE_NUMBER = '\d+(:?\.\d+)*'
