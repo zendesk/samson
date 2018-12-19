@@ -126,6 +126,12 @@ describe Kubernetes::TemplateFiller do
       template.to_hash[:metadata][:namespace].must_equal 'kube-system'
     end
 
+    it "keeps namespace when disabled" do
+      raw_template[:metadata][:namespace] = "foo"
+      raw_template[:metadata][:annotations] = {"samson/keep_namespace": 'true'}
+      template.to_hash[:metadata][:namespace].must_equal 'foo'
+    end
+
     it "can verify without builds" do
       doc.kubernetes_release.builds = []
       template.to_hash(verification: true)
