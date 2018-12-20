@@ -182,9 +182,7 @@ module Kubernetes
     end
 
     def set_namespace
-      system_namespaces = ["default", "kube-system"]
-      return if system_namespaces.include?(template.dig(:metadata, :namespace)) &&
-        template.dig(:metadata, :labels, :'kubernetes.io/cluster-service') == 'true'
+      return if template.dig(:metadata, :labels, :'kubernetes.io/cluster-service') == 'true'
       template[:metadata][:namespace] = @doc.deploy_group.kubernetes_namespace
     end
 
