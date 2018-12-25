@@ -173,10 +173,11 @@ describe SamsonEnv do
       view_context
     end
 
-    describe 'project_form callback' do
-      let(:checkbox) { 'id="use_env_repo"' }
+    # see plugins/env/app/views/samson_env/_fields.html.erb
+    describe :project_form do
+      let(:checkbox) { 'id="project_use_env_repo"' }
       let(:dep_env_repo) { 'zendesk/test' }
-      let(:repo_link) { "href=\"#{dep_env_repo}/#{project.permalink}.env.erb\"" }
+      let(:repo_link) { "href=\"https://github.com/#{dep_env_repo}/projects/#{project.permalink}.env.erb\"" }
 
       def with_form
         view_context.form_for project do |form|
@@ -192,22 +193,16 @@ describe SamsonEnv do
 
       it 'renders use_env_repo checkbox when DEPLOYMENT_ENV_REPO is present' do
         with_env DEPLOYMENT_ENV_REPO: dep_env_repo do
-          render_view.must_include checkbox
+          view = render_view
+          view.must_include checkbox
+          view.must_include repo_link
         end
       end
 
       it 'does not render use_env_repo checkbox when DEPLOYMENT_ENV_REPO is nil' do
-        render_view.wont_include checkbox
-      end
-
-      it 'renders project erb link when DEPLOYMENT_ENV_REPO is present' do
-        with_env DEPLOYMENT_ENV_REPO: dep_env_repo do
-          render_view.must_include repo_link
-        end
-      end
-
-      it 'does not renders project erb link when DEPLOYMENT_ENV_REPO is nil' do
-        render_view.wont_include repo_link
+        view = render_view
+        view.wont_include checkbox
+        view.wont_include repo_link
       end
     end
   end

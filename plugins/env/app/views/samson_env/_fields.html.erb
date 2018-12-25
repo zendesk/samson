@@ -4,11 +4,15 @@
     <%= additional_info SamsonEnv::HELP_TEXT %>
   </legend>
 
-  <% if ENV['DEPLOYMENT_ENV_REPO'] %>
-    <%= check_box_tag(:use_env_repo) %>
-    <% link_target =  "#{ENV['DEPLOYMENT_ENV_REPO']}/#{@project.permalink}.env.erb" %>
-    <% label_text = "Use the GitHub repo for deployment env vars for this project here #{link_target}" %>
-    <%= label_tag(:use_env_repo, link_to(label_text,link_target)).html_safe %>
+  <% if repo = ENV['DEPLOYMENT_ENV_REPO'] %>
+    <% url = "https://github.com/#{repo}" %>
+    <% path = "/projects/#{@project.permalink}.env.erb" %>
+    <%= form.input(
+          :use_env_repo,
+          label: "Use #{link_to(repo, url)} to manage deployment environment variables in #{link_to(path, "#{url}#{path}")}".html_safe,
+          as: :check_box
+        )
+    %>
   <% end %>
 
   <% scopes = Environment.env_deploy_group_array %>
