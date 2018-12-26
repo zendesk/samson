@@ -5,11 +5,10 @@
   </legend>
 
   <% if ENV['DEPLOYMENT_ENV_REPO'] %>
-    <% project = form.object %>
     <%= check_box_tag(:use_env_repo) %>
-    <% link_target =  "#{ENV['DEPLOYMENT_ENV_REPO']}/#{project.permalink}.env.erb" %>
+    <% link_target =  "#{ENV['DEPLOYMENT_ENV_REPO']}/#{@project.permalink}.env.erb" %>
     <% label_text = "Use the GitHub repo for deployment env vars for this project here #{link_target}" %>
-    <%= label_tag(:use_env_repo, link_to(label_text,link_target)) %>
+    <%= label_tag(:use_env_repo, link_to(label_text,link_target)).html_safe %>
   <% end %>
 
   <% scopes = Environment.env_deploy_group_array %>
