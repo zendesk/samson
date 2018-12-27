@@ -6,7 +6,9 @@ for a project and deploy_group.
 
 ## GitHub to manage environment variables
 This plugin has an option to use a GitHub repository as source for environment variables. 
-The DEPLOYMENT_ENV_REPO must be set in samson's start up. Each project must opt-in to it via project settings.
+The DEPLOYMENT_ENV_REPO must be set in samson's start up to be the `organization/repo`.   
+
+Each project must opt-in to it via project settings.
 
 The expected structure of this repository is a directory named `generated` with a sub directory for each 
 _project permalink_ samson deploys.  Within this directory for a project are the deploy group .env files using the name
@@ -37,3 +39,5 @@ RAILS_THREAD_MAX=5
 The generated enviornment variables is the merger of deploy_group env variables, if the samson `deploy_group plugin` is 
 activated, the `project` environment variables in the samson database and the environment variables in the github `repo`.
 The order of precedence for variables with the same key name: `deploy_group` replaces `project` which replaces `repo` variables.
+
+*The variables in the Samson database overwrite any variables in the repo.*
