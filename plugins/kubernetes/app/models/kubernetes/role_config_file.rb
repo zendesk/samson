@@ -10,6 +10,7 @@ module Kubernetes
     SERVICE_KINDS = ['Service'].freeze
     PREREQUISITE = [:metadata, :annotations, :'samson/prerequisite'].freeze
 
+    # TODO: rename to has_pods? or so
     def self.primary?(resource)
       templates(resource).any?
     end

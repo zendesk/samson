@@ -8,7 +8,6 @@ module Kubernetes
     belongs_to :deploy_group
 
     serialize :resource_template, JSON
-    delegate :desired_pod_count, :prerequisite?, to: :primary_resource
     delegate :build_selectors, to: :verification_template
 
     validates :deploy_group, presence: true
@@ -56,7 +55,7 @@ module Kubernetes
     # Temporary template we run validations on ... so can be cheap / not fully fleshed out
     # and only be the primary since services/configmaps are not very interesting anyway
     def verification_template
-      primary_config = raw_template.detect { |e| Kubernetes::RoleConfigFile.primary?(e) }
+      primary_config = raw_template.detect { |e| Kubernetes::RoleConfigFile.primary?(e) } || raw_template.first
       Kubernetes::TemplateFiller.new(self, primary_config, index: 0)
     end
 
@@ -64,11 +63,15 @@ module Kubernetes
       kubernetes_release.blue_green_color if kubernetes_role.blue_green?
     end
 
-    private
-
-    def primary_resource
-      resources.detect(&:primary?)
+    def prerequisite?
+      resources.any?(&:prerequisite?)
     end
+
+    def desired_pod_count
+      resources.sum(&:desired_pod_count)
+    end
+
+    private
 
     def resource_template=(value)
       @resource_template = nil

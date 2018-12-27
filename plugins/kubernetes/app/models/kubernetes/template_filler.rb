@@ -215,11 +215,12 @@ module Kubernetes
     end
 
     def pod_annotations
-      pod_template[:metadata][:annotations] ||= {}
+      pod_template ? pod_template[:metadata][:annotations] ||= {} : {}
     end
 
     def pod_template
-      @pod_template ||= RoleConfigFile.templates(template).first
+      return @pod_template if defined?(@pod_template)
+      @pod_template = RoleConfigFile.templates(template).first
     end
 
     def secret_annotations
@@ -532,11 +533,11 @@ module Kubernetes
     end
 
     def init_containers
-      @init_containers ||= Api::Pod.init_containers(pod_template)
+      @init_containers ||= pod_template ? Api::Pod.init_containers(pod_template) : []
     end
 
     def containers
-      pod_template.dig_fetch(:spec, :containers)
+      pod_template ? pod_template.dig_fetch(:spec, :containers) : []
     end
   end
 end

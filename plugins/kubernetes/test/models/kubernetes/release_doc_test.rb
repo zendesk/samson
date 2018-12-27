@@ -248,14 +248,16 @@ describe Kubernetes::ReleaseDoc do
   end
 
   describe "#desired_pod_count" do
-    it "delegates to primary resource" do
+    it "delegates to resource" do
       doc.desired_pod_count.must_equal 2
     end
   end
 
   describe "#prerequisite?" do
-    it "delegates to primary resource" do
+    it "delegates to resources" do
       refute doc.prerequisite?
+      doc.resources.first.stubs(:prerequisite?).returns(true)
+      assert doc.prerequisite?
     end
   end
 
