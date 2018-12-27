@@ -32,10 +32,6 @@ module Kubernetes
         @template.dig(*RoleConfigFile::PREREQUISITE)
       end
 
-      def primary?
-        Kubernetes::RoleConfigFile.primary?(@template)
-      end
-
       def deploy
         if exist?
           if @delete_resource
@@ -86,7 +82,11 @@ module Kubernetes
       end
 
       def desired_pod_count
-        @delete_resource ? 0 : replica_source.dig(:spec, :replicas) || 1
+        if @delete_resource
+          0
+        else
+          replica_source.dig(:spec, :replicas) || (RoleConfigFile.primary?(@template) ? 1 : 0)
+        end
       end
 
       private

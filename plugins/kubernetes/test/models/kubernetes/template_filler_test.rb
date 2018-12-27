@@ -901,6 +901,11 @@ describe Kubernetes::TemplateFiller do
       template.send(:verify_env)
     end
 
+    it "passes when resource has no containers" do
+      raw_template.delete :spec
+      template.send(:verify_env)
+    end
+
     describe "when something is required" do
       let(:pod_annotations) { raw_template[:spec][:template][:metadata][:annotations] = {} }
 
@@ -951,6 +956,11 @@ describe Kubernetes::TemplateFiller do
 
     it "ignores images that should not be built via annotations" do
       raw_template[:spec][:template][:metadata][:annotations] = {'container-some-project-samson/dockerfile': 'none'}
+      template.build_selectors.must_equal []
+    end
+
+    it "returns empty when resource has no containers" do
+      raw_template.delete :spec
       template.build_selectors.must_equal []
     end
 

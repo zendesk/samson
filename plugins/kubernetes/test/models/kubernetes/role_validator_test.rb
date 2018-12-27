@@ -326,7 +326,7 @@ describe Kubernetes::RoleValidator do
 
       it "reports invalid prerequisites" do
         role.first[:kind] = "Deployment"
-        errors.must_include "Only elements with type Job, Pod can be prerequisites."
+        errors.must_include "Elements with type Deployment cannot be prerequisites."
       end
 
       it "allows static configuration" do

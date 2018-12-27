@@ -229,10 +229,12 @@ module Kubernetes
 
     def validate_prerequisites
       allowed = ["Job", "Pod"]
-      bad = (@elements + templates).any? do |e|
+      bad = (@elements + templates).select do |e|
         e.dig(*RoleConfigFile::PREREQUISITE) && !allowed.include?(e[:kind]) && RoleConfigFile.primary?(e)
       end
-      @errors << "Only elements with type #{allowed.join(", ")} can be prerequisites." if bad
+      bad.compact!
+      bad.map! { |e| e[:kind] }
+      @errors << "Elements with type #{bad.join(", ")} cannot be prerequisites." if bad.any?
     end
 
     # comparing all directories with trailing / so we can use simple matching logic

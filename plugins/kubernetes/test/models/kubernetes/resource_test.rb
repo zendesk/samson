@@ -288,18 +288,6 @@ describe Kubernetes::Resource do
       end
     end
 
-    describe "#primary?" do
-      it "is primary when it is a primary resource" do
-        template[:kind] = "Deployment"
-        assert resource.primary?
-      end
-
-      it "is not primary when it is a secondary resource" do
-        template[:spec][:template][:spec].delete :containers
-        refute resource.primary?
-      end
-    end
-
     describe "#desired_pod_count" do
       it "reads the value from config" do
         template[:spec] = {replicas: 3}
@@ -320,9 +308,14 @@ describe Kubernetes::Resource do
         end
       end
 
-      it "is 1 when not set" do
+      it "is 1 when not set for primary" do
         template[:spec].delete :replicas
         resource.desired_pod_count.must_equal 1
+      end
+
+      it "is 0 when not set for config" do
+        template.delete :spec
+        resource.desired_pod_count.must_equal 0
       end
 
       it "is 0 when pod is deleted" do
