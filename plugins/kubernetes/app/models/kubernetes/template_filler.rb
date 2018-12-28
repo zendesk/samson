@@ -8,10 +8,11 @@ module Kubernetes
     SECRET_PULLER_IMAGE = ENV['SECRET_PULLER_IMAGE'].presence
     KUBERNETES_ADD_PRESTOP = Samson::EnvCheck.set?('KUBERNETES_ADD_PRESTOP')
     SECRET_PREFIX = "secret/"
+    DOCKERFILE_NONE = 'none'
 
     def initialize(release_doc, template, index:)
       @doc = release_doc
-      @template = template
+      @template = template # TODO: deep_dup
       @index = index
     end
 
@@ -91,9 +92,9 @@ module Kubernetes
 
     def build_selector_for_container(container, first:)
       dockerfile = samson_container_config(container, :"samson/dockerfile") ||
-        (!first && ENV['KUBERNETES_ADDITIONAL_CONTAINERS_WITHOUT_DOCKERFILE'] ? 'none' : 'Dockerfile')
+        (!first && ENV['KUBERNETES_ADDITIONAL_CONTAINERS_WITHOUT_DOCKERFILE'] ? DOCKERFILE_NONE : 'Dockerfile')
 
-      return if dockerfile == 'none'
+      return if dockerfile == DOCKERFILE_NONE
 
       if project.docker_image_building_disabled?
         # also supporting dockerfile would make sense if external builds did not have image_name,
@@ -108,7 +109,11 @@ module Kubernetes
     # samson/ keys in containers trigger validation warnings in kubectl, so we allow using annotations too
     # NOTE: containers always have a name see role_validator.rb
     def samson_container_config(container, key)
-      pod_annotations[:"container-#{container[:name]}-#{key}"] || container[key]
+      pod_annotations[samson_container_config_key(container, key)] || container[key]
+    end
+
+    def samson_container_config_key(container, key)
+      :"container-#{container.fetch(:name)}-#{key}"
     end
 
     def set_deploy_url
@@ -235,7 +240,7 @@ module Kubernetes
     # /secretkeys are where the annotations from the config are mounted
     def set_secret_puller
       secret_vol = {mountPath: "/secrets", name: "secrets-volume"}
-      init_containers.unshift(
+      container = {
         image: SECRET_PULLER_IMAGE,
         imagePullPolicy: 'IfNotPresent',
         name: 'secret-puller',
@@ -245,7 +250,11 @@ module Kubernetes
           secret_vol
         ],
         env: vault_env
-      )
+      }
+      init_containers.unshift container
+
+      # mark the container as not needing a dockerfile without making the pod invalid for kubelet
+      pod_annotations[samson_container_config_key(container, "samson/dockerfile")] = DOCKERFILE_NONE
 
       # share secrets volume between all containers
       containers.each do |container|
@@ -355,10 +364,8 @@ module Kubernetes
       containers.first[:resources][:limits].delete(:cpu) if @doc.no_cpu_limit
     end
 
-    # To not break previous workflows for sidecars we do not pick the default Dockerfile
     def set_docker_image
       builds = @doc.kubernetes_release.builds
-
       set_docker_image_for_containers(builds, containers + init_containers)
     end
 
@@ -533,7 +540,7 @@ module Kubernetes
     end
 
     def init_containers
-      @init_containers ||= pod_template ? Api::Pod.init_containers(pod_template) : []
+      @init_containers ||= (pod_template ? Api::Pod.init_containers(pod_template) : [])
     end
 
     def containers

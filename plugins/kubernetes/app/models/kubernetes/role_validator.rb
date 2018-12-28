@@ -178,6 +178,7 @@ module Kubernetes
       @errors << "All templates need spec.containers"
     end
 
+    # TODO: validate init containers
     def validate_container_name
       names = map_attributes([:spec, :containers], elements: templates).flatten(1).map { |c| c[:name] }
       if names.any?(&:nil?)
