@@ -108,7 +108,6 @@
     });
   }
 
-
   $(document).on("click", ".duplicate_previous_row", function(e){
     e.preventDefault();
     var $row = $(this).prev();
@@ -128,13 +127,17 @@
   $(document).on("click", ".paste_env_variables", function (e) {
     e.preventDefault();
 
-    $("#env_paste_dialog").html("<textarea id='env_var_paste_area' cols='40' rows='8'></textarea>");
+    $("#env_paste_dialog").html("" +
+      ".env format (newline separated key=val)" +
+      "<textarea id='env_var_paste_area' cols='40' rows='8'></textarea>"
+    );
     $("#env_paste_dialog").dialog({
       autoOpen: true,
       resizable: true,
       width: 350,
       height: 300,
       modal: true,
+      title: "Paste environment variables",
       buttons: {
         "Parse": function () {
           var pasted = $("#env_paste_dialog #env_var_paste_area").val();
