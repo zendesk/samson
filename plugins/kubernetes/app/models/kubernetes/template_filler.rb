@@ -12,7 +12,7 @@ module Kubernetes
 
     def initialize(release_doc, template, index:)
       @doc = release_doc
-      @template = template # TODO: deep_dup
+      @template = template.deep_dup
       @index = index
     end
 

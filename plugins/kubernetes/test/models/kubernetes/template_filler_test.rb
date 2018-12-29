@@ -64,6 +64,12 @@ describe Kubernetes::TemplateFiller do
       result.deep_symbolize_keys.must_equal result
     end
 
+    it "does not modify passed in template" do
+      old = raw_template.deep_dup
+      template.to_hash
+      raw_template.must_equal old
+    end
+
     it "escapes things that would not be allowed in labels or environment values" do
       doc.deploy_group.update_column(:env_value, 'foo:bar')
       doc.kubernetes_release.update_column(:git_ref, 'user/feature')
@@ -237,7 +243,7 @@ describe Kubernetes::TemplateFiller do
         end
 
         it "keeps prefixed service names when using multiple services" do
-          raw_template[:metadata][:name] = 'foo-other'
+          template.instance_variable_get(:@template)[:metadata][:name] = 'foo-other'
           template.to_hash[:metadata][:name].must_equal 'foo-other'
         end
 

@@ -348,8 +348,13 @@ describe Kubernetes::RoleValidator do
         errors.must_equal ["All templates need spec.containers"]
       end
 
-      it "fails without name" do
+      it "fails without container name" do
         role[0][:spec][:containers][0].delete :name
+        errors.must_equal ["Containers need a name"]
+      end
+
+      it "fails without init container name" do
+        role[0][:spec][:initContainers] = [{}]
         errors.must_equal ["Containers need a name"]
       end
     end
