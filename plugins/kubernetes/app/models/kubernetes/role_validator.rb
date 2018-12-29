@@ -173,13 +173,12 @@ module Kubernetes
     end
 
     def validate_containers
-      containers = map_attributes([:spec, :containers], elements: templates)
-      return if containers.all? { |c| c.is_a?(Array) && c.any? }
+      return if pod_containers.all? { |c| c.is_a?(Array) && c.any? }
       @errors << "All templates need spec.containers"
     end
 
     def validate_container_name
-      names = map_attributes([:spec, :containers], elements: templates).flatten(1).map { |c| c[:name] }
+      names = (pod_containers + init_containers).flatten(1).map { |c| c[:name] }
       if names.any?(&:nil?)
         @errors << "Containers need a name"
       elsif bad = names.grep_v(VALID_LABEL).presence
@@ -248,6 +247,14 @@ module Kubernetes
     end
 
     # helpers below
+
+    def pod_containers
+      map_attributes([:spec, :containers], elements: templates)
+    end
+
+    def init_containers
+      templates.map { |t| (t.dig(:metadata, :annotations) || {}).is_a?(Hash) ? Api::Pod.init_containers(t) : [] }
+    end
 
     def find_stateful_set
       @elements.detect { |t| t[:kind] == "StatefulSet" }

@@ -64,6 +64,12 @@ describe Kubernetes::TemplateFiller do
       result.deep_symbolize_keys.must_equal result
     end
 
+    it "does not modify passed in template" do
+      old = raw_template.deep_dup
+      template.to_hash
+      raw_template.must_equal old
+    end
+
     it "escapes things that would not be allowed in labels or environment values" do
       doc.deploy_group.update_column(:env_value, 'foo:bar')
       doc.kubernetes_release.update_column(:git_ref, 'user/feature')
@@ -237,7 +243,7 @@ describe Kubernetes::TemplateFiller do
         end
 
         it "keeps prefixed service names when using multiple services" do
-          raw_template[:metadata][:name] = 'foo-other'
+          template.instance_variable_get(:@template)[:metadata][:name] = 'foo-other'
           template.to_hash[:metadata][:name].must_equal 'foo-other'
         end
 
@@ -361,12 +367,12 @@ describe Kubernetes::TemplateFiller do
         end
 
         it "allows selecting dockerfile for init containers" do
-          add_init_container "samson/dockerfile": 'Dockerfile'
-          init_containers[0].must_equal("samson/dockerfile" => "Dockerfile", "image" => image)
+          add_init_container "samson/dockerfile": 'Dockerfile', name: 'foo'
+          init_containers[0].must_equal("samson/dockerfile" => "Dockerfile", "image" => image, "name" => "foo")
         end
 
         it "raises if an init container does not specify a dockerfile" do
-          add_init_container a: 1, "samson/dockerfile": 'Foo'
+          add_init_container a: 1, "samson/dockerfile": 'Foo', name: 'foo'
           e = assert_raises(Samson::Hooks::UserError) { init_containers[0] }
           e.message.must_equal(
             "Did not find build for dockerfile \"Foo\".\nFound builds: [[\"Dockerfile\"]].\n"\
@@ -375,7 +381,7 @@ describe Kubernetes::TemplateFiller do
         end
 
         it "overrides Always imagePullPolicy since it does not make sense and slows us down" do
-          add_init_container imagePullPolicy: 'Always'
+          add_init_container imagePullPolicy: 'Always', name: 'foo'
           init_containers[0]["imagePullPolicy"].must_equal "IfNotPresent"
         end
 
@@ -409,15 +415,23 @@ describe Kubernetes::TemplateFiller do
         let(:spec_init_containers) { result.dig(:spec, :template, :spec, :initContainers) || [] }
 
         it 'sets init containers in annotations if using < 1.6.0 k8s server version' do
-          add_init_container("samson/dockerfile": 'Dockerfile')
-          spec_annotation_containers[0].must_equal("samson/dockerfile" => "Dockerfile", "image" => image)
+          add_init_container "samson/dockerfile": 'Dockerfile', name: 'foo'
+          spec_annotation_containers[0].must_equal(
+            "samson/dockerfile" => "Dockerfile",
+            "image" => image,
+            "name" => "foo"
+          )
         end
 
         it 'sets init containers using updated syntax to old syntax if using < 1.6.0 k8s server version' do
-          add_init_contnainer_new_syntax('samson/dockerfile': 'Dockerfile')
+          add_init_contnainer_new_syntax('samson/dockerfile': 'Dockerfile', name: 'foo')
 
           spec_init_containers.must_equal([])
-          spec_annotation_containers[0].must_equal("samson/dockerfile" => "Dockerfile", "image" => image)
+          spec_annotation_containers[0].must_equal(
+            "samson/dockerfile" => "Dockerfile",
+            "image" => image,
+            "name" => "foo"
+          )
         end
 
         it 'does not set init containers if there are none' do
@@ -430,15 +444,15 @@ describe Kubernetes::TemplateFiller do
           end
 
           it 'sets init containers in spec if using >= 1.6.0 k8s server version' do
-            add_init_contnainer_new_syntax("samson/dockerfile": 'Dockerfile')
-            spec_init_containers[0].must_equal('samson/dockerfile': "Dockerfile", image: image)
+            add_init_contnainer_new_syntax("samson/dockerfile": 'Dockerfile', name: 'foo')
+            spec_init_containers[0].must_equal('samson/dockerfile': "Dockerfile", image: image, name: 'foo')
           end
 
           it 'sets init containers using old syntax to new syntax if using >= 1.6.0 k8s server version' do
-            add_init_container("samson/dockerfile": 'Dockerfile')
+            add_init_container "samson/dockerfile": 'Dockerfile', name: 'foo'
 
             spec_annotation_containers.must_equal([])
-            spec_init_containers[0].must_equal('samson/dockerfile': "Dockerfile", image: image)
+            spec_init_containers[0].must_equal('samson/dockerfile': "Dockerfile", image: image, name: 'foo')
           end
 
           it 'does not set init containers if there are none' do
@@ -523,7 +537,7 @@ describe Kubernetes::TemplateFiller do
       end
 
       describe "with multiple containers" do
-        before { raw_template[:spec][:template][:spec][:containers] = [{}, {}] }
+        before { raw_template[:spec][:template][:spec][:containers] = [{name: 'foo'}, {name: 'bar'}] }
 
         it "allows multiple containers, even though they will not be properly replaced" do
           template.to_hash
@@ -560,7 +574,8 @@ describe Kubernetes::TemplateFiller do
 
         # secrets got resolved?
         template.to_hash[:spec][:template][:metadata][:annotations].select { |k, _| k.match?("secret") }.must_equal(
-          "secret/FOO": "global/global/global/bar"
+          "secret/FOO": "global/global/global/bar",
+          "container-secret-puller-samson/dockerfile": "none"
         )
       end
 
@@ -646,7 +661,8 @@ describe Kubernetes::TemplateFiller do
           # secrets got resolved?
           secret_annotations(hash).must_equal(
             "secret/FOO": "global/global/global/bar",
-            "secret/BAR": "global/global/global/foo"
+            "secret/BAR": "global/global/global/foo",
+            "container-secret-puller-samson/dockerfile": "none"
           )
 
           # keeps the unresolved around for debugging
@@ -666,13 +682,14 @@ describe Kubernetes::TemplateFiller do
         end
 
         it "does not blow up when using multiple containers with the same env" do
-          raw_template[:spec][:template][:spec][:containers] = [{}, {}]
+          raw_template[:spec][:template][:spec][:containers] = [{name: 'foo'}, {name: 'bar'}]
           hash = template.to_hash
 
           # secrets got resolved?
           secret_annotations(hash).must_equal(
             "secret/FOO": "global/global/global/bar",
-            "secret/BAR": "global/global/global/foo"
+            "secret/BAR": "global/global/global/foo",
+            "container-secret-puller-samson/dockerfile": "none"
           )
 
           # keeps the unresolved around for debugging
@@ -685,7 +702,8 @@ describe Kubernetes::TemplateFiller do
         it "works when no other secret annotation was set" do
           raw_template[:spec][:template][:metadata][:annotations].clear
           secret_annotations(template.to_hash).must_equal(
-            "secret/BAR": "global/global/global/foo"
+            "secret/BAR": "global/global/global/foo",
+            "container-secret-puller-samson/dockerfile": "none"
           )
         end
       end
@@ -968,12 +986,12 @@ describe Kubernetes::TemplateFiller do
       with_env KUBERNETES_ADDITIONAL_CONTAINERS_WITHOUT_DOCKERFILE: 'true'
 
       it "defaults to no dockerfile for additional containers" do
-        raw_template[:spec][:template][:spec][:containers] << {image: 'baz'}
+        raw_template[:spec][:template][:spec][:containers] << {image: 'baz', name: 'foo'}
         template.build_selectors.must_equal [["Dockerfile", nil]]
       end
 
       it "still allows selecting a dockerfile" do
-        raw_template[:spec][:template][:spec][:containers] << {'samson/dockerfile': 'bar', image: 'baz'}
+        raw_template[:spec][:template][:spec][:containers] << {'samson/dockerfile': 'bar', image: 'baz', name: 'foo'}
         template.build_selectors.must_equal [["Dockerfile", nil], ["bar", nil]]
       end
     end
@@ -986,7 +1004,7 @@ describe Kubernetes::TemplateFiller do
       end
 
       it "finds images from init-containers" do
-        add_init_container image: 'init-container'
+        add_init_container image: 'init-container', name: 'foo'
         template.build_selectors.must_equal(
           [[nil, "docker-registry.zende.sk/truth_service:latest"], [nil, "init-container"]]
         )
@@ -994,7 +1012,7 @@ describe Kubernetes::TemplateFiller do
 
       it "does not include images that should not be built" do
         raw_template[:spec][:template][:spec][:containers][0][:'samson/dockerfile'] = 'none'
-        raw_template[:spec][:template][:spec][:containers] << {'samson/dockerfile': 'bar', image: 'baz'}
+        raw_template[:spec][:template][:spec][:containers] << {'samson/dockerfile': 'bar', image: 'baz', name: 'baz'}
 
         template.build_selectors.must_equal [[nil, 'baz']]
       end
