@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 module SamsonEnv
   HELP_TEXT = "$VAR / ${VAR} replacements supported. Priority is DeployGroup, Environment, All. " \
-    "Secrets can be used with secret://key_of_secrect."
+    "Secrets can be used with secret://key_of_secret."
 
   class Engine < Rails::Engine
   end
