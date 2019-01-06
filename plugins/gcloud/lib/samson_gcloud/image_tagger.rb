@@ -52,8 +52,8 @@ module SamsonGcloud
           #{Samson::OutputUtils.timestamp} Tagging GCR image:
           #{command.join(" ")}
           #{output.strip}
-          #{success ? "SUCCESS" : "FAILED"}
         TEXT
+        job_output.puts "FAILED" unless success
       end
     end
   end
