@@ -39,7 +39,7 @@ describe SamsonGcloud::ImageTagger do
     it "tags" do
       assert_tagged_with 'stage-staging'
       tag
-      output_serialized.must_include "\nOUT\nSUCCESS"
+      output_serialized.must_include "\nOUT"
     end
 
     it 'includes timestamp' do
@@ -62,7 +62,7 @@ describe SamsonGcloud::ImageTagger do
 
         tag
 
-        output_serialized.must_include "\nOUT\nSUCCESS"
+        output_serialized.must_include "\nOUT"
       end
     end
 
@@ -86,7 +86,7 @@ describe SamsonGcloud::ImageTagger do
 
       tag
 
-      output_serialized.must_include "\nOUT\nSUCCESS"
+      output_serialized.must_include "\nOUT"
     end
 
     it 'does not tag with production if stage does not deploy code' do
@@ -97,7 +97,7 @@ describe SamsonGcloud::ImageTagger do
 
       tag
 
-      output_serialized.must_include "\nOUT\nSUCCESS"
+      output_serialized.must_include "\nOUT"
     end
 
     it "tags other regions" do
