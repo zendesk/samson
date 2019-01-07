@@ -2,7 +2,7 @@
   <% unless job.active? %>
     <%# needs single lines since we use them for log_lines_selection.js %>
     <% job.output.split("\n").each do |line| %>
-<%= render_log(line) %>
+      <%= render_log(line) %>
     <% end %>
   <% end %>
 </pre>
