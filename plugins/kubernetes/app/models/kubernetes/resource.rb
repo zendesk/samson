@@ -149,7 +149,7 @@ module Kubernetes
           raise(
             Samson::Hooks::UserError,
             "Updating #{static.join(".")} from #{old_labels.inspect} to #{new_labels.inspect} " \
-            "can only be done can only be done by deleting and redeploying or old pods would not be deleted."
+            "can only be done by deleting and redeploying or old pods would not be deleted."
           )
         end
       end

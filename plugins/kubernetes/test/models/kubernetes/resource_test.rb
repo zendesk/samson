@@ -160,7 +160,7 @@ describe Kubernetes::Resource do
             e = assert_raises(Samson::Hooks::UserError) { resource.deploy }
             e.message.must_equal(
               "Updating spec.selector.matchLabels from {:foo=>\"baz\"} to {:foo=>\"bar\"} " \
-              "can only be done can only be done by deleting and redeploying or old pods would not be deleted."
+              "can only be done by deleting and redeploying or old pods would not be deleted."
             )
           end
         end
