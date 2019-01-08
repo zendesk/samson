@@ -58,6 +58,15 @@ class BuildsController < ApplicationController
     start_docker_build if saved && !registering_external_build?
 
     status = new ? :created : :ok
+
+    if new
+      deploy_service = DeployService.new(build.creator)
+
+      @project.stages.deployed_on_build.each do |stage|
+        deploy_service.deploy(stage, reference: build.git_sha)
+      end
+    end
+
     respond_to_save saved, status, :new
   end
 
