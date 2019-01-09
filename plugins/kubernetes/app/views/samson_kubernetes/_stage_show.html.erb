@@ -1,86 +1,89 @@
 <% if @stage.kubernetes %>
-  <h2><%= link_to "Kubernetes Roles", project_kubernetes_roles_path(@stage.project) %></h2>
-
   <% matrix = Kubernetes::DeployGroupRole.matrix(@stage) %>
   <% project_dg_roles = matrix.flat_map(&:last).map!(&:last) %>
   <% missing = project_dg_roles.include?(nil) %>
 
-  <table class="table table-hover table-condensed">
-    <thead>
-      <th>Deploy Group</th>
-      <th>Replicas</th>
-      <th>CPU<%= additional_info "Requested to Limit" %></th>
-      <th>Memory<%= additional_info "Requested to Limit in MB" %></th>
-      <th>
-        <% if missing %>
-          <%= link_to 'Seed Missing', seed_kubernetes_deploy_group_roles_path(stage_id: @stage.id), data: {method: :post}, class: 'btn btn-default' %>
-        <% end %>
-        <%= link_to "Edit all", edit_many_project_kubernetes_deploy_group_roles_path(@project) if current_user.admin_for?(@project) %>
-      </th>
-    </thead>
+  <br/>
+  <details <%= 'open="open"' if missing %>>
+    <summary><h2 style="display: inline;">Kubernetes resources</h2></summary>
 
-    <% matrix.each do |deploy_group, roles| %>
-      <tr>
-        <td colspan="7"><h3><%= deploy_group.name %></h3></td>
-      </tr>
-      <% roles.each do |role, dg_role| %>
-        <tr>
-          <td><%= link_to role.name, [@project, role] %></td>
-          <% if dg_role %>
-            <td><%= kubernetes_deploy_group_role_replica role, dg_role %></td>
-            <td>
-              <%= dg_role.requests_cpu %> to <%= dg_role.limits_cpu %>
-              <%= "(Not enforced)" if dg_role.no_cpu_limit?  %>
-            </td>
-            <td><%= dg_role.requests_memory %> to <%= dg_role.limits_memory %></td>
-            <td>
-              <% if current_user.admin_for?(@stage.project) %>
-                <%= link_to 'Edit', edit_kubernetes_deploy_group_role_path(dg_role) %>
-              <% end %>
-            </td>
-          <% else %>
-            <td colspan="3" style="text-align: center">----- Missing -----</td>
-            <td>
-              <% if current_user.admin_for?(@stage.project) %>
-                <% attributes = {kubernetes_role_id: role.id, project_id: @stage.project_id, deploy_group_id: deploy_group.id} %>
-                <%= link_to "Create", new_kubernetes_deploy_group_role_path(kubernetes_deploy_group_role: attributes) %>
-              <% end %>
-            </td>
+    <table class="table table-hover table-condensed">
+      <thead>
+        <th>Deploy Group</th>
+        <th>Replicas</th>
+        <th>CPU<%= additional_info "Requested to Limit" %></th>
+        <th>Memory<%= additional_info "Requested to Limit in MB" %></th>
+        <th>
+          <% if missing %>
+            <%= link_to 'Seed Missing', seed_kubernetes_deploy_group_roles_path(stage_id: @stage.id), data: {method: :post}, class: 'btn btn-default' %>
           <% end %>
+          <%= link_to "Edit all", edit_many_project_kubernetes_deploy_group_roles_path(@project) if current_user.admin_for?(@project) %>
+        </th>
+      </thead>
+
+      <% matrix.each do |deploy_group, roles| %>
+        <tr>
+          <td colspan="7"><h3><%= deploy_group.name %></h3></td>
+        </tr>
+        <% roles.each do |role, dg_role| %>
+          <tr>
+            <td><%= link_to role.name, [@project, role] %></td>
+            <% if dg_role %>
+              <td><%= kubernetes_deploy_group_role_replica role, dg_role %></td>
+              <td>
+                <%= dg_role.requests_cpu %> to <%= dg_role.limits_cpu %>
+                <%= "(Not enforced)" if dg_role.no_cpu_limit?  %>
+              </td>
+              <td><%= dg_role.requests_memory %> to <%= dg_role.limits_memory %></td>
+              <td>
+                <% if current_user.admin_for?(@stage.project) %>
+                  <%= link_to 'Edit', edit_kubernetes_deploy_group_role_path(dg_role) %>
+                <% end %>
+              </td>
+            <% else %>
+              <td colspan="3" style="text-align: center">----- Missing -----</td>
+              <td>
+                <% if current_user.admin_for?(@stage.project) %>
+                  <% attributes = {kubernetes_role_id: role.id, project_id: @stage.project_id, deploy_group_id: deploy_group.id} %>
+                  <%= link_to "Create", new_kubernetes_deploy_group_role_path(kubernetes_deploy_group_role: attributes) %>
+                <% end %>
+              </td>
+            <% end %>
+          </tr>
+        <% end %>
+
+        <% dg_roles = roles.map(&:last).compact %>
+        <tr>
+          <td>Subtotal</td>
+          <td><%= dg_roles.sum(&:replicas) %></td>
+          <td>
+            <%= dg_roles.sum { |gr| gr.requests_cpu * gr.replicas } %> to
+            <%= dg_roles.sum { |gr| gr.limits_cpu * gr.replicas } %>
+          </td>
+          <td>
+            <%= dg_roles.sum { |gr| gr.requests_memory * gr.replicas } %> to
+            <%= dg_roles.sum { |gr| gr.limits_memory * gr.replicas } %>
+          </td>
+          <td></td>
         </tr>
       <% end %>
 
-      <% dg_roles = roles.map(&:last).compact %>
       <tr>
-        <td>Subtotal</td>
-        <td><%= dg_roles.sum(&:replicas) %></td>
+        <td><b>Total</b></td>
+        <% found_roles = project_dg_roles.compact %>
+        <td><%= found_roles.sum(&:replicas) %></td>
         <td>
-          <%= dg_roles.sum { |gr| gr.requests_cpu * gr.replicas } %> to
-          <%= dg_roles.sum { |gr| gr.limits_cpu * gr.replicas } %>
+          <%= found_roles.sum { |gr| gr.requests_cpu * gr.replicas } %> to
+          <%= found_roles.sum { |gr| gr.limits_cpu * gr.replicas } %>
         </td>
         <td>
-          <%= dg_roles.sum { |gr| gr.requests_memory * gr.replicas } %> to
-          <%= dg_roles.sum { |gr| gr.limits_memory * gr.replicas } %>
+          <%= found_roles.sum { |gr| gr.requests_memory * gr.replicas } %> to
+          <%= found_roles.sum { |gr| gr.limits_memory * gr.replicas } %>
         </td>
         <td></td>
       </tr>
-    <% end %>
-
-    <tr>
-      <td><b>Total</b></td>
-      <% found_roles = project_dg_roles.compact %>
-      <td><%= found_roles.sum(&:replicas) %></td>
-      <td>
-        <%= found_roles.sum { |gr| gr.requests_cpu * gr.replicas } %> to
-        <%= found_roles.sum { |gr| gr.limits_cpu * gr.replicas } %>
-      </td>
-      <td>
-        <%= found_roles.sum { |gr| gr.requests_memory * gr.replicas } %> to
-        <%= found_roles.sum { |gr| gr.limits_memory * gr.replicas } %>
-      </td>
-      <td></td>
-    </tr>
-  </table>
+    </table>
+  </details>
 
   <script>
     $(function(){
