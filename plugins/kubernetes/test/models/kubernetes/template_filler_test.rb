@@ -897,6 +897,105 @@ describe Kubernetes::TemplateFiller do
         e.message.must_equal "Unable to set key samson/set_via_env_json-spec.foo: key not found: \"FOO\""
       end
     end
+
+    describe "set_env" do
+      let(:env) { raw_template[:spec][:template][:spec][:containers][0][:env] = [] }
+
+      it "does not sort environment variables based on referencing by default" do
+        env.concat([
+                     {name: "FOO", value: "$(BAR)"},
+                     {name: "BAZ", value: "$(FOO)"},
+                     {name: "BAR", value: "$(DEPLOY_GROUP)"},
+                     {name: "FIZZ", value: "$(BAZ)"},
+                   ])
+
+        result_env = template.to_hash[:spec][:template][:spec][:containers][0][:env]
+        result_env.must_equal([
+                                {name: "FOO", value: "$(BAR)"},
+                                {name: "BAZ", value: "$(FOO)"},
+                                {name: "BAR", value: "$(DEPLOY_GROUP)"},
+                                {name: "FIZZ", value: "$(BAZ)"},
+                                {name: "REVISION", value: "1a6f551a2ffa6d88e15eef5461384da0bfb1c194"},
+                                {name: "TAG", value: "master"},
+                                {name: "DEPLOY_ID", value: "178003093"},
+                                {name: "DEPLOY_GROUP", value: "pod1"},
+                                {name: "PROJECT", value: "some-project"},
+                                {name: "ROLE", value: "some-role"},
+                                {name: "KUBERNETES_CLUSTER_NAME", value: "test"},
+                                {name: "POD_NAME", valueFrom: {fieldRef: {fieldPath: "metadata.name"}}},
+                                {name: "POD_NAMESPACE", valueFrom: {fieldRef: {fieldPath: "metadata.namespace"}}},
+                                {name: "POD_IP", valueFrom: {fieldRef: {fieldPath: "status.podIP"}}},
+                              ])
+      end
+
+      describe "with KUBERNETES_SORT_ENV_BY_REFERENCE set" do
+        around { |t| stub_const Kubernetes::TemplateFiller, :KUBERNETES_SORT_ENV_BY_REFERENCE, true, &t }
+
+        it "sorts based on referencing" do
+          env.concat([
+                       {name: "FOO", value: "$(BAR)"},
+                       {name: "BAZ", value: "$(FOO)"},
+                       {name: "BAR", value: "$(DEPLOY_GROUP)"},
+                       {name: "FIZZ", value: "$(BAZ)"},
+                     ])
+
+          result_env = template.to_hash[:spec][:template][:spec][:containers][0][:env]
+          result_env.must_equal([
+                                  {name: "DEPLOY_GROUP", value: "pod1"},
+                                  {name: "BAR", value: "$(DEPLOY_GROUP)"},
+                                  {name: "FOO", value: "$(BAR)"},
+                                  {name: "BAZ", value: "$(FOO)"},
+                                  {name: "FIZZ", value: "$(BAZ)"},
+                                  {name: "REVISION", value: "1a6f551a2ffa6d88e15eef5461384da0bfb1c194"},
+                                  {name: "TAG", value: "master"},
+                                  {name: "DEPLOY_ID", value: "178003093"},
+                                  {name: "PROJECT", value: "some-project"},
+                                  {name: "ROLE", value: "some-role"},
+                                  {name: "KUBERNETES_CLUSTER_NAME", value: "test"},
+                                  {name: "POD_NAME", valueFrom: {fieldRef: {fieldPath: "metadata.name"}}},
+                                  {name: "POD_NAMESPACE", valueFrom: {fieldRef: {fieldPath: "metadata.namespace"}}},
+                                  {name: "POD_IP", valueFrom: {fieldRef: {fieldPath: "status.podIP"}}},
+                                ])
+        end
+
+        it "referencing unknown environment variables works as expected" do
+          env.concat([
+                       {name: "FOO", value: "$(ASDF)"},
+                       {name: "BAZ", value: "$(SDF)"},
+                       {name: "BAR", value: "$(SDF)"},
+                       {name: "FIZZ", value: "$(SDFSD)"},
+                     ])
+
+          result_env = template.to_hash[:spec][:template][:spec][:containers][0][:env]
+          result_env.must_equal([
+                                  {name: "FOO", value: "$(ASDF)"},
+                                  {name: "BAZ", value: "$(SDF)"},
+                                  {name: "BAR", value: "$(SDF)"},
+                                  {name: "FIZZ", value: "$(SDFSD)"},
+                                  {name: "REVISION", value: "1a6f551a2ffa6d88e15eef5461384da0bfb1c194"},
+                                  {name: "TAG", value: "master"},
+                                  {name: "DEPLOY_ID", value: "178003093"},
+                                  {name: "DEPLOY_GROUP", value: "pod1"},
+                                  {name: "PROJECT", value: "some-project"},
+                                  {name: "ROLE", value: "some-role"},
+                                  {name: "KUBERNETES_CLUSTER_NAME", value: "test"},
+                                  {name: "POD_NAME", valueFrom: {fieldRef: {fieldPath: "metadata.name"}}},
+                                  {name: "POD_NAMESPACE", valueFrom: {fieldRef: {fieldPath: "metadata.namespace"}}},
+                                  {name: "POD_IP", valueFrom: {fieldRef: {fieldPath: "status.podIP"}}},
+                                ])
+        end
+
+        it "fails with error presented to user if encountering cyclic error" do
+          env.concat([
+                       {name: "FOO", value: "$(BAR)"},
+                       {name: "BAR", value: "$(FOO)"},
+                     ])
+
+          e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
+          e.message.must_equal "Could not sort environment variables, topological sort failed: [\"FOO\", \"BAR\"]"
+        end
+      end
+    end
   end
 
   describe "#verify" do

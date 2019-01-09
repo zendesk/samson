@@ -7,6 +7,7 @@ module Kubernetes
     CUSTOM_UNIQUE_LABEL_KEY = 'rc_unique_identifier'
     SECRET_PULLER_IMAGE = ENV['SECRET_PULLER_IMAGE'].presence
     KUBERNETES_ADD_PRESTOP = Samson::EnvCheck.set?('KUBERNETES_ADD_PRESTOP')
+    KUBERNETES_SORT_ENV_BY_REFERENCE = Samson::EnvCheck.set?('KUBERNETES_SORT_ENV_BY_REFERENCE')
     SECRET_PREFIX = "secret/"
     DOCKERFILE_NONE = 'none'
 
@@ -428,6 +429,8 @@ module Kubernetes
         env.reverse!
         env.uniq! { |h| h[:name] }
         env.reverse!
+
+        Kubernetes::Util.env_sort!(env) if KUBERNETES_SORT_ENV_BY_REFERENCE
       end
     end
 

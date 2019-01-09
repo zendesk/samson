@@ -222,3 +222,11 @@ this is useful when dealing with large deployments that have some random failure
 To debug services or to create resources that needs to reference a selector that doesn't include team/role (like a Gateway), you can disable selector validation with:
 
 `metadata.annotations.samson/service_selector_across_roles: "true"`
+
+### Ordering environment variables based on references
+
+In kubernetes, you can reference an environment variable from another using the syntax: `FOO: $(BAR)`. However, in this case `BAR` needs to be defined before `FOO` for it to work. This is due to an implementation detail in kubernetes itself.
+
+Set `KUBERNETES_SORT_ENV_BY_REFERENCE=true` to make samson ensure the proper order when generating kubernetes manifests.
+
+Beware that cyclic references (setting `FOO: $(BAR)` and `BAR: $(FOO)`) will cause an error like this: `Could not sort environment variables, topological sort failed: ["BAR", "FOO"]`
