@@ -167,7 +167,7 @@ describe Kubernetes::DeployExecutor do
     end
 
     it "does limited amounts of queries" do
-      assert_sql_queries(27) do
+      assert_sql_queries(28) do
         assert execute, out
       end
     end
@@ -249,13 +249,22 @@ describe Kubernetes::DeployExecutor do
         doc.limits_memory.must_equal config.limits_memory
       end
 
-      it "fails when role config is missing" do
-        worker_role.delete
-        e = assert_raises(Samson::Hooks::UserError) { execute }
-        e.message.must_equal(
-          "Role resque-worker for Pod 100 is not configured, but in repo at #{commit}. " \
+      describe "with missing role" do
+        before { worker_role.delete }
+
+        it "fails" do
+          e = assert_raises(Samson::Hooks::UserError) { execute }
+          e.message.must_equal(
+            "Role resque-worker for Pod 100 is not configured, but in repo at #{commit}. " \
           "Remove it from the repo or configure it via the stage page."
-        )
+          )
+        end
+
+        it "passes when ignored" do
+          stage.kubernetes_roles.create!(kubernetes_role: worker_role.kubernetes_role, ignored: true)
+          execute
+          out.must_include "SUCCESS"
+        end
       end
 
       it "fails when no role is setup in the project" do

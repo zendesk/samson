@@ -36,7 +36,12 @@ Samson::Hooks.view :deploy_group_table_cell, "samson_kubernetes/deploy_group_tab
 Samson::Hooks.callback :deploy_group_permitted_params do
   {cluster_deploy_group_attributes: [:kubernetes_cluster_id, :namespace]}
 end
-Samson::Hooks.callback(:stage_permitted_params) { :kubernetes }
+Samson::Hooks.callback(:stage_permitted_params) do
+  [
+    :kubernetes,
+    {kubernetes_roles_attributes: [:kubernetes_role_id, :ignored, :_destroy, :id]}
+  ]
+end
 Samson::Hooks.callback(:deploy_permitted_params) { [:kubernetes_rollback, :kubernetes_reuse_build] }
 Samson::Hooks.callback(:link_parts_for_resource) do
   [

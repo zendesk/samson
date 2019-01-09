@@ -99,6 +99,18 @@ describe Kubernetes::DeployGroupRole do
         ]]
       )
     end
+
+    it "ignores stage-roles that are ignored" do
+      stage.kubernetes_roles.create!(kubernetes_role: kubernetes_roles(:resque_worker), ignored: true)
+      Kubernetes::DeployGroupRole.matrix(stage).must_equal(
+        [[
+          stage.deploy_groups.first,
+          [
+            [kubernetes_roles(:app_server), kubernetes_deploy_group_roles(:test_pod100_app_server)]
+          ]
+        ]]
+      )
+    end
   end
 
   describe ".usage" do
