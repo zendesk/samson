@@ -61,7 +61,7 @@ module Samson
         end
 
         def ids
-          ids = vault_action(:list_recursive, "")
+          ids = vault_action(:list_recursive)
           ids.uniq! # we read from multiple backends that might have the same ids
           ids.map! { |secret_path| vault_path(secret_path, :decode) }
         end
@@ -88,14 +88,14 @@ module Samson
           vault_action(:write, vault_path(id, :encode), important)
         end
 
-        def vault_action(method, path, *args)
-          vault_client.public_send(method, path, *args)
+        def vault_action(method, *args)
+          vault_client_manager.public_send(method, *args)
         rescue Vault::HTTPConnectionError => e
           raise Samson::Secrets::BackendError, "Error talking to vault backend: #{e.message}"
         end
 
-        def vault_client
-          Samson::Secrets::VaultClient.client
+        def vault_client_manager
+          Samson::Secrets::VaultClientManager.instance
         end
 
         # id is the last element and should not include directories

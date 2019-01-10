@@ -19,6 +19,7 @@
       <%= form.input :name, required: true %>
       <%= form.input :address, as: :url_field, required: true %>
       <%= form.input :token, required: true, input_html: token_options %>
+      <%= form.input :versioned_kv, as: :check_box, label: "Using versioned key/value secret engine" %>
       <%= form.input :tls_verify, as: :check_box %>
       <%= form.input :ca_cert, as: :text_area, input_html: {size: '80x5', style: 'width: auto'} %>
 
