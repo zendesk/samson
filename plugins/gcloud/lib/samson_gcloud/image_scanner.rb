@@ -14,21 +14,21 @@ module SamsonGcloud
       # which has many thousand occurrence for very simple images
       # the occurrence with type DISCOVERY tells us the scan status
       # https://cloud.google.com/container-registry/docs/reference/rest/v1alpha1/projects.occurrences#analysisstatus
-      def scan(build)
-        return ERROR unless result = request(build, "occurrences", "kind=\"DISCOVERY\"")
+      def scan(image)
+        return ERROR unless image.include? SamsonGcloud.project
+        return ERROR unless result = request(image, "occurrences", "kind=\"DISCOVERY\"")
 
         status = result.dig("occurrences", 0, "discovered", "analysisStatus")
         if status != "FINISHED_SUCCESS"
           return ["PENDING", "SCANNING"].include?(status) ? WAITING : ERROR
         end
 
-        return ERROR unless result = request(build, "occurrences", "kind=\"PACKAGE_VULNERABILITY\"")
+        return ERROR unless result = request(image, "occurrences", "kind=\"PACKAGE_VULNERABILITY\"")
         result.empty? ? SUCCESS : FOUND
       end
 
-      def result_url(build)
-        return unless digest = build.docker_repo_digest
-        digest_base = digest.split(SamsonGcloud.project).last
+      def result_url(image)
+        return unless image && digest_base = image.split(SamsonGcloud.project, 2)[1]
         "https://console.cloud.google.com/gcr/images/#{SamsonGcloud.project}/GLOBAL#{digest_base}/details/vulnz"
       end
 
@@ -48,10 +48,9 @@ module SamsonGcloud
 
       private
 
-      def request(build, path, filter = nil)
-        url = build.docker_repo_digest
-        url = "https://#{url}" unless url.start_with?("http")
-        filter = (["resourceUrl=\"#{url}\""] + Array(filter)).join(" AND ")
+      def request(image, path, filter = nil)
+        image = "https://#{image}" unless image.start_with?("http")
+        filter = (["resourceUrl=\"#{image}\""] + Array(filter)).join(" AND ")
         response = nil
 
         3.times do
