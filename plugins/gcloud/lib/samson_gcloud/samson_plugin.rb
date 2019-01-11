@@ -21,7 +21,7 @@ module SamsonGcloud
       unless SamsonGcloud::ImageScanner::FINISHED.include?(status)
         output.puts 'Waiting for GCR scan to finish ...'
         (SCAN_WAIT_PERIOD / SCAN_SLEEP_PERIOD).times do
-          status = SamsonGcloud::ImageScanner.scan(build)
+          status = SamsonGcloud::ImageScanner.scan(build.docker_repo_digest)
           break if SamsonGcloud::ImageScanner::FINISHED.include?(status) || scan_optional
           sleep(SCAN_SLEEP_PERIOD)
         end
@@ -30,7 +30,7 @@ module SamsonGcloud
 
       success = (status == SamsonGcloud::ImageScanner::SUCCESS)
       message = SamsonGcloud::ImageScanner.status(status)
-      message += ", see #{SamsonGcloud::ImageScanner.result_url(build)}" unless success
+      message += ", see #{SamsonGcloud::ImageScanner.result_url(build.docker_repo_digest)}" unless success
       output.puts message
 
       success || scan_optional

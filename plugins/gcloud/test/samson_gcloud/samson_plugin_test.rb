@@ -56,7 +56,7 @@ describe SamsonGcloud do
         SamsonGcloud.expects(:sleep).times(times)
       end
 
-      with_env GCLOUD_IMAGE_SCANNER: "true", GCLOUD_ACCOUNT: 'acc', GCLOUD_PROJECT: 'proj'
+      with_env GCLOUD_IMAGE_SCANNER: "true", GCLOUD_ACCOUNT: 'acc', GCLOUD_PROJECT: 'example'
 
       before do
         job.project.show_gcr_vulnerabilities = true

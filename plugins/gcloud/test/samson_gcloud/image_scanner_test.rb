@@ -6,7 +6,7 @@ SingleCov.covered!
 describe SamsonGcloud::ImageScanner do
   with_env GCLOUD_ACCOUNT: 'acc', GCLOUD_PROJECT: 'proj'
 
-  let(:build) { builds(:docker_build) }
+  let(:image) { 'foo.com/proj/image' }
 
   describe ".scan" do
     def assert_done(status = "FINISHED_SUCCESS")
@@ -16,77 +16,91 @@ describe SamsonGcloud::ImageScanner do
       )
     end
 
+    def scan
+      SamsonGcloud::ImageScanner.scan(image)
+    end
+
     assert_requests
 
     before do
       Samson::CommandExecutor.expects(:execute).returns([true, "foo"])
-      build.updated_at = 1.hour.ago
     end
 
     it "returns success" do
       assert_done
       assert_request(:get, /PACKAGE_VULNERABILITY/, to_return: {body: "[]"})
-      SamsonGcloud::ImageScanner.scan(build).must_equal SamsonGcloud::ImageScanner::SUCCESS
+      scan.must_equal SamsonGcloud::ImageScanner::SUCCESS
     end
 
     it "returns found" do
       assert_done
       assert_request(:get, /PACKAGE_VULNERABILITY/, to_return: {body: "[111]"})
-      SamsonGcloud::ImageScanner.scan(build).must_equal SamsonGcloud::ImageScanner::FOUND
+      scan.must_equal SamsonGcloud::ImageScanner::FOUND
     end
 
     it "returns error when not found" do
       assert_done
       assert_request(:get, /PACKAGE_VULNERABILITY/, to_return: {status: 400, body: "[]"})
-      SamsonGcloud::ImageScanner.scan(build).must_equal SamsonGcloud::ImageScanner::ERROR
+      scan.must_equal SamsonGcloud::ImageScanner::ERROR
     end
 
     it "returns error when it blows up" do
       assert_done
       assert_request(:get, /PACKAGE_VULNERABILITY/, to_timeout: [])
-      SamsonGcloud::ImageScanner.scan(build).must_equal SamsonGcloud::ImageScanner::ERROR
+      scan.must_equal SamsonGcloud::ImageScanner::ERROR
     end
 
-    it "returns waiting when build was not yet scanned" do
+    it "returns waiting when image was not yet scanned" do
       assert_done "PENDING"
-      SamsonGcloud::ImageScanner.scan(build).must_equal SamsonGcloud::ImageScanner::WAITING
+      scan.must_equal SamsonGcloud::ImageScanner::WAITING
     end
 
-    it "returns waiting when build is in progress" do
+    it "returns waiting when image scan is in progress" do
       assert_done "SCANNING"
-      SamsonGcloud::ImageScanner.scan(build).must_equal SamsonGcloud::ImageScanner::WAITING
+      scan.must_equal SamsonGcloud::ImageScanner::WAITING
     end
 
     it "returns err if we are unable to determine the status" do
       assert_request(:get, /DISCOVERY/, to_return: {body: "{}"})
-      SamsonGcloud::ImageScanner.scan(build).must_equal SamsonGcloud::ImageScanner::ERROR
+      scan.must_equal SamsonGcloud::ImageScanner::ERROR
     end
 
     it "retries request if error code >= 500" do
       assert_request(:get, /DISCOVERY/, to_return: {status: 500}, times: 3)
-      SamsonGcloud::ImageScanner.scan(build).must_equal SamsonGcloud::ImageScanner::ERROR
+      scan.must_equal SamsonGcloud::ImageScanner::ERROR
     end
 
     it "supports digests with https prefix (idk if that really happens)" do
-      build.update_column(:docker_repo_digest, "https://#{build.docker_repo_digest}")
       assert_done "SCANNING"
-      SamsonGcloud::ImageScanner.scan(build).must_equal SamsonGcloud::ImageScanner::WAITING
+      SamsonGcloud::ImageScanner.scan("https://#{image}").must_equal SamsonGcloud::ImageScanner::WAITING
+    end
+
+    it "shows error when image is not scannable" do
+      Samson::CommandExecutor.unstub(:execute)
+      SamsonGcloud::ImageScanner.scan('foo_image').must_equal SamsonGcloud::ImageScanner::ERROR
     end
   end
 
   describe ".result_url" do
     it "builds" do
-      SamsonGcloud::ImageScanner.result_url(build).must_include "https://"
+      SamsonGcloud::ImageScanner.result_url(image).must_include "https://"
     end
 
     it "is nil when build is not finished" do
-      build.docker_repo_digest = nil
-      SamsonGcloud::ImageScanner.result_url(build).must_be_nil
+      SamsonGcloud::ImageScanner.result_url(nil).must_be_nil
+    end
+
+    it "is nil when image is not scannable" do
+      SamsonGcloud::ImageScanner.result_url('foo_image').must_be_nil
+    end
+
+    it "can scan images that include gcloud projects twice" do
+      SamsonGcloud::ImageScanner.result_url("#{image}/proj/bar").must_include "GLOBAL/image/proj/bar/details"
     end
   end
 
   describe ".status" do
-    it "produces valid stati" do
+    it "produces valid statuses" do
       SamsonGcloud::ImageScanner.status(0).must_equal "Waiting for Vulnerability scan"
       SamsonGcloud::ImageScanner.status(1).must_equal "No vulnerabilities found"
       SamsonGcloud::ImageScanner.status(2).must_equal "Vulnerabilities found"
