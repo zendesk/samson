@@ -57,7 +57,7 @@ class CommitStatus
   def github_state
     static = @reference.match?(Build::SHA1_REGEX) || @reference.match?(Release::VERSION_REGEX)
     expires_in = ->(reply) { cache_duration(reply) }
-    cache_fetch_if static, cache_key(@reference), expires_in: expires_in do
+    Samson::DynamicTtlCache.cache_fetch_if static, cache_key(@reference), expires_in: expires_in do
       checks_result = with_octokit_client_error_rescue { github_check }
       status_result = with_octokit_client_error_rescue { github_status }
 
@@ -130,17 +130,6 @@ class CommitStatus
 
   def cache_key(commit)
     ['commit-status', @project.id, commit]
-  end
-
-  def cache_fetch_if(condition, key, expires_in:)
-    return yield unless condition
-
-    old = Rails.cache.read(key)
-    return old if old
-
-    current = yield
-    Rails.cache.write(key, current, expires_in: expires_in.call(current))
-    current
   end
 
   # checks if other stages that deploy to the same hosts as this stage have deployed a newer release

@@ -14,18 +14,14 @@ module SamsonGcloud
   class << self
     def scan!(build, job, output)
       return true unless ENV['GCLOUD_IMAGE_SCANNER'] && job.project.show_gcr_vulnerabilities
-
-      status = build.gcr_vulnerabilities_status_id
       scan_optional = !job.deploy.stage.block_on_gcr_vulnerabilities
 
-      unless SamsonGcloud::ImageScanner::FINISHED.include?(status)
-        output.puts 'Waiting for GCR scan to finish ...'
-        (SCAN_WAIT_PERIOD / SCAN_SLEEP_PERIOD).times do
-          status = SamsonGcloud::ImageScanner.scan(build.docker_repo_digest)
-          break if SamsonGcloud::ImageScanner::FINISHED.include?(status) || scan_optional
-          sleep(SCAN_SLEEP_PERIOD)
-        end
-        build.update_attributes!(gcr_vulnerabilities_status_id: status)
+      output.puts 'Waiting for GCR scan to finish ...'
+      status = nil
+      (SCAN_WAIT_PERIOD / SCAN_SLEEP_PERIOD).times do
+        status = SamsonGcloud::ImageScanner.scan(build.docker_repo_digest)
+        break if SamsonGcloud::ImageScanner::FINISHED.include?(status) || scan_optional
+        sleep(SCAN_SLEEP_PERIOD)
       end
 
       success = (status == SamsonGcloud::ImageScanner::SUCCESS)

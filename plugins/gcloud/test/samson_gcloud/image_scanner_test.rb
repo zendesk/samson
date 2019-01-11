@@ -79,6 +79,18 @@ describe SamsonGcloud::ImageScanner do
       Samson::CommandExecutor.unstub(:execute)
       SamsonGcloud::ImageScanner.scan('foo_image').must_equal SamsonGcloud::ImageScanner::ERROR
     end
+
+    it "caches final results" do
+      Samson::CommandExecutor.unstub(:execute)
+      SamsonGcloud::ImageScanner.expects(:uncached_scan).times(1).returns(SamsonGcloud::ImageScanner::SUCCESS)
+      2.times { SamsonGcloud::ImageScanner.scan('foo').must_equal SamsonGcloud::ImageScanner::SUCCESS }
+    end
+
+    it "does not cache pending results" do
+      Samson::CommandExecutor.unstub(:execute)
+      SamsonGcloud::ImageScanner.expects(:uncached_scan).times(2).returns(SamsonGcloud::ImageScanner::WAITING)
+      2.times { SamsonGcloud::ImageScanner.scan('foo').must_equal SamsonGcloud::ImageScanner::WAITING }
+    end
   end
 
   describe ".result_url" do

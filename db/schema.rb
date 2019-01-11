@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_11_27_191406) do
+ActiveRecord::Schema.define(version: 2019_01_11_195416) do
 
   create_table "audits" do |t|
     t.integer "auditable_id", null: false
@@ -53,7 +53,6 @@ ActiveRecord::Schema.define(version: 2018_11_27_191406) do
     t.string "dockerfile", default: "Dockerfile"
     t.string "external_status"
     t.string "image_name"
-    t.integer "gcr_vulnerabilities_status_id", default: 0, null: false
     t.index ["created_by"], name: "index_builds_on_created_by"
     t.index ["git_sha", "dockerfile"], name: "index_builds_on_git_sha_and_dockerfile", unique: true
     t.index ["git_sha", "image_name"], name: "index_builds_on_git_sha_and_image_name", unique: true, length: 80

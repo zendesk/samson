@@ -67,22 +67,18 @@ describe SamsonGcloud do
         SamsonGcloud::ImageScanner.expects(:scan).returns SamsonGcloud::ImageScanner::SUCCESS
         fire.must_equal [true]
         output.string.must_equal "Waiting for GCR scan to finish ...\nNo vulnerabilities found\n"
-        build.gcr_vulnerabilities_status_id.must_equal SamsonGcloud::ImageScanner::SUCCESS
       end
 
       it "does not re-scan when a result was found" do
-        SamsonGcloud::ImageScanner.expects(:scan).never
-        build.gcr_vulnerabilities_status_id = SamsonGcloud::ImageScanner::SUCCESS
-        fire.must_equal [true]
-        output.string.must_equal "No vulnerabilities found\n"
-        build.gcr_vulnerabilities_status_id.must_equal SamsonGcloud::ImageScanner::SUCCESS
+        SamsonGcloud::ImageScanner.expects(:uncached_scan).returns SamsonGcloud::ImageScanner::SUCCESS
+        2.times { fire.must_equal [true] }
+        output.string.scan(/.*vulnerabilities.*/).must_equal ["No vulnerabilities found", "No vulnerabilities found"]
       end
 
       it "shows failures" do
         SamsonGcloud::ImageScanner.expects(:scan).returns SamsonGcloud::ImageScanner::FOUND
         fire.must_equal [true]
         output.string.must_include "Vulnerabilities found, see https://"
-        build.gcr_vulnerabilities_status_id.must_equal SamsonGcloud::ImageScanner::FOUND
       end
 
       it "does not wait when a scan is not required" do
@@ -112,7 +108,6 @@ describe SamsonGcloud do
         it "stops the deploy when stage enforces scans" do
           SamsonGcloud::ImageScanner.expects(:scan).returns 2
           fire.must_equal [false]
-          build.gcr_vulnerabilities_status_id.must_equal SamsonGcloud::ImageScanner::FOUND
         end
       end
     end
