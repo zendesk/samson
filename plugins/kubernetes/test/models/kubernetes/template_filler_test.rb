@@ -982,6 +982,13 @@ describe Kubernetes::TemplateFiller do
       template.build_selectors.must_equal []
     end
 
+    it "calls vulnerability scanner for hardcoded images" do
+      raw_template[:spec][:template][:spec][:containers][0][:'samson/dockerfile'] = 'none'
+      raw_template[:spec][:template][:spec][:containers][0][:image] = 'foo.com/example/bar'
+      SamsonGcloud.expects(:ensure_docker_image_has_no_vulnerabilities)
+      template.build_selectors
+    end
+
     describe "when user selected to not enforce docker images" do
       with_env KUBERNETES_ADDITIONAL_CONTAINERS_WITHOUT_DOCKERFILE: 'true'
 

@@ -111,6 +111,43 @@ describe SamsonGcloud do
         end
       end
     end
+
+    describe "gcloud vulnerabilty scanning" do
+      with_env GCLOUD_IMAGE_SCANNER: "true", GCLOUD_ACCOUNT: 'acc', GCLOUD_PROJECT: 'example'
+
+      def fire
+        Samson::Hooks.fire(:ensure_docker_image_has_no_vulnerabilities, stage, image)
+      end
+
+      let(:image) { +'foo.com/example/bar' }
+      let(:stage) { stages :test_staging }
+
+      before do
+        stage.block_on_gcr_vulnerabilities = true
+        SamsonGcloud::ImageScanner.stubs(:scan).returns(SamsonGcloud::ImageScanner::ERROR)
+      end
+
+      it "fails when using hardcoded image with vulnerabilities" do
+        e = assert_raises(Samson::Hooks::UserError) { fire }
+        e.message.must_include "Error retrieving vulnerabilities"
+      end
+
+      it "does not fail if image does not have vulnerabilities" do
+        SamsonGcloud::ImageScanner.stubs(:scan).returns(SamsonGcloud::ImageScanner::SUCCESS)
+        fire
+      end
+
+      it "does not fail if stage does not block on vulnerabilities" do
+        stage.block_on_gcr_vulnerabilities = false
+        fire
+      end
+
+      it "shows when image is not scannable because image is not on GCR" do
+        image.replace('foo_image')
+        e = assert_raises(Samson::Hooks::UserError) { fire }
+        e.message.must_include "Image needs to be hosted on GCR to be scanned for vulnerabilities: foo_image."
+      end
+    end
   end
 
   describe ".cli_options" do

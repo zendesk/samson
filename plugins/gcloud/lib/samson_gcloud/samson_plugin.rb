@@ -32,6 +32,23 @@ module SamsonGcloud
       success || scan_optional
     end
 
+    def ensure_docker_image_has_no_vulnerabilities(stage, image)
+      return unless stage.block_on_gcr_vulnerabilities
+
+      status = SamsonGcloud::ImageScanner.scan(image)
+      return if status == SamsonGcloud::ImageScanner::SUCCESS
+
+      message =
+        if url = SamsonGcloud::ImageScanner.result_url(image)
+          result = SamsonGcloud::ImageScanner.status(status)
+          "GCR scan result: #{result} for #{url}"
+        else
+          "Image needs to be hosted on GCR to be scanned for vulnerabilities: #{image}."
+        end
+
+      raise Samson::Hooks::UserError, message
+    end
+
     def cli_options(project: nil)
       Shellwords.split(ENV.fetch('GCLOUD_OPTIONS', '')) +
         ["--account", account, "--project", project || self.project]
@@ -79,4 +96,8 @@ end
 
 Samson::Hooks.callback :ensure_build_is_successful do |*args|
   SamsonGcloud.scan!(*args)
+end
+
+Samson::Hooks.callback :ensure_docker_image_has_no_vulnerabilities do |stage, image|
+  SamsonGcloud.ensure_docker_image_has_no_vulnerabilities stage, image
 end
