@@ -15,16 +15,10 @@ module SamsonGcloud
       # the occurrence with type DISCOVERY tells us the scan status
       # https://cloud.google.com/container-registry/docs/reference/rest/v1alpha1/projects.occurrences#analysisstatus
       def scan(image)
-        return ERROR unless image.include? SamsonGcloud.project
-        return ERROR unless result = request(image, "occurrences", "kind=\"DISCOVERY\"")
-
-        status = result.dig("occurrences", 0, "discovered", "analysisStatus")
-        if status != "FINISHED_SUCCESS"
-          return ["PENDING", "SCANNING"].include?(status) ? WAITING : ERROR
+        expires_in = ->(status) { FINISHED.include?(status) ? 1.day : 0 }
+        Samson::DynamicTtlCache.cache_fetch_if(true, "gcloud-scan-#{image}", expires_in: expires_in) do
+          uncached_scan(image)
         end
-
-        return ERROR unless result = request(image, "occurrences", "kind=\"PACKAGE_VULNERABILITY\"")
-        result.empty? ? SUCCESS : FOUND
       end
 
       def result_url(image)
@@ -47,6 +41,19 @@ module SamsonGcloud
       end
 
       private
+
+      def uncached_scan(image)
+        return ERROR unless image.include? SamsonGcloud.project
+        return ERROR unless result = request(image, "occurrences", "kind=\"DISCOVERY\"")
+
+        status = result.dig("occurrences", 0, "discovered", "analysisStatus")
+        if status != "FINISHED_SUCCESS"
+          return ["PENDING", "SCANNING"].include?(status) ? WAITING : ERROR
+        end
+
+        return ERROR unless result = request(image, "occurrences", "kind=\"PACKAGE_VULNERABILITY\"")
+        result.empty? ? SUCCESS : FOUND
+      end
 
       def request(image, path, filter = nil)
         image = "https://#{image}" unless image.start_with?("http")
