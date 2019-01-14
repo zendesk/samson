@@ -42,11 +42,17 @@ module SamsonGcloud
 
       private
 
+      # gcr only offers one endpoint that returns both "scan is finished" events (discovery) and
+      # "vulnerability found" events (package vulnerability).
+      # If we get an empty result set, we dont not know if there are no vulnerability or if a scan has not started
+      # so we need to see if there is a discovery and if there are vulnerabilities.
+      # NOTE: If we could guarantee ordering we could make a single request for
+      # "(kind=\"DISCOVERY\" OR kind=\"PACKAGE_VULNERABILITY\")"
       def uncached_scan(image)
         return ERROR unless image.include? SamsonGcloud.project
         return ERROR unless result = request(image, "occurrences", "kind=\"DISCOVERY\"")
 
-        status = result.dig("occurrences", 0, "discovered", "analysisStatus")
+        status = result.dig("occurrences", 0, "discovered", "discovered", "analysisStatus")
         if status != "FINISHED_SUCCESS"
           return ["PENDING", "SCANNING"].include?(status) ? WAITING : ERROR
         end
@@ -63,7 +69,7 @@ module SamsonGcloud
         3.times do
           begin
             response = Faraday.get(
-              "https://containeranalysis.googleapis.com/v1alpha1/projects/#{SamsonGcloud.project}/#{path}",
+              "https://containeranalysis.googleapis.com/v1beta1/projects/#{SamsonGcloud.project}/#{path}",
               {filter: filter, pageSize: 1},
               authorization: "Bearer #{token}"
             )
