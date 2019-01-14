@@ -28,7 +28,7 @@ describe Kubernetes::TemplateFiller do
 
     stub_request(:get, %r{http://foobar.server/api/v1/namespaces/\S+/secrets}).to_return(body: {items: []}.to_json)
 
-    Samson::Secrets::VaultClient.any_instance.stubs(:client).
+    Samson::Secrets::VaultClientManager.any_instance.stubs(:client).
       returns(stub(options: {address: 'https://test.hvault.server', ssl_verify: false}))
   end
 
@@ -581,7 +581,7 @@ describe Kubernetes::TemplateFiller do
 
       it "fails when vault is not configured" do
         with_env('SECRET_STORAGE_BACKEND': "Samson::Secrets::HashicorpVaultBackend") do
-          Samson::Secrets::VaultClient.client.expects(:client).raises("Could not find Vault config for pod1")
+          Samson::Secrets::VaultClientManager.instance.expects(:client).raises("Could not find Vault config for pod1")
           e = assert_raises { template.to_hash }
           e.message.must_equal "Could not find Vault config for pod1"
         end

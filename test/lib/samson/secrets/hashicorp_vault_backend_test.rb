@@ -17,6 +17,7 @@ describe Samson::Secrets::HashicorpVaultBackend do
       assert_vault_request :get, "production/foo/pod2/bar", body: {data: {vault: "SECRET"}}.to_json do
         backend.read('production/foo/pod2/bar').must_equal(
           auth: nil,
+          metadata: nil,
           lease_duration: nil,
           lease_id: nil,
           renewable: nil,
@@ -50,6 +51,7 @@ describe Samson::Secrets::HashicorpVaultBackend do
         backend.read_multi(['production/foo/pod2/bar']).must_equal(
           'production/foo/pod2/bar' => {
             auth: nil,
+            metadata: nil,
             lease_duration: nil,
             lease_id: nil,
             renewable: nil,
@@ -160,10 +162,10 @@ describe Samson::Secrets::HashicorpVaultBackend do
   end
 
   describe "raises BackendError when a vault instance is down/unreachable" do
-    let(:client) { Samson::Secrets::VaultClient.client }
+    let(:manager) { Samson::Secrets::VaultClientManager.instance }
 
     it ".ids" do
-      client.expects(:list_recursive).
+      manager.expects(:list_recursive).
         raises(Vault::HTTPConnectionError.new("address", RuntimeError.new('no ids for you')))
       e = assert_raises Samson::Secrets::BackendError do
         backend.ids
@@ -172,7 +174,7 @@ describe Samson::Secrets::HashicorpVaultBackend do
     end
 
     it ".read" do
-      client.expects(:read).raises(Vault::HTTPConnectionError.new("address", RuntimeError.new('no read for you')))
+      manager.expects(:read).raises(Vault::HTTPConnectionError.new("address", RuntimeError.new('no read for you')))
       e = assert_raises Samson::Secrets::BackendError do
         backend.read('production/foo/group/isbar/foo')
       end
@@ -180,8 +182,8 @@ describe Samson::Secrets::HashicorpVaultBackend do
     end
 
     it ".write" do
-      client.expects(:read).returns(nil)
-      client.expects(:write).raises(Vault::HTTPConnectionError.new("address", RuntimeError.new('no write for you')))
+      manager.expects(:read).returns(nil)
+      manager.expects(:write).raises(Vault::HTTPConnectionError.new("address", RuntimeError.new('no write for you')))
       e = assert_raises Samson::Secrets::BackendError do
         backend.write(
           'production/foo/group/isbar/foo', value: 'whatever', visible: false, user_id: 1, comment: 'secret!'
