@@ -48,6 +48,7 @@ module Samson
       :deploy_permitted_params,
       :ensure_build_is_successful,
       :error,
+      :ensure_docker_image_has_no_vulnerabilities,
       :ignore_error,
       :deploy_env,
       :link_parts_for_resource,

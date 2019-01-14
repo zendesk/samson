@@ -72,7 +72,7 @@ module Kubernetes
 
     def build_selectors
       all = containers + init_containers
-      all.each_with_index.map { |c, i| build_selector_for_container(c, first: i == 0) }.compact
+      all.each_with_index.map { |c, i| build_selector_for_container(c, first: i == 0, scan: true) }.compact
     end
 
     private
@@ -90,11 +90,15 @@ module Kubernetes
       end
     end
 
-    def build_selector_for_container(container, first:)
+    def build_selector_for_container(container, first:, scan:)
       dockerfile = samson_container_config(container, :"samson/dockerfile") ||
         (!first && ENV['KUBERNETES_ADDITIONAL_CONTAINERS_WITHOUT_DOCKERFILE'] ? DOCKERFILE_NONE : 'Dockerfile')
 
-      return if dockerfile == DOCKERFILE_NONE
+      if dockerfile == DOCKERFILE_NONE
+        stage = @doc.kubernetes_release&.deploy&.stage
+        Samson::Hooks.fire :ensure_docker_image_has_no_vulnerabilities, stage, container.fetch(:image) if scan && stage
+        return
+      end
 
       if project.docker_image_building_disabled?
         # also supporting dockerfile would make sense if external builds did not have image_name,
@@ -371,7 +375,7 @@ module Kubernetes
 
     def set_docker_image_for_containers(builds, containers)
       containers.each_with_index do |container, i|
-        next unless build_selector = build_selector_for_container(container, first: i == 0)
+        next unless build_selector = build_selector_for_container(container, first: i == 0, scan: false)
         build = Samson::BuildFinder.detect_build_by_selector!(builds, *build_selector,
           fail: true, project: project)
         container[:image] = build.docker_repo_digest
