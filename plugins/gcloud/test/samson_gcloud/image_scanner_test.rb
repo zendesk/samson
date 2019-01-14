@@ -12,7 +12,7 @@ describe SamsonGcloud::ImageScanner do
     def assert_done(status = "FINISHED_SUCCESS")
       assert_request(
         :get, /DISCOVERY/,
-        to_return: {body: {occurrences: [{discovered: {analysisStatus: status}}]}.to_json}
+        to_return: {body: {occurrences: [{discovered: {discovered: {analysisStatus: status}}}]}.to_json}
       )
     end
 
