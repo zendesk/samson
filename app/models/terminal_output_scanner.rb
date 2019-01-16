@@ -5,6 +5,8 @@
 # attention to newlines (`\n`) and carriage returns (`\r`). When a carriage
 # return is encountered, the scanner's cursor is reset to the start of the
 # current line, and the next data will overwrite that line.
+#
+# TODO: fix not returning buffer when source is empty, for example "foo\n" + "bar" does not return bar
 class TerminalOutputScanner
   def initialize(source)
     @source = source

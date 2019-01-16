@@ -54,7 +54,17 @@ class OutputBuffer
   end
 
   def to_s
-    @previous.select { |event, _data| event == :message }.map(&:last).join
+    scanner = TerminalOutputScanner.new(@previous)
+    log = []
+
+    scanner.each do |event, data|
+      next unless [:replace, :append].include?(event)
+
+      log.pop if event == :replace
+      log.push data
+    end
+
+    log.join
   end
 
   # needs a mutex so we never add a new queue after closing since that would hang forever on the .pop
@@ -65,17 +75,13 @@ class OutputBuffer
     end
   end
 
-  def closed?
-    @closed
-  end
-
   # a new listener subscribes ...
   def each(&block)
     # If the buffer is closed, there's no reason to block the listening
     # thread, yield all the buffered chunks and return.
     queue = Queue.new
     @mutex.synchronize do
-      return @previous.each(&block) if closed?
+      return @previous.each(&block) if @closed
       @listeners << queue
     end
 

@@ -25,7 +25,7 @@ describe SamsonGcloud::ImageTagger do
     let(:output) { OutputBuffer.new }
     let(:output_serialized) do
       output.close
-      OutputAggregator.new(output).to_s.gsub(/\[.*?\] /, "") # remove timestamps
+      output.to_s.gsub(/\[.*?\] /, "") # remove timestamps
     end
 
     before do

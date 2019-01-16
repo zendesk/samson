@@ -26,9 +26,9 @@ describe ImageBuilder do
     it "builds and pushes" do
       executor.expects(:execute).with do |*commands|
         if commands.to_s.include? "docker pull cache"
-          executor.output.write "Successfully built #{image_id}"
+          executor.output.puts "Successfully built #{image_id}"
         elsif commands.to_s.include? "docker push"
-          executor.output.write "Digest: #{digest}"
+          executor.output.puts "Digest: #{digest}"
         else
           raise "UNKNOWN: #{commands}"
         end

@@ -102,26 +102,60 @@ describe OutputBuffer do
   end
 
   describe "#to_s" do
+    before { Time.stubs(:now).returns Time.parse('2018-01-01') }
+
     it "serializes all messages" do
       buffer.write("hello\n", :message)
       buffer.write(nil, :close)
-      buffer.write("world", :message)
-      buffer.to_s.must_equal "[04:05:06] hello\n[04:05:06] world"
+      buffer.write("world\n", :message)
+      buffer.close
+      buffer.to_s.must_equal "[00:00:00] hello\n[00:00:00] world\n"
+    end
+
+    it "does not hang when not closed" do
+      buffer.write("world\n", :message)
+      buffer.to_s.must_equal "[00:00:00] world\n"
+    end
+
+    it "aggregates the output into a single string" do
+      ["hel", "lo", "\n", "world\n"].map { |x| buffer.write x }
+      buffer.close
+      buffer.to_s.must_equal "[00:00:00] hello\n[00:00:00] world\n"
+    end
+
+    it "replaces lines correctly" do
+      buffer.write "hello\rworld\n"
+      buffer.close
+      buffer.to_s.must_equal "world\n"
+    end
+
+    it "only shows latest when message was replaced" do
+      buffer.write "foo"
+      buffer.write "bar\n"
+      buffer.write "baz\n", :replace
+      buffer.puts "baz2"
+      buffer.close
+      buffer.to_s.must_equal "[00:00:00] baz\n[00:00:00] baz2\n"
+    end
+
+    it "ignores other events" do
+      buffer.write "hello\n"
+      buffer.write "world\n", :finished
+      buffer.close
+      buffer.to_s.must_equal "[00:00:00] hello\n"
     end
   end
 
   describe "#close" do
     it "closes" do
-      refute buffer.closed?
+      refute buffer.instance_variable_get(:@closed)
       buffer.close
-      assert buffer.closed?
+      assert buffer.instance_variable_get(:@closed)
     end
 
     it "does not fail when closing multiple times by accident" do
-      refute buffer.closed?
       buffer.close
       buffer.close
-      assert buffer.closed?
     end
   end
 

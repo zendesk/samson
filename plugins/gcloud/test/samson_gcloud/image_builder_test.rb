@@ -8,7 +8,7 @@ describe SamsonGcloud::ImageBuilder do
 
   describe ".build_image" do
     def expect_successful_build
-      executor.expects(:execute).with { output.write "foo digest: sha-123:abc" }.returns(true)
+      executor.expects(:execute).with { output.puts "foo digest: sha-123:abc" }.returns(true)
     end
 
     def build_image(tag_as_latest: false, cache_from: nil)
