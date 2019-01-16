@@ -127,7 +127,7 @@ describe Kubernetes::DeployExecutor do
       stub_request(:delete, service_url).to_return(body: "{}")
 
       Samson::Secrets::VaultClientManager.any_instance.stubs(:client).
-        returns(stub(options: {address: 'https://test.hvault.server', ssl_verify: false}))
+        returns(stub(options: {address: 'https://test.hvault.server', ssl_verify: false}, versioned_kv: false))
     end
 
     it "succeeds" do
