@@ -31,7 +31,10 @@ module Kubernetes
       validate_not_matching_team
       validate_stateful_set_service_consistent
       validate_stateful_set_restart_policy
-      validate_annotations || validate_prerequisites
+      unless validate_annotations
+        validate_prerequisites_kinds
+        validate_prerequisites_consistency
+      end
       validate_env_values
       validate_host_volume_paths
       @errors.presence
@@ -226,14 +229,21 @@ module Kubernetes
       @errors << "Env values #{bad.join(', ')} must be strings." if bad.any?
     end
 
-    def validate_prerequisites
+    # samson waits for prerequisites to finish, so only resources that complete can be prerequisites
+    def validate_prerequisites_kinds
       allowed = ["Job", "Pod"]
-      bad = (@elements + templates).select do |e|
-        e.dig(*RoleConfigFile::PREREQUISITE) && !allowed.include?(e[:kind]) && RoleConfigFile.primary?(e)
-      end
-      bad.compact!
-      bad.map! { |e| e[:kind] }
-      @errors << "Elements with type #{bad.join(", ")} cannot be prerequisites." if bad.any?
+      return if map_attributes(RoleConfigFile::PREREQUISITE).compact.empty?
+      return if (map_attributes([:kind]) & allowed).any? || templates.empty?
+
+      @errors << "Prerequisites only support #{allowed.join(', ')}"
+    end
+
+    # only a whole role is supported to be a prerequisites, so prerequisites flag needs to be consistent
+    def validate_prerequisites_consistency
+      used = map_attributes(RoleConfigFile::PREREQUISITE).compact
+      return if used.empty? || used.size == @elements.size && used.uniq.size <= 1
+
+      @errors << "Prerequisite annotation must be used consistently across all resources of each role"
     end
 
     # comparing all directories with trailing / so we can use simple matching logic
