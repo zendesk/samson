@@ -5,6 +5,8 @@ require 'vault'
 module Samson
   module Secrets
     class VaultClientWrapper < Vault::Client
+      attr_reader :versioned_kv
+
       def initialize(versioned_kv:, **client_args)
         @versioned_kv = versioned_kv
 

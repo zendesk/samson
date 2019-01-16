@@ -553,6 +553,7 @@ describe Kubernetes::TemplateFiller do
     describe "secret-puller-containers" do
       let(:secret_key) { "global/global/global/bar" }
       let(:template_env) { template.to_hash[:spec][:template][:spec][:containers].first[:env] }
+      let!(:vault_server) { create_vault_server(name: 'pod1') }
 
       around do |test|
         stub_const Kubernetes::TemplateFiller, :SECRET_PULLER_IMAGE, "docker-registry.example.com/foo:bar", &test
@@ -561,14 +562,19 @@ describe Kubernetes::TemplateFiller do
       before do
         raw_template[:spec][:template][:metadata][:annotations] = {"secret/FOO": "bar"}
         create_secret(secret_key)
+        Samson::Secrets::VaultClientManager.any_instance.unstub(:client)
+        deploy_groups(:pod1).update_column(:vault_server_id, vault_server.id)
       end
 
       it "adds secret puller container" do
         init_containers.first['name'].must_equal('secret-puller')
         init_containers.first['env'].must_equal(
           [
-            {"name" => "VAULT_ADDR", "value" => "https://test.hvault.server"},
-            {"name" => "VAULT_SSL_VERIFY", "value" => "false"}
+            {"name" => "VAULT_ADDR", "value" => "http://vault-land.com"},
+            {"name" => "VAULT_SSL_VERIFY", "value" => "false"},
+            {"name" => "VAULT_MOUNT", "value" => "secret"},
+            {"name" => "VAULT_PREFIX", "value" => "apps"},
+            {"name" => "VAULT_KV_V2", "value" => "false"}
           ]
         )
 
@@ -577,6 +583,11 @@ describe Kubernetes::TemplateFiller do
           "secret/FOO": "global/global/global/bar",
           "container-secret-puller-samson/dockerfile": "none"
         )
+      end
+
+      it "adds vault kv v2 hint so puller knows to use the new api" do
+        vault_server.update_column :versioned_kv, true
+        init_containers.first['env'].last.must_equal "name" => "VAULT_KV_V2", "value" => "true"
       end
 
       it "fails when vault is not configured" do
@@ -600,7 +611,7 @@ describe Kubernetes::TemplateFiller do
           before { raw_template[:spec][:template][:metadata][:annotations] = {"samson/required_env": 'VAULT_ADDR'} }
 
           it "adds the vault server address to the containers env" do
-            vault_env.must_equal "https://test.hvault.server"
+            vault_env.must_equal "http://vault-land.com"
           end
 
           it "does not overwrite user defined value" do

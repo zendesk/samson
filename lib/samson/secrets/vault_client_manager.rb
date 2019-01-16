@@ -4,7 +4,6 @@ module Samson
   module Secrets
     # Vault wrapper that sends requests to all matching vault servers
     class VaultClientManager
-      # TODO: make these configurable via env vars and send env vars to samson_secret_puller
       MOUNT = 'secret'
       PREFIX = 'apps'
 
