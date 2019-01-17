@@ -304,7 +304,7 @@ describe Kubernetes::RoleValidator do
       end
     end
 
-    describe "#validate_prerequisites" do
+    describe "#validate_prerequisites_kinds" do
       before do
         role.pop
         role.first[:kind] = "Job"
@@ -326,13 +326,44 @@ describe Kubernetes::RoleValidator do
 
       it "reports invalid prerequisites" do
         role.first[:kind] = "Deployment"
-        errors.must_include "Elements with type Deployment cannot be prerequisites."
+        errors.must_include "Prerequisites only support Job, Pod"
       end
 
       it "allows static configuration" do
         role.first[:kind] = "ServiceAccount"
         role.first[:spec].delete(:template)
+        role.first[:metadata][:annotations].delete(:"samson/prerequisite")
         refute errors
+      end
+    end
+
+    describe "#validate_prerequisites_consistency" do
+      before do
+        role.first[:kind] = "Job"
+        role.first[:metadata][:annotations] = {"samson/prerequisite": "true"}
+        role.first[:spec][:template][:spec][:restartPolicy] = "Never"
+
+        role.last[:kind] = "ConfigMap"
+        role.last[:metadata][:annotations] = {"samson/prerequisite": "true"}
+      end
+
+      it "does not report consistent prerequisites values" do
+        errors.must_equal nil
+      end
+
+      it "reports if prerequisites are inconsistent" do
+        role.last[:metadata][:annotations] = {"samson/prerequisite": "false"}
+        errors.must_include "Prerequisite annotation must be used consistently across all resources of each role"
+      end
+
+      it "reports when not all resources have prerequisites" do
+        role.last[:metadata].delete(:annotations)
+        errors.must_include "Prerequisite annotation must be used consistently across all resources of each role"
+      end
+
+      it "does not report if there are no prerequisites" do
+        role.each { |r| r[:metadata][:annotations].delete(:"samson/prerequisite") }
+        errors.must_equal nil
       end
     end
 
