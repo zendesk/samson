@@ -4,7 +4,7 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe ImageBuilder do
-  let(:output) { executor.output.to_s }
+  let(:output) { executor.output.messages }
   let(:executor) { TerminalExecutor.new(OutputBuffer.new, verbose: true, project: project) } # verbose
   let(:project) { projects(:test) }
   let(:build) { project.builds.create!(git_ref: 'v123', git_sha: 'a' * 40, creator: users(:admin)) }
@@ -241,7 +241,7 @@ describe ImageBuilder do
       stub_push primary_repo, tag, true
 
       refute call, output
-      output.to_s.must_include "Docker push failed: Unable to get repo digest"
+      output.must_include "Docker push failed: Unable to get repo digest"
     end
 
     describe "with secondary registry" do

@@ -45,6 +45,7 @@ class OutputBuffer
         data = data.encode(Encoding::UTF_8, invalid: :replace, undef: :replace)
       end
     end
+
     @previous << [event, data]
     @listeners.dup.each { |listener| listener.push([event, data]) }
   end
@@ -53,7 +54,8 @@ class OutputBuffer
     @previous.include?([event, data])
   end
 
-  def to_s
+  # incomplete / unparsed messages for inspection or grepping
+  def messages
     @previous.select { |event, _data| event == :message }.map(&:last).join
   end
 
@@ -91,6 +93,7 @@ class OutputBuffer
 
   private
 
+  # TODO: ideally the TerminalOutputScanner should handle this, but that would require us to record the timestamp
   def inject_timestamp(chunk)
     stamped = +""
     lines = chunk.each_line.to_a

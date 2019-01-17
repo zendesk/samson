@@ -67,6 +67,10 @@ describe OutputBuffer do
       listen { |o| o.write("a"); o.write(""); o.write("b") }.
         must_equal ["[04:05:06] a", "", "b"]
     end
+
+    it "works with non-string writes" do
+      listen { |o| o.write([1, 2, 3], :bar) }.must_equal [[1, 2, 3]]
+    end
   end
 
   describe "#puts" do
@@ -101,12 +105,12 @@ describe OutputBuffer do
     end
   end
 
-  describe "#to_s" do
+  describe "#messages" do
     it "serializes all messages" do
       buffer.write("hello\n", :message)
       buffer.write(nil, :close)
       buffer.write("world", :message)
-      buffer.to_s.must_equal "[04:05:06] hello\n[04:05:06] world"
+      buffer.messages.must_equal "[04:05:06] hello\n[04:05:06] world"
     end
   end
 

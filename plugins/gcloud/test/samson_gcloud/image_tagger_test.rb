@@ -23,10 +23,7 @@ describe SamsonGcloud::ImageTagger do
 
     let(:auth_options) { ['--account', 'acc', '--project', '123'] }
     let(:output) { OutputBuffer.new }
-    let(:output_serialized) do
-      output.close
-      OutputAggregator.new(output).to_s.gsub(/\[.*?\] /, "") # remove timestamps
-    end
+    let(:output_serialized) { output.messages.gsub(/\[.*?\] /, "") }
 
     before do
       build.update_columns(

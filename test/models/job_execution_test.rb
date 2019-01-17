@@ -15,7 +15,7 @@ describe JobExecution do
   end
 
   def last_line_of_output
-    job.output.to_s.split("\n").last.strip
+    job.output.split("\n").last.strip
   end
 
   let(:repo_dir) { File.join(GitRepository.cached_repos_dir, project.repository_directory) }
@@ -69,7 +69,7 @@ describe JobExecution do
   it 'can do a full checkout when requested' do
     stage.update_column(:full_checkout, true)
     execute_job 'master'
-    job.output.to_s.wont_include 'worktree'
+    job.output.wont_include 'worktree'
   end
 
   it 'does not fail with nil ENV vars' do
@@ -240,7 +240,7 @@ describe JobExecution do
   it 'lets subscribers communicate with viewers' do
     output = OutputBuffer.new
     execute_job('master', on_finish: -> { output.puts "Hello" }, output: output)
-    output.to_s.must_include "Hello"
+    output.messages.must_include "Hello"
     job.output.must_include "Hello"
     job.reload.output.must_include "Hello"
   end
@@ -248,14 +248,14 @@ describe JobExecution do
   it 'errors if job setup fails' do
     execute_job('nope')
     assert_equal 'errored', job.status
-    job.output.to_s.must_include "Could not find commit for nope"
+    job.output.must_include "Could not find commit for nope"
   end
 
   it 'errors if job commit resultion fails, but checkout works' do
     GitRepository.any_instance.expects(:commit_from_ref).returns nil
     execute_job('master')
     assert_equal 'errored', job.status
-    job.output.to_s.must_include "Could not find commit for master"
+    job.output.must_include "Could not find commit for master"
   end
 
   it 'cannot setup project if project is locked' do
@@ -401,7 +401,7 @@ describe JobExecution do
 
     it "runs a job" do
       perform
-      execution.output.to_s.must_include "cat foo"
+      execution.output.messages.must_include "cat foo"
       job.reload.output.must_include "cat foo"
     end
 
@@ -409,7 +409,7 @@ describe JobExecution do
       ErrorNotifier.expects(:notify)
       job.expects(:running!).raises("Oh boy")
       perform
-      execution.output.to_s.must_include "JobExecution failed: Oh boy"
+      execution.output.messages.must_include "JobExecution failed: Oh boy"
       job.reload.output.must_include "JobExecution failed: Oh boy" # shows error message
       job.reload.output.must_include model_file # shows important backtrace
       job.reload.output.wont_include '/gems/' # hides unimportant backtrace
@@ -419,7 +419,7 @@ describe JobExecution do
       ErrorNotifier.expects(:notify).never
       job.expects(:running!).raises(Samson::Hooks::UserError, "Oh boy")
       perform
-      execution.output.to_s.must_include "JobExecution failed: Oh boy"
+      execution.output.messages.must_include "JobExecution failed: Oh boy"
     end
 
     it "does not show error backtraces in production to hide internals" do
@@ -427,8 +427,8 @@ describe JobExecution do
         ErrorNotifier.expects(:notify)
         job.expects(:running!).raises("Oh boy")
         perform
-        execution.output.to_s.must_include "JobExecution failed: Oh boy"
-        execution.output.to_s.wont_include model_file
+        execution.output.messages.must_include "JobExecution failed: Oh boy"
+        execution.output.messages.wont_include model_file
       end
     end
 
@@ -437,7 +437,7 @@ describe JobExecution do
         ErrorNotifier.expects(:notify).with { |_e, o| assert o.key?(:sync) }.returns('foo')
         job.expects(:running!).raises("Oh boy")
         perform
-        execution.output.to_s.must_include "Error URL: foo"
+        execution.output.messages.must_include "Error URL: foo"
       end
     end
   end

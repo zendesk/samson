@@ -68,7 +68,7 @@ describe SamsonGcloud::ImageBuilder do
         tags:
         - '#{build.git_sha}'
       YML
-      output.to_s.must_include "not found in gcr"
+      output.messages.must_include "not found in gcr"
     end
 
     it "tags latest when requested" do
