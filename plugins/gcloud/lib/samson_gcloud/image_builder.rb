@@ -51,7 +51,7 @@ module SamsonGcloud
           command.shelljoin
         )
 
-        log = executor.output.to_s
+        log = executor.output.messages
         build.external_url = log[/Logs are permanently available at \[(.*?)\]/, 1]
         return unless digest = log[/digest: (\S+:\S+)/, 1]
         "#{base}@#{digest}"

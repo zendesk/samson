@@ -64,7 +64,7 @@ class ImageBuilder
             executor.verbose_command(build_command)
           )
         end
-        executor.output.to_s.scan(/Successfully built ([a-f\d]{12,})/).last&.first
+        executor.output.messages.scan(/Successfully built ([a-f\d]{12,})/).last&.first
       end
     end
 
@@ -111,7 +111,7 @@ class ImageBuilder
 
           if primary
             # cache-from also produced digest lines, so we need to be careful
-            last = executor.output.to_s.split("\n").last.to_s
+            last = executor.output.messages.split("\n").last.to_s
             return nil unless sha = last[DIGEST_SHA_REGEX, 1]
             digest = "#{repo}@#{sha}"
           end

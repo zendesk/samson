@@ -126,10 +126,10 @@ class JobExecution
   def finish
     @finish_callbacks.each(&:call)
 
-    @output.write('', :finished) # TODO: .close should do that
+    @output.write('', :finished)
     @output.close
 
-    @job.update_column :output, OutputAggregator.new(@output).to_s
+    @job.update_column :output, TerminalOutputScanner.new(@output).to_s
   end
 
   def execute(dir)
