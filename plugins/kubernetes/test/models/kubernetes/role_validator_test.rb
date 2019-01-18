@@ -210,17 +210,19 @@ describe Kubernetes::RoleValidator do
 
     it "reports bad container names" do
       spec[:containers][0][:name] = 'foo_bar'
-      errors.must_equal ["Container name foo_bar did not match \\A[a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?\\z"]
+      errors.must_equal ["Container name foo_bar did not match \\A[a-zA-Z0-9]([-a-zA-Z0-9.]*[a-zA-Z0-9])?\\z"]
     end
 
     it "reports non-string labels" do
       role.first[:metadata][:labels][:role_id] = 1
-      errors.must_include "Deployment metadata.labels.role_id must be a String"
+      errors.must_include "Deployment metadata.labels.role_id is 1, but must be a String"
     end
 
     it "reports invalid labels" do
       role.first[:metadata][:labels][:role] = 'foo_bar'
-      errors.must_include "Deployment metadata.labels.role must match /\\A[a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?\\z/"
+      errors.must_include(
+        'Deployment metadata.labels.role is "foo_bar", but must match /\\A[a-zA-Z0-9]([-a-zA-Z0-9.]*[a-zA-Z0-9])?\\z/'
+      )
     end
 
     it "allows valid labels" do
