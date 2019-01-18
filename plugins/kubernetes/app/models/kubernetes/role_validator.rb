@@ -1,7 +1,10 @@
 # frozen_string_literal: true
 module Kubernetes
   class RoleValidator
-    VALID_LABEL = /\A[a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?\z/ # also used in js ... cannot use /i
+    # per https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#syntax-and-character-set
+    # not perfect since the actual rules are stricter
+    VALID_LABEL_VALUE = /\A[a-zA-Z0-9]([-a-zA-Z0-9.]*[a-zA-Z0-9])?\z/ # also used in js ... cannot use /i
+
     NAMESPACELESS_KINDS = ['APIService', 'ClusterRoleBinding', 'ClusterRole', 'CustomResourceDefinition'].freeze
     IMMUTABLE_NAME_KINDS = ['APIService', 'CustomResourceDefinition', 'ConfigMap', 'Role', 'ClusterRole'].freeze
 
@@ -129,10 +132,14 @@ module Kubernetes
 
           # make sure we get sane values for labels or deploy will blow up
           labels.each do |k, v|
+            prefix = "#{kind} #{path.join('.')}.#{k} is #{v.inspect}"
+
             if v.is_a?(String)
-              @errors << "#{kind} #{path.join('.')}.#{k} must match #{VALID_LABEL.inspect}" unless v.match?(VALID_LABEL)
+              unless v.match?(VALID_LABEL_VALUE)
+                @errors << "#{prefix}, but must match #{VALID_LABEL_VALUE.inspect}"
+              end
             else
-              @errors << "#{kind} #{path.join('.')}.#{k} must be a String"
+              @errors << "#{prefix}, but must be a String"
             end
           end
 
@@ -184,8 +191,8 @@ module Kubernetes
       names = (pod_containers + init_containers).flatten(1).map { |c| c[:name] }
       if names.any?(&:nil?)
         @errors << "Containers need a name"
-      elsif bad = names.grep_v(VALID_LABEL).presence
-        @errors << "Container name #{bad.join(", ")} did not match #{VALID_LABEL.source}"
+      elsif bad = names.grep_v(VALID_LABEL_VALUE).presence
+        @errors << "Container name #{bad.join(", ")} did not match #{VALID_LABEL_VALUE.source}"
       end
     end
 
