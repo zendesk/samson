@@ -6,9 +6,10 @@
   <% if form_obj.force_external_build? %>
     <%= form.hidden_field :docker_build_method, value: "docker_image_building_disabled" if form_obj.new_record? %>
     <span>
-      Configured to use externally built docker images only, click
-      <%= link_to "here", "https://zendesk.atlassian.net/wiki/spaces/TOOLS/pages/274488773/Building+Docker+Images+using+Google+Container+Builder", target: '_blank' %>
-      to know more.
+      Configured to use externally built docker images only.
+      <% if url = ENV["EXTERNAL_IMAGES_DETAILS_URL"] %>
+        <%= link_to "Details", url %>
+      <% end %>
     </span>
   <% else %>
     <%= form.input :docker_build_method, help: docker_build_methods_help_text do %>
