@@ -881,6 +881,20 @@ describe Kubernetes::TemplateFiller do
         template.to_hash[:spec][:foo].must_equal "bar"
       end
 
+      it "sets annotations with ." do
+        raw_template[:metadata][:annotations] = {
+          "samson/set_via_env_json-metadata.annotations.foo.bar/baz" => "FOO"
+        }
+        template.to_hash[:metadata][:annotations][:"foo.bar/baz"].must_equal "bar"
+      end
+
+      it "sets labels with ." do
+        raw_template[:metadata][:annotations] = {
+          "samson/set_via_env_json-metadata.labels.foo.bar/baz" => "FOO"
+        }
+        template.to_hash[:metadata][:labels][:"foo.bar/baz"].must_equal "bar"
+      end
+
       it "sets in arrays" do
         raw_template[:metadata][:annotations] = {
           "samson/set_via_env_json-spec.template.spec.containers.0.foo" => "FOO"
