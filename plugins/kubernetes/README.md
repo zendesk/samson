@@ -67,8 +67,14 @@ environment variables, secrets, etc and then sends them to the Kubernetes API.
 Multiple roles will likely be similar, but have different commands or liveness probes.
 ([kucodiff](https://github.com/grosser/kucodiff) can be used to make sure they stay in sync).
 
-Samson can be instructed to validate certain environment variables are present by adding a `samson/required_env`
-annotation (space separated).
+Validate required environment variables are set by adding `metadata.annotations.samson/required_env` (space separated).
+
+```
+samson/required_env: >
+  RAILS_ENV
+  OTHER_STUFF
+
+```
 
 ### Limits
 
