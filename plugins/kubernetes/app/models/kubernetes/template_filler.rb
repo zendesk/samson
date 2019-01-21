@@ -447,7 +447,7 @@ module Kubernetes
         end
 
         [:PROJECT, :ROLE].each do |k|
-          env[k] = pod_template.dig_fetch(:metadata, :labels, k.downcase)
+          env[k] = template.dig_fetch(:metadata, :labels, k.downcase)
         end
 
         # name of the cluster
