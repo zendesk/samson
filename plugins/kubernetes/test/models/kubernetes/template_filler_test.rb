@@ -120,16 +120,10 @@ describe Kubernetes::TemplateFiller do
       template.to_hash[:spec][:revisionHistoryLimit].must_equal 1
     end
 
-    it "keeps default namespace because it is a unique system namespace" do
+    it "keeps namespaces when cluster-service is set" do
       raw_template[:metadata][:namespace] = "default"
-      raw_template[:metadata][:labels] = {"kubernetes.io/cluster-service": 'true'}
+      raw_template[:metadata][:labels][:"kubernetes.io/cluster-service"] = 'true'
       template.to_hash[:metadata][:namespace].must_equal 'default'
-    end
-
-    it "keeps kube-system namespace because it's valid for cluster services " do
-      raw_template[:metadata][:namespace] = "kube-system"
-      raw_template[:metadata][:labels] = {"kubernetes.io/cluster-service": 'true'}
-      template.to_hash[:metadata][:namespace].must_equal 'kube-system'
     end
 
     it "can verify without builds" do
@@ -878,6 +872,11 @@ describe Kubernetes::TemplateFiller do
       end
 
       it "sets simple" do
+        template.to_hash[:spec][:foo].must_equal "bar"
+      end
+
+      it "sets podless roles" do
+        raw_template[:spec] = {}
         template.to_hash[:spec][:foo].must_equal "bar"
       end
 
