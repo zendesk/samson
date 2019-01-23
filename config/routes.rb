@@ -89,6 +89,7 @@ Samson::Application.routes.draw do
     resource :mass_rollouts, only: [:new, :create, :destroy] do
       collection do
         post :merge
+        get :review_deploy
         post :deploy
       end
     end

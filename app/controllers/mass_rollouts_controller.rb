@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 class MassRolloutsController < ApplicationController
-  before_action :authorize_super_admin!
+  before_action :authorize_deployer!, except: [:new, :create, :merge, :destroy]
+  before_action :authorize_super_admin!, except: [:review_deploy, :deploy]
   before_action :deploy_group
 
   def new
@@ -9,37 +10,48 @@ class MassRolloutsController < ApplicationController
 
   # No more than one stage, per project, per deploy_group
   # Note: you can call this multiple times, and it will create missing stages, but no redundant stages.
+  # TODO: only create selected list like #deploy does
   def create
     stages_created = create_all_stages.compact
 
     redirect_to deploy_group, notice: "Created #{stages_created.length} Stages"
   end
 
+  def review_deploy
+    if stage_ids = params[:stage_ids]
+      @stages = Stage.find(stage_ids)
+    else
+      @stages = deploy_group.stages.to_a
+
+      case params[:status].presence
+      when nil # rubocop:disable Lint/EmptyWhen
+        # all
+      when 'successful'
+        @stages.select!(&:last_successful_deploy)
+      when 'missing'
+        @stages.reject!(&:last_successful_deploy)
+      else
+        return unsupported_option(:status)
+      end
+
+      case params[:kubernetes].to_s.presence
+      when nil # rubocop:disable Lint/EmptyWhen
+        # all
+      when 'true'
+        @stages.select!(&:kubernetes?)
+      when 'false'
+        @stages.reject!(&:kubernetes?)
+      else
+        return unsupported_option(:kubernetes)
+      end
+    end
+  end
+
+  # TODO: show when deploys are waiting for buddy
+  # TODO: show when deploys were invalid
+  # TODO: show when stage had no reference
   def deploy
-    stages_to_deploy = deploy_group.stages.to_a
-
-    case params[:status].presence
-    when nil # rubocop:disable Lint/EmptyWhen
-      # all
-    when 'successful'
-      stages_to_deploy.select!(&:last_successful_deploy)
-    when 'missing'
-      stages_to_deploy.reject!(&:last_successful_deploy)
-    else
-      return unsupported_option(:status)
-    end
-
-    case params[:kubernetes].to_s.presence
-    when nil # rubocop:disable Lint/EmptyWhen
-      # all
-    when 'true'
-      stages_to_deploy.select!(&:kubernetes?)
-    when 'false'
-      stages_to_deploy.reject!(&:kubernetes?)
-    else
-      return unsupported_option(:kubernetes)
-    end
-
+    stages_to_deploy = Stage.find(params.require(:stage_ids))
     deploy_references = stages_to_deploy.map do |stage|
       reference = last_successful_template_reference(stage)
       [stage, reference] if reference
@@ -172,7 +184,7 @@ class MassRolloutsController < ApplicationController
   end
 
   def last_successful_template_reference(stage)
-    template_stage = deploy_group.environment.template_stages.find_by(project_id: stage.project_id)
+    template_stage = deploy_group.environment.template_stages.where(project_id: stage.project_id).first
     template_stage&.last_successful_deploy&.reference
   end
 

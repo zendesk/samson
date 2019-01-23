@@ -1,8 +1,8 @@
 <label class="col-lg-2 control-label">Mass Rollout</label>
 <div class="col-lg-10">
-  <%= form_tag deploy_deploy_group_mass_rollouts_path(@deploy_group) do %>
+  <%= form_tag review_deploy_deploy_group_mass_rollouts_path(@deploy_group), method: :get do %>
 
-    <% if defined?(SamsonKubernetes::Engine) %>
+    <% if defined?(SamsonKubernetes) %>
       <div class="form-group">
         <div class="col-lg-10">
           <label>Kubernetes</label>
@@ -56,6 +56,6 @@
         </div>
       </div>
     </div>
-    <%= submit_tag "Start Deploys", class: "btn btn-default", data: { confirm: "Deploys will be started for all matching stages", disable_with: "Deploying..." } %>
+    <%= submit_tag "Review", class: "btn btn-default" %>
   <% end %>
 </div>

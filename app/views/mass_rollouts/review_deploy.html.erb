@@ -1,0 +1,38 @@
+<%= page_title "Mass Rollout for #{@deploy_group.name} in #{@deploy_group.environment.name}" %>
+
+<% if @stages.empty? %>
+  <p>There are no stages to deploy for this Deploy Group.</p>
+<% else %>
+  <%= form_tag deploy_deploy_group_mass_rollouts_path(@deploy_group) do %>
+    <small>Selected stages will be deployed.</small>
+    <section class="clearfix">
+      <div class="table table-hover table-condensed">
+        <table class="table">
+          <thead>
+          <tr>
+            <th></th>
+            <th>Project</th>
+            <th>Stage</th>
+          </tr>
+          </thead>
+
+          <tbody>
+          <% @stages.each do |stage| %>
+            <tr>
+              <td><%= check_box_tag "stage_ids[]", stage.id, true %></td>
+              <td><%= link_to_resource stage.project %></td>
+              <td><%= link_to_resource stage %></td>
+            </tr>
+          <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="admin-actions">
+        <div class="pull-right">
+          <%= submit_tag "Deploy selected stages", class: "btn btn-primary", data: {disable_with: "Deploying..."} %>
+        </div>
+      </div>
+    </section>
+  <% end %>
+<% end %>
