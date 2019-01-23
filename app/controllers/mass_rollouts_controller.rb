@@ -53,7 +53,14 @@ class MassRolloutsController < ApplicationController
   def deploy
     stages_to_deploy = Stage.find(params.require(:stage_ids))
     deploy_references = stages_to_deploy.map do |stage|
-      reference = last_successful_template_reference(stage)
+      reference =
+        case params[:reference_source]
+        when 'template' then last_successful_template_reference(stage)
+        when 'redeploy' then stage.last_successful_deploy&.reference
+        else
+          return unsupported_option(:reference_source)
+        end
+
       [stage, reference] if reference
     end.compact
 
