@@ -89,8 +89,12 @@ describe MassRolloutsController do
     end
 
     describe "#deploy" do
-      def deploy
-        post :deploy, params: {deploy_group_id: deploy_groups(:pod2), stage_ids: [stage.id]}
+      def deploy(options = {})
+        post :deploy, params: {
+          reference_source: 'template',
+          deploy_group_id: deploy_groups(:pod2),
+          stage_ids: [stage.id]
+        }.merge(options)
       end
 
       let(:stage) { stages(:test_production) }
@@ -105,6 +109,14 @@ describe MassRolloutsController do
 
       it "deploys template reference and redirects to deploy list" do
         assert_difference('Deploy.count', 1) { deploy }
+        deploy = stage.deploys.order('created_at desc').first
+        assert_redirected_to "/deploys?ids%5B%5D=#{deploy.id}"
+        deploy.reference.must_equal template_deploy.reference
+      end
+
+      it "re-deploys last successful deploy of the stage" do
+        template_deploy.update_column(:stage_id, stage.id)
+        assert_difference('Deploy.count', 1) { deploy reference_source: 'redeploy' }
         deploy = stage.deploys.order('created_at desc').first
         assert_redirected_to "/deploys?ids%5B%5D=#{deploy.id}"
         deploy.reference.must_equal template_deploy.reference
@@ -138,6 +150,11 @@ describe MassRolloutsController do
         template_stage.update_column(:project_id, 123)
         refute_difference('Deploy.count') { deploy }
         assert_redirected_to "/deploys"
+      end
+
+      it "fails on unknown reference_source" do
+        deploy reference_source: 'foo'
+        assert_response :bad_request
       end
     end
   end

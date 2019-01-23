@@ -28,8 +28,18 @@
         </table>
       </div>
 
-      <div class="admin-actions">
-        <div class="pull-right">
+      <div class="form-group">
+        <div class="col-lg-2">
+          <label>Deploy reference from</label>
+        </div>
+        <%= select_tag :reference_source, options_for_select([
+              ["Last successful deploy of template stage in same environment", "template"],
+              ["Last successful deploy", "redeploy"]
+            ]) %>
+      </div>
+
+      <div class="form-group">
+        <div class="col-lg-2">
           <%= submit_tag "Deploy selected stages", class: "btn btn-primary", data: {disable_with: "Deploying..."} %>
         </div>
       </div>
