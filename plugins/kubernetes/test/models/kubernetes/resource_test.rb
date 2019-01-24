@@ -152,11 +152,16 @@ describe Kubernetes::Resource do
       end
 
       describe "updating matchLabels" do
+        def assert_old(&block)
+          assert_request(:get, url, to_return: {body: {spec: {selector: {matchLabels: old}}}.to_json}, &block)
+        end
+
+        let(:old) { {foo: "baz"} }
+
         before { template[:spec][:selector] = {matchLabels: {foo: "bar"}} }
 
         it "explains why it is a bad idea" do
-          old = {spec: {selector: {matchLabels: {foo: "baz"}}}}
-          assert_request(:get, url, to_return: {body: old.to_json}) do
+          assert_old do
             e = assert_raises(Samson::Hooks::UserError) { resource.deploy }
             e.message.must_equal(
               "Updating spec.selector.matchLabels from {:foo=>\"baz\"} to {:foo=>\"bar\"} " \
@@ -165,9 +170,17 @@ describe Kubernetes::Resource do
           end
         end
 
+        it "allows deletion" do
+          delete_resource!
+          assert_old do
+            resource.expects(:delete)
+            resource.deploy
+          end
+        end
+
         it "allows removing a label" do
-          old = {spec: {selector: {matchLabels: {foo: "bar", bar: "baz"}}}}
-          assert_request(:get, url, to_return: {body: old.to_json}) do
+          old.replace(foo: "bar", bar: "baz")
+          assert_old do
             assert_request(:put, url, to_return: {body: "{}"}) do
               resource.deploy
             end
@@ -176,7 +189,7 @@ describe Kubernetes::Resource do
 
         it "allows it for blue-green deploys" do
           template[:spec][:selector][:matchLabels][:blue_green] = "blue"
-          assert_request(:get, url, to_return: {body: "{}"}) do
+          assert_old do
             assert_request(:put, url, to_return: {body: "{}"}) do
               resource.deploy
             end
