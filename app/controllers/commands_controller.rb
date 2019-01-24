@@ -20,7 +20,16 @@ class CommandsController < ApplicationController
         @commands = @commands.where(project_id: project_id)
       end
     end
-    @pagy, @commands = pagy(@commands, page: page, items: 15)
+    respond_to do |format|
+      format.html do
+        @pagy, @commands = pagy(@commands, page: page, items: 15)
+      end
+
+      format.json do
+        render json: {commands: @commands.as_json}
+      end
+    end
+
   end
 
   def new

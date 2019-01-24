@@ -44,6 +44,21 @@ describe CommandsController do
         get :index, params: {search: {project_id: 'global'}}
         assigns[:commands].must_equal [global]
       end
+
+      it "renders json" do
+        get :index, params: {format: 'json'}
+        result = JSON.parse(response.body)
+        commands = result['commands']
+        commands.length.must_equal 2
+
+        global_command = commands.first
+        global_command['command'].must_equal global['command']
+        global_command['project_id'].must_be_nil
+
+        hello_command = commands.second
+        hello_command['command'].must_equal hello['command']
+        hello_command['project_id'].must_equal hello['project_id']
+      end
     end
 
     describe '#show' do
