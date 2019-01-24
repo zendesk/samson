@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_01_11_195416) do
+ActiveRecord::Schema.define(version: 2019_01_24_171416) do
 
   create_table "audits" do |t|
     t.integer "auditable_id", null: false
@@ -235,7 +235,7 @@ ActiveRecord::Schema.define(version: 2019_01_11_195416) do
     t.integer "deploy_group_id"
     t.decimal "limits_cpu", precision: 6, scale: 2, null: false
     t.integer "limits_memory", null: false
-    t.text "resource_template"
+    t.text "resource_template", limit: 16777215
     t.decimal "requests_cpu", precision: 6, scale: 2, null: false
     t.integer "requests_memory", null: false
     t.boolean "delete_resource", default: false, null: false
