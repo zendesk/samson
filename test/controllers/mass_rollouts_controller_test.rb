@@ -107,6 +107,12 @@ describe MassRolloutsController do
         template_deploy.update_column(:stage_id, template_stage.id)
       end
 
+      it "ignores when user selected no stages" do
+        post :deploy, params: {reference_source: 'template', deploy_group_id: deploy_groups(:pod2)}
+        assert_redirected_to "/deploys"
+        flash[:alert].must_be_nil
+      end
+
       it "deploys template reference and redirects to deploy list" do
         assert_difference('Deploy.count', 1) { deploy }
         deploy = stage.deploys.order('created_at desc').first
@@ -126,6 +132,25 @@ describe MassRolloutsController do
         template_deploy.job.update_column(:status, "errored")
         assert_difference('Deploy.count', 0) { deploy }
         assert_redirected_to "/deploys"
+        flash[:alert].must_equal "No reference found http://www.test-url.com/projects/foo/stages/production"
+      end
+
+      it "does not deploy if deploy was invalid" do
+        Deploy.any_instance.expects(:valid?).returns false
+        assert_difference('Deploy.count', 0) { deploy }
+        assert_redirected_to "/deploys"
+        flash[:alert].must_equal "Validation error http://www.test-url.com/projects/foo/stages/production"
+      end
+
+      it "does not overflow the cookie with errors" do
+        Deploy.any_instance.expects(:valid?).times(20).returns false
+        stages = Array.new(20).fill(stage)
+        Stage.expects(:find).returns stages
+        assert_difference('Deploy.count', 0) { deploy }
+        assert_redirected_to "/deploys"
+        alert = flash[:alert]
+        alert.size.must_be :<, 1000
+        alert.must_include "10 more"
       end
 
       it "does not deploy if template was never deployed" do
