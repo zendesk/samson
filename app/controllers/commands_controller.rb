@@ -26,10 +26,10 @@ class CommandsController < ApplicationController
       end
 
       format.json do
-        render json: {commands: @commands.as_json}
+        @pagy, @commands = pagy(@commands, page: page, items: 50)
+        render_as_json :commands, @commands
       end
     end
-
   end
 
   def new
