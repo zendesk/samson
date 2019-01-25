@@ -220,12 +220,12 @@ module Kubernetes
     end
 
     def print_events(events)
-      groups = events.group_by { |e| [e[:reason], (e[:message] || "").split("\n").sort] }
+      groups = events.group_by { |e| [e[:type], e[:reason], (e[:message] || "").split("\n").sort] }
       groups.each do |_, event_group|
         count = event_group.sum { |e| e[:count] }
         counter = " x#{count}" if count != 1
         e = event_group.first
-        @output.puts "  #{e[:reason]}: #{e[:message]}#{counter}"
+        @output.puts "  #{e[:type]} #{e[:reason]}: #{e[:message]}#{counter}"
       end
     end
 
@@ -254,7 +254,7 @@ module Kubernetes
         elsif release_doc.prerequisite? ? pod.completed? : pod.live?
           {live: true, details: "Live", pod: pod}
         elsif pod.events_indicate_failure?
-          {live: false, stop: true, details: "Error", pod: pod}
+          {live: false, stop: true, details: "Error event", pod: pod}
         else
           {live: false, details: "Waiting (#{pod.phase}, #{pod.reason})", pod: pod}
         end

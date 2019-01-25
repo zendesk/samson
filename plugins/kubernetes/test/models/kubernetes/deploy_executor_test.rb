@@ -404,7 +404,7 @@ describe Kubernetes::DeployExecutor do
 
       refute execute
 
-      out.must_include "resque-worker: Error\n"
+      out.must_include "resque-worker: Error event\n"
       out.must_include "UNSTABLE"
 
       assert_requested request, times: 5 # fetches pod events once and once for 4 different resources
@@ -573,12 +573,14 @@ describe Kubernetes::DeployExecutor do
               items: [
                 {
                   reason: 'FailedScheduling',
+                  type: 'Warning',
                   message: "fit failure on node (ip-1-2-3-4)\nfit failure on node (ip-2-3-4-5)",
                   count: 4,
                   metadata: {creationTimestamp: "2017-03-31T22:56:20Z"}
                 },
                 {
                   reason: 'FailedScheduling',
+                  type: 'Warning',
                   message: "fit failure on node (ip-2-3-4-5)\nfit failure on node (ip-1-2-3-4)",
                   count: 1,
                   metadata: {creationTimestamp: "2017-03-31T22:56:20Z"}
@@ -596,10 +598,10 @@ describe Kubernetes::DeployExecutor do
         # correct debugging output
         out.scan(/Pod 100 pod pod-(\S+)/).flatten.uniq.must_equal ["resque-worker:"] # logs and events only for bad pod
         out.must_match(
-          /EVENTS:\s+FailedScheduling: fit failure on node \(ip-1-2-3-4\)\s+fit failure on node \(ip-2-3-4-5\) x5\n\n/
+          /EVENTS:\s+Warning FailedScheduling: fit failure on node \(ip-1-2-3-4\)\s+fit failure on node \(ip-2-3-4-5\) x5\n\n/ # rubocop:disable Metrics/LineLength
         ) # no repeated events
         out.must_match /LOGS:\s+LOG-1/
-        out.must_include "RESOURCE EVENTS staging.some-project:\n  FailedScheduling:"
+        out.must_include "RESOURCE EVENTS staging.some-project:\n  Warning FailedScheduling:"
       end
 
       it "displays events without message" do
@@ -609,11 +611,13 @@ describe Kubernetes::DeployExecutor do
               items: [
                 {
                   reason: 'Foobar',
+                  type: 'Warning',
                   count: 1,
                   metadata: {creationTimestamp: "2017-03-31T22:56:20Z"}
                 },
                 {
                   reason: 'Foobar',
+                  type: 'Warning',
                   count: 1,
                   metadata: {creationTimestamp: "2017-03-31T22:56:20Z"}
                 }
