@@ -27,7 +27,7 @@ class LocksController < ApplicationController
   end
 
   def destroy
-    lock.try(:soft_delete)
+    lock&.soft_delete(validate: false)
     respond_to do |format|
       format.html { redirect_back notice: 'Unlocked', fallback_location: root_path }
       format.json { head :ok }

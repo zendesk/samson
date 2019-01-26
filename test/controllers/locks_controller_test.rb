@@ -160,6 +160,13 @@ describe LocksController do
         Lock.count.must_equal 0
       end
 
+      it 'destroys an invalid lock' do
+        lock.update_column(:description, '')
+        delete :destroy, params: {id: lock.id}
+        assert_redirected_to '/back'
+        Lock.count.must_equal 0
+      end
+
       it 'destroys via json' do
         delete :destroy, params: {id: lock.id}, format: :json
         assert_response :success

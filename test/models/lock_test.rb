@@ -22,6 +22,12 @@ describe Lock do
       refute_valid lock
     end
 
+    it "is not valid when the same lock already exists (user spam-clicks or uses api)" do
+      Lock.create!(user: user)
+      refute_valid lock
+      lock.errors.full_messages.must_equal ["Resource warning/lock for resource already exists.", "Resource is invalid"]
+    end
+
     describe "warning" do
       before { lock.warning = true }
 
