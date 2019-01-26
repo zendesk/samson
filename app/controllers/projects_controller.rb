@@ -67,7 +67,7 @@ class ProjectsController < ApplicationController
         if saved
           render_as_json :project, @project
         else
-          render_as_json :errors, @project.errors, status: :bad_request
+          render_as_json :errors, @project.errors, status: :unprocessable_entity
         end
       end
     end
@@ -102,7 +102,7 @@ class ProjectsController < ApplicationController
         if updated
           render_as_json :project, @project
         else
-          render_as_json :errors, @project.errors, status: :bad_request
+          render_as_json :errors, @project.errors, status: :unprocessable_entity
         end
       end
     end

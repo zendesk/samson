@@ -271,7 +271,7 @@ describe ProjectsController do
         it "does not update invalid" do
           params[:project][:name] = ""
           put :update, params: params, format: :json
-          assert_response :bad_request
+          assert_response :unprocessable_entity
           result = JSON.parse(response.body)
           assert_equal result, "errors" => {"name" => ["can't be blank"]}
         end
@@ -375,7 +375,7 @@ describe ProjectsController do
 
         it "returns errors in JSON" do
           post :create, params: params, format: :json
-          assert_response :bad_request
+          assert_response :unprocessable_entity
           result = JSON.parse(response.body)
           expected = {
             "errors" => {
