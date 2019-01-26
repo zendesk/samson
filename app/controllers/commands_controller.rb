@@ -39,6 +39,12 @@ class CommandsController < ApplicationController
   end
 
   def show
+    respond_to do |format|
+      format.html
+      format.json do
+        render_as_json :command, @command
+      end
+    end
   end
 
   def update

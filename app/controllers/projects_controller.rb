@@ -46,15 +46,30 @@ class ProjectsController < ApplicationController
   def create
     @project = Project.new(project_params)
     @project.current_user = current_user
+    saved = @project.save
 
-    if @project.save
+    if saved
       if Rails.application.config.samson.project_created_email
         ProjectMailer.created_email(@current_user, @project).deliver_now
       end
-      redirect_to @project
       Rails.logger.info("#{@current_user.name_and_email} created a new project #{@project.to_param}")
-    else
-      render :new
+    end
+
+    respond_to do |format|
+      format.html do
+        if saved
+          redirect_to @project
+        else
+          render :new
+        end
+      end
+      format.json do
+        if saved
+          render_as_json :project, @project
+        else
+          render_as_json :errors, @project.errors, status: :bad_request
+        end
+      end
     end
   end
 
@@ -74,10 +89,22 @@ class ProjectsController < ApplicationController
   end
 
   def update
-    if @project.update_attributes(project_params)
-      redirect_to @project
-    else
-      render :edit
+    updated = @project.update_attributes(project_params)
+    respond_to do |format|
+      format.html do
+        if updated
+          redirect_to @project
+        else
+          render :edit
+        end
+      end
+      format.json do
+        if updated
+          render_as_json :project, @project
+        else
+          render_as_json :errors, @project.errors, status: :bad_request
+        end
+      end
     end
   end
 
@@ -87,7 +114,15 @@ class ProjectsController < ApplicationController
     if Rails.application.config.samson.project_deleted_email
       ProjectMailer.deleted_email(@current_user, @project).deliver_now
     end
-    redirect_to projects_path, notice: "Project removed."
+
+    respond_to do |format|
+      format.html do
+        redirect_to projects_path, notice: "Project removed."
+      end
+      format.json do
+        render json: {message: "Project removed."}
+      end
+    end
   end
 
   def deploy_group_versions

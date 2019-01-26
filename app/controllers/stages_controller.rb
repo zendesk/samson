@@ -54,11 +54,23 @@ class StagesController < ApplicationController
     # Need to ensure project is already associated
     @stage = @project.stages.build
     @stage.attributes = stage_params
+    saved = @stage.save
 
-    if @stage.save
-      redirect_to [@project, @stage]
-    else
-      render :new
+    respond_to do |format|
+      format.html do
+        if saved
+          redirect_to [@project, @stage]
+        else
+          render :new
+        end
+      end
+      format.json do
+        if saved
+          render_as_json :stage, @stage
+        else
+          render_as_json :errors, @stage.errors
+        end
+      end
     end
   end
 

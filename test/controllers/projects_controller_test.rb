@@ -259,6 +259,23 @@ describe ProjectsController do
           put :update, params: params
         end
       end
+
+      describe "as JSON" do
+        it "updates" do
+          put :update, params: params, format: :json
+          assert_response :success
+          project = JSON.parse(response.body)['project']
+          project['name'].must_equal "Hi-yo"
+        end
+
+        it "does not update invalid" do
+          params[:project][:name] = ""
+          put :update, params: params, format: :json
+          assert_response :bad_request
+          result = JSON.parse(response.body)
+          assert_equal result, "errors" => {"name" => ["can't be blank"]}
+        end
+      end
     end
 
     describe "#destroy" do
@@ -283,6 +300,14 @@ describe ProjectsController do
           project.update_column(:name, "")
           delete :destroy, params: {id: project.to_param}
         end
+      end
+
+      it "as JSON" do
+        delete :destroy, params: {id: project.to_param}, format: :json
+        assert_response :success
+        result = JSON.parse(response.body)
+        expected = {"message" => "Project removed."}
+        assert_equal expected, result
       end
     end
   end
@@ -332,6 +357,13 @@ describe ProjectsController do
           mail.subject.include?("Samson Project Created")
           mail.subject.include?(project.name)
         end
+
+        it "renders JSON" do
+          post :create, params: params, format: :json
+          assert_response :success
+          project = JSON.parse(response.body)['project']
+          project['name'].must_equal "Hello"
+        end
       end
 
       describe "with invalid parameters" do
@@ -339,6 +371,20 @@ describe ProjectsController do
 
         it "renders new template" do
           assert_template :new
+        end
+
+        it "returns errors in JSON" do
+          post :create, params: params, format: :json
+          assert_response :bad_request
+          result = JSON.parse(response.body)
+          expected = {
+            "errors" => {
+              "permalink" => ["can't be blank"],
+              "name" => ["can't be blank"],
+              "repository_url" => ["can't be blank"]
+            }
+          }
+          assert_equal expected, result
         end
       end
     end
