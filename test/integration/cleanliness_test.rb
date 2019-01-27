@@ -226,6 +226,7 @@ describe "cleanliness" do
       'test/controllers/application_controller_test.rb',
       'test/controllers/doorkeeper_base_controller_test.rb',
       'test/controllers/unauthorized_controller_test.rb',
+      'test/controllers/resource_controller_test.rb',
     ]
     controller_tests.reject! { |c| c =~ %r{/(integrations|concerns)/} }
 
