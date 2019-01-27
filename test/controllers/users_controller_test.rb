@@ -4,14 +4,14 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe UsersController do
-  as_a_deployer do
+  as_a :deployer do
     unauthorized :get, :index
     unauthorized :get, :show, id: 1
     unauthorized :delete, :destroy, id: 1
     unauthorized :put, :update, id: 1
   end
 
-  as_an_admin do
+  as_a :admin do
     unauthorized :get, :new
     unauthorized :post, :create
     unauthorized :delete, :destroy, id: 1
@@ -124,7 +124,7 @@ describe UsersController do
     end
   end
 
-  as_a_super_admin do
+  as_a :super_admin do
     describe '#new' do
       it "renders" do
         get :new

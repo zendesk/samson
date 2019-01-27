@@ -6,7 +6,7 @@ SingleCov.covered!
 describe GcloudController do
   with_env GCLOUD_ACCOUNT: "foo", GCLOUD_PROJECT: "bar"
 
-  as_a_viewer do
+  as_a :viewer do
     describe "#sync_build" do
       def do_sync
         post :sync_build, params: {id: build.id}

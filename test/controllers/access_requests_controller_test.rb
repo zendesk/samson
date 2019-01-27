@@ -6,7 +6,7 @@ SingleCov.covered!
 describe AccessRequestsController do
   include AccessRequestTestSupport
 
-  as_a_viewer do
+  as_a :viewer do
     around { |t| enable_access_request &t }
 
     before do

@@ -64,7 +64,7 @@ describe StagesController do
     end
   end
 
-  as_a_viewer do
+  as_a :viewer do
     unauthorized :get, :new, project_id: :foo
     unauthorized :post, :create, project_id: :foo
     unauthorized :get, :edit, project_id: :foo, id: 1
@@ -156,7 +156,7 @@ describe StagesController do
     end
   end
 
-  as_a_project_deployer do
+  as_a :project_deployer do
     unauthorized :get, :new, project_id: :foo
     unauthorized :post, :create, project_id: :foo
     unauthorized :get, :edit, project_id: :foo, id: 1
@@ -167,7 +167,7 @@ describe StagesController do
     unauthorized :post, :clone, project_id: :foo, id: 1
   end
 
-  as_a_project_admin do
+  as_a :project_admin do
     describe '#new' do
       describe 'valid' do
         before { get :new, params: {project_id: subject.project.to_param} }
@@ -414,7 +414,7 @@ describe StagesController do
     end
   end
 
-  as_an_admin do
+  as_a :admin do
     describe '#new' do
       it 'can alter `does not deploy code`' do
         refute stage_no_code_deployed_disabled

@@ -6,7 +6,7 @@ SingleCov.covered!
 describe EnvironmentsController do
   let(:json) { JSON.parse(response.body) }
 
-  as_a_viewer do
+  as_a :viewer do
     describe "#index" do
       it 'renders' do
         get :index
@@ -40,7 +40,7 @@ describe EnvironmentsController do
     unauthorized :put, :update, id: 1
   end
 
-  as_a_super_admin do
+  as_a :super_admin do
     describe "#new" do
       it 'renders' do
         get :new

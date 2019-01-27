@@ -13,7 +13,7 @@ describe Kubernetes::ClustersController do
   unauthorized :get, :index
   unauthorized :get, :show, id: 1
 
-  as_a_viewer do
+  as_a :viewer do
     describe "#index" do
       it "renders" do
         get :index
@@ -37,7 +37,7 @@ describe Kubernetes::ClustersController do
     end
   end
 
-  as_a_deployer do
+  as_a :deployer do
     unauthorized :get, :new
     unauthorized :post, :create
     unauthorized :get, :edit, id: 1
@@ -45,7 +45,7 @@ describe Kubernetes::ClustersController do
     unauthorized :post, :seed_ecr, id: 1
   end
 
-  as_an_admin do
+  as_a :admin do
     unauthorized :get, :new
     unauthorized :post, :create
     unauthorized :get, :edit, id: 1
@@ -79,7 +79,7 @@ describe Kubernetes::ClustersController do
     end
   end
 
-  as_a_super_admin do
+  as_a :super_admin do
     describe "#new" do
       use_example_config
 

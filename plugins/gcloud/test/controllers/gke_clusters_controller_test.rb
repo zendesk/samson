@@ -6,12 +6,12 @@ SingleCov.covered!
 describe GkeClustersController do
   with_env GCLOUD_ACCOUNT: "foo", GCLOUD_PROJECT: "bar"
 
-  as_an_admin do
+  as_a :admin do
     unauthorized :get, :new
     unauthorized :post, :create
   end
 
-  as_a_super_admin do
+  as_a :super_admin do
     describe "#new" do
       it "renders" do
         get :new

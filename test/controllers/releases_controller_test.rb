@@ -55,7 +55,7 @@ describe ReleasesController do
     ).to_return(status: 200, body: check_run_response.to_json, headers: headers.merge(preview_headers))
   end
 
-  as_a_viewer do
+  as_a :viewer do
     unauthorized :get, :new, project_id: :foo
     unauthorized :post, :create, project_id: :foo
 
@@ -91,7 +91,7 @@ describe ReleasesController do
     end
   end
 
-  as_a_project_deployer do
+  as_a :project_deployer do
     describe "#create" do
       let(:release_params) { {commit: "abcd"} }
       before do

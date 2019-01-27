@@ -64,7 +64,7 @@ class CurrentUserConcernTest < ActionController::TestCase
     end
   end
 
-  as_a_viewer do
+  as_a :viewer do
     it "knows who did something" do
       get :whodunnit, params: {test_route: true}
       response.body.must_equal users(:viewer).name
@@ -99,7 +99,7 @@ class CurrentUserConcernTest < ActionController::TestCase
     unauthorized :get, :super_admin_action, test_route: true
   end
 
-  as_a_deployer do
+  as_a :deployer do
     authorized :get, :deployer_action, test_route: true
     unauthorized :get, :admin_action, test_route: true
     unauthorized :get, :super_admin_action, test_route: true
@@ -116,7 +116,7 @@ class CurrentUserConcernTest < ActionController::TestCase
     end
   end
 
-  as_a_project_deployer do
+  as_a :project_deployer do
     it "can access allowed projects" do
       get :project_deployer_action, params: {project_id: Project.first.id, test_route: true}
       assert_response :success
@@ -134,7 +134,7 @@ class CurrentUserConcernTest < ActionController::TestCase
     end
   end
 
-  as_a_project_admin do
+  as_a :project_admin do
     it "can access allowed projects" do
       get :project_admin_action, params: {project_id: Project.first.id, test_route: true}
       assert_response :success
@@ -147,7 +147,7 @@ class CurrentUserConcernTest < ActionController::TestCase
     end
   end
 
-  as_an_admin do
+  as_a :admin do
     authorized :get, :deployer_action, test_route: true
     authorized :get, :admin_action, test_route: true
     unauthorized :get, :super_admin_action, test_route: true
@@ -163,14 +163,14 @@ class CurrentUserConcernTest < ActionController::TestCase
     end
   end
 
-  as_a_super_admin do
+  as_a :super_admin do
     authorized :get, :deployer_action, test_route: true
     authorized :get, :admin_action, test_route: true
     authorized :get, :super_admin_action, test_route: true
   end
 
   describe "logging" do
-    as_a_viewer do
+    as_a :viewer do
       it "logs unautorized so we can see it in test output for easy debugging" do
         Rails.logger.expects(:warn)
         get :unauthorized_action, params: {test_route: true}

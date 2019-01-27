@@ -42,7 +42,7 @@ describe SlackAppController do
     with_env(SLACK_VERIFICATION_TOKEN: 'token') { post :interact, params: opts }
   end
 
-  as_a_viewer do
+  as_a :viewer do
     describe '#oauth' do
       before do
         stub_request(:post, "https://slack.com/api/oauth.access").

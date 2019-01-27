@@ -4,11 +4,11 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe ReferencesController do
-  as_a_viewer do
+  as_a :viewer do
     unauthorized :get, :index, project_id: :foo
   end
 
-  as_a_project_deployer do
+  as_a :project_deployer do
     describe '#index' do
       let(:project) { projects(:test) }
 

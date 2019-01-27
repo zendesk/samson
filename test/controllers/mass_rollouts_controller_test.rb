@@ -25,12 +25,12 @@ describe MassRolloutsController do
   let(:deploy_group) { deploy_groups(:pod100) }
   let(:stage) { stages(:test_staging) }
 
-  as_a_project_deployer do
+  as_a :project_deployer do
     unauthorized :post, :deploy, deploy_group_id: 1
     unauthorized :get, :review_deploy, deploy_group_id: 1
   end
 
-  as_a_deployer do
+  as_a :deployer do
     describe "#review_deploy" do
       def review_deploy(options = {})
         get :review_deploy, params: {deploy_group_id: deploy_group}.merge(options)
@@ -159,14 +159,14 @@ describe MassRolloutsController do
     end
   end
 
-  as_a_project_admin do
+  as_a :project_admin do
     unauthorized :get, :new, deploy_group_id: 1
     unauthorized :post, :create, deploy_group_id: 1
     unauthorized :delete, :destroy, deploy_group_id: 1
     unauthorized :post, :merge, deploy_group_id: 1
   end
 
-  as_a_super_admin do
+  as_a :super_admin do
     describe "#new" do
       let(:env) { environments(:staging) }
       let(:deploy_group) { DeployGroup.create!(name: 'Pod 101', environment: env) }

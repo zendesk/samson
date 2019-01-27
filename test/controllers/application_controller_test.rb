@@ -18,7 +18,7 @@ describe ApplicationController do
   use_test_routes ApplicationTestController
 
   describe "#redirect_back" do
-    as_a_viewer do
+    as_a :viewer do
       it "redirects to fallback" do
         get :test_redirect_back, params: {test_route: true}
         assert_redirected_to '/fallback'
@@ -81,7 +81,7 @@ describe ApplicationController do
   end
 
   describe "Samson::Hooks::UserError" do
-    as_a_viewer do
+    as_a :viewer do
       before do
         ApplicationTestController.any_instance.expects(:test_redirect_back).raises(Samson::Hooks::UserError, "Wut")
       end

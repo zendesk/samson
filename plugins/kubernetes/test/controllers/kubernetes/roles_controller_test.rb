@@ -19,7 +19,7 @@ describe Kubernetes::RolesController do
   unauthorized :get, :show, project_id: :foo, id: 1
   unauthorized :get, :example, project_id: :foo
 
-  as_a_viewer do
+  as_a :viewer do
     unauthorized :post, :seed, project_id: :foo
     unauthorized :get, :new, project_id: :foo
     unauthorized :post, :create, project_id: :foo
@@ -62,7 +62,7 @@ describe Kubernetes::RolesController do
     end
   end
 
-  as_a_deployer do
+  as_a :deployer do
     unauthorized :post, :seed, project_id: :foo
     unauthorized :get, :new, project_id: :foo
     unauthorized :post, :create, project_id: :foo
@@ -70,7 +70,7 @@ describe Kubernetes::RolesController do
     unauthorized :delete, :destroy, project_id: :foo, id: 1
   end
 
-  as_a_project_admin do
+  as_a :project_admin do
     describe "#seed" do
       it "creates roles" do
         Kubernetes::Role.expects(:seed!)

@@ -19,7 +19,7 @@ describe AccessTokensController do
 
   unauthorized :post, :create
 
-  as_a_viewer do
+  as_a :viewer do
     describe "#index" do
       let!(:token) { Doorkeeper::AccessToken.create!(application: application, resource_owner_id: user.id) }
       let!(:other_token) { Doorkeeper::AccessToken.create!(application: application, resource_owner_id: 123) }
@@ -89,7 +89,7 @@ describe AccessTokensController do
     end
   end
 
-  as_a_super_admin do
+  as_a :super_admin do
     describe "#create" do
       it "can create for another user and returns where they came from" do
         assert_difference 'Doorkeeper::AccessToken.count', +1 do

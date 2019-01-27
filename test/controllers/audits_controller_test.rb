@@ -12,7 +12,7 @@ describe AuditsController do
 
   let(:stage) { stages(:test_staging) }
 
-  as_a_viewer do
+  as_a :viewer do
     describe "#index" do
       before { create_audit user }
 

@@ -26,7 +26,7 @@ describe SecretsController do
     }
   end
 
-  as_a_viewer do
+  as_a :viewer do
     before { create_secret 'production/foo/group/bar' }
 
     unauthorized :get, :index
@@ -37,7 +37,7 @@ describe SecretsController do
     unauthorized :delete, :destroy, id: 'production/foo/group/bar'
   end
 
-  as_a_project_deployer do
+  as_a :project_deployer do
     unauthorized :post, :create, secret: {
       environment_permalink: 'production',
       project_permalink: 'foo',
@@ -197,7 +197,7 @@ describe SecretsController do
     end
   end
 
-  as_a_deployer do
+  as_a :deployer do
     describe '#index' do
       it 'renders template' do
         get :index
@@ -206,7 +206,7 @@ describe SecretsController do
     end
   end
 
-  as_a_project_admin do
+  as_a :project_admin do
     describe '#create' do
       it 'creates a secret' do
         post :create, params: {secret: attributes.merge(visible: 'false')}
@@ -418,7 +418,7 @@ describe SecretsController do
     end
   end
 
-  as_an_admin do
+  as_a :admin do
     let(:secret) { create_global }
 
     describe '#create' do

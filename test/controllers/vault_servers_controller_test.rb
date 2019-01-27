@@ -7,7 +7,7 @@ describe VaultServersController do
   let!(:server) { create_vault_server }
   before { deploy_groups(:pod1).update_column(:vault_server_id, server.id) }
 
-  as_a_viewer do
+  as_a :viewer do
     describe "#index" do
       it "renders" do
         get :index
@@ -30,7 +30,7 @@ describe VaultServersController do
     unauthorized :delete, :destroy, id: 1
   end
 
-  as_a_super_admin do
+  as_a :super_admin do
     describe "#new" do
       it "renders" do
         get :new

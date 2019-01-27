@@ -4,7 +4,7 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe FlowdockController do
-  as_a_viewer do
+  as_a :viewer do
     describe 'buddy request notifications' do
       it 'sends a buddy request' do
         FlowdockNotification.any_instance.expects(:buddy_request).once

@@ -37,7 +37,7 @@ describe LocksController do
     end
   end
 
-  as_a_viewer do
+  as_a :viewer do
     unauthorized :post, :create
 
     it 'is unauthorized when doing a post to create a stage lock' do
@@ -69,7 +69,7 @@ describe LocksController do
     end
   end
 
-  as_a_project_deployer do
+  as_a :project_deployer do
     unauthorized :post, :create
     unauthorized :delete, :destroy_via_resource
 
@@ -195,7 +195,7 @@ describe LocksController do
     end
   end
 
-  as_an_admin do
+  as_a :admin do
     describe '#create' do
       it 'creates a global lock' do
         create_lock

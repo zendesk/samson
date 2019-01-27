@@ -25,7 +25,7 @@ describe RollbarDashboards::DashboardsController do
     end
     let(:item) { {title: 'Crazy Error', environment: 'production', occurrences: 9000} }
 
-    as_a_viewer do
+    as_a :viewer do
       it 'renders project dashboard' do
         assert_request(:get, endpoint, to_return: {body: {result: [item: item]}.to_json}) do
           get_dashboard(project)
@@ -102,7 +102,7 @@ describe RollbarDashboards::DashboardsController do
       }
     end
 
-    as_a_viewer do
+    as_a :viewer do
       it 'renders deploy dashboard' do
         stub_deploy_rql_query(query)
 

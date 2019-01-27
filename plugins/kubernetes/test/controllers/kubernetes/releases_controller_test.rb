@@ -4,12 +4,12 @@ require_relative '../../test_helper'
 SingleCov.covered!
 
 describe Kubernetes::ReleasesController do
-  as_a_viewer do
+  as_a :viewer do
     unauthorized :get, :index, project_id: :foo
     unauthorized :get, :show, project_id: :foo, id: 123
   end
 
-  as_a_project_deployer do
+  as_a :project_deployer do
     describe '#index' do
       it 'renders' do
         get :index, params: {project_id: :foo}

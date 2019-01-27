@@ -9,12 +9,12 @@ describe OutboundWebhooksController do
   let(:params) { {url: "https://zendesk.com", stage_id: stage.id} }
   let(:invalid_params) { {url: "https://zendesk.com", username: "poopthe@cat.com", stage_id: stage.id} }
 
-  as_a_viewer do
+  as_a :viewer do
     unauthorized :post, :create, project_id: :foo
     unauthorized :delete, :destroy, project_id: :foo, id: 1
   end
 
-  as_a_project_deployer do
+  as_a :project_deployer do
     describe '#create' do
       describe 'with valid params' do
         it 'redirects to :index' do

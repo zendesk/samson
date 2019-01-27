@@ -4,7 +4,7 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe ProfilesController do
-  as_a_viewer do
+  as_a :viewer do
     describe '#show' do
       it 'renders' do
         get :show

@@ -7,7 +7,7 @@ describe BuildCommandsController do
   let(:project) { projects(:test) }
   let(:command) { Command.create(command: 'foo') }
 
-  as_a_viewer do
+  as_a :viewer do
     unauthorized :patch, :update, project_id: :foo
 
     describe '#show' do
@@ -18,7 +18,7 @@ describe BuildCommandsController do
     end
   end
 
-  as_a_project_admin do
+  as_a :project_admin do
     describe '#update' do
       it "creates when it does not exist" do
         assert_difference 'Command.count', +1 do

@@ -6,7 +6,7 @@ SingleCov.covered!
 describe ChangelogsController do
   let(:project) { projects(:test) }
 
-  as_a_viewer do
+  as_a :viewer do
     describe "#show" do
       it "renders recent logs by default" do
         today = Date.parse('2016-03-01')

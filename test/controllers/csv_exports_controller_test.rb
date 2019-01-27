@@ -8,7 +8,7 @@ describe CsvExportsController do
   let(:export) { csv_exports(:pending) }
 
   describe "permissions test" do
-    as_an_admin do
+    as_a :admin do
       describe "#new" do
         it "renders the full admin menu and new page" do
           get :new
@@ -20,7 +20,7 @@ describe CsvExportsController do
       end
     end
 
-    as_a_viewer do
+    as_a :viewer do
       describe "#new" do
         it "renders the limited admin menu and limited new page" do
           get :new
@@ -33,7 +33,7 @@ describe CsvExportsController do
     end
   end
 
-  as_a_viewer do
+  as_a :viewer do
     describe "#index" do
       describe "as html with exports" do
         it "renders the table of each status type" do
