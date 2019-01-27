@@ -20,7 +20,15 @@ class CommandsController < ApplicationController
         @commands = @commands.where(project_id: project_id)
       end
     end
-    @pagy, @commands = pagy(@commands, page: page, items: 15)
+
+    multi_format_render(
+      successful: true,
+      on_success_html: -> { @pagy, @commands = pagy(@commands, page: page, items: 15) },
+      on_success_json: -> {
+        @pagy, @commands = pagy(@commands, page: page, items: 50)
+        render_as_json :commands, @commands
+      }
+    )
   end
 
   def new
@@ -30,62 +38,34 @@ class CommandsController < ApplicationController
 
   def create
     @command = Command.create(command_params)
-
-    if @command.persisted?
-      successful_response 'Command created.'
-    else
-      render :show
-    end
+    is_saved = @command.persisted?
+    render_formats(is_saved)
   end
 
   def show
-    respond_to do |format|
-      format.html
-      format.json do
-        render_as_json :command, @command
-      end
-    end
+    multi_format_render(
+      successful: true,
+      on_success_html: -> {},
+      on_success_json: -> { render_as_json :command, @command }
+    )
   end
 
   def update
-    if @command.update_attributes(command_params)
-      successful_response('Command updated.')
-    else
-      respond_to do |format|
-        format.html { render :show }
-        format.js { render json: {}, status: :unprocessable_entity }
-      end
-    end
+    is_saved = @command.update_attributes(command_params)
+    render_formats(is_saved)
   end
 
   def destroy
     # Destroy specific stage command usage if `stage_id` is passed in to allow for inline deletion
     remove_stage_usage_if_exists
-
-    if @command.destroy
-      successful_response('Command removed.')
-    else
-      respond_to do |format|
-        format.html { render :show }
-        format.js { render json: {}, status: :unprocessable_entity }
-      end
-    end
+    is_destroyed = @command.destroy
+    render_formats(is_destroyed)
   end
 
   private
 
   def command_params
     params.require(:command).permit(:command, :project_id)
-  end
-
-  def successful_response(notice)
-    respond_to do |format|
-      format.html do
-        flash[:notice] = notice
-        redirect_to commands_path
-      end
-      format.js { render json: {} }
-    end
   end
 
   def find_command
@@ -118,5 +98,20 @@ class CommandsController < ApplicationController
   def remove_stage_usage_if_exists
     return if params[:stage_id].nil?
     StageCommand.find_by(stage_id: params[:stage_id], command_id: @command.id)&.destroy
+  end
+
+  def render_formats(successful)
+    multi_format_render(
+      successful: successful,
+      on_success_html: -> {
+        flash[:notice] = 'Command created.'
+        redirect_to commands_path
+      },
+      on_error_html: -> { render :show },
+      on_success_json: -> { render_as_json :command, @command },
+      on_error_json: -> { render_json_error 422, @command.errors },
+      on_success_js: -> { render json: {} },
+      on_error_js: -> { render_json_error 422, @command.errors }
+    )
   end
 end

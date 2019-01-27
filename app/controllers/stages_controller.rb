@@ -12,11 +12,11 @@ class StagesController < ApplicationController
 
   def index
     @stages = @project.stages
-
-    respond_to do |format|
-      format.html
-      format.json { render json: {stages: @stages} }
-    end
+    multi_format_render(
+      successful: true,
+      on_success_html: -> {},
+      on_success_json: -> { render_as_json :stages, @stages }
+    )
   end
 
   def show
@@ -54,40 +54,37 @@ class StagesController < ApplicationController
     # Need to ensure project is already associated
     @stage = @project.stages.build
     @stage.attributes = stage_params
-    saved = @stage.save
-
-    respond_to do |format|
-      format.html do
-        if saved
-          redirect_to [@project, @stage]
-        else
-          render :new
-        end
-      end
-      format.json do
-        if saved
-          render_as_json :stage, @stage
-        else
-          render_as_json :errors, @stage.errors
-        end
-      end
-    end
+    is_saved = @stage.save
+    multi_format_render(
+      successful: is_saved,
+      on_success_html: -> { redirect_to [@project, @stage] },
+      on_error_html: -> { render :new },
+      on_success_json: -> { render_as_json :stage, @stage },
+      on_error_json: -> { render_json_error :unprocessable_entity, @stage.errors }
+    )
   end
 
   def edit
   end
 
   def update
-    if @stage.update_attributes(stage_params)
-      redirect_to [@project, @stage]
-    else
-      render :edit
-    end
+    is_saved = @stage.update_attributes(stage_params)
+    multi_format_render(
+      successful: is_saved,
+      on_success_html: -> { redirect_to [@project, @stage] },
+      on_error_html: -> { render :edit },
+      on_success_json: -> { render_as_json :stage, @stage },
+      on_error_json: -> { render_json_error :unprocessable_entity, @stage.errors }
+    )
   end
 
   def destroy
-    @stage.soft_delete!(validate: false)
-    redirect_to @project
+    is_destroyed = @stage.soft_delete!(validate: false)
+    multi_format_render(
+      successful: is_destroyed,
+      on_success_html: -> { redirect_to @project },
+      on_success_json: -> { head :ok }
+    )
   end
 
   def reorder

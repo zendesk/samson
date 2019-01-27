@@ -221,6 +221,13 @@ describe StagesController do
         it 'redirects' do
           assert_redirected_to project_stage_path(project, assigns(:stage))
         end
+
+        it "returns JSON" do
+          post :create, params: {stage: {name: "prod"}, project_id: project.to_param}, format: :json
+          assert_response :success
+          body = JSON.parse(response.body)
+          body["stage"]["name"].must_equal "prod"
+        end
       end
 
       describe 'invalid attributes' do
@@ -230,6 +237,21 @@ describe StagesController do
 
         it 'renders' do
           assert_template :new
+        end
+
+        it "returns errors as JSON" do
+          params = {project_id: project.to_param, id: subject.to_param, stage: {name: ""}}
+          post :create, params: params, format: :json
+          assert_response :unprocessable_entity
+          result = JSON.parse(response.body)
+          expected = {
+            "status" => "unprocessable_entity",
+            "error" => {
+              "permalink" => ["can't be blank"],
+              "name" => ["can't be blank"]
+            }
+          }
+          result.must_equal expected
         end
       end
 
@@ -331,6 +353,14 @@ describe StagesController do
           it 'redirects' do
             assert_redirected_to project_stage_path(subject.project, subject)
           end
+
+          it "returns JSON" do
+            params = {project_id: subject.project.to_param, id: subject.to_param, stage: attributes}
+            patch :update, params: params, format: :json
+            assert_response :success
+            body = JSON.parse(response.body)
+            body["stage"]["name"].must_equal "Hello"
+          end
         end
 
         describe 'invalid attributes' do
@@ -338,6 +368,15 @@ describe StagesController do
 
           it 'renders' do
             assert_template :edit
+          end
+
+          it "returns errors as JSON" do
+            params = {project_id: project.to_param, id: subject.to_param, stage: {name: ""}}
+            patch :update, params: params, format: :json
+            assert_response :unprocessable_entity
+            body = JSON.parse(response.body)
+            expected = {"status" => "unprocessable_entity", "error" => {"name" => ["can't be blank"]}}
+            body.must_equal expected
           end
         end
       end
@@ -367,6 +406,12 @@ describe StagesController do
           subject.reload
           subject.deleted_at.wont_be_nil
         end
+      end
+
+      it "returns empty body for JSON" do
+        delete :destroy, params: {project_id: subject.project.to_param, id: subject.to_param}, format: :json
+        assert_response :ok
+        response.body.must_equal ""
       end
 
       it "fails with invalid project" do

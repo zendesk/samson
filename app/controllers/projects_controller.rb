@@ -27,7 +27,7 @@ class ProjectsController < ApplicationController
       end
 
       format.json do
-        render json: {projects: projects_as_json(projects)}
+        render_as_json :projects, projects_as_json(projects)
       end
 
       format.csv do
@@ -46,31 +46,22 @@ class ProjectsController < ApplicationController
   def create
     @project = Project.new(project_params)
     @project.current_user = current_user
-    saved = @project.save
+    is_saved = @project.save
 
-    if saved
+    if is_saved
       if Rails.application.config.samson.project_created_email
         ProjectMailer.created_email(@current_user, @project).deliver_now
       end
       Rails.logger.info("#{@current_user.name_and_email} created a new project #{@project.to_param}")
     end
 
-    respond_to do |format|
-      format.html do
-        if saved
-          redirect_to @project
-        else
-          render :new
-        end
-      end
-      format.json do
-        if saved
-          render_as_json :project, @project
-        else
-          render_as_json :errors, @project.errors, status: :unprocessable_entity
-        end
-      end
-    end
+    multi_format_render(
+      successful: is_saved,
+      on_success_html: -> { redirect_to @project },
+      on_error_html: -> { render :new },
+      on_success_json: -> { render_as_json :project, @project },
+      on_error_json: -> { render_as_json :errors, @project.errors, status: :unprocessable_entity }
+    )
   end
 
   def show
@@ -89,40 +80,28 @@ class ProjectsController < ApplicationController
   end
 
   def update
-    updated = @project.update_attributes(project_params)
-    respond_to do |format|
-      format.html do
-        if updated
-          redirect_to @project
-        else
-          render :edit
-        end
-      end
-      format.json do
-        if updated
-          render_as_json :project, @project
-        else
-          render_as_json :errors, @project.errors, status: :unprocessable_entity
-        end
-      end
-    end
+    is_saved = @project.update_attributes(project_params)
+    multi_format_render(
+      successful: is_saved,
+      on_success_html: -> { redirect_to @project },
+      on_error_html: -> { render :edit },
+      on_success_json: -> { render_as_json :project, @project },
+      on_error_json: -> { render_as_json :errors, @project.errors, status: :unprocessable_entity }
+    )
   end
 
   def destroy
-    @project.soft_delete(validate: false)
+    is_destroyed = @project.soft_delete(validate: false)
 
     if Rails.application.config.samson.project_deleted_email
       ProjectMailer.deleted_email(@current_user, @project).deliver_now
     end
 
-    respond_to do |format|
-      format.html do
-        redirect_to projects_path, notice: "Project removed."
-      end
-      format.json do
-        render json: {message: "Project removed."}
-      end
-    end
+    multi_format_render(
+      successful: is_destroyed,
+      on_success_html: -> { redirect_to projects_path, notice: "Project removed." },
+      on_success_json: -> { head :ok }
+    )
   end
 
   def deploy_group_versions

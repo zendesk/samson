@@ -44,12 +44,34 @@ describe CommandsController do
         get :index, params: {search: {project_id: 'global'}}
         assigns[:commands].must_equal [global]
       end
+
+      it "renders JSON" do
+        get :index, params: {format: 'json'}
+        result = JSON.parse(response.body)
+        commands = result['commands']
+        commands.length.must_equal 2
+
+        global_command = commands.first
+        global_command['command'].must_equal global['command']
+        global_command['project_id'].must_be_nil
+
+        hello_command = commands.second
+        hello_command['command'].must_equal hello['command']
+        hello_command['project_id'].must_equal hello['project_id']
+      end
     end
 
     describe '#show' do
       it 'renders' do
         get :show, params: {id: commands(:global).id}
         assert_template :show
+      end
+
+      it "renders JSON" do
+        get :show, params: {id: commands(:global).id}, format: :json
+        assert_response :ok
+        body = JSON.parse(response.body)
+        body["command"]["command"].must_equal "echo global"
       end
     end
 
@@ -71,10 +93,26 @@ describe CommandsController do
         assert_redirected_to commands_path
       end
 
+      it "can create as JSON" do
+        post :create, params: params, format: :json
+        assert_response :ok
+        body = JSON.parse(response.body)
+        assert_equal "hello", body["command"]["command"]
+      end
+
       it "fails for invalid command" do
         params[:command][:command] = ""
         post :create, params: params
         assert_template :show
+      end
+
+      it "fails for invalid command as JSON" do
+        params[:command][:command] = ""
+        post :create, params: params, format: :json
+        assert_response :unprocessable_entity
+        body = JSON.parse(response.body)
+        expected = {"status" => 422, "error" => {"command" => ["can't be blank"]}}
+        assert_equal expected, body
       end
 
       it "cannot create for a global project" do
@@ -97,6 +135,13 @@ describe CommandsController do
       it "can update as js" do
         patch :update, params: params, format: 'js'
         assert_response :ok
+      end
+
+      it "can update as JSON" do
+        patch :update, params: params, format: :json
+        assert_response :ok
+        body = JSON.parse(response.body)
+        body["command"]["command"].must_equal "echo hi"
       end
 
       it "cannot update global" do
@@ -139,6 +184,14 @@ describe CommandsController do
           patch :update, params: params, format: 'js'
           assert_response :unprocessable_entity
         end
+
+        it "cannot update invalid as JSON" do
+          patch :update, params: params, format: :json
+          assert_response :unprocessable_entity
+          body = JSON.parse(response.body)
+          expected = {"status" => 422, "error" => {"command" => ["can't be blank"]}}
+          body.must_equal expected
+        end
       end
     end
 
@@ -153,6 +206,12 @@ describe CommandsController do
       it "cannot delete global commands" do
         delete :destroy, params: {id: commands(:global)}
         assert_response :unauthorized
+      end
+
+      it "returns empty body for JSON" do
+        delete :destroy, params: {id: commands(:echo)}, format: :json
+        assert_response :ok
+        puts('body below', response.body)
       end
     end
   end
@@ -187,13 +246,13 @@ describe CommandsController do
       end
 
       describe 'valid' do
+        def delete_command(param_overrides = {})
+          params = {id: command.id, format: format}.merge(param_overrides)
+          delete :destroy, params: params
+        end
+
         describe 'html' do
           let(:format) { 'html' }
-
-          def delete_command(param_overrides = {})
-            params = {id: command.id, format: format}.merge(param_overrides)
-            delete :destroy, params: params
-          end
 
           it 'redirects' do
             StageCommand.delete_all
@@ -252,11 +311,29 @@ describe CommandsController do
           end
         end
 
-        describe 'js' do
-          let(:format) { 'js' }
+        describe "JSON and js" do
+          before do
+            StageCommand.delete_all
+            delete_command
+          end
 
-          it 'responds ok' do
-            assert_response :ok
+          describe 'js' do
+            let(:format) { 'js' }
+
+            it 'responds ok' do
+              assert_response :ok
+              response.body.must_equal "{}"
+            end
+          end
+
+          describe "json" do
+            let(:format) { :json }
+
+            it "returns empty body for JSON" do
+              assert_response :ok
+              body = JSON.parse(response.body)
+              body["command"]["command"].must_equal "echo hello"
+            end
           end
         end
       end
@@ -281,6 +358,17 @@ describe CommandsController do
 
           it 'responds ok' do
             assert_response :unprocessable_entity
+          end
+        end
+
+        describe 'json' do
+          let(:format) { :json }
+
+          it "returns the errors" do
+            assert_response :unprocessable_entity
+            body = JSON.parse(response.body)
+            expected = {"status" => 422, "error" => {"base" => ["Can only delete when unused."]}}
+            body.must_equal expected
           end
         end
       end

@@ -268,9 +268,10 @@ describe ProjectsController do
           project['name'].must_equal "Hi-yo"
         end
 
-        it "does not update invalid" do
+        it "returns errors for invalid properties" do
           params[:project][:name] = ""
           put :update, params: params, format: :json
+          puts('daninho', response.status)
           assert_response :unprocessable_entity
           result = JSON.parse(response.body)
           assert_equal result, "errors" => {"name" => ["can't be blank"]}
@@ -302,12 +303,10 @@ describe ProjectsController do
         end
       end
 
-      it "as JSON" do
+      it "returns empty body for JSON" do
         delete :destroy, params: {id: project.to_param}, format: :json
-        assert_response :success
-        result = JSON.parse(response.body)
-        expected = {"message" => "Project removed."}
-        assert_equal expected, result
+        assert_response :ok
+        response.body.must_equal ""
       end
     end
   end
@@ -361,6 +360,7 @@ describe ProjectsController do
         it "renders JSON" do
           post :create, params: params, format: :json
           assert_response :success
+          puts 'body', response.body
           project = JSON.parse(response.body)['project']
           project['name'].must_equal "Hello"
         end
