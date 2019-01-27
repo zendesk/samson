@@ -11,25 +11,13 @@ module MultiFormatRenderer
   )
     respond_to do |format|
       format.html do
-        if successful
-          on_success_html.call
-        else
-          on_error_html.call
-        end
+        (successful ? on_success_html : on_error_html).call
       end
       format.json do
-        if successful
-          on_success_json.call
-        else
-          on_error_json.call
-        end
+        (successful ? on_success_json : on_error_json).call
       end
       format.js do
-        if successful
-          on_success_js.call
-        else
-          on_error_js.call
-        end
+        (successful ? on_success_js : on_error_js).call
       end
     end
   end
