@@ -47,34 +47,41 @@ class MassRolloutsController < ApplicationController
     end
   end
 
-  # TODO: show when deploys are waiting for buddy
-  # TODO: show when deploys were invalid
-  # TODO: show when stage had no reference
   def deploy
-    stages_to_deploy = Stage.find(params.require(:stage_ids))
-    deploy_references = stages_to_deploy.map do |stage|
+    warnings = []
+
+    stages = Stage.find(params[:stage_ids] || [])
+    deploys = stages.map do |stage|
       reference =
         case params[:reference_source]
         when 'template' then last_successful_template_reference(stage)
         when 'redeploy' then stage.last_successful_deploy&.reference
-        else
-          return unsupported_option(:reference_source)
+        else return unsupported_option(:reference_source)
         end
 
-      [stage, reference] if reference
+      unless reference
+        warnings << [stage, "No reference found"]
+        next
+      end
+
+      deploy = DeployService.new(current_user).deploy(stage, reference: reference)
+      if deploy.new_record?
+        warnings << [stage, "Validation error"]
+        next
+      end
+
+      deploy
     end.compact
 
-    deploys = deploy_references.map do |stage, reference|
-      deploy_service = DeployService.new(current_user)
-      deploy_service.deploy(stage, reference: reference)
-    end
+    # prevent cookie overflow / keep the message short
+    ignored = warnings.slice!(10..-1)
+    warnings.map! { |stage, message| "#{message} #{stage.url}" }
+    warnings << "... #{ignored.size} more" if ignored
 
-    if deploys.empty?
-      flash[:error] = "No deployable stages found."
-      redirect_to deploys_path
-    else
-      redirect_to deploys_path(ids: deploys.map(&:id))
-    end
+    redirect_to(
+      deploys_path(ids: deploys.map(&:id).presence),
+      alert: helpers.safe_join(warnings, "<br/>".html_safe).presence
+    )
   end
 
   def merge
