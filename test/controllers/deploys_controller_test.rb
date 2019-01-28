@@ -38,7 +38,7 @@ describe DeploysController do
       controller: "deploys", action: "create", project_id: "1", stage_id: "2")
   end
 
-  as_a_viewer do
+  as_a :viewer do
     describe "#active" do
       with_and_without_project do
         it "renders the template" do
@@ -353,7 +353,7 @@ describe DeploysController do
     unauthorized :post, :confirm, project_id: :foo, stage_id: 2
   end
 
-  as_a_project_deployer do
+  as_a :project_deployer do
     before do
       DeployService.stubs(:new).with(user).returns(deploy_service)
       deploy_service.stubs(:deploy).capture(deploy_called).returns(deploy)
@@ -523,7 +523,7 @@ describe DeploysController do
     end
   end
 
-  as_a_project_admin do
+  as_a :project_admin do
     before do
       DeployService.stubs(:new).with(user).returns(deploy_service)
     end

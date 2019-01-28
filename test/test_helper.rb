@@ -225,20 +225,11 @@ ActionController::TestCase.class_eval do
       end
     end
 
-    %w[super_admin admin deployer viewer project_admin project_deployer].each do |user|
-      article = (user == "admin" ? "an" : "a")
-      define_method "as_#{article}_#{user}" do |&block|
-        describe "as #{article} #{user}" do
-          let(:user) { users(user) }
-
-          def self.let(*args)
-            raise "Cannot override :user in as_a_*" if args.first.to_sym == :user
-            super
-          end
-
-          before { login_as(self.user) }
-          instance_eval(&block)
-        end
+    def as_a(type, &block)
+      describe "as a #{type}" do
+        let(:user) { users(type) }
+        before { login_as(user) }
+        instance_exec(&block)
       end
     end
 

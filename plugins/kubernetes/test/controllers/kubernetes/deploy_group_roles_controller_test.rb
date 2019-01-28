@@ -14,7 +14,7 @@ describe Kubernetes::DeployGroupRolesController do
   id = ActiveRecord::FixtureSet.identify(:test_pod1_app_server)
   project_id = ActiveRecord::FixtureSet.identify(:test)
 
-  as_a_viewer do
+  as_a :viewer do
     describe "#index" do
       before do
         # one different to test filtering
@@ -108,7 +108,7 @@ describe Kubernetes::DeployGroupRolesController do
     unauthorized :put, :update_many, project_id: 'foo'
   end
 
-  as_a_project_admin do
+  as_a :project_admin do
     describe "#create" do
       let(:params) do
         {

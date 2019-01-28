@@ -6,7 +6,7 @@ SingleCov.covered!
 describe UserProjectRolesController do
   let(:project) { projects(:test) }
 
-  as_a_viewer do
+  as_a :viewer do
     describe "#index" do
       it 'renders' do
         get :index, params: {project_id: project.to_param}
@@ -44,11 +44,11 @@ describe UserProjectRolesController do
     end
   end
 
-  as_a_deployer do
+  as_a :deployer do
     unauthorized :post, :create, project_id: :foo
   end
 
-  as_a_project_admin do
+  as_a :project_admin do
     describe "#create" do
       def create(role_id, **options)
         post :create, params: {project_id: project, user_id: new_admin.id, role_id: role_id}, **options

@@ -13,7 +13,7 @@ describe CommandsController do
     p
   end
 
-  as_a_viewer do
+  as_a :viewer do
     command_id = ActiveRecord::FixtureSet.identify(:echo)
     command_params = {command: 'foo', project_id: ActiveRecord::FixtureSet.identify(:test)}
     unauthorized :post, :create, command: command_params
@@ -61,7 +61,7 @@ describe CommandsController do
     end
   end
 
-  as_a_project_admin do
+  as_a :project_admin do
     describe "#create" do
       let(:params) { {command: {command: 'hello', project_id: project.id}} }
 
@@ -157,7 +157,7 @@ describe CommandsController do
     end
   end
 
-  as_an_admin do
+  as_a :admin do
     describe "#create" do
       it "cannot create for a global project" do
         post :create, params: {command: {command: "hello"}}

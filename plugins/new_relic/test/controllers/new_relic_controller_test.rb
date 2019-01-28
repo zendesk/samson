@@ -6,11 +6,11 @@ SingleCov.covered!
 describe NewRelicController do
   with_new_relic_plugin_enabled
 
-  as_a_viewer do
+  as_a :viewer do
     unauthorized :get, :show, project_id: :foo, stage_id: 1
   end
 
-  as_a_project_deployer do
+  as_a :project_deployer do
     describe "#show" do
       it "requires a project" do
         assert_raises(ActiveRecord::RecordNotFound) do

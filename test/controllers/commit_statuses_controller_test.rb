@@ -4,11 +4,11 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe CommitStatusesController do
-  as_a_viewer do
+  as_a :viewer do
     unauthorized :get, :show, stage_id: 'staging', project_id: 'foo', id: 'test/test'
   end
 
-  as_a_project_deployer do
+  as_a :project_deployer do
     describe '#show' do
       let(:stage) { stages(:test_staging) }
       let(:project) { projects(:test) }

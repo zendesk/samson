@@ -10,7 +10,7 @@ describe JobsController do
   let(:job) { Job.create!(command: command, project: project, user: user) }
   let(:job_service) { stub(execute: nil) }
 
-  as_a_viewer do
+  as_a :viewer do
     unauthorized :delete, :destroy, project_id: :foo, id: 1
 
     describe "#enabled" do
@@ -74,7 +74,7 @@ describe JobsController do
     end
   end
 
-  as_a_project_deployer do
+  as_a :project_deployer do
     describe "#destroy" do
       it "deletes the job" do
         delete :destroy, params: {project_id: project.to_param, id: job}

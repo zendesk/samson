@@ -6,7 +6,7 @@ SingleCov.covered!
 describe Env::EnvironmentController do
   unauthorized :get, :show, project_id: 1, deploy_group: 1
 
-  as_a_viewer do
+  as_a :viewer do
     describe "#show" do
       let(:project) { projects(:test) }
       let(:deploy_group) { deploy_groups(:pod1) }

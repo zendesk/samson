@@ -11,7 +11,7 @@ describe Kubernetes::UsageLimitsController do
   unauthorized :get, :index
   unauthorized :get, :show, id: 1
 
-  as_a_deployer do
+  as_a :deployer do
     unauthorized :get, :new
     unauthorized :post, :create
     unauthorized :patch, :update, id: 1
@@ -66,7 +66,7 @@ describe Kubernetes::UsageLimitsController do
     end
   end
 
-  as_an_admin do
+  as_a :admin do
     describe "#index" do
       let!(:other) { Kubernetes::UsageLimit.create!(cpu: 1, memory: 10, scope: environments(:production)) }
 

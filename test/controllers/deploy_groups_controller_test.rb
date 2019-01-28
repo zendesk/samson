@@ -8,7 +8,7 @@ describe DeployGroupsController do
   let(:stage) { stages(:test_staging) }
   let(:json) { JSON.parse(response.body) }
 
-  as_a_viewer do
+  as_a :viewer do
     describe "#index" do
       let(:json) { JSON.parse(response.body) }
 
@@ -83,7 +83,7 @@ describe DeployGroupsController do
     end
   end
 
-  as_a_project_admin do
+  as_a :project_admin do
     unauthorized :post, :create
     unauthorized :get, :new
     unauthorized :get, :edit, id: 1
@@ -91,7 +91,7 @@ describe DeployGroupsController do
     unauthorized :delete, :destroy, id: 1
   end
 
-  as_a_super_admin do
+  as_a :super_admin do
     describe "#new" do
       it 'renders' do
         get :new

@@ -18,7 +18,7 @@ describe ProjectsController do
     projects(:other).delete
   end
 
-  as_a_viewer do
+  as_a :viewer do
     describe "#index" do
       it "renders" do
         get :index
@@ -194,12 +194,12 @@ describe ProjectsController do
     end
   end
 
-  as_a_deployer do
+  as_a :deployer do
     unauthorized :put, :update, id: :foo
     unauthorized :delete, :destroy, id: :foo
   end
 
-  as_a_project_admin do
+  as_a :project_admin do
     unauthorized :get, :new
     unauthorized :post, :create
 
@@ -287,7 +287,7 @@ describe ProjectsController do
     end
   end
 
-  as_an_admin do
+  as_a :admin do
     describe "#new" do
       it "renders" do
         get :new

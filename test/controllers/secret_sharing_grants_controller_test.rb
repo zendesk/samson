@@ -7,7 +7,7 @@ describe SecretSharingGrantsController do
   let(:project) { projects(:test) }
   let!(:grant) { SecretSharingGrant.create!(project: project, key: "foobar") }
 
-  as_a_viewer do
+  as_a :viewer do
     describe "#index" do
       it "renders" do
         get :index
@@ -36,13 +36,13 @@ describe SecretSharingGrantsController do
     end
   end
 
-  as_a_deployer do
+  as_a :deployer do
     unauthorized :get, :new
     unauthorized :post, :create
     unauthorized :delete, :destroy, id: 1
   end
 
-  as_an_admin do
+  as_a :admin do
     describe "#new" do
       it "renders" do
         get :new

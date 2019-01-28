@@ -29,7 +29,7 @@ describe BuildsController do
     )
   end
 
-  as_a_viewer do
+  as_a :viewer do
     unauthorized :get, :new, project_id: :foo
     unauthorized :post, :create, project_id: :foo
     unauthorized :get, :edit, id: 1, project_id: :foo
@@ -118,7 +118,7 @@ describe BuildsController do
     end
   end
 
-  as_a_project_deployer do
+  as_a :project_deployer do
     describe '#new' do
       it 'renders' do
         get :new, params: {project_id: project.to_param}

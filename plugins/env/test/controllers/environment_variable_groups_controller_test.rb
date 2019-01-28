@@ -54,7 +54,7 @@ describe EnvironmentVariableGroupsController do
     p
   end
 
-  as_a_viewer do
+  as_a :viewer do
     unauthorized :get, :new
     unauthorized :post, :create
 
@@ -163,7 +163,7 @@ describe EnvironmentVariableGroupsController do
     end
   end
 
-  as_a_project_admin do
+  as_a :project_admin do
     describe "#new" do
       it "renders" do
         get :new
@@ -263,7 +263,7 @@ describe EnvironmentVariableGroupsController do
     end
   end
 
-  as_an_admin do
+  as_a :admin do
     describe "#update" do
       before { env_group }
       it_updates

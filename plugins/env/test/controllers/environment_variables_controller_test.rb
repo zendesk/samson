@@ -6,7 +6,7 @@ SingleCov.covered!
 describe EnvironmentVariablesController do
   let!(:env_var) { EnvironmentVariable.create!(name: 'FOO', value: 'bar', parent: projects(:test)) }
 
-  as_a_viewer do
+  as_a :viewer do
     unauthorized :delete, :destroy, id: 1
 
     describe "#index" do
@@ -32,7 +32,7 @@ describe EnvironmentVariablesController do
     end
   end
 
-  as_an_admin do
+  as_a :admin do
     describe "#destroy" do
       it "destroy" do
         assert_difference "EnvironmentVariable.count", -1 do

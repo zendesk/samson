@@ -4,7 +4,7 @@ require_relative '../../test_helper'
 SingleCov.covered!
 
 describe Kubernetes::RoleVerificationsController do
-  as_a_viewer do
+  as_a :viewer do
     describe '#new' do
       it "renders" do
         get :new
