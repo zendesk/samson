@@ -36,14 +36,6 @@ ActiveRecord::Migration.check_pending!
 
 Samson::Hooks.symlink_plugin_fixtures
 
-# Use AD::IntegrationTest for the base class when describing a controller
-# https://github.com/blowmage/minitest-rails/issues/195
-class ActionController::TestCase
-  register_spec_type(self) do |desc|
-    desc.is_a?(Class) && desc < ActionController::Metal
-  end
-end
-
 ActiveRecord::Base.logger.level = 1
 WebMock.disable_net_connect!(allow: 'codeclimate.com')
 
