@@ -68,7 +68,7 @@ describe CommandsController do
       it "can create a command for an allowed project" do
         post :create, params: params
         flash[:notice].wont_be_nil
-        assert_redirected_to commands_path
+        assert_redirected_to command_path(Command.last)
       end
 
       it "fails for invalid command" do
@@ -90,7 +90,7 @@ describe CommandsController do
 
       it "can update html" do
         patch :update, params: params
-        assert_redirected_to commands_path
+        assert_redirected_to command
         flash[:notice].wont_be_nil
       end
 
@@ -123,7 +123,7 @@ describe CommandsController do
         it "can update when admin of both" do
           UserProjectRole.create!(role_id: Role::ADMIN.id, project: other_project, user: user)
           patch :update, params: params
-          assert_redirected_to commands_path
+          assert_redirected_to command
         end
       end
 
@@ -161,19 +161,21 @@ describe CommandsController do
     describe "#create" do
       it "cannot create for a global project" do
         post :create, params: {command: {command: "hello"}}
-        assert_redirected_to commands_path
+        assert_redirected_to command_path(Command.last)
       end
     end
 
     describe '#update' do
       it "updates a project" do
-        put :update, params: {id: commands(:echo).id, command: {command: 'echo hi', project_id: other_project.id}}
-        assert_redirected_to commands_path
+        command = commands(:echo)
+        put :update, params: {id: command.id, command: {command: 'echo hi', project_id: other_project.id}}
+        assert_redirected_to command_path(command)
       end
 
       it "updates a global commands" do
-        put :update, params: {id: commands(:global).id, command: {command: 'echo hi'}}
-        assert_redirected_to commands_path
+        command = commands(:global)
+        put :update, params: {id: command.id, command: {command: 'echo hi'}}
+        assert_redirected_to command_path(command)
       end
     end
 

@@ -76,7 +76,7 @@ class CommandsController < ApplicationController
     respond_to do |format|
       format.html do
         flash[:notice] = notice
-        redirect_to commands_path
+        redirect_to @command
       end
       format.json { render json: {} }
     end
