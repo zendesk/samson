@@ -17,7 +17,7 @@
           </div>
           <div class="col-lg-8">
             <% klass = "pre-command pre-inline #{command.global? ? 'global' : 'local'} #{'others' if others_warning} #{'no_access' unless administrated.include?(command.project_id)}" %>
-            <pre data-type="textarea" data-others-warning="<%= others_warning %>" data-url="<%= command_path(b.value, stage_id: @stage.id) %>" class="<%= klass %>"><%= b.text %></pre>
+            <pre data-type="textarea" data-others-warning="<%= others_warning %>" data-url="<%= command_path(b.value, stage_id: @stage.id, format: :json) %>" class="<%= klass %>"><%= b.text %></pre>
           </div>
           <%= edit_command_link command %>
           <%= content_tag :span, others, title: others_warning + " use this. Click edit for details.", class: 'glyphicon glyphicon-lock' if others_warning %>
