@@ -311,3 +311,17 @@ ActionController::TestCase.class_eval do
     end
   end)
 end
+
+ActionDispatch::IntegrationTest.class_eval do
+  def self.as_a(type, &block)
+    describe "as a #{type}" do
+      before { ApplicationController.any_instance.stubs(current_user: users(type), login_user: true) }
+      instance_exec(&block)
+    end
+  end
+
+  # bring back helper that was removed in rails 5
+  def assigns(name)
+    @controller.instance_variable_get(:"@#{name}")
+  end
+end

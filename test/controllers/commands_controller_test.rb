@@ -56,7 +56,7 @@ describe CommandsController do
     describe '#new' do
       it 'renders' do
         get :new
-        assert_template :show
+        assert_template :new
       end
     end
   end
@@ -74,7 +74,7 @@ describe CommandsController do
       it "fails for invalid command" do
         params[:command][:command] = ""
         post :create, params: params
-        assert_template :show
+        assert_template :new
       end
 
       it "cannot create for a global project" do
@@ -132,7 +132,7 @@ describe CommandsController do
 
         it "cannot update invalid as html" do
           patch :update, params: params
-          assert_template :show
+          assert_template :edit
         end
 
         it "cannot update invalid as json" do
@@ -202,7 +202,7 @@ describe CommandsController do
 
             delete_command
 
-            flash[:notice].wont_be_nil
+            assert flash[:notice]
             assert_redirected_to commands_path
           end
 
@@ -270,11 +270,9 @@ describe CommandsController do
           let(:format) { 'html' }
 
           it 'fails' do
-            assert_template :show
-          end
-
-          it 'did not remove the command' do
             Command.exists?(command.id).must_equal(true)
+            assert_redirected_to command
+            assert flash[:alert]
           end
         end
 

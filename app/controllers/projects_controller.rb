@@ -1,13 +1,11 @@
 # frozen_string_literal: true
 require 'csv'
 
-class ProjectsController < ApplicationController
-  include CurrentProject
-
-  skip_before_action :require_project, only: [:index, :new, :create]
-
+class ProjectsController < ResourceController
+  before_action :find_resource, only: [:show, :edit, :update, :destroy, :deploy_group_versions]
   before_action :authorize_resource!, except: [:deploy_group_versions, :edit]
 
+  # TODO: make this behave more like resource_controller
   def index
     projects = projects_for_user
 
@@ -38,56 +36,8 @@ class ProjectsController < ApplicationController
   end
 
   def new
-    @project = Project.new
-    @project.current_user = current_user
+    super
     @project.stages.build(name: "Production")
-  end
-
-  def create
-    @project = Project.new(project_params)
-    @project.current_user = current_user
-
-    if @project.save
-      if Rails.application.config.samson.project_created_email
-        ProjectMailer.created_email(@current_user, @project).deliver_now
-      end
-      redirect_to @project
-      Rails.logger.info("#{@current_user.name_and_email} created a new project #{@project.to_param}")
-    else
-      render :new
-    end
-  end
-
-  def show
-    respond_to do |format|
-      format.html { @stages = @project.stages }
-      format.json do
-        render_as_json :project, @project, allowed_includes: [
-          :environment_variable_groups,
-          :environment_variables_with_scope,
-        ]
-      end
-    end
-  end
-
-  def edit
-  end
-
-  def update
-    if @project.update_attributes(project_params)
-      redirect_to @project
-    else
-      render :edit
-    end
-  end
-
-  def destroy
-    @project.soft_delete(validate: false)
-
-    if Rails.application.config.samson.project_deleted_email
-      ProjectMailer.deleted_email(@current_user, @project).deliver_now
-    end
-    redirect_to projects_path, notice: "Project removed."
   end
 
   def deploy_group_versions
@@ -100,8 +50,32 @@ class ProjectsController < ApplicationController
 
   protected
 
-  def project_params
-    params.require(:project).permit(
+  # compatibility with authorize_resource!
+  def current_project
+    @project
+  end
+
+  def create_callback
+    if Rails.application.config.samson.project_created_email
+      ProjectMailer.created_email(current_user, @project).deliver_now
+    end
+  end
+
+  def destroy_callback
+    if Rails.application.config.samson.project_deleted_email
+      ProjectMailer.deleted_email(current_user, @project).deliver_now
+    end
+  end
+
+  def allowed_includes
+    [
+      :environment_variable_groups,
+      :environment_variables_with_scope,
+    ]
+  end
+
+  def resource_params
+    super.permit(
       *[
         :name,
         :repository_url,
@@ -116,7 +90,7 @@ class ProjectsController < ApplicationController
         :include_new_deploy_groups,
         :dashboard,
       ] + Samson::Hooks.fire(:project_permitted_params)
-    )
+    ).merge(current_user: current_user)
   end
 
   # TODO: rename ... not user anymore
@@ -145,11 +119,6 @@ class ProjectsController < ApplicationController
         Project.ordered_for_user(current_user) # TODO: wasteful to use join when just doing counts
       end
     scope.alphabetical.order(id: :desc)
-  end
-
-  # Overriding require_project from CurrentProject
-  def require_project
-    @project = (Project.find_by_param!(params[:id]) if params[:id])
   end
 
   # Avoiding N+1 queries on project index

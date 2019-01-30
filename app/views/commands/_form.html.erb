@@ -1,0 +1,44 @@
+<% usages = @command.usages.presence %>
+
+<section>
+  <%= form_for @command, html: { class: "form-horizontal" } do |form| %>
+    <fieldset>
+      <%= render 'shared/errors', object: @command %>
+
+      <%= form.input :command, as: :text_area, input_html: {rows: 10, style: 'width: 800px'} %>
+
+      <%= form.input :project_id do %>
+        <% options = (current_user.admin? ? { include_blank: "Global" } : {}) %>
+        <%= form.select :project_id, current_user.administrated_projects.all.map {|p| [p.name, p.id]}, options, class: "form-control" %>
+      <% end %>
+
+      <% if usages %>
+        <div class="form-group">
+          <%= form.label :usage, value: "Usage", class: "col-lg-2 control-label" %>
+          <% usages.group_by(&:class).each do |klass, usages_by_class| %>
+            <div class="col-lg-4">
+              Used in <%= pluralize(usages_by_class.count, klass.name) %>:
+              <ul>
+                <% usages_by_class.each do |s| %>
+                  <li>
+                    <% if s.is_a?(Project) %>
+                      <%= link_to s.name, project_build_command_path(s) %>
+                    <% else %>
+                      <%= link_to "#{s.project.name} - #{s.name}", [s.project, s, action: :edit] %>
+                    <% end %>
+                  </li>
+                <% end %>
+              </ul>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+
+      <%= form.actions do %>
+        <% disabled = "Can only delete unused commands." if usages %>
+        <%= link_to_delete(@command, disabled: disabled) if @command.persisted? %> |
+        <%= link_to_history(@command) %>
+      <% end %>
+    </fieldset>
+  <% end %>
+</section>

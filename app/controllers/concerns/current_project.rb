@@ -7,11 +7,11 @@ module CurrentProject
     helper_method :current_project
   end
 
+  protected
+
   def current_project
     @project
   end
-
-  protected
 
   def require_project
     @project = (Project.find_by_param!(params[:project_id]) if params[:project_id])
