@@ -56,15 +56,19 @@ class ProjectsController < ResourceController
   end
 
   def create_callback
-    if Rails.application.config.samson.project_created_email
-      ProjectMailer.created_email(current_user, @project).deliver_now
+    if to = created_email
+      ProjectMailer.created_email(to, current_user, @project).deliver_now
     end
   end
 
   def destroy_callback
-    if Rails.application.config.samson.project_deleted_email
-      ProjectMailer.deleted_email(current_user, @project).deliver_now
+    if to = (ENV["PROJECT_DELETED_NOTIFY_ADDRESS"] || created_email)
+      ProjectMailer.deleted_email(to, current_user, @project).deliver_now
     end
+  end
+
+  def created_email
+    ENV["PROJECT_CREATED_NOTIFY_ADDRESS"]
   end
 
   def allowed_includes
