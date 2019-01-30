@@ -29,8 +29,8 @@ module Samson
       validate :validate_cert
       validate :validate_connection
 
-      after_save :refresh_vault_clients
-      after_save :expire_secrets_cache
+      after_commit :refresh_vault_clients
+      after_commit :expire_secrets_cache
 
       def cert_store
         return unless ca_cert.present?
