@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 2
+SingleCov.covered!
 
 describe ProjectsController do
   def fields_disabled?
@@ -268,14 +268,18 @@ describe ProjectsController do
 
           assert_redirected_to projects_path
           request.flash[:notice].wont_be_nil
+
+          refute ActionMailer::Base.deliveries.last
         end
       end
 
       it "sends deletion notification" do
-        delete :destroy, params: {id: project.to_param}
-        mail = ActionMailer::Base.deliveries.last
-        mail.subject.include?("Samson Project Deleted")
-        mail.subject.include?(project.name)
+        with_env PROJECT_DELETED_NOTIFY_ADDRESS: 'foo@bar.com' do
+          delete :destroy, params: {id: project.to_param}
+          mail = ActionMailer::Base.deliveries.last
+          mail.subject.include?("Samson Project Deleted")
+          mail.subject.include?(project.name)
+        end
       end
 
       it "does not fail when validations fail" do
@@ -303,31 +307,25 @@ describe ProjectsController do
     end
 
     describe "#create" do
-      before do
-        post :create, params: params
+      let(:params) do
+        {
+          project: {
+            name: "Hello",
+            repository_url: "git://foo.com/bar"
+          }
+        }
       end
 
-      describe "with valid parameters" do
-        let(:params) do
-          {
-            project: {
-              name: "Hello",
-              repository_url: "git://foo.com/bar"
-            }
-          }
-        end
-        let(:project) { Project.where(name: "Hello").first }
+      it "redirects to the new project's page" do
+        post :create, params: params
+        project = Project.last
+        assert_redirected_to project_path(project)
+        refute ActionMailer::Base.deliveries.last
+      end
 
-        it "redirects to the new project's page" do
-          assert_redirected_to project_path(project)
-        end
-
-        it "creates a new project" do
-          project.wont_be_nil
-          project.stages.must_be_empty
-        end
-
-        it "notifies about creation" do
+      it "notifies about creation" do
+        with_env PROJECT_CREATED_NOTIFY_ADDRESS: 'foo@bar.com' do
+          post :create, params: params
           mail = ActionMailer::Base.deliveries.last
           mail.subject.include?("Samson Project Created")
           mail.subject.include?(project.name)
@@ -335,9 +333,10 @@ describe ProjectsController do
       end
 
       describe "with invalid parameters" do
-        let(:params) { {project: {name: ""}} }
+        before { params[:project][:name] = '' }
 
         it "renders new template" do
+          post :create, params: params
           assert_template :new
         end
       end

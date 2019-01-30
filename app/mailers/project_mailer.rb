@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 class ProjectMailer < ApplicationMailer
-  def created_email(user, project)
-    build_mail user, project, Rails.application.config.samson.project_created_email, 'created'
+  def created_email(to, user, project)
+    build_mail user, project, to, 'created'
   end
 
-  def deleted_email(user, project)
-    build_mail user, project, Rails.application.config.samson.project_deleted_email, 'deleted'
+  def deleted_email(to, user, project)
+    build_mail user, project, to, 'deleted'
   end
 
   private

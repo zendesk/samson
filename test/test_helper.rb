@@ -280,6 +280,7 @@ ActionController::TestCase.class_eval do
 
   after do
     Warden.test_reset!
+    ActionMailer::Base.deliveries.clear
   end
 
   # overrides warden/test/helpers.rb which does not work in controller tests
