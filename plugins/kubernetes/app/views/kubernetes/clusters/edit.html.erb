@@ -1,5 +1,5 @@
 <%= page_title(@cluster.new_record? ? "New Kubernetes Cluster" : "Edit Kubernetes Cluster") %>
-<% config_contexts = (@cluster.config_filepath ? @cluster.kubeconfig.contexts : []) %>
+<% config_contexts = (@cluster.config_filepath ? @cluster.kubeconfig.contexts : []) rescue [] %>
 
 <section>
   <%= form_for @cluster, html: { class: "form-horizontal" } do |form| %>

@@ -25,7 +25,7 @@
   <div class="form-group">
     <label class="col-lg-2 control-label">URL</label>
     <div class="col-lg-4">
-      <p class="form-control-static"><%= @cluster.client('v1').api_endpoint %></p>
+      <p class="form-control-static"><%= @cluster.client('v1').api_endpoint rescue "Error finding api endpoint: #{$!}" %></p>
     </div>
   </div>
 

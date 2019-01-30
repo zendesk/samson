@@ -5,7 +5,7 @@ SingleCov.covered!
 
 describe Kubernetes::ClustersController do
   def self.use_example_config
-    around { |t| with_example_kube_config { |f| with_env "KUBE_CONFIG_FILE": f, &t } }
+    around { |t| with_example_kube_config { |f| with_env KUBE_CONFIG_FILE: f, &t } }
   end
 
   let(:cluster) { create_kubernetes_cluster }
@@ -33,6 +33,13 @@ describe Kubernetes::ClustersController do
       it "renders" do
         get :show, params: {id: cluster.id}
         assert_template :show
+      end
+
+      it "does not blow up when client cannot connect" do
+        with_env KUBE_CONFIG_FILE: "nope.txt" do
+          get :show, params: {id: cluster.id}
+          assert_template :show
+        end
       end
     end
   end
@@ -143,6 +150,12 @@ describe Kubernetes::ClustersController do
       use_example_config
 
       it "renders" do
+        get :edit, params: {id: cluster.id}
+        assert_template :edit
+      end
+
+      it "does not blow up when client cannot connect" do
+        cluster.update_column(:config_filepath, 'nope.txt')
         get :edit, params: {id: cluster.id}
         assert_template :edit
       end
