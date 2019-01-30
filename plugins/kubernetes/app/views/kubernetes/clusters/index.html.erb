@@ -11,7 +11,7 @@
         <th>Actions</th>
       </tr>
 
-      <% @clusters.each do |cluster| %>
+      <% @kubernetes_clusters.each do |cluster| %>
         <tr>
           <td><%= link_to cluster.name, cluster %></td>
           <td><%= cluster.description %></td>

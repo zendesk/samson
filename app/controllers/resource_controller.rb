@@ -131,7 +131,7 @@ class ResourceController < ApplicationController
   end
 
   def resource_name
-    resource_class.name.underscore
+    resource_class.name.underscore.tr('/', '_')
   end
 
   def assign_resource(value)

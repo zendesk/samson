@@ -92,20 +92,20 @@ describe Kubernetes::ClustersController do
 
       it "renders" do
         get :new
-        assert_template :edit
-        assigns(:cluster).config_filepath.must_include Dir.tmpdir
+        assert_template :new
+        assigns(:kubernetes_cluster).config_filepath.must_include Dir.tmpdir
       end
 
       it "renders when ECR plugin is active" do
         SamsonAwsEcr::Engine.expects(:active?).returns(true)
         get :new
-        assert_template :edit
+        assert_template :new
       end
 
       it "can prefill config_filepath" do
         Kubernetes::Cluster.any_instance.expects(:kubeconfig).returns(stub(contexts: []))
         get :new, params: {kubernetes_cluster: {config_filepath: "foo"}}
-        assigns(:cluster).config_filepath.must_equal "foo"
+        assigns(:kubernetes_cluster).config_filepath.must_equal "foo"
       end
 
       describe "when config file env is not set" do
@@ -113,15 +113,15 @@ describe Kubernetes::ClustersController do
 
         it "uses last config" do
           get :new
-          assert_template :edit
-          assigns(:cluster).config_filepath.must_equal "plugins/kubernetes/test/cluster_config.yml"
+          assert_template :new
+          assigns(:kubernetes_cluster).config_filepath.must_equal "plugins/kubernetes/test/cluster_config.yml"
         end
 
         it "can render without any config file" do
           Kubernetes::Cluster.delete_all
           get :new
-          assert_template :edit
-          assigns(:cluster).config_filepath.must_equal nil
+          assert_template :new
+          assigns(:kubernetes_cluster).config_filepath.must_equal nil
         end
       end
     end
@@ -142,7 +142,7 @@ describe Kubernetes::ClustersController do
       it "renders when it fails to create" do
         params.delete(:name)
         post :create, params: {kubernetes_cluster: params}
-        assert_template :edit
+        assert_template :new
       end
     end
 
@@ -166,7 +166,7 @@ describe Kubernetes::ClustersController do
 
       it "updates" do
         patch :update, params: {id: cluster.id, kubernetes_cluster: {name: "NEW"}}
-        assert_redirected_to "/kubernetes/clusters"
+        assert_redirected_to cluster
         cluster.reload.name.must_equal "NEW"
       end
 
@@ -185,13 +185,14 @@ describe Kubernetes::ClustersController do
         end
       end
 
-      it "renders when it fails to destroy" do
+      it "refuses to destroy" do
         # cluster still has usages, cannot destroy
         Kubernetes::ClusterDeployGroup.any_instance.stubs(:validate_namespace_exists)
         cluster.cluster_deploy_groups.create! deploy_group: deploy_groups(:pod100), namespace: 'foo'
 
         delete :destroy, params: {id: cluster.id}
-        assert_template :edit
+        assert_redirected_to cluster
+        assert flash[:alert]
       end
     end
   end

@@ -1,38 +1,38 @@
-<%= page_title "Kubernetes Cluster #{@cluster.name}" %>
+<%= page_title "Kubernetes Cluster #{@kubernetes_cluster.name}" %>
 
 <section class="form-horizontal">
   <div class="form-group">
     <label class="col-lg-2 control-label">Name</label>
     <div class="col-lg-4">
-      <p class="form-control-static"><%= @cluster.name %></p>
+      <p class="form-control-static"><%= @kubernetes_cluster.name %></p>
     </div>
   </div>
 
   <div class="form-group">
     <label class="col-lg-2 control-label">Config filepath</label>
     <div class="col-lg-4">
-      <p class="form-control-static"><%= @cluster.config_filepath %></p>
+      <p class="form-control-static"><%= @kubernetes_cluster.config_filepath %></p>
     </div>
   </div>
 
   <div class="form-group">
     <label class="col-lg-2 control-label">Description</label>
     <div class="col-lg-4">
-      <p class="form-control-static"><%= @cluster.description %></p>
+      <p class="form-control-static"><%= @kubernetes_cluster.description %></p>
     </div>
   </div>
 
   <div class="form-group">
     <label class="col-lg-2 control-label">URL</label>
     <div class="col-lg-4">
-      <p class="form-control-static"><%= @cluster.client('v1').api_endpoint rescue "Error finding api endpoint: #{$!}" %></p>
+      <p class="form-control-static"><%= @kubernetes_cluster.client('v1').api_endpoint rescue "Error finding api endpoint: #{$!}" %></p>
     </div>
   </div>
 
   <div class="form-group">
     <label class="col-lg-2 control-label">Context</label>
     <div class="col-lg-4">
-      <p class="form-control-static"><%= @cluster.config_context %></p>
+      <p class="form-control-static"><%= @kubernetes_cluster.config_context %></p>
     </div>
   </div>
 
@@ -40,14 +40,14 @@
     <label class="col-lg-2 control-label">Deploy Groups</label>
     <div class="col-lg-4">
       <p class="form-control-static">
-        <%= render 'deploy_group_list', deploy_groups: @cluster.deploy_groups %>
+        <%= render 'deploy_group_list', deploy_groups: @kubernetes_cluster.deploy_groups %>
       </p>
     </div>
   </div>
 
   <div class="form-group">
     <div class="col-lg-offset-2 col-lg-10">
-      <%= link_to "Edit", edit_kubernetes_cluster_path(@cluster), class: "btn btn-primary" %>
+      <%= link_to "Edit", edit_kubernetes_cluster_path(@kubernetes_cluster), class: "btn btn-primary" %>
       <%= link_to "Back", kubernetes_clusters_path, class: "btn btn-default" %>
     </div>
   </div>
