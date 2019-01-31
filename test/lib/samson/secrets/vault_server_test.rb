@@ -138,6 +138,14 @@ describe Samson::Secrets::VaultServer do
       server.update_attribute(:address, 'http://new.com')
       manager.send(:clients).values.first.address.must_equal 'http://new.com'
     end
+
+    it "removes clients" do
+      manager.send(:clients).size.must_equal 0
+      server = create_vault_server(name: 'pod0')
+      manager.send(:clients).size.must_equal 1
+      server.destroy!
+      manager.send(:clients).size.must_equal 0
+    end
   end
 
   describe "#expire_secrets_cache" do
