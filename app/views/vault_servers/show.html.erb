@@ -23,8 +23,7 @@
       <%= form.input :tls_verify, as: :check_box %>
       <%= form.input :ca_cert, as: :text_area, input_html: {size: '80x5', style: 'width: auto'} %>
 
-      <%= form.actions delete: @vault_server do %>
-        | <%= link_to_history @vault_server %>
+      <%= form.actions delete: true, history: true do %>
         <% if sync_targets %>
           | <%= link_to "Sync", "#", data: {target: "#sync_dialog"}, class: 'toggle' %>
         <% end %>

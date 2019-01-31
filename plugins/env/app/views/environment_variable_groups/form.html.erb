@@ -41,7 +41,7 @@
       <%= render "samson_env/environment_variables", form: form %> |
       <%= link_to "Preview", preview_environment_variable_groups_path(group_id: @group.id) %>
       <hr>
-      <%= form.actions delete: (@group.projects.length > 0 ? false : @group) %>
+      <%= form.actions delete: (@group.projects.length == 0) %>
     </fieldset>
   <% end %>
 </section>

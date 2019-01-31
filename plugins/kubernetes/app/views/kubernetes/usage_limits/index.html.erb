@@ -26,7 +26,7 @@
         <th></th>
       </tr>
 
-      <% @usage_limits.each do |usage_limit| %>
+      <% @kubernetes_usage_limits.each do |usage_limit| %>
         <tr>
           <% unless @project %>
             <td><%= usage_limit.project ? link_to(usage_limit.project.name, usage_limit.project) : 'All' %></td>
