@@ -32,7 +32,7 @@ class ResourceController < ApplicationController
       format.html do
         if @resource.save
           create_callback
-          redirect_to @resource, notice: "#{resource_class.name} was successfully created."
+          redirect_to @resource, notice: "Created!"
         else
           render :new
         end
@@ -59,7 +59,7 @@ class ResourceController < ApplicationController
     respond_to do |format|
       format.html do
         if @resource.update(resource_params)
-          redirect_to @resource, notice: "#{resource_class.name} was successfully updated."
+          redirect_to @resource, notice: "Updated!"
         else
           render :edit
         end
@@ -83,7 +83,7 @@ class ResourceController < ApplicationController
     respond_to do |format|
       format.html do
         if success
-          redirect_to resource_class, notice: "#{resource_class.name} was successfully destroyed."
+          redirect_to resource_class, notice: "Destroyed!"
         else
           error_message = <<~TEXT
             #{resource_class.name} could not be destroyed because:

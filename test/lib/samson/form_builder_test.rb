@@ -13,7 +13,8 @@ describe Samson::FormBuilder do
     template.extend ApplicationHelper
     template
   end
-  let(:builder) { Samson::FormBuilder.new(:user, User.new, template, {}) }
+  let(:object) { User.new }
+  let(:builder) { Samson::FormBuilder.new(:user, object, template, {}) }
 
   describe '#input' do
     it "adds a clickable label" do
@@ -112,7 +113,7 @@ describe Samson::FormBuilder do
   end
 
   describe '#actions' do
-    before { builder.object.stubs(persisted?: true) }
+    let(:object) { users(:viewer) }
 
     it "renders" do
       result = builder.actions
@@ -121,7 +122,7 @@ describe Samson::FormBuilder do
     end
 
     it "does not include delete link for new object" do
-      builder.object.unstub(:persisted?)
+      builder.object.stubs(persisted?: false)
       builder.actions(delete: true).wont_include "Delete"
     end
 
@@ -133,6 +134,22 @@ describe Samson::FormBuilder do
     it "can include custom delete link" do
       template.expects(:url_for).with([:admin, commands(:echo)]).returns('/xxx')
       builder.actions(delete: [:admin, commands(:echo)]).must_include "Delete"
+    end
+
+    it "does not include history link for new object" do
+      builder.object.stubs(persisted?: false)
+      builder.actions(history: true).wont_include "History"
+    end
+
+    it "can include history link" do
+      template.expects(:audits_path).returns('/xxx')
+      builder.actions(history: true).must_include "> <a href=\"/xxx\">History"
+    end
+
+    it "can include visibly separated history and delete link" do
+      template.expects(:url_for).times(2).returns('/xxx') # audits_url is passed into url_for
+      template.expects(:audits_path).returns('/xxx')
+      builder.actions(history: true, delete: true).must_include "> | <a href=\"/xxx\">History"
     end
 
     it "can add additional links with block" do
