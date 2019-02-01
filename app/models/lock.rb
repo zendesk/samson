@@ -20,10 +20,6 @@ class Lock < ActiveRecord::Base
   validates :user_id, presence: true
   validates :description, presence: true, if: :warning?
   validates :resource_type, inclusion: RESOURCE_TYPES
-  validates :resource_id, uniqueness: {
-    scope: [:resource_type, :warning],
-    message: "warning/lock for resource already exists."
-  }
   validate :unique_global_lock, on: :create
   validate :valid_delete_at, on: :create
 
