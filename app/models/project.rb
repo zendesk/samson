@@ -179,7 +179,7 @@ class Project < ActiveRecord::Base
 
   def last_deploy_by_stage
     return unless found = deploys.select('max(deploys.id) as id').reorder(nil).group(:stage_id).successful.presence
-    Deploy.find(found.map(&:id)).select(&:stage).sort_by { |d| d.stage.order }.presence
+    Deploy.find(found.map(&:id)).reject { |d| d.stage.try(&:deleted?) }.sort_by { |d| d.stage.order }.presence
   end
 
   def deployed_reference_to_non_production_stage?(reference)

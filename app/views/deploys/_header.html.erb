@@ -1,20 +1,21 @@
 <h1>
   <%= "#{@project.name} - Deploy ##{@deploy.id}" %>
+  <% if !@deploy.deleted? && !@deploy.stage.deleted? && !@deploy.project.deleted?%>
+    <div class="pull-right">
+      <% if deployer_for_project? %>
+        <%= redeploy_button %>
 
-  <div class="pull-right">
-    <% if deployer_for_project? %>
-      <%= redeploy_button %>
-
-      <% if @deploy.succeeded? && next_stage = @deploy.stage.next_stage %>
-        <% unless Lock.locked_for?(next_stage, current_user) %>
-          <%= link_to "Deploy #{@deploy.short_reference} to #{next_stage.name}",
-              new_project_stage_deploy_path(@project, next_stage, reference: @deploy.short_reference),
-              class: "btn btn-primary"
-          %>
+        <% if @deploy.succeeded? && next_stage = @deploy.stage.next_stage %>
+          <% unless Lock.locked_for?(next_stage, current_user) %>
+            <%= link_to "Deploy #{@deploy.short_reference} to #{next_stage.name}",
+                new_project_stage_deploy_path(@project, next_stage, reference: @deploy.short_reference),
+                class: "btn btn-primary"
+            %>
+          <% end %>
         <% end %>
       <% end %>
-    <% end %>
-  </div>
+    </div>
+  <% end %>
 </h1>
 
 <% if @deploy.job.waiting_for_restart? %>

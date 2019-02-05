@@ -118,6 +118,12 @@ describe DeploysController do
         assert_template :show
       end
 
+      it "renders soft deleted" do
+        deploy.soft_delete!
+        get :show, params: {project_id: project, id: deploy}
+        assert_template :show
+      end
+
       it "fails with unknown deploy" do
         assert_raises ActiveRecord::RecordNotFound do
           get :show, params: {project_id: project.to_param, id: "deploy:nope"}
@@ -344,6 +350,19 @@ describe DeploysController do
         end
         e.message.must_equal "Unsupported type Blob"
       end
+
+      it "renders the soft deleted deploys" do
+        deploy.soft_delete!
+        get :index
+        @response.body.must_include deploy.summary
+      end
+
+      it "displays deleted label instead of links" do
+        stage = deploy.stage
+        stage.soft_delete!
+        get :index
+        @response.body.must_include "#{stage.name} (Deleted)"
+      end
     end
 
     unauthorized :get, :new, project_id: :foo, stage_id: 2
@@ -431,6 +450,14 @@ describe DeploysController do
             assert_response :unprocessable_entity
           end
         end
+      end
+    end
+
+    describe "#show" do
+      it "renders soft deleted without re-deploy options" do
+        deploy.soft_delete!
+        get :show, params: {project_id: project, id: deploy}
+        @response.body.wont_include "Redeploy"
       end
     end
 

@@ -1,7 +1,11 @@
 <% cache [@project, !!@stage, deploy, params[:time_format].presence || current_user.time_format  ] do %>
   <tr>
     <% unless @project %>
-      <td><%= link_to deploy.project.name, deploy.project %></td>
+      <% if deploy.stage.deleted? %>
+        <td><%= deploy.project.name %> (Deleted)</td>
+      <% else %>
+        <td><%= link_to deploy.project.name, deploy.project %></td>
+      <% end %>
     <% end %>
     <td><%= render_time(deploy.start_time) %></td>
     <td>
@@ -14,7 +18,11 @@
       <%= link_to deploy.summary, [@project || deploy.project, deploy] %>
     </td>
     <% unless @stage %>
-      <td><%= link_to deploy.stage.name, [deploy.project, deploy.stage] %></td>
+      <% if deploy.stage.deleted? %>
+        <td><%= deploy.stage.name %> (Deleted)</td>
+      <% else %>
+        <td><%= link_to deploy.stage.name, [deploy.project, deploy.stage] %></td>
+      <% end %>
     <% end %>
     <td><%= status_badge deploy.job.status %></td>
   </tr>

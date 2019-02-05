@@ -72,14 +72,23 @@ module ApplicationHelper
   # tested via link_to_resource
   def link_parts_for_resource(resource)
     case resource
-    when Project, DeployGroup, User, Samson::Secrets::VaultServer then [resource.name, resource]
+    when Project, DeployGroup, User, Samson::Secrets::VaultServer then
+      if link = link_soft_deleted_resource(resource, resource.name)
+        link
+      else
+        [resource.name, resource]
+      end
     when Command then ["Command ##{resource.id}", resource]
     when UserProjectRole then ["Role for ##{resource.user.name}", resource.user]
     when Environment then [resource.name, dashboard_path(resource)]
     when Stage then
       name = resource.name
       name = (resource.lock.warning? ? warning_icon : lock_icon) + " " + name if resource.lock
-      [name, [resource.project, resource]]
+      if link = link_soft_deleted_resource(resource, name)
+        link
+      else
+        [name, [resource.project, resource]]
+      end
     when SecretSharingGrant then [resource.key, resource]
     else
       @@link_parts_for_resource ||= Samson::Hooks.fire(:link_parts_for_resource).to_h
@@ -96,6 +105,10 @@ module ApplicationHelper
     else
       link_to(name, path)
     end
+  end
+
+  def link_soft_deleted_resource(resource, name)
+    [name, nil, true] if resource.respond_to?(:deleted?) && resource.deleted?
   end
 
   def manual_breadcrumb(items)

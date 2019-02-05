@@ -226,6 +226,16 @@ describe ApplicationHelper do
     it "renders array" do
       breadcrumb(['foo', 'bar'], ['baz', 'bar']).must_equal "<ul class=\"breadcrumb\"><li class=\"\"><a href=\"/\">Home</a></li><li class=\"\"><a href=\"bar\">foo</a></li><li class=\"active\">baz</li></ul>"
     end
+
+    it "renders soft_deleted stage" do
+      stage.soft_delete!
+      breadcrumb(stage, "stuff").must_equal "<ul class=\"breadcrumb\"><li class=\"\"><a href=\"/\">Home</a></li><li class=\"active\">Staging</li><li class=\"active\">stuff</li></ul>"
+    end
+
+    it "renders soft_deleted project" do
+      stage.soft_delete!
+      breadcrumb(project, "stuff").must_equal "<ul class=\"breadcrumb\"><li class=\"\"><a href=\"/\">Home</a></li><li class=\"active\">Foo</li><li class=\"active\">stuff</li></ul>"
+    end
   end
 
   describe "#flash_messages" do

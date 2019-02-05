@@ -455,6 +455,20 @@ describe Deploy do
     end
   end
 
+  describe ".stage" do
+    it "renders soft_delete stage" do
+      stage.soft_delete!
+      deploy.stage.wont_be_nil
+    end
+  end
+
+  describe ".project" do
+    it "renders soft_delete project" do
+      project.soft_delete!(validate: false)
+      deploy.project.wont_be_nil
+    end
+  end
+
   describe "#url" do
     it 'builds an address for a deploy' do
       deploy.url.must_equal "http://www.test-url.com/projects/foo/deploys/#{deploy.id}"

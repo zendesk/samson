@@ -64,6 +64,14 @@ class Deploy < ActiveRecord::Base
     end
   end
 
+  def stage
+    Stage.with_deleted { Stage.find(stage_id) } if stage_id
+  end
+
+  def project
+    Project.with_deleted { Project.find(project_id) } if project_id
+  end
+
   def references?(ref)
     reference == ref || (ref =~ Build::SHA1_REGEX && job&.commit == ref)
   end

@@ -2,13 +2,11 @@
 require 'csv'
 
 class DeploysController < ApplicationController
-  include CurrentProject
-
-  skip_before_action :require_project, only: [:active, :active_count, :changeset]
-
+  before_action :require_project, except: [:active, :active_count, :changeset]
   before_action :authorize_project_deployer!, except: [:index, :show, :active, :active_count, :changeset]
   before_action :find_deploy, except: [:index, :active, :active_count, :new, :create, :confirm]
   before_action :stage, only: :new
+  helper_method :current_project
 
   def active
     @deploys = deploys_scope.active
@@ -175,13 +173,15 @@ class DeploysController < ApplicationController
       end
     end
 
-    deploys = deploys_scope
-    deploys = deploys.where(stage: stages) if stages
-    deploys = deploys.where(job: jobs) if jobs
-    if updated_at = search[:updated_at].presence
-      deploys = deploys.where("updated_at between ? AND ?", *updated_at)
+    Deploy.with_deleted do
+      deploys = deploys_scope
+      deploys = deploys.where(stage: stages) if stages
+      deploys = deploys.where(job: jobs) if jobs
+      if updated_at = search[:updated_at].presence
+        deploys = deploys.where("updated_at between ? AND ?", *updated_at)
+      end
+      pagy(deploys, page: page, items: 30)
     end
-    pagy(deploys, page: page, items: 30)
   end
 
   def deploy_permitted_params
@@ -201,11 +201,19 @@ class DeploysController < ApplicationController
   end
 
   def find_deploy
-    @deploy = Deploy.find(params[:id])
+    @deploy = Deploy.with_deleted { Deploy.find(params[:id]) }
   end
 
   def deploys_scope
     current_project&.deploys || Deploy
+  end
+
+  def current_project
+    @project
+  end
+
+  def require_project
+    @project = (Project.with_deleted { Project.find_by_param!(params[:project_id]) } if params[:project_id])
   end
 
   def param_to_bool(param)
