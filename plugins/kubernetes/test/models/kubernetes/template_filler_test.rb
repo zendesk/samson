@@ -144,12 +144,6 @@ describe Kubernetes::TemplateFiller do
         must_equal doc.kubernetes_release.deploy.url
     end
 
-    it "sets name for unknown non-primary kinds" do
-      raw_template[:kind] = "foobar"
-      raw_template[:spec][:template][:spec].delete(:containers)
-      template.to_hash[:metadata][:name].must_equal "test-app-server"
-    end
-
     it "sets replicas for templates" do
       raw_template[:kind] = "foobar"
       raw_template[:spec].delete :replicas
@@ -157,6 +151,18 @@ describe Kubernetes::TemplateFiller do
       result = template.to_hash
       result[:spec][:replicas].must_be_nil
       result[:spec][:template][:spec][:replicas].must_equal 2
+    end
+
+    it "sets name for unknown non-primary kinds" do
+      raw_template[:kind] = "foobar"
+      raw_template[:spec][:template][:spec].delete(:containers)
+      template.to_hash[:metadata][:name].must_equal "test-app-server"
+    end
+
+    it "keeps resource name when keep_name is set" do
+      raw_template[:metadata][:name] = "foobar"
+      raw_template[:metadata][:annotations] = {"samson/keep_name": 'true'}
+      template.to_hash[:metadata][:name].must_equal 'foobar'
     end
 
     ['CustomResourceDefinition', 'APIService'].each do |kind|
@@ -222,6 +228,12 @@ describe Kubernetes::TemplateFiller do
       it "fills name" do
         doc.kubernetes_role.update_column(:service_name, 'custom')
         template.to_hash[:metadata][:name].must_equal 'custom'
+      end
+
+      it "keeps service name when keep_name is set" do
+        raw_template[:metadata][:name] = "foobar"
+        raw_template[:metadata][:annotations] = {"samson/keep_name": 'true'}
+        template.to_hash[:metadata][:name].must_equal 'foobar'
       end
 
       it "fails when trying to fill for a generated service" do
