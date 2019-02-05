@@ -108,7 +108,7 @@ module ApplicationHelper
   end
 
   def link_soft_deleted_resource(resource, name)
-    [name, nil, true] if resource.respond_to?(:deleted?) && resource.deleted?
+    [name, [nil], true] if resource.respond_to?(:deleted?) && resource.deleted?
   end
 
   def manual_breadcrumb(items)

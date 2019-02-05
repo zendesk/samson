@@ -460,12 +460,22 @@ describe Deploy do
       stage.soft_delete!
       deploy.stage.wont_be_nil
     end
+
+    it "skips without stage" do
+      deploy.stage_id = nil
+      deploy.stage.must_be_nil
+    end
   end
 
   describe ".project" do
     it "renders soft_delete project" do
       project.soft_delete!(validate: false)
       deploy.project.wont_be_nil
+    end
+
+    it "skips without project" do
+      deploy.project_id = nil
+      deploy.project.must_be_nil
     end
   end
 
@@ -634,7 +644,7 @@ describe Deploy do
             prod.name,
             environment.production,
             !prod.no_code_deployed, # Inverted because report is reporting as code deployed
-            project.deleted_at,
+            prod_deploy.project.deleted_at,
             prod.deploy_group_names.join('|')
           ]
         end
@@ -660,7 +670,7 @@ describe Deploy do
             prod.name,
             prod.production,
             !prod.no_code_deployed, # Inverted because report is reporting as code deployed
-            project.deleted_at,
+            prod_deploy.project.deleted_at,
             ''
           ]
         end

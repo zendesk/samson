@@ -233,7 +233,7 @@ describe ApplicationHelper do
     end
 
     it "renders soft_deleted project" do
-      stage.soft_delete!
+      project.soft_delete(validate: false)
       breadcrumb(project, "stuff").must_equal "<ul class=\"breadcrumb\"><li class=\"\"><a href=\"/\">Home</a></li><li class=\"active\">Foo</li><li class=\"active\">stuff</li></ul>"
     end
   end

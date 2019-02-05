@@ -17,7 +17,7 @@ describe Deploy do
     end
 
     it "copies kubernetes" do
-      stage.kubernetes = true
+      stage.update_attribute(:kubernetes, true)
       create_deploy.kubernetes.must_equal true
     end
 
