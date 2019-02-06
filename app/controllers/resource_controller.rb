@@ -32,7 +32,7 @@ class ResourceController < ApplicationController
       format.html do
         if @resource.save
           create_callback
-          redirect_to @resource, notice: "Created!"
+          redirect_back fallback_location: @resource, notice: "Created!"
         else
           render :new
         end
@@ -59,7 +59,7 @@ class ResourceController < ApplicationController
     respond_to do |format|
       format.html do
         if @resource.update(resource_params)
-          redirect_to @resource, notice: "Updated!"
+          redirect_back fallback_location: @resource, notice: "Updated!"
         else
           render :edit
         end
