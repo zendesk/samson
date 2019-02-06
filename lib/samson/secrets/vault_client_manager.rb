@@ -112,7 +112,7 @@ module Samson
       end
 
       def clients
-        @clients ||= VaultServer.all.each_with_object({}) do |vault_server, all|
+        @clients ||= VaultServer.all.order(preferred_reader: :desc).each_with_object({}) do |vault_server, all|
           all[vault_server.id] = vault_server.client
         end
       end

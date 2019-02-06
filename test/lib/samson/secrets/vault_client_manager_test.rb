@@ -42,6 +42,14 @@ describe Samson::Secrets::VaultClientManager do
         manager.read('global/global/global/foo').class.must_equal(Vault::Secret)
       end
     end
+
+    it "reads from the preferred server" do
+      create_vault_server(address: 'http://pick-me.com', name: 'pod101', token: 'POD100-TOKEN', preferred_reader: true)
+      create_vault_server(address: 'http://not-me.com', name: 'pod102', token: 'POD100-TOKEN')
+      assert_vault_request(
+        :get, 'global/global/global/foo', address: 'http://pick-me.com', body: {data: {foo: :bar}}.to_json
+      ) { manager.read('global/global/global/foo') }
+    end
   end
 
   describe "#write" do
