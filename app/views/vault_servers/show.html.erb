@@ -20,6 +20,7 @@
       <%= form.input :address, as: :url_field, required: true %>
       <%= form.input :token, required: true, input_html: token_options %>
       <%= form.input :versioned_kv, as: :check_box, label: "Using versioned key/value secret engine" %>
+      <%= form.input :preferred_reader, as: :check_box, help: "Read from this server when picking from multiple servers" %>
       <%= form.input :tls_verify, as: :check_box %>
       <%= form.input :ca_cert, as: :text_area, input_html: {size: '80x5', style: 'width: auto'} %>
 
