@@ -65,11 +65,11 @@ class Deploy < ActiveRecord::Base
   end
 
   def stage
-    @stage ||= (Stage.with_deleted { Stage.find(stage_id) } if stage_id)
+    super || (Stage.with_deleted { Stage.find(stage_id) } if stage_id)
   end
 
   def project
-    @project ||= (Project.with_deleted { Project.find(project_id) } if project_id)
+    super || (Project.with_deleted { Project.find(project_id) } if project_id)
   end
 
   def references?(ref)
