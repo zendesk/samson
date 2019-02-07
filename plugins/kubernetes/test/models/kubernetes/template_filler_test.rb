@@ -881,6 +881,13 @@ describe Kubernetes::TemplateFiller do
         template.to_hash[:spec][:foo].must_equal "bar"
       end
 
+      it "supports - mode to make name valid dns name when user uses /" do
+        raw_template[:metadata][:annotations] = {
+          "samson-set-via-env-json-spec.foo" => "FOO"
+        }
+        template.to_hash[:spec][:foo].must_equal "bar"
+      end
+
       it "sets podless roles" do
         raw_template[:spec] = {}
         template.to_hash[:spec][:foo].must_equal "bar"

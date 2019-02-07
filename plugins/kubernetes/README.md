@@ -217,6 +217,8 @@ For custom things that need to be different between environments/deploy-groups.
 Use an annotation to configure what will to be replaced:
 ```
 metadata.annotations.samson/set_via_env_json-metadata.labels.custom: SOME_ENV_VAR
+or for paths failing dns name validations:
+metadata.annotations.samson-set-via-env-json-metadata.labels.custom: SOME_ENV_VAR
 ```
 Then configure an ENV var with that same name and a value that is valid JSON.
 
