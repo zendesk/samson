@@ -216,7 +216,7 @@ describe DeploysController do
         assigns[:deploys].must_include deploy
       end
 
-      it "skips deleted without params " do
+      it "skips deleted without params" do
         deploy.soft_delete!
         get :index
         assert_template :index
