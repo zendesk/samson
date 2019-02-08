@@ -61,6 +61,12 @@
   padding: 0 50px;
 }
 
+.deploy-search{
+  input[type="checkbox"] {
+    margin: 10px 0 0 15px;
+  }
+}
+
 #deploy-confirmation {
   display: none;
 

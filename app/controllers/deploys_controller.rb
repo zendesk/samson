@@ -2,7 +2,9 @@
 require 'csv'
 
 class DeploysController < ApplicationController
-  around_action :wrap_in_with_deleted, if: proc { request.get? && params[:with_deleted] == "true" }
+  around_action :wrap_in_with_deleted, if: proc {
+    request.get? && (params[:with_deleted] == "true" || params.dig(:search, :deleted_at) == "true")
+  }
 
   include CurrentProject
 
@@ -183,6 +185,7 @@ class DeploysController < ApplicationController
     if updated_at = search[:updated_at].presence
       deploys = deploys.where("updated_at between ? AND ?", *updated_at)
     end
+    deploys = deploys.where.not(deleted_at: nil) if search[:deleted_at].presence
     pagy(deploys, page: page, items: 30)
   end
 
