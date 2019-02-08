@@ -11,7 +11,7 @@
       <% end %>
     </td>
     <td>
-      <%= link_to deploy.summary, [@project || deploy.project, deploy] %>
+      <%= link_to deploy.summary, [@project || deploy.project, deploy, with_deleted: params[:with_deleted]] %>
     </td>
     <% unless @stage %>
       <td><%= link_to deploy.stage.name, [deploy.project, deploy.stage] %></td>

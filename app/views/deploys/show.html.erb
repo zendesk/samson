@@ -10,7 +10,7 @@
 
 <%= Samson::Hooks.render_views(:deploy_show_view, self, deploy: @deploy) %>
 
-<ul id="deploy-tabs" class="nav nav-tabs" data-changeset-url="<%= changeset_project_deploy_url(@project, @deploy) %>">
+<ul id="deploy-tabs" class="nav nav-tabs" data-changeset-url="<%= changeset_project_deploy_url(@project, @deploy, with_deleted: params[:with_deleted]) %>">
   <li class="active"><a href="#output" data-toggle="tab">Output</a></li>
   <li><a href="#files" data-type="github" data-toggle="tab">Files</a></li>
   <li><a href="#commits" data-type="github" data-toggle="tab">Commits</a></li>
