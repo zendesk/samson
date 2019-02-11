@@ -365,9 +365,9 @@ describe DeploysController do
         assigns[:deploys].map(&:id).sort.must_equal expected.map(&:id).sort
       end
 
-      it "filters by deleted_at" do
+      it "filters by deleted" do
         Deploy.last.soft_delete!
-        get :index, params: {search: {deleted_at: "true"}}, format: "json"
+        get :index, params: {search: {deleted: "true"}}, format: "json"
         assert_response :ok
         deploys["deploys"].count.must_equal 1
       end

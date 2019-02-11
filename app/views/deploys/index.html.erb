@@ -32,7 +32,7 @@
       <%= search_select :time_format, User::TIME_FORMATS, selected: params.dig(:search, :time_format) || current_user.time_format, label: 'Time', size: 1 %>
       <div class="col-sm-1">
         <%= label_tag :Deleted %>
-        <%= check_box_tag 'search[deleted_at]', true, params.dig(:search, :deleted_at) %>
+        <%= check_box_tag 'search[deleted]', true, params.dig(:search, :deleted) %>
       </div>
     <% end %>
   </div>

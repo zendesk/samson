@@ -2,10 +2,7 @@
 require 'csv'
 
 class DeploysController < ApplicationController
-  around_action :wrap_in_with_deleted, if: proc {
-    request.get? && (params[:with_deleted] == "true" || params.dig(:search, :deleted_at) == "true")
-  }
-
+  include WrapInWithDeleted
   include CurrentProject
 
   skip_before_action :require_project, only: [:active, :active_count, :changeset]
@@ -185,7 +182,7 @@ class DeploysController < ApplicationController
     if updated_at = search[:updated_at].presence
       deploys = deploys.where("updated_at between ? AND ?", *updated_at)
     end
-    deploys = deploys.where.not(deleted_at: nil) if search[:deleted_at].presence
+    deploys = deploys.where.not(deleted_at: nil) if search_for_deleted?
     pagy(deploys, page: page, items: 30)
   end
 
@@ -242,16 +239,6 @@ class DeploysController < ApplicationController
       if deploy_count > csv_limit
         csv << ['-', 'There are more records. Generate a full report at']
         csv << ['-', new_csv_export_url]
-      end
-    end
-  end
-
-  def wrap_in_with_deleted
-    Project.with_deleted do
-      Stage.with_deleted do
-        Deploy.with_deleted do
-          yield
-        end
       end
     end
   end
