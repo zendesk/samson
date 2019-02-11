@@ -59,7 +59,7 @@ describe Kubernetes::DeployGroupRolesController do
       it "renders JSON" do
         get :show, params: {id: deploy_group_role.id}, format: :json
         assert_response :success
-        json.keys.must_equal ['deploy_group_role']
+        json.keys.must_equal ['kubernetes_deploy_group_role']
       end
 
       describe "rendering verification_template" do
@@ -74,8 +74,8 @@ describe Kubernetes::DeployGroupRolesController do
           GitRepository.any_instance.stubs(:commit_from_ref).with("master").returns(commit)
           get :show, params: {id: deploy_group_role.id, include: "verification_template"}, format: :json
           assert_response :success
-          json.keys.must_equal ['deploy_group_role']
-          json["deploy_group_role"].keys.must_include 'verification_template'
+          json.keys.must_equal ['kubernetes_deploy_group_role']
+          json["kubernetes_deploy_group_role"].keys.must_include 'verification_template'
         end
 
         it "can request exact ref" do
@@ -95,7 +95,7 @@ describe Kubernetes::DeployGroupRolesController do
       it "can prefill" do
         get :new, params: {kubernetes_deploy_group_role: {kubernetes_role_id: kubernetes_roles(:app_server).id}}
         assert_template :new
-        assigns(:deploy_group_role).kubernetes_role_id.must_equal kubernetes_roles(:app_server).id
+        assigns(:kubernetes_deploy_group_role).kubernetes_role_id.must_equal kubernetes_roles(:app_server).id
       end
     end
 
@@ -194,9 +194,9 @@ describe Kubernetes::DeployGroupRolesController do
       end
 
       it "does not allow to circumvent project admin protection" do
-        put :update, params: {id: deploy_group_role.id, kubernetes_deploy_group_role: {project_id: 123}}
-        deploy_group_role.reload.project_id.must_equal projects(:test).id
-        assert_redirected_to deploy_group_role
+        assert_raises ActionController::UnpermittedParameters do
+          put :update, params: {id: deploy_group_role.id, kubernetes_deploy_group_role: {project_id: 123}}
+        end
       end
 
       it "does not allow updates for non-admins" do
