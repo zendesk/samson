@@ -32,7 +32,7 @@ class ResourceController < ApplicationController
       format.html do
         if @resource.save
           create_callback
-          redirect_back fallback_location: @resource, notice: "Created!"
+          redirect_back fallback_location: resource_path, notice: "Created!"
         else
           render :new
         end
@@ -59,7 +59,7 @@ class ResourceController < ApplicationController
     respond_to do |format|
       format.html do
         if @resource.update(resource_params)
-          redirect_back fallback_location: @resource, notice: "Updated!"
+          redirect_back fallback_location: resource_path, notice: "Updated!"
         else
           render :edit
         end
@@ -83,7 +83,7 @@ class ResourceController < ApplicationController
     respond_to do |format|
       format.html do
         if success
-          redirect_to resource_class, notice: "Destroyed!"
+          redirect_to resources_path, notice: "Destroyed!"
         else
           error_message = <<~TEXT
             #{resource_class.name} could not be destroyed because:
@@ -115,6 +115,14 @@ class ResourceController < ApplicationController
   # hook
   def allowed_includes
     []
+  end
+
+  def resource_path
+    @resource
+  end
+
+  def resources_path
+    resource_class
   end
 
   def render_resource_as_json(**args)
