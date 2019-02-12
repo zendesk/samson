@@ -2,6 +2,7 @@
 require 'csv'
 
 class DeploysController < ApplicationController
+  include WrapInWithDeleted
   include CurrentProject
 
   skip_before_action :require_project, only: [:active, :active_count, :changeset]
@@ -181,6 +182,7 @@ class DeploysController < ApplicationController
     if updated_at = search[:updated_at].presence
       deploys = deploys.where("updated_at between ? AND ?", *updated_at)
     end
+    deploys = deploys.where.not(deleted_at: nil) if search_with_deleted?
     pagy(deploys, page: page, items: 30)
   end
 

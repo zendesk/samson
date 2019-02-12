@@ -118,6 +118,19 @@ describe DeploysController do
         assert_template :show
       end
 
+      it "renders soft deleted" do
+        deploy.soft_delete!
+        get :show, params: {project_id: project, id: deploy, with_deleted: true}
+        assert_template :show
+      end
+
+      it "fails on missing params" do
+        deploy.soft_delete!
+        assert_raises ActiveRecord::RecordNotFound do
+          get :show, params: {project_id: project, id: deploy}
+        end
+      end
+
       it "fails with unknown deploy" do
         assert_raises ActiveRecord::RecordNotFound do
           get :show, params: {project_id: project.to_param, id: "deploy:nope"}
@@ -194,6 +207,20 @@ describe DeploysController do
         assert_raises ActiveRecord::RecordNotFound do
           get :index, params: {ids: [121211221]}
         end
+      end
+
+      it "renders with soft_delete" do
+        deploy.soft_delete!
+        get :index, params: {with_deleted: "true"}
+        assert_template :index
+        assigns[:deploys].must_include deploy
+      end
+
+      it "skips deleted without params" do
+        deploy.soft_delete!
+        get :index
+        assert_template :index
+        assigns[:deploys].wont_include deploy
       end
 
       it "can scope by project" do
@@ -336,6 +363,13 @@ describe DeploysController do
 
         assert_response :ok
         assigns[:deploys].map(&:id).sort.must_equal expected.map(&:id).sort
+      end
+
+      it "filters by deleted" do
+        Deploy.last.soft_delete!
+        get :index, params: {search: {deleted: "true"}}, format: "json"
+        assert_response :ok
+        deploys["deploys"].count.must_equal 1
       end
 
       it "fails when filtering for unknown" do
