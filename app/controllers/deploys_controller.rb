@@ -47,6 +47,7 @@ class DeploysController < ApplicationController
     end
   end
 
+  # TODO: use permitted deploy-params here and not pull from all params
   def new
     defaults = {reference: @stage.default_reference}
     deploy_params = params.except(:project_id, :stage_id).permit(:reference).merge(stage: @stage)
@@ -182,7 +183,7 @@ class DeploysController < ApplicationController
     if updated_at = search[:updated_at].presence
       deploys = deploys.where("updated_at between ? AND ?", *updated_at)
     end
-    deploys = deploys.where.not(deleted_at: nil) if search_with_deleted?
+    deploys = deploys.where.not(deleted_at: nil) if search_deleted
     pagy(deploys, page: page, items: 30)
   end
 
