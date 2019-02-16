@@ -66,8 +66,8 @@ module CurrentUser
   end
 
   def can?(action, resource_namespace, scope = nil)
-    scope ||= if resource_namespace == :locks && respond_to?(:current_stage)
-      current_stage
+    scope ||= if resource_namespace == :locks
+      current_stage || current_project
     elsif respond_to?(:current_project, true)
       current_project
     end

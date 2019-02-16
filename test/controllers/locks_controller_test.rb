@@ -19,24 +19,6 @@ describe LocksController do
 
   before { request.headers['HTTP_REFERER'] = '/back' }
 
-  describe "#for_stage_lock?" do
-    it "raises on unsupported action" do
-      @controller.stubs(action_name: 'show')
-      assert_raises RuntimeError do
-        @controller.send(:for_stage_lock?)
-      end
-    end
-  end
-
-  describe "#require_stage" do
-    it "raises on unsupported action" do
-      @controller.stubs(action_name: 'show')
-      assert_raises RuntimeError do
-        @controller.send(:require_stage)
-      end
-    end
-  end
-
   as_a :viewer do
     unauthorized :post, :create
 
@@ -213,6 +195,12 @@ describe LocksController do
 
         lock = environment.lock
         lock.description.must_equal 'DESC'
+      end
+
+      it 'redirects with error if resource params are invalid' do
+        create_lock nil, resource_type: "xyz"
+        assert_redirected_to '/back'
+        assert flash[:error]
       end
     end
 
