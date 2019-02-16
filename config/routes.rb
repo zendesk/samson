@@ -47,7 +47,7 @@ Samson::Application.routes.draw do
 
     resource :changelog, only: [:show]
     resource :stars, only: [:create]
-    resources :webhooks, only: [:index, :create, :destroy]
+    resources :webhooks, only: [:index, :create, :update, :destroy]
     resources :outbound_webhooks, only: [:create, :destroy]
     resources :references, only: [:index]
     resources :user_project_roles, only: [:index]
