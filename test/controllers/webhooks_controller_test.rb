@@ -47,6 +47,29 @@ describe WebhooksController do
       end
     end
 
+    describe '#update' do
+      let(:attributes) do
+        {branch: 'my-branch', source: 'semaphore'}
+      end
+
+      it "updates the attributes and redirects" do
+        patch :update, params: {project_id: project.to_param, id: webhook.to_param, webhook: attributes}
+        webhook.reload
+        refute flash[:alert]
+        assert_redirected_to project_webhook_path(project, webhook)
+        webhook.branch.must_equal 'my-branch'
+        webhook.source.must_equal 'semaphore'
+      end
+
+      it "renders JSON" do
+        patch :update, params: {project_id: project.to_param, id: webhook.to_param, webhook: attributes, format: :json}
+        assert_response :success
+        webhook = JSON.parse(response.body)['webhook']
+        webhook['branch'].must_equal 'my-branch'
+        webhook['source'].must_equal 'semaphore'
+      end
+    end
+
     describe "#destroy" do
       it "deletes the hook" do
         delete :destroy, params: {project_id: project.to_param, id: webhook.id}
