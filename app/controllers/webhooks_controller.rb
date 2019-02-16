@@ -20,10 +20,6 @@ class WebhooksController < ResourceController
   end
 
   def resource_params
-    puts(current_project.inspect)
-    puts("super is #{super}")
     super.permit(:branch, :source).merge(project: current_project)
-
-    params.require(:webhook).permit(:branch, :stage_id, :source)
   end
 end
