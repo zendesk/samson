@@ -3,37 +3,24 @@ require 'samson/integration'
 
 class OutboundWebhooksController < ResourceController
   include CurrentProject
-  before_action :authorize_project_deployer!
+
+  prepend_before_action :authorize_project_deployer!, except: [:index]
+  prepend_before_action :require_project
+
+  def index
+    respond_to do |format|
+      format.json { render_as_json :webhooks, @project.outbound_webhooks }
+    end
+  end
 
   def create
-    webhook = OutboundWebhook.new(resource_params)
-
-    respond_to do |format|
-      format.html do
-        if webhook.save
-          flash.delete(:error)
-          redirect_to project_webhooks_path(current_project)
-        else
-          flash[:error] = webhook.errors.full_messages.join(', ')
-          @new_outbound_webhook = webhook
-          render 'webhooks/index'
-        end
-      end
-      format.json do
-        webhook.save!
-        render_as_json :webhook, webhook
-      end
-    end
+    super(template: 'webhooks/index')
   end
 
   private
 
-  def search_resources
-    @project.outbound_webhooks
-  end
-
   def resource_path
-    [@project, 'webhooks']
+    resources_path
   end
 
   def resources_path
@@ -41,7 +28,6 @@ class OutboundWebhooksController < ResourceController
   end
 
   def resource_params
-    params = [:stage_id, :project_id, :url, :username, :password]
-    super.permit(params).merge(project: current_project)
+    super.permit(:stage_id, :url, :username, :password).merge(project: current_project)
   end
 end

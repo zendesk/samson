@@ -10,6 +10,7 @@ describe WebhooksController do
 
   as_a :viewer do
     unauthorized :post, :create, project_id: :foo
+    unauthorized :put, :update, project_id: :foo, id: 1
     unauthorized :delete, :destroy, project_id: :foo, id: 1
 
     describe '#index' do
@@ -18,6 +19,11 @@ describe WebhooksController do
       it 'renders' do
         get :index, params: {project_id: project.to_param}
         assert_template :index
+      end
+
+      it 'renders json' do
+        get :index, params: {project_id: project.to_param}, format: :json
+        assert_response :success
       end
 
       it "does not blow up with deleted stages" do
@@ -41,9 +47,20 @@ describe WebhooksController do
       it "shows validation errors" do
         webhook # already exists
         post :create, params: {project_id: project.to_param, webhook: params}
-        flash[:alert].must_include 'branch'
+        assert flash[:alert]
         assert_template :index
-        response.body.scan("<strong>#{params[:branch]}</strong>").count.must_equal 1 # do not show the built hook
+      end
+    end
+
+    describe '#update' do
+      it "updates" do
+        put :update, params: {project_id: project.to_param, id: webhook.id, webhook: {branch: "foo"}}, format: :json
+        assert_response :success
+      end
+
+      it "shows validation errors" do
+        put :update, params: {project_id: project.to_param, id: webhook.id, webhook: {stage_id: nil}}, format: :json
+        assert_response 422
       end
     end
 

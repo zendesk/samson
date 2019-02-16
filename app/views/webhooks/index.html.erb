@@ -45,7 +45,8 @@
   <% end %>
 
   <h2>Add webhook mapping</h2>
-  <%= form_for :webhook, url: project_webhooks_path(@project), html: { class: "form-inline" } do |form| %>
+  <%= form_for [:project, ((@resource.is_a?(Webhook) && @resource) || Webhook.new)], html: { class: "form-inline" } do |form| %>
+    <%= render 'shared/errors', object: form.object %>
     <div class="form-group">
       <%= form.text_field :branch, class: "form-control", placeholder: "Branch (Blank for any)" %>
     </div>
@@ -134,7 +135,8 @@
   <% end %>
 
   <h2>Add an outbound webhook</h2>
-  <%= form_for [:project, (@new_outbound_webhook || OutboundWebhook.new)], html: { class: 'form-inline' } do |form| %>
+  <%= form_for [:project, ((@resource.is_a?(OutboundWebhook) && @resource) || OutboundWebhook.new)], html: { class: 'form-inline' } do |form| %>
+    <%= render 'shared/errors', object: form.object %>
     <div class="form-group">
       <%= form.text_field :url, class: "form-control", placeholder: "Full Url" %>
     </div>
