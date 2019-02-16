@@ -23,6 +23,13 @@ describe OutboundWebhooksController do
             assert_redirected_to project_webhooks_path(project)
           end
         end
+
+        it 'renders JSON' do
+          post :create, params: {project_id: project.to_param, outbound_webhook: params}, format: :json
+          assert_response :success
+          outbound_webhook = JSON.parse(response.body)
+          outbound_webhook['webhook']['url'].must_equal params[:url]
+        end
       end
 
       describe 'with invalid params' do
@@ -33,6 +40,34 @@ describe OutboundWebhooksController do
             assert_template 'webhooks/index'
           end
         end
+      end
+    end
+
+    describe '#update' do
+      let(:outbound_webhook) do
+        project.outbound_webhooks.create!(stage: stage, url: 'http://old-url.com')
+      end
+      let(:params) do
+        {
+          project_id: project.to_param,
+          id: outbound_webhook.to_param,
+          outbound_webhook: {url: 'https://new-url.com'}
+        }
+      end
+
+      it "updates the attributes and redirects" do
+        patch :update, params: params
+        outbound_webhook.reload
+        refute flash[:alert]
+        assert_redirected_to project_webhooks_path(project)
+        outbound_webhook.url.must_equal params[:outbound_webhook][:url]
+      end
+
+      it "renders JSON" do
+        patch :update, params: params, format: :json
+        assert_response :success
+        outbound_webhook = JSON.parse(response.body)['outbound_webhook']
+        outbound_webhook['url'].must_equal params[:outbound_webhook][:url]
       end
     end
 
