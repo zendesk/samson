@@ -3,8 +3,8 @@
 class WebhooksController < ResourceController
   include CurrentProject
 
-  prepend_before_action :authorize_resource!
-  prepend_before_action :require_project
+  before_action :authorize_resource!
+  before_action :find_resource, only: [:show, :edit, :update, :destroy]
 
   def index
     respond_to do |format|

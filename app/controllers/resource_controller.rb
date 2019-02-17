@@ -5,8 +5,6 @@ require 'csv'
 class ResourceController < ApplicationController
   include JsonRenderer
 
-  before_action :find_resource, only: [:show, :edit, :update, :destroy]
-
   def index
     assign_resources(
       pagy(

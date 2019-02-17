@@ -8,6 +8,14 @@ describe WebhooksController do
   let(:stage) { stages(:test_staging) }
   let(:webhook) { project.webhooks.create!(stage: stage, branch: 'master', source: 'code') }
 
+  # NOTE: here because messing with prepend-before-filters caused this even with authenticated users
+  describe "when logged out" do
+    it "redirects to login" do
+      post :create, params: {project_id: project.to_param}
+      assert_response :unauthorized
+    end
+  end
+
   as_a :viewer do
     unauthorized :post, :create, project_id: :foo
     unauthorized :put, :update, project_id: :foo, id: 1

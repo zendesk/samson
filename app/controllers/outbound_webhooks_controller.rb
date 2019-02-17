@@ -4,8 +4,8 @@ require 'samson/integration'
 class OutboundWebhooksController < ResourceController
   include CurrentProject
 
-  prepend_before_action :authorize_project_deployer!, except: [:index]
-  prepend_before_action :require_project
+  before_action :authorize_project_deployer!, except: [:index]
+  before_action :find_resource, only: [:show, :edit, :update, :destroy]
 
   def index
     respond_to do |format|
