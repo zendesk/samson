@@ -56,13 +56,13 @@ class ResourceController < ApplicationController
   def edit
   end
 
-  def update
+  def update(template: :edit)
     respond_to do |format|
       format.html do
         if @resource.update(resource_params)
           redirect_back fallback_location: resource_path, notice: "Updated!"
         else
-          render :edit
+          render template
         end
       end
       format.json do
