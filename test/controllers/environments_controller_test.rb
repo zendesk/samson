@@ -53,7 +53,7 @@ describe EnvironmentsController do
       it 'creates an environment' do
         assert_difference 'Environment.count', +1 do
           post :create, params: {environment: {name: 'gamma', production: true}}
-          assert_redirected_to environments_path
+          assert_redirected_to "/environments/gamma"
         end
       end
 
