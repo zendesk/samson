@@ -23,6 +23,11 @@ class StagesController < ResourceController
           if params[:include] == "kubernetes_matrix"
             reply[:stage][:kubernetes_matrix] = Kubernetes::DeployGroupRole.matrix(@stage)
           end
+
+          # for idempotent updates via api
+          if params[:inlines].to_s.split(",").include?("slack_webhooks_attributes")
+            reply[:stage][:slack_webhooks_attributes] = @stage.slack_webhooks.map(&:attributes)
+          end
         end
       end
       format.svg do

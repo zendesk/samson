@@ -139,6 +139,17 @@ describe StagesController do
           get :show, params: {project_id: subject.project.to_param, id: 123123}
         end
       end
+
+      it "inlines slack_webhooks_attributes" do
+        subject.slack_webhooks.create!(webhook_url: "https://xyz.com", before_deploy: true)
+        get :show, params: {
+          project_id: subject.project.to_param, id: subject.to_param,
+          inlines: "slack_webhooks_attributes"
+        }, format: :json
+        json["stage"]["slack_webhooks_attributes"].first.slice("webhook_url", "before_deploy").must_equal(
+          "webhook_url" => "https://xyz.com", "before_deploy" => true
+        )
+      end
     end
 
     describe "#index" do
