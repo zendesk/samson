@@ -43,6 +43,10 @@ class OutboundWebhook < ActiveRecord::Base
     )
   end
 
+  def as_json
+    super(except: [:password])
+  end
+
   private
 
   def connection

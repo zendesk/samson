@@ -2,7 +2,8 @@
 class Kubernetes::UsageLimitsController < ResourceController
   ALL = 'all'
 
-  prepend_before_action :authorize_admin!, except: [:show, :index]
+  before_action :authorize_admin!, except: [:show, :index]
+  before_action :find_resource, only: [:show, :edit, :update, :destroy]
 
   def index
     if project_id = params[:project_id]

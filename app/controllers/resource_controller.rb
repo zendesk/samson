@@ -5,8 +5,6 @@ require 'csv'
 class ResourceController < ApplicationController
   include JsonRenderer
 
-  before_action :find_resource, only: [:show, :edit, :update, :destroy]
-
   def index
     assign_resources(
       pagy(
@@ -26,7 +24,7 @@ class ResourceController < ApplicationController
     assign_resource resource_class.new(resource_params)
   end
 
-  def create
+  def create(template: :new)
     assign_resource resource_class.new(resource_params)
     respond_to do |format|
       format.html do
@@ -34,7 +32,8 @@ class ResourceController < ApplicationController
           create_callback
           redirect_back fallback_location: resource_path, notice: "Created!"
         else
-          render :new
+          flash[:alert] = "Failed to create!"
+          render template
         end
       end
       format.json do
