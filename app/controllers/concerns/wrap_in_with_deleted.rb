@@ -3,29 +3,27 @@ module WrapInWithDeleted
   extend ActiveSupport::Concern
 
   included do
-    around_action :wrap_in_with_deleted, if: proc {
-      request.get? && (with_deleted? || search_with_deleted?)
-    }
+    around_action :wrap_in_with_deleted
   end
 
   protected
 
-  def wrap_in_with_deleted
-    Project.with_deleted do
-      Stage.with_deleted do
-        Deploy.with_deleted do
-          yield
-        end
-      end
+  def search_deleted
+    params.dig(:search, :deleted)
+  end
+
+  def wrap_in_with_deleted(&block)
+    # when searching for deleted, make sure results are shown
+    if deleted = search_deleted
+      params[:with_deleted] ||= deleted
     end
-  end
 
-  # For both deleted and non-deleted resources
-  def with_deleted?
-    params[:with_deleted] == "true"
-  end
-
-  def search_with_deleted?
-    params.dig(:search, :deleted) == "true"
+    if value = params[:with_deleted].presence
+      raise "with_deleted is only supported for get requests" unless request.get?
+      klasses = value.split(",").map(&:safe_constantize)
+      klasses.inject(block) { |inner, klass| -> { klass.with_deleted(&inner) } }.call
+    else
+      yield
+    end
   end
 end

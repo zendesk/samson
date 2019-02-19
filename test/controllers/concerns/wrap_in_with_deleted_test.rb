@@ -28,20 +28,34 @@ class WrapInWithDeletedConcernTest < ActionController::TestCase
 
   it "fetch deleted deploy" do
     deploy.soft_delete!
-    get :show, params: {project_id: project.id, id: deploy.id, test_route: true, with_deleted: true}
+    get :show, params: {project_id: project, id: deploy, test_route: true, with_deleted: "Project,Stage,Deploy"}
     response.body.must_equal 'Deploy'
+  end
+
+  it "fetch deleted deploy when searching" do
+    deploy.soft_delete!
+    get :show, params: {project_id: project, id: deploy, test_route: true, search: {deleted: "Project,Stage,Deploy"}}
+    response.body.must_equal 'Deploy'
+  end
+
+  it "does not support posting since that would be super dangerous" do
+    deploy.soft_delete!
+    e = assert_raises RuntimeError do
+      post :show, params: {project_id: project, id: deploy, test_route: true, with_deleted: "Project,Stage,Deploy"}
+    end
+    e.message.must_equal "with_deleted is only supported for get requests"
   end
 
   it "fails without params" do
     deploy.soft_delete!
     assert_raises ActiveRecord::RecordNotFound do
-      get :show, params: {project_id: project.id, id: deploy.id, test_route: true}
+      get :show, params: {project_id: project, id: deploy, test_route: true}
     end
   end
 
   it "fetch deleted project" do
     project.soft_delete(validate: false)
-    get :project, params: {project_id: project.id, id: deploy.id, test_route: true, with_deleted: true}
+    get :project, params: {project_id: project, id: deploy, test_route: true, with_deleted: "Project,Stage,Deploy"}
     response.body.must_equal project.name
   end
 end

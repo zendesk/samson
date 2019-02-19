@@ -120,7 +120,7 @@ describe DeploysController do
 
       it "renders soft deleted" do
         deploy.soft_delete!
-        get :show, params: {project_id: project, id: deploy, with_deleted: true}
+        get :show, params: {project_id: project, id: deploy, with_deleted: "Project,Stage,Deploy"}
         assert_template :show
       end
 
@@ -211,7 +211,7 @@ describe DeploysController do
 
       it "renders with soft_delete" do
         deploy.soft_delete!
-        get :index, params: {with_deleted: "true"}
+        get :index, params: {with_deleted: "Project,Stage,Deploy"}
         assert_template :index
         assigns[:deploys].must_include deploy
       end
@@ -367,7 +367,7 @@ describe DeploysController do
 
       it "filters by deleted" do
         Deploy.last.soft_delete!
-        get :index, params: {search: {deleted: "true"}}, format: "json"
+        get :index, params: {search: {deleted: "Project,Stage,Deploy"}}, format: "json"
         assert_response :ok
         deploys["deploys"].count.must_equal 1
       end
