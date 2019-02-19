@@ -87,7 +87,7 @@ module Kubernetes
         begin
           template.dig_set(path, JSON.parse(static_env.fetch(v), symbolize_names: true))
         rescue KeyError, JSON::ParserError => e
-          raise Samson::Hooks::UserError, "Unable to set key #{k}: #{e.message}"
+          raise Samson::Hooks::UserError, "Unable to set key #{k}: #{e.class} #{e.message}"
         end
       end
     end
