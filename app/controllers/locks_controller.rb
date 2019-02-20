@@ -71,7 +71,7 @@ class LocksController < ApplicationController
   def find_resource
     case action_name
     when 'create' then
-      resource_class.find(params[:lock][:resource_id]) if (params[:lock] || {})[:resource_type] == @resource_class
+      resource_class.find(params[:lock][:resource_id]) if params.dig(:lock, :resource_type) == @resource_class
     when 'destroy' then
       lock.resource if lock.resource_type == @resource_class
     end
