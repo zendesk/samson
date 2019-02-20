@@ -5,9 +5,9 @@ SingleCov.covered!
 
 class CurrentUserConcernTest < ActionController::TestCase
   class CurrentUserTestController < ApplicationController
-    include CurrentUser
     include CurrentProject
     include CurrentStage
+    include CurrentUser
 
     def whodunnit
       render plain: Audited.store[:current_user].call.name
@@ -207,6 +207,13 @@ class CurrentUserConcernTest < ActionController::TestCase
 
     it "renders when authorized for builds" do
       @controller.stubs(:controller_name).returns('builds')
+      perform_get
+      assert_response :success
+    end
+
+    it "render without current projects" do
+      @controller.stubs(:respond_to?).with(:current_project, true).returns(false)
+      @controller.stubs(:respond_to?).with(:request).returns(true)
       perform_get
       assert_response :success
     end

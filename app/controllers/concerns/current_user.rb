@@ -58,7 +58,8 @@ module CurrentUser
 
   # tested via access checks in the actual controllers
   def authorize_resource!
-    unauthorized! unless can?(resource_action, controller_name.to_sym)
+    scope = current_stage || current_project if controller_name == 'locks'
+    unauthorized! unless can?(resource_action, controller_name.to_sym, scope)
   end
 
   def resource_action
@@ -66,11 +67,7 @@ module CurrentUser
   end
 
   def can?(action, resource_namespace, scope = nil)
-    scope ||= if resource_namespace == :locks
-      current_stage || current_project
-    elsif respond_to?(:current_project, true)
-      current_project
-    end
+    scope ||= current_project if respond_to?(:current_project, true)
     AccessControl.can?(current_user, action, resource_namespace, scope)
   end
 end
