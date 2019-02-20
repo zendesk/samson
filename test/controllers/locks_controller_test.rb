@@ -23,7 +23,7 @@ describe LocksController do
   before { request.headers['HTTP_REFERER'] = '/back' }
 
   as_a :viewer do
-    unauthorized :post, :create
+    unauthorized :post, :create, lock: {description: 'xyz'}
 
     it 'is unauthorized when doing a post to create a stage lock' do
       create_lock stage
@@ -55,7 +55,7 @@ describe LocksController do
   end
 
   as_a :project_deployer do
-    unauthorized :post, :create
+    unauthorized :post, :create, lock: {description: 'xyz'}
     unauthorized :delete, :destroy_via_resource
 
     it 'is not authorized to create a global lock' do
