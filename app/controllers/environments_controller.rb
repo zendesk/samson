@@ -1,55 +1,31 @@
 # frozen_string_literal: true
-class EnvironmentsController < ApplicationController
+class EnvironmentsController < ResourceController
   before_action :authorize_resource!
-  before_action :environment, only: [:show, :update, :destroy]
-
-  def index
-    respond_to do |format|
-      format.html
-      format.json { render_as_json :environments, Environment.all, allowed_includes: [:deploy_groups] }
-    end
-  end
+  before_action :find_resource, only: [:show, :update, :destroy]
 
   def new
-    @environment = Environment.new
-    render 'show'
-  end
-
-  def show
+    super(template: :show)
   end
 
   def create
-    @environment = Environment.create(env_params)
-    if @environment.persisted?
-      flash[:notice] = "Successfully saved environment: #{@environment.name}"
-      redirect_to action: 'index'
-    else
-      render 'show'
-    end
+    super(template: :show)
   end
 
   def update
-    if environment.update_attributes(env_params)
-      flash[:notice] = "Successfully saved environment: #{environment.name}"
-      redirect_to action: 'index'
-    else
-      render 'show'
-    end
-  end
-
-  def destroy
-    environment.soft_delete!(validate: false)
-    flash[:notice] = "Successfully deleted environment: #{environment.name}"
-    redirect_to action: 'index'
+    super(template: :show)
   end
 
   private
 
-  def env_params
-    params.require(:environment).permit(:name, :permalink, :production)
+  def search_resources
+    Environment.all
   end
 
-  def environment
-    @environment ||= Environment.find_by_param!(params[:id])
+  def allowed_includes
+    [:deploy_groups]
+  end
+
+  def resource_params
+    super.permit(:name, :permalink, :production)
   end
 end
