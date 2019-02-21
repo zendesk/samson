@@ -59,29 +59,29 @@ class LocksController < ApplicationController
   end
 
   def require_stage
-    @resource_class = "Stage"
+    @resource_class = Stage
     @stage = find_resource
   end
 
   def require_project
-    @resource_class = "Project"
+    @resource_class = Project
     @project = find_resource
   end
 
   def find_resource
     case action_name
     when 'create' then
-      resource_class.find lock_params[:resource_id] if lock_params[:resource_type] == @resource_class
+      @resource_class.find lock_params[:resource_id] if lock_params[:resource_type] == @resource_class.name
     when 'destroy' then
-      lock.resource if lock.resource_type == @resource_class
+      lock.resource if lock.resource_type == @resource_class.name
     end
-  end
-
-  def resource_class
-    @resource_class&.constantize
   end
 
   def lock
     @lock ||= Lock.find(params[:id])
+  end
+
+  def authorize_resource!
+    unauthorized! unless can?(resource_action, controller_name.to_sym, current_stage || current_project)
   end
 end

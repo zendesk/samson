@@ -250,14 +250,6 @@ class CurrentUserConcernTest < ActionController::TestCase
         assert_response :unauthorized
       end
 
-      # This still authorizes based on Project, but for the lock controller, it needs a Stage object
-      # passed to access control since locks are per Stage.  See app/models/access_control.rb#can? when
-      # the resource_namespace is :locks
-      it "renders when authorized via the stage" do
-        perform_get(project_id: projects(:test).id, id: stages(:test_staging).id)
-        assert_response :success
-      end
-
       it "fails when not authorized via the project" do
         users(:project_deployer).user_project_roles.delete_all
         perform_get(project_id: projects(:test).id)

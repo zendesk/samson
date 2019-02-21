@@ -188,13 +188,22 @@ describe LocksController do
   as_a :project_admin do
     describe '#create' do
       it 'creates a project lock' do
-        delete_at = Time.now + 1.hour
-        create_lock project, delete_at: delete_at
-        assert_redirected_to '/back'
-        assert flash[:notice]
+        assert_difference 'Lock.count', 1 do
+          delete_at = Time.now + 1.hour
+          create_lock project, delete_at: delete_at
+          assert_redirected_to '/back'
+          assert flash[:notice]
+        end
+      end
 
-        lock = project.lock
-        (lock.delete_at&.to_i).must_equal delete_at.to_i
+      it 'does not allow creating a deploy-group lock' do
+        create_lock deploy_group
+        assert_response :unauthorized
+      end
+
+      it 'does not allow creating a environment lock' do
+        create_lock environment
+        assert_response :unauthorized
       end
     end
 
