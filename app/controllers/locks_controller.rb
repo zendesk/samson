@@ -3,7 +3,6 @@ class LocksController < ApplicationController
   include CurrentProject
   include CurrentStage
 
-  before_action :require_stage, if: :for_stage_lock?
   before_action :authorize_resource!
 
   def index
@@ -59,16 +58,22 @@ class LocksController < ApplicationController
     object.errors.messages.values.flatten.join("\n")
   end
 
-  def for_stage_lock?
+  def require_stage
+    @resource_class = Stage
+    @stage = find_resource
+  end
+
+  def require_project
+    @resource_class = Project
+    @project = find_resource
+  end
+
+  def find_resource
     case action_name
-    when 'create'
-      (params[:lock] || {})[:resource_type] == "Stage"
-    when 'destroy'
-      lock.resource_type == "Stage"
-    when 'index', 'destroy_via_resource'
-      false
-    else
-      raise 'Unsupported action'
+    when 'create' then
+      @resource_class.find lock_params[:resource_id] if lock_params[:resource_type] == @resource_class.name
+    when 'destroy' then
+      lock.resource if lock.resource_type == @resource_class.name
     end
   end
 
@@ -76,15 +81,7 @@ class LocksController < ApplicationController
     @lock ||= Lock.find(params[:id])
   end
 
-  # Overrides CurrentStage#require_stage
-  def require_stage
-    case action_name
-    when 'create' then
-      @stage = Stage.find(params[:lock][:resource_id])
-    when 'destroy' then
-      @stage = lock.resource
-    else
-      raise 'Unsupported action'
-    end
+  def authorize_resource!
+    unauthorized! unless can?(resource_action, controller_name.to_sym, current_stage || current_project)
   end
 end

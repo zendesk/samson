@@ -5,9 +5,9 @@ SingleCov.covered!
 
 class CurrentUserConcernTest < ActionController::TestCase
   class CurrentUserTestController < ApplicationController
-    include CurrentUser
     include CurrentProject
     include CurrentStage
+    include CurrentUser
 
     def whodunnit
       render plain: Audited.store[:current_user].call.name
@@ -211,6 +211,13 @@ class CurrentUserConcernTest < ActionController::TestCase
       assert_response :success
     end
 
+    it "render without current projects" do
+      @controller.stubs(:respond_to?).with(:current_project, true).returns(false)
+      @controller.stubs(:respond_to?).with(:request).returns(true)
+      perform_get
+      assert_response :success
+    end
+
     it "fails for unknown controller" do
       @controller.unstub(:controller_name)
       e = assert_raises(ArgumentError) { perform_get }
@@ -241,14 +248,6 @@ class CurrentUserConcernTest < ActionController::TestCase
       it "does not render when unauthorized" do
         perform_get
         assert_response :unauthorized
-      end
-
-      # This still authorizes based on Project, but for the lock controller, it needs a Stage object
-      # passed to access control since locks are per Stage.  See app/models/access_control.rb#can? when
-      # the resource_namespace is :locks
-      it "renders when authorized via the stage" do
-        perform_get(project_id: projects(:test).id, id: stages(:test_staging).id)
-        assert_response :success
       end
 
       it "fails when not authorized via the project" do

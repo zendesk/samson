@@ -11,34 +11,19 @@ describe LocksController do
     post :create, params: {lock: params}, format: format
   end
 
+  let(:project) { projects(:test) }
   let(:stage) { stages(:test_staging) }
   let(:prod_stage) { stages(:test_production) }
+  let(:deploy_group) { deploy_groups(:pod100) }
   let(:environment) { environments(:production) }
-  let(:lock) { stage.create_lock! user: users(:deployer) }
+  let(:project_lock) { project.create_lock! user: users(:project_admin) }
+  let(:stage_lock) { stage.create_lock! user: users(:deployer) }
   let(:global_lock) { Lock.create! user: users(:deployer) }
 
   before { request.headers['HTTP_REFERER'] = '/back' }
 
-  describe "#for_stage_lock?" do
-    it "raises on unsupported action" do
-      @controller.stubs(action_name: 'show')
-      assert_raises RuntimeError do
-        @controller.send(:for_stage_lock?)
-      end
-    end
-  end
-
-  describe "#require_stage" do
-    it "raises on unsupported action" do
-      @controller.stubs(action_name: 'show')
-      assert_raises RuntimeError do
-        @controller.send(:require_stage)
-      end
-    end
-  end
-
   as_a :viewer do
-    unauthorized :post, :create
+    unauthorized :post, :create, lock: {description: 'xyz'}
 
     it 'is unauthorized when doing a post to create a stage lock' do
       create_lock stage
@@ -46,7 +31,7 @@ describe LocksController do
     end
 
     it 'is unauthorized when doing a delete to destroy a stage lock' do
-      delete :destroy, params: {id: lock.id}
+      delete :destroy, params: {id: stage_lock.id}
       assert_response :unauthorized
     end
 
@@ -70,7 +55,7 @@ describe LocksController do
   end
 
   as_a :project_deployer do
-    unauthorized :post, :create
+    unauthorized :post, :create, lock: {description: 'xyz'}
     unauthorized :delete, :destroy_via_resource
 
     it 'is not authorized to create a global lock' do
@@ -124,6 +109,11 @@ describe LocksController do
         JSON.parse(response.body).fetch("lock").fetch("id").must_equal Lock.last.id
       end
 
+      it 'unauthorized to create project lock' do
+        create_lock project
+        assert_response :unauthorized
+      end
+
       describe 'with PRODUCTION_STAGE_LOCK_REQUIRES_ADMIN' do
         with_env 'PRODUCTION_STAGE_LOCK_REQUIRES_ADMIN' => 'true'
 
@@ -152,7 +142,7 @@ describe LocksController do
       let(:lock) { stage.create_lock!(user: users(:deployer)) }
 
       it 'destroys a stage lock' do
-        delete :destroy, params: {id: lock.id}
+        delete :destroy, params: {id: stage_lock.id}
 
         assert_redirected_to '/back'
         assert flash[:notice]
@@ -178,7 +168,7 @@ describe LocksController do
       with_env 'PRODUCTION_STAGE_LOCK_REQUIRES_ADMIN' => 'true'
 
       it 'no change in default behavior for non-production stage lock' do
-        delete :destroy, params: {id: lock.id}
+        delete :destroy, params: {id: stage_lock.id}
 
         assert_redirected_to '/back'
         assert flash[:notice]
@@ -188,9 +178,43 @@ describe LocksController do
 
       it 'cannot destroy a stage production lock' do
         stage.update_column(:production, true)
-        delete :destroy, params: {id: lock.id}
+        delete :destroy, params: {id: stage_lock.id}
 
         assert_response :unauthorized
+      end
+    end
+  end
+
+  as_a :project_admin do
+    describe '#create' do
+      it 'creates a project lock' do
+        assert_difference 'Lock.count', 1 do
+          delete_at = Time.now + 1.hour
+          create_lock project, delete_at: delete_at
+          assert_redirected_to '/back'
+          assert flash[:notice]
+        end
+      end
+
+      it 'does not allow creating a deploy-group lock' do
+        create_lock deploy_group
+        assert_response :unauthorized
+      end
+
+      it 'does not allow creating a environment lock' do
+        create_lock environment
+        assert_response :unauthorized
+      end
+    end
+
+    describe '#destroy' do
+      it 'destroys a project lock' do
+        delete :destroy, params: {id: project_lock.id}
+
+        assert_redirected_to '/back'
+        assert flash[:notice]
+
+        Lock.count.must_equal 0
       end
     end
   end
@@ -213,6 +237,21 @@ describe LocksController do
 
         lock = environment.lock
         lock.description.must_equal 'DESC'
+      end
+
+      it 'creates a deploy_group lock' do
+        create_lock deploy_group, warning: true
+        assert_redirected_to '/back'
+        assert flash[:notice]
+
+        lock = deploy_group.lock
+        assert lock.warning
+      end
+
+      it 'redirects with error if resource params are invalid' do
+        create_lock nil, resource_type: "xyz"
+        assert_redirected_to '/back'
+        assert flash[:error]
       end
     end
 

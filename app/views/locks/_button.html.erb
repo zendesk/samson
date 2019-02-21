@@ -1,4 +1,4 @@
-<% if can? :write, :locks, @stage %>
+<% if can? :write, :locks, resource %>
   <% prefix ||= "" %>
   <% warning = {resource: resource, warning: true, icon: warning_icon, text: "#{prefix}Warn", disabled: false} %>
   <% locking = {resource: resource, warning: false, icon: lock_icon, text: "#{prefix}Lock", disabled: false} %>
