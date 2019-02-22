@@ -213,7 +213,7 @@ GEM
       encryptor (~> 3.0.0)
     audited (4.7.1)
       activerecord (>= 4.0, < 5.3)
-    autoprefixer-rails (6.3.3.1)
+    autoprefixer-rails (9.4.8)
       execjs
     awesome_print (1.6.1)
     aws-partitions (1.82.0)
@@ -227,9 +227,9 @@ GEM
     aws-sigv4 (1.0.2)
     bootsnap (1.3.0)
       msgpack (~> 1.0)
-    bootstrap-sass (3.3.6)
+    bootstrap-sass (3.4.1)
       autoprefixer-rails (>= 5.2.1)
-      sass (>= 3.3.4)
+      sassc (>= 2.0.0)
     bootstrap3-datetimepicker-rails (4.17.47)
       momentjs-rails (>= 2.8.1)
     brakeman (4.4.0)
@@ -264,6 +264,7 @@ GEM
       multipart-post (>= 1.2, < 3)
     faraday-http-cache (2.0.0)
       faraday (~> 0.8)
+    ffi (1.9.25)
     flay (2.11.0)
       erubis (~> 2.7.0)
       path_expander (~> 1.0)
@@ -497,6 +498,9 @@ GEM
       sprockets (>= 2.8, < 4.0)
       sprockets-rails (>= 2.0, < 4.0)
       tilt (>= 1.1, < 3)
+    sassc (2.0.0)
+      ffi (~> 1.9.6)
+      rake
     sawyer (0.6.0)
       addressable (~> 2.3.5)
       faraday (~> 0.8, < 0.10)
@@ -556,7 +560,7 @@ DEPENDENCIES
   audited
   awesome_print
   bootsnap
-  bootstrap-sass
+  bootstrap-sass (>= 3.4.1)
   bootstrap3-datetimepicker-rails
   brakeman
   bundler
