@@ -1,7 +1,14 @@
-version: "2"
+version: "3.6"
+
 services:
+  base: &base
+    image: zendesk/samson:latest
+    build:
+      context: .
+
+  # run samson locally for dev bound to port 3000
   samson:
-    image: zendesk/samson:latest # replace with `build: .` to use Dockerfile (--build to rebuild it)
+    <<: *base
     ports:
       - "3000:9080"
     volumes:
@@ -10,3 +17,43 @@ services:
       DATABASE_URL: "sqlite3:///app/db/development.sqlite3"
       RAILS_LOG_TO_STDOUT: 1
     command: ["./script/docker_dev_server"]
+
+  # run samson in buildkite with sqlite
+  samson-buildkite-sqlite:
+    <<: *base
+    environment:
+      BUNDLE_WITHOUT: postgres:mysql
+      DATABASE_URL: "sqlite3:///db/test.sqlite3"
+      SILENCE_MIGRATIONS: 1
+    volumes:
+      - .:/app/
+    command: ["bundle", "exec", "rake", "db:create", "db:migrate", "default"]
+
+  # run samson in buildkite with mysql
+  samson-buildkite-mysql:
+    <<: *base
+    environment:
+      PLUGINS: ""
+      DATABASE_URL: mysql2://travis@127.0.0.1/samson_test?reconnect=true
+      BUNDLE_WITHOUT: postgres:sqlite
+      USE_UTF8MB4: 1
+      SILENCE_MIGRATIONS: 1
+    volumes:
+      - .:/app/
+    command: ["bundle", "exec", "rake", "db:create", "test:migrate_without_plugins"]
+    depends_on:
+      - mysql
+
+  # types of database to test against
+  # ---------------------------------
+
+  mysql:
+    image: mysql:latest
+    command: "--default-authentication-plugin=mysql_native_password"
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    volumes:
+      - "./.buildkite/mysql-initdb.d:/docker-entrypoint-initdb.d"
+
+  postgres:
+    image: postgres:alpine

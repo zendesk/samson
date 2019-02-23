@@ -28,9 +28,11 @@ COPY plugins /app/plugins
 RUN bundle install --quiet --jobs 4
 
 # Code
+WORKDIR /app
 COPY config /app/config
 COPY app /app/app
 COPY lib /app/lib
+COPY test /app/test
 
 # Assets
 COPY vendor/assets /app/vendor/assets
