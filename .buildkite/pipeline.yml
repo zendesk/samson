@@ -1,0 +1,49 @@
+steps:
+  - name: ":rubocop: RuboCop"
+    command: ".buildkite/steps/rubocop"
+    plugins:
+      - docker-compose#v2.5.0:
+          run: samson
+    env:
+      RAILS_ENV: test
+
+  - name: ":brakeman: Brakeman"
+    command: "bundle exec rake brakeman"
+    plugins:
+      - docker-compose#v2.5.0:
+          run: samson
+    env:
+      RAILS_ENV: test
+
+  - name: "Flay"
+    command: "bundle exec rake flay"
+    plugins:
+      - docker-compose#v2.5.0:
+          run: samson
+    env:
+      RAILS_ENV: test
+
+  - name: "Bundle Audit"
+    command: "bundle exec rake bundle_audit"
+    plugins:
+      - docker-compose#v2.5.0:
+          run: samson
+    env:
+      RAILS_ENV: test
+
+  - name: ":rspec: RSpec"
+    command: "bundle exec rake test"
+    artifact_paths:
+      - "tmp/capybara/**/*"
+      - "log/**/*"
+      - "tmp/state/**/*"
+      - "tmp/rspec-*.xml"
+      - "tmp/simplecov-resultset-*.tar.gz"
+    plugins:
+      - docker-compose#v2.5.0:
+          run: samson
+    env:
+      RAILS_ENV: test
+    retry:
+      automatic:
+        - exit_status: -1  # The poor Agent went and got lost in the big wide internet
