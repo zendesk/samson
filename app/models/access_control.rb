@@ -19,10 +19,9 @@ class AccessControl
         when :read then true
         when :write
           case scope.class.to_s
-          when 'NilClass' then user.admin? # global locks
-          when 'Project' then user.admin_for?(scope) # project locks
-          when 'Stage' then can_lock_stage?(user, scope) # stage locks
-          else false
+          when "Project" then user.admin_for?(scope) # project locks
+          when "Stage" then can_lock_stage?(user, scope) # stage locks
+          else user.admin? # global / env / deploy-group
           end
         else raise ArgumentError, "Unsupported action #{action}"
         end

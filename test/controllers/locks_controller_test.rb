@@ -56,7 +56,11 @@ describe LocksController do
 
   as_a :project_deployer do
     unauthorized :post, :create, lock: {description: 'xyz'}
-    unauthorized :delete, :destroy_via_resource
+
+    describe "with global lock" do
+      before { global_lock }
+      unauthorized :delete, :destroy_via_resource, resource_id: "", resource_type: ""
+    end
 
     it 'is not authorized to create a global lock' do
       create_lock
@@ -302,6 +306,18 @@ describe LocksController do
         assert_response :bad_request
         JSON.parse(response.body).must_equal "status" => 400, "error" => {"resource_id" => ["is required"]}
       end
+
+      it "fails with partial parameters" do
+        assert_raises RuntimeError do
+          delete :destroy_via_resource, format: :json, params: {resource_id: stage_lock.resource_id, resource_type: ""}
+        end
+      end
+    end
+  end
+
+  describe "#lock" do
+    it "fails when using unknown action" do
+      assert_raises(RuntimeError) { @controller.send(:lock) }
     end
   end
 end

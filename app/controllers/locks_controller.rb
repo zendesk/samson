@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 class LocksController < ApplicationController
-  include CurrentProject
-  include CurrentStage
-
   before_action :authorize_resource!
 
   def index
@@ -11,16 +8,18 @@ class LocksController < ApplicationController
   end
 
   def create
-    new_lock = Lock.new(lock_params)
-    if new_lock.save
+    if lock.save
       respond_to do |format|
-        format.html { redirect_back notice: (new_lock.warning? ? 'Warned' : 'Locked'), fallback_location: root_path }
-        format.json { render json: {lock: new_lock} }
+        format.html { redirect_back notice: (lock.warning? ? 'Warned' : 'Locked'), fallback_location: root_path }
+        format.json { render json: {lock: lock} }
       end
     else
       respond_to do |format|
-        format.html { redirect_back flash: {error: format_errors(new_lock)}, fallback_location: root_path }
-        format.json { render_json_error 422, new_lock.errors }
+        format.html do
+          error = lock.errors.messages.values.flatten.join("\n")
+          redirect_back flash: {error: error}, fallback_location: root_path
+        end
+        format.json { render_json_error 422, lock.errors }
       end
     end
   end
@@ -34,10 +33,7 @@ class LocksController < ApplicationController
   end
 
   def destroy_via_resource
-    Lock.where(
-      resource_id: params.fetch(:resource_id).presence,
-      resource_type: params.fetch(:resource_type).presence
-    ).first!.soft_delete!(validate: false)
+    lock.soft_delete!(validate: false)
     head :ok
   end
 
@@ -54,34 +50,29 @@ class LocksController < ApplicationController
     ).merge(user: current_user)
   end
 
-  def format_errors(object)
-    object.errors.messages.values.flatten.join("\n")
-  end
-
-  def require_stage
-    @resource_class = Stage
-    @stage = find_resource
-  end
-
-  def require_project
-    @resource_class = Project
-    @project = find_resource
-  end
-
-  def find_resource
-    case action_name
-    when 'create' then
-      @resource_class.find lock_params[:resource_id] if lock_params[:resource_type] == @resource_class.name
-    when 'destroy' then
-      lock.resource if lock.resource_type == @resource_class.name
+  def lock
+    @lock ||= begin
+      case action_name
+      when 'create'
+        Lock.new(lock_params)
+      when 'destroy'
+        Lock.find(params[:id])
+      when 'destroy_via_resource'
+        # NOTE: using .fetch instead of .require since we support "" as meaning "global"
+        id = params.fetch(:resource_id).presence
+        type = params.fetch(:resource_type).presence
+        raise if !type ^ !id # global or exact are ok, but not just id or just type
+        Lock.where(resource_id: id, resource_type: type).first!
+      when 'index'
+        nil
+      else
+        raise
+      end
     end
   end
 
-  def lock
-    @lock ||= Lock.find(params[:id])
-  end
-
+  # TODO: make CurrentUser handle dynamic scopes and remove this
   def authorize_resource!
-    unauthorized! unless can?(resource_action, controller_name.to_sym, current_stage || current_project)
+    unauthorized! unless can?(resource_action, controller_name.to_sym, lock&.resource)
   end
 end

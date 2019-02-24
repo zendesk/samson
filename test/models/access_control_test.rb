@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 1
+SingleCov.covered!
 
 # each test is written as a pair of the lowest level that allows access and the one below that forbids access
 describe AccessControl do
@@ -165,6 +165,16 @@ describe AccessControl do
           with_env 'PRODUCTION_STAGE_LOCK_REQUIRES_ADMIN' => 'true' do
             refute can?(deployer, :write, prod_stage)
           end
+        end
+      end
+
+      describe "other" do
+        it "allows admins to update" do
+          assert can?(admin, :write, Environment.new)
+        end
+
+        it "forbids deployers to update" do
+          refute can?(deployer, :write, Environment.new)
         end
       end
 
