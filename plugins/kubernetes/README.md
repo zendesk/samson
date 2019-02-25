@@ -193,8 +193,16 @@ to make all kubernetes deploys that do not use a `metadata.labels.team` / `spec.
 ### Using custom namespace
 
 Samson overrides each resources namespace with to the deploygroups `kubernetes_namespace`.
-To make samson not override the namespace, set `metadata.annotations.samson/keep_namespace: 'true'` 
+
+To make Samson not override the namespace, set `metadata.annotations.samson/keep_namespace: 'true'`
 (or `metadata.labels.kubernetes.io/cluster-service: 'true'`)
+
+### Using custom resource names
+
+Samson overrides each resource name in a particular role with the resource and service name set in the UI to prevent
+collision between resources in the same namespace from different projects unintentionally.
+
+To make Samson leave your resource name alone, set `metadata.annotations.samson/keep_name: 'true'`
 
 ### Preventing request loss with preStop
 
