@@ -25,19 +25,3 @@ before_script:
   - mysql -u root -e 'set GLOBAL innodb_file_format = "barracuda"'
   - mysql -u root -e 'GRANT ALL ON *.* TO 'travis'@'localhost';'
 script: bundle exec rake $TASK
-
-# make sure we can release as apache v2
-matrix:
-  include:
-    - env: TASK=fossa # nice label for UI
-      before_script:
-        - export BINDIR=$(pwd) && curl -H 'Cache-Control:no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install.sh | bash
-
-      # pass on PRs from forks that do not get FOSSA_API_KEY
-      # analyze dependencies and upload them (fails when missing api key)
-      # wait for fossa to analyse the upload and fail if it finds issues, to add ignores contact legal@zendesk.com with subject "FOSSA ignore <NAME> in samson"
-      # Needs to be && joined since otherwise travis does not fail the build when a earlier step fails
-      script: |
-        ([[ -z "$FOSSA_API_KEY" ]] && [[ "$TRAVIS_PULL_REQUEST" != "false" ]]) || \
-        ./fossa analyze --config config/fossa.yml && \
-        travis_wait 20 ./fossa test --config config/fossa.yml
