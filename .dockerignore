@@ -1,9 +1,6 @@
 # git history is big, do not add it
 .git
 
-# tests are big and not needed
-test
-
 # user might chose to have local gem installs, they can be quiet big
 vendor/bundle
 

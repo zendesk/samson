@@ -1,7 +1,12 @@
-version: "2"
+version: "3.6"
+
 services:
-  samson:
-    image: zendesk/samson:latest # replace with `build: .` to use Dockerfile (--build to rebuild it)
+  # run samson locally for dev bound to port 3000
+  samson-dev:
+    image: zendesk/samson:latest
+    build:
+      context: .
+      target: samson-puma
     ports:
       - "3000:9080"
     volumes:
@@ -10,3 +15,71 @@ services:
       DATABASE_URL: "sqlite3:///app/db/development.sqlite3"
       RAILS_LOG_TO_STDOUT: 1
     command: ["./script/docker_dev_server"]
+
+  # run samson in test mode
+  samson-test: &test
+    build:
+      context: .
+      target: samson-test
+    environment:
+      BUNDLE_WITHOUT: postgres:mysql
+
+  # run samson in test mode against sqlite
+  samson-test-sqlite:
+    <<: *test
+    environment:
+      DATABASE_URL: "sqlite3:///app/db/test.sqlite3"
+      SILENCE_MIGRATIONS: 1
+      RAILS_ENV: test
+    command: ["bundle", "exec", "rake", "db:create", "db:migrate", "default"]
+
+  # run samson in test with mysql
+  samson-test-mysql:
+    <<: *test
+    environment:
+      DATABASE_URL: mysql2://root@mysql/samson_test?reconnect=true
+      USE_UTF8MB4: 1
+      SILENCE_MIGRATIONS: 1
+      RAILS_ENV: test
+    command: ["await", "-v", "mysql://root@mysql:3306", "--", "bundle", "exec", "rake", "db:create", "db:migrate", "default"]
+    depends_on:
+      - mysql
+
+  # run samson in test with mysql (no plugins)
+  samson-test-mysql-no-plugins:
+    <<: *test
+    environment:
+      PLUGINS: ""
+      DATABASE_URL: mysql2://root@mysql/samson_test?reconnect=true
+      USE_UTF8MB4: 1
+      SILENCE_MIGRATIONS: 1
+      RAILS_ENV: test
+    command: ["await", "-v", "mysql://root@mysql:3306", "--", "bundle", "exec", "rake", "db:create", "test:migrate_without_plugins"]
+    depends_on:
+      - mysql
+
+  # run samson in test with postgres
+  samson-test-postgres:
+    <<: *test
+    environment:
+      PLUGINS: ""
+      DATABASE_URL: postgresql://postgres@postgres/samson_test
+      SILENCE_MIGRATIONS: 1
+      RAILS_ENV: test
+    command: ["await", "-v", "tcp4://postgres:5432", "--", "bundle", "exec", "rake", "db:create", "db:migrate", "default"]
+    depends_on:
+      - postgres
+
+  # types of database to test against
+  # ---------------------------------
+
+  mysql:
+    image: mysql:5.7
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_ROOT_HOST: "%"
+
+  postgres:
+    image: postgres:9.2-alpine
+    environment:
+      POSTGRES_PASSWORD: ""
