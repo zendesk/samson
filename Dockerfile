@@ -18,7 +18,7 @@ COPY .ruby-version /app/.ruby-version
 
 # NPM
 COPY package.json /app/package.json
-RUN npm install --silent
+RUN npm install --silent >/dev/null
 
 # Gems
 COPY Gemfile /app/
@@ -34,7 +34,7 @@ COPY lib /app/lib
 
 # Assets
 COPY vendor/assets /app/vendor/assets
-RUN echo "takes 5 minute" && ./bin/decode_dot_env .env && RAILS_ENV=production PRECOMPILE=1 bundle exec rake assets:precompile
+RUN echo "takes 5 minute" && ./bin/decode_dot_env .env && RAILS_ENV=production PRECOMPILE=1 bundle exec rake assets:precompile 2>/dev/null
 
 EXPOSE 9080
 
