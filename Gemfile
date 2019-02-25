@@ -68,7 +68,7 @@ end
 group :assets do
   gem 'sass-rails'
   gem 'uglifier'
-  gem 'bootstrap-sass'
+  gem 'bootstrap-sass', '>= 3.4.1'
   gem 'momentjs-rails'
   gem 'bootstrap3-datetimepicker-rails'
 
