@@ -38,6 +38,10 @@ ActiveSupport::TestCase.class_eval do
     sleep 0.01 until JobQueue.debug == [{}, {}]
   end
 
+  def wait_for_jobs_to_start
+    sleep 0.01 until JobQueue.executing.any?
+  end
+
   def with_blocked_jobs(count)
     with_job_execution do
       begin
