@@ -28,10 +28,6 @@ describe JobQueue do
     end
   end
 
-  def wait_for_jobs_to_finish
-    sleep 0.01 until subject.debug == [{}, {}]
-  end
-
   def with_executing_job
     job_execution.expects(:perform).with { active_lock.synchronize { true } }
 
