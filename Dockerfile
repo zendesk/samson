@@ -1,40 +1,48 @@
 FROM ruby:2.5.3-slim
 
-RUN apt-get update && apt-get install -y build-essential default-libmysqlclient-dev libpq-dev libsqlite3-dev wget apt-transport-https git curl
-RUN curl -sL https://deb.nodesource.com/setup_6.x | bash - && apt-get install nodejs -y
-RUN curl -fsSL https://get.docker.com | bash -
+# Install dependencies
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
+    build-essential \
+    default-libmysqlclient-dev \
+    libpq-dev \
+    libsqlite3-dev \
+    wget \
+    apt-transport-https \
+    git \
+    curl \
+    gnupg2 \
+  && curl -sL https://deb.nodesource.com/setup_6.x | bash - \
+  && apt-get install nodejs -y \
+  && rm -rf /var/lib/apt/lists/* \
+  && curl -fsSL https://get.docker.com | bash -
 
 WORKDIR /app
 
 # Mostly static
-COPY config.ru /app/
-COPY Rakefile /app/
-COPY bin /app/bin
-COPY public /app/public
-COPY db /app/db
-COPY .env.bootstrap /app/.env
-COPY .env.virtualbox /app/
-COPY .ruby-version /app/.ruby-version
+COPY .ruby-version config.ru Rakefile .env.virtualbox ./
+COPY bin bin
+COPY public public
+COPY db db
+COPY .env.bootstrap .env
 
 # NPM
-COPY package.json /app/package.json
-RUN npm install --silent
+COPY package.json ./
+RUN npm install --silent >/dev/null
 
 # Gems
-COPY Gemfile /app/
-COPY Gemfile.lock /app/
-COPY plugins /app/plugins
-
+COPY Gemfile Gemfile.lock ./
+COPY plugins plugins
 RUN bundle install --quiet --jobs 4
 
 # Code
-COPY config /app/config
-COPY app /app/app
-COPY lib /app/lib
+COPY config config
+COPY app app
+COPY lib lib
 
 # Assets
-COPY vendor/assets /app/vendor/assets
-RUN echo "takes 5 minute" && ./bin/decode_dot_env .env && RAILS_ENV=production PRECOMPILE=1 bundle exec rake assets:precompile
+COPY vendor/assets vendor/assets
+RUN echo "takes 5 minute" && ./bin/decode_dot_env .env && RAILS_ENV=production PRECOMPILE=1 bundle exec rake assets:precompile 2>/dev/null
 
 EXPOSE 9080
 
