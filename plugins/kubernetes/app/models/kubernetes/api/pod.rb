@@ -83,11 +83,12 @@ module Kubernetes
       end
 
       def events_indicate_failure?
-        bad = events.reject { |e| e.fetch(:type) == 'Normal' || ignorable_hpa_event?(e) }
-        readiness_failures, other_failures = bad.partition do |e|
-          e[:reason] == "Unhealthy" && e[:message] =~ /\A\S+ness probe failed/
-        end
-        other_failures.any? || readiness_failures.any? { |event| probe_failed_to_often?(event) }
+        events_indicating_failure.any?
+      end
+
+      def waiting_for_resources?
+        events = events_indicating_failure
+        events.any? && events_indicating_failure.all? { |e| e[:reason] == "FailedScheduling" }
       end
 
       def events
@@ -102,6 +103,18 @@ module Kubernetes
       end
 
       private
+
+      def events_indicating_failure
+        @events_indicating_failure ||= begin
+          bad = events.dup
+          bad.reject! { |e| e.fetch(:type) == 'Normal' }
+          bad.reject! { |e| ignorable_hpa_event?(e) }
+          bad.reject! do |e|
+            e[:reason] == "Unhealthy" && e[:message] =~ /\A\S+ness probe failed/ && !probe_failed_to_often?(e)
+          end
+          bad
+        end
+      end
 
       def ignorable_hpa_event?(event)
         event[:kind] == 'HorizontalPodAutoscaler' && INGORED_AUTOSCALE_EVENT_REASONS.include?(event[:reason])

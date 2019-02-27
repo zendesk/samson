@@ -39,6 +39,11 @@ describe Kubernetes::Api::Pod do
     )
   end
   let(:start_time) { "2017-03-31T22:56:20Z" }
+  let(:events_url) do
+    "http://foobar.server/api/v1/namespaces/the-namespace/events?fieldSelector=involvedObject.name=test_name"
+  end
+  let(:event) { {metadata: {creationTimestamp: start_time}, type: 'Normal'} }
+  let(:events) { [event] }
 
   describe "#live?" do
     it "is done" do
@@ -261,12 +266,6 @@ describe Kubernetes::Api::Pod do
   end
 
   describe "#events_indicate_failure?" do
-    let(:events_url) do
-      "http://foobar.server/api/v1/namespaces/the-namespace/events?fieldSelector=involvedObject.name=test_name"
-    end
-    let(:event) { {metadata: {creationTimestamp: start_time}, type: 'Normal'} }
-    let(:events) { [event] }
-
     def events_indicate_failure?
       stub_request(:get, events_url).to_return(body: {items: events}.to_json)
       pod_with_client.events_indicate_failure?
@@ -363,6 +362,34 @@ describe Kubernetes::Api::Pod do
 
         assert events_indicate_failure?, 'Events we dont explicitly ignore must be recognized as failures'
       end
+    end
+  end
+
+  describe "#waiting_for_resources?" do
+    def waiting_for_resources?
+      stub_request(:get, events_url).to_return(body: {items: events}.to_json)
+      pod_with_client.waiting_for_resources?
+    end
+
+    it "is not waiting when all is good" do
+      refute waiting_for_resources?
+    end
+
+    it "is not waiting when bad" do
+      event[:type] = "Warning"
+      refute waiting_for_resources?
+    end
+
+    it "is not waiting when bad and FailedScheduling" do
+      event[:type] = "Warning"
+      events << event.dup.merge(reason: "FailedScheduling")
+      refute waiting_for_resources?
+    end
+
+    it "is waiting when bad event is FailedScheduling" do
+      event[:type] = "Warning"
+      event[:reason] = "FailedScheduling"
+      assert waiting_for_resources?
     end
   end
 

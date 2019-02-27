@@ -253,6 +253,8 @@ module Kubernetes
           {live: false, stop: true, details: "Failed", pod: pod}
         elsif release_doc.prerequisite? ? pod.completed? : pod.live?
           {live: true, details: "Live", pod: pod}
+        elsif pod.waiting_for_resources?
+          {live: false, details: "Waiting for resources (#{pod.phase}, #{pod.reason})", pod: pod}
         elsif pod.events_indicate_failure?
           {live: false, stop: true, details: "Error event", pod: pod}
         else
