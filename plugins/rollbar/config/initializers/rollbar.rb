@@ -17,7 +17,7 @@ if token = ENV['ROLLBAR_ACCESS_TOKEN']
 
     # ignore errors we do not want to send to Rollbar
     config.before_process << proc do |options|
-      raise Rollbar::Ignore if Samson::Hooks.fire(:ignore_error, options[:exception].class.name).any?
+      "ignored" if Samson::Hooks.fire(:ignore_error, options[:exception].class.name).any?
     end
 
     Rollbar::UserInformer.user_information_placeholder = ErrorNotifier::USER_INFORMATION_PLACEHOLDER
