@@ -394,8 +394,8 @@ describe Kubernetes::DeployExecutor do
             items: [
               {
                 type: 'Warning',
-                reason: 'FailedScheduling',
-                message: "fit failure on node (ip-1-2-3-4)\nfit failure on node (ip-2-3-4-5)",
+                reason: 'Unhealthy',
+                message: "kubelet, ip-12-34-56-78 Liveness probe failed: Get http://12.34.56.78/ping",
                 metadata: {creationTimestamp: "2017-03-31T22:56:20Z"}
               }
             ]
@@ -408,6 +408,29 @@ describe Kubernetes::DeployExecutor do
       out.must_include "UNSTABLE"
 
       assert_requested request, times: 5 # fetches pod events once and once for 4 different resources
+    end
+
+    it "waits when node needs to auto-scale" do
+      pod_status[:phase] = "Pending"
+      request = stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/events}).
+        to_return(
+          body: {
+            items: [
+              {
+                type: 'Warning',
+                reason: 'FailedScheduling',
+                message: "0/20 nodes are available: 17 Insufficient cpu, 3 Insufficient memory.",
+                metadata: {creationTimestamp: "2017-03-31T22:56:20Z"}
+              }
+            ]
+          }.to_json
+        )
+
+      cancel_after_first_iteration
+      assert_raises(JobQueue::Cancel) { execute }
+
+      assert_requested request
+      out.must_include "resque-worker: Waiting for resources (Pending, Unknown)\n"
     end
 
     it "stops when taking too long to go live" do
