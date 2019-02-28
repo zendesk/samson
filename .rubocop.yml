@@ -191,3 +191,6 @@ Naming/UncommunicativeMethodParamName:
 
 Layout/EmptyLineAfterGuardClause:
   Enabled: false
+
+Style/IfInsideElse:
+  Enabled: false

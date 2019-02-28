@@ -19,7 +19,7 @@ class ProjectsController < ResourceController
           # Workaround with pagy internals for https://github.com/rails/rails/issues/33719
           count = projects.reorder(nil).count(:all) # count on joined query with ordering does not work
           count = count.count if count.is_a?(Hash) # fix for AR grouping count inconsistency (Hash instead of Integer)
-          @pagy = Pagy.new(count: count, page: page, items: per_page)
+          @pagy = Pagy.new(count: count, page: params[:page], items: per_page)
           @projects = pagy_get_items(projects, @pagy)
         end
       end

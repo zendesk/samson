@@ -8,7 +8,7 @@ class JobsController < ApplicationController
   before_action :find_job, only: [:show, :destroy]
 
   def index
-    @pagy, @jobs = pagy(@project.jobs.non_deploy, page: page, items: 15)
+    @pagy, @jobs = pagy(@project.jobs.non_deploy, page: params[:page], items: 15)
   end
 
   def show

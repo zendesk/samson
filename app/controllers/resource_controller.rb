@@ -100,6 +100,7 @@ class ResourceController < ApplicationController
   private
 
   def search_resources
+    resource_class
   end
 
   # hook
