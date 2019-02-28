@@ -201,7 +201,7 @@ describe ProjectsController do
 
   as_a :project_admin do
     unauthorized :get, :new
-    unauthorized :post, :create
+    unauthorized :post, :create, project: {name: "foo"}
 
     describe "#edit" do
       with_env DOCKER_FEATURE: "1"

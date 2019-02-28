@@ -7,7 +7,7 @@ class StagesController < ResourceController
 
   before_action :authorize_resource!
   before_action :check_token, if: :badge?
-  before_action :find_resource, only: [:show, :edit, :update, :destroy, :clone]
+  before_action :set_resource, only: [:show, :edit, :update, :destroy, :clone, :new, :create]
   helper_method :can_change_no_code_deployed?
 
   def show
@@ -89,9 +89,13 @@ class StagesController < ResourceController
     super.permit(stage_permitted_params).merge(project: current_project)
   end
 
-  def find_resource
-    return if assign_resource current_project.stages.find_by_param(params[:id])
-    badge? ? head(:not_found) : raise(ActiveRecord::RecordNotFound)
+  def set_resource
+    if ['new', 'create'].include?(action_name)
+      super
+    else
+      return if assign_resource current_project.stages.find_by_param(params[:id])
+      badge? ? head(:not_found) : raise(ActiveRecord::RecordNotFound)
+    end
   end
 
   def stage_permitted_params

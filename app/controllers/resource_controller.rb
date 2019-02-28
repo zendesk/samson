@@ -21,12 +21,10 @@ class ResourceController < ApplicationController
   end
 
   def new(template: :new)
-    assign_resource resource_class.new(resource_params)
     respond_to { |format| format.html { render template } }
   end
 
   def create(template: :new)
-    assign_resource resource_class.new(resource_params)
     respond_to do |format|
       format.html do
         if @resource.save
@@ -129,9 +127,15 @@ class ResourceController < ApplicationController
     render_as_json resource_name, @resource, **args, allowed_includes: allowed_includes
   end
 
-  def find_resource
-    finder = (resource_class.respond_to?(:find_by_param!) ? :find_by_param! : :find)
-    assign_resource resource_class.send(finder, params.require(:id))
+  def set_resource
+    resource =
+      if ['new', 'create'].include?(action_name)
+        assign_resource resource_class.new(resource_params)
+      else
+        finder = (resource_class.respond_to?(:find_by_param!) ? :find_by_param! : :find)
+        resource_class.send(finder, params.require(:id))
+      end
+    assign_resource resource
   end
 
   def resource_class

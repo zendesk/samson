@@ -4,7 +4,7 @@ class CommandsController < ResourceController
 
   PUBLIC = [:index, :show, :new].freeze
 
-  before_action :find_resource, only: [:show, :edit, :update, :destroy]
+  before_action :set_resource, only: [:show, :edit, :update, :destroy, :new, :create]
   before_action :authorize_custom_project_admin!, except: PUBLIC
 
   def destroy

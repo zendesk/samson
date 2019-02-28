@@ -2,7 +2,7 @@
 require 'csv'
 
 class ProjectsController < ResourceController
-  before_action :find_resource, only: [:show, :edit, :update, :destroy, :deploy_group_versions]
+  before_action :set_resource, only: [:show, :edit, :update, :destroy, :deploy_group_versions, :new, :create]
   before_action :authorize_resource!, except: [:deploy_group_versions, :edit]
 
   # TODO: make this behave more like resource_controller
