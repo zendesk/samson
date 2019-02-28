@@ -10,6 +10,7 @@ RUN apt-get update \
     wget \
     apt-transport-https \
     git \
+    openssh-client \
     curl \
     gnupg2 \
   && curl -sL https://deb.nodesource.com/setup_6.x | bash - \
