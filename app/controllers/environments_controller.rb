@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 class EnvironmentsController < ResourceController
   before_action :authorize_resource!
-  before_action :find_resource, only: [:show, :update, :destroy]
+  before_action :set_resource, only: [:show, :update, :destroy, :new, :create]
 
   def new
     super(template: :show)

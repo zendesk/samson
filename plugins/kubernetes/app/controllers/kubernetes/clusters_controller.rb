@@ -3,7 +3,7 @@ class Kubernetes::ClustersController < ResourceController
   PUBLIC = [:index, :show].freeze
   before_action :authorize_admin!, except: PUBLIC
   before_action :authorize_super_admin!, except: PUBLIC + [:seed_ecr]
-  before_action :find_resource, only: [:show, :edit, :update, :destroy, :seed_ecr]
+  before_action :set_resource, only: [:show, :edit, :update, :destroy, :seed_ecr, :new, :create]
 
   def new
     super

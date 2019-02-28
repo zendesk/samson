@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 class Kubernetes::DeployGroupRolesController < ResourceController
-  before_action :find_resource, only: [:show, :edit, :update, :destroy]
+  before_action :set_resource, only: [:show, :edit, :update, :destroy, :new, :create]
   before_action :find_roles, only: [:index, :edit_many, :update_many]
   before_action :find_stage, only: [:seed]
   before_action :authorize_project_admin!, except: [:index, :show, :new]

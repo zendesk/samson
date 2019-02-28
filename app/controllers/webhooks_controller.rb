@@ -4,7 +4,7 @@ class WebhooksController < ResourceController
   include CurrentProject
 
   before_action :authorize_resource!
-  before_action :find_resource, only: [:show, :edit, :update, :destroy]
+  before_action :set_resource, only: [:show, :edit, :update, :destroy, :new, :create]
 
   def index
     respond_to do |format|
