@@ -91,7 +91,8 @@ module Kubernetes
         events.any? && events_indicating_failure.all? { |e| e[:reason] == "FailedScheduling" }
       end
 
-      def events
+      def events(reload: false)
+        @events = nil if reload
         @events ||= raw_events.select do |event|
           # compare strings to avoid parsing time '2017-03-31T22:56:20Z'
           event.dig(:metadata, :creationTimestamp) >= @pod.dig(:status, :startTime).to_s

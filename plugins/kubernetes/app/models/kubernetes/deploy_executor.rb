@@ -214,9 +214,10 @@ module Kubernetes
     end
 
     # show what happened in kubernetes internally since we might not have any logs
+    # reloading the events so we see things added during+after pod restart
     def print_pod_events(pod)
       @output.puts "POD EVENTS:"
-      print_events(pod.events)
+      print_events(pod.events(reload: true))
     end
 
     def print_events(events)

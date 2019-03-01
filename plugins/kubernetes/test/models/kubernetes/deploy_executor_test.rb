@@ -407,7 +407,7 @@ describe Kubernetes::DeployExecutor do
       out.must_include "resque-worker: Error event\n"
       out.must_include "UNSTABLE"
 
-      assert_requested request, times: 5 # fetches pod events once and once for 4 different resources
+      assert_requested request, times: 6 # fetches pod events twice and once for 4 different resources
     end
 
     it "waits when node needs to auto-scale" do

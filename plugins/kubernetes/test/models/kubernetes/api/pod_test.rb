@@ -408,4 +408,23 @@ describe Kubernetes::Api::Pod do
       pod.init_containers.must_equal [{foo: "bar"}]
     end
   end
+
+  describe "#events" do
+    it "returns events" do
+      stub_request(:get, events_url).to_return(body: {items: events}.to_json)
+      pod_with_client.events.size.must_equal 1
+    end
+
+    it "caches events" do
+      request = stub_request(:get, events_url).to_return(body: {items: events}.to_json)
+      2.times { pod_with_client.events.size.must_equal 1 }
+      assert_requested request, times: 1
+    end
+
+    it "reloads events" do
+      request = stub_request(:get, events_url).to_return(body: {items: events}.to_json)
+      2.times { pod_with_client.events(reload: true).size.must_equal 1 }
+      assert_requested request, times: 2
+    end
+  end
 end
