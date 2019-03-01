@@ -29,7 +29,7 @@ class ResourceController < ApplicationController
       format.html do
         if @resource.save
           create_callback
-          redirect_back fallback_location: resource_path, notice: "Created!"
+          redirect_to(redirect_to_from_params || resource_path, notice: "Created!")
         else
           flash[:alert] = "Failed to create!"
           render template
@@ -57,7 +57,7 @@ class ResourceController < ApplicationController
     respond_to do |format|
       format.html do
         if @resource.update(resource_params)
-          redirect_back fallback_location: resource_path, notice: "Updated!"
+          redirect_to(redirect_to_from_params || resource_path, notice: "Updated!")
         else
           render template
         end
@@ -81,7 +81,7 @@ class ResourceController < ApplicationController
     respond_to do |format|
       format.html do
         if success
-          redirect_to resources_path, notice: "Destroyed!"
+          redirect_to(redirect_to_from_params || resources_path, notice: "Destroyed!")
         else
           error_message = <<~TEXT
             #{resource_class.name} could not be destroyed because:

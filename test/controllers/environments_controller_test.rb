@@ -83,11 +83,9 @@ describe EnvironmentsController do
     describe '#update' do
       let(:environment) { environments(:production) }
 
-      before { request.env["HTTP_REFERER"] = environments_url }
-
       it 'save' do
         post :update, params: {environment: {name: 'Test Update', production: false, permalink: 'foo'}, id: environment}
-        assert_redirected_to environments_path
+        assert_redirected_to environment_path('foo')
         environment.reload
         environment.name.must_equal 'Test Update'
         environment.permalink.must_equal 'foo'
