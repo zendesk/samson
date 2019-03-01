@@ -28,7 +28,7 @@ describe 'Unauthorized' do
 
       it 'sets the flash' do
         flash = last_request.env['action_dispatch.request.flash_hash']
-        flash[:authorization_error].must_equal('You are not logged in.')
+        flash[:authorization_error].must_equal('You are not logged in')
       end
 
       describe 'when user is not authorized' do
@@ -36,7 +36,7 @@ describe 'Unauthorized' do
 
         it 'uses a custom flash message' do
           flash = last_request.env['action_dispatch.request.flash_hash']
-          flash[:authorization_error].must_equal('You are not authorized to view this page.')
+          flash[:authorization_error].must_equal('You are not authorized to view this page')
         end
       end
 
