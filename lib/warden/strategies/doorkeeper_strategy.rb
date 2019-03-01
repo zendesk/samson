@@ -17,7 +17,8 @@ class Warden::Strategies::Doorkeeper < ::Warden::Strategies::Base
     elsif !token.accessible?
       halt_json "Bearer token is expired"
     elsif !token.acceptable?(requested_scopes)
-      halt_json "Bearer token needs scope #{requested_scopes.to_sentence(last_word_connector: ', or ')}"
+      sentence = requested_scopes.to_sentence(two_words_connector: ' or ', last_word_connector: ', or ')
+      halt_json "Bearer token needs scope #{sentence}"
     elsif !(user = User.find_by_id(token.resource_owner_id))
       halt_json "Bearer token belongs to deleted user #{token.resource_owner_id}"
     else
