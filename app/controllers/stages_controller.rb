@@ -10,6 +10,10 @@ class StagesController < ResourceController
   before_action :set_resource, only: [:show, :edit, :update, :destroy, :clone, :new, :create]
   helper_method :can_change_no_code_deployed?
 
+  def index
+    super(with_pagination: false)
+  end
+
   def show
     respond_to do |format|
       format.html do

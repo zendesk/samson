@@ -29,6 +29,11 @@ describe "ResourceController Integration" do
           get commands_url, params: {per_page: 1}
           assigns(:commands).size.must_equal 1
         end
+
+        it "renders without pagination" do
+          get project_stages_url(project_id: project), params: {per_page: 1}
+          assigns(:stages).size.must_equal 3
+        end
       end
 
       describe "json" do

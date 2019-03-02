@@ -5,13 +5,17 @@ require 'csv'
 class ResourceController < ApplicationController
   include JsonRenderer
 
-  def index
+  def index(with_pagination: true)
     assign_resources(
-      pagy(
-        search_resources,
-        page: params[:page],
-        items: [Integer(params[:per_page] || 25), 100].min
-      )
+      if with_pagination
+        pagy(
+          search_resources,
+          page: params[:page],
+          items: [Integer(params[:per_page] || 25), 100].min
+        )
+      else
+        [nil, search_resources]
+      end
     )
     respond_to do |format|
       format.html
