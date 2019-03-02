@@ -689,7 +689,10 @@ describe Kubernetes::DeployExecutor do
         ErrorNotifier.expects(:notify).returns("Details")
         executor.send(:show_failure_cause, [], [])
       end
-      output.string.must_equal "Error showing failure cause: Details\n"
+      output.string.must_equal <<~TEXT
+        Error showing failure cause: Details
+        Debug: disable 'Rollback on failure' when deploying and use 'kubectl describe pod <name>' on failed pods
+      TEXT
     end
   end
 
@@ -831,6 +834,7 @@ describe Kubernetes::DeployExecutor do
 
       out.must_equal <<~OUT
         Deploying BLUE resources for Pod1 role app-server
+        Debug: disable 'Rollback on failure' when deploying and use 'kubectl describe pod <name>' on failed pods
         Deleting BLUE resources for Pod1 role app-server
         DONE
       OUT

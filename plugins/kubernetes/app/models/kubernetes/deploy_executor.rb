@@ -161,6 +161,10 @@ module Kubernetes
     rescue
       info = ErrorNotifier.notify($!, sync: true)
       @output.puts "Error showing failure cause: #{info}"
+    ensure
+      @output.puts(
+        "Debug: disable 'Rollback on failure' when deploying and use 'kubectl describe pod <name>' on failed pods"
+      )
     end
 
     def print_pod_details(pod, log_end_time, events:)
