@@ -184,7 +184,7 @@ class DeploysController < ApplicationController
       deploys = deploys.where("updated_at between ? AND ?", *updated_at)
     end
     deploys = deploys.where.not(deleted_at: nil) if search_deleted
-    pagy(deploys, page: page, items: 30)
+    pagy(deploys, page: params[:page], items: 30)
   end
 
   def deploy_permitted_params

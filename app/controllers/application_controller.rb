@@ -25,10 +25,6 @@ class ApplicationController < ActionController::Base
 
   protected
 
-  def page
-    params.fetch(:page, 1)
-  end
-
   def force_ssl?
     ENV['FORCE_SSL'] == '1'
   end

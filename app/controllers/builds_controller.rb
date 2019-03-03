@@ -23,7 +23,7 @@ class BuildsController < ApplicationController
       @builds = @builds.where(search.permit(*Build.column_names)) unless search.empty?
     end
 
-    @pagy, @builds = pagy(@builds, page: page, items: 15)
+    @pagy, @builds = pagy(@builds, page: params[:page], items: 15)
 
     respond_to do |format|
       format.html

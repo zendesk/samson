@@ -25,6 +25,13 @@ describe "ResourceController Integration" do
           assigns(:commands).size.must_equal 2
         end
 
+        it "renders with default" do
+          Lock.create!(user: users(:admin), description: "foo")
+          get locks_url(:json)
+          assert_response :success
+          assigns(:locks).size.must_equal 1
+        end
+
         it "can define the page size" do
           get commands_url, params: {per_page: 1}
           assigns(:commands).size.must_equal 1

@@ -13,7 +13,7 @@ class StagesController < ResourceController
   def show
     respond_to do |format|
       format.html do
-        @pagy, @deploys = pagy(@stage.deploys, page: page, items: 15)
+        @pagy, @deploys = pagy(@stage.deploys, page: params[:page], items: 15)
       end
       format.json do
         render_as_json :stage, @stage, allowed_includes: [

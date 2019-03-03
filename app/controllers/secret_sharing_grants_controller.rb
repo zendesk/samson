@@ -5,7 +5,7 @@ class SecretSharingGrantsController < ApplicationController
 
   def index
     query = params[:search]&.to_unsafe_h&.slice(:key, :project_id)&.select { |_, v| v.present? }
-    @pagy, @secret_sharing_grants = pagy(SecretSharingGrant.where(query).order(:key), page: page, items: 25)
+    @pagy, @secret_sharing_grants = pagy(SecretSharingGrant.where(query).order(:key), page: params[:page], items: 25)
   end
 
   def new

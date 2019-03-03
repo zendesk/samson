@@ -35,7 +35,7 @@ class SecretsController < ApplicationController
       matching.delete(value_from) # do not show what we already know
       @secrets.select! { |id, _, _| matching.include?(id) }
     end
-    @pagy, @secrets = pagy_array(@secrets, page: page, items: 50)
+    @pagy, @secrets = pagy_array(@secrets, page: params[:page], items: 50)
   rescue Samson::Secrets::BackendError => e
     flash[:error] = e.message
     render html: "", layout: true

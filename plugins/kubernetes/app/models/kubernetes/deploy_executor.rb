@@ -109,7 +109,7 @@ module Kubernetes
             wait_start_time = Time.now.to_i
           end
         else
-          if too_many_not_ready # rubocop:disable Style/IfInsideElse
+          if too_many_not_ready
             print_statuses(statuses)
             unstable!('one or more pods are not live', not_ready_statuses)
             return false, statuses

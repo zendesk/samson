@@ -12,7 +12,7 @@ class ReleasesController < ApplicationController
 
   def index
     @stages = @project.stages
-    @pagy, @releases = pagy(@project.releases.order(id: :desc), page: page, items: 15)
+    @pagy, @releases = pagy(@project.releases.order(id: :desc), page: params[:page], items: 15)
   end
 
   def new

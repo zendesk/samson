@@ -36,8 +36,8 @@ describe "JsonExceptions Integration" do
       # HACK: to deal with new controller implementation.
       # Ideally refactor this test to decouple from production code and use dummy controller/model
       lock_with_errors = Lock.new(warning: true, user: user)
-      lock_with_errors.valid?
-      Lock.any_instance.expects(:save).raises(ActiveRecord::RecordInvalid.new(lock_with_errors))
+      refute lock_with_errors.valid?
+      Lock.any_instance.expects(:save!).raises(ActiveRecord::RecordInvalid.new(lock_with_errors))
       post '/locks.json', params: {lock: {warning: true}}, headers: headers
       assert_json 422, description: ["can't be blank"]
     end
