@@ -147,11 +147,22 @@ describe StagesController do
         assert_template 'index'
       end
 
+      it "renders html without pagination" do
+        stages = project.stages
+        get :index, params: {project_id: project, per_page: 1}
+        assigns(:stages).count.must_equal stages.count
+      end
+
       it "renders json" do
         get :index, params: {project_id: project}, format: :json
         assert_response :success
         json.keys.must_equal ['stages']
         json['stages'][0].keys.must_include 'name'
+      end
+
+      it "render json with pagination" do
+        get :index, params: {project_id: project, per_page: 1}, format: :json
+        assigns(:stages).count.must_equal 1
       end
     end
   end

@@ -11,7 +11,7 @@ class StagesController < ResourceController
   helper_method :can_change_no_code_deployed?
 
   def index
-    super(with_pagination: false)
+    super(paginate: !request.format.html?)
   end
 
   def show

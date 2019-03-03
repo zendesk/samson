@@ -5,9 +5,9 @@ require 'csv'
 class ResourceController < ApplicationController
   include JsonRenderer
 
-  def index(with_pagination: true)
+  def index(paginate: true)
     assign_resources(
-      if with_pagination
+      if paginate
         pagy(
           search_resources,
           page: params[:page],
