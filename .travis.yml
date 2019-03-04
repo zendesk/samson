@@ -34,11 +34,11 @@ matrix:
         - export BINDIR=$(pwd) && curl -H 'Cache-Control:no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install.sh | bash
 
       # pass on PRs from forks that do not get FOSSA_API_KEY
-      # analyze dependencies and upload them (fails when missing api key)
-      # wait for fossa to analyse the upload and fail if it finds issues, to add ignores contact legal@zendesk.com with subject "FOSSA ignore <NAME> in samson"
+      # the "fossa" command auto generates a configuration file, analyze dependencies, and upload them to our internal reporting tool (fails when missing api key)
+      # If the license scan status is red, please contact legal@zendesk.com with subject "FOSSA status red in samson"
       # Needs to be && joined since otherwise travis does not fail the build when a earlier step fails
       script: |
         ([[ -z "$FOSSA_API_KEY" ]] && [[ "$TRAVIS_PULL_REQUEST" != "false" ]]) || \
         ./fossa  
   allow_failures:
-    - env: TASK=fossa
+    - env: TASK=fossa #failures have been allowed so Fossa will not block builds if it is having issues
