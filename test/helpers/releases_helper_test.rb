@@ -46,11 +46,18 @@ describe ReleasesHelper do
       html.must_include "Github status: pending"
     end
 
-    it "renders an icon for pending status" do
-      html = github_commit_status_icon("pending")
-      html.must_include "glyphicon-hourglass"
-      html.must_include "text-primary"
-      html.must_include "Github status: pending"
+    it "renders an icon for error status" do
+      html = github_commit_status_icon("error")
+      html.must_include "glyphicon-exclamation-sign"
+      html.must_include "text-warning"
+      html.must_include "Github status: error"
+    end
+
+    it "assumes 'error' as default status" do
+      html = github_commit_status_icon("key_not_found")
+      html.must_include "glyphicon-exclamation-sign"
+      html.must_include "text-warning"
+      html.must_include "Github status: error"
     end
   end
 

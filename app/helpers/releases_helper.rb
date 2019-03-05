@@ -16,6 +16,8 @@ module ReleasesHelper
     "error" => "warning"
   }.freeze
 
+  DEFAULT_STATUS = "error".freeze
+
   def release_label(project, release)
     link_to(
       release.version,
@@ -25,8 +27,8 @@ module ReleasesHelper
   end
 
   def github_commit_status_icon(status_state)
-    icon = GITHUB_STATUS_ICONS.fetch(status_state)
-    text = GITHUB_STATUS_TEXT_LABELS.fetch(status_state)
+    icon = GITHUB_STATUS_ICONS.fetch(status_state, GITHUB_STATUS_ICONS[DEFAULT_STATUS])
+    text = GITHUB_STATUS_TEXT_LABELS.fetch(status_state, GITHUB_STATUS_TEXT_LABELS[DEFAULT_STATUS])
     title = "Github status: #{status_state}"
 
     icon_tag icon, class: "text-#{text}", 'data-toggle': "tooltip", 'data-placement': "right", title: title
