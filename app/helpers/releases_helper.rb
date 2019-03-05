@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 module ReleasesHelper
-  GITHUB_STATUS_ICONS = {
+  STATUS_ICONS = {
     "success" => "ok",
     "failure" => "remove",
     "missing" => "minus",
@@ -8,7 +8,7 @@ module ReleasesHelper
     "error" => "exclamation-sign"
   }.freeze
 
-  GITHUB_STATUS_TEXT_LABELS = {
+  STATUS_TEXT_LABELS = {
     "success" => "success",
     "failure" => "danger",
     "missing" => "muted",
@@ -26,10 +26,10 @@ module ReleasesHelper
     )
   end
 
-  def github_commit_status_icon(status_state)
-    icon = GITHUB_STATUS_ICONS.fetch(status_state, GITHUB_STATUS_ICONS[DEFAULT_STATUS])
-    text = GITHUB_STATUS_TEXT_LABELS.fetch(status_state, GITHUB_STATUS_TEXT_LABELS[DEFAULT_STATUS])
-    title = "Github status: #{status_state}"
+  def commit_status_icon(status_state)
+    icon = STATUS_ICONS.fetch(status_state, STATUS_ICONS[DEFAULT_STATUS])
+    text = STATUS_TEXT_LABELS.fetch(status_state, STATUS_TEXT_LABELS[DEFAULT_STATUS])
+    title = "Commit status: #{status_state}"
 
     icon_tag icon, class: "text-#{text}", 'data-toggle': "tooltip", 'data-placement': "right", title: title
   end

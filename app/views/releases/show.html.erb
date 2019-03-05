@@ -19,7 +19,7 @@
   <legend>Commit Status</legend>
   <p>
     <% CommitStatus.new(@release.project, @release.commit).statuses.each do |status| %>
-      <%= github_commit_status_icon(status.fetch(:state)) %>
+      <%= commit_status_icon(status.fetch(:state)) %>
       <b><%= status[:context] %>:</b> <%= link_to status[:description], status[:target_url] %><br/>
     <% end %>
   </p>
