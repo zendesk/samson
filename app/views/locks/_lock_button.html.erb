@@ -1,7 +1,7 @@
-<span class="dropdown">
+<span class="dropdown lock-dialog">
   <button class="btn btn-default want-lock dropdown-toggle" data-toggle="dropdown" <%= "disabled" if disabled %>><%= icon %> <%= text %></button>
   <div class="dropdown-menu lock-dropdown-menu">
-    <%= form_for Lock.new(resource: resource, warning: warning), html: {class: 'new-lock-form form-horizontal'} do |f| %>
+    <%= form_for Lock.new(resource: resource, warning: warning), html: {class: 'form-horizontal'} do |f| %>
       <%= f.hidden_field :resource_id %>
         <%= f.hidden_field :resource_type %>
         <%= f.hidden_field :warning %>

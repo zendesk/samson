@@ -1,44 +1,45 @@
-// Governs the lock/warning form. Users can use either the buttons for quickly setting the
-// lock/warning duration or a datetime picker for setting a custom value.
+// Lock/warning dialog
+// - use buttons to set predefined duration
+// - datetime picker to set a custom value
 
 $(function () {
-  var datetimeFormat = 'MM/DD/YYYY h:mm A';
+  var datetimePickerFormat = 'MM/DD/YYYY h:mm A';
+  var never = '';
+  var dialog = '.lock-dialog';
 
-  function formatLockExpirationTime(form, lockDeleteAtInput) {
-    form.submit(function (e) {
-      var lockDeleteAtVal = lockDeleteAtInput.val();
+  // user opens the a dropdown via bootstrap.js for the first time: initialize it
+  $(document).one('shown.bs.dropdown', dialog, function () {
+    var form = $(this, 'form');
+    var deleteAtInput = form.find('#lock_delete_at');
 
-      if (lockDeleteAtVal !== '') {
-        var lockExpireMoment = moment(lockDeleteAtVal, datetimeFormat);
-        lockDeleteAtInput.val(lockExpireMoment.utc().format());
-      }
-    });
-  }
+    // initialize date-picker UI
+    $('.datetimepicker', this).datetimepicker();
 
-  function handleLockTimeButtons(lockExpirationTimeButtons, lockDeleteAtInput) {
-    // user clicks on pre-defined lock time buttons
-    lockExpirationTimeButtons.click(function (e) {
+    // user clicks on pre-defined lock time buttons (2 hours / 1 day etc)
+    form.find('.lock-times').click(function (e) {
       var buttonData = e.target.dataset;
-      var unit = buttonData.unit;
       var quantity = parseInt(buttonData.num, 10);
 
       if (quantity === 0) {
-        lockDeleteAtInput.val('');
+        deleteAtInput.val(never);
       } else {
-        var newVal = moment().add(quantity, unit).format(datetimeFormat);
-        lockDeleteAtInput.val(newVal);
+        // pretend the data-picker set it
+        deleteAtInput.val(moment().add(quantity, buttonData.unit).format(datetimePickerFormat));
       }
     });
-  }
 
-  $('.datetimepicker').datetimepicker();
+    // user submits the form: covert datetimepicker value to backend expected date format
+    form.submit(function () {
+      var lockDeleteAtVal = deleteAtInput.val();
+      if (lockDeleteAtVal !== never) {
+        var expireMoment = moment(lockDeleteAtVal, datetimePickerFormat);
+        deleteAtInput.val(expireMoment.utc().format());
+      }
+    });
+  });
 
-  $('.new-lock-form').each(function() {
-    var form = $(this);
-    var lockDeleteAtInput = form.find('#lock_delete_at');
-    var lockExpirationTimeButtons = form.find('.lock-times');
-
-    formatLockExpirationTime(form, lockDeleteAtInput);
-    handleLockTimeButtons(lockExpirationTimeButtons, lockDeleteAtInput);
+  // user opens the a dropdown via bootstrap.js: focus mandatory description
+  $(document).on('shown.bs.dropdown', dialog, function () {
+    $('#lock_description', this).focus();
   });
 });
