@@ -5,8 +5,12 @@ module Kubernetes
     # not perfect since the actual rules are stricter
     VALID_LABEL_VALUE = /\A[a-zA-Z0-9]([-a-zA-Z0-9.]*[a-zA-Z0-9])?\z/ # also used in js ... cannot use /i
 
-    NAMESPACELESS_KINDS = ['APIService', 'ClusterRoleBinding', 'ClusterRole', 'CustomResourceDefinition'].freeze
-    IMMUTABLE_NAME_KINDS = ['APIService', 'CustomResourceDefinition', 'ConfigMap', 'Role', 'ClusterRole'].freeze
+    NAMESPACELESS_KINDS = [
+      'APIService', 'ClusterRoleBinding', 'ClusterRole', 'CustomResourceDefinition', 'Namespace'
+    ].freeze
+    IMMUTABLE_NAME_KINDS = [
+      'APIService', 'CustomResourceDefinition', 'ConfigMap', 'Role', 'ClusterRole', 'Namespace'
+    ].freeze
 
     # we either generate multiple names or allow custom names
     ALLOWED_DUPLICATE_KINDS = ((['Service'] + IMMUTABLE_NAME_KINDS)).freeze

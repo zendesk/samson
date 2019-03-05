@@ -466,6 +466,12 @@ module Kubernetes
     class APIService < Immutable
     end
 
+    class Namespace < Base
+      # Noop because we are scared ... should later only allow deletion if samson created it
+      def delete
+      end
+    end
+
     def self.build(*args)
       klass = "Kubernetes::Resource::#{args.first.fetch(:kind)}".safe_constantize || VersionedUpdate
       klass.new(*args)

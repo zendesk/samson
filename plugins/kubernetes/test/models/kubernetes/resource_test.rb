@@ -885,6 +885,23 @@ describe Kubernetes::Resource do
     end
   end
 
+  describe Kubernetes::Resource::Namespace do
+    let(:kind) { "Namespace" }
+    let(:api_version) { "v1" }
+
+    it "deploys" do
+      assert_request(:get, url, to_return: {status: 404}) do
+        assert_request(:post, base_url, to_return: {body: "{}"}) do
+          resource.deploy
+        end
+      end
+    end
+
+    it "refuses to delete" do
+      resource.delete
+    end
+  end
+
   describe Kubernetes::Resource::PodDisruptionBudget do
     let(:kind) { 'PodDisruptionBudget' }
     let(:api_version) { 'policy/v1beta1' }
