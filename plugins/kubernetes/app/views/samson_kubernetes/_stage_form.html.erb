@@ -2,7 +2,7 @@
   <legend>Kubernetes</legend>
   <%= form.input :kubernetes, as: :check_box, label: "Deploy via kubernetes / ignore commands" %>
 
-  <h3>Roles to ignore</h3>
+  <h3>Role config</h3>
   <% @stage.kubernetes_roles.build %>
   <% roles = @project.kubernetes_roles.not_deleted.pluck(:name, :id).unshift ["", nil] %>
   <%= form.fields_for :kubernetes_roles, @stage.kubernetes_roles do |fields| %>
