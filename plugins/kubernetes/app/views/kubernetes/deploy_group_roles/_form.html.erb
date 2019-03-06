@@ -44,7 +44,8 @@
     <%# use form.actions with delete: true, history: true and block %>
     <div class="form-group">
       <div class="col-lg-offset-2 col-lg-10">
-        <%= form.submit form.object.persisted? ? 'Save' : 'Create', class: "btn btn-primary" %>
+        <%= form.submit 'Save', class: "btn btn-primary" %>
+        <%= submit_tag ResourceController::ADD_MORE, class: 'btn btn-default' %>
         <%= link_to_delete form.object, class: 'btn btn-default' if form.object.persisted? %>
         <%= link_to "Cancel", :back, class: 'btn btn-default' %>
         <%= link_to_history form.object %>
