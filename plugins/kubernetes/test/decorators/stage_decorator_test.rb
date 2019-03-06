@@ -36,6 +36,22 @@ describe Stage do
     end
   end
 
+  describe "#kubernetes_roles" do
+    it "accepts attributes" do
+      stage = Stage.new(
+        kubernetes_roles_attributes: {0 => {kubernetes_role_id: kubernetes_roles(:app_server).id, ignored: true}}
+      )
+      stage.kubernetes_roles.size.must_equal 1
+    end
+
+    it "ignores blank attributes" do
+      stage = Stage.new(
+        kubernetes_roles_attributes: {0 => {kubernetes_role_id: "", ignored: true}}
+      )
+      stage.kubernetes_roles.size.must_equal 0
+    end
+  end
+
   describe "#seed_kubernetes_roles" do
     let(:stage) do
       stage = stages(:test_staging).dup

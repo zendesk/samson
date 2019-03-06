@@ -34,6 +34,10 @@ module Kubernetes
       class_name: 'Kubernetes::DeployGroupRole',
       foreign_key: :kubernetes_role_id,
       dependent: :destroy
+    has_many :stage_roles,
+      class_name: "Kubernetes::StageRole",
+      foreign_key: :kubernetes_role_id,
+      dependent: :destroy
 
     before_validation :nilify_service_name
     before_validation :strip_config_file

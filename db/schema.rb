@@ -271,6 +271,12 @@ ActiveRecord::Schema.define(version: 2019_02_06_191721) do
     t.index ["service_name", "deleted_at"], name: "index_kubernetes_roles_on_service_name_and_deleted_at", unique: true, length: { service_name: 191 }
   end
 
+  create_table "kubernetes_stage_roles" do |t|
+    t.integer "stage_id", null: false
+    t.integer "kubernetes_role_id", null: false
+    t.boolean "ignored", default: false, null: false
+  end
+
   create_table "kubernetes_usage_limits" do |t|
     t.integer "project_id"
     t.integer "scope_id"
