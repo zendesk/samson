@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 class SecretsController < ApplicationController
-  ADD_MORE = 'Save and add another'
   UPDATEDABLE_ATTRIBUTES = [:value, :visible, :deprecated_at, :comment].freeze
 
   include CurrentProject
@@ -134,7 +133,7 @@ class SecretsController < ApplicationController
 
   def successful_response(notice)
     flash[:notice] = notice
-    if params[:commit] == ADD_MORE
+    if params[:commit] == ResourceController::ADD_MORE
       redirect_to new_secret_path(secret: params[:secret].except(:value).to_unsafe_h)
     else
       redirect_to action: :index

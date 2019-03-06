@@ -128,6 +128,11 @@ describe "ResourceController Integration" do
           assert_redirected_to Project.last
         end
 
+        it "can redirect to new" do
+          post projects_url, params: {project: project_params, commit: ResourceController::ADD_MORE}
+          assert_redirected_to "/projects/new?#{{project: project_params}.to_query}"
+        end
+
         it "fails to creates" do
           project_params[:name] = ""
           post projects_url, params: {project: project_params}
@@ -216,10 +221,16 @@ describe "ResourceController Integration" do
     end
 
     describe "#update" do
+      let(:project_params) { {name: "Baz2", description: "Gah2"} }
       describe "html" do
         it "updates" do
-          patch project_url(project), params: {project: {name: "Baz2", description: "Gah2"}}
+          patch project_url(project), params: {project: project_params}
           assert_redirected_to project
+        end
+
+        it "can redirect to new" do
+          patch project_url(project), params: {project: project_params, commit: ResourceController::ADD_MORE}
+          assert_redirected_to "/projects/new?#{{project: project_params}.to_query}"
         end
 
         it "fails to update" do
@@ -230,7 +241,7 @@ describe "ResourceController Integration" do
 
       describe "json" do
         it "updates" do
-          patch project_url(project, :json), params: {project: {name: "Baz2", description: "desc2"}}
+          patch project_url(project, :json), params: {project: project_params}
           assert_response :success
           assert_rendered_resource
         end

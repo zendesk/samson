@@ -236,7 +236,7 @@ describe SecretsController do
       end
 
       it "redirects to new form when user wants to create another secret" do
-        post :create, params: {secret: attributes, commit: SecretsController::ADD_MORE}
+        post :create, params: {secret: attributes, commit: ResourceController::ADD_MORE}
         flash[:notice].wont_be_nil
         redirect_params = attributes.except(:value).merge(visible: false, deprecated_at: nil)
         assert_redirected_to "/secrets/new?#{{secret: redirect_params}.to_query}"

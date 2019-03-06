@@ -3,6 +3,8 @@ require 'csv'
 
 # Abstract controller that handles all resources, subclasses handle custom logic by overwriting
 class ResourceController < ApplicationController
+  ADD_MORE = 'Save and add another'
+
   include JsonRenderer
 
   def index(paginate: true)
@@ -33,7 +35,9 @@ class ResourceController < ApplicationController
       format.html do
         if @resource.save
           create_callback
-          redirect_to(redirect_to_from_params || resource_path, notice: "Created!")
+
+          flash[:notice] = "Created!"
+          redirect_after_save
         else
           flash[:alert] = "Failed to create!"
           render template
@@ -61,7 +65,8 @@ class ResourceController < ApplicationController
     respond_to do |format|
       format.html do
         if @resource.update(resource_params)
-          redirect_to(redirect_to_from_params || resource_path, notice: "Updated!")
+          flash[:notice] = "Updated!"
+          redirect_after_save
         else
           render template
         end
@@ -102,6 +107,14 @@ class ResourceController < ApplicationController
   end
 
   private
+
+  def redirect_after_save
+    if params[:commit] == ADD_MORE
+      redirect_to action: :new, resource_name => params.fetch(resource_name).to_unsafe_h
+    else
+      redirect_to(redirect_to_from_params || resource_path)
+    end
+  end
 
   def search_resources
     resource_class
