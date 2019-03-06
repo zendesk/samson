@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-class Kubernetes::RolesController < ApplicationController
+class Kubernetes::RolesController < ResourceController
   include CurrentProject
 
   DEFAULT_BRANCH = 'master'
@@ -7,15 +7,7 @@ class Kubernetes::RolesController < ApplicationController
   PUBLIC = [:index, :show, :example].freeze
   before_action :authorize_project_deployer!, except: PUBLIC
   before_action :authorize_project_admin!, except: PUBLIC
-  before_action :find_role, only: [:show, :update, :destroy]
-
-  def index
-    @roles = ::Kubernetes::Role.not_deleted.where(project: current_project).order(:name).to_a
-    respond_to do |format|
-      format.html
-      format.json { render json: @roles.as_json }
-    end
-  end
+  before_action :set_resource, only: [:show, :update, :destroy, :new, :create]
 
   def seed
     begin
@@ -29,48 +21,27 @@ class Kubernetes::RolesController < ApplicationController
   def example
   end
 
-  def new
-    @role = Kubernetes::Role.new
-  end
-
-  def create
-    @role = Kubernetes::Role.new(role_params.merge(project: @project))
-    if @role.save
-      redirect_to action: :index
-    else
-      render :new
-    end
-  end
-
-  def show
-    respond_to do |format|
-      format.html
-      format.json { render json: {role: @role} }
-    end
-  end
-
-  def update
-    if @role.update_attributes(role_params)
-      redirect_to action: :index
-    else
-      render :show
-    end
-  end
-
-  def destroy
-    @role.soft_delete!(validate: false)
-    redirect_to action: :index
-  end
-
   private
 
-  def find_role
-    @role = Kubernetes::Role.not_deleted.find(params[:id])
+  def search_resources
+    resource_class.where(project: current_project).order(:name)
   end
 
-  def role_params
-    params.require(:kubernetes_role).permit(
+  def resource_class
+    super.not_deleted
+  end
+
+  def resource_path
+    [@project, @resource]
+  end
+
+  def resources_path
+    [@project, Kubernetes::Role]
+  end
+
+  def resource_params
+    super.permit(
       :name, :config_file, :service_name, :resource_name, :autoscaled, :blue_green, :manual_deletion_acknowledged
-    )
+    ).merge(project: @project)
   end
 end
