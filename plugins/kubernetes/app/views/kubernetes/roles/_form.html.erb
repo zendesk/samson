@@ -1,6 +1,6 @@
-<% @role.resource_name ||= @project.permalink.tr('_', '-') + '-' %>
-<%= form_for [@project, @role], html: { class: "form-horizontal" } do |form| %>
-  <%= render 'shared/errors', object: @role %>
+<% @kubernetes_role.resource_name ||= @project.permalink.tr('_', '-') + '-' %>
+<%= form_for [@project, @kubernetes_role], html: { class: "form-horizontal" } do |form| %>
+  <%= render 'shared/errors', object: @kubernetes_role %>
 
   <fieldset>
     <%= form.input :name %>
@@ -10,7 +10,7 @@
         pattern: Kubernetes::RoleValidator::VALID_LABEL_VALUE,
         help: "Name for the resource this role will create (service/job), a-Z 0-9 and -"
     %>
-    <% if @role.manual_deletion_required? %>
+    <% if @kubernetes_role.manual_deletion_required? %>
       <div class="alert-danger">
         <%= form.input :manual_deletion_acknowledged, as: :check_box, label: "I will manually delete the changed resource/service from all deploy groups before deploying (this will cause a short outage, deleting after deploying will result in undefined behavior with 2 copies running)" %>
       </div>
@@ -22,11 +22,11 @@
     <div class="form-group">
       <div class="col-lg-offset-2 col-lg-10">
         <% if current_user.admin_for?(@project) %>
-          <%= form.submit @role.persisted? ? 'Save' : 'Create', class: "btn btn-primary" %>
-          <%= link_to_delete [@project, @role], class: 'btn btn-default' if @role.persisted? %>
+          <%= form.submit @kubernetes_role.persisted? ? 'Save' : 'Create', class: "btn btn-primary" %>
+          <%= link_to_delete [@project, @kubernetes_role], class: 'btn btn-default' if @kubernetes_role.persisted? %>
         <% end %>
         <%= link_to "Cancel", :back, class: 'btn btn-default' %>
-        <%= link_to_history @role %>
+        <%= link_to_history @kubernetes_role %>
       </div>
     </div>
   </fieldset>

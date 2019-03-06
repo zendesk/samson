@@ -34,7 +34,7 @@ describe Kubernetes::RolesController do
 
       it "can render as json" do
         get :index, params: {project_id: project, format: 'json'}
-        JSON.parse(response.body).size.must_equal project.kubernetes_roles.size
+        JSON.parse(response.body)["kubernetes_roles"].size.must_equal project.kubernetes_roles.size
       end
     end
 
@@ -46,7 +46,7 @@ describe Kubernetes::RolesController do
 
       it "renders JSON" do
         get :show, params: {project_id: project, id: role.id, format: 'json'}
-        JSON.parse(response.body).keys.must_equal ["role"]
+        JSON.parse(response.body).keys.must_equal ["kubernetes_role"]
       end
     end
 
@@ -105,7 +105,7 @@ describe Kubernetes::RolesController do
       it "creates" do
         post :create, params: {project_id: project, kubernetes_role: role_params}
         role = Kubernetes::Role.last
-        assert_redirected_to "/projects/foo/kubernetes/roles"
+        assert_redirected_to "/projects/foo/kubernetes/roles/#{role.id}"
         role.name.must_equal 'name'
       end
 
@@ -121,7 +121,7 @@ describe Kubernetes::RolesController do
 
       it "updates" do
         put :update, params: {project_id: project, id: role.id, kubernetes_role: role_params}
-        assert_redirected_to "/projects/foo/kubernetes/roles"
+        assert_redirected_to "/projects/foo/kubernetes/roles/#{role.id}"
         role.reload.name.must_equal 'name'
       end
 

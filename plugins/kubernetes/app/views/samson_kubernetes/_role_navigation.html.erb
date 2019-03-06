@@ -8,6 +8,6 @@
 <ul class="nav nav-tabs">
   <% links.each do |name, path| %>
     <% active = request.path.start_with?(path) %>
-    <li class="<%= "active" if active %>"><%= link_to name, active ? '#' : path %></li>
+    <li class="<%= "active" if active %>"><%= link_to name, path %></li>
   <% end %>
 </ul>

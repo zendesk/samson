@@ -5,7 +5,7 @@
 <section class="tabs kubernetes-section clearfix">
   <%= render 'samson_kubernetes/role_navigation' %>
 
-  <% if @roles.none? %>
+  <% if @kubernetes_roles.none? %>
     <%= render 'seed' %>
   <% else %>
     <div class="table table-hover table-condensed">
@@ -18,7 +18,7 @@
           <th></th>
         </tr>
 
-        <% @roles.each do |role| %>
+        <% @kubernetes_roles.each do |role| %>
           <tr>
             <td><%= link_to role.name, [@project, role] %></td>
             <td><%= role.config_file %></td>
@@ -32,6 +32,10 @@
       </table>
     </div>
   <% end %>
+
+  <div class="admin-actions">
+    <%= paginate @pagy %>
+  </div>
 
   <% if current_user.admin_for?(@project) %>
     <div class="admin-actions">

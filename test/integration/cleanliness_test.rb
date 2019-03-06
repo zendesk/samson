@@ -170,7 +170,7 @@ describe "cleanliness" do
       reject { |v| v.include?('_mailer/') }.
       reject { |v| v.include?('/layouts/') }
     assert_content views do |content|
-      unless content.include?(' page_title')
+      if !content.include?(' page_title') && !content.include?(' render template: ')
         "declare a page title for nicer navigation"
       end
     end
