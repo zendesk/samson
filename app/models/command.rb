@@ -5,9 +5,9 @@ class Command < ActiveRecord::Base
   audited
   audits_on_association(:stages, :stage_commands, audit_name: :script, &:script)
 
-  has_many :stage_commands
+  has_many :stage_commands, dependent: nil
   has_many :stages, through: :stage_commands
-  has_many :projects, foreign_key: :build_command_id
+  has_many :projects, foreign_key: :build_command_id, dependent: nil
 
   belongs_to :project, optional: true
 

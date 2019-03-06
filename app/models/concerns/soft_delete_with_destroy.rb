@@ -12,7 +12,7 @@ module SoftDeleteWithDestroy
         association.options[:dependent] == :destroy && !association.klass.method_defined?(:soft_delete!)
       end
 
-      to_destroy.each { |association| send(association.name).each(&:destroy!) }
+      to_destroy.each { |association| Array(send(association.name)).each(&:destroy!) }
     end
   end
 end

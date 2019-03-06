@@ -13,8 +13,7 @@ class User < ActiveRecord::Base
 
   audited except: [:last_seen_at, :last_login_at]
 
-  has_many :commands
-  has_many :stars
+  has_many :stars, dependent: :destroy
   has_many :locks, dependent: :destroy
   has_many :user_project_roles, dependent: :destroy
   has_many :projects, through: :user_project_roles

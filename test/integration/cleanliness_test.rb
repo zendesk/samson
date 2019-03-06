@@ -16,14 +16,14 @@ describe "cleanliness" do
 
   let(:all_tests) { Dir["{,plugins/*/}test/**/*_test.rb"] }
   let(:controllers) do
-    controllers = Dir["{,plugins/*/}app/controllers/**/*.rb"]
+    controllers = Dir["{,plugins/*/}app/controllers/**/*.rb"].grep_v(/\/concerns\//)
     controllers.size.must_be :>, 50
     controllers
   end
   let(:all_code) do
-    controllers = Dir["{,plugins/*/}{app,lib}/**/*.rb"]
-    controllers.size.must_be :>, 50
-    controllers
+    code = Dir["{,plugins/*/}{app,lib}/**/*.rb"]
+    code.size.must_be :>, 50
+    code
   end
 
   it "does not have boolean limit 1 in schema since this breaks mysql" do
@@ -156,7 +156,7 @@ describe "cleanliness" do
     )
   end
 
-  it "has same version in .ruby-version and lock to make herku not crash" do
+  it "has same version in .ruby-version and lock to make heroku not crash" do
     File.read('Gemfile.lock').must_include File.read('.ruby-version').strip
   end
 
@@ -287,5 +287,27 @@ describe "cleanliness" do
 
   it "has gitignore and dockerignore in sync" do
     File.read(".dockerignore").must_include File.read(".gitignore")
+  end
+
+  it "explicity defines what should happen to dependencies" do
+    roots = (Samson::Hooks.plugins.map(&:folder) + [""])
+    models = Dir["{#{roots.join(",")}}app/models/**/*.rb"].grep_v(/\/concerns\//)
+    models.size.must_be :>, 20
+    models.map! { |f| f.sub(/plugins\/[^\/]+\//, "").sub("app/models/", "") }
+    models.each { |f| require f }
+
+    bad = ActiveRecord::Base.descendants.flat_map do |model|
+      model.reflect_on_all_associations.map do |association|
+        next if association.is_a?(ActiveRecord::Reflection::BelongsToReflection)
+        next if association.name == :audits
+        next if association.options.key?(:through)
+        next if association.options.key?(:dependent)
+        "#{model.name} #{association.name}"
+      end
+    end.compact
+    assert(
+      bad.empty?,
+      "These assocations need a :dependent defined (most likely :destroy or nil)\n#{bad.join("\n")}"
+    )
   end
 end
