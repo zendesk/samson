@@ -16,7 +16,7 @@ module ReleasesHelper
     "error" => "warning"
   }.freeze
 
-  DEFAULT_STATUS = "error".freeze
+  DEFAULT_STATUS = "error"
 
   def release_label(project, release)
     link_to(
