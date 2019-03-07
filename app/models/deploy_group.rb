@@ -9,7 +9,7 @@ class DeployGroup < ActiveRecord::Base
 
   belongs_to :environment
   belongs_to :vault_server, class_name: 'Samson::Secrets::VaultServer', optional: true
-  has_many :deploy_groups_stages
+  has_many :deploy_groups_stages, dependent: nil
   has_many :stages, through: :deploy_groups_stages
   has_many :template_stages, -> { where(is_template: true) }, through: :deploy_groups_stages, source: :stage
 

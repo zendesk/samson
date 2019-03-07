@@ -4,7 +4,7 @@ class Job < ActiveRecord::Base
   belongs_to :user, -> { unscope(where: :deleted_at) }
   belongs_to :canceller, -> { unscope(where: "deleted_at") }, class_name: 'User', optional: true
 
-  has_one :deploy
+  has_one :deploy, dependent: nil
 
   # Used by status_panel
   alias_attribute :start_time, :created_at

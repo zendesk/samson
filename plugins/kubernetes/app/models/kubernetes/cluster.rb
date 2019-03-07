@@ -8,7 +8,10 @@ module Kubernetes
 
     IP_PREFIX_PATTERN = /\A(?:[\d]{1,3}\.){0,2}[\d]{1,3}\z/ # also used in js
 
-    has_many :cluster_deploy_groups, class_name: 'Kubernetes::ClusterDeployGroup', foreign_key: :kubernetes_cluster_id
+    has_many :cluster_deploy_groups,
+      class_name: 'Kubernetes::ClusterDeployGroup',
+      foreign_key: :kubernetes_cluster_id,
+      dependent: nil
     has_many :deploy_groups, through: :cluster_deploy_groups
 
     validates :name, presence: true, uniqueness: true

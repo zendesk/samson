@@ -19,9 +19,7 @@ class Stage < ActiveRecord::Base
   has_many :outbound_webhooks, dependent: :destroy
 
   belongs_to :template_stage, class_name: "Stage", optional: true
-  has_many :clones, class_name: "Stage", foreign_key: "template_stage_id"
-
-  has_one :lock, as: :resource
+  has_many :clones, class_name: "Stage", foreign_key: "template_stage_id", dependent: nil
 
   has_many :stage_commands, autosave: true, dependent: :destroy
   private :stage_commands, :stage_commands= # must use ordering via script/command_ids/command_ids=

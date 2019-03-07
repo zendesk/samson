@@ -119,9 +119,9 @@ describe DeployGroup do
     end
   end
 
-  it_expires_stage :save
-  it_expires_stage :destroy
-  it_expires_stage :soft_delete
+  it_expires_stage :save!
+  it_expires_stage :destroy!
+  it_expires_stage :soft_delete!
 
   describe "#destroy_deploy_groups_stages" do
     let(:deploy_group) { deploy_groups(:pod100) }

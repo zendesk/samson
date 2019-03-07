@@ -6,7 +6,8 @@ DeployGroup.class_eval do
     :cluster_deploy_group,
     class_name: 'Kubernetes::ClusterDeployGroup',
     foreign_key: :deploy_group_id,
-    inverse_of: :deploy_group
+    inverse_of: :deploy_group,
+    dependent: :destroy
   )
   has_one :kubernetes_cluster, class_name: 'Kubernetes::Cluster', through: :cluster_deploy_group, source: :cluster
   has_many :kubernetes_deploy_group_roles, class_name: 'Kubernetes::DeployGroupRole', dependent: :destroy
