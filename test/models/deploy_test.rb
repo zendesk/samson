@@ -587,21 +587,21 @@ describe Deploy do
     describe "with deleted objects" do
       before do
         # replicate worse case scenario where any referenced associations are soft deleted
-        prod_deploy.update_attributes(buddy_id: other_user.id)
+        prod_deploy.update_column(:buddy_id, other_user.id)
         prod_deploy.job.user.soft_delete!(validate: false)
         prod_deploy.buddy.soft_delete!(validate: false)
-        prod_deploy.stage.deploy_groups.first.environment.soft_delete!(validate: false)
-        # next 2 are false soft_deletions: there are dependent destroys that would result in
+        # next are fake soft_deletions: there are dependent destroys that would result in
         # deploy_groups_stages to be cleared which would make this test condition to likely
         # never occur in production but could exist
-        prod_deploy.stage.project.update_attribute(:deleted_at, Time.new(2016, 1, 1))
-        prod_deploy.stage.update_attribute(:deleted_at, Time.now)
+        prod_deploy.stage.deploy_groups.first.environment.update_column(:deleted_at, Time.now)
+        prod_deploy.stage.project.update_column(:deleted_at, Time.new(2016, 1, 1))
+        prod_deploy.stage.update_column(:deleted_at, Time.now)
         prod_deploy.reload
       end
 
       it "returns array with deleted object values with DeployGroups" do
         DeployGroup.stubs(enabled?: true)
-        prod.update_attribute(:production, false) # make sure response is from environment
+        prod.update_column(:production, false) # make sure response is from environment
 
         # the with_deleted calls would be done in CsvJob
         CsvExportJob.new(nil).send(:with_deleted) do
