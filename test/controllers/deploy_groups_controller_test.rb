@@ -107,8 +107,8 @@ describe DeployGroupsController do
     describe '#create' do
       it 'creates a deploy group' do
         assert_difference 'DeployGroup.count', +1 do
-          post :create, params: {deploy_group: {name: 'pod666', environment_id: environments(:staging).id}}
-          assert_redirected_to deploy_groups_path
+          post :create, params: {deploy_group: {name: 'Pod666', environment_id: environments(:staging).id}}
+          assert_redirected_to deploy_group_path('pod666')
         end
       end
 
@@ -137,7 +137,7 @@ describe DeployGroupsController do
           },
           id: deploy_group.id
         }
-        assert_redirected_to deploy_groups_path
+        assert_redirected_to deploy_group_path('fooo')
         deploy_group.reload
         deploy_group.name.must_equal 'Test Update'
         deploy_group.permalink.must_equal 'fooo'
@@ -161,7 +161,7 @@ describe DeployGroupsController do
       it 'fails for used deploy_group and sends user to a page that shows which groups are used+errors' do
         delete :destroy, params: {id: deploy_group}
         assert_redirected_to deploy_group
-        assert flash[:error]
+        assert flash[:alert]
         deploy_group.reload
       end
     end
