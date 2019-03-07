@@ -102,6 +102,7 @@ group :development, :test do
   gem 'flay'
   gem 'parallel_tests'
   gem 'forking_test_runner'
+  gem 'stackprof'
 end
 
 group :test do
