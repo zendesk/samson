@@ -21,7 +21,7 @@ fail() {
 
 fail_and_exit() {
   fail
-  exit -1
+  exit 1
 }
 
 install_gem() {
@@ -42,8 +42,18 @@ try() {
   fi
 }
 
+# do not force users to install all databses, but at least one
+without="nothing"
+which mysql >/dev/null || without="$without mysql"
+which postgres >/dev/null || without="$without postgres"
+which sqlite3 >/dev/null || without="$without sqlite"
+if [[ $without = "nothing mysql postgres sqlite" ]]; then
+  echo "Need mysql, sqlite, or postgresql installed"
+  exit 1
+fi
+
 try "Installing bundler" "install_gem bundler"
-try "Bundling" "bundle check > /dev/null || bundle --local --quiet "
+try "Bundling" "bundle check >/dev/null 2>&1 || bundle --quiet --without $without"
 
 echo
 bold "Copying example files"
