@@ -53,7 +53,7 @@ gem 'parallel'
 # treat included plugins like gems
 Dir[File.join(Bundler.root, 'plugins/*/')].each { |f| gemspec path: f }
 
-group :mysql2 do
+group :mysql do
   gem 'mysql2'
 end
 

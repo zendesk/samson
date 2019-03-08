@@ -14,7 +14,10 @@ When running on neither localhost nor `192.168.42.45` create your own credential
 
 ### Local machine
 ```bash
+# install the database you want to use, samson needs mysql, postgresql, or sqlite
 sudo apt-get install mysql-dev pg-dev nodejs
+brew install postgresql sqlite mysql
+
 bin/setup # Run the setup script to use the test credentials.
 rails s
 open http://localhost:3000
