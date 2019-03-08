@@ -522,11 +522,9 @@ module Kubernetes
     def vault_env
       vault_client = Samson::Secrets::VaultClientManager.instance.client(@doc.deploy_group.permalink)
       [
-        {name: "VAULT_ADDR", value: vault_client.options.fetch(:address)},
-        {name: "VAULT_SSL_VERIFY", value: vault_client.options.fetch(:ssl_verify).to_s},
+        {name: "VAULT_TLS_VERIFY", value: vault_client.options.fetch(:ssl_verify).to_s},
         {name: "VAULT_MOUNT", value: Samson::Secrets::VaultClientManager::MOUNT},
-        {name: "VAULT_PREFIX", value: Samson::Secrets::VaultClientManager::PREFIX},
-        {name: "VAULT_KV_V2", value: vault_client.versioned_kv.to_s}
+        {name: "VAULT_PREFIX", value: Samson::Secrets::VaultClientManager::PREFIX}
       ]
     end
 
