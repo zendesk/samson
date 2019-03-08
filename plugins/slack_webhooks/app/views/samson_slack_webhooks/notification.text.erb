@@ -2,7 +2,7 @@
 <% if changeset.commits.count == 0 %>
 There are no new commits since last time.
 <% else %>
-_<<%= changeset.github_url %>|<%= pluralize changeset.commits.count, "commit" %>> and <%= pluralize changeset.pull_requests.count, "pull request" %> by <%= changeset.author_names.to_sentence %>._
+_<<%= changeset.commit_range_url %>|<%= pluralize changeset.commits.count, "commit" %>> and <%= pluralize changeset.pull_requests.count, "pull request" %> by <%= changeset.author_names.to_sentence %>._
 <% if show_prs %>
 
 <% if changeset.pull_requests.empty? %>

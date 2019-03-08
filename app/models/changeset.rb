@@ -1,17 +1,18 @@
 # frozen_string_literal: true
 class Changeset
-  attr_reader :repo, :previous_commit, :commit
+  attr_reader :project, :repo, :previous_commit, :commit
   BRANCH_TAGS = ["master", "develop"].freeze
   ATTRIBUTE_TABS = %w[files commits pull_requests risks jira_issues].freeze
 
-  def initialize(repo, previous_commit, commit)
-    @repo = repo
+  def initialize(project, previous_commit, commit)
+    @project = project
+    @repo = project.repository_path
     @commit = commit
     @previous_commit = previous_commit || @commit
   end
 
-  def github_url
-    "#{Rails.application.config.samson.github.web_url}/#{repo}/compare/#{commit_range}"
+  def commit_range_url
+    "#{project.repository_homepage}/compare/#{commit_range}"
   end
 
   def commit_range
@@ -23,7 +24,7 @@ class Changeset
   end
 
   def commits
-    @commits ||= comparison.commits.map { |data| Commit.new(repo, data) }
+    @commits ||= comparison.commits.map { |data| Commit.new(project, data) }
   end
 
   def files
@@ -71,11 +72,20 @@ class Changeset
       # for branches that frequently change we make sure to always get the correct cache,
       # others might get an outdated changeset if they are reviewed with different shas
       if BRANCH_TAGS.include?(commit)
-        @commit = GITHUB.branch(repo, CGI.escape(commit)).commit[:sha]
+        @commit =
+          if project.gitlab?
+            Gitlab.branch(repo, commit).commit.id
+          else
+            GITHUB.branch(repo, CGI.escape(commit)).commit[:sha]
+          end
       end
 
       Rails.cache.fetch(cache_key) do
-        GITHUB.compare(repo, previous_commit, commit)
+        if project.gitlab?
+          SamsonGitlab::Presenters::Changeset.new(Gitlab.compare(repo, previous_commit, commit)).comparison
+        else
+          GITHUB.compare(repo, previous_commit, commit)
+        end
       end
     end
   rescue Octokit::Error, Faraday::ConnectionFailed => e

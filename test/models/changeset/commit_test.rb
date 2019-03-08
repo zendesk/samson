@@ -6,7 +6,8 @@ SingleCov.covered!
 describe Changeset::Commit do
   let(:commit_data) { stub }
   let(:data) { stub("data", commit: commit_data, author: stub, sha: "aa2a33444343") }
-  let(:commit) { Changeset::Commit.new("foo/bar", data) }
+  let(:project) { Project.new(repository_url: 'ssh://git@github.com:foo/bar.git') }
+  let(:commit) { Changeset::Commit.new(project, data) }
 
   describe "#author_name" do
     it "returns username that made the commit" do

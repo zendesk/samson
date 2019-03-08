@@ -3,8 +3,11 @@ class Changeset::Commit
   PULL_REQUEST_MERGE_MESSAGE = /\AMerge pull request #(\d+)/
   PULL_REQUEST_SQUASH_MESSAGE = /\A.*\(#(\d+)\)$/
 
-  def initialize(repo, data)
-    @repo = repo
+  attr_reader :project
+
+  def initialize(project, data)
+    @project = project
+    @repo = project.repository_path
     @data = data
   end
 
@@ -40,6 +43,6 @@ class Changeset::Commit
   end
 
   def url
-    "#{Rails.application.config.samson.github.web_url}/#{@repo}/commit/#{sha}"
+    "#{project.repository_homepage}/commit/#{sha}"
   end
 end
