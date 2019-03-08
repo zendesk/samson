@@ -43,7 +43,7 @@ try() {
 }
 
 try "Installing bundler" "install_gem bundler"
-try "Bundling" "bundle check > /dev/null || bundle --local --quiet "
+try "Bundling" "bundle check >/dev/null 2>&1 || bundle --quiet"
 
 echo
 bold "Copying example files"
