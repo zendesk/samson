@@ -311,8 +311,4 @@ describe "cleanliness" do
       "These assocations need a :dependent defined (most likely :destroy or nil)\n#{bad.join("\n")}"
     )
   end
-
-  it "does not hardcored the bundler version because that fails with cryptic errors" do
-    File.read("Gemfile.lock").wont_include "BUNDLED WITH"
-  end
 end
