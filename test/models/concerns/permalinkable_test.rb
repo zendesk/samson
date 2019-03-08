@@ -149,6 +149,26 @@ describe Permalinkable do
     it "frees the permalink when soft deleting" do
       project.soft_delete!(validate: false)
       project.permalink.must_match /\Afoo-deleted-\d+\z/
+      project.reload.permalink.must_match /\Afoo-deleted-\d+\z/
+    end
+
+    it "creates an audit that points to the new permalink" do
+      project.soft_delete!(validate: false)
+      project.audits.last.audited_changes.keys.must_equal ["permalink", "deleted_at"]
+    end
+
+    it "does not change the permalink when before_soft_delete fail" do
+      failed_transaction = Class.new(Project) { before_soft_delete { throw :abort } }.find(project.id)
+      refute failed_transaction.soft_delete(validate: false)
+      failed_transaction.permalink.must_equal "foo"
+      failed_transaction.reload.permalink.must_equal "foo"
+    end
+
+    it "does not change the permalink when validations fail" do
+      failed_transaction = Class.new(Project) { before_save { throw :abort } }.find(project.id)
+      refute failed_transaction.soft_delete(validate: false)
+      failed_transaction.permalink.must_equal "foo"
+      failed_transaction.reload.permalink.must_equal "foo"
     end
   end
 end

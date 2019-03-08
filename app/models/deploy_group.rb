@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 class DeployGroup < ActiveRecord::Base
-  has_soft_deletion default_scope: true unless self < SoftDeletion::Core
+  has_soft_deletion default_scope: true unless self < SoftDeletion::Core # uncovered
   audited
 
   include Permalinkable
@@ -9,7 +9,7 @@ class DeployGroup < ActiveRecord::Base
 
   belongs_to :environment
   belongs_to :vault_server, class_name: 'Samson::Secrets::VaultServer', optional: true
-  has_many :deploy_groups_stages, dependent: nil
+  has_many :deploy_groups_stages, dependent: :destroy
   has_many :stages, through: :deploy_groups_stages
   has_many :template_stages, -> { where(is_template: true) }, through: :deploy_groups_stages, source: :stage
 
@@ -22,8 +22,7 @@ class DeployGroup < ActiveRecord::Base
   validate :validate_vault_server_has_same_environment
 
   after_save :touch_stages
-  before_destroy :touch_stages
-  after_destroy :destroy_deploy_groups_stages
+  before_soft_delete :validate_not_used
 
   def self.enabled?
     ENV['DEPLOY_GROUP_FEATURE'].present?
@@ -56,9 +55,10 @@ class DeployGroup < ActiveRecord::Base
     self.env_value = name.to_s.parameterize if env_value.blank?
   end
 
-  # DeployGroupsStage has no ids so the default dependent: :destroy fails
-  def destroy_deploy_groups_stages
-    DeployGroupsStage.where(deploy_group_id: id).delete_all
+  def validate_not_used
+    return if deploy_groups_stages.empty?
+    errors.add(:base, "Still being used")
+    throw(:abort)
   end
 
   # Don't allow mixing of production and non-production vault servers

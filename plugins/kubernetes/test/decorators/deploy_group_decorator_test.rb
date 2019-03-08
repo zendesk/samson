@@ -8,8 +8,7 @@ describe DeployGroup do
 
   describe "cluster_deploy_group" do
     it "accepts nested attributes" do
-      group = DeployGroup.new(cluster_deploy_group_attributes: {namespace: 'Foo',
-                                                                kubernetes_cluster_id: 1})
+      group = DeployGroup.new(cluster_deploy_group_attributes: {namespace: 'Foo', kubernetes_cluster_id: 1})
       group.cluster_deploy_group.namespace.must_equal "Foo"
     end
 
@@ -36,8 +35,9 @@ describe DeployGroup do
     let(:group_role) { kubernetes_deploy_group_roles(:test_pod1_app_server) }
 
     it "destroys deploy_group_roles after soft delete" do
+      deploy_group.deploy_groups_stages.clear
       refute_empty deploy_group.kubernetes_deploy_group_roles
-      deploy_group.soft_delete!
+      deploy_group.soft_delete!(validate: false)
       assert_empty deploy_group.reload.kubernetes_deploy_group_roles
     end
   end
