@@ -53,7 +53,7 @@ class SlackAppController < ApplicationController
     return unknown_user unless @current_user_from_slack
 
     # Parse the command
-    project_name, ref_name, stage_name = @payload['text'].match(/([^\s\/]+)(?:\/(\S+))?\s*(?:to\s+(.*))?/).captures
+    project_name, ref_name, stage_name = @payload['text'].scan(/([^\s\/]+)(?:\/(\S+))?\s*(?:to\s+(.*))?/).flatten.compact
 
     # Sanity checks
     unless project = Project.find_by_permalink(project_name)
