@@ -86,6 +86,15 @@ ActiveSupport::TestCase.class_eval do
     $VERBOSE = old
   end
 
+  def capture_stdout
+    old = $stdout
+    $stdout = StringIO.new
+    yield
+    $stdout.string
+  ensure
+    $stdout = old
+  end
+
   undef :assert_nothing_raised
   class << self
     undef :test
