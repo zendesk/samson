@@ -582,11 +582,9 @@ describe Kubernetes::TemplateFiller do
         init_containers.first['name'].must_equal('secret-puller')
         init_containers.first['env'].must_equal(
           [
-            {"name" => "VAULT_ADDR", "value" => "http://vault-land.com"},
-            {"name" => "VAULT_SSL_VERIFY", "value" => "false"},
+            {"name" => "VAULT_TLS_VERIFY", "value" => "false"},
             {"name" => "VAULT_MOUNT", "value" => "secret"},
-            {"name" => "VAULT_PREFIX", "value" => "apps"},
-            {"name" => "VAULT_KV_V2", "value" => "false"}
+            {"name" => "VAULT_PREFIX", "value" => "apps"}
           ]
         )
 
@@ -599,7 +597,7 @@ describe Kubernetes::TemplateFiller do
 
       it "adds vault kv v2 hint so puller knows to use the new api" do
         vault_server.update_column :versioned_kv, true
-        init_containers.first['env'].last.must_equal "name" => "VAULT_KV_V2", "value" => "true"
+        init_containers.first['env'].last.must_equal "name" => "VAULT_PREFIX", "value" => "apps"
       end
 
       it "fails when vault is not configured" do
@@ -621,10 +619,6 @@ describe Kubernetes::TemplateFiller do
 
         describe 'when vault address is required' do
           before { raw_template[:spec][:template][:metadata][:annotations] = {"samson/required_env": 'VAULT_ADDR'} }
-
-          it "adds the vault server address to the containers env" do
-            vault_env.must_equal "http://vault-land.com"
-          end
 
           it "does not overwrite user defined value" do
             EnvironmentVariable.create!(parent: projects(:test), name: 'VAULT_ADDR', value: 'hello')
