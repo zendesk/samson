@@ -21,6 +21,8 @@ class CsvExportsController < ApplicationController
       format.html do
         if params[:type] == "users"
           render :new_users
+        elsif params[:type] == "deploy_group_usage"
+          render :new_deploy_group_usage
         else
           @csv_export = CsvExport.new
         end
@@ -29,6 +31,9 @@ class CsvExportsController < ApplicationController
         if params[:type] == "users"
           options = user_filter
           send_data UserCsvPresenter.to_csv(options), type: :csv, filename: "Users_#{options[:datetime]}.csv"
+        elsif params[:type] == "deploy_group_usage"
+          date_time_now = Time.now.strftime "%Y%m%d_%H%M"
+          send_data DeployGroupUsageCsvPresenter.to_csv, type: :csv, filename: "DeployGroupUsage_#{date_time_now}.csv"
         else
           render body: "not found", status: :not_found
         end
