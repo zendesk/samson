@@ -106,6 +106,14 @@ describe CsvExportsController do
             @response.body.must_include ">Super Admin</option>"
           end
         end
+
+        describe "deploy_group_usage type" do
+          it "renders form options" do
+            get :new, params: {type: :deploy_group_usage}
+            assert_select "h1", "Deploy Group Usage Report"
+            @response.body.must_include "Download Deploy Group Usage Report"
+          end
+        end
       end
 
       describe "as csv" do

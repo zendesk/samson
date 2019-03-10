@@ -4,7 +4,6 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe DeployGroupUsageCsvPresenter do
-  
   describe ".csv_header" do
     it "returns the list of column headers" do
       DeployGroupUsageCsvPresenter.csv_header(project).must_equal(
@@ -19,6 +18,7 @@ describe DeployGroupUsageCsvPresenter do
         ]
       )
     end
+  end
 
   describe ".csv_line" do
     let(:project) { projects(:test) }

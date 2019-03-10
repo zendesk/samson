@@ -1,9 +1,7 @@
 # frozen_string_literal: true
-
 require 'csv'
 
 class DeployGroupUsageCsvPresenter
-
   def self.to_csv
     CSV.generate do |csv|
       csv << csv_header
@@ -33,7 +31,7 @@ class DeployGroupUsageCsvPresenter
     ]
   end
 
-  def self.csv_line(project, stage=nil, deploy_group=nil)
+  def self.csv_line(project, stage = nil, deploy_group = nil)
     result = []
     if stage && deploy_group
       result << stage.name
@@ -43,6 +41,6 @@ class DeployGroupUsageCsvPresenter
       result << deploy_group.env_value
       result << deploy_group.permalink
     end
-    return result.unshift(project.name)
+    result.unshift(project.name)
   end
 end
