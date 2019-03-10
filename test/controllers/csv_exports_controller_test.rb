@@ -125,9 +125,10 @@ describe CsvExportsController do
         end
 
         describe "deploy_group_usage type" do
-          options = {format: :csv, type: "deploy_group_usage"}
-          get :new, params: options
-          assert_response :success
+          it "returns csv" do
+            get :new, params: {format: :csv, type: "deploy_group_usage"}
+            assert_response :success
+          end
         end
 
         describe "users type" do
