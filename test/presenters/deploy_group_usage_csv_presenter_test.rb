@@ -22,7 +22,7 @@ describe DeployGroupUsageCsvPresenter do
 
   describe ".csv_header" do
     it "returns the list of column headers" do
-      DeployGroupUsageCsvPresenter.csv_header.must_equal(
+      DeployGroupUsageCsvPresenter.send(:csv_header).must_equal(
         [
           "project_name",
           "stage_name",
