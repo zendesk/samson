@@ -6,7 +6,7 @@ SingleCov.covered!
 describe DeployGroupUsageCsvPresenter do
   describe ".csv_header" do
     it "returns the list of column headers" do
-      DeployGroupUsageCsvPresenter.csv_header(project).must_equal(
+      DeployGroupUsageCsvPresenter.csv_header.must_equal(
         [
           "project_name",
           "stage_name",
@@ -23,10 +23,11 @@ describe DeployGroupUsageCsvPresenter do
   describe ".csv_line" do
     let(:project) { projects(:test) }
     let(:stage) { stages(:test_staging) }
+    let(:environment) { environments(:production) }
     let(:deploy_group) do
       DeployGroup.create!(
         name: 'Pod 101',
-        environment: env,
+        environment: environment,
         env_value: 'test env value',
         permalink: 'test permalink value'
       )
