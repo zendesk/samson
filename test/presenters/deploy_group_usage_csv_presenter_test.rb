@@ -23,15 +23,7 @@ describe DeployGroupUsageCsvPresenter do
   describe ".csv_line" do
     let(:project) { projects(:test) }
     let(:stage) { stages(:test_staging) }
-    let(:environment) { environments(:production) }
-    let(:deploy_group) do
-      DeployGroup.create!(
-        name: 'Pod 101',
-        environment: environment,
-        env_value: 'test env value',
-        permalink: 'test permalink value'
-      )
-    end
+    let(:deploy_group) { deploy_groups(:pod1) }    
 
     it "returns a project line when only a project is available" do
       DeployGroupUsageCsvPresenter.csv_line(project).must_equal(
@@ -45,7 +37,7 @@ describe DeployGroupUsageCsvPresenter do
       )
     end
 
-    it "returns a project line when a project, stage, and eploy_group are available" do
+    it "returns a project line when a project, stage, and deploy_group are available" do
       DeployGroupUsageCsvPresenter.csv_line(project, stage, deploy_group).must_equal(
         [
           project.name,
