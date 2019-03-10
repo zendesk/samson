@@ -42,19 +42,19 @@ describe DeployGroupUsageCsvPresenter do
     let(:deploy_group) { deploy_groups(:pod1) }
 
     it "returns a project line when only a project is available" do
-      DeployGroupUsageCsvPresenter.csv_line(project).must_equal(
+      DeployGroupUsageCsvPresenter.send(:csv_line, project).must_equal(
         [project.name]
       )
     end
 
     it "returns a project line when a project and a stage is available but no deploy_group" do
-      DeployGroupUsageCsvPresenter.csv_line(project, stage).must_equal(
+      DeployGroupUsageCsvPresenter.send(:csv_line, project, stage).must_equal(
         [project.name]
       )
     end
 
     it "returns a project line when a project, stage, and deploy_group are available" do
-      DeployGroupUsageCsvPresenter.csv_line(project, stage, deploy_group).must_equal(
+      DeployGroupUsageCsvPresenter.send(:csv_line, project, stage, deploy_group).must_equal(
         [
           project.name,
           stage.name,
