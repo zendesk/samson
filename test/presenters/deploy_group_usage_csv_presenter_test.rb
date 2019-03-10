@@ -4,6 +4,13 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe DeployGroupUsageCsvPresenter do
+  describe ".to_csv" do
+    it "generates csv" do
+      csv_header_rows
+      DeployGroupUsageCsvPresenter.to_csv.split("\n").size.must_equal Project.count + csv_header_rows
+    end
+  end
+
   describe ".csv_header" do
     it "returns the list of column headers" do
       DeployGroupUsageCsvPresenter.csv_header.must_equal(
