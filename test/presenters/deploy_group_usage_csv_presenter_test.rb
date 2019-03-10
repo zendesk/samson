@@ -6,7 +6,7 @@ SingleCov.covered!
 describe DeployGroupUsageCsvPresenter do
   describe ".to_csv" do
     it "generates csv" do
-      csv_header_rows
+      csv_header_rows = 1
       DeployGroupUsageCsvPresenter.to_csv.split("\n").size.must_equal Project.count + csv_header_rows
     end
   end
