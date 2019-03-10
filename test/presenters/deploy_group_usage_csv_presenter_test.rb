@@ -23,7 +23,7 @@ describe DeployGroupUsageCsvPresenter do
   describe ".csv_line" do
     let(:project) { projects(:test) }
     let(:stage) { stages(:test_staging) }
-    let(:deploy_group) { deploy_groups(:pod1) }    
+    let(:deploy_group) { deploy_groups(:pod1) }
 
     it "returns a project line when only a project is available" do
       DeployGroupUsageCsvPresenter.csv_line(project).must_equal(

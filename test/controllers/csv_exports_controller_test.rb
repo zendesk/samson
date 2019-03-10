@@ -124,6 +124,12 @@ describe CsvExportsController do
           end
         end
 
+        describe "deploy_group_usage type" do
+          options = options.merge(format: :csv, type: "deploy_group_usage")
+          get :new, params: options
+          assert_response :success
+        end
+
         describe "users type" do
           before { users(:super_admin).soft_delete! }
           let(:expected) do
