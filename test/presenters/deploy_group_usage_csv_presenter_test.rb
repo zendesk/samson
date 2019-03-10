@@ -8,10 +8,14 @@ describe DeployGroupUsageCsvPresenter do
     it "generates csv" do
       expected_csv_rows = 1
       Project.all.each do |project|
-        expected_csv_rows += project.stages.empty? ? 1 : project.stages.count
+        if project.stages.empty?
+          expected_csv_rows += 1
+        else
+          project.stages.each do |stage|
+            expected_csv_rows += stage.deploy_groups.count
+          end
+        end
       end
-      puts "GOOBER: #{DeployGroupUsageCsvPresenter.to_csv}"
-      expect("dummy string").to eq(DeployGroupUsageCsvPresenter.to_csv.to_s)
       DeployGroupUsageCsvPresenter.to_csv.split("\n").size.must_equal expected_csv_rows
     end
   end
