@@ -32,15 +32,17 @@ class DeployGroupUsageCsvPresenter
   end
 
   def self.csv_line(project, stage = nil, deploy_group = nil)
-    result = []
+    result = [project.name]
     if stage && deploy_group
-      result << stage.name
-      result << deploy_group.name
-      result << deploy_group.environment_id
-      result << deploy_group.environment.name
-      result << deploy_group.env_value
-      result << deploy_group.permalink
+      result.concat [
+        stage.name,
+        deploy_group.name,
+        deploy_group.environment_id,
+        deploy_group.environment.name,
+        deploy_group.env_value,
+        deploy_group.permalink
+      ]
     end
-    result.unshift(project.name)
+    result
   end
 end

@@ -125,7 +125,7 @@ describe CsvExportsController do
         end
 
         describe "deploy_group_usage type" do
-          options = options.merge(format: :csv, type: "deploy_group_usage")
+          options = {format: :csv, type: "deploy_group_usage"}
           get :new, params: options
           assert_response :success
         end
