@@ -130,12 +130,12 @@ class GitRepository
   end
 
   def clone!
-    executor.execute "git -c core.askpass=true clone --mirror #{repository_url} #{repo_cache_dir}"
+    executor.execute "git -c core.askpass=true clone --mirror #{repository_url} #{repo_cache_dir}", min_timeout: 30
   end
   add_tracer :clone!
 
   def update!
-    executor.execute("cd #{repo_cache_dir}", 'git fetch -p')
+    executor.execute "cd #{repo_cache_dir}", 'git fetch -p', min_timeout: 30
   end
   add_tracer :update!
 

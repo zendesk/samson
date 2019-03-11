@@ -32,7 +32,8 @@ class TerminalExecutor
     @cancel_timeout = cancel_timeout
   end
 
-  def execute(*commands, timeout: @timeout)
+  def execute(*commands, timeout: @timeout, min_timeout: 0)
+    timeout = [timeout, min_timeout].max
     script_as_executable(script(commands)) do |command|
       output, _, pid = PTY.spawn(whitelisted_env, command, in: '/dev/null', unsetenv_others: true)
       record_pid(pid) do

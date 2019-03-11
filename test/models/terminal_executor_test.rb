@@ -9,7 +9,7 @@ describe TerminalExecutor do
 
   before { freeze_time }
 
-  describe '#execute!' do
+  describe '#execute' do
     it 'records stdout' do
       subject.execute('echo "hi"', 'echo "hello"')
       output.string.must_equal("hi\r\nhello\r\n")
@@ -117,6 +117,12 @@ describe TerminalExecutor do
     it "can timeout" do
       refute subject.execute('echo hello; sleep 10', timeout: 1)
       `ps -ef | grep "[s]leep 10"`.wont_include "sleep 10" # process got killed
+      output.string.must_equal("hello\r\nTimeout: execution took longer then 1s and was terminated\n")
+    end
+
+    it "can optionally override too short timeouts" do
+      subject.instance_variable_set(:@timeout, 0)
+      refute subject.execute('echo hello; sleep 10', min_timeout: 1)
       output.string.must_equal("hello\r\nTimeout: execution took longer then 1s and was terminated\n")
     end
 
