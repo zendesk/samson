@@ -18,7 +18,7 @@
         </tr>
         </thead>
         <tbody>
-        <% rows = environments.map { |e| [e, e.deploy_groups.sort_by(&:natural_order)] } %>
+        <% rows = environments.map { |e| [e, e.deploy_groups] } %>
         <% rows.map { |_, dgs| dgs.size }.max.times do |index| %>
           <tr>
             <% rows.each do |environment, deploy_groups| %>

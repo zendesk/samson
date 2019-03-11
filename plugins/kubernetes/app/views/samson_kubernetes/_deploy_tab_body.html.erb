@@ -5,7 +5,7 @@
       GIT: <%= release.git_ref %> @ <%= release.git_sha %><br/>
 
       <h3>Release docs</h3>
-      <% release.release_docs.sort_by { |rd| DeployGroup.with_deleted{ rd.deploy_group&.natural_order }}.each do |release_doc| %>
+      <% release.release_docs.sort_by { |rd| DeployGroup.with_deleted{ rd.deploy_group&.name_sortable }}.each do |release_doc| %>
         <div>
           <h3><%= release_doc.deploy_group.name %> - <%= link_to release_doc.kubernetes_role.name, [@project, release_doc.kubernetes_role] %></h3>
           <pre><%= release_doc.resource_template.map(&:deep_stringify_keys).to_yaml %></pre>

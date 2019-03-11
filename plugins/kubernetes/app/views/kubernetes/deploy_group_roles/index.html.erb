@@ -7,7 +7,7 @@
     <% projects = Project.where(id: Kubernetes::DeployGroupRole.pluck(Arel.sql('distinct project_id'))).order(:name).pluck(:name, :id) %>
     <%= search_select :project_id, projects, live: true, size: 3 %>
 
-    <% deploy_groups = DeployGroup.where(id: Kubernetes::DeployGroupRole.pluck(Arel.sql('distinct deploy_group_id'))).sort_by(&:natural_order).map { |dg| [dg.name, dg.id] } %>
+    <% deploy_groups = DeployGroup.where(id: Kubernetes::DeployGroupRole.pluck(Arel.sql('distinct deploy_group_id'))).pluck(:name, :id) %>
     <%= search_select :deploy_group_id, deploy_groups, live: true, size: 3 %>
   <% end %>
 

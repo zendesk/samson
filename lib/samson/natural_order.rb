@@ -6,5 +6,9 @@ module Samson
     def self.convert(name)
       name.split(/(\d+)/).each_with_index.map { |x, i| i.odd? ? x.to_i : x }
     end
+
+    def self.name_sortable(name)
+      name.split(/(\d+)/).each_with_index.map { |x, i| i.odd? ? x.rjust(5, "0") : x }.join
+    end
   end
 end

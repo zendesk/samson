@@ -9,7 +9,7 @@ class DeployGroupsController < ApplicationController
         Project.find(project_id).stages.find(params.require(:id)).deploy_groups
       else
         DeployGroup.where(nil)
-      end.sort_by(&:natural_order)
+      end
 
     respond_to do |format|
       format.html

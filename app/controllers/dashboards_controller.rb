@@ -4,14 +4,14 @@ class DashboardsController < ApplicationController
 
   def show
     @before = Time.parse(params[:before] || Time.now.to_s(:db))
-    @deploy_groups = @environment.deploy_groups.sort_by(&:natural_order)
+    @deploy_groups = @environment.deploy_groups
     @projects = Project.all
     @failed_deploys = (params[:failed_deploys] == "true")
     @versions = project_versions(@before)
   end
 
   def deploy_groups
-    render json: {deploy_groups: @environment.deploy_groups.sort_by(&:natural_order)}
+    render json: {deploy_groups: @environment.deploy_groups}
   end
 
   private
@@ -26,7 +26,7 @@ class DashboardsController < ApplicationController
       [
         project.id,
         project.last_deploy_by_group(before_time, include_failed_deploys: @failed_deploys).
-                select { |k| env_deploys.include?(k) }
+          select { |k| env_deploys.include?(k) }
       ]
     end.to_h
   end

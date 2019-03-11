@@ -7,6 +7,8 @@ class DeployGroup < ActiveRecord::Base
   include Lockable
   include SoftDeleteWithDestroy
 
+  default_scope { order(:name_sortable) }
+
   belongs_to :environment
   belongs_to :vault_server, class_name: 'Samson::Secrets::VaultServer', optional: true
   has_many :deploy_groups_stages, dependent: :destroy
@@ -19,6 +21,7 @@ class DeployGroup < ActiveRecord::Base
   validates_uniqueness_of :name, :env_value
   validates_format_of :env_value, with: /\A\w[-:\w]*\w\z/
   before_validation :initialize_env_value, on: :create
+  before_validation :generated_name_sortable, if: :name_changed?
   validate :validate_vault_server_has_same_environment
 
   after_save :touch_stages
@@ -26,10 +29,6 @@ class DeployGroup < ActiveRecord::Base
 
   def self.enabled?
     ENV['DEPLOY_GROUP_FEATURE'].present?
-  end
-
-  def natural_order
-    Samson::NaturalOrder.convert(name)
   end
 
   # faster alternative to stage_ids way of getting stage_ids
@@ -42,6 +41,10 @@ class DeployGroup < ActiveRecord::Base
   end
 
   private
+
+  def generated_name_sortable
+    self.name_sortable = Samson::NaturalOrder.name_sortable(name)
+  end
 
   def permalink_base
     name

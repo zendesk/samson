@@ -152,7 +152,7 @@ class Stage < ActiveRecord::Base
   end
 
   def deploy_group_names
-    DeployGroup.enabled? ? deploy_groups.select(:name).sort_by(&:natural_order).map(&:name) : []
+    DeployGroup.enabled? ? deploy_groups.pluck(:name) : []
   end
 
   def environments
