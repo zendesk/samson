@@ -1,6 +1,10 @@
 # Getting Started
 
-## Docker
+## Server setup
+
+### Docker: 
+
+Simple/reproducible but slow to develop on.
 
 ```bash
 docker-compose up
@@ -12,7 +16,10 @@ When running on virtual the `3000` port forwarding should be configured in virtu
 When running on virtual `192.168.42.45` use `.env.virtualbox` from `docker-compose.yml`.
 When running on neither localhost nor `192.168.42.45` create your own credentials and load them from `docker-compose.yml`.
 
-## Local machine
+### Local machine
+
+Complicated to start, but easy to develop from.
+
 ```bash
 # install the database you want to use, samson needs mysql, postgresql, or sqlite
 sudo apt-get install mysql-dev pg-dev nodejs
@@ -23,11 +30,13 @@ rails s
 open http://localhost:3000
 ```
 
-## Heroku
+### Heroku
+
+Simple setup, no dependencies, but slow to develop.
 
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/zendesk/samson)
 
-## Setup
+## Creating the first project
  - Add a new project http://localhost:3000/projects/new
  - name: example-project url: git@github.com:samson-test-org/example-project.git
  - Create a Stage
@@ -54,21 +63,22 @@ Configure `config/puma.rb` as you need. See [puma's documentation](https://githu
 You can start the server using this file by doing `bundle exec puma -C config/puma.rb`.
 To restart the server use `kill -USR1 <pid>` which makes it restart without losing any downtime (lost requests).
 
-### Settings
+### Environment variables
 
-Set environment variables in your `.env` file, see `.env.example` for documentation on what is required/available. 
+Set environment variables in your `.env` file, see `.env.example` for documentation on what is required/available.
+Alternatively set them directly in heroku or the process environment. 
 
-### Production assets
+### Advanced features
+
+For advanced features see the [Extra features page](extra_features.md).
+
+## Production assets
 
 Needs to generate assets before running in production or it will show `not present in the asset pipeline` errors.
 
 `RAILS_ENV=production PRECOMPILE=1 PLUGINS=all bundle exec rake assets:precompile assets:clean[0] --trace`
 
-### Advanced features
-
-For more settings that enable advanced features see the [Extra features page](extra_features.md).
-
-### Profiling
+## Profiling
 
 Generate graphs via [stackprof](https://github.com/tmm1/stackprof) from development console, using the `PROFILE` mode.
 
