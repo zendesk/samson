@@ -1,6 +1,6 @@
 # Getting Started
 
-### Docker
+## Docker
 
 ```bash
 docker-compose up
@@ -12,25 +12,28 @@ When running on virtual the `3000` port forwarding should be configured in virtu
 When running on virtual `192.168.42.45` use `.env.virtualbox` from `docker-compose.yml`.
 When running on neither localhost nor `192.168.42.45` create your own credentials and load them from `docker-compose.yml`.
 
-### Local machine
+## Local machine
 ```bash
+# install the database you want to use, samson needs mysql, postgresql, or sqlite
 sudo apt-get install mysql-dev pg-dev nodejs
+brew install postgresql sqlite mysql
+
 bin/setup # Run the setup script to use the test credentials.
 rails s
 open http://localhost:3000
 ```
 
-### Heroku
+## Heroku
 
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/zendesk/samson)
 
-### Setup
+## Setup
  - Add a new project http://localhost:3000/projects/new
  - name: example-project url: git@github.com:samson-test-org/example-project.git
  - Create a Stage
  - Deploy!
 
-# Permission
+## Permission
 
 Samson assumes the user you are running the service under has permission to perform the various tasks like
 cloning repositories. For private repositories especially, this may necessitate uploading SSH keys or keychaining the user/password:
@@ -38,29 +41,41 @@ cloning repositories. For private repositories especially, this may necessitate 
 
 Otherwise when creating a new project you may get the error "<Repository URL> is not valid or accessible".
 
-# Configuration
+## Configuration
 
-## Database
+### Database
 
 For very small deployments, SQLite is sufficient, however you may want to leverage MySQL or PostgreSQL.
 Set up a production block in database.yml with the settings to connect to your DB then run `RAILS_ENV=production bundle exec rake db:setup`
 
-## Webserver
+### Webserver
 
 Configure `config/puma.rb` as you need. See [puma's documentation](https://github.com/puma/puma/) for details.
 You can start the server using this file by doing `bundle exec puma -C config/puma.rb`.
 To restart the server use `kill -USR1 <pid>` which makes it restart without losing any downtime (lost requests).
 
-## Settings
+### Settings
 
 Set environment variables in your `.env` file, see `.env.example` for documentation on what is required/available. 
 
-## Production assets
+### Production assets
 
 Needs to generate assets before running in production or it will show `not present in the asset pipeline` errors.
 
 `RAILS_ENV=production PRECOMPILE=1 PLUGINS=all bundle exec rake assets:precompile assets:clean[0] --trace`
 
-## Advanced features
+### Advanced features
 
 For more settings that enable advanced features see the [Extra features page](extra_features.md).
+
+### Profiling
+
+Generate graphs via [stackprof](https://github.com/tmm1/stackprof) from development console, using the `PROFILE` mode.
+
+```
+rake assets:precompile
+PROFILE=1 rails c
+login User.first
+app.get '/' # warmup
+flamegraph(name: 'foo') { app.get '/' }
+```

@@ -56,9 +56,14 @@ describe Environment do
     end
   end
 
-  describe "#soft_delete!" do
-    it "also deletes deploy groups" do
-      environments(:production).soft_delete!
+  describe "#soft_delete" do
+    it "refuses when groups are used" do
+      refute environments(:production).soft_delete(validate: false)
+    end
+
+    it "deletes unused deploy groups" do
+      DeployGroupsStage.delete_all
+      assert environments(:production).soft_delete(validate: false)
       assert DeployGroup.with_deleted { DeployGroup.find(deploy_groups(:pod1).id) }.deleted_at
     end
   end

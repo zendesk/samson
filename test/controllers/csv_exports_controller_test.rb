@@ -106,6 +106,14 @@ describe CsvExportsController do
             @response.body.must_include ">Super Admin</option>"
           end
         end
+
+        describe "deploy_group_usage type" do
+          it "renders form options" do
+            get :new, params: {type: :deploy_group_usage}
+            assert_select "h1", "Deploy Group Usage Report"
+            @response.body.must_include "Download Deploy Group Usage Report"
+          end
+        end
       end
 
       describe "as csv" do
@@ -113,6 +121,13 @@ describe CsvExportsController do
           it "responds with not found" do
             get :new, params: {format: :csv}
             response.body.must_equal "not found"
+          end
+        end
+
+        describe "deploy_group_usage type" do
+          it "returns csv" do
+            get :new, params: {format: :csv, type: "deploy_group_usage"}
+            assert_response :success
           end
         end
 

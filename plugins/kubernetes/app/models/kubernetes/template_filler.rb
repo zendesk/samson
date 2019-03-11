@@ -251,6 +251,7 @@ module Kubernetes
     # /vaultauth is a secrets volume in the cluster
     # /secretkeys are where the annotations from the config are mounted
     def set_secret_puller
+      vault_client = Samson::Secrets::VaultClientManager.instance.client(@doc.deploy_group.permalink)
       secret_vol = {mountPath: "/secrets", name: "secrets-volume"}
       container = {
         image: SECRET_PULLER_IMAGE,
@@ -261,7 +262,11 @@ module Kubernetes
           {mountPath: "/secretkeys", name: "secretkeys"},
           secret_vol
         ],
-        env: vault_env
+        env: [
+          {name: "VAULT_TLS_VERIFY", value: vault_client.options.fetch(:ssl_verify).to_s},
+          {name: "VAULT_MOUNT", value: Samson::Secrets::VaultClientManager::MOUNT},
+          {name: "VAULT_PREFIX", value: Samson::Secrets::VaultClientManager::PREFIX}
+        ]
       }
       init_containers.unshift container
 
@@ -420,8 +425,6 @@ module Kubernetes
     def set_env
       all = []
 
-      all.concat vault_env if vault_env_required?
-
       static_env.each { |k, v| all << {name: k.to_s, value: v.to_s} }
 
       # dynamic lookups for unknown things during deploy
@@ -513,21 +516,6 @@ module Kubernetes
     def blue_green_color
       return @blue_green_color if defined?(@blue_green_color)
       @blue_green_color = @doc.blue_green_color
-    end
-
-    def vault_env_required?
-      required_env.include?('VAULT_ADDR') && ENV["SECRET_STORAGE_BACKEND"] == "Samson::Secrets::HashicorpVaultBackend"
-    end
-
-    def vault_env
-      vault_client = Samson::Secrets::VaultClientManager.instance.client(@doc.deploy_group.permalink)
-      [
-        {name: "VAULT_ADDR", value: vault_client.options.fetch(:address)},
-        {name: "VAULT_SSL_VERIFY", value: vault_client.options.fetch(:ssl_verify).to_s},
-        {name: "VAULT_MOUNT", value: Samson::Secrets::VaultClientManager::MOUNT},
-        {name: "VAULT_PREFIX", value: Samson::Secrets::VaultClientManager::PREFIX},
-        {name: "VAULT_KV_V2", value: vault_client.versioned_kv.to_s}
-      ]
     end
 
     # kubernetes needs docker secrets to be able to pull down images from the registry

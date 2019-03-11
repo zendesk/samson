@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 1
+SingleCov.covered!
 
 describe DeployGroupsController do
   let(:deploy_group) { deploy_groups(:pod100) }
@@ -75,10 +75,15 @@ describe DeployGroupsController do
 
       it "compares environment" do
         var = EnvironmentVariable.create!(scope: deploy_groups(:pod2), parent: stage.project, name: "Foo", value: "bar")
+        group = EnvironmentVariableGroup.create!(name: "G1")
+        var2 = EnvironmentVariable.create!(scope: deploy_groups(:pod2), parent: group, name: "Bar", value: "baz")
         get :missing_config, params: {id: deploy_group, compare: deploy_groups(:pod2).permalink}
         assert_template :missing_config
         assert_response :success
-        assigns(:diff).must_equal("foo" => {"Environment" => [var]})
+        assigns(:diff).must_equal(
+          "foo" => {"Environment" => [var]},
+          "global" => {"Environment" => [var2]}
+        )
       end
     end
   end
@@ -153,13 +158,7 @@ describe DeployGroupsController do
         DeployGroup.where(id: deploy_group.id).must_equal []
       end
 
-      it 'fails for non-existent deploy_group' do
-        assert_raises ActiveRecord::RecordNotFound do
-          delete :destroy, params: {id: -1}
-        end
-      end
-
-      it 'fails for used deploy_group and sends user to a page that shows which groups are used' do
+      it 'fails for used deploy_group and sends user to a page that shows which groups are used+errors' do
         delete :destroy, params: {id: deploy_group}
         assert_redirected_to deploy_group
         assert flash[:error]

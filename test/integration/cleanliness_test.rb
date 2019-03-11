@@ -110,9 +110,10 @@ describe "cleanliness" do
     end
   end
 
+  # rails does not run validations on :destroy, so we should not run them on soft-delete (which is an update)
   it 'discourages use of soft_delete without validate: false' do
     assert_content all_code do |content|
-      if content.match?(/soft_delete\!?$/)
+      if content.match?(/[\. ]soft_delete\!?$/)
         'prefer soft_delete(validate: false)'
       end
     end
