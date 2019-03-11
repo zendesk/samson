@@ -11,32 +11,40 @@ describe 'Unauthorized' do
   end
 
   describe '#respond' do
+    def request(params: {})
+      get path, {controller: "ping", action: "show"}.merge(params), headers
+    end
+
     describe 'as html' do
+      alias_method :response, :last_response
       let(:headers) { {} }
       let(:path) { '/' }
-
-      before do
-        get path, {controller: "ping", action: "show"}, headers
-      end
+      let(:flash) { last_request.env['action_dispatch.request.flash_hash'] }
 
       it 'redirects to the login path' do
-        last_response.status.must_equal 302
+        request
+        response.status.must_equal 302
 
         # Really just a path, but Rack insists on using the full SERVER_NAME
-        last_response.headers['Location'].must_equal('http://example.org/login?redirect_to=%2Fping')
+        response.headers['Location'].must_equal('http://example.org/login?redirect_to=%2Fping')
       end
 
       it 'sets the flash' do
-        flash = last_request.env['action_dispatch.request.flash_hash']
+        request
         flash[:authorization_error].must_equal('You are not logged in')
       end
 
       describe 'when user is not authorized' do
         let(:headers) { {'warden' => stub(user: 111)} }
 
-        it 'uses a custom flash message' do
-          flash = last_request.env['action_dispatch.request.flash_hash']
+        it 'uses a custom flash message for viewing' do
+          request
           flash[:authorization_error].must_equal('You are not authorized to view this page')
+        end
+
+        it 'uses a custom flash message for changes' do
+          request(params: {_method: "patch"})
+          flash[:authorization_error].must_equal('You are not authorized to make this change')
         end
       end
 
@@ -44,11 +52,13 @@ describe 'Unauthorized' do
         let(:path) { "deploys/active_count.json" }
 
         it 'responds unauthorized' do
-          last_response.status.must_equal 401
+          request
+          response.status.must_equal 401
         end
 
         it 'responds with json' do
-          last_response.headers['Content-Type'].must_match(%r{\Aapplication/json})
+          request
+          response.headers['Content-Type'].must_match(%r{\Aapplication/json})
         end
       end
 
@@ -56,10 +66,11 @@ describe 'Unauthorized' do
         let(:headers) { {'HTTP_REFERER' => '/hello'} }
 
         it 'redirects to the login path' do
-          last_response.status.must_equal 302
+          request
+          response.status.must_equal 302
 
           # Really just '/', but Rack insists on using the full SERVER_NAME
-          last_response.headers['Location'].must_equal('http://example.org/login?redirect_to=%2Fping')
+          response.headers['Location'].must_equal('http://example.org/login?redirect_to=%2Fping')
         end
       end
     end

@@ -18,7 +18,8 @@ class UnauthorizedController < ActionController::Metal
   end
 
   def respond
-    message = "You are not #{request.env['warden']&.user ? "authorized to view this page" : "logged in"}"
+    action = (["patch", "post", "put"].include?(params[:_method]) ? "make this change" : "view this page")
+    message = "You are not #{request.env['warden']&.user ? "authorized to #{action}" : "logged in"}"
     respond_to do |format|
       format.json do
         render json: {error: message + ", see docs/api.md on how to authenticate"}, status: :unauthorized
