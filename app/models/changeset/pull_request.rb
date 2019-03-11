@@ -4,16 +4,16 @@ class Changeset::PullRequest
   CODE_ONLY = "[A-Z][A-Z\\d]+-\\d+" # e.g., S4MS0N-123, SAM-456
   PUNCT = "\\s|\\p{Punct}|~|="
 
-  WEBHOOK_FILTER = /(^|\s)\[samson review\]($|\s)/i
+  WEBHOOK_FILTER = /(^|\s)\[samson review\]($|\s)/i.freeze
 
   # Matches URLs to JIRA issues.
-  JIRA_ISSUE_URL = %r[https?:\/\/[\da-z\.\-]+\.[a-z\.]{2,6}\/browse\/#{CODE_ONLY}(?=#{PUNCT}|$)]
+  JIRA_ISSUE_URL = %r[https?:\/\/[\da-z\.\-]+\.[a-z\.]{2,6}\/browse\/#{CODE_ONLY}(?=#{PUNCT}|$)].freeze
 
   # Matches "VOICE-1234" or "[VOICE-1234]"
-  JIRA_CODE_TITLE = /(\[)*(#{CODE_ONLY})(\])*/
+  JIRA_CODE_TITLE = /(\[)*(#{CODE_ONLY})(\])*/.freeze
 
   # Matches "VOICE-1234" only
-  JIRA_CODE = /(?<=#{PUNCT}|^)(#{CODE_ONLY})(?=#{PUNCT}|$)/
+  JIRA_CODE = /(?<=#{PUNCT}|^)(#{CODE_ONLY})(?=#{PUNCT}|$)/.freeze
 
   # Github pull request events can be triggered by a number of actions such as 'labeled', 'assigned'
   # Actions which aren't related to a code push should not trigger a samson deploy.

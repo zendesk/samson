@@ -6,7 +6,7 @@ module Kubernetes
     self.table_name = 'kubernetes_clusters'
     audited
 
-    IP_PREFIX_PATTERN = /\A(?:[\d]{1,3}\.){0,2}[\d]{1,3}\z/ # also used in js
+    IP_PREFIX_PATTERN = /\A(?:[\d]{1,3}\.){0,2}[\d]{1,3}\z/.freeze # also used in js
 
     has_many :cluster_deploy_groups,
       class_name: 'Kubernetes::ClusterDeployGroup',

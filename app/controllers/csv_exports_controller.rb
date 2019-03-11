@@ -122,7 +122,7 @@ class CsvExportsController < ApplicationController
       end
     end
 
-    if project = params[:project].try(:to_i)
+    if project = params[:project]&.to_i
       if project > 0
         filter['stages.project_id'] = project
       elsif project.to_s != params[:project]

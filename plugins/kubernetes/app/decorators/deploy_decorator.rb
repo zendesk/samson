@@ -7,7 +7,7 @@ Deploy.class_eval do
   private
 
   def copy_kubernetes_from_stage
-    self.kubernetes = stage.try(:kubernetes)
+    self.kubernetes = stage&.kubernetes
     nil
   end
 end
