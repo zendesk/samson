@@ -27,14 +27,29 @@ describe Changeset do
     end
 
     describe "with master" do
-      it "doesn't cache" do
-        stub_github_api("repos/foo/bar/branches/master", commit: {sha: "foo"})
-        stub_github_api("repos/foo/bar/compare/a...foo", "x" => "y")
-        Changeset.new(project, "a", "master").comparison.to_h.must_equal x: "y"
+      describe "when GitHub project" do
+        it "doesn't cache" do
+          stub_github_api("repos/foo/bar/branches/master", commit: {sha: "foo"})
+          stub_github_api("repos/foo/bar/compare/a...foo", "x" => "y")
+          Changeset.new(project, "a", "master").comparison.to_h.must_equal x: "y"
 
-        stub_github_api("repos/foo/bar/branches/master", commit: {sha: "bar"})
-        stub_github_api("repos/foo/bar/compare/a...bar", "x" => "z")
-        Changeset.new(project, "a", "master").comparison.to_h.must_equal x: "z"
+          stub_github_api("repos/foo/bar/branches/master", commit: {sha: "bar"})
+          stub_github_api("repos/foo/bar/compare/a...bar", "x" => "z")
+          Changeset.new(project, "a", "master").comparison.to_h.must_equal x: "z"
+        end
+      end
+
+      describe "when GitLab project" do
+        it "doesn't cache" do
+          project.repository_url = 'ssh://git@gitlab.com:foo/bar.git'
+          stub_request(:get, "https://gitlab.com/api/v4/projects/foo%2Fbar/repository/branches/master").to_return(
+            body: JSON.dump(commit: {id: 'foo'})
+          )
+          stub_request(:get, "https://gitlab.com/api/v4/projects/foo%2Fbar/repository/compare?from=a&to=foo").to_return(
+            body: JSON.dump(diffs: [], commits: [])
+          )
+          Changeset.new(project, "a", "master").comparison.to_h.must_equal(files: [], commits: [])
+        end
       end
     end
 

@@ -82,7 +82,7 @@ class Changeset
 
       Rails.cache.fetch(cache_key) do
         if project.gitlab?
-          SamsonGitlab::Presenters::Changeset.new(Gitlab.compare(repo, previous_commit, commit)).comparison
+          Presenters::GitlabChangeset.new(Gitlab.compare(repo, previous_commit, commit)).build
         else
           GITHUB.compare(repo, previous_commit, commit)
         end

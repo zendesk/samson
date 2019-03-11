@@ -107,7 +107,7 @@ describe SlackWebhookNotification do
     let(:changeset) do
       stub "changeset",
         commits: stub("commits", count: 3),
-        github_url: "https://github.com/url",
+        commit_range_url: "https://github.com/url",
         pull_requests: pull_requests,
         author_names: ['author1', 'author2']
     end

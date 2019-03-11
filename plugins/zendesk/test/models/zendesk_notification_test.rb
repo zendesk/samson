@@ -4,8 +4,9 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe ZendeskNotification do
+  let(:project) { projects(:test) }
   def commit(message)
-    Changeset::Commit.new(nil, Hashie::Mash.new(commit: {message: message}))
+    Changeset::Commit.new(project, Hashie::Mash.new(commit: {message: message}))
   end
 
   let(:stage) { stub(name: "Production") }
