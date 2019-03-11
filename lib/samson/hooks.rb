@@ -61,7 +61,10 @@ module Samson
       :trace_method,
       :trace_scope,
       :asynchronous_performance_tracer,
-      :repo_provider_status
+      :repo_provider_status,
+      :omniauth_builder,
+      :omniauth_uid,
+      :omniauth_provider
     ].freeze
 
     # Hooks that are slow and we want performance info on

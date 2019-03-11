@@ -7,11 +7,15 @@
       Please configure them via the AUTH_* environment variables as documented in
       <%= link_to '.env.example', 'https://github.com/zendesk/samson/blob/master/.env.example' %>.
     <% else %>
-      <% ['Github', 'Google', 'LDAP', 'Gitlab', 'Bitbucket'].each do |provider| %>
-        <% if Rails.application.config.samson.auth.public_send(provider.downcase) %>
-          <%= link_to omniauth_path(provider.downcase.to_sym), class: "action #{provider.downcase}" do %>
-            <%= image_tag image_url("#{provider.downcase}.png") %> Login with <%= provider %>
-          <% end %>
+      <%
+        providers = ['Github', 'Google', 'Gitlab', 'Bitbucket']
+        providers.select! { |p| Rails.application.config.samson.auth.public_send(p.downcase) }
+        providers.concat Samson::Hooks.fire(:omniauth_provider).compact
+      %>
+
+      <% providers.each do |provider| %>
+        <%= link_to omniauth_path(provider.downcase.to_sym), class: "action #{provider.downcase}" do %>
+          <%= image_tag image_url("auth/#{provider.downcase}.png") %> Login with <%= provider %>
         <% end %>
       <% end %>
     <% end %>

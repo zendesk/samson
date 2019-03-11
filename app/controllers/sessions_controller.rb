@@ -3,7 +3,7 @@ require 'omniauth/github_authorization'
 
 class SessionsController < ApplicationController
   skip_before_action :login_user
-  skip_before_action :verify_authenticity_token, only: [:ldap]
+  skip_before_action :verify_authenticity_token, only: [:omniauth_callback]
 
   def new
     redirect_to root_path if current_user
@@ -14,22 +14,7 @@ class SessionsController < ApplicationController
     login(role_id: custom_role_or_default(role_id))
   end
 
-  def google
-    return show_login_restriction unless allowed_to_login
-    login(role_id: custom_role_or_default(Role::VIEWER.id))
-  end
-
-  def ldap
-    return show_login_restriction unless allowed_to_login
-    login(role_id: custom_role_or_default(Role::VIEWER.id))
-  end
-
-  def gitlab
-    return show_login_restriction unless allowed_to_login
-    login(role_id: custom_role_or_default(Role::VIEWER.id))
-  end
-
-  def bitbucket
+  def omniauth_callback
     return show_login_restriction unless allowed_to_login
     login(role_id: custom_role_or_default(Role::VIEWER.id))
   end
@@ -90,13 +75,7 @@ class SessionsController < ApplicationController
   end
 
   def login(options = {})
-    if auth_hash.provider == 'ldap' && ENV['AUTH_LDAP'] && ENV['USE_LDAP_UID_AS_EXTERNAL_ID']
-      uid_field = Rails.application.config.samson.ldap.uid
-      uid = auth_hash.extra.raw_info.send(uid_field).presence || raise
-      uid = Array(uid).first
-    else
-      uid = auth_hash.uid
-    end
+    uid = Samson::Hooks.fire(:omniauth_uid, auth_hash).compact.first || auth_hash.uid
 
     user = find_or_create_user_from_hash(options.merge(
       external_id: "#{strategy.name}-#{uid}",
