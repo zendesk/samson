@@ -22,7 +22,7 @@
           <td>
             <pre class="pre-command pre-scrollable"><%= command.command %></pre>
           </td>
-          <td><%= command.project.try(:name) ? command.project.name : "Global" %></td>
+          <td><%= command.project&.name ? command.project.name : "Global" %></td>
           <td>
             <%= link_to "Edit", command %>
             |

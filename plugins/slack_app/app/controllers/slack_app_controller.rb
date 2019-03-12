@@ -150,14 +150,14 @@ class SlackAppController < ApplicationController
     end
 
     @current_user_from_slack = if current_user
-      SlackIdentifier.find_by_user_id(current_user.id).try(:user)
+      SlackIdentifier.find_by_user_id(current_user.id)&.user
     else
       slack_user_id = if @payload.key? 'user'
         @payload['user']['id']
       else
         @payload['user_id']
       end
-      SlackIdentifier.find_by_identifier(slack_user_id).try(:user)
+      SlackIdentifier.find_by_identifier(slack_user_id)&.user
     end
   end
 

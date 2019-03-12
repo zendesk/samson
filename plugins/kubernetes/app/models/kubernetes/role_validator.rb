@@ -3,7 +3,7 @@ module Kubernetes
   class RoleValidator
     # per https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#syntax-and-character-set
     # not perfect since the actual rules are stricter
-    VALID_LABEL_VALUE = /\A[a-zA-Z0-9]([-a-zA-Z0-9.]*[a-zA-Z0-9])?\z/ # also used in js ... cannot use /i
+    VALID_LABEL_VALUE = /\A[a-zA-Z0-9]([-a-zA-Z0-9.]*[a-zA-Z0-9])?\z/.freeze # also used in js ... cannot use /i
 
     NAMESPACELESS_KINDS = [
       'APIService', 'ClusterRoleBinding', 'ClusterRole', 'CustomResourceDefinition', 'Namespace'

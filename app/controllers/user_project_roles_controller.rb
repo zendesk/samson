@@ -34,7 +34,7 @@ class UserProjectRolesController < ApplicationController
       role.destroy!
     end
 
-    role_name = (role.role.try(:display_name) || 'None')
+    role_name = (role.role&.display_name || 'None')
     Rails.logger.info(
       "#{current_user.name_and_email} set the role #{role_name} to #{user.name} on project #{current_project.name}"
     )

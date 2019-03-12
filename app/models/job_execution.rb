@@ -67,7 +67,7 @@ class JobExecution
   end
   add_asynchronous_tracer :perform,
     category: :task,
-    params: '{ job_id: id, project: job.project.try(:name), reference: reference }'
+    params: '{ job_id: id, project: job.project&.name, reference: reference }'
 
   # Used on queued jobs when shutting down
   # so that the stream sockets are closed

@@ -9,7 +9,7 @@ module Samson
       audited
       include AttrEncryptedSupport
       self.table_name = :vault_servers
-      ADDRESS_PATTERN = /\Ahttps?:\/\//
+      ADDRESS_PATTERN = /\Ahttps?:\/\//.freeze
 
       DEFAULT_CLIENT_OPTIONS = {
         use_ssl: true,
