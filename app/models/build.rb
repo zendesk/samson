@@ -98,25 +98,25 @@ class Build < ActiveRecord::Base
   end
 
   def validate_git_reference
-    if git_ref.blank? && git_sha.blank?
-      errors.add(:git_ref, 'must be specified')
-      return
-    end
-
+    return errors.add(:git_ref, 'must be specified') if git_ref.blank? && git_sha.blank?
     return if errors.include?(:git_ref) || errors.include?(:git_sha)
+    return validate_git_sha if git_ref.blank?
+    commit = commit_from_ref(git_ref)
+    return errors.add(:git_ref, 'is not a valid reference') unless commit
+    return validate_git_sha if git_sha.present? && git_sha != commit
+    self.git_sha = commit
+  end
 
-    if git_ref.present?
-      commit = project.repository.commit_from_ref(git_ref)
-      if commit
-        self.git_sha = commit unless git_sha.present?
-      else
-        errors.add(:git_ref, 'is not a valid reference')
-      end
-    elsif git_sha.present?
-      unless project.repository.commit_from_ref(git_sha)
-        errors.add(:git_sha, 'is not a valid SHA for this project')
-      end
-    end
+  def validate_git_sha
+    return if commit_from_ref(git_sha)
+    errors.add(:git_sha, 'is not a valid SHA for this project')
+  end
+
+  # TODO: support local / github / gitlab ?
+  def commit_from_ref(ref)
+    GITHUB.commit(project.repository_path, ref).sha
+  rescue StandardError
+    nil
   end
 
   def assign_number

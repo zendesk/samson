@@ -4,12 +4,20 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe Build do
-  include GitRepoTestHelper
+  def stub_commit_from_ref(ref, commit)
+    stub_request(:get, "https://api.github.com/repos/bar/foo/commits/#{ref}").
+      to_return(
+        body: {sha: commit}.to_json,
+        status: commit ? 200 : 404,
+        headers: {"Content-Type" => "application/json"}
+      )
+  end
 
-  let(:project) { Project.new(id: 99999, name: 'test_project', repository_url: repo_temp_dir) }
+  let(:project) { projects(:test) }
   let(:example_sha) { 'cbbf2f9a99b47fc460d422812b6a5adff7dfee951d8fa2e4a98caa0382cfbdbf' }
   let(:repo_digest) { "my-registry.zende.sk/some_project@sha256:#{example_sha}" }
   let(:build) { builds(:staging) }
+  let(:current_commit) { "af0798b05e10ac6b8381f85b38ae3973278e71ba" }
 
   def valid_build(attributes = {})
     Build.new(attributes.reverse_merge(
@@ -20,64 +28,65 @@ describe Build do
   end
 
   describe 'validations' do
-    let(:repository) { project.repository }
-    let(:cached_repo_dir) { File.join(GitRepository.cached_repos_dir, project.repository_directory) }
-    let(:git_tag) { 'test_tag' }
-
-    before do
-      create_repo_with_tags(git_tag)
-    end
-
-    after do
-      FileUtils.rm_rf(repo_temp_dir)
-      FileUtils.rm_rf(repository.repo_cache_dir)
-      FileUtils.rm_rf(cached_repo_dir)
-    end
+    before { stub_commit_from_ref("master", current_commit) }
 
     it 'validates git sha' do
-      Dir.chdir(repo_temp_dir) do
-        assert_valid(valid_build(git_ref: nil, git_sha: current_commit))
-        refute_valid(valid_build(git_ref: nil, git_sha: '0123456789012345678901234567890123456789')) # sha no in repo
-        refute_valid(valid_build(git_ref: nil, git_sha: 'This is a string of 40 characters.......'))
-        refute_valid(valid_build(git_ref: nil, git_sha: 'abc'))
-      end
+      stub_commit_from_ref(current_commit, current_commit)
+      stub_commit_from_ref('0123456789012345678901234567890123456789', nil)
+      stub_commit_from_ref('This is a string of 40 characters.......', nil)
+      stub_commit_from_ref('abc', nil)
+      assert_valid(valid_build(git_ref: nil, git_sha: current_commit))
+      refute_valid(valid_build(git_ref: nil, git_sha: '0123456789012345678901234567890123456789')) # sha no in repo
+      refute_valid(valid_build(git_ref: nil, git_sha: 'This is a string of 40 characters.......'))
+      refute_valid(valid_build(git_ref: nil, git_sha: 'abc'))
+    end
+
+    it "is invalid with a ref and an invalid sha" do
+      stub_commit_from_ref('abc', current_commit)
+      stub_commit_from_ref('a' * 40, nil)
+      refute_valid(valid_build(git_ref: 'abc', git_sha: 'a' * 40))
+    end
+
+    it "is valid with a ref and an old sha" do
+      stub_commit_from_ref('abc', current_commit)
+      stub_commit_from_ref('a' * 40, 'b' * 40)
+      assert_valid(valid_build(git_ref: 'abc', git_sha: 'a' * 40))
     end
 
     it "validates git sha uniqueness with dockerfile" do
-      Dir.chdir(repo_temp_dir) do
-        build.update_column(:git_sha, current_commit)
-        refute_valid(valid_build(git_ref: nil, git_sha: current_commit)) # not unique
-        refute_valid(valid_build) # not unique since ref resolves to sha
-        assert_valid(valid_build(git_ref: nil, git_sha: current_commit, dockerfile: 'Other'))
-        assert_valid(valid_build(git_ref: nil, git_sha: current_commit, dockerfile: nil, external_status: 'pending'))
-      end
+      stub_commit_from_ref(current_commit, current_commit)
+      build.update_column(:git_sha, current_commit)
+      refute_valid(valid_build(git_ref: nil, git_sha: current_commit)) # not unique
+      refute_valid(valid_build) # not unique since ref resolves to sha
+      assert_valid(valid_build(git_ref: nil, git_sha: current_commit, dockerfile: 'Other'))
+      assert_valid(valid_build(git_ref: nil, git_sha: current_commit, dockerfile: nil, external_status: 'pending'))
     end
 
     it "validates git sha uniqueness with image_name" do
-      Dir.chdir(repo_temp_dir) do
-        Build.all.each { |b| b.update_column :dockerfile, b.id }
-        build.update_columns(git_sha: current_commit, image_name: 'hello', dockerfile: 'Other')
-        builds(:v1_tag).update_columns(git_sha: current_commit, image_name: nil)
+      stub_commit_from_ref(current_commit, current_commit)
 
-        base = {git_ref: nil, git_sha: current_commit, external_status: 'pending'}
-        assert_valid(valid_build(base))
-        refute_valid(valid_build(base.merge(image_name: 'hello'))) # not unique
-        assert_valid(valid_build(base.merge(image_name: 'world'))) # unique
-        assert_valid(valid_build(base.merge(image_name: '')))
-      end
+      Build.all.each { |b| b.update_column :dockerfile, b.id }
+      build.update_columns(git_sha: current_commit, image_name: 'hello', dockerfile: 'Other')
+      builds(:v1_tag).update_columns(git_sha: current_commit, image_name: nil)
+
+      base = {git_ref: nil, git_sha: current_commit, external_status: 'pending'}
+      assert_valid(valid_build(base))
+      refute_valid(valid_build(base.merge(image_name: 'hello'))) # not unique
+      assert_valid(valid_build(base.merge(image_name: 'world'))) # unique
+      assert_valid(valid_build(base.merge(image_name: '')))
     end
 
     it 'validates git_ref' do
+      stub_commit_from_ref(current_commit, current_commit)
+      stub_commit_from_ref('some_tag_i_made_up', nil)
       assert_valid(valid_build(git_ref: 'master'))
-      assert_valid(valid_build(git_ref: git_tag))
       refute_valid(Build.new(project: project))
-      Dir.chdir(repo_temp_dir) do
-        assert_valid(valid_build(git_ref: current_commit))
-      end
+      assert_valid(valid_build(git_ref: current_commit))
       refute_valid(valid_build(git_ref: 'some_tag_i_made_up'))
     end
 
     it 'validates docker digest' do
+      stub_commit_from_ref("a" * 40, current_commit)
       assert_valid(valid_build(docker_repo_digest: repo_digest, git_sha: 'a' * 40))
       assert_valid(valid_build(docker_repo_digest: "", git_sha: 'a' * 40))
       multi_slash = "my-registry.zende.sk/samson/another_project@sha256:#{example_sha}"
@@ -133,12 +142,8 @@ describe Build do
   describe 'create' do
     let(:project) { projects(:test) }
 
-    before do
-      create_repo_without_tags
-      project.repository_url = repo_temp_dir
-    end
-
     it 'increments the build number' do
+      stub_commit_from_ref("master", "a" * 40)
       biggest_build_num = project.builds.maximum(:number) || 0
       build = project.builds.create!(git_ref: 'master', creator: users(:admin))
       assert_valid(build)
@@ -190,7 +195,7 @@ describe Build do
 
   describe "#make_dockerfile_and_image_name_not_collide" do
     it "stores nil dockerfile so index does not collide when using image_name for uniqueness" do
-      GitRepository.any_instance.expects(:commit_from_ref).returns('a' * 40)
+      stub_commit_from_ref("master", current_commit)
       build = valid_build(image_name: 'foobar', external_status: 'pending')
       build.save!
       build.dockerfile.must_be_nil
