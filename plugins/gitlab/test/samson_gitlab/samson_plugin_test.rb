@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 1
+SingleCov.covered!
 
 describe SamsonGitlab do
   it 'configures GitLab API client' do
@@ -20,6 +20,11 @@ describe SamsonGitlab do
 
     around { |t| Samson::Hooks.only_callbacks_for_plugin('gitlab', :changeset_api_request, &t) }
 
+    it "skips non-gitlab" do
+      project.stubs(:gitlab?).returns(false)
+      fire(:branch).must_equal [nil]
+    end
+
     it "calls branch api endpoint" do
       stub_request(:get, api_request["branches/b"]).to_return(body: JSON.dump(commit: {id: 'foo'}))
       fire(:branch).must_equal ["foo"]
@@ -36,7 +41,7 @@ describe SamsonGitlab do
 
     it "catches exception and returns NullComparison" do
       stub_request(:get, api_request["compare?from=a&to=b"]).to_return(status: 401)
-      fire(:compare).first.class.must_equal(Changeset::NullComparison)
+      assert_raises(RuntimeError) { fire(:compare).first }.message.must_include "GitLab: Server responded with"
     end
   end
 end
