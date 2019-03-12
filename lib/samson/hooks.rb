@@ -174,7 +174,7 @@ module Samson
       def only_callbacks_for_plugin(plugin_name, hook_name)
         original_hooks = @hooks[hook_name]
         @hooks[hook_name] = @hooks[hook_name].select do |proc|
-          proc.source_location.first.include?(plugin_name)
+          proc.source_location.first.include?("/#{plugin_name}/")
         end
         yield
       ensure
