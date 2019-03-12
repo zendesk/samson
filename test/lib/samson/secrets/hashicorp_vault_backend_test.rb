@@ -159,6 +159,13 @@ describe Samson::Secrets::HashicorpVaultBackend do
         end
       end
     end
+
+    it "ignores invalid ids so a single bad key does not blow up secrets UI" do
+      ErrorNotifier.expects(:notify)
+      assert_vault_request :get, "?list=true", body: {data: {keys: ["oh-noes", "a/b/c/d"]}}.to_json do
+        backend.ids.must_equal ["a/b/c/d"]
+      end
+    end
   end
 
   describe "raises BackendError when a vault instance is down/unreachable" do
