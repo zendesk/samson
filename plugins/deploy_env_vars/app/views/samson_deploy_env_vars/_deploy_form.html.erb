@@ -1,10 +1,10 @@
 <fieldset>
-  <legend>
-    Extra Environment Variables for this deploy <%= additional_info SamsonEnv::HELP_TEXT %>
-  </legend>
-  <% env_vars = @deploy.environment_variables %>
-  <% env_vars << EnvironmentVariable.new %>
-  <%= form.fields_for :environment_variables, env_vars do |fields| %>
+	<legend>
+		Extra Environment Variables for this deploy <%= additional_info SamsonEnv::HELP_TEXT %>
+	</legend>
+	<% env_vars = @deploy.environment_variables %>
+	<% env_vars << EnvironmentVariable.new %>
+	<%= form.fields_for :environment_variables, env_vars do |fields| %>
 		<%= render "samson_env/environment_variables_fields", fields: fields %>
 	<% end %>
 	<%= link_to "Add row", "#", class: "duplicate_previous_row" %> |
