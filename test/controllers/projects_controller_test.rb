@@ -143,18 +143,31 @@ describe ProjectsController do
           refute project.key?('token')
         end
 
-        it "renders with envionment_variable_groups if present" do
-          get :show, params: {id: project.to_param, includes: "environment_variable_groups", format: :json}
-          assert_response :success
-          project = JSON.parse(response.body)
-          project.keys.must_include "environment_variable_groups"
-        end
+        describe "allowed includes" do
+          def project_allowed_includes_callback
+            Samson::Hooks.with_callback(:project_allowed_includes,
+              -> { [:environment_variable_groups] }) do
+              yield
+            end
+          end
 
-        it "renders with environment_variables_with_scope if present" do
-          get :show, params: {id: project.to_param, includes: "environment_variables_with_scope", format: :json}
-          assert_response :success
-          project = JSON.parse(response.body)
-          project.keys.must_include "environment_variables_with_scope"
+          it "renders with includes if present" do
+            project_allowed_includes_callback do
+              get :show, params: {id: project.to_param, includes: "environment_variable_groups", format: :json}
+              assert_response :success
+              project = JSON.parse(response.body)
+              project.keys.must_include "environment_variable_groups"
+            end
+          end
+
+          it "fails with invalid includes" do
+            project_allowed_includes_callback do
+              get :show, params: {id: project.to_param, includes: "xyz", format: :json}
+              assert_response :bad_request
+              error = JSON.parse(response.body).dig('error')
+              error.must_equal "Forbidden includes [xyz] found, allowed includes are [environment_variable_groups]"
+            end
+          end
         end
       end
     end

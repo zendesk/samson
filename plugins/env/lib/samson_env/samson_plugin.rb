@@ -62,9 +62,17 @@ Samson::Hooks.callback :project_permitted_params do
     :use_env_repo
   ]
 end
+
 Samson::Hooks.callback :stage_permitted_params do
   [
     ScopesEnvironmentVariables::ASSIGNABLE_ATTRIBUTES
+  ]
+end
+
+Samson::Hooks.callback :project_allowed_includes do
+  [
+    :environment_variable_groups,
+    :environment_variables_with_scope,
   ]
 end
 

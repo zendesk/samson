@@ -194,13 +194,6 @@ class Project < ActiveRecord::Base
     Rails.application.routes.url_helpers.project_url(self)
   end
 
-  def environment_variables_with_scope
-    scopes = Environment.env_stage_deploy_group_array(project: self)
-    EnvironmentVariable.sort_by_scopes(
-      environment_variables, scopes
-    )
-  end
-
   def as_json(options = {})
     super(
       {

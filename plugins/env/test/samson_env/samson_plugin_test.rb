@@ -32,6 +32,17 @@ describe SamsonEnv do
     end
   end
 
+  describe :project_allowed_includes do
+    it "allowed includes" do
+      Samson::Hooks.fire(:project_allowed_includes).must_include(
+        [
+          :environment_variable_groups,
+          :environment_variables_with_scope,
+        ]
+      )
+    end
+  end
+
   describe :after_deploy_setup do
     def fire
       job = stub(deploy: deploy, project: project)

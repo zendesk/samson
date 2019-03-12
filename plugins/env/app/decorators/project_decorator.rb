@@ -25,6 +25,13 @@ Project.class_eval do
     EnvironmentVariable.serialize(variables, @env_scopes)
   end
 
+  def environment_variables_with_scope
+    scopes = Environment.env_stage_deploy_group_array(project: self)
+    EnvironmentVariable.sort_by_scopes(
+      environment_variables, scopes
+    )
+  end
+
   private
 
   def environment_variables_changes

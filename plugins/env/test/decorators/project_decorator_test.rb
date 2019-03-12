@@ -5,10 +5,10 @@ SingleCov.covered!
 
 describe Project do
   let(:project) { projects(:test) }
+  let(:env_attributes) { {name: "A", value: "B", scope_type_and_id: "Environment-#{environments(:production)}"} }
 
   describe "auditing" do
     let(:group) { EnvironmentVariableGroup.create!(name: "Foo", environment_variables_attributes: [env_attributes]) }
-    let(:env_attributes) { {name: "A", value: "B", scope_type_and_id: "Environment-#{environments(:production)}"} }
 
     it "does not audit when var did not change" do
       project.update_attributes!(name: 'Bar')
@@ -54,6 +54,16 @@ describe Project do
         environment_variables_attributes: [env_attributes.merge(id: existing.id)]
       )
       refute project.audits.last
+    end
+  end
+
+  describe "#environment_variables_with_scope" do
+    let(:stage_attributes) { {name: "A1", value: "B", scope_type_and_id: "Stage-X"} }
+
+    it "sort environment_variables by scope" do
+      environment_env = project.environment_variables.create!(env_attributes)
+      stage_env = project.environment_variables.create!(stage_attributes)
+      project.environment_variables_with_scope.must_equal [environment_env, stage_env]
     end
   end
 end
