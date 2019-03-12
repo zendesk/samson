@@ -65,8 +65,9 @@ describe EnvironmentsController do
       end
     end
 
-    describe '#delete' do
+    describe '#destroy' do
       it 'succeeds' do
+        DeployGroupsStage.delete_all
         env = environments(:production)
         delete :destroy, params: {id: env}
         assert_redirected_to environments_path

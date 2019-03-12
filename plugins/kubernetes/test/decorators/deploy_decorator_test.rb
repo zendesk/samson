@@ -25,25 +25,4 @@ describe Deploy do
       create_deploy.kubernetes.must_equal false
     end
   end
-
-  describe "#delete_kubernetes_deploy_group_roles" do
-    let(:role) { kubernetes_roles(:app_server) }
-    let(:project) { role.project }
-    it "cleanes up deploy group roles on delete" do
-      deploy_group = deploy_groups(:pod2)
-      Kubernetes::DeployGroupRole.create!(
-        kubernetes_role: role,
-        project: project,
-        replicas: 1,
-        requests_cpu: 0.5,
-        requests_memory: 5,
-        limits_cpu: 1,
-        limits_memory: 10,
-        deploy_group: deploy_group
-      )
-      deploy_group.kubernetes_deploy_group_roles.wont_equal []
-      deploy_group.soft_delete!(validate: false)
-      deploy_group.reload.kubernetes_deploy_group_roles.must_equal []
-    end
-  end
 end

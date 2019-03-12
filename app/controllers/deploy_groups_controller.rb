@@ -61,12 +61,11 @@ class DeployGroupsController < ApplicationController
   end
 
   def destroy
-    if deploy_group.deploy_groups_stages.empty?
-      deploy_group.soft_delete!(validate: false)
+    if deploy_group.soft_delete(validate: false)
       flash[:notice] = "Successfully deleted deploy group: #{deploy_group.name}"
       redirect_to action: :index
     else
-      flash[:error] = "Deploy group is still in use."
+      flash[:error] = "Deploy group could not be deleted because: #{deploy_group.errors.full_messages.join(', ')}"
       redirect_to deploy_group
     end
   end
@@ -101,7 +100,8 @@ class DeployGroupsController < ApplicationController
   end
 
   def custom_env(deploy_group)
-    EnvironmentVariable.where(scope: deploy_group).each_with_object({}) do |e, h|
+    supported = [Project.name, EnvironmentVariableGroup.name]
+    EnvironmentVariable.where(scope: deploy_group, parent_type: supported).each_with_object({}) do |e, h|
       h[[e.name, e.parent_type, e.parent_id]] = e
     end
   end

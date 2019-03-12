@@ -3,7 +3,7 @@
     <%= release_label(@project, release) %>
   </td>
   <td>
-    <%= github_commit_status_icon CommitStatus.new(release.project, release.commit).state %>
+    <%= commit_status_icon CommitStatus.new(release.project, release.commit).state %>
   </td>
   <td>
     <span style="white-space: nowrap">

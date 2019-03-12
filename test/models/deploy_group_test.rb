@@ -1,22 +1,12 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 1 # Need a fix in soft delete gem
+SingleCov.covered!
 
 describe DeployGroup do
   let(:stage) { stages(:test_staging) }
   let(:environment) { environments(:production) }
   let(:deploy_group) { deploy_groups(:pod1) }
-
-  def self.it_expires_stage(method)
-    it "expires stages when #{method}" do
-      stage.deploy_groups << deploy_group
-      stage.update_column(:updated_at, 1.minute.ago)
-      old = stage.updated_at.to_s(:db)
-      deploy_group.send(method)
-      stage.reload.updated_at.to_s(:db).wont_equal old
-    end
-  end
 
   describe '.enabled?' do
     it 'is enabled when DEPLOY_GROUP_FEATURE is present' do
@@ -92,6 +82,17 @@ describe DeployGroup do
     end
   end
 
+  describe "#soft_delete" do
+    it 'does not allow deleting while still being used' do
+      refute deploy_group.soft_delete(validate: false)
+    end
+
+    it 'allows deleting while not being used' do
+      deploy_group.deploy_groups_stages.delete_all
+      assert deploy_group.soft_delete!(validate: false)
+    end
+  end
+
   it 'queried by environment' do
     env = Environment.create!(name: 'env666')
     dg1 = DeployGroup.create!(name: 'Pod666', environment: env)
@@ -119,18 +120,12 @@ describe DeployGroup do
     end
   end
 
-  it_expires_stage :save!
-  it_expires_stage :destroy!
-  it_expires_stage :soft_delete!
-
-  describe "#destroy_deploy_groups_stages" do
-    let(:deploy_group) { deploy_groups(:pod100) }
-
-    it 'deletes deploy_groups_stages on destroy' do
-      assert_difference 'DeployGroupsStage.count', -1 do
-        deploy_group.destroy!
-      end
-    end
+  it "expires stages when saving" do
+    stage.deploy_groups << deploy_group
+    stage.update_column(:updated_at, 1.minute.ago)
+    old = stage.updated_at.to_s(:db)
+    deploy_group.save!
+    stage.reload.updated_at.to_s(:db).wont_equal old
   end
 
   describe "#template_stages" do

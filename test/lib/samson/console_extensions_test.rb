@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../../test_helper'
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 2
 
 describe Samson::ConsoleExtensions do
   include Samson::ConsoleExtensions
@@ -74,6 +74,17 @@ describe Samson::ConsoleExtensions do
       use_clean_cache
       Rails.cache.write('x', 2)
       Rails.cache.read('x').must_equal 2
+    end
+  end
+
+  describe "#flamegraph" do
+    it "can graph" do
+      capture_stdout do
+        flamegraph(name: "foo") { sleep 0.1 }
+      end
+      assert File.exist?("foo.js")
+    ensure
+      FileUtils.rm_f("foo.js")
     end
   end
 end
