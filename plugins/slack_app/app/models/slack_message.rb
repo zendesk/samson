@@ -7,7 +7,7 @@ class SlackMessage
   def deliver
     # Only deploys triggered by the slash-command will have a DeployResponseUrl,
     # but we'll get to this point after every deploy completes.
-    url = DeployResponseUrl.find_by(deploy_id: @deploy.id).try(:response_url)
+    url = DeployResponseUrl.find_by(deploy_id: @deploy.id)&.response_url
     return unless url.present?
 
     Faraday.new(url).post do |request|

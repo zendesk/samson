@@ -102,7 +102,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def changeset_to(other)
-    Changeset.new(project, other.try(:commit), commit)
+    Changeset.new(project, other&.commit, commit)
   end
 
   def production
@@ -192,11 +192,11 @@ class Deploy < ActiveRecord::Base
   end
 
   def buddy_name
-    user.id == buddy_id ? "bypassed" : buddy.try(:name)
+    user.id == buddy_id ? "bypassed" : buddy&.name
   end
 
   def buddy_email
-    user.id == buddy_id ? "bypassed" : buddy.try(:email)
+    user.id == buddy_id ? "bypassed" : buddy&.email
   end
 
   def url
@@ -213,7 +213,7 @@ class Deploy < ActiveRecord::Base
 
   def csv_line
     [
-      id, project.name, summary, commit, job.status, updated_at, start_time, user.try(:name), user.try(:email),
+      id, project.name, summary, commit, job.status, updated_at, start_time, user&.name, user&.email,
       buddy_name, buddy_email, stage.name, production, !stage.no_code_deployed, project.deleted_at,
       stage.deploy_group_names.join('|')
     ]

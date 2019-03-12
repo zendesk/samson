@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 class Release < ActiveRecord::Base
-  NUMBER_REGEX = /\A#{Samson::RELEASE_NUMBER}\z/
-  VERSION_REGEX = /\Av(#{Samson::RELEASE_NUMBER})\z/
+  NUMBER_REGEX = /\A#{Samson::RELEASE_NUMBER}\z/.freeze
+  VERSION_REGEX = /\Av(#{Samson::RELEASE_NUMBER})\z/.freeze
 
   belongs_to :project, touch: true
   belongs_to :author, polymorphic: true
@@ -17,7 +17,7 @@ class Release < ActiveRecord::Base
   DEFAULT_RELEASE_NUMBER = "1"
 
   def changeset
-    @changeset ||= Changeset.new(project, previous_release.try(:commit), commit)
+    @changeset ||= Changeset.new(project, previous_release&.commit, commit)
   end
 
   def previous_release

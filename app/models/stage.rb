@@ -126,7 +126,7 @@ class Stage < ActiveRecord::Base
     return unless deploy.failed?
     return unless deploy.user.integration?
     last_deploy = deploys.finished_naturally.prior_to(deploy).first
-    return if last_deploy.try(:failed?)
+    return if last_deploy&.failed?
 
     emails = []
 

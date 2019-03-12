@@ -12,8 +12,8 @@ class AddCpuAndRamToReleaseDocs < ActiveRecord::Migration[4.2]
     add_column :kubernetes_release_docs, :ram, :integer
 
     KubernetesReleaseDoc.find_each do |doc|
-      doc.cpu = doc.kubernetes_role.try(:cpu) || 1
-      doc.ram = doc.kubernetes_role.try(:ram) || 1
+      doc.cpu = doc.kubernetes_role&.cpu || 1
+      doc.ram = doc.kubernetes_role&.ram || 1
       doc.save!
     end
 

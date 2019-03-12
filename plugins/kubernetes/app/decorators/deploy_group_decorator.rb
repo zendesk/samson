@@ -20,6 +20,6 @@ DeployGroup.class_eval do
   )
 
   def kubernetes_namespace
-    cluster_deploy_group.try(:namespace)
+    cluster_deploy_group&.namespace
   end
 end

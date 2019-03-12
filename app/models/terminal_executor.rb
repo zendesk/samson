@@ -19,7 +19,7 @@ class TerminalExecutor
   HIDDEN_TXT = "HIDDEN"
   KILL_TIMEOUT = 1
 
-  CURSOR = /\e\[\d*[ABCDK]/
+  CURSOR = /\e\[\d*[ABCDK]/.freeze
 
   attr_reader :pid, :pgid, :output, :timeout
 

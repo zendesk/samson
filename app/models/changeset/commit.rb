@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 class Changeset::Commit
-  PULL_REQUEST_MERGE_MESSAGE = /\AMerge pull request #(\d+)/
-  PULL_REQUEST_SQUASH_MESSAGE = /\A.*\(#(\d+)\)$/
+  PULL_REQUEST_MERGE_MESSAGE = /\AMerge pull request #(\d+)/.freeze
+  PULL_REQUEST_SQUASH_MESSAGE = /\A.*\(#(\d+)\)$/.freeze
 
   attr_reader :project
 

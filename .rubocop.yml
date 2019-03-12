@@ -84,9 +84,6 @@ Style/Documentation:
 Style/Next:
   Enabled: false
 
-Metrics/CyclomaticComplexity:
-  Enabled: false
-
 Layout/MultilineMethodCallIndentation:
   Enabled: false # none of the EnforcedStyle options allow for consistent 2-space indent
 
@@ -155,12 +152,6 @@ Naming/VariableNumber:
 Style/TernaryParentheses:
   Enabled: false
 
-# should use, but is currently showing false positives / bugs
-# https://github.com/bbatsov/rubocop/issues/3551
-# https://github.com/bbatsov/rubocop/issues/3561
-Style/SafeNavigation:
-  Enabled: false
-
 Style/SymbolArray:
   Enabled: false
 
@@ -193,4 +184,8 @@ Layout/EmptyLineAfterGuardClause:
   Enabled: false
 
 Style/IfInsideElse:
+  Enabled: false
+
+# Enable this once https://github.com/rubocop-hq/rubocop/issues/6410 is fixed
+Layout/AlignHash:
   Enabled: false

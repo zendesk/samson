@@ -127,7 +127,7 @@ class Job < ActiveRecord::Base
   end
 
   def pid
-    execution.try :pid
+    execution&.pid
   end
 
   private

@@ -39,7 +39,7 @@ class CsvExport < ActiveRecord::Base
 
   def filters_project
     if id = filters['stages.project_id']
-      proj = Project.with_deleted { Project.where(id: id).first.try(:permalink) }
+      proj = Project.with_deleted { Project.where(id: id).first&.permalink }
       proj + '_' if proj
     end
   end
