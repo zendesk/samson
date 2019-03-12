@@ -63,7 +63,16 @@ module Samson
         def ids
           ids = vault_action(:list_recursive)
           ids.uniq! # we read from multiple backends that might have the same ids
-          ids.map! { |secret_path| vault_path(secret_path, :decode) }
+          ids.map! do |secret_path|
+            begin
+              vault_path(secret_path, :decode)
+            rescue ActiveRecord::RecordNotFound => e
+              ErrorNotifier.notify(e, notice: true)
+              nil
+            end
+          end
+          ids.compact!
+          ids
         end
 
         def deploy_groups
@@ -101,8 +110,8 @@ module Samson
         # id is the last element and should not include directories
         def vault_path(id, direction)
           parts = id.split(DIRECTORY_SEPARATOR, ID_SEGMENTS)
-          raise ActiveRecord::RecordNotFound, "Invalid id #{id.inspect}" unless last = parts[ID_SEGMENTS - 1]
-          convert_path!(last, direction)
+          raise ActiveRecord::RecordNotFound, "Invalid id #{id.inspect}" unless parts.size == ID_SEGMENTS
+          convert_path!(parts.last, direction)
           parts.join(DIRECTORY_SEPARATOR)
         end
 
