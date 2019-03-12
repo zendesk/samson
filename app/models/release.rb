@@ -17,7 +17,7 @@ class Release < ActiveRecord::Base
   DEFAULT_RELEASE_NUMBER = "1"
 
   def changeset
-    @changeset ||= Changeset.new(project.repository_path, previous_release&.commit, commit)
+    @changeset ||= Changeset.new(project, previous_release&.commit, commit)
   end
 
   def previous_release

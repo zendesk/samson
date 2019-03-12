@@ -42,3 +42,21 @@ Samson::Hooks.callback :repo_provider_status do
     error
   end
 end
+
+Samson::Hooks.callback :changeset_api_request do |changeset, method|
+  if changeset.project.github?
+    begin
+      case method
+      when :branch
+        sha = GITHUB.branch(changeset.repo, CGI.escape(changeset.commit)).commit[:sha]
+        changeset.instance_variable_set(:@commit, sha)
+      when :compare
+        GITHUB.compare(changeset.repo, changeset.previous_commit, changeset.commit)
+      else
+        raise NoMethodError
+      end
+    rescue Octokit::Error, Faraday::ConnectionFailed => e
+      Changeset::NullComparison.new("GitHub: #{e.message.sub("Octokit::", "").underscore.humanize}")
+    end
+  end
+end

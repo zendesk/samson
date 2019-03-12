@@ -12,7 +12,7 @@ describe ChangelogsController do
         today = Date.parse('2016-03-01')
         Date.stubs(:today).returns(today)
         Changeset.expects(:new).with(
-          'bar/foo',
+          project,
           'master@{2016-02-22}',
           'master@{2016-03-01}'
         ).returns(stub(pull_requests: []))
@@ -22,7 +22,7 @@ describe ChangelogsController do
 
       it "renders requested dates" do
         Changeset.expects(:new).with(
-          'bar/foo',
+          project,
           'master@{2016-01-01}',
           'master@{2016-02-01}'
         ).returns(stub(pull_requests: []))
@@ -34,7 +34,7 @@ describe ChangelogsController do
         today = Date.parse('2016-03-01')
         Date.stubs(:today).returns(today)
         Changeset.expects(:new).with(
-          'bar/foo',
+          project,
           'production@{2016-02-22}',
           'production@{2016-03-01}'
         ).returns(stub(pull_requests: []))

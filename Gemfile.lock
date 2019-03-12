@@ -75,6 +75,13 @@ PATH
     samson_github (0.0.0)
 
 PATH
+  remote: plugins/gitlab
+  specs:
+    samson_gitlab (0.0.0)
+      git_diff_parser
+      gitlab
+
+PATH
   remote: plugins/jenkins_status_checker
   specs:
     samson_jenkins_status_checker (0.0.0)
@@ -275,7 +282,11 @@ GEM
       multi_json
     forking_test_runner (1.2.0)
       parallel_tests (>= 1.3.7)
+    git_diff_parser (3.1.0)
     github-markdown (0.6.9)
+    gitlab (4.10.0)
+      httparty (~> 0.14, >= 0.14.0)
+      terminal-table (~> 1.5, >= 1.5.1)
     globalid (0.4.1)
       activesupport (>= 4.2.0)
     goldiloader (2.1.0)
@@ -634,6 +645,7 @@ DEPENDENCIES
   samson_env!
   samson_flowdock!
   samson_github!
+  samson_gitlab!
   samson_jenkins!
   samson_jenkins_status_checker!
   samson_kubernetes!

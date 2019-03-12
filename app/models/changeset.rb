@@ -1,17 +1,18 @@
 # frozen_string_literal: true
 class Changeset
-  attr_reader :repo, :previous_commit, :commit
+  attr_reader :project, :repo, :previous_commit, :commit
   BRANCH_TAGS = ["master", "develop"].freeze
   ATTRIBUTE_TABS = %w[files commits pull_requests risks jira_issues].freeze
 
-  def initialize(repo, previous_commit, commit)
-    @repo = repo
+  def initialize(project, previous_commit, commit)
+    @project = project
+    @repo = project.repository_path
     @commit = commit
     @previous_commit = previous_commit || @commit
   end
 
-  def github_url
-    "#{Rails.application.config.samson.github.web_url}/#{repo}/compare/#{commit_range}"
+  def commit_range_url
+    "#{project.repository_homepage}/compare/#{commit_range}"
   end
 
   def commit_range
@@ -23,7 +24,7 @@ class Changeset
   end
 
   def commits
-    @commits ||= comparison.commits.map { |data| Commit.new(repo, data) }
+    @commits ||= comparison.commits.map { |data| Commit.new(project, data) }
   end
 
   def files
@@ -65,21 +66,17 @@ class Changeset
   private
 
   def find_comparison
-    if empty?
-      NullComparison.new(nil)
-    else
-      # for branches that frequently change we make sure to always get the correct cache,
-      # others might get an outdated changeset if they are reviewed with different shas
-      if BRANCH_TAGS.include?(commit)
-        @commit = GITHUB.branch(repo, CGI.escape(commit)).commit[:sha]
-      end
+    return NullComparison.new(nil) if empty?
 
-      Rails.cache.fetch(cache_key) do
-        GITHUB.compare(repo, previous_commit, commit)
-      end
+    # for branches that frequently change we make sure to always get the correct cache,
+    # others might get an outdated changeset if they are reviewed with different shas
+    if BRANCH_TAGS.include?(commit)
+      Samson::Hooks.fire(:changeset_api_request, self, :branch)
     end
-  rescue Octokit::Error, Faraday::ConnectionFailed => e
-    NullComparison.new("GitHub: #{e.message.sub("Octokit::", "").underscore.humanize}")
+
+    Rails.cache.fetch(cache_key) do
+      Samson::Hooks.fire(:changeset_api_request, self, :compare).compact.first
+    end
   end
 
   def find_pull_requests

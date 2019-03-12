@@ -4,7 +4,8 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe Changeset do
-  let(:changeset) { Changeset.new("foo/bar", "a", "b") }
+  let(:project) { Project.new(repository_url: 'ssh://git@github.com:foo/bar.git') }
+  let(:changeset) { Changeset.new(project, "a", "b") }
 
   describe "#comparison" do
     it "builds a new changeset" do
@@ -13,27 +14,42 @@ describe Changeset do
     end
 
     it "creates no comparison when the changeset is empty" do
-      changeset = Changeset.new("foo/bar", "a", "a")
+      changeset = Changeset.new(project, "a", "a")
       changeset.comparison.class.must_equal Changeset::NullComparison
     end
 
     describe "with a specificed SHA" do
       it "caches" do
         request = stub_github_api("repos/foo/bar/compare/a...b", "x" => "y")
-        2.times { Changeset.new("foo/bar", "a", "b").comparison.to_h.must_equal x: "y" }
+        2.times { Changeset.new(project, "a", "b").comparison.to_h.must_equal x: "y" }
         assert_requested request
       end
     end
 
     describe "with master" do
-      it "doesn't cache" do
-        stub_github_api("repos/foo/bar/branches/master", commit: {sha: "foo"})
-        stub_github_api("repos/foo/bar/compare/a...foo", "x" => "y")
-        Changeset.new("foo/bar", "a", "master").comparison.to_h.must_equal x: "y"
+      describe "when GitHub project" do
+        it "doesn't cache" do
+          stub_github_api("repos/foo/bar/branches/master", commit: {sha: "foo"})
+          stub_github_api("repos/foo/bar/compare/a...foo", "x" => "y")
+          Changeset.new(project, "a", "master").comparison.to_h.must_equal x: "y"
 
-        stub_github_api("repos/foo/bar/branches/master", commit: {sha: "bar"})
-        stub_github_api("repos/foo/bar/compare/a...bar", "x" => "z")
-        Changeset.new("foo/bar", "a", "master").comparison.to_h.must_equal x: "z"
+          stub_github_api("repos/foo/bar/branches/master", commit: {sha: "bar"})
+          stub_github_api("repos/foo/bar/compare/a...bar", "x" => "z")
+          Changeset.new(project, "a", "master").comparison.to_h.must_equal x: "z"
+        end
+      end
+
+      describe "when GitLab project" do
+        it "doesn't cache" do
+          project.repository_url = 'ssh://git@gitlab.com:foo/bar.git'
+          stub_request(:get, "https://gitlab.com/api/v4/projects/foo%2Fbar/repository/branches/master").to_return(
+            body: JSON.dump(commit: {id: 'foo'})
+          )
+          stub_request(:get, "https://gitlab.com/api/v4/projects/foo%2Fbar/repository/compare?from=a&to=foo").to_return(
+            body: JSON.dump(diffs: [], commits: [])
+          )
+          Changeset.new(project, "a", "master").comparison.to_h.must_equal(files: [], commits: [])
+        end
       end
     end
 
@@ -46,7 +62,7 @@ describe Changeset do
     }.each do |exception, message|
       it "catches #{exception} exceptions" do
         GITHUB.expects(:compare).raises(exception)
-        comparison = Changeset.new("foo/bar", "a", "b").comparison
+        comparison = Changeset.new(project, "a", "b").comparison
         comparison.error.must_equal message
       end
     end
@@ -54,20 +70,21 @@ describe Changeset do
     # tests config/initializers/octokit.rb Octokit::RedirectAsError
     it "converts a redirect into a NullComparison" do
       stub_github_api("repos/foo/bar/branches/master", {}, 301)
-      Changeset.new("foo/bar", "a", "master").comparison.class.must_equal Changeset::NullComparison
+      stub_github_api("repos/foo/bar/compare/a...master", {}, 301)
+      Changeset.new(project, "a", "master").comparison.class.must_equal Changeset::NullComparison
     end
 
     # tests config/initializers/octokit.rb Octokit::RedirectAsError
     it "uses the cached body of a 304" do
       stub_github_api("repos/foo/bar/branches/master", {commit: {sha: "bar"}}, 304)
       stub_github_api("repos/foo/bar/compare/a...bar", "x" => "z")
-      Changeset.new("foo/bar", "a", "master").comparison.to_h.must_equal x: "z"
+      Changeset.new(project, "a", "master").comparison.to_h.must_equal x: "z"
     end
   end
 
-  describe "#github_url" do
+  describe "#commit_range_url" do
     it "returns a URL to a GitHub comparison page" do
-      changeset.github_url.must_equal "https://github.com/foo/bar/compare/a...b"
+      changeset.commit_range_url.must_equal "https://github.com/foo/bar/compare/a...b"
     end
   end
 
@@ -143,7 +160,7 @@ describe Changeset do
       find_pr_stub = stub_github_api("repos/foo/bar/pulls", []).with(query: hash_including({}))
 
       %w[abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd master v123].each do |reference|
-        changeset = Changeset.new("foo/bar", "a", reference)
+        changeset = Changeset.new(project, "a", reference)
         changeset.pull_requests
         assert_not_requested(find_pr_stub)
       end

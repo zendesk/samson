@@ -1,4 +1,4 @@
-<p>Commit range: <code><%= link_to changeset.commit_range, changeset.github_url %></code></p>
+<p>Commit range: <code><%= link_to changeset.commit_range, changeset.commit_range_url %></code></p>
 <% if changeset.error %>
   <p class="alert alert-warning"><%= changeset.error %></p>
 <% end %>
