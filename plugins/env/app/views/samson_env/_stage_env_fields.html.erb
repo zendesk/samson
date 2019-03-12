@@ -1,17 +1,12 @@
 <fieldset>
-  <legend>
-    Environment Variables
-    <%= additional_info SamsonEnv::HELP_TEXT %>
-  </legend>
-  <div>
-    <% stage = form.object %>
-    <% sorted_env_vars = stage.scoped_environment_variables.sort_by{ |env| env.name } %>
-    <% sorted_env_vars << EnvironmentVariable.new %>
-    <div id="env_paste_dialog"></div>
-    <%= form.fields_for :scoped_environment_variables, sorted_env_vars do |fields| %>
-      <%= render "samson_env/environment_variables_fields", fields: fields %>
-    <% end %>
-    <%= link_to "Add row", "#", class: "duplicate_previous_row" %> |
-    <%= link_to "Paste", "#", class: "paste_env_variables" %>
-  </div>
+	<legend>
+		Environment Variables
+		<%= additional_info SamsonEnv::HELP_TEXT %>
+	</legend>
+	<div>
+		<% stage = form.object %>
+		<% sorted_env_vars = stage.scoped_environment_variables.sort_by{ |env| env.name } %>
+		<%= render "samson_env/environment_variables_fields",
+      form: form, environment_variables: sorted_env_vars, form_name: "scoped_environment_variables" %>
+	</div>
 </fieldset>

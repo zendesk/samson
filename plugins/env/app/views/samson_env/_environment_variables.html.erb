@@ -1,10 +1,4 @@
 <% scopes ||= Environment.env_deploy_group_array %>
 <% sorted_env_vars ||= EnvironmentVariable.sort_by_scopes(form.object.environment_variables, scopes) %>
-<% sorted_env_vars << EnvironmentVariable.new %>
-<%= form.fields_for :environment_variables, sorted_env_vars do |fields| %>
-	<%= render "samson_env/environment_variables_fields", fields: fields, scopes: scopes %>
-<% end %>
-<%= link_to "Add row", "#", class: "duplicate_previous_row" %> |
-<%= link_to "Paste", "#", class: "paste_env_variables" %>
-
-<div id="env_paste_dialog"></div>
+<%= render "samson_env/environment_variables_fields",
+  form: form, environment_variables: sorted_env_vars, scopes: scopes %>

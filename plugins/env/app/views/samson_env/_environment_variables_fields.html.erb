@@ -1,29 +1,35 @@
-<div class="form-group">
-  <div class="col-lg-3">
-    <%= fields.text_field :name, class: "form-control", placeholder: "Name" %>
+<% environment_variables << EnvironmentVariable.new %>
+<% form_name ||= "environment_variables" %>
+<%= form.fields_for form_name, environment_variables do |fields| %>
+  <div class="form-group">
+    <div class="col-lg-3">
+      <%= fields.text_field :name, class: "form-control", placeholder: "Name" %>
+    </div>
+
+    <div class="col-lg-5">
+      <%# using a text area so users can resize them with browser controls %>
+      <%= fields.text_area :value, class: "form-control", placeholder: "Value", rows: 1 %>
+    </div>
+
+    <% if DeployGroup.enabled? && defined?(scopes) %>
+      <div class="col-lg-2">
+        <%= fields.select :scope_type_and_id, scopes, {}, Samson::FormBuilder::LIVE_SELECT_OPTIONS %>
+      </div>
+    <% end %>
+
+    <% if fields.object.persisted? %>
+      <div class="col-lg-1 checkbox">
+        <%= link_to_history fields.object, counter: false %>
+      </div>
+      <div class="col-lg-1 checkbox">
+        <%= fields.label :_destroy do %>
+          <%= fields.check_box :_destroy if fields.object.persisted? %>
+          Delete
+        <% end %>
+      </div>
+    <% end %>
   </div>
-
-  <div class="col-lg-5">
-    <%# using a text area so users can resize them with browser controls %>
-    <%= fields.text_area :value, class: "form-control", placeholder: "Value", rows: 1 %>
-  </div>
-
-  <% if DeployGroup.enabled? && defined?(scopes) %>
-    <div class="col-lg-2">
-      <%= fields.select :scope_type_and_id, scopes, {}, Samson::FormBuilder::LIVE_SELECT_OPTIONS %>
-    </div>
-  <% end %>
-
-  <% if fields.object.persisted? %>
-    <div class="col-lg-1 checkbox">
-      <%= link_to_history fields.object, counter: false %>
-    </div>
-    <div class="col-lg-1 checkbox">
-      <%= fields.label :_destroy do %>
-        <%= fields.check_box :_destroy if fields.object.persisted? %>
-        Delete
-      <% end %>
-    </div>
-  <% end %>
-</div>
-
+<% end %>
+<div id="env_paste_dialog"></div>
+<%= link_to "Add row", "#", class: "duplicate_previous_row" %> |
+<%= link_to "Paste", "#", class: "paste_env_variables" %>
