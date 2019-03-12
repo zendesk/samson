@@ -33,7 +33,15 @@ ActiveSupport::Notifications.subscribe("job_queue.samson") do |*, payload|
 end
 
 ActiveSupport::Notifications.subscribe("job_status.samson") do |*, payload|
-  Samson.statsd.increment "jobs.#{payload.fetch(:type)}.#{payload.fetch(:status)}"
+  tags = [
+    "project:#{payload.fetch(:project)}",
+    "stage:#{payload.fetch(:stage)}",
+  ]
+
+  payload.fetch(:cycle_time).each do |key, value|
+    Samson.statsd.histogram "jobs.deploy.cycle_time.#{key}", value, tags: tags
+  end
+  Samson.statsd.increment "jobs.#{payload.fetch(:type)}.#{payload.fetch(:status)}", tags: tags
 end
 
 ActiveSupport::Notifications.subscribe("system_stats.samson") do |*, payload|

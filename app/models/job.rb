@@ -157,7 +157,13 @@ class Job < ActiveRecord::Base
   end
 
   def report_state
-    type = deploy ? 'deploy' : 'build'
-    ActiveSupport::Notifications.instrument('job_status.samson', type: type, status: status)
+    payload = {
+      stage: deploy&.stage&.permalink,
+      project: project.permalink,
+      type: deploy ? 'deploy' : 'build',
+      status: status,
+      cycle_time: DeployMetrics.new(deploy).cycle_time
+    }
+    ActiveSupport::Notifications.instrument('job_status.samson', payload)
   end
 end
