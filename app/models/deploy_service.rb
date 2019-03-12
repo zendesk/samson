@@ -89,7 +89,7 @@ class DeployService
   def construct_env(stage)
     env = {STAGE: stage.permalink}
 
-    group_names = stage.deploy_groups.sort_by(&:natural_order).map(&:env_value).join(" ")
+    group_names = stage.deploy_groups.pluck(:env_value).join(" ")
     env[:DEPLOY_GROUPS] = group_names if group_names.present?
 
     env

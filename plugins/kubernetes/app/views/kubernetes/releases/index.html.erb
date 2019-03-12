@@ -38,7 +38,7 @@
               <%= link_to "Build", project_builds_path(@project, search: {git_sha: kubernetes_release.git_sha}) %>
             </td>
             <td>
-              <% DeployGroup.with_deleted { kubernetes_release.release_docs.map(&:deploy_group) }.uniq.sort_by(&:natural_order).each do |deploy_group| %>
+              <% DeployGroup.with_deleted { kubernetes_release.release_docs.map(&:deploy_group) }.uniq.sort_by(&:name_sortable).each do |deploy_group| %>
                  <span class="label label-info"><%= deploy_group.name %></span>
               <% end %>
             </td>

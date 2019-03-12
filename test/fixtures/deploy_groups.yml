@@ -1,17 +1,20 @@
 pod1:
   name: Pod1
+  name_sortable: Pod00001
   env_value: pod1
   environment: production
   permalink: pod1
 
 pod2:
   name: Pod2
+  name_sortable: Pod00002
   env_value: pod2
   environment: production
   permalink: pod2
 
 pod100:
   name: Pod 100
+  name_sortable: Pod00100
   env_value: pod100
   environment: staging
   permalink: pod100

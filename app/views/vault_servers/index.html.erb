@@ -14,7 +14,7 @@
     </thead>
 
     <tbody>
-      <% deploy_groups = DeployGroup.where.not(vault_server_id: nil).sort_by(&:natural_order) %>
+      <% deploy_groups = DeployGroup.where.not(vault_server_id: nil) %>
       <% @vault_servers.each do |vault_server| %>
         <tr>
           <td><%= vault_server.name %></td>

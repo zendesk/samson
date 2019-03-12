@@ -235,10 +235,7 @@ class Project < ActiveRecord::Base
       stage_filter = include_failed_deploys ? stage.deploys : stage.deploys.successful.where(release: true)
       deploy = stage_filter.where("deploys.updated_at <= ?", before.to_s(:db)).first
       next unless deploy
-      stage.deploy_groups.sort_by(&:natural_order).each do |deploy_group|
-        result[deploy_group.id] ||= []
-        result[deploy_group.id] << deploy
-      end
+      stage.deploy_groups.pluck(:id).each { |id| (result[id] ||= []) << deploy }
     end
   end
 

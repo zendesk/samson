@@ -86,7 +86,7 @@ class Kubernetes::DeployGroupRolesController < ResourceController
     # TODO: needs to return something paginatable and not rely on with_deleted
     @deploy_group_roles = DeployGroup.with_deleted do
       deploy_group_roles.
-        sort_by { |dgr| [dgr.project.name, dgr.kubernetes_role.name, dgr.deploy_group&.natural_order].compact }
+        sort_by { |dgr| [dgr.project.name, dgr.kubernetes_role.name, dgr.deploy_group&.name_sortable].compact }
     end
   end
 

@@ -112,11 +112,10 @@ describe DeployGroup do
     end
   end
 
-  describe '#natural_order' do
-    it "sorts naturally" do
-      list = ['a11', 'a1', 'a22', 'b1', 'a12', 'a9']
-      sorted = list.map { |n| DeployGroup.new(name: n) }.sort_by(&:natural_order).map(&:name)
-      sorted.must_equal ['a1', 'a9', 'a11', 'a12', 'a22', 'b1']
+  describe "#generated_name_sortable" do
+    it "sets value" do
+      group = DeployGroup.create!(name: "Pod666 - the best", environment: environment)
+      group.name_sortable.must_equal "Pod00666 - the best"
     end
   end
 

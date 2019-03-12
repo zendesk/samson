@@ -18,7 +18,7 @@ class Environment < ActiveRecord::Base
     all = include_all ? [["All", nil]] : []
     envs = Environment.all.map { |env| [env.name, "Environment-#{env.id}"] }
     separator = [["----", "disabled", {disabled: true}]]
-    deploy_groups = DeployGroup.all.sort_by(&:natural_order).map { |dg| [dg.name, "DeployGroup-#{dg.id}"] }
+    deploy_groups = DeployGroup.select(:name, :id).map { |dg| [dg.name, "DeployGroup-#{dg.id}"] }
     all + envs + separator + deploy_groups
   end
 

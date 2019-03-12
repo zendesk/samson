@@ -32,7 +32,7 @@ module Kubernetes
       ).where.not(kubernetes_role_id: ignored_role_ids).to_a
       roles = stage.project.kubernetes_roles.where.not(id: ignored_role_ids).not_deleted.sort_by(&:name)
 
-      stage.deploy_groups.sort_by(&:natural_order).map do |deploy_group|
+      stage.deploy_groups.map do |deploy_group|
         dg_roles = project_dg_roles.select { |r| r.deploy_group_id == deploy_group.id }
         role_pairs = roles.map do |role|
           [role, dg_roles.detect { |r| r.kubernetes_role_id == role.id }]

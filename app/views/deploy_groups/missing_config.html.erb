@@ -6,7 +6,7 @@
       <%= label_tag "Deploy group" %>
     </div>
     <div class="col-md-2">
-      <%= live_select_tag :compare, options_from_collection_for_select(DeployGroup.where.not(id: @deploy_group.id).sort_by(&:natural_order), :permalink, :name) %>
+      <%= live_select_tag :compare, options_from_collection_for_select(DeployGroup.where.not(id: @deploy_group.id), :permalink, :name) %>
     </div>
     <div class="col-md-2">
       <%= submit_tag "Compare", class: 'btn btn-primary' %>
