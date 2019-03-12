@@ -3,7 +3,7 @@ require_relative '../../test_helper'
 
 SingleCov.covered!
 
-describe Presenters::GitlabFile do
+describe Gitlab::FilePresenter do
   let(:added_file) do
     {
       new_path: 'added_file',
@@ -26,25 +26,25 @@ describe Presenters::GitlabFile do
 
   describe "#build" do
     it "builds a new added file" do
-      file = Presenters::GitlabFile.new(added_file).build
+      file = Gitlab::FilePresenter.new(added_file).build
       file.filename.must_equal 'added_file'
-      file.status.must_equal Presenters::GitlabFile::ADDED
+      file.status.must_equal Gitlab::FilePresenter::ADDED
       file.additions.must_equal 2
       file.deletions.must_equal 0
     end
 
     it "builds a new modified file" do
-      file = Presenters::GitlabFile.new(modified_file).build
+      file = Gitlab::FilePresenter.new(modified_file).build
       file.filename.must_equal 'modified_file'
-      file.status.must_equal Presenters::GitlabFile::MODIFIED
+      file.status.must_equal Gitlab::FilePresenter::MODIFIED
       file.additions.must_equal 1
       file.deletions.must_equal 1
     end
 
     it "builds a new deleted file" do
-      file = Presenters::GitlabFile.new(deleted_file).build
+      file = Gitlab::FilePresenter.new(deleted_file).build
       file.filename.must_equal 'deleted_file'
-      file.status.must_equal Presenters::GitlabFile::REMOVED
+      file.status.must_equal Gitlab::FilePresenter::REMOVED
       file.additions.must_equal 0
       file.deletions.must_equal 0
     end

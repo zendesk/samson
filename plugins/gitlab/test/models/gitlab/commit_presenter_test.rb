@@ -3,7 +3,7 @@ require_relative '../../test_helper'
 
 SingleCov.covered!
 
-describe Presenters::GitlabCommit do
+describe Gitlab::CommitPresenter do
   let(:commit) do
     {
       id: 'bar',
@@ -12,7 +12,7 @@ describe Presenters::GitlabCommit do
       message: 'Initial commit'
     }.stringify_keys
   end
-  let(:gitlab_commit) { Presenters::GitlabCommit.new(commit) }
+  let(:gitlab_commit) { Gitlab::CommitPresenter.new(commit) }
 
   describe "#build" do
     it "builds a new commit" do

@@ -70,6 +70,7 @@ describe Changeset do
     # tests config/initializers/octokit.rb Octokit::RedirectAsError
     it "converts a redirect into a NullComparison" do
       stub_github_api("repos/foo/bar/branches/master", {}, 301)
+      stub_github_api("repos/foo/bar/compare/a...master", {}, 301)
       Changeset.new(project, "a", "master").comparison.class.must_equal Changeset::NullComparison
     end
 

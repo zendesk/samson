@@ -1,6 +1,6 @@
 # frozen_string_literal: true
-module Presenters
-  class GitlabFile
+module Gitlab
+  class FilePresenter
     ADDED = 'added'
     MODIFIED = 'modified'
     REMOVED = 'removed'

@@ -3,7 +3,7 @@ require_relative '../../test_helper'
 
 SingleCov.covered!
 
-describe Presenters::GitlabChangeset do
+describe Gitlab::ChangesetPresenter do
   let(:data) do
     OpenStruct.new(
       diffs: [{new_path: 'test_file'}.stringify_keys],
@@ -13,7 +13,7 @@ describe Presenters::GitlabChangeset do
 
   describe "#build" do
     it "builds a new changeset" do
-      changeset = Presenters::GitlabChangeset.new(data).build
+      changeset = Gitlab::ChangesetPresenter.new(data).build
       changeset.files.size.must_equal 1
       changeset.files.first.filename.must_equal 'test_file'
       changeset.commits.size.must_equal 1

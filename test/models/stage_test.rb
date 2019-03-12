@@ -232,6 +232,7 @@ describe Stage do
     let(:simple_response) { Hashie::Mash.new(commits: [{commit: {author: {email: "pete@example.com"}}}]) }
 
     before do
+      Project.any_instance.stubs(:github?).returns(true)
       user.update_attribute(:integration, true)
       subject.update_column(:static_emails_on_automated_deploy_failure, "static@example.com")
       subject.update_column(:email_committers_on_automated_deploy_failure, true)

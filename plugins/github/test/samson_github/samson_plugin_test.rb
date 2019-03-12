@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 1
+SingleCov.covered! uncovered: 2
 
 describe SamsonDatadog do
   let(:deploy) { deploys(:succeeded_test) }
@@ -94,6 +94,36 @@ describe SamsonDatadog do
       assert_request(:get, status_url, to_timeout: []) do
         fire.to_s.must_include "GitHub may be having problems"
       end
+    end
+  end
+
+  describe :changeset_api_request do
+    let(:project) { Project.new(repository_url: 'ssh://git@github.com:foo/bar.git') }
+    let(:changeset) { Changeset.new(project, "a", "b") }
+
+    def fire(method)
+      Samson::Hooks.fire(:changeset_api_request, changeset, method)
+    end
+
+    around { |t| Samson::Hooks.only_callbacks_for_plugin('github', :changeset_api_request, &t) }
+
+    it "calls branch api endpoint" do
+      stub_github_api("repos/foo/bar/branches/b", commit: {sha: "foo"})
+      fire(:branch).must_equal ["foo"]
+    end
+
+    it "calls compare api endpoint" do
+      stub_github_api("repos/foo/bar/compare/a...b", "x" => "y")
+      fire(:compare).first.to_h.must_equal x: "y"
+    end
+
+    it "requires a valid method" do
+      assert_raises(NoMethodError) { fire(:bad) }
+    end
+
+    it "catches exception and returns NullComparison" do
+      stub_github_api("repos/foo/bar/compare/a...b", {}, 301)
+      fire(:compare).first.class.must_equal(Changeset::NullComparison)
     end
   end
 end

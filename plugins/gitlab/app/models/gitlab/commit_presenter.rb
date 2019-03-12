@@ -1,6 +1,6 @@
 # frozen_string_literal: true
-module Presenters
-  class GitlabCommit
+module Gitlab
+  class CommitPresenter
     attr_reader :commit
 
     def initialize(commit)

@@ -66,30 +66,17 @@ class Changeset
   private
 
   def find_comparison
-    if empty?
-      NullComparison.new(nil)
-    else
-      # for branches that frequently change we make sure to always get the correct cache,
-      # others might get an outdated changeset if they are reviewed with different shas
-      if BRANCH_TAGS.include?(commit)
-        @commit =
-          if project.gitlab?
-            Gitlab.branch(repo, commit).commit.id
-          else
-            GITHUB.branch(repo, CGI.escape(commit)).commit[:sha]
-          end
-      end
+    return NullComparison.new(nil) if empty?
 
-      Rails.cache.fetch(cache_key) do
-        if project.gitlab?
-          Presenters::GitlabChangeset.new(Gitlab.compare(repo, previous_commit, commit)).build
-        else
-          GITHUB.compare(repo, previous_commit, commit)
-        end
-      end
+    # for branches that frequently change we make sure to always get the correct cache,
+    # others might get an outdated changeset if they are reviewed with different shas
+    if BRANCH_TAGS.include?(commit)
+      Samson::Hooks.fire(:changeset_api_request, self, :branch)
     end
-  rescue Octokit::Error, Faraday::ConnectionFailed => e
-    NullComparison.new("GitHub: #{e.message.sub("Octokit::", "").underscore.humanize}")
+
+    Rails.cache.fetch(cache_key) do
+      Samson::Hooks.fire(:changeset_api_request, self, :compare).compact.first
+    end
   end
 
   def find_pull_requests
