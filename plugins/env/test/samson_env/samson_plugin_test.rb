@@ -75,6 +75,17 @@ describe SamsonEnv do
         end
       end
 
+      describe "with stage env" do
+        before do
+          stage.scoped_environment_variables.create!(name: "STAGE", value: "xyz", parent: project)
+        end
+
+        it "writes to .env" do
+          fire
+          File.read(".env.pod-100").must_include "STAGE=\"xyz\""
+        end
+      end
+
       describe "with deploy groups" do
         it "deletes the base file" do
           fire
