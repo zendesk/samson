@@ -5,14 +5,16 @@ SingleCov.covered!
 
 describe WebhookRecorder do
   let(:request) do
-    request = ActionController::TestRequest.new({
-      "FOO" => "bar",
-      "rack.foo" => "bar",
-      "RAW_POST_DATA" => +"BODY",
-      "rack.input" => {"foo" => "bar"},
-      "QUERY_STRING" => "action=good&password=secret",
-      "action_dispatch.parameter_filter" => Rails.application.config.filter_parameters
-    }, {}, {})
+    request = ActionController::TestRequest.new(
+      {
+        "FOO" => "bar",
+        "rack.foo" => "bar",
+        "RAW_POST_DATA" => +"BODY",
+        "rack.input" => {"foo" => "bar"},
+        "QUERY_STRING" => "action=good&password=secret",
+        "action_dispatch.parameter_filter" => Rails.application.config.filter_parameters
+      }, {}, {}
+    )
     request.stubs(:params).returns("action" => "create") # making sure nobody calls this (includes controller action)
     request
   end

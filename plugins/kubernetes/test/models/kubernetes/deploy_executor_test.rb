@@ -755,9 +755,11 @@ describe Kubernetes::DeployExecutor do
       )
       other.release_docs = release.release_docs.map do |doc|
         copy = Kubernetes::ReleaseDoc.new(doc.attributes.except('resource_template'))
-        copy.send(:resource_template=, doc.resource_template.map do |t|
-          t.deep_merge(metadata: {name: t.dig(:metadata, :name).sub("-blue", "-green")})
-        end)
+        copy.send(
+          :resource_template=,
+          doc.resource_template.
+            map { |t| t.deep_merge(metadata: {name: t.dig(:metadata, :name).sub("-blue", "-green")}) }
+        )
         copy.kubernetes_release = other
         copy
       end

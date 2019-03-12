@@ -189,3 +189,15 @@ Style/IfInsideElse:
 # Enable this once https://github.com/rubocop-hq/rubocop/issues/6410 is fixed
 Layout/AlignHash:
   Enabled: false
+
+# Opt-in
+Layout/FirstHashElementLineBreak:
+  Enabled: true
+
+# Opt-in
+Layout/FirstMethodArgumentLineBreak:
+  Enabled: true
+
+# Opt-in
+Layout/FirstMethodParameterLineBreak:
+  Enabled: true

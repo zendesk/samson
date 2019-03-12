@@ -12,8 +12,10 @@ class CsvExport < ActiveRecord::Base
   scope :old, -> {
     end_date = Rails.application.config.samson.export_job.downloaded_age.seconds.ago
     timeout_date = Rails.application.config.samson.export_job.max_age.seconds.ago
-    where("(status = 'downloaded' AND updated_at <= :end_date) OR created_at <= :timeout_date",
-      end_date: end_date, timeout_date: timeout_date)
+    where(
+      "(status = 'downloaded' AND updated_at <= :end_date) OR created_at <= :timeout_date",
+      end_date: end_date, timeout_date: timeout_date
+    )
   }
 
   def status?(state)

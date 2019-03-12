@@ -59,9 +59,11 @@ class Release < ActiveRecord::Base
   rescue Octokit::NotFound
     false
   rescue Octokit::Error => e
-    ErrorNotifier.notify(e, parameters: {
-      repository_path: project.repository_path, commit: commit, other_commit: other_commit
-    })
+    ErrorNotifier.notify(
+      e, parameters: {
+        repository_path: project.repository_path, commit: commit, other_commit: other_commit
+      }
+    )
     false # Err on side of caution and cause a new release to be created.
   end
 
