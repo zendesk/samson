@@ -18,8 +18,11 @@ describe CsvExport do
     end
 
     it "returns old downloaded" do
-      @old_export.update_attributes(updated_at: Time.now - 13.hours, created_at: Time.now - 14.hours,
-                                    status: 'downloaded')
+      @old_export.update_attributes(
+        updated_at: Time.now - 13.hours,
+        created_at: Time.now - 14.hours,
+        status: 'downloaded'
+      )
       assert_equal(1, CsvExport.old.size)
     end
 

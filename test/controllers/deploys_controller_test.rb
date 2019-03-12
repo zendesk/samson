@@ -34,8 +34,10 @@ describe DeploysController do
       "/projects/1/stages/2/deploys/new",
       controller: "deploys", action: "new", project_id: "1", stage_id: "2"
     )
-    assert_routing({method: "post", path: "/projects/1/stages/2/deploys"},
-      controller: "deploys", action: "create", project_id: "1", stage_id: "2")
+    assert_routing(
+      {method: "post", path: "/projects/1/stages/2/deploys"},
+      controller: "deploys", action: "create", project_id: "1", stage_id: "2"
+    )
   end
 
   as_a :viewer do

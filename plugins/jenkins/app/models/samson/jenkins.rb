@@ -57,9 +57,11 @@ module Samson
     end
 
     def jenkins_job_config
-      conf = Rails.cache.fetch(jenkins_job_cache_key,
+      conf = Rails.cache.fetch(
+        jenkins_job_cache_key,
         expires_in: JENKINS_JOB_CACHE_TIME,
-        race_condition_ttl: 5.minute) do
+        race_condition_ttl: 5.minute
+      ) do
         client.job.get_config(job_name)
       end
       Nokogiri::XML(conf)

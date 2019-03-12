@@ -393,8 +393,10 @@ module Kubernetes
     def set_docker_image_for_containers(builds, containers)
       containers.each_with_index do |container, i|
         next unless build_selector = build_selector_for_container(container, first: i == 0, scan: false)
-        build = Samson::BuildFinder.detect_build_by_selector!(builds, *build_selector,
-          fail: true, project: project)
+        build = Samson::BuildFinder.detect_build_by_selector!(
+          builds, *build_selector,
+          fail: true, project: project
+        )
         container[:image] = build.docker_repo_digest
         container[:imagePullPolicy] = 'IfNotPresent' if container[:imagePullPolicy] == 'Always'
       end

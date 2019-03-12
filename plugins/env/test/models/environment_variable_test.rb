@@ -65,8 +65,10 @@ describe EnvironmentVariable do
           "repos/organization/repo_name/contents/generated/foo/pod100.env",
           "FROM_REPO_VAR_ONE=one\nVAR_TWO=two\n"
         )
-        expected_result = {"FROM_REPO_VAR_ONE" => "one", "VAR_TWO" => "two",
-                           "PROJECT" => "PROJECT", "Z" => "A", "X" => "Y", "Y" => "Z"}
+        expected_result = {
+          "FROM_REPO_VAR_ONE" => "one", "VAR_TWO" => "two",
+          "PROJECT" => "PROJECT", "Z" => "A", "X" => "Y", "Y" => "Z"
+        }
         EnvironmentVariable.env(project, deploy_group).must_equal expected_result
       end
 
@@ -79,8 +81,10 @@ describe EnvironmentVariable do
           "repos/organization/repo_name/contents/generated/foo/pod100.env",
           "FROM_REPO_VAR_ONE=one\nVAR_TWO=two\nPROJECT=NOT_PROJECT"
         )
-        expected_result = {"FROM_REPO_VAR_ONE" => "one", "VAR_TWO" => "db_two",
-                           "PROJECT" => "DEPLOY", "Z" => "A", "X" => "Y", "Y" => "Z"}
+        expected_result = {
+          "FROM_REPO_VAR_ONE" => "one", "VAR_TWO" => "db_two",
+          "PROJECT" => "DEPLOY", "Z" => "A", "X" => "Y", "Y" => "Z"
+        }
         EnvironmentVariable.env(project, deploy_group).must_equal expected_result
       end
 
