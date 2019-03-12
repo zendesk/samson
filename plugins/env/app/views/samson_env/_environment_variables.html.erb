@@ -1,5 +1,5 @@
-<% scopes = Environment.env_deploy_group_array %>
-<% sorted_env_vars = EnvironmentVariable.sort_by_scopes(form.object.environment_variables, scopes) %>
+<% scopes ||= Environment.env_deploy_group_array %>
+<% sorted_env_vars ||= EnvironmentVariable.sort_by_scopes(form.object.environment_variables, scopes) %>
 <%= render "samson_env/environment_variables_fields",
       form: form, environment_variables: sorted_env_vars, scopes: scopes %>
 

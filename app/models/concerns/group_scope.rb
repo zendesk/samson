@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 module GroupScope
   def self.included(base)
-    base.validates :scope_type, inclusion: ["Environment", "DeployGroup", nil]
+    base.validates :scope_type, inclusion: ["Environment", "DeployGroup", "Stage", nil]
     base.belongs_to :scope, polymorphic: true, optional: true
   end
 
@@ -19,13 +19,14 @@ module GroupScope
     "#{scope_type}-#{scope_id}"
   end
 
-  def matches_scope?(deploy_group)
+  def matches_scope?(deploy_group, stage = nil)
     return true unless scope_id # for all
     return false unless deploy_group # unscoped -> no specific groups
 
     case scope_type
     when "DeployGroup" then scope_id == deploy_group.id # matches deploy group
     when "Environment" then scope_id == deploy_group.environment_id # matches deploy group's environment
+    when "Stage"       then stage && scope_id == stage.id
     else raise "Unsupported scope #{scope_type}"
     end
   end
@@ -34,9 +35,10 @@ module GroupScope
     [
       (project? ? 0 : 1),
       case scope_type
-      when nil then 2
-      when "Environment" then 1
-      when "DeployGroup" then 0
+      when nil then 3
+      when "Environment" then 2
+      when "DeployGroup" then 1
+      when "Stage"       then 0
       else raise "Unsupported scope #{scope_type}"
       end
     ]

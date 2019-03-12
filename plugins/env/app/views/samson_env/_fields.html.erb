@@ -15,13 +15,12 @@
     %>
   <% end %>
 
-  <% scopes = Environment.env_deploy_group_array %>
-  <% sorted_env_vars = EnvironmentVariable.sort_by_scopes(form.object.environment_variables, scopes) %>
-  <% sorted_env_vars << EnvironmentVariable.new %>
-  <%= render "samson_env/environment_variables", form: form, environment_variables: sorted_env_vars %>
+  <% project = form.object %>
+  <% scopes = Environment.env_stage_deploy_group_array(project: project) %>
+  <% sorted_env_vars = EnvironmentVariable.sort_by_scopes(project.environment_variables, scopes) %>
+  <%= render "samson_env/environment_variables", form: form, sorted_env_vars: sorted_env_vars, scopes: scopes %>
 
   <h4>Groups</h4>
-  <% project = form.object %>
   <% ids = project.environment_variable_group_ids + [nil] %>
   <% environment_variable_groups = EnvironmentVariableGroup.order(:name).map { |g| [g.name, g.id] } %>
   <% if environment_variable_groups.any? %>

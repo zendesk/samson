@@ -128,7 +128,7 @@ describe EnvironmentVariableGroupsController do
       end
 
       it "calls env with preview" do
-        EnvironmentVariable.expects(:env).with(anything, anything, preview: true).times(3)
+        EnvironmentVariable.expects(:env).with(anything, anything, anything, preview: true).times(3)
         get :preview, params: {group_id: env_group.id}
         assert_response :success
       end

@@ -21,7 +21,7 @@ Project.class_eval do
 
   def serialized_environment_variables
     variables = EnvironmentVariable.nested_variables(self)
-    @env_scopes ||= Environment.env_deploy_group_array # cache since each save needs them twice
+    @env_scopes ||= Environment.env_stage_deploy_group_array(project: self) # cache since each save needs them twice
     EnvironmentVariable.serialize(variables, @env_scopes)
   end
 

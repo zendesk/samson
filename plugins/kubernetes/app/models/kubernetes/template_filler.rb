@@ -97,7 +97,6 @@ module Kubernetes
         (!first && ENV['KUBERNETES_ADDITIONAL_CONTAINERS_WITHOUT_DOCKERFILE'] ? DOCKERFILE_NONE : 'Dockerfile')
 
       if dockerfile == DOCKERFILE_NONE
-        stage = @doc.kubernetes_release&.deploy&.stage
         Samson::Hooks.fire :ensure_docker_image_has_no_vulnerabilities, stage, container.fetch(:image) if scan && stage
         return
       end
@@ -399,6 +398,10 @@ module Kubernetes
       @project ||= @doc.kubernetes_release.project
     end
 
+    def stage
+      @stage ||= @doc.kubernetes_release&.deploy&.stage
+    end
+
     # custom annotation we support here and in kucodiff
     def missing_env
       test_env = containers.flat_map { |c| c[:env] ||= [] }
@@ -468,7 +471,7 @@ module Kubernetes
         env[:BLUE_GREEN] = blue_green_color if blue_green_color
 
         # env from plugins
-        plugin_envs = Samson::Hooks.fire(:deploy_group_env, project, @doc.deploy_group, resolve_secrets: false)
+        plugin_envs = Samson::Hooks.fire(:deploy_group_env, project, @doc.deploy_group, stage, resolve_secrets: false)
         plugin_envs += Samson::Hooks.fire(:deploy_env, @doc.kubernetes_release.deploy) if @doc.kubernetes_release.deploy
         plugin_envs.compact.inject(env, :merge!)
       end

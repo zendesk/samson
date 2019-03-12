@@ -1,28 +1,28 @@
 # frozen_string_literal: true
 module SamsonEnv
-  HELP_TEXT = "$VAR / ${VAR} replacements supported. Priority is DeployGroup, Environment, All. " \
+  HELP_TEXT = "$VAR / ${VAR} replacements supported. Priority is Stages, DeployGroup, Environment, All. " \
     "Secrets can be used with secret://key_of_secret."
 
   class Engine < Rails::Engine
   end
 
   class << self
-    def write_env_files(dir, project, deploy_groups)
-      return unless groups = env_groups(project, deploy_groups)
+    def write_env_files(dir, project, deploy_groups, stage = nil)
+      return unless groups = env_groups(project, deploy_groups, stage)
       write_dotenv("#{dir}/.env", groups)
     end
 
-    def env_groups(project, deploy_groups, **kwargs)
+    def env_groups(project, deploy_groups, stage = nil, **kwargs)
       groups =
         if deploy_groups.any?
           deploy_groups.map do |deploy_group|
             [
               ".#{deploy_group.name.parameterize}",
-              EnvironmentVariable.env(project, deploy_group, **kwargs)
+              EnvironmentVariable.env(project, deploy_group, stage, **kwargs)
             ]
           end
         else
-          [["", EnvironmentVariable.env(project, nil, **kwargs)]]
+          [["", EnvironmentVariable.env(project, nil, stage, **kwargs)]]
         end
       return groups if groups.any? { |_, data| data.present? }
     end
@@ -48,6 +48,7 @@ module SamsonEnv
 end
 
 Samson::Hooks.view :project_form, "samson_env/fields"
+Samson::Hooks.view :stage_form, "samson_env/stage_env_fields"
 Samson::Hooks.view :manage_menu, "samson_env/manage_menu"
 Samson::Hooks.view :deploy_confirmation_tab_nav, "samson_env/deploy_tab_nav"
 Samson::Hooks.view :deploy_confirmation_tab_body, "samson_env/deploy_tab_body"
@@ -61,10 +62,15 @@ Samson::Hooks.callback :project_permitted_params do
     :use_env_repo
   ]
 end
+Samson::Hooks.callback :stage_permitted_params do
+  [
+    ScopesEnvironmentVariables::ASSIGNABLE_ATTRIBUTES
+  ]
+end
 
 Samson::Hooks.callback :after_deploy_setup do |dir, job|
   if stage = job.deploy&.stage
-    SamsonEnv.write_env_files(dir, stage.project, stage.deploy_groups.to_a)
+    SamsonEnv.write_env_files(dir, stage.project, stage.deploy_groups.to_a, stage)
   end
 end
 

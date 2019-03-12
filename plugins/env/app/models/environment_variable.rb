@@ -18,12 +18,12 @@ class EnvironmentVariable < ActiveRecord::Base
     # preview parameter can be used to not raise an error,
     # but return a value with a helpful message
     # also used by an external plugin
-    def env(project, deploy_group, preview: false, resolve_secrets: true)
+    def env(project, deploy_group, stage = nil, preview: false, resolve_secrets: true)
       env = {}
       if (env_repo_name = ENV["DEPLOYMENT_ENV_REPO"]) && project.use_env_repo
         env = env_vars_from_repo(env_repo_name, project, deploy_group)
       end
-      env.merge!(env_vars_from_db(project, deploy_group))
+      env.merge!(env_vars_from_db(project, deploy_group, stage))
       resolve_dollar_variables(env)
       resolve_secrets(project, deploy_group, env, preview: preview) if resolve_secrets
       env
@@ -46,11 +46,11 @@ class EnvironmentVariable < ActiveRecord::Base
       end.join("\n")
     end
 
-    def env_vars_from_db(project, deploy_group)
+    def env_vars_from_db(project, deploy_group, stage = nil)
       variables = nested_variables(project)
       variables.sort_by!(&:priority)
       variables.each_with_object({}) do |ev, all|
-        all[ev.name] = ev.value if !all[ev.name] && ev.matches_scope?(deploy_group)
+        all[ev.name] = ev.value if !all[ev.name] && ev.matches_scope?(deploy_group, stage)
       end
     end
 

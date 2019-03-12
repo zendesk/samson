@@ -195,7 +195,7 @@ class Project < ActiveRecord::Base
   end
 
   def environment_variables_with_scope
-    scopes = Environment.env_deploy_group_array
+    scopes = Environment.env_stage_deploy_group_array(project: self)
     EnvironmentVariable.sort_by_scopes(
       environment_variables, scopes
     )

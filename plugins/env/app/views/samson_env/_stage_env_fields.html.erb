@@ -1,0 +1,38 @@
+<fieldset>
+  <legend>
+    Environment Variables
+    <%= additional_info SamsonEnv::HELP_TEXT %>
+  </legend>
+  <div>
+    <% stage = form.object %>
+    <% sorted_env_vars = stage.scoped_environment_variables.sort_by{ |env| env.name } %>
+    <% sorted_env_vars << EnvironmentVariable.new %>
+    <div id="env_paste_dialog"></div>
+    <%= form.fields_for :scoped_environment_variables, sorted_env_vars do |fields| %>
+      <div class="form-group">
+        <div class="col-lg-3">
+          <%= fields.text_field :name, class: "form-control", placeholder: "Name" %>
+        </div>
+
+        <div class="col-lg-5">
+          <%# using a text area so users can resize them with browser controls %>
+          <%= fields.text_area :value, class: "form-control", placeholder: "Value", rows: 1 %>
+        </div>
+
+        <% if fields.object.persisted? %>
+          <div class="col-lg-1 checkbox">
+            <%= link_to_history fields.object, counter: false %>
+          </div>
+          <div class="col-lg-1 checkbox">
+            <%= fields.label :_destroy do %>
+              <%= fields.check_box :_destroy if fields.object.persisted? %>
+              Delete
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+    <%= link_to "Add row", "#", class: "duplicate_previous_row" %> |
+    <%= link_to "Paste", "#", class: "paste_env_variables" %>
+  </div>
+</fieldset>

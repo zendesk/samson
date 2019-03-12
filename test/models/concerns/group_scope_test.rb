@@ -7,6 +7,7 @@ describe GroupScope do
   let(:deploy_group) { deploy_groups(:pod100) }
   let(:environment) { deploy_group.environment }
   let(:project) { projects(:test) }
+  let(:stage) { stages(:test_staging) }
   let(:deploy_group_scope_type_and_id) { "DeployGroup-#{deploy_group.id}" }
   let(:environment_variable) { EnvironmentVariable.new(name: "NAME", parent: project) } # TODO: don't use a plugin model
 
@@ -18,7 +19,7 @@ describe GroupScope do
     end
 
     it "is invalid with wrong type" do
-      environment_variable.scope_type_and_id = "Stage-#{project.id}"
+      environment_variable.scope_type_and_id = "Deploy-#{project.id}"
       refute_valid environment_variable
     end
   end
@@ -43,19 +44,23 @@ describe GroupScope do
     end
 
     it "is higher with project" do
-      EnvironmentVariable.new(parent_type: 'Project').priority.must_equal [0, 2]
+      EnvironmentVariable.new(parent_type: 'Project').priority.must_equal [0, 3]
     end
 
     it "is lower without project" do
-      EnvironmentVariable.new.priority.must_equal [1, 2]
+      EnvironmentVariable.new.priority.must_equal [1, 3]
     end
 
-    it "is higher with deploy group" do
-      EnvironmentVariable.new(scope_type: 'DeployGroup').priority.must_equal [1, 0]
+    it "is lower with deploy group" do
+      EnvironmentVariable.new(scope_type: 'DeployGroup').priority.must_equal [1, 1]
     end
 
     it "is lower with environment" do
-      EnvironmentVariable.new(scope_type: 'Environment').priority.must_equal [1, 1]
+      EnvironmentVariable.new(scope_type: 'Environment').priority.must_equal [1, 2]
+    end
+
+    it "is higher with stage" do
+      EnvironmentVariable.new(scope_type: 'Stage').priority.must_equal [1, 0]
     end
   end
 
@@ -81,6 +86,10 @@ describe GroupScope do
 
     it "matches environment" do
       assert EnvironmentVariable.new(scope: deploy_group.environment).matches_scope?(deploy_group)
+    end
+
+    it "matches stage" do
+      assert EnvironmentVariable.new(scope: stage).matches_scope?(deploy_group, stage)
     end
 
     it "does not matche other" do

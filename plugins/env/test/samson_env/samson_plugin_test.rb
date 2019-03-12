@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 3
+SingleCov.covered!
 
 describe SamsonEnv do
   let(:deploy) { deploys(:succeeded_test) }
@@ -17,6 +17,16 @@ describe SamsonEnv do
             environment_variable_group_ids: []
           },
           :use_env_repo
+        ]
+      )
+    end
+  end
+
+  describe :stage_permitted_params do
+    it "adds params" do
+      Samson::Hooks.fire(:stage_permitted_params).must_include(
+        [
+          scoped_environment_variables_attributes: [:name, :value, :_destroy, :id]
         ]
       )
     end
@@ -50,6 +60,18 @@ describe SamsonEnv do
           fire
           File.read(".env").must_equal "HELLO=\"world\"\nWORLD=\"hello\"\n"
           ("%o" % File.stat(".env").mode).must_equal "100640"
+        end
+
+        it "overrides .env" do
+          File.open(".env", 'w') { |f| f.write("XYZ=\"123\"") }
+          fire
+          File.read(".env").wont_include "XYZ=\"123\""
+        end
+
+        it "invalid job" do
+          job = stub(deploy: nil)
+          Samson::Hooks.fire(:after_deploy_setup, Dir.pwd, job)
+          refute File.exist?('.env')
         end
       end
 
@@ -113,6 +135,15 @@ describe SamsonEnv do
       )
       proc = Samson::Hooks.fire(:link_parts_for_resource).to_h.fetch("EnvironmentVariable")
       proc.call(var).must_equal ["WORLD3 for Production on Bar", EnvironmentVariable]
+    end
+
+    it "links to soft_deleted parent" do
+      params = {name: "WORLD3", value: "hello", parent_id: project.id, parent_type: 'Project'}
+      EnvironmentVariable.create!(params)
+      var = EnvironmentVariable.where(params).first
+      project.soft_delete!(validate: false)
+      proc = Samson::Hooks.fire(:link_parts_for_resource).to_h.fetch("EnvironmentVariable")
+      proc.call(var).must_equal ["WORLD3", EnvironmentVariable]
     end
   end
 

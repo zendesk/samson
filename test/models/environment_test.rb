@@ -29,9 +29,10 @@ describe Environment do
       all.must_equal(
         [
           ["All", nil],
+          ["--- Environments ---", "disabled"],
           ["Production", "Environment-X"],
           ["Staging", "Environment-X"],
-          ["----", "disabled"],
+          ["--- Deploy Groups ---", "disabled"],
           ["Pod1", "DeployGroup-X"],
           ["Pod2", "DeployGroup-X"],
           ["Pod 100", "DeployGroup-X"]
@@ -39,8 +40,51 @@ describe Environment do
       )
     end
 
+    it "does not includes environments" do
+      Environment.stubs(:all).returns []
+      Environment.env_deploy_group_array.wont_include ["--- Environments ---", "disabled"]
+    end
+
+    it "does not includes deploy_groups" do
+      DeployGroup.stubs(:all).returns []
+      Environment.env_deploy_group_array.wont_include ["--- Deploy Groups ---", "disabled"]
+    end
+
     it "does not includes All when requested" do
       Environment.env_deploy_group_array(include_all: false).wont_include ["All", nil]
+    end
+  end
+
+  describe ".env_stage_deploy_group_array" do
+    let(:project) { projects(:test) }
+
+    it "includes project stages and All" do
+      all = Environment.env_stage_deploy_group_array(project: project)
+      all.map! { |name, value| [name, value&.sub(/-\d+/, '-X')] }
+      all.must_equal(
+        [
+          ["All", nil],
+          ["--- Environments ---", "disabled"],
+          ["Production", "Environment-X"],
+          ["Staging", "Environment-X"],
+          ["--- Deploy Groups ---", "disabled"],
+          ["Pod1", "DeployGroup-X"],
+          ["Pod2", "DeployGroup-X"],
+          ["Pod 100", "DeployGroup-X"],
+          ["--- Stages ---", "disabled"],
+          ["Staging", "Stage-X"],
+          ["Production", "Stage-X"],
+          ["Production Pod", "Stage-X"]
+        ]
+      )
+    end
+
+    it "does not includes All when requested" do
+      Environment.env_stage_deploy_group_array(project: project, include_all: false).wont_include ["All", nil]
+    end
+
+    it "does not includes project stages" do
+      Environment.env_stage_deploy_group_array.wont_include ["--- Stages ---", "disabled"]
     end
   end
 

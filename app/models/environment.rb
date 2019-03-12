@@ -14,12 +14,29 @@ class Environment < ActiveRecord::Base
   validates_uniqueness_of :name
 
   # also used by private plugin
-  def self.env_deploy_group_array(include_all: true)
-    all = include_all ? [["All", nil]] : []
-    envs = Environment.all.map { |env| [env.name, "Environment-#{env.id}"] }
-    separator = [["----", "disabled", {disabled: true}]]
-    deploy_groups = DeployGroup.all.sort_by(&:natural_order).map { |dg| [dg.name, "DeployGroup-#{dg.id}"] }
-    all + envs + separator + deploy_groups
+  class << self
+    def env_deploy_group_array(include_all: true)
+      scopes = include_all ? [["All", nil]] : []
+      envs = Environment.all.map { |env| [env.name, "Environment-#{env.id}"] }
+      scopes = scopes + scope_separator(' Environments ') + envs if envs.present?
+      deploy_groups = DeployGroup.all.sort_by(&:natural_order).map { |dg| [dg.name, "DeployGroup-#{dg.id}"] }
+      scopes = scopes + scope_separator(' Deploy Groups ') + deploy_groups if deploy_groups.present?
+      scopes
+    end
+
+    def env_stage_deploy_group_array(project: nil, include_all: true)
+      scopes = env_deploy_group_array(include_all: include_all)
+      if (stages = project&.stages).present?
+        scopes = scopes + scope_separator(' Stages ') + stages.map { |stage| [stage.name, "Stage-#{stage.id}"] }
+      end
+      scopes
+    end
+
+    private
+
+    def scope_separator(name = '')
+      [["---#{name}---", "disabled", {disabled: true}]]
+    end
   end
 
   private
