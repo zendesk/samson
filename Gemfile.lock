@@ -48,11 +48,6 @@ PATH
       dogapi (~> 1.9)
 
 PATH
-  remote: plugins/deploy_env_vars
-  specs:
-    samson_deploy_env_vars (0.0.0)
-
-PATH
   remote: plugins/env
   specs:
     samson_env (0.0.0)
@@ -641,7 +636,6 @@ DEPENDENCIES
   samson_aws_sts!
   samson_datadog!
   samson_datadog_tracer!
-  samson_deploy_env_vars!
   samson_env!
   samson_flowdock!
   samson_github!

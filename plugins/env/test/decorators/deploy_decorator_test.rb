@@ -70,4 +70,14 @@ describe Deploy do
       new_deploy.env_state.must_equal serialized_vars
     end
   end
+
+  describe "#environment_variables" do
+    it "can use environment variables" do
+      deploy.environment_variables << EnvironmentVariable.create(
+        name: "ENV_VARIABLE_ONE",
+        value: "ONE"
+      )
+      deploy.environment_variables.count.must_equal 1
+    end
+  end
 end
