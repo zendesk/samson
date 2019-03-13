@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 2
+SingleCov.covered!
 
 describe SamsonDatadog do
   let(:deploy) { deploys(:succeeded_test) }
@@ -61,6 +61,11 @@ describe SamsonDatadog do
       GithubDeployment.any_instance.expects(:create)
       Samson::Hooks.fire(:before_deploy, deploy, nil)
     end
+
+    it "does not create a github deployment when not enabled" do
+      stage.use_github_deployment_api = false
+      Samson::Hooks.fire(:before_deploy, deploy, nil)
+    end
   end
 
   describe :repo_provider_status do
@@ -107,6 +112,11 @@ describe SamsonDatadog do
 
     around { |t| Samson::Hooks.only_callbacks_for_plugin('github', :changeset_api_request, &t) }
 
+    it "skips non-gitlab" do
+      project.stubs(:github?).returns(false)
+      fire(:branch).must_equal [nil]
+    end
+
     it "calls branch api endpoint" do
       stub_github_api("repos/foo/bar/branches/b", commit: {sha: "foo"})
       fire(:branch).must_equal ["foo"]
@@ -123,7 +133,7 @@ describe SamsonDatadog do
 
     it "catches exception and returns NullComparison" do
       stub_github_api("repos/foo/bar/compare/a...b", {}, 301)
-      fire(:compare).first.class.must_equal(Changeset::NullComparison)
+      assert_raises(RuntimeError) { fire(:compare).first }.message.must_include "GitHub: Get https://"
     end
   end
 end

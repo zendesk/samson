@@ -71,12 +71,14 @@ class Changeset
     # for branches that frequently change we make sure to always get the correct cache,
     # others might get an outdated changeset if they are reviewed with different shas
     if BRANCH_TAGS.include?(commit)
-      Samson::Hooks.fire(:changeset_api_request, self, :branch)
+      @commit = Samson::Hooks.fire(:changeset_api_request, self, :branch).compact.first
     end
 
     Rails.cache.fetch(cache_key) do
       Samson::Hooks.fire(:changeset_api_request, self, :compare).compact.first
     end
+  rescue StandardError => e
+    Changeset::NullComparison.new(e.message)
   end
 
   def find_pull_requests
