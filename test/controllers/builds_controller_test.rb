@@ -1,25 +1,14 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 1
+SingleCov.covered!
 
 describe BuildsController do
-  include GitRepoTestHelper
-
-  let(:tmp_dir) { Dir.mktmpdir }
-  let(:project_repo_url) { repo_temp_dir }
-  let(:project) { projects(:test).tap { |p| p.repository_url = project_repo_url } }
-  let(:default_build) do
-    project.builds.create!(name: 'master branch', git_ref: 'master', git_sha: 'a' * 40, creator: user)
-  end
+  let(:project) { projects(:test) }
   let(:build) { builds(:docker_build) }
 
-  before do
-    create_repo_with_an_additional_branch('test_branch')
-  end
-
-  def stub_git_reference_check(returns: false)
-    GitRepository.any_instance.stubs(:commit_from_ref).returns(returns)
+  def stub_git_reference_check(returns)
+    Build.any_instance.stubs(:commit_from_ref).returns(returns)
   end
 
   it "recognizes deprecated api route" do
@@ -43,6 +32,7 @@ describe BuildsController do
       end
 
       it 'displays basic build info' do
+        stub_git_reference_check 'c' * 40
         project.builds.create!(creator: user, name: 'test branch', git_ref: 'test_branch', git_sha: 'a' * 40)
         project.builds.create!(creator: user, name: 'master branch', git_ref: 'master', git_sha: 'b' * 40)
         get :index, params: {project_id: project.to_param}
@@ -99,19 +89,16 @@ describe BuildsController do
     end
 
     describe '#show' do
-      before { default_build }
-
       it 'displays information about the build' do
-        get :show, params: {project_id: project.to_param, id: default_build.id}
+        get :show, params: {project_id: build.project.to_param, id: build.id}
         assert_response :ok
-        @response.body.must_include default_build.name
+        @response.body.must_include build.name
       end
 
       it 'displays the output of docker builds' do
-        default_build.create_docker_job
-        default_build.save!
-
-        get :show, params: {project_id: project.to_param, id: default_build.id}
+        build.create_docker_job
+        build.save! # store id on build
+        get :show, params: {project_id: build.project.to_param, id: build.id}
         assert_response :ok
         @response.body.must_include 'Docker Build Output'
       end
@@ -149,7 +136,7 @@ describe BuildsController do
       let(:git_sha) { '0123456789012345678901234567890123456789' }
 
       before do
-        stub_git_reference_check(returns: git_sha)
+        stub_git_reference_check(git_sha)
       end
 
       it 'can create a build' do
@@ -257,7 +244,7 @@ describe BuildsController do
 
       it "does not start the build when there were errors" do
         DockerBuilderService.any_instance.expects(:run).never
-        stub_git_reference_check(returns: false)
+        stub_git_reference_check(false)
         create
       end
 
@@ -312,21 +299,17 @@ describe BuildsController do
     end
 
     describe '#edit' do
-      before { default_build }
-
       it 'renders' do
-        get :edit, params: {project_id: project.to_param, id: default_build.id}
+        get :edit, params: {project_id: build.project.to_param, id: build.id}
         assert_response :ok
-        @response.body.must_include default_build.name
+        @response.body.must_include build.name
       end
     end
 
     describe "#update" do
       def update(params = {name: 'New updated name!'})
-        put :update, params: {project_id: project.to_param, id: default_build.id, build: params, format: format}
+        put :update, params: {project_id: project.to_param, id: build.id, build: params, format: format}
       end
-
-      before { default_build }
 
       describe "html" do
         let(:format) { 'html' }
@@ -334,7 +317,7 @@ describe BuildsController do
         it 'updates the build' do
           update
           assert_response :redirect
-          default_build.reload.name.must_equal 'New updated name!'
+          build.reload.name.must_equal 'New updated name!'
         end
 
         it "renders when it fails to update" do
@@ -364,7 +347,7 @@ describe BuildsController do
           update
           assert_response :success
           response.body.must_equal "{}"
-          default_build.reload.name.must_equal 'New updated name!'
+          build.reload.name.must_equal 'New updated name!'
         end
 
         it "renders when it fails to update" do
@@ -377,8 +360,8 @@ describe BuildsController do
     end
 
     describe "#build_docker_image" do
-      def build
-        post :build_docker_image, params: {project_id: project.to_param, id: default_build.id, format: format}
+      def build_docker_image
+        post :build_docker_image, params: {project_id: project.to_param, id: build.id, format: format}
       end
 
       before { DockerBuilderService.any_instance.expects(:run) }
@@ -387,15 +370,15 @@ describe BuildsController do
         let(:format) { 'html' }
 
         it "builds an image" do
-          build
-          assert_redirected_to [project, default_build]
+          build_docker_image
+          assert_redirected_to [project, build]
         end
 
         it "does not build when disabled" do
           DockerBuilderService.any_instance.unstub(:run)
           DockerBuilderService.any_instance.expects(:run).never
           project.update_column :docker_image_building_disabled, true
-          build
+          build_docker_image
           assert_redirected_to project_builds_path(project)
           assert flash[:alert]
         end
@@ -405,7 +388,7 @@ describe BuildsController do
         let(:format) { 'json' }
 
         it "builds an image" do
-          build
+          build_docker_image
           assert_response :success
         end
       end

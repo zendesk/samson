@@ -103,7 +103,7 @@ class BuildsController < ApplicationController
   end
 
   def rename_deprecated_attributes
-    return unless build = params[:build]
+    build = params.require(:build)
     return unless source_url = build.delete(:source_url)
     build[:external_url] = source_url
   end
