@@ -214,7 +214,7 @@ describe Samson::Periodical do
   end
 
   it "runs everything" do
-    stub_request(:get, "https://status.github.com/api/status.json")
+    stub_request(:get, "https://www.githubstatus.com/api/v2/status.json")
     Samson::Periodical.send(:registered).each_key do |task|
       Samson::Periodical.run_once task
     end

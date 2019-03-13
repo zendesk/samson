@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 module SamsonGithub
-  STATUS_URL = ENV["GITHUB_STATUS_URL"] || 'https://status.github.com'
+  # Reference: https://www.githubstatus.com/api#status
+  # Official doc example is: https://kctbh9vrtdwd.statuspage.io',
+  # however 'https://www.githubstatus.com' also works
+  STATUS_URL = ENV["GITHUB_STATUS_URL"] || 'https://www.githubstatus.com'
 
   class Engine < Rails::Engine
   end
@@ -33,10 +36,13 @@ end
 Samson::Hooks.callback :repo_provider_status do
   error = "GitHub may be having problems. Please check their status page #{SamsonGithub::STATUS_URL} for details."
   begin
-    response = Faraday.get("#{SamsonGithub::STATUS_URL}/api/status.json") do |req|
+    # From this reference: https://www.githubstatus.com/api#status
+    # Get the status rollup for the whole page. This endpoint includes an indicator -
+    # one of none, minor, major, or critical, as well as a human description of the blended component status.
+    response = Faraday.get("#{SamsonGithub::STATUS_URL}/api/v2/status.json") do |req|
       req.options.timeout = req.options.open_timeout = 1
     end
-    error unless response.status == 200 && JSON.parse(response.body)['status'] == 'good'
+    error unless response.status == 200 && JSON.parse(response.body)['status']['indicator'] == 'none'
   rescue StandardError
     error
   end
