@@ -206,4 +206,22 @@ describe SamsonEnv do
       end
     end
   end
+
+  describe :deploy_env do
+    it "adds stage env variables" do
+      Samson::Hooks.only_callbacks_for_plugin("env", :deploy_env) do
+        deploy = deploys(:succeeded_test)
+        deploy.stage.environment_variables.build(name: "Foo", value: "bar")
+        Samson::Hooks.fire(:deploy_env, deploy).must_equal [{"Foo" => "bar"}]
+      end
+    end
+  end
+
+  describe :stage_permitted_params do
+    it "allows environment attributes" do
+      Samson::Hooks.only_callbacks_for_plugin("env", :stage_permitted_params) do
+        Samson::Hooks.fire(:stage_permitted_params).map(&:keys).must_equal [[:environment_variables_attributes]]
+      end
+    end
+  end
 end

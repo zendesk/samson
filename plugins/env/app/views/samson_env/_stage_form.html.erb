@@ -1,0 +1,8 @@
+<fieldset>
+  <legend>
+    Extra Environment Variables for this stage <%= additional_info SamsonEnv::HELP_TEXT %>
+  </legend>
+
+  <%= render "samson_env/environment_variables_fields",
+      form: form, environment_variables: @stage.environment_variables %>
+</fieldset>

@@ -106,3 +106,18 @@ Samson::Hooks.callback(:can) do
     end
   ]
 end
+
+# Adds the stage env vars view to the stage form in order to add
+# specific environment vars per stage
+Samson::Hooks.view :stage_form, 'samson_env/stage_form'
+
+# Allows environment vars as valid parameters for the stage model
+Samson::Hooks.callback :stage_permitted_params do
+  AcceptsEnvironmentVariables::ASSIGNABLE_ATTRIBUTES
+end
+
+# Injects specific environment variables for the stage when they were set in the form
+# NOTE: does not resolve secrets or dollar variables on purpose
+Samson::Hooks.callback :deploy_env do |deploy|
+  deploy.stage.environment_variables.each_with_object({}) { |var, h| h[var.name] = var.value }
+end
