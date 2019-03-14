@@ -1,10 +1,23 @@
-## Env Plugin
-Plugin to manage ENV settings for projects and write .env files during deploy.
+# Env Plugin
+
+Plugin to manage ENV settings for projects/stages/deploys and write .env files during deploy.
+
+## Stage ENV Vars
+
+Can be used to have 1-off settings that differ from the project.
+
+## Deploy ENV Vars
+
+Can be used to have generic stages to run one-off jobs or other tasks that need to be parameterized on each run.
+Since these pose a compliance problem, they can be disabled with the samson environment variable `DEPLOY_ENV_VARS=false`.
+
+## API
 
 Includes `/projects/:permalink/environment?deploy_group=permalink` endpoint that returns the `.env` content
 for a project and deploy_group.
 
 ## GitHub to manage environment variables
+
 This plugin has an option to use a GitHub repository as source for environment variables. 
 The DEPLOYMENT_ENV_REPO must be set in samson's start up to be the `organization/repo`.   
 
@@ -35,7 +48,9 @@ SECRETE_TOKEN=/secrets/SECRET_TOKEN
 RAILS_THREAD_MIN=3
 RAILS_THREAD_MAX=5 
 ```
+
 ###### Merging enviroment variables stored in the database with those in the repo 
+
 The generated enviornment variables is the merger of deploy_group env variables, if the samson `deploy_group plugin` is 
 activated, the `project` environment variables in the samson database and the environment variables in the github `repo`.
 The order of precedence for variables with the same key name: `deploy_group` replaces `project` which replaces `repo` variables.

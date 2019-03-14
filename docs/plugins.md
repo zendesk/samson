@@ -14,7 +14,6 @@ Available plugins:
  - [AWS STS Tokens](https://github.com/zendesk/samson/tree/master/plugins/aws_sts)
  - [Datadog monitoring and deploy tracking](https://github.com/zendesk/samson/tree/master/plugins/datadog)
  - [Datadog APM tracer](https://github.com/zendesk/samson/tree/master/plugins/datadog_tracer)
- - [Deploy Environment Variables](https://github.com/zendesk/samson/tree/master/plugins/deploy_env_vars)
  - [ENV var management](https://github.com/zendesk/samson/tree/master/plugins/env)
  - [Flowdock notification](https://github.com/zendesk/samson/tree/master/plugins/flowdock)
  - [Github](https://github.com/zendesk/samson/tree/master/plugins/github)
