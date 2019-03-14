@@ -53,13 +53,15 @@ describe Changeset::PullRequest do
           "head" => {
             "ref" => 'a/ref',
             "sha" => 'abcd123'
-          }
+          },
+          "created_at" => '2019-03-13T00:00:00Z'
         }
       }
       pr = Changeset::PullRequest.changeset_from_webhook(project, params)
       pr.state.must_equal 'open'
       pr.branch.must_equal 'a/ref'
       pr.sha.must_equal 'abcd123'
+      pr.created_at.must_equal '2019-03-13T00:00:00Z'
     end
   end
 

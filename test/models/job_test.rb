@@ -380,15 +380,27 @@ describe Job do
     let(:job) { jobs(:succeeded_test) }
 
     it 'reports for deploy' do
-      assert_instrument(type: 'deploy', status: 'succeeded')
+      assert_instrument(
+        stage: job&.deploy&.stage&.permalink,
+        project: project.permalink,
+        type: job&.deploy ? 'deploy' : 'build',
+        status: 'succeeded',
+        cycle_time: DeployMetrics.new(job&.deploy).cycle_time
+      )
 
       job.send(:report_state)
     end
 
     it 'reports for build' do
-      assert_instrument(type: 'build', status: 'succeeded')
       job = jobs(:running_test) # job without deploy
       job.update_column(:status, 'succeeded')
+      assert_instrument(
+        stage: job&.deploy&.stage&.permalink,
+        project: project.permalink,
+        type: job&.deploy ? 'deploy' : 'build',
+        status: 'succeeded',
+        cycle_time: DeployMetrics.new(job&.deploy).cycle_time
+      )
 
       job.send(:report_state)
     end

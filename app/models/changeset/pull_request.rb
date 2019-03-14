@@ -98,6 +98,10 @@ class Changeset::PullRequest
     users.compact.map { |user| Changeset::GithubUser.new(user) }.uniq
   end
 
+  def created_at
+    @data['created_at']
+  end
+
   def risky?
     risks.present?
   end
