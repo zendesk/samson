@@ -107,14 +107,17 @@ class ProjectsController < ResourceController
         end
         if url = search[:url]
           # users can pass in git@ or https:// with or without .git
-          # database has git@ or https:// urls with .git
-          uri = URI.parse(url.sub(/\.git$/, '').sub(':', '/').sub('git@', 'https://'))
-          git = "git@#{uri.host}#{uri.path.sub('/', ':')}.git"
+          # database has git@ or https:// urls with or without .git
+          uri = URI.parse("https://" + url.gsub(/(^https?:\/\/|\.git|git@|ssh:\/\/)/, '').sub(':', '/'))
+          git = "git@#{uri.host}#{uri.path.sub('/', ':')}"
+          git_http = "https://#{uri.host}#{uri.path}"
           urls = [
             url, # make sure the exact query always matches
             git,
-            "ssh://#{git}",
-            "https://#{uri.host}#{uri.path}.git"
+            git_http,
+            "ssh://#{git}.git",
+            "#{git}.git",
+            "#{git_http}.git"
           ]
           scope = scope.where(repository_url: urls)
         end

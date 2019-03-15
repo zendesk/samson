@@ -41,18 +41,9 @@ describe ProjectsController do
       end
 
       describe "search" do
-        before do
-          Project.create!(name: "https_url", repository_url: "https://github.com/foo/bar.git")
-        end
-
         it "can search via query" do
           get :index, params: {search: {query: "foo"}}
           assigns(:projects).map(&:name).must_equal ["Foo"]
-        end
-
-        it "can search via url" do
-          get :index, params: {search: {url: "https://github.com/foo/bar.git"}}
-          assigns(:projects).map(&:name).must_equal ["https_url"]
         end
 
         it "can combine query and url" do
@@ -60,9 +51,36 @@ describe ProjectsController do
           assigns(:projects).map(&:name).must_equal ["Foo"]
         end
 
-        it "does not find when url does not match" do
-          get :index, params: {search: {url: "https://github.com/test.git"}}
-          assigns(:projects).map(&:name).must_be_empty
+        describe "via url" do
+          def validate_search_url(url, result)
+            get :index, params: {search: {url: url}}
+            assigns(:projects).map(&:name).must_equal result
+          end
+
+          before do
+            Project.create!(name: "https_url", repository_url: "https://github.com/foo/bar.git")
+          end
+
+          it "renders with https and .git in url" do
+            validate_search_url("https://github.com/foo/bar.git", ["https_url"])
+          end
+
+          it "renders with ssh in url" do
+            validate_search_url("ssh://git@example.com:bar/foo.git", ["Foo"])
+          end
+
+          it "renders without .git in url" do
+            validate_search_url("https://github.com/foo/bar", ["https_url"])
+          end
+
+          it "renders without .git and with @git in url" do
+            validate_search_url("git@example.com/bar/foo", ["Foo"])
+          end
+
+          it "does not find when url does not match" do
+            get :index, params: {search: {url: "https://github.com/test.git"}}
+            assigns(:projects).map(&:name).must_be_empty
+          end
         end
       end
 
