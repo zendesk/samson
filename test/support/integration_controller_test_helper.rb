@@ -44,7 +44,7 @@ module IntegrationsControllerTestHelper
       end
 
       it "responds with 422 OK if deploy cannot be started" do
-        DeployService.stubs(new: stub(deploy: Deploy.new))
+        DeployService.stubs(new: stub(deploy: Deploy.new(stage: stages(:test_production))))
         post :create, params: payload.deep_merge(token: project.token)
         assert_response :unprocessable_entity
       end

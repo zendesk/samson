@@ -14,6 +14,7 @@ describe Integrations::BaseController do
   let(:project) { projects(:test) }
   let(:stage) { stages(:test_staging) }
   let(:token) { project.token }
+  let(:json) { JSON.parse(response.body, symbolize_names: true) }
 
   before do
     project.releases.destroy_all
@@ -98,10 +99,7 @@ describe Integrations::BaseController do
       post :create, params: {test_route: true, token: token, foo: "bar"}
       assert_response :success
       result = WebhookRecorder.read(project)
-      log = <<~LOG
-        INFO: Branch master is release branch: true
-        INFO: Deploying to 0 stages
-      LOG
+      log = "INFO: Branch master is release branch: true\n"
 
       result.fetch(:log).must_equal log
       result.fetch(:response_code).must_equal 200
@@ -136,7 +134,7 @@ describe Integrations::BaseController do
     it "fails with invalid token" do
       post :create, params: {test_route: true, token: token + 'x'}
       assert_response :unauthorized
-      JSON.parse(response.body, symbolize_names: true).must_equal(deploy_ids: [], messages: 'Invalid token')
+      json.must_equal(deploy_ids: [], messages: 'Invalid token')
     end
 
     it 'does not blow up when creating docker image if a release was not created' do
@@ -172,26 +170,26 @@ describe Integrations::BaseController do
 
         expected_messages = <<~MESSAGES
           INFO: Branch master is release branch: true
-          INFO: Deploying to 2 stages
+          INFO: Deploying to Staging
+          INFO: Deploying to Production
         MESSAGES
 
         assert_response :success
-        JSON.parse(response.body, symbolize_names: true).
-          must_equal(deploy_ids: [deploy1.id, deploy2.id], messages: expected_messages)
+        json.must_equal(deploy_ids: [deploy1.id, deploy2.id], messages: expected_messages)
       end
 
-      it 'stops deploy to further stages when first fails' do
-        DeployService.any_instance.expects(:deploy).times(1).returns(Deploy.new)
+      it 'records deploy failures but continues' do
+        stage.create_lock!(description: "foo", user: users(:admin))
         post :create, params: {test_route: true, token: token}
 
-        expected_messages = <<~MESSAGES
+        message = <<~MSG
           INFO: Branch master is release branch: true
-          ERROR: Deploy to Staging failed: []
-          ERROR: Failed to start deploy to Staging
-        MESSAGES
+          ERROR: Failed deploying to Staging: Stage is locked
+          INFO: Deploying to Production
+        MSG
 
         assert_response :unprocessable_entity
-        JSON.parse(response.body, symbolize_names: true).must_equal(deploy_ids: [], messages: expected_messages)
+        json.must_equal(deploy_ids: [Deploy.first.id], messages: message)
       end
 
       it 'uses the release version to make the deploy easy to understand' do
