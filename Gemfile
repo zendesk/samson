@@ -5,7 +5,7 @@ ruby File.read('.ruby-version').strip
 
 # gems that have rails engines are are always needed
 group :preload do
-  gem 'rails', '5.2.1.1'
+  gem 'rails', '5.2.2.1'
   gem 'dotenv'
   gem 'connection_pool'
   gem 'marco-polo'
