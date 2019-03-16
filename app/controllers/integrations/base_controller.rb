@@ -27,17 +27,22 @@ class Integrations::BaseController < ApplicationController
     end
 
     stages = project.webhook_stages_for(branch, service_type, service_name)
-    deploy_results = deploy_to_stages(release, stages)
-
-    if failed = deploy_results[:failed_stage]
-      record_log :error, "Failed to start deploy to #{failed.name}"
-    else
-      record_log :info, "Deploying to #{stages.size} stages"
+    deploy_service = DeployService.new(user)
+    deploys = stages.map { |stage| deploy_service.deploy(stage, reference: release&.version || commit) }
+    deploys.each do |deploy|
+      if deploy.persisted?
+        record_log :info, "Deploying to #{deploy.stage.name}"
+      else
+        record_log :error, "Failed deploying to #{deploy.stage.name}: #{deploy.errors.full_messages.to_sentence}"
+      end
     end
 
     render(
-      json: {deploy_ids: deploy_results[:deploy_ids], messages: @recorded_log.to_s},
-      status: (failed ? :unprocessable_entity : :ok)
+      json: {
+        deploy_ids: deploys.map(&:id).compact,
+        messages: @recorded_log.to_s
+      },
+      status: (deploys.all?(&:persisted?) ? :ok : :unprocessable_entity)
     )
   end
 
@@ -65,22 +70,6 @@ class Integrations::BaseController < ApplicationController
     latest_release = project.releases.order(:id).last
     return latest_release if latest_release&.contains_commit?(commit)
     ReleaseService.new(project).release(release_params)
-  end
-
-  # returns failed stage and any successfully started deploy ids
-  def deploy_to_stages(release, stages)
-    deploy_service = DeployService.new(user)
-    stages.each_with_object(failed_stage: nil, deploy_ids: []) do |stage, result_hash|
-      deploy = deploy_service.deploy(stage, reference: release&.version || commit)
-
-      if deploy.persisted?
-        result_hash[:deploy_ids] << deploy.id
-      else
-        record_log :error, "Deploy to #{stage.name} failed: #{deploy.errors.full_messages}"
-        result_hash[:failed_stage] = stage
-        break result_hash
-      end
-    end
   end
 
   def project
