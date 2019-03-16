@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 class SlackAppController < ApplicationController
   PUBLIC = [:command, :interact].freeze
+
   skip_before_action :verify_authenticity_token, :login_user, only: PUBLIC
 
   before_action :handle_slack_inputs
@@ -27,7 +28,7 @@ class SlackAppController < ApplicationController
       end
       SlackIdentifier.create!(user_id: current_user.id, identifier: body.fetch('user_id'))
 
-      redirect_to
+      redirect_to # to what ??
     end
   end
 
@@ -41,32 +42,46 @@ class SlackAppController < ApplicationController
 
   private
 
+  # TODO
+  # - returning parts of the text can most likely be abused to do some kind of reflection attack.
+  # - / is a bad separator between project and branch since branches often include / too
   def command_response
+    return unknown_user_response unless @current_user_from_slack
+
     # Interesting parts of params:
     # {
     #   "user_id"=>"U0HAGH3AB", <-- look up Samson user using this
     #   "command"=>"/deploy",
-    #   "text"=>"foo bar baz", <-- this is what to deploy
+    #   "text"=>"foobar/master to production", <-- deploy project foobar, branch master to stage production
     #   "response_url"=>"https://hooks.slack.com/commands/T0HAGP0J2/58604540277/g0xd4K2KOsgL9zXwR4kEc0eL"
     #    ^^^^ This is how to respond later, we can also directly return some JSON
     # }
-    return unknown_user unless @current_user_from_slack
+    project_permalink, ref_name, stage_permalink =
+      @payload['text'].match(/^([^\s\/]+)(?:\/(\S+))?(?: to (\S+))?$/)&.captures
+    stage_permalink ||= 'production'
+    ref_name ||= 'master'
 
-    # Parse the command
-    project_name, ref_name, stage_name = @payload['text'].match(/([^\s\/]+)(?:\/(\S+))?\s*(?:to\s+(.*))?/).captures
-
-    # Sanity checks
-    unless project = Project.find_by_permalink(project_name)
-      return unknown_project(project_name)
+    unless project_permalink
+      return <<~TEXT
+        Did not understand.
+        Please use for example `project-permalink`, `project-permalink/branch`, `project-permalink to stage-permalink`.
+      TEXT
     end
 
-    return unauthorized_deployer(project) unless @current_user_from_slack.deployer_for?(project)
+    unless project = Project.find_by_permalink(project_permalink)
+      return "Could not find a project with permalink `#{project_permalink}`."
+    end
 
-    stage = project.stages.find_by_permalink(stage_name || 'production')
-    return unknown_stage(project, stage_name) unless stage.present?
+    unless @current_user_from_slack.deployer_for?(project)
+      return "You do not have permission to deploy on `#{project_permalink}`."
+    end
+
+    unless stage = project.stages.find_by_permalink(stage_permalink)
+      return "`#{project_permalink}` does not have a stage `#{stage_permalink}`."
+    end
 
     deploy_service = DeployService.new(@current_user_from_slack)
-    deploy = deploy_service.deploy(stage, reference: ref_name || 'master')
+    deploy = deploy_service.deploy(stage, reference: ref_name)
     DeployResponseUrl.create! deploy: deploy, response_url: @payload[:response_url]
 
     SlackMessage.new(deploy).message_body
@@ -94,7 +109,7 @@ class SlackAppController < ApplicationController
     unless @current_user_from_slack
       return {
         replace_original: false,
-        text: unknown_user
+        text: unknown_user_response
       }
     end
 
@@ -115,26 +130,6 @@ class SlackAppController < ApplicationController
     # Buddy up
     deploy.confirm_buddy!(@current_user_from_slack)
     SlackMessage.new(deploy).message_body
-  end
-
-  def unknown_user
-    "You're not set up to use this yet. Please visit " \
-    "#{url_for action: :oauth, only_path: false} " \
-    "to connect your accounts."
-  end
-
-  def unknown_project(project)
-    "Couldn't find a project with permalink `#{project}`."
-  end
-
-  def unknown_stage(project, stage_name)
-    "Sorry, " \
-    "<#{project_path(project)}|#{project.name}> " \
-    "doesn't have a stage named `#{stage_name}`."
-  end
-
-  def unauthorized_deployer(project)
-    "Sorry, it doesn't look like you have permission to create a deployment on `#{project}`."
   end
 
   def handle_slack_inputs
@@ -159,6 +154,10 @@ class SlackAppController < ApplicationController
       end
       SlackIdentifier.find_by_identifier(slack_user_id)&.user
     end
+  end
+
+  def unknown_user_response
+    "Visit #{url_for action: :oauth, only_path: false} to connect your accounts."
   end
 
   def app_token
