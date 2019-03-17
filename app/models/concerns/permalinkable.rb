@@ -4,7 +4,7 @@ module Permalinkable
 
   included do
     before_validation :generate_permalink, on: :create
-    validates :permalink, presence: true
+    validates :permalink, presence: true, format: /\A[a-z0-9\-_]*\z/
     validate :validate_unique_permalink
 
     # making permalink and soft-delete dependent is a bit weird, but if a model is important enough to have a permalink
@@ -39,6 +39,7 @@ module Permalinkable
   end
 
   def generate_permalink
+    return if permalink.present?
     base = permalink_base.to_s.parameterize
     self.permalink = base
     self.permalink = "#{base}-#{SecureRandom.hex(4)}" if permalink_taken?

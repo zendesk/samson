@@ -294,6 +294,7 @@ describe Stage do
       clone_diff.must_equal(
         [
           ["id", stage.id, nil],
+          ["permalink", "staging", nil],
           ["is_template", true, false],
           ["template_stage_id", nil, stage.id]
         ]

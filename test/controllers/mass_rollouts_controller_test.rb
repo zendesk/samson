@@ -482,7 +482,6 @@ describe MassRolloutsController do
           project = Project.create!(
             name: "foo",
             include_new_deploy_groups: true,
-            permalink: "foo",
             repository_url: "https://github.com/samson-test-org/example-project.git"
           )
           Stage.create!(name: "foo tstage", project: project, is_template: true, deploy_groups: [template_deploy_group])

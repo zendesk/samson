@@ -56,6 +56,7 @@ describe Stage do
     let(:stage) do
       stage = stages(:test_staging).dup
       stage.name = 'Another'
+      stage.permalink = nil
       stage
     end
 
