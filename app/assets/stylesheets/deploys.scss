@@ -4,20 +4,6 @@
 
 @import "jquery-mentions-input/jquery.mentionsInput";
 
-.panel {
-  .failed {
-    border-color: red;
-  }
-
-  .running, .started {
-    border-color: blue;
-  }
-
-  .successful {
-    border-color: green;
-  }
-}
-
 .log {
   display: block;
 }
