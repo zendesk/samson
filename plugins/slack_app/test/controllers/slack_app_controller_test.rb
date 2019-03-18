@@ -116,18 +116,13 @@ describe SlackAppController do
         @response.body.must_equal 'ok'
       end
 
-      it 'warns on an unauthorized deployer' do
-        post_command viewer_identifier, text: project.permalink
-      end
-
-      it 'warns on unknown project' do
-        post_command deployer_identifier, text: 'jkfldsaklfdsalk'
-        @response.body.must_include "Couldn't find"
-      end
-
-      it 'warns on unknown stage' do
-        post_command deployer_identifier, text: "#{project.permalink} to unknown"
-        @response.body.must_include "doesn't have a stage named"
+      it 'can deploy with branch and stage' do
+        expects_new_deploy
+        post_command deployer_identifier, text: "#{project.permalink}/foo/bar to #{project.stages.last.permalink}"
+        body['text'].must_include "is deploying"
+        deploy = Deploy.first
+        deploy.reference.must_equal "foo/bar"
+        deploy.stage.permalink.must_equal project.stages.last.permalink
       end
 
       it 'mentions PRs in the return JSON' do
@@ -136,6 +131,25 @@ describe SlackAppController do
         first_attachment = body['attachments'][0]
         first_attachment['fields'][0]['value'].must_include '#123'
         first_attachment['fields'][0]['value'].must_include 'sample PR'
+      end
+
+      it 'warns on an unauthorized deployer' do
+        post_command viewer_identifier, text: project.permalink
+      end
+
+      it 'warns on unknown project' do
+        post_command deployer_identifier, text: 'jkfldsaklfdsalk'
+        @response.body.must_equal "Could not find a project with permalink `jkfldsaklfdsalk`."
+      end
+
+      it 'warns on unknown stage' do
+        post_command deployer_identifier, text: "#{project.permalink} to unknown"
+        @response.body.must_equal "`foo` does not have a stage `unknown`."
+      end
+
+      it 'ignores invalid request' do
+        post_command deployer_identifier, text: 'wut do I do here'
+        @response.body.must_include "Did not understand."
       end
     end
   end
