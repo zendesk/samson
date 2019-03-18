@@ -14,6 +14,9 @@ class EnvironmentVariable < ActiveRecord::Base
   include ValidatesLengthsFromDatabase
   validates_lengths_from_database only: :value
 
+  delegate :name, to: :parent, prefix: true, allow_nil: true
+  delegate :name, to: :scope, prefix: true, allow_nil: true
+
   class << self
     # preview parameter can be used to not raise an error,
     # but return a value with a helpful message
@@ -91,6 +94,10 @@ class EnvironmentVariable < ActiveRecord::Base
   # used by `priority` from GroupScope
   def project?
     parent_type == "Project"
+  end
+
+  def as_json(options = {})
+    super({methods: [:parent_name, :scope_name]}.merge(options))
   end
 
   private
