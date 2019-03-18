@@ -122,12 +122,7 @@ module Kubernetes
       end
 
       def raw_events
-        SamsonKubernetes.retry_on_connection_errors do
-          @client.get_events(
-            namespace: namespace,
-            field_selector: "involvedObject.name=#{name}"
-          ).fetch(:items)
-        end
+        Kubernetes::EventReader.events(@client, @pod)
       end
 
       # if the pod is still running we stream the logs until it times out to get as much info as possible

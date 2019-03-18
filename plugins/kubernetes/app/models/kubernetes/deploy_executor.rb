@@ -200,17 +200,7 @@ module Kubernetes
     # show what happened at the resource level ... need uid to avoid showing previous events
     def print_resource_events(doc)
       doc.resources.each do |resource|
-        selector = ["involvedObject.name=#{resource.name}"]
-
-        # do not query for nil uid ... rather show events for old+new resource when creation failed
-        if uid = resource.uid
-          selector << "involvedObject.uid=#{uid}"
-        end
-
-        events = doc.deploy_group.kubernetes_cluster.client('v1').get_events(
-          namespace: resource.namespace,
-          field_selector: selector.join(',')
-        ).fetch(:items)
+        events = Kubernetes::EventReader.events(doc.deploy_group.kubernetes_cluster.client('v1'), resource.resource)
         next if events.none?
         @output.puts "RESOURCE EVENTS #{resource.namespace}.#{resource.name}:"
         print_events(events)
@@ -219,6 +209,7 @@ module Kubernetes
 
     # show what happened in kubernetes internally since we might not have any logs
     # reloading the events so we see things added during+after pod restart
+    # not re-printing the name+namespace since we do that above already
     def print_pod_events(pod)
       @output.puts "POD EVENTS:"
       print_events(pod.events(reload: true))
