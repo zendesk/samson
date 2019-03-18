@@ -50,10 +50,10 @@ class RollbarDashboards::DashboardsController < ApplicationController
 
   def deploy_rql_query(deploy)
     environment = deploy.stage.deploy_groups.first.environment.name.downcase
-    next_successful_deploy = deploy.next_successful_deploy
+    next_succeeded_deploy = deploy.next_succeeded_deploy
 
-    timestamp_query = if next_successful_deploy
-      "timestamp BETWEEN #{deploy.created_at.to_i} and #{next_successful_deploy.created_at.to_i}"
+    timestamp_query = if next_succeeded_deploy
+      "timestamp BETWEEN #{deploy.created_at.to_i} and #{next_succeeded_deploy.created_at.to_i}"
     else
       "timestamp >= #{deploy.created_at.to_i}"
     end

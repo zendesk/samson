@@ -27,9 +27,9 @@ describe Samson::BuildFinder do
   let(:finder) { Samson::BuildFinder.new(output, job, 'master', build_selectors: build_selectors) }
   let(:project) { build.project }
 
-  describe "#ensure_successful_builds" do
+  describe "#ensure_succeeded_builds" do
     def execute
-      finder.ensure_successful_builds
+      finder.ensure_succeeded_builds
     end
 
     before do
@@ -94,7 +94,7 @@ describe Samson::BuildFinder do
 
     it "fails when plugin checks fail" do
       build.update_column :docker_repo_digest, 'foo'
-      Samson::Hooks.with_callback(:ensure_build_is_successful, ->(*) { false }) do
+      Samson::Hooks.with_callback(:ensure_build_is_succeeded, ->(*) { false }) do
         e = assert_raises Samson::Hooks::UserError do
           execute
         end

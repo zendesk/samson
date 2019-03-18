@@ -7,7 +7,7 @@ describe SamsonGcloud::ImageBuilder do
   let(:build) { builds(:docker_build) }
 
   describe ".build_image" do
-    def expect_successful_build
+    def expect_succeeded_build
       executor.expects(:execute).with { output.write "foo digest: sha-123:abc" }.returns(true)
     end
 
@@ -86,7 +86,7 @@ describe SamsonGcloud::ImageBuilder do
     end
 
     it "returns the docker repo digest" do
-      expect_successful_build
+      expect_succeeded_build
       build_image.must_equal "#{repo}@sha-123:abc"
       build.external_url.must_be_nil
     end
@@ -126,7 +126,7 @@ describe SamsonGcloud::ImageBuilder do
 
     it "builds different Dockerfiles" do
       build.dockerfile = 'Dockerfile.changed'
-      expect_successful_build
+      expect_succeeded_build
       build_image.must_equal "#{repo}-changed@sha-123:abc"
       build.external_url.must_be_nil
     end

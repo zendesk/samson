@@ -177,7 +177,7 @@ describe RollbarDashboards::DashboardsController do
       @controller.send(:deploy_rql_query, deploy).must_equal expected
     end
 
-    it 'returns query with range timestamp if there is a next successful deploy' do
+    it 'returns query with range timestamp if there is a next succeeded deploy' do
       Deploy.create!(
         release: true,
         project: deploy.project,

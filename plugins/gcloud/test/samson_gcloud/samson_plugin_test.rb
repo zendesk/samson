@@ -28,9 +28,9 @@ describe SamsonGcloud do
     end
   end
 
-  describe :ensure_build_is_successful do
+  describe :ensure_build_is_succeeded do
     def fire
-      Samson::Hooks.fire(:ensure_build_is_successful, build, job, output)
+      Samson::Hooks.fire(:ensure_build_is_succeeded, build, job, output)
     end
 
     let(:build) { builds(:docker_build) }

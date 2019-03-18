@@ -178,7 +178,7 @@ class Project < ActiveRecord::Base
   end
 
   def last_deploy_by_stage
-    return unless found = deploys.select('max(deploys.id) as id').reorder(nil).group(:stage_id).successful.presence
+    return unless found = deploys.select('max(deploys.id) as id').reorder(nil).group(:stage_id).succeeded.presence
     Deploy.find(found.map(&:id)).select(&:stage).sort_by { |d| d.stage.order }.presence
   end
 
@@ -232,7 +232,7 @@ class Project < ActiveRecord::Base
 
   def deploys_by_group(before, include_failed_deploys = false)
     stages.each_with_object({}) do |stage, result|
-      stage_filter = include_failed_deploys ? stage.deploys : stage.deploys.successful.where(release: true)
+      stage_filter = include_failed_deploys ? stage.deploys : stage.deploys.succeeded.where(release: true)
       deploy = stage_filter.where("deploys.updated_at <= ?", before.to_s(:db)).first
       next unless deploy
       stage.deploy_groups.pluck(:id).each { |id| (result[id] ||= []) << deploy }

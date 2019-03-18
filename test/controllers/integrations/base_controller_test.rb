@@ -163,7 +163,7 @@ describe Integrations::BaseController do
         project.webhooks.create!(branch: 'master', stage: stages(:test_production), source: 'any')
       end
 
-      it 'returns the deploy ids if they are successful' do
+      it 'returns the deploy ids if they are succeeded' do
         DeployService.any_instance.expects(:deploy).times(2).returns(deploy1, deploy2)
 
         post :create, params: {test_route: true, token: token}

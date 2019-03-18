@@ -20,7 +20,7 @@ class DeployGroupsController < ResourceController
   end
 
   def show
-    @deployed = Deploy.successful.where(stage_id: @deploy_group.pluck_stage_ids).last_deploys_for_projects
+    @deployed = Deploy.succeeded.where(stage_id: @deploy_group.pluck_stage_ids).last_deploys_for_projects
     respond_to do |format|
       format.html
       format.json do

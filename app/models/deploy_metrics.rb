@@ -17,7 +17,7 @@ class DeployMetrics
 
     stages = @deploy.project.stages
     production_stages, staging_stages = stages.partition(&:production?)
-    scope = Deploy.successful.where(jobs: {commit: @deploy.commit}).reorder(:id)
+    scope = Deploy.succeeded.where(jobs: {commit: @deploy.commit}).reorder(:id)
     return {} unless @deploy == scope.where(stage: production_stages).first!
 
     first_staging_deploy = scope.where(stage: staging_stages).first

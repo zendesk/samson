@@ -104,7 +104,7 @@ describe CommitStatus do
         end
 
         it "warns when an older deploy has a lower version (grouping + ordering test)" do
-          deploys(:succeeded_test).update_column(:stage_id, deploy.stage_id) # need 2 successful deploys on same stage
+          deploys(:succeeded_test).update_column(:stage_id, deploy.stage_id) # need 2 succeeded deploys on same stage
           deploys(:succeeded_test).update_column(:reference, 'v4.1') # old is lower
           deploy.update_column(:reference, 'v4.3') # new is higher
           success!

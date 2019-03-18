@@ -305,7 +305,7 @@ describe JobExecution do
 
     before do
       stage.update_column(:builds_in_environment, true)
-      Samson::BuildFinder.any_instance.expects(:ensure_successful_builds).returns([build])
+      Samson::BuildFinder.any_instance.expects(:ensure_succeeded_builds).returns([build])
     end
 
     it "makes builds available via env" do

@@ -130,7 +130,7 @@ class ProjectsController < ResourceController
 
   # Avoiding N+1 queries on project index
   def last_deploy_for(project)
-    @projects_last_deployed_at ||= Deploy.successful.
+    @projects_last_deployed_at ||= Deploy.succeeded.
       last_deploys_for_projects.
       includes(:project, job: :user).
       index_by(&:project_id)

@@ -118,23 +118,23 @@ describe Stage do
     end
   end
 
-  describe '#last_successful_deploy' do
+  describe '#last_succeeded_deploy' do
     let(:project) { projects(:test) }
 
     it 'caches nil' do
       subject
       ActiveRecord::Relation.any_instance.expects(:first).returns nil
-      stage.last_successful_deploy.must_be_nil
+      stage.last_succeeded_deploy.must_be_nil
       ActiveRecord::Relation.any_instance.expects(:first).never
-      stage.last_successful_deploy.must_be_nil
+      stage.last_succeeded_deploy.must_be_nil
     end
 
-    it 'returns the last successful deploy for the stage' do
-      successful_job = project.jobs.create!(command: 'cat foo', user: users(:deployer), status: 'succeeded')
-      stage.deploys.create!(reference: 'master', job: successful_job, project: project)
+    it 'returns the last succeeded deploy for the stage' do
+      succeeded_job = project.jobs.create!(command: 'cat foo', user: users(:deployer), status: 'succeeded')
+      stage.deploys.create!(reference: 'master', job: succeeded_job, project: project)
       project.jobs.create!(command: 'cat foo', user: users(:deployer), status: 'failed')
-      deploy = stage.deploys.create!(reference: 'master', job: successful_job, project: project)
-      assert_equal deploy, stage.last_successful_deploy
+      deploy = stage.deploys.create!(reference: 'master', job: succeeded_job, project: project)
+      assert_equal deploy, stage.last_succeeded_deploy
     end
   end
 

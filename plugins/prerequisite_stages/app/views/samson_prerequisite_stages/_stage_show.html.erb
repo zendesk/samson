@@ -2,7 +2,7 @@
   <h2>Prerequisite Stages</h2>
 
   <div>
-    This stage can only deploy after these stages have successfully deployed:
+    This stage can only deploy after these stages have succeededly deployed:
     <%= unordered_list prerequisite_stages do |stage| %>
       <%= link_to stage.name, [@project, stage]%>
     <% end %>

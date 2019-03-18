@@ -1,1 +1,1 @@
-Pipeline deploys: a successful deploy kicks off the next deploy.
+Pipeline deploys: a succeeded deploy kicks off the next deploy.

@@ -115,7 +115,7 @@ describe Samson::Jenkins do
       deploy.stage.jenkins_job_names = 'foo,bar'
     end
 
-    it "stores successful deploys" do
+    it "stores succeeded deploys" do
       assert_difference('JenkinsJob.count', +2) { Samson::Jenkins.deployed!(deploy) }
       attributes.must_equal(
         "jenkins_job_id" => 123,

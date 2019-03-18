@@ -1,6 +1,6 @@
 <% if deploy.stage.jenkins_job_names? && deploy.jenkins_jobs.none? && deploy.active? %>
   <% deploy.stage.jenkins_job_names.to_s.split(/, ?/).map do |jenkins_job_name| %>
-    <div class="alert alert-info">Jenkins build <%= jenkins_job_name %> for <%= deploy.stage.name %> will start after successful deploy. Reload this page after deploy is finished to get latest status.</div>
+    <div class="alert alert-info">Jenkins build <%= jenkins_job_name %> for <%= deploy.stage.name %> will start after succeeded deploy. Reload this page after deploy is finished to get latest status.</div>
   <% end %>
 <% end %>
 

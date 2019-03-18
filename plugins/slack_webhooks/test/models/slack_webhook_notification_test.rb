@@ -159,7 +159,7 @@ describe SlackWebhookNotification do
       render.must_include ':x:'
     end
 
-    it 'uses a checkmark emoji for a successful deploy' do
+    it 'uses a checkmark emoji for a succeeded deploy' do
       render.must_include ':white_check_mark:'
     end
 

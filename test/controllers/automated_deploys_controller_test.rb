@@ -109,7 +109,7 @@ describe AutomatedDeploysController do
       Job.update_all(status: 'cancelled')
       post_create
       assert_response :bad_request
-      response.body.must_equal "{\"error\":\"Unable to find successful deploy for Automated Deploys\"}"
+      response.body.must_equal "{\"error\":\"Unable to find succeeded deploy for Automated Deploys\"}"
     end
 
     it "fails when deploy could not be started" do

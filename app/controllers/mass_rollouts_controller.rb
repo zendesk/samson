@@ -26,10 +26,10 @@ class MassRolloutsController < ApplicationController
       case params[:status].presence
       when nil # rubocop:disable Lint/EmptyWhen
         # all
-      when 'successful'
-        @stages.select!(&:last_successful_deploy)
+      when 'succeeded'
+        @stages.select!(&:last_succeeded_deploy)
       when 'missing'
-        @stages.reject!(&:last_successful_deploy)
+        @stages.reject!(&:last_succeeded_deploy)
       else
         return unsupported_option(:status)
       end
@@ -54,8 +54,8 @@ class MassRolloutsController < ApplicationController
     deploys = stages.map do |stage|
       reference =
         case params[:reference_source]
-        when 'template' then last_successful_template_reference(stage)
-        when 'redeploy' then stage.last_successful_deploy&.reference
+        when 'template' then last_successded_template_reference(stage)
+        when 'redeploy' then stage.last_succeeded_deploy&.reference
         else return unsupported_option(:reference_source)
         end
 
@@ -197,9 +197,9 @@ class MassRolloutsController < ApplicationController
     stage
   end
 
-  def last_successful_template_reference(stage)
+  def last_successded_template_reference(stage)
     template_stage = deploy_group.environment.template_stages.where(project_id: stage.project_id).first
-    template_stage&.last_successful_deploy&.reference
+    template_stage&.last_succeeded_deploy&.reference
   end
 
   def deploy_group
