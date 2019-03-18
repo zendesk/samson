@@ -181,7 +181,7 @@ class CommitStatus
   end
 
   def deploy_scope
-    @deploy_scope ||= Deploy.reorder(nil).successful.where(stage_id: @stage.influencing_stage_ids).group(:stage_id)
+    @deploy_scope ||= Deploy.reorder(nil).succeeded.where(stage_id: @stage.influencing_stage_ids).group(:stage_id)
   end
 
   def with_octokit_client_error_rescue

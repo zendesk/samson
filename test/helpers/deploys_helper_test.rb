@@ -202,7 +202,7 @@ describe DeploysHelper do
       deploy_favicon_path(deploy).must_equal "/images/favicons/32x32_yellow.png"
     end
 
-    it 'returns succeeded favicon if deploy was successful' do
+    it 'returns succeeded favicon if deploy was succeeded' do
       deploy_favicon_path(deploy).must_equal "/images/favicons/32x32_green.png"
     end
 

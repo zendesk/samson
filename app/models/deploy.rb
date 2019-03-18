@@ -89,16 +89,16 @@ class Deploy < ActiveRecord::Base
     stage.deploys.prior_to(self).first
   end
 
-  def previous_successful_deploy
-    stage.deploys.successful.prior_to(self).first
+  def previous_succeeded_deploy
+    stage.deploys.succeeded.prior_to(self).first
   end
 
-  def next_successful_deploy
-    stage.deploys.successful.after(self).first
+  def next_succeeded_deploy
+    stage.deploys.succeeded.after(self).first
   end
 
   def changeset
-    @changeset ||= changeset_to(previous_successful_deploy)
+    @changeset ||= changeset_to(previous_succeeded_deploy)
   end
 
   def changeset_to(other)
@@ -160,7 +160,7 @@ class Deploy < ActiveRecord::Base
     joins(:job).where(jobs: {status: 'running'})
   end
 
-  def self.successful
+  def self.succeeded
     joins(:job).where(jobs: {status: 'succeeded'})
   end
 

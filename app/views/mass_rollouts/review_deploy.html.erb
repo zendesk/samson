@@ -33,8 +33,8 @@
           <label>Deploy reference from</label>
         </div>
         <%= select_tag :reference_source, options_for_select([
-              ["Last successful deploy of template stage in same environment", "template"],
-              ["Last successful deploy", "redeploy"]
+              ["Last succeeded deploy of template stage in same environment", "template"],
+              ["Last succeeded deploy", "redeploy"]
             ]) %>
       </div>
 

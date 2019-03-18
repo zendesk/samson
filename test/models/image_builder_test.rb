@@ -87,7 +87,7 @@ describe ImageBuilder do
 
       before { ImageBuilder.expects(:build_image_locally).returns(image_id) }
 
-      it "removes when successful" do
+      it "removes when succeeded" do
         ImageBuilder.expects(:push_image).returns(digest)
         expect_removal
         call.must_equal digest

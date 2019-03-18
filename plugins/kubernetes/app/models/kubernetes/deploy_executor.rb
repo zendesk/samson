@@ -325,7 +325,7 @@ module Kubernetes
     # create a release, storing all the configuration
     def create_release
       release = Kubernetes::Release.create_release(
-        builds: build_finder.ensure_successful_builds,
+        builds: build_finder.ensure_succeeded_builds,
         deploy: @job.deploy,
         grouped_deploy_group_roles: grouped_deploy_group_roles,
         git_sha: @job.commit,
@@ -484,7 +484,7 @@ module Kubernetes
 
     def finish_blue_green_deployment(release_docs)
       switch_blue_green_service(release_docs)
-      previous = @release.previous_successful_release
+      previous = @release.previous_succeeded_release
       if previous && previous.blue_green_color != @release.blue_green_color
         previous.release_docs.each { |d| delete_blue_green_resources(d) }
       end

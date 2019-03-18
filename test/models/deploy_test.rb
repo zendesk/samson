@@ -185,32 +185,32 @@ describe Deploy do
     end
   end
 
-  describe "#previous_successful_deploy" do
+  describe "#previous_succeeded_deploy" do
     it "returns the deploy prior to that deploy" do
       deploy1 = create_deploy!
       deploy2 = create_deploy!
       deploy3 = create_deploy!
 
-      deploy2.previous_successful_deploy.must_equal deploy1
-      deploy3.previous_successful_deploy.must_equal deploy2
+      deploy2.previous_succeeded_deploy.must_equal deploy1
+      deploy3.previous_succeeded_deploy.must_equal deploy2
     end
 
-    it "excludes non-successful deploys" do
+    it "excludes non-succeeded deploys" do
       deploy1 = create_deploy!
       create_deploy!(job: create_job!(status: "errored"))
       deploy3 = create_deploy!
 
-      deploy3.previous_successful_deploy.must_equal deploy1
+      deploy3.previous_succeeded_deploy.must_equal deploy1
     end
   end
 
-  describe "#next_successful_deploy" do
-    it 'returns the next successful deploy' do
+  describe "#next_succeeded_deploy" do
+    it 'returns the next succeeded deploy' do
       deploy1 = create_deploy!
       create_deploy!(job: create_job!(status: "errored"))
       deploy3 = create_deploy!
 
-      deploy1.next_successful_deploy.must_equal deploy3
+      deploy1.next_succeeded_deploy.must_equal deploy3
     end
   end
 
@@ -350,9 +350,9 @@ describe Deploy do
     end
   end
 
-  describe ".successful" do
+  describe ".succeeded" do
     it "finds all succeeded deploys" do
-      Deploy.successful.must_equal [deploys(:succeeded_production_test), deploys(:succeeded_test)]
+      Deploy.succeeded.must_equal [deploys(:succeeded_production_test), deploys(:succeeded_test)]
     end
   end
 

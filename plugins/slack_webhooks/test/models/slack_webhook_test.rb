@@ -58,7 +58,7 @@ describe SlackWebhook do
   describe "#deliver_for?" do
     before { webhook.on_deploy_success = false }
 
-    describe "with successful deploy" do
+    describe "with succeeded deploy" do
       let(:deploy) { deploys(:succeeded_test) }
 
       it "does not deliver when everything is disabled" do

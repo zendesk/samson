@@ -110,7 +110,7 @@ describe Kubernetes::Release do
       it 'creates followup as green' do
         expect_file_contents_from_repo
         release.blue_green_color = "blue"
-        Kubernetes::Release.any_instance.expects(:previous_successful_release).returns(release)
+        Kubernetes::Release.any_instance.expects(:previous_succeeded_release).returns(release)
         assert_create_succeeds(release_params).blue_green_color.must_equal "green"
       end
     end
@@ -172,21 +172,21 @@ describe Kubernetes::Release do
     end
   end
 
-  describe "#previous_successful_release" do
+  describe "#previous_succeeded_release" do
     before { release.deploy = deploys(:failed_staging_test) }
 
-    it "finds successful release" do
-      release.previous_successful_release.must_equal kubernetes_releases(:test_release)
+    it "finds succeeded release" do
+      release.previous_succeeded_release.must_equal kubernetes_releases(:test_release)
     end
 
     it "is nil when non was found" do
       deploys(:succeeded_test).delete
-      release.previous_successful_release.must_be_nil
+      release.previous_succeeded_release.must_be_nil
     end
 
     it "is ignores failed releases" do
       deploys(:succeeded_test).job.update_column(:status, 'failed')
-      release.previous_successful_release.must_be_nil
+      release.previous_succeeded_release.must_be_nil
     end
   end
 

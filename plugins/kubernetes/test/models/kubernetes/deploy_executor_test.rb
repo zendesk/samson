@@ -172,7 +172,7 @@ describe Kubernetes::DeployExecutor do
       end
     end
 
-    it "show logs after successful deploy when requested" do
+    it "show logs after succeeded deploy when requested" do
       pod_reply[:items][0][:metadata][:annotations] = {'samson/show_logs_on_deploy' => 'true'}
       assert execute, out
       out.scan("LOGS:").size.must_equal 1 # shows for first but not for second pod
@@ -744,7 +744,7 @@ describe Kubernetes::DeployExecutor do
       doc.save!(validate: false)
     end
 
-    def create_previous_successful_release
+    def create_previous_succeeded_release
       other = Kubernetes::Release.new(
         user: release.user,
         project: release.project,
@@ -763,7 +763,7 @@ describe Kubernetes::DeployExecutor do
         copy.kubernetes_release = other
         copy
       end
-      Kubernetes::Release.any_instance.stubs(:previous_successful_release).returns(other)
+      Kubernetes::Release.any_instance.stubs(:previous_succeeded_release).returns(other)
     end
 
     let(:deployments_url) { "#{origin}/apis/extensions/v1beta1/namespaces/pod1/deployments" }
@@ -797,7 +797,7 @@ describe Kubernetes::DeployExecutor do
     end
 
     it "updates existing resources" do
-      create_previous_successful_release
+      create_previous_succeeded_release
 
       # deployment
       assert_request(:get, "#{deployments_url}/test-app-server-blue", to_return: {status: 404}) # blue did not exist

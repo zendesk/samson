@@ -94,7 +94,7 @@ Samson::Hooks.callback :stage_permitted_params do
   :block_on_gcr_vulnerabilities
 end
 
-Samson::Hooks.callback :ensure_build_is_successful do |*args|
+Samson::Hooks.callback :ensure_build_is_succeeded do |*args|
   SamsonGcloud.scan!(*args)
 end
 

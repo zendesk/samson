@@ -78,12 +78,12 @@ class Stage < ActiveRecord::Base
     @last_deploy = deploys.first
   end
 
-  def last_successful_deploy
-    return @last_successful_deploy if defined?(@last_successful_deploy)
-    @last_successful_deploy = deploys.successful.first
+  def last_succeeded_deploy
+    return @last_succeeded_deploy if defined?(@last_succeeded_deploy)
+    @last_succeeded_deploy = deploys.succeeded.first
   end
 
-  # last active or successful deploy
+  # last active or succeeded deploy
   def deployed_or_running_deploy
     deploys.joins(:job).where("jobs.status" => Job::ACTIVE_STATUSES + ["succeeded"]).first
   end
@@ -133,7 +133,7 @@ class Stage < ActiveRecord::Base
     # static notification
     emails.concat static_emails_on_automated_deploy_failure.to_s.split(/, ?/)
 
-    # authors of commits after last successful deploy
+    # authors of commits after last succeeded deploy
     if email_committers_on_automated_deploy_failure?
       changeset = deploy.changeset_to(last_deploy)
       emails.concat changeset.commits.map(&:author_email).compact

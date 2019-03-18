@@ -31,8 +31,8 @@ describe DeployService do
       before { BuddyCheck.stubs(:enabled?).returns(true) }
       let(:deploy) { deploys(:succeeded_production_test) }
 
-      def create_previous_deploy(ref, stage, successful: true, bypassed: false, commit: nil)
-        status = successful ? "succeeded" : 'failed'
+      def create_previous_deploy(ref, stage, succeeded: true, bypassed: false, commit: nil)
+        status = succeeded ? "succeeded" : 'failed'
         job = project.jobs.create!(user: user, command: "foo", status: status, commit: commit)
         buddy = bypassed ? user : other_user
         Deploy.create!(job: job, reference: ref, stage: stage, buddy: buddy, started_at: Time.now, project: project)
@@ -283,7 +283,7 @@ describe DeployService do
       before do
         service # cache instance
         deploy.redeploy_previous_when_failed = true
-        deploy.stubs(:previous_successful_deploy).returns(deploys(:succeeded_production_test))
+        deploy.stubs(:previous_succeeded_deploy).returns(deploys(:succeeded_production_test))
         Job.any_instance.stubs(:status).returns("failed")
       end
 
@@ -293,8 +293,8 @@ describe DeployService do
       end
 
       it "does nothing when it cannot find a previous deploy" do
-        deploy.unstub(:previous_successful_deploy)
-        deploy.expects(:previous_successful_deploy).returns(nil)
+        deploy.unstub(:previous_succeeded_deploy)
+        deploy.expects(:previous_succeeded_deploy).returns(nil)
         run_deploy false
       end
 

@@ -21,7 +21,7 @@ class StagesController < ResourceController
       end
       format.json do
         render_as_json :stage, @stage, allowed_includes: [
-          :last_deploy, :last_successful_deploy, :active_deploy
+          :last_deploy, :last_succeeded_deploy, :active_deploy
         ] do |reply|
           # deprecated way of inclusion, do not add more
           if params[:include] == "kubernetes_matrix"
@@ -31,7 +31,7 @@ class StagesController < ResourceController
       end
       format.svg do
         badge =
-          if deploy = @stage.last_successful_deploy
+          if deploy = @stage.last_succeeded_deploy
             "#{badge_safe(@stage.name)}-#{badge_safe(deploy.short_reference)}-green"
           else
             "#{badge_safe(@stage.name)}-None-red"

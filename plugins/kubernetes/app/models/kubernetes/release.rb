@@ -27,7 +27,7 @@ module Kubernetes
         release = create(params) do |release|
           if roles.flatten(1).any? { |dgr| dgr.kubernetes_role.blue_green? }
             release.blue_green_color = begin
-              release.previous_successful_release&.blue_green_color == "blue" ? "green" : "blue"
+              release.previous_succeeded_release&.blue_green_color == "blue" ? "green" : "blue"
             end
           end
         end
@@ -69,8 +69,8 @@ module Kubernetes
       Rails.application.routes.url_helpers.project_kubernetes_release_url(project, self)
     end
 
-    def previous_successful_release
-      deploy.previous_successful_deploy&.kubernetes_release
+    def previous_succeeded_release
+      deploy.previous_succeeded_deploy&.kubernetes_release
     end
 
     private

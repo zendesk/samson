@@ -9,7 +9,7 @@ namespace :reports do
       start = 1.year.ago + i.weeks
       range = start..(start + 1.week)
 
-      deploys = Deploy.where(created_at: range, kubernetes: true).successful.order(created_at: :asc).
+      deploys = Deploy.where(created_at: range, kubernetes: true).succeeded.order(created_at: :asc).
         uniq { |d| d.job.commit }
       builds = Build.where(git_sha: deploys.map { |d| d.job.commit }).order(created_at: :asc).
         group(:project_id, :git_sha)

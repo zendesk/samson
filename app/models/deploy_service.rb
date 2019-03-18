@@ -48,7 +48,7 @@ class DeployService
     job_execution.on_finish { notify_outbound_webhooks(deploy) }
     job_execution.on_finish do
       if deploy.redeploy_previous_when_failed? && deploy.status == "failed"
-        redeploy_previous_successful(deploy, job_execution.output)
+        redeploy_previous_succeeded(deploy, job_execution.output)
       end
     end
     job_execution.on_finish { Samson::Hooks.fire(:after_deploy, deploy, job_execution) }
@@ -60,9 +60,9 @@ class DeployService
 
   private
 
-  def redeploy_previous_successful(failed_deploy, output)
-    unless previous = failed_deploy.previous_successful_deploy
-      output.puts("Deploy failed, cannot find any previous successful deploy")
+  def redeploy_previous_succeeded(failed_deploy, output)
+    unless previous = failed_deploy.previous_succeeded_deploy
+      output.puts("Deploy failed, cannot find any previous succeeded deploy")
       return
     end
     reference = previous.exact_reference
@@ -72,7 +72,7 @@ class DeployService
       redeploy_previous_when_failed: false # prevent cascading redeploys
     )
     redeploy = deploy(previous.stage, attributes)
-    output.puts("Deploy failed, redeploying previously successful (#{previous.url} #{reference}) with #{redeploy.url}")
+    output.puts("Deploy failed, redeploying previously succeeded (#{previous.url} #{reference}) with #{redeploy.url}")
   end
 
   def update_average_deploy_time(deploy)

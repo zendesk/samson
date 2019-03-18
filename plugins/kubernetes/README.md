@@ -212,7 +212,7 @@ Samson automatically adds `container[].lifecycle.preStop` `sleep 3` if a preStop
 `container[].samson/preStop` is not set to `disabled`, to prevent in-flight requests from getting lost when taking a pod
 out of rotation (alternatively set `metadata.annoations.container-nameofcontainer-samson/preStop: disabled`).
 
-### Showing logs on successful deploys
+### Showing logs on succeeded deploys
 
 Set `metadata.annoations.samson/show_logs_on_deploy: 'true'` on pods, to see logs when the deploy succeeds.
 This can be useful for Migrations (see above).

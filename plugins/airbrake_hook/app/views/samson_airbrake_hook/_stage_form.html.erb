@@ -2,7 +2,7 @@
   <fieldset>
     <legend>Airbrake</legend>
     <%= form.input :notify_airbrake, as: :check_box, label: "Notify airbrake on deploy",
-          help: "Only for deploys that: are successful, go to a deploy group that has airbrake_api_key secret set, go to an environments with a Rails env like name (staging/production)"
+          help: "Only for deploys that: are succeeded, go to a deploy group that has airbrake_api_key secret set, go to an environments with a Rails env like name (staging/production)"
     %>
   </fieldset>
 <% end %>

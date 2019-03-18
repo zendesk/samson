@@ -212,7 +212,7 @@ class JobExecution
 
   def make_builds_available
     # wait for builds to finish
-    builds = build_finder.ensure_successful_builds
+    builds = build_finder.ensure_succeeded_builds
 
     # pre-download the necessary images in case they are not public
     ImageBuilder.local_docker_login do |login_commands|

@@ -118,12 +118,12 @@ describe StagesController do
         it 'renders deploys mentioned in the include param' do
           get :show, params: {
             project_id: subject.project.to_param, id: subject.to_param,
-            includes: "last_deploy,last_successful_deploy,active_deploy"
+            includes: "last_deploy,last_succeeded_deploy,active_deploy"
           }, format: :json
           assert_response :success
-          json.keys.must_equal ["stage", "last_deploys", "last_successful_deploys", "active_deploys"]
+          json.keys.must_equal ["stage", "last_deploys", "last_succeeded_deploys", "active_deploys"]
           json["stage"].keys.must_include 'last_deploy_id'
-          json["stage"].keys.must_include 'last_successful_deploy_id'
+          json["stage"].keys.must_include 'last_succeeded_deploy_id'
           json["stage"].keys.must_include 'active_deploy_id'
         end
       end
