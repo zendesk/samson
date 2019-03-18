@@ -15,11 +15,18 @@ class DeployMetrics
   def cycle_time
     return {} unless @deploy&.production && @deploy&.status == "succeeded"
 
+    stages = @deploy.project.stages
+    production_stages, staging_stages = stages.partition(&:production?)
+    scope = Deploy.successful.where(jobs: {commit: @deploy.commit}).reorder(:id)
+    return {} unless @deploy == scope.where(stage: production_stages).first!
+
+    first_staging_deploy = scope.where(stage: staging_stages).first
+
     times = {}
     if time = pr_production
       times[:pr_production] = time
     end
-    if time = staging_production
+    if time = staging_production(first_staging_deploy)
       times[:staging_production] = time
     end
     times
@@ -36,15 +43,9 @@ class DeployMetrics
   end
 
   # Time it took from first staging deploy to finish until the first production deploy finished
-  def staging_production
-    stages = @deploy.project.stages
-    production, staging = stages.partition(&:production?)
-
-    scope = Deploy.successful.where(jobs: {commit: @deploy.commit}).reorder(:id)
-    return nil unless first_staging_deploy = scope.where(stage: staging).first
-    # should always exists since we have a check in cycle_time method
-    first_production_deploy = scope.where(stage: production).first!
-
-    first_production_deploy.updated_at.to_i - first_staging_deploy.updated_at.to_i
+  # (this can end up being negative if production was done before staging)
+  def staging_production(staging)
+    return nil unless staging
+    @deploy.updated_at.to_i - staging.updated_at.to_i
   end
 end

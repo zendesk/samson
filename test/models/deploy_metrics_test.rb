@@ -4,119 +4,63 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe DeployMetrics do
-  let(:now) { Time.now }
-  let(:project) { projects(:test) }
-  let(:stage) { stages(:test_staging) }
-  let(:user) { users(:deployer) }
-  let(:deploy) { deploys(:succeeded_test) }
-  let(:deploy_metrics) { DeployMetrics.new(deploy) }
+  let(:deploy) { deploys(:succeeded_production_test) }
+  let(:staging_deploy) { deploys(:succeeded_test) }
+  let(:cycle_time) { DeployMetrics.new(deploy).cycle_time }
 
   describe "#cycle_time" do
-    describe "production deployment with no staging deployment" do
-      let(:deploy) { deploys(:succeeded_production_test) }
-      let(:deploy_metrics) { DeployMetrics.new(deploy) }
-      before do
-        deploy.updated_at = now + 25
-        deploy.changeset.expects(:pull_requests).
-          returns([stub("commit 1", created_at: now), stub("commit 2", created_at: now + 10)])
-      end
+    before do
+      # stop time to avoid random test errors
+      now = Time.now
+      Time.stubs(:now).returns(now)
+      deploy.update_column(:updated_at, now - 25)
 
-      it "returns pr_production cycle time" do
-        deploy_metrics.cycle_time[:pr_production].must_equal 20
-      end
+      # make staging deploy match deploy
+      staging_deploy.job.update_column(:commit, deploy.commit)
+      staging_deploy.update_column(:updated_at, now - 50)
 
-      it "returns nil for staging_production cycle time" do
-        deploy_metrics.cycle_time[:staging_production].must_equal nil
-      end
+      # fake some PRs
+      deploy.changeset.stubs(:pull_requests).
+        returns(
+          [
+            stub("commit 1", created_at: now - 30),
+            stub("commit 2", created_at: now - 50)
+          ]
+        )
     end
 
-    describe "production deployment with staging deployment" do
-      let(:deploy1) do
-        create_deploy!(reference: deploy.commit, stage: stages(:test_production), updated_at: now + 25)
-      end
-      let(:deploy2) do
-        create_deploy!(reference: deploy1.commit, stage: stages(:test_production), updated_at: now + 50)
-      end
-      let(:deploy_metrics) { DeployMetrics.new(deploy2) }
-      before do
-        deploy2.changeset.expects(:pull_requests).
-          returns([stub("commit 1", created_at: now), stub("commit 2", created_at: now + 10)])
-      end
-
-      it "returns pr_production cycle time" do
-        deploy_metrics.cycle_time[:pr_production].must_equal 45
-      end
-
-      it "returns staging_production cycle time" do
-        expected = deploy1.updated_at.to_i - deploy.updated_at.to_i
-        deploy_metrics.cycle_time[:staging_production].must_equal expected
-      end
+    it "reports cycle times" do
+      cycle_time.must_equal(
+        pr_production: 15, # (30 - 25 + 50 - 25) / 2
+        staging_production: 25
+      )
     end
 
-    describe "production deployment with no changes deployed" do
-      let(:deploy) { deploys(:succeeded_production_test) }
-      let(:deploy_metrics) { DeployMetrics.new(deploy) }
-      before do
-        deploy.updated_at = now + 25
-        deploy.changeset.expects(:pull_requests).returns([])
-      end
-
-      it "returns nil for pr_production cycle time" do
-        deploy_metrics.cycle_time[:pr_production].must_equal nil
-      end
-
-      it "returns nil for staging_production cycle time" do
-        deploy_metrics.cycle_time[:staging_production].must_equal nil
-      end
+    it "ignores failed deploys" do
+      deploy.job.update_column(:status, "failed")
+      cycle_time.must_equal({})
     end
 
-    describe "production deployment with unsuccessful staging deployment" do
-      let(:deploy) { deploys(:failed_staging_test) }
-      let(:deploy1) do
-        create_deploy!(reference: deploy.commit, stage: stages(:test_production), updated_at: now + 25)
-      end
-      let(:deploy_metrics) { DeployMetrics.new(deploy1) }
-      before do
-        deploy1.changeset.expects(:pull_requests).
-          returns([stub("commit 1", created_at: now), stub("commit 2", created_at: now + 10)])
-      end
-
-      it "returns pr_production cycle time" do
-        deploy_metrics.cycle_time[:pr_production].must_equal 20
-      end
-
-      it "returns nil for staging_production cycle time if no successful staging deployment" do
-        deploy_metrics.cycle_time[:staging_production].must_equal nil
-      end
+    it "ignores non-production deploys" do
+      deploy.stage = stages(:test_staging)
+      cycle_time.must_equal({})
     end
 
-    describe "staging deployment" do
-      it "returns {} for cycle time" do
-        deploy_metrics.cycle_time.blank?.must_equal true
-      end
+    it "does not report staging_production when there was no staging deploy" do
+      staging_deploy.job.update_column(:commit, 'a' * 40)
+      cycle_time.must_equal(pr_production: 15)
     end
-  end
 
-  def create_deploy!(attrs = {})
-    default_attrs = {
-      reference: "baz",
-      job: create_job!(commit: attrs[:reference]),
-      project: project
-    }
+    it "does not report when this was not the first production deploy" do
+      other = deploys(:failed_staging_test)
+      other.update_columns(stage_id: deploy.stage_id, id: deploy.id - 1)
+      other.job.update_columns(commit: deploy.commit, status: "succeeded")
+      cycle_time.must_equal({})
+    end
 
-    deploy_stage = attrs.delete(:stage) || stage
-
-    deploy_stage.deploys.create!(default_attrs.merge(attrs))
-  end
-
-  def create_job!(attrs = {})
-    default_attrs = {
-      project: project,
-      command: "echo hello world",
-      status: "succeeded",
-      user: user
-    }
-
-    Job.create!(default_attrs.merge(attrs))
+    it "does not report PR time when there are no PRs" do
+      deploy.changeset.pull_requests.clear
+      cycle_time.must_equal(staging_production: 25)
+    end
   end
 end
