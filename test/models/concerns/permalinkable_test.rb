@@ -39,6 +39,16 @@ describe Permalinkable do
       stage = project.stages.create!(name: "SDF∂ƒß∂fsƒ.&  XXX")
       stage.permalink.must_equal "sdf-ss-fs-xxx"
     end
+
+    it "does not override given permalink" do
+      stage = project.stages.create!(name: "SDF∂ƒß∂fsƒ.&  XXX", permalink: 'given')
+      stage.permalink.must_equal "given"
+    end
+
+    it "does not allow invalid permalink" do
+      project.permalink = "OHNO"
+      refute_valid project
+    end
   end
 
   describe ".find_by_param!" do
@@ -70,6 +80,7 @@ describe Permalinkable do
   describe "validations" do
     let(:duplicate) do
       duplicate = record.dup
+      duplicate.permalink = nil
       duplicate.stubs(:clone_repository).returns(true)
       duplicate.stubs(:clean_repository).returns(true)
       duplicate
