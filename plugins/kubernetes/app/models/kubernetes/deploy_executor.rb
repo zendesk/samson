@@ -14,16 +14,25 @@ module Kubernetes
     TICK = Integer(ENV.fetch('KUBERNETES_STABILITY_CHECK_TICK', 2.seconds))
     RESTARTED = "Restarted"
 
-    # TODO: this logic might be able to go directly into Pod, which would simplify the code here a bit
-    class ReleaseStatus
-      attr_reader :live, :stop, :details, :pod, :role, :group
-      def initialize(stop: false, live:, details:, pod:, role:, group:)
+    class ResourceStatus
+      attr_reader :live, :stop, :details, :role, :group, :resource
+      def initialize(stop: false, live:, details:, resource:, pod:, role:, group:)
         @live = live
         @stop = stop
         @details = details
         @pod = pod
+        @resource = resource
         @role = role
         @group = group
+      end
+
+      def pod?
+        @pod
+      end
+
+      # TODO: use resource
+      def pod
+        @resource if pod?
       end
     end
 
@@ -82,8 +91,8 @@ module Kubernetes
       @output.puts "Waiting for pods to be created"
 
       loop do
-        statuses = pod_statuses(release_docs)
-        if statuses.none?
+        statuses = all_resource_statuses(release_docs)
+        if statuses.none?(&:pod?)
           @output.puts "No pods were created"
           return success, statuses
         end
@@ -95,13 +104,13 @@ module Kubernetes
           print_statuses(statuses)
           if too_many_not_ready
             if stopped = not_ready_statuses.select(&:stop).presence
-              unstable!('one or more pods stopped', stopped)
+              unstable!('one or more resources failed', stopped)
               return false, statuses
             elsif (Time.now.to_i - wait_start_time) > timeout
               @output.puts "TIMEOUT, pods took too long to get live"
               return false, statuses
             end
-          elsif ready_statuses.all? { |s| s.pod.completed? }
+          elsif ready_statuses.all? { |s| !s.pod? || s.pod.completed? }
             return success, statuses
           else
             @output.puts "READY, starting stability test"
@@ -111,7 +120,7 @@ module Kubernetes
         else
           if too_many_not_ready
             print_statuses(statuses)
-            unstable!('one or more pods are not live', not_ready_statuses)
+            unstable!('one or more resources failed', not_ready_statuses)
             return false, statuses
           else
             remaining = [wait_start_time + STABILITY_CHECK_DURATION - Time.now.to_i, 0].max
@@ -129,9 +138,9 @@ module Kubernetes
       remaining == 0
     end
 
-    def pod_statuses(release_docs)
+    def all_resource_statuses(release_docs)
       pods = fetch_pods
-      release_docs.flat_map { |release_doc| release_statuses(pods, release_doc) }
+      release_docs.flat_map { |release_doc| resource_statuses(pods, release_doc) }
     end
 
     # efficient pod fetching by querying once per cluster instead of once per deploy group
@@ -200,6 +209,7 @@ module Kubernetes
     # show what happened at the resource level ... need uid to avoid showing previous events
     def print_resource_events(doc)
       doc.resources.each do |resource|
+        next unless resource.resource
         events = Kubernetes::EventReader.events(doc.deploy_group.kubernetes_cluster.client('v1'), resource.resource)
         next if events.none?
         @output.puts "RESOURCE EVENTS #{resource.namespace}.#{resource.name}:"
@@ -225,48 +235,64 @@ module Kubernetes
       end
     end
 
-    def unstable!(reason, bad_release_statuses)
+    def unstable!(reason, bad_resource_statuses)
       @output.puts "UNSTABLE: #{reason}"
-      bad_release_statuses.select(&:pod).each do |status|
-        @output.puts "  #{pod_identifier(status.pod)}: #{status.details}"
+      bad_resource_statuses.select(&:resource).each do |status|
+        # TODO: resource needs deploy group too
+        name = status.pod? ? pod_identifier(status.pod) : status.resource.dig(:metadata, :name)
+        @output.puts "  #{name}: #{status.details}"
       end
     end
 
-    def release_statuses(pods, release_doc)
+    def resource_statuses(pods, release_doc)
       group = release_doc.deploy_group
       role = release_doc.kubernetes_role
 
-      pods = pods.select { |pod| pod.role_id == role.id && pod.deploy_group_id == group.id }
-
-      statuses = Array.new(release_doc.desired_pod_count).each_with_index.map do |_, i|
-        pod = pods[i]
-
-        status = if !pod
-          {live: false, details: "Missing", pod: pod}
-        elsif pod.restarted?
-          {live: false, stop: true, details: "Restarted", pod: pod}
-        elsif pod.failed?
-          {live: false, stop: true, details: "Failed", pod: pod}
-        elsif release_doc.prerequisite? ? pod.completed? : pod.live?
-          {live: true, details: "Live", pod: pod}
-        elsif pod.waiting_for_resources?
-          {live: false, details: "Waiting for resources (#{pod.phase}, #{pod.reason})", pod: pod}
-        elsif pod.events_indicate_failure?
-          {live: false, stop: true, details: "Error event", pod: pod}
+      resource_statuses = release_doc.resources.map do |resource|
+        res = resource.resource
+        template = resource.instance_variable_get(:@template)
+        kind = template.fetch(:kind)
+        next if kind == "Pod" # handled via pod_statuses
+        if !res
+          {live: false, stop: true, details: "Missing resource", resource: {kind: kind}, pod: false}
         else
-          {live: false, details: "Waiting (#{pod.phase}, #{pod.reason})", pod: pod}
+          events = Kubernetes::EventReader.events(release_doc.deploy_group.kubernetes_cluster.client('v1'), res)
+          if events.any? { |e| e.fetch(:type) != 'Normal' }
+            {live: false, stop: true, details: "#{kind} Error event", resource: res, pod: false}
+          else
+            {live: true, details: "#{kind} Created", resource: res, pod: false}
+          end
         end
+      end.compact
 
-        status[:details] += " (autoscaled role, only showing one pod)" if role.autoscaled?
-        status
+      pods = pods.select { |pod| pod.role_id == role.id && pod.deploy_group_id == group.id }
+      pod_statuses = Array.new(release_doc.desired_pod_count).each_with_index.map do |_, i|
+        if !(pod = pods[i])
+          {live: false, details: "Missing", resource: nil, pod: true}
+        elsif pod.restarted?
+          {live: false, stop: true, details: "Restarted", resource: pod, pod: true}
+        elsif pod.failed?
+          {live: false, stop: true, details: "Failed", resource: pod, pod: true}
+        elsif release_doc.prerequisite? ? pod.completed? : pod.live?
+          {live: true, details: "Live", resource: pod, pod: true}
+        elsif pod.waiting_for_resources?
+          {live: false, details: "Waiting for resources (#{pod.phase}, #{pod.reason})", resource: pod, pod: true}
+        elsif pod.events_indicate_failure?
+          {live: false, stop: true, details: "Error event", resource: pod, pod: true}
+        else
+          {live: false, details: "Waiting (#{pod.phase}, #{pod.reason})", resource: pod, pod: true}
+        end
       end
 
       # If a role is autoscaled, there is a chance pods can be deleted during a deployment.
       # Sort them by "most alive" and use the first one, so we ensure at least one pods works.
-      statuses.sort_by!(&method(:pod_liveliness)).slice!(1..-1) if role.autoscaled?
+      if role.autoscaled?
+        pod_statuses.each { |s| s[:details] += " (autoscaled role, only showing one pod)" }
+        pod_statuses.sort_by!(&method(:pod_liveliness)).slice!(1..-1)
+      end
 
-      statuses.map do |status|
-        ReleaseStatus.new(status.merge(role: role.name, group: group.name))
+      (resource_statuses + pod_statuses).map do |status|
+        ResourceStatus.new(status.merge!(role: role.name, group: group.name))
       end
     end
 
@@ -280,12 +306,12 @@ module Kubernetes
       end
     end
 
-    def print_statuses(status_groups)
+    def print_statuses(statuses)
       return if @last_status_output && @last_status_output > 10.seconds.ago
 
       @last_status_output = Time.now
       @output.puts "Deploy status:"
-      status_groups.group_by(&:group).each do |group, statuses|
+      statuses.group_by(&:group).each do |group, statuses|
         statuses.each do |status|
           @output.puts "  #{group} #{status.role}: #{status.details}"
         end

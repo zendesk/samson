@@ -378,7 +378,7 @@ describe Kubernetes::DeployExecutor do
 
     it "stops when detecting a restart and pod goes missing" do
       worker_is_unstable
-      Kubernetes::DeployExecutor::ReleaseStatus.any_instance.stubs(:pod)
+      Kubernetes::DeployExecutor::ResourceStatus.any_instance.stubs(:pod)
 
       refute execute
 
