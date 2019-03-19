@@ -14,19 +14,6 @@ module Kubernetes
     TICK = Integer(ENV.fetch('KUBERNETES_STABILITY_CHECK_TICK', 2.seconds))
     RESTARTED = "Restarted"
 
-    # TODO: this logic might be able to go directly into Pod, which would simplify the code here a bit
-    class ReleaseStatus
-      attr_reader :live, :stop, :details, :pod, :role, :group
-      def initialize(stop: false, live:, details:, pod:, role:, group:)
-        @live = live
-        @stop = stop
-        @details = details
-        @pod = pod
-        @role = role
-        @group = group
-      end
-    end
-
     def initialize(job, output)
       @output = output
       @job = job
@@ -94,14 +81,14 @@ module Kubernetes
         if waiting_for_ready
           print_statuses(statuses)
           if too_many_not_ready
-            if stopped = not_ready_statuses.select(&:stop).presence
+            if stopped = not_ready_statuses.select(&:finished).presence
               unstable!('one or more pods stopped', stopped)
               return false, statuses
             elsif (Time.now.to_i - wait_start_time) > timeout
               @output.puts "TIMEOUT, pods took too long to get live"
               return false, statuses
             end
-          elsif ready_statuses.all? { |s| s.pod.completed? }
+          elsif ready_statuses.all?(&:finished)
             return success, statuses
           else
             @output.puts "READY, starting stability test"
@@ -137,15 +124,16 @@ module Kubernetes
     # efficient pod fetching by querying once per cluster instead of once per deploy group
     def fetch_pods
       @release.clients.flat_map do |client, query|
-        pods = SamsonKubernetes.retry_on_connection_errors { client.get_pods(query).fetch(:items) }
-        pods.map! { |p| Kubernetes::Api::Pod.new(p, client: client) }
+        SamsonKubernetes.retry_on_connection_errors { client.get_pods(query).fetch(:items) }
       end
     end
 
     def show_logs_on_deploy_if_requested(statuses)
-      pods = statuses.map(&:pod).compact.select { |p| p.annotations[:'samson/show_logs_on_deploy'] == 'true' }
+      statuses = statuses.select do |s|
+        s.resource&.dig(:metadata, :annotations, :'samson/show_logs_on_deploy') == 'true'
+      end
       log_end = Time.now # here to be consistent for all pods
-      pods.each { |pod| print_pod_details(pod, log_end, events: false) }
+      statuses.each { |status| print_pod_details(status, log_end, events: false) }
     rescue StandardError
       info = ErrorNotifier.notify($!, sync: true)
       @output.puts "Error showing logs: #{info}"
@@ -154,9 +142,9 @@ module Kubernetes
     def show_failure_cause(release_docs, statuses)
       release_docs.each { |doc| print_resource_events(doc) }
       log_end_time = Integer(ENV['KUBERNETES_LOG_TIMEOUT'] || '20').seconds.from_now
-      debug_pods = statuses.reject(&:live).select(&:pod).group_by(&:role).map { |_, g| g.first.pod }
-      debug_pods.each do |pod|
-        print_pod_details(pod, log_end_time, events: true)
+      debug_statuses = statuses.reject(&:live).select(&:resource).group_by(&:role).each_value.map(&:first)
+      debug_statuses.each do |status|
+        print_pod_details(status, log_end_time, events: true)
       end
     rescue
       info = ErrorNotifier.notify($!, sync: true)
@@ -167,25 +155,26 @@ module Kubernetes
       )
     end
 
-    def print_pod_details(pod, log_end_time, events:)
-      @output.puts "\n#{pod_identifier(pod)}:"
+    def print_pod_details(status, log_end_time, events:)
+      @output.puts "\n#{pod_identifier(status)}:"
       if events
-        print_pod_events(pod)
+        print_pod_events(status)
         @output.puts
       end
-      print_pod_logs(pod, log_end_time)
+      print_pod_logs(status.pod, log_end_time)
       @output.puts "\n------------------------------------------\n"
     end
 
-    def pod_identifier(pod)
-      "#{deploy_group_for_pod(pod).name} Pod #{pod.name}"
+    def pod_identifier(status)
+      name = status.resource&.dig(:metadata, :name)
+      "#{status.deploy_group.name} #{status.kind} #{name}"
     end
 
     # show why container failed to boot
     def print_pod_logs(pod, end_time)
       @output.puts "LOGS:"
 
-      containers_names = (pod.containers + pod.init_containers).map { |c| c.fetch(:name) }.uniq
+      containers_names = pod.container_names
       containers_names.each do |container_name|
         @output.puts "Container #{container_name}" if containers_names.size > 1
 
@@ -197,37 +186,28 @@ module Kubernetes
       end
     end
 
-    # TODO: unify with plugins/kubernetes/app/models/kubernetes/api/pod.rb#events
     def print_resource_events(doc)
       # ignores pods since we print their events already
       resources = doc.resources.reject { |r| r.is_a?(Kubernetes::Resource::Pod) }
 
       resources.each do |resource|
-        # do not rely on uid, when creation fails we don't get one
-        events = doc.deploy_group.kubernetes_cluster.client('v1').get_events(
-          namespace: resource.namespace,
-          field_selector: "involvedObject.name=#{resource.name},involvedObject.kind=#{resource.kind}"
-        ).fetch(:items)
-
-        # ignore events from before the deploy, comparing strings for speed
-        events.select! { |e| e.dig(:metadata, :creationTimestamp) >= @deploy_start_time }
-
+        status = ResourceStatus.new(
+          # does not use resource.resource to also see events for failed creation
+          deploy_group: doc.deploy_group, resource: resource.template, start: @deploy_start_time
+        )
+        events = status.events
         next if events.none?
 
-        # https://github.com/kubernetes/kubernetes/issues/29838
-        events.sort_by! { |e| e.dig(:metadata, :creationTimestamp) }
-
-        # TODO: unify with pod_identifier
-        @output.puts "RESOURCE EVENTS #{doc.deploy_group.name} #{resource.kind} #{resource.name}:"
+        @output.puts "RESOURCE EVENTS #{pod_identifier(status)}:"
         print_events(events)
       end
     end
 
     # show what happened in kubernetes internally since we might not have any logs
     # reloading the events so we see things added during+after pod restart
-    def print_pod_events(pod)
+    def print_pod_events(status)
       @output.puts "POD EVENTS:"
-      print_events(pod.events(reload: true))
+      print_events(status.events)
     end
 
     def print_events(events)
@@ -242,8 +222,8 @@ module Kubernetes
 
     def unstable!(reason, bad_release_statuses)
       @output.puts "UNSTABLE: #{reason}"
-      bad_release_statuses.select(&:pod).each do |status|
-        @output.puts "  #{pod_identifier(status.pod)}: #{status.details}"
+      bad_release_statuses.select(&:resource).each do |status|
+        @output.puts "  #{pod_identifier(status)}: #{status.details}"
       end
     end
 
@@ -251,48 +231,36 @@ module Kubernetes
       group = release_doc.deploy_group
       role = release_doc.kubernetes_role
 
-      pods = pods.select { |pod| pod.role_id == role.id && pod.deploy_group_id == group.id }
+      pods = pods.select do |pod|
+        labels = pod.dig_fetch(:metadata, :labels)
+        Integer(labels.fetch(:role_id)) == role.id && Integer(labels.fetch(:deploy_group_id)) == group.id
+      end
 
       statuses = Array.new(release_doc.desired_pod_count).each_with_index.map do |_, i|
-        pod = pods[i]
-
-        status = if !pod
-          {live: false, details: "Missing", pod: pod}
-        elsif pod.restarted?
-          {live: false, stop: true, details: "Restarted", pod: pod}
-        elsif pod.failed?
-          {live: false, stop: true, details: "Failed", pod: pod}
-        elsif release_doc.prerequisite? ? pod.completed? : pod.live?
-          {live: true, details: "Live", pod: pod}
-        elsif pod.waiting_for_resources?
-          {live: false, details: "Waiting for resources (#{pod.phase}, #{pod.reason})", pod: pod}
-        elsif pod.events_indicate_failure?
-          {live: false, stop: true, details: "Error event", pod: pod}
-        else
-          {live: false, details: "Waiting (#{pod.phase}, #{pod.reason})", pod: pod}
-        end
-
-        status[:details] += " (autoscaled role, only showing one pod)" if role.autoscaled?
-        status
-      end
+        ResourceStatus.new(
+          resource: pods[i],
+          kind: "Pod",
+          role: role,
+          deploy_group: group,
+          prerequisite: release_doc.prerequisite?,
+          start: @deploy_start_time
+        )
+      end.each(&:check)
 
       # If a role is autoscaled, there is a chance pods can be deleted during a deployment.
       # Sort them by "most alive" and use the first one, so we ensure at least one pods works.
-      statuses.sort_by!(&method(:pod_liveliness)).slice!(1..-1) if role.autoscaled?
-
-      statuses.map do |status|
-        ReleaseStatus.new(status.merge(role: role.name, group: group.name))
+      if role.autoscaled?
+        statuses.sort_by! do |status|
+          if status.live
+            -1
+          else
+            status.finished ? 1 : 0
+          end
+        end.slice!(1..-1)
+        statuses.each { |s| s.details += " (autoscaled role, only showing one pod)" }
       end
-    end
 
-    def pod_liveliness(status_hash)
-      if status_hash[:live]
-        -1
-      elsif status_hash[:stop]
-        1
-      else
-        0
-      end
+      statuses
     end
 
     def print_statuses(status_groups)
@@ -300,9 +268,9 @@ module Kubernetes
 
       @last_status_output = Time.now
       @output.puts "Deploy status:"
-      status_groups.group_by(&:group).each do |group, statuses|
+      status_groups.group_by(&:deploy_group).each do |deploy_group, statuses|
         statuses.each do |status|
-          @output.puts "  #{group} #{status.role}: #{status.details}"
+          @output.puts "  #{deploy_group.name} #{status.role.name}: #{status.details}"
         end
       end
     end
@@ -440,11 +408,6 @@ module Kubernetes
     def success
       @output.puts "SUCCESS"
       true
-    end
-
-    # find deploy group without extra sql queries
-    def deploy_group_for_pod(pod)
-      @release.release_docs.detect { |rd| break rd.deploy_group if rd.deploy_group_id == pod.deploy_group_id }
     end
 
     # vary by role and not by deploy-group

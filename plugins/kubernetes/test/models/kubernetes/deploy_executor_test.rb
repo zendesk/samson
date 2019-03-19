@@ -65,6 +65,7 @@ describe Kubernetes::DeployExecutor do
         resourceVersion: "1",
         items: [kubernetes_roles(:resque_worker), kubernetes_roles(:app_server)].map do |role|
           {
+            kind: "Pod",
             status: {
               phase: "Running",
               conditions: [{type: "Ready", status: "True"}],
@@ -378,7 +379,8 @@ describe Kubernetes::DeployExecutor do
 
     it "stops when detecting a restart and pod goes missing" do
       worker_is_unstable
-      Kubernetes::DeployExecutor::ReleaseStatus.any_instance.stubs(:pod)
+      Kubernetes::ResourceStatus.any_instance.stubs(:pod)
+      Kubernetes::ResourceStatus.any_instance.stubs(:resource)
 
       refute execute
 
@@ -405,7 +407,7 @@ describe Kubernetes::DeployExecutor do
                 type: 'Warning',
                 reason: 'Unhealthy',
                 message: "kubelet, ip-12-34-56-78 Liveness probe failed: Get http://12.34.56.78/ping",
-                metadata: {creationTimestamp: "2017-03-31T22:56:20Z"}
+                metadata: {creationTimestamp: 1.minute.from_now.iso8601}
               }
             ]
           }.to_json
@@ -416,7 +418,8 @@ describe Kubernetes::DeployExecutor do
       out.must_include "resque-worker: Error event\n"
       out.must_include "UNSTABLE"
 
-      assert_requested request, times: 6 # fetches pod events twice and once for 4 different resources
+      # once for first pod, then stops + 4 different resource events + once to debug failed pod
+      assert_requested request, times: 6
     end
 
     it "waits when node needs to auto-scale" do
@@ -429,7 +432,7 @@ describe Kubernetes::DeployExecutor do
                 type: 'Warning',
                 reason: 'FailedScheduling',
                 message: "0/20 nodes are available: 17 Insufficient cpu, 3 Insufficient memory.",
-                metadata: {creationTimestamp: "2017-03-31T22:56:20Z"}
+                metadata: {creationTimestamp: 1.minute.from_now.iso8601}
               }
             ]
           }.to_json
@@ -438,7 +441,7 @@ describe Kubernetes::DeployExecutor do
       cancel_after_first_iteration
       assert_raises(JobQueue::Cancel) { execute }
 
-      assert_requested request
+      assert_requested request, times: 1 # for first pod and then stops
       out.must_include "resque-worker: Waiting for resources (Pending, Unknown)\n"
     end
 

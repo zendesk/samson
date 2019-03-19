@@ -5,6 +5,8 @@ module Kubernetes
       INIT_CONTAINER_KEY = :'pod.beta.kubernetes.io/init-containers'
       INGORED_AUTOSCALE_EVENT_REASONS = %w[FailedGetMetrics FailedRescale].freeze
 
+      attr_writer :events
+
       def self.init_containers(pod)
         containers = pod.dig(:spec, :initContainers) || []
         if json = pod.dig(:metadata, :annotations, Kubernetes::Api::Pod::INIT_CONTAINER_KEY)
@@ -16,18 +18,6 @@ module Kubernetes
       def initialize(api_pod, client: nil)
         @pod = api_pod
         @client = client
-      end
-
-      def name
-        @pod.dig(:metadata, :name)
-      end
-
-      def namespace
-        @pod.dig(:metadata, :namespace)
-      end
-
-      def annotations
-        @pod[:metadata][:annotations] ||= {}
       end
 
       def live?
@@ -59,16 +49,8 @@ module Kubernetes
         reasons.reject(&:blank?).uniq.join("/").presence || "Unknown"
       end
 
-      def deploy_group_id
-        Integer(labels.fetch(:deploy_group_id))
-      end
-
-      def role_id
-        Integer(labels.fetch(:role_id))
-      end
-
-      def containers
-        @pod.dig(:spec, :containers)
+      def container_names
+        (@pod.dig(:spec, :containers) + self.class.init_containers(@pod)).map { |c| c.fetch(:name) }.uniq
       end
 
       # tries to get logs from current or previous pod depending on if it restarted
@@ -91,24 +73,11 @@ module Kubernetes
         events.any? && events_indicating_failure.all? { |e| e[:reason] == "FailedScheduling" }
       end
 
-      def events(reload: false)
-        @events = nil if reload
-        @events ||= raw_events.select do |event|
-          # ignore events from old pods if this is a statefulset pod / static pod
-          # compare strings to avoid parsing time '2017-03-31T22:56:20Z'
-          event.dig(:metadata, :creationTimestamp) >= @pod.dig(:status, :startTime).to_s
-        end
-      end
-
-      def init_containers
-        self.class.init_containers(@pod)
-      end
-
       private
 
       def events_indicating_failure
         @events_indicating_failure ||= begin
-          bad = events.dup
+          bad = @events.dup
           bad.reject! { |e| e.fetch(:type) == 'Normal' }
           bad.reject! { |e| ignorable_hpa_event?(e) }
           bad.reject! do |e|
@@ -122,18 +91,12 @@ module Kubernetes
         event[:kind] == 'HorizontalPodAutoscaler' && INGORED_AUTOSCALE_EVENT_REASONS.include?(event[:reason])
       end
 
-      def raw_events
-        SamsonKubernetes.retry_on_connection_errors do
-          @client.get_events(
-            namespace: namespace,
-            field_selector: "involvedObject.name=#{name},involvedObject.kind=Pod"
-          ).fetch(:items)
-        end
-      end
-
       # if the pod is still running we stream the logs until it times out to get as much info as possible
       # necessary since logs often hang for a while even if the pod is already done
       def fetch_logs(container, end_time, previous:)
+        name = @pod.dig_fetch(:metadata, :name)
+        namespace = @pod.dig_fetch(:metadata, :namespace)
+
         if previous
           SamsonKubernetes.retry_on_connection_errors do
             tries = 3
@@ -190,10 +153,6 @@ module Kubernetes
       # by default checks every 10s so that gives us 30s to pass
       def failure_threshold(probe)
         @pod.dig(:spec, :containers, 0, probe, :failureThreshold) || 3
-      end
-
-      def labels
-        @pod.dig(:metadata, :labels)
       end
 
       def ready?
