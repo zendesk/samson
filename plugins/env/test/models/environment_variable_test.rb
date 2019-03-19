@@ -258,6 +258,18 @@ describe EnvironmentVariable do
     end
   end
 
+  describe "#as_json" do
+    let(:variable) { environment_variable.as_json }
+
+    it "includes parent_name" do
+      variable.keys.must_include "parent_name"
+    end
+
+    it "includes scope_name" do
+      variable.keys.must_include "scope_name"
+    end
+  end
+
   describe "#auditing_enabled" do
     it "creates audits for regular vars" do
       assert_difference "Audited::Audit.count", +1 do

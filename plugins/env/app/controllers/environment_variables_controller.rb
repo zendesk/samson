@@ -20,6 +20,8 @@ class EnvironmentVariablesController < ApplicationController
     head :ok
   end
 
+  private
+
   def search_params
     permitted = params.fetch(:search, {}).permit(:id, :name, :value, :parent_id, :parent_type, :scope_id, :scope_type)
     permitted.select { |_, v| v.present? }
