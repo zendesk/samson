@@ -98,7 +98,7 @@ describe AccessRequestsController do
               post :create, params: request_params
             end
             access_request_email = ActionMailer::Base.deliveries.last
-            access_request_email.cc.must_equal [manager_email]
+            access_request_email.cc.must_equal [manager_email, user.email]
             access_request_email.body.to_s.must_match /#{reason}/
             access_request_email.body.to_s.must_match /#{role.display_name}/
             Project.all.each { |project| access_request_email.body.to_s.must_match /#{project.name}/ }
