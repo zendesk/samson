@@ -38,6 +38,7 @@ Samson will:
 ### Documentation
 
 * [Getting started](/docs/setup.md)
+* [Basic Components](/docs/components.md)
 * [Permissions](/docs/permissions.md)
 * [Continuous Integration](/docs/ci.md)
 * [Extra features](/docs/extra_features.md)
