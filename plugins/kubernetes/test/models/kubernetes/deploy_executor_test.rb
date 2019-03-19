@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative "../../test_helper"
 
-SingleCov.covered! uncovered: 8
+SingleCov.covered! uncovered: 7
 
 describe Kubernetes::DeployExecutor do
   assert_requests
@@ -542,7 +542,7 @@ describe Kubernetes::DeployExecutor do
           metadata: {uid: '123', name: 'some-project', namespace: 'staging', resourceVersion: 'X'},
           spec: {clusterIP: "Y"}
         }
-        assert_request(:get, service_url, to_return: {body: old.to_json}, times: 6)
+        assert_request(:get, service_url, to_return: {body: old.to_json}, times: 4)
         assert_request(:put, service_url, to_return: {body: "{}"}, times: 4)
 
         refute execute
@@ -608,14 +608,14 @@ describe Kubernetes::DeployExecutor do
                   type: 'Warning',
                   message: "fit failure on node (ip-1-2-3-4)\nfit failure on node (ip-2-3-4-5)",
                   count: 4,
-                  metadata: {creationTimestamp: "2017-03-31T22:56:20Z"}
+                  metadata: {creationTimestamp: 1.hour.from_now.utc.iso8601}
                 },
                 {
                   reason: 'FailedScheduling',
                   type: 'Warning',
                   message: "fit failure on node (ip-2-3-4-5)\nfit failure on node (ip-1-2-3-4)",
                   count: 1,
-                  metadata: {creationTimestamp: "2017-03-31T22:56:20Z"}
+                  metadata: {creationTimestamp: 1.hour.from_now.utc.iso8601}
                 }
               ]
             }.to_json
@@ -628,12 +628,13 @@ describe Kubernetes::DeployExecutor do
         out.must_include "UNSTABLE"
 
         # correct debugging output
-        out.scan(/Pod 100 pod pod-(\S+)/).flatten.uniq.must_equal ["resque-worker:"] # logs and events only for bad pod
+        out.scan(/Pod 100 Pod pod-(\S+)/).flatten.uniq.must_equal ["resque-worker:"] # logs and events only for bad pod
         out.must_match(
           /EVENTS:\s+Warning FailedScheduling: fit failure on node \(ip-1-2-3-4\)\s+fit failure on node \(ip-2-3-4-5\) x5\n\n/ # rubocop:disable Metrics/LineLength
-        ) # no repeated events
+        ) # combined repeated events
         out.must_match /LOGS:\s+LOG-1/
-        out.must_include "RESOURCE EVENTS staging.some-project:\n  Warning FailedScheduling:"
+        out.must_include "POD EVENTS:\n  Warning FailedScheduling"
+        out.must_include "RESOURCE EVENTS Pod 100 Service some-project:\n  Warning FailedScheduling:"
       end
 
       it "displays events without message" do
@@ -645,13 +646,13 @@ describe Kubernetes::DeployExecutor do
                   reason: 'Foobar',
                   type: 'Warning',
                   count: 1,
-                  metadata: {creationTimestamp: "2017-03-31T22:56:20Z"}
+                  metadata: {creationTimestamp: 1.hour.from_now.utc.iso8601}
                 },
                 {
                   reason: 'Foobar',
                   type: 'Warning',
                   count: 1,
-                  metadata: {creationTimestamp: "2017-03-31T22:56:20Z"}
+                  metadata: {creationTimestamp: 1.hour.from_now.utc.iso8601}
                 }
               ]
             }.to_json
@@ -660,6 +661,27 @@ describe Kubernetes::DeployExecutor do
         refute execute
 
         out.must_include "Foobar:  x2"
+      end
+
+      it "ignores resource events from previous deploys" do
+        stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/events.*}).
+          to_return(
+            body: {
+              items: [
+                {
+                  reason: 'Foobar',
+                  type: 'Warning',
+                  message: 'Foobar',
+                  count: 1,
+                  metadata: {creationTimestamp: 1.hour.ago.utc.iso8601}
+                }
+              ]
+            }.to_json
+          )
+
+        refute execute
+
+        out.wont_include "RESOURCE EVENTS"
       end
     end
   end

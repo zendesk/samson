@@ -81,6 +81,10 @@ module Kubernetes
         resource&.dig_fetch(:metadata, :uid)
       end
 
+      def kind
+        @template.fetch(:kind)
+      end
+
       def desired_pod_count
         if @delete_resource
           0
@@ -201,13 +205,13 @@ module Kubernetes
       def request(verb, *args)
         SamsonKubernetes.retry_on_connection_errors do
           begin
-            method = "#{verb}_#{Kubeclient::ClientMixin.underscore_entity(@template.fetch(:kind))}"
+            method = "#{verb}_#{Kubeclient::ClientMixin.underscore_entity(kind)}"
             if client.respond_to? method
               client.send(method, *args)
             else
               raise(
                 Samson::Hooks::UserError,
-                "apiVersion #{@template.fetch(:apiVersion)} does not support #{@template.fetch(:kind)}. " \
+                "apiVersion #{@template.fetch(:apiVersion)} does not support #{kind}. " \
                 "Check kubernetes docs for correct apiVersion"
               )
             end

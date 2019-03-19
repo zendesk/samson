@@ -178,7 +178,7 @@ module Kubernetes
     end
 
     def pod_identifier(pod)
-      "#{deploy_group_for_pod(pod).name} pod #{pod.name}"
+      "#{deploy_group_for_pod(pod).name} Pod #{pod.name}"
     end
 
     # show why container failed to boot
@@ -197,22 +197,28 @@ module Kubernetes
       end
     end
 
-    # show what happened at the resource level ... need uid to avoid showing previous events
+    # TODO: unify with plugins/kubernetes/app/models/kubernetes/api/pod.rb#events
     def print_resource_events(doc)
-      doc.resources.each do |resource|
-        selector = ["involvedObject.name=#{resource.name}"]
+      # ignores pods since we print their events already
+      resources = doc.resources.reject { |r| r.is_a?(Kubernetes::Resource::Pod) }
 
-        # do not query for nil uid ... rather show events for old+new resource when creation failed
-        if uid = resource.uid
-          selector << "involvedObject.uid=#{uid}"
-        end
-
+      resources.each do |resource|
+        # do not rely on uid, when creation fails we don't get one
         events = doc.deploy_group.kubernetes_cluster.client('v1').get_events(
           namespace: resource.namespace,
-          field_selector: selector.join(',')
+          field_selector: "involvedObject.name=#{resource.name},involvedObject.kind=#{resource.kind}"
         ).fetch(:items)
+
+        # ignore events from before the deploy, comparing strings for speed
+        events.select! { |e| e.dig(:metadata, :creationTimestamp) >= @deploy_start_time }
+
         next if events.none?
-        @output.puts "RESOURCE EVENTS #{resource.namespace}.#{resource.name}:"
+
+        # https://github.com/kubernetes/kubernetes/issues/29838
+        events.sort_by! { |e| e.dig(:metadata, :creationTimestamp) }
+
+        # TODO: unify with pod_identifier
+        @output.puts "RESOURCE EVENTS #{doc.deploy_group.name} #{resource.kind} #{resource.name}:"
         print_events(events)
       end
     end
@@ -408,6 +414,7 @@ module Kubernetes
     end
 
     def deploy_and_watch(release_docs, timeout:)
+      @deploy_start_time = Time.now.utc.iso8601
       deploy(release_docs)
       success, statuses = wait_for_resources_to_complete(release_docs, timeout)
       if success
