@@ -80,6 +80,7 @@ module ApplicationHelper
       name = resource.name
       name = (resource.lock.warning? ? warning_icon : lock_icon) + " " + name if resource.lock
       [name, [resource.project, resource]]
+    when Deploy then ["Deploy ##{resource.id}", [resource.project, resource]]
     when SecretSharingGrant then [resource.key, resource]
     else
       @@link_parts_for_resource ||= Samson::Hooks.fire(:link_parts_for_resource).to_h

@@ -311,6 +311,11 @@ describe ApplicationHelper do
       link_to_resource(stages(:test_staging)).must_equal "<a href=\"/projects/foo/stages/staging\">Staging</a>"
     end
 
+    it "links to deploys" do
+      deploy = deploys(:succeeded_test)
+      link_to_resource(deploy).must_equal "<a href=\"/projects/foo/deploys/#{deploy.id}\">Deploy ##{deploy.id}</a>"
+    end
+
     it "links to environments" do
       link_to_resource(environments(:production)).must_equal "<a href=\"/dashboards/production\">Production</a>"
     end

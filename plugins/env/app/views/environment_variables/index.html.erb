@@ -31,16 +31,11 @@
         <td><%= variable.value %></td>
         <td><%= variable.scope_type ? (variable.scope&.name || "Deleted #{variable.scope_type} ##{variable.scope_id}") : 'All' %></td>
         <td>
-          <% if variable.parent %>
-            <%= case variable.parent
-                when Project then link_to variable.parent.name, variable.parent
-                when EnvironmentVariableGroup then link_to variable.parent.name, variable.parent
-                else raise "Unsupported #{variable.parent}"
-                end
-            %>
+          <% if parent = variable.parent %>
+            <%= link_to_resource parent %>
           <% else %>
             <%= "Deleted #{variable.parent_type} ##{variable.parent_id}" %>
-            <% end %>
+          <% end %>
         </td>
         <td><%= link_to_delete variable, remove_container: 'tr' %></td>
       </tr>
