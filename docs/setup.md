@@ -2,7 +2,7 @@
 
 ## Server setup
 
-### Docker: 
+### Docker
 
 Simple/reproducible but slow to develop on.
 
