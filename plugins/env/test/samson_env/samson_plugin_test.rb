@@ -114,6 +114,12 @@ describe SamsonEnv do
       proc = Samson::Hooks.fire(:link_parts_for_resource).to_h.fetch("EnvironmentVariable")
       proc.call(var).must_equal ["WORLD3 for Production on Bar", EnvironmentVariable]
     end
+
+    it "links to env var group" do
+      group = EnvironmentVariableGroup.create!(name: "FOO")
+      proc = Samson::Hooks.fire(:link_parts_for_resource).to_h.fetch("EnvironmentVariableGroup")
+      proc.call(group).must_equal ["FOO", group]
+    end
   end
 
   describe :can do

@@ -76,7 +76,6 @@ Samson::Hooks.callback :deploy_group_env do |*args|
   EnvironmentVariable.env(*args)
 end
 
-# TODO: make a edit page and link to that
 Samson::Hooks.callback(:link_parts_for_resource) do
   [
     "EnvironmentVariable",
@@ -85,6 +84,12 @@ Samson::Hooks.callback(:link_parts_for_resource) do
       parent = " on #{env.parent.name}" if env.parent
       ["#{env.name}#{scope}#{parent}", EnvironmentVariable]
     end
+  ]
+end
+Samson::Hooks.callback(:link_parts_for_resource) do
+  [
+    "EnvironmentVariableGroup",
+    ->(env_group) { [env_group.name, env_group] }
   ]
 end
 
