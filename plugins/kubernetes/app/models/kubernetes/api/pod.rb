@@ -94,6 +94,7 @@ module Kubernetes
       def events(reload: false)
         @events = nil if reload
         @events ||= raw_events.select do |event|
+          # ignore events from old pods if this is a statefulset pod / static pod
           # compare strings to avoid parsing time '2017-03-31T22:56:20Z'
           event.dig(:metadata, :creationTimestamp) >= @pod.dig(:status, :startTime).to_s
         end
@@ -125,7 +126,7 @@ module Kubernetes
         SamsonKubernetes.retry_on_connection_errors do
           @client.get_events(
             namespace: namespace,
-            field_selector: "involvedObject.name=#{name}"
+            field_selector: "involvedObject.name=#{name},involvedObject.kind=Pod"
           ).fetch(:items)
         end
       end

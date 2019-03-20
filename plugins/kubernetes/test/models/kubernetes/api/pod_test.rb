@@ -40,7 +40,7 @@ describe Kubernetes::Api::Pod do
   end
   let(:start_time) { "2017-03-31T22:56:20Z" }
   let(:events_url) do
-    "http://foobar.server/api/v1/namespaces/the-namespace/events?fieldSelector=involvedObject.name=test_name"
+    "http://foobar.server/api/v1/namespaces/the-namespace/events?fieldSelector=involvedObject.name=test_name,involvedObject.kind=Pod"
   end
   let(:event) { {metadata: {creationTimestamp: start_time}, type: 'Normal'} }
   let(:events) { [event] }
