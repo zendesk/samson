@@ -23,10 +23,27 @@ describe EnvironmentVariablesController do
         assert_response :success
         json_response = JSON.parse response.body
         first_env = json_response['environment_variables'].first
+        first_env['name'].must_equal "FOO"
+      end
+
+      it "renders json with inlines" do
+        get :index, params: {inlines: "parent_name,scope_name"}, format: :json
+        assert_response :success
+        json_response = JSON.parse response.body
+        first_env = json_response['environment_variables'].first
         first_env.keys.must_include "parent_name"
         first_env.keys.must_include "scope_name"
-        first_env['name'].must_equal "FOO"
         first_env['parent_name'].must_equal "Foo"
+      end
+
+      it "fails with invalid inlines" do
+        get :index, params: {inlines: "xyz"}, format: :json
+        json_response = JSON.parse response.body
+        assert_response :bad_request
+        json_response.must_equal(
+          "status" => 400,
+          "error" => "Forbidden inlines [xyz] found, allowed inlines are [parent_name, scope_name]"
+        )
       end
 
       it "can filter by name" do

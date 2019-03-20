@@ -201,13 +201,13 @@ class Project < ActiveRecord::Base
     )
   end
 
-  def as_json(options = {})
+  def as_json(methods: [], **options)
     super(
       {
         except: [:token, :deleted_at],
         methods: [
           :repository_path,
-        ]
+        ] + methods
       }.merge(options)
     )
   end

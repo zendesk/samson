@@ -3,14 +3,13 @@ class EnvironmentVariablesController < ApplicationController
   before_action :authorize_admin!, except: [:index]
 
   def index
-    scope = EnvironmentVariable
-    scope = scope.where(search_params) if search_params.present?
+    scope = EnvironmentVariable.where(search_params)
     respond_to do |format|
       format.html do
         @pagy, @environment_variables = pagy(scope, page: params[:page], items: 30)
       end
       format.json do
-        render_as_json :environment_variables, scope.all
+        render_as_json :environment_variables, scope
       end
     end
   end
