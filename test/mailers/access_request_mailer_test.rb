@@ -39,7 +39,7 @@ describe AccessRequestMailer do
       it 'has correct sender and recipients' do
         subject.from.must_equal [user.email]
         subject.to.must_equal address_list.split
-        subject.cc.must_equal [manager_email]
+        subject.cc.must_equal [manager_email, user.email]
       end
 
       it 'has a correct subject' do
@@ -67,7 +67,7 @@ describe AccessRequestMailer do
         let(:address_list) { 'jira@example.com' }
         it 'handles single email address configured' do
           subject.to.must_equal [address_list]
-          subject.cc.must_equal [manager_email]
+          subject.cc.must_equal [manager_email, user.email]
         end
       end
 
@@ -75,7 +75,7 @@ describe AccessRequestMailer do
         let(:address_list) { nil }
         it 'handles no configured email address' do
           subject.to.must_equal [manager_email]
-          subject.cc.must_be_empty
+          subject.cc.must_equal [user.email]
         end
       end
     end

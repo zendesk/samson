@@ -18,7 +18,7 @@ class AccessRequestMailer < ApplicationMailer
   end
 
   def build_cc
-    ENV['REQUEST_ACCESS_EMAIL_ADDRESS_LIST'].present? ? @manager_email : nil
+    (ENV['REQUEST_ACCESS_EMAIL_ADDRESS_LIST'].present? ? [@manager_email] : []) << @user.email
   end
 
   def build_subject
