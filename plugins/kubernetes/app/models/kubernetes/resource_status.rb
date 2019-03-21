@@ -51,10 +51,10 @@ module Kubernetes
         ).fetch(:items)
 
         # ignore events from before the deploy, comparing strings for speed
-        events.select! { |e| e.dig(:metadata, :creationTimestamp) >= @start }
+        events.select! { |e| e.dig(:lastTimestamp) >= @start }
 
         # https://github.com/kubernetes/kubernetes/issues/29838
-        events.sort_by! { |e| e.dig(:metadata, :creationTimestamp) }
+        events.sort_by! { |e| e.dig(:lastTimestamp) }
 
         events
       end
