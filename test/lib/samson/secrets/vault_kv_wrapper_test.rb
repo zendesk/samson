@@ -5,6 +5,7 @@ require_relative '../../../test_helper'
 SingleCov.covered!
 
 describe Samson::Secrets::VaultKVWrapper do
+  # TODO: use VaultRequestHelper
   let(:server) { create_vault_server(name: 'pod0', versioned_kv: true) }
 
   describe '#list' do
@@ -24,6 +25,25 @@ describe Samson::Secrets::VaultKVWrapper do
       result = server.client.kv.read('foo/bar')
       result.must_be_instance_of Vault::Secret
       result.data.must_equal cool: 'beans'
+    end
+
+    it 'reads secret versions' do
+      stub_request(:get, 'http://vault-land.com/v1/secret/data/apps/foo/bar?version=v1').
+        to_return(headers: {content_type: 'application/json'}, body: {data: {data: {cool: 'beans'}}}.to_json)
+
+      result = server.client.kv.read('foo/bar', 'v1')
+      result.data.must_equal cool: 'beans'
+    end
+  end
+
+  describe '#read_metadata' do
+    it 'reads metadata' do
+      stub_request(:get, 'http://vault-land.com/v1/secret/metadata/apps/foo/bar').
+        to_return(headers: {content_type: 'application/json'}, body: {data: {cool: 'beans'}}.to_json)
+
+      result = server.client.kv.read_metadata('foo/bar')
+      result.must_be_instance_of Hash
+      result.must_equal cool: 'beans'
     end
   end
 

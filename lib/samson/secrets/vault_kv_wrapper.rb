@@ -12,7 +12,11 @@ module Samson
         super(prefix_id(''))
       end
 
-      def read(id)
+      def read(id, *args)
+        super(prefix_id(id), *args)
+      end
+
+      def read_metadata(id)
         super(prefix_id(id))
       end
 

@@ -47,6 +47,10 @@ class SecretsController < ApplicationController
       sort_by { |_, v| -v.size }
   end
 
+  def history
+    @history = Samson::Secrets::Manager.history(id)
+  end
+
   def new
     render :show
   end
@@ -177,6 +181,6 @@ class SecretsController < ApplicationController
   # @override CurrentUser since we need to allow any user to see new since we do not yet
   # know what project they want to create for
   def resource_action
-    ["new", "duplicates"].include?(action_name) ? :read : super
+    ["new", "duplicates", "history"].include?(action_name) ? :read : super
   end
 end

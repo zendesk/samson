@@ -21,6 +21,19 @@ module Samson
           secret_to_hash secret
         end
 
+        # Not implemented, just bogus values to be able to debug UI in development+test
+        def history(_id)
+          {
+            foo: "bar",
+            versions: {
+              "1" => {bar: "baz", value: "v1", creator_id: 1},
+              "2" => {bar: "baz", value: "v2", creator_id: 1},
+              "3" => {bar: "baz", value: "v2", creator_id: 1},
+              "4" => {bar: "baz", value: "v3", creator_id: 1}
+            }
+          }
+        end
+
         def read_multi(ids)
           secrets = Secret.where(id: ids).all
           secrets.each_with_object({}) { |s, a| a[s.id] = secret_to_hash(s) }

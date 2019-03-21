@@ -15,9 +15,15 @@ module Samson
       end
 
       # responsible servers should have the same data, so read from the first
-      def read(id)
+      def read(id, *args)
         vault_client = responsible_clients(id).first
-        with_retries { vault_client.kv.read(id) }
+        with_retries { vault_client.kv.read(id, *args) }
+      end
+
+      # responsible servers should have the same data, so read from the first
+      def read_metadata(id)
+        vault_client = responsible_clients(id).first
+        with_retries { vault_client.kv.read_metadata(id) }
       end
 
       # different servers have different ids so combine all

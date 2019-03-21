@@ -28,6 +28,12 @@ describe Samson::Secrets::DbBackend do
     end
   end
 
+  describe ".history" do
+    it "works" do
+      Samson::Secrets::DbBackend.history(secret.id).class.must_equal Hash
+    end
+  end
+
   describe ".read_multi" do
     it "reads" do
       read = Samson::Secrets::DbBackend.read_multi([secret.id])

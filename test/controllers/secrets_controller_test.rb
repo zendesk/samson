@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 1
+SingleCov.covered!
 
 describe SecretsController do
   def create_global
@@ -33,6 +33,7 @@ describe SecretsController do
     unauthorized :get, :duplicates
     unauthorized :get, :new
     unauthorized :get, :show, id: 'production/foo/group/bar'
+    unauthorized :get, :history, id: 'production/foo/group/bar'
     unauthorized :patch, :update, id: 'production/foo/group/bar'
     unauthorized :delete, :destroy, id: 'production/foo/group/bar'
   end
@@ -182,6 +183,13 @@ describe SecretsController do
       end
     end
 
+    describe '#history' do
+      it 'renders' do
+        get :history, params: {id: secret}
+        assert_template :history
+      end
+    end
+
     describe '#update' do
       it "is unauthrized" do
         put :update, params: {id: secret, secret: {value: 'xxx'}}
@@ -218,12 +226,6 @@ describe SecretsController do
         secret.visible.must_equal false
         secret.comment.must_equal 'hello'
         secret.deprecated_at.must_equal nil
-      end
-
-      it 'writes nil to deprecated_at to make vault work and not store strange values' do
-        attributes[:deprecated_at] = "0"
-        Samson::Secrets::Manager.expects(:write).with { |_, data| data.fetch(:deprecated_at).must_equal nil }
-        post :create, params: {secret: attributes}
       end
 
       it 'does not override an existing secret' do
@@ -327,6 +329,23 @@ describe SecretsController do
         do_update
         assert_redirected_to secrets_path
         secret.reload.id.must_equal 'production/foo/pod2/some_key'
+      end
+
+      it "stores nil for falsy deprecated_at" do
+        Samson::Secrets::Manager.expects(:write).
+          with { |_id, data| data[:deprecated_at].must_be_nil }.
+          returns(true)
+        do_update
+        assert_redirected_to secrets_path
+      end
+
+      it 'writes truthy to deprecated_at' do
+        attributes[:deprecated_at] = "1"
+        Samson::Secrets::Manager.expects(:write).
+          with { |_, data| data.fetch(:deprecated_at).must_equal "1" }.
+          returns(true)
+        do_update
+        assert_redirected_to secrets_path
       end
 
       describe 'duplicate secret key values' do

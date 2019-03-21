@@ -52,6 +52,17 @@ describe Samson::Secrets::VaultClientManager do
     end
   end
 
+  describe "#read_metadata" do
+    before { Samson::Secrets::VaultServer.update_all(versioned_kv: true) }
+
+    it "only reads from first server" do
+      body = {data: {foo: :bar}}.to_json
+      assert_vault_request :get, 'global/global/global/foo', versioned_kv: "metadata", body: body do
+        manager.read_metadata('global/global/global/foo').must_equal(foo: "bar")
+      end
+    end
+  end
+
   describe "#write" do
     it "writes to all servers" do
       assert_vault_request :put, 'global/global/global/foo', times: 2 do
