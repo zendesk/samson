@@ -4,6 +4,10 @@ require_relative '../../test_helper'
 SingleCov.covered!
 
 describe Kubernetes::ResourceStatus do
+  def expect_event_request(&block)
+    assert_request :get, /events/, to_return: {body: {items: events}.to_json}, &block
+  end
+
   let(:status) do
     Kubernetes::ResourceStatus.new(
       deploy_group: deploy_groups(:pod1),
@@ -20,11 +24,6 @@ describe Kubernetes::ResourceStatus do
     let(:details) do
       status.check
       status.details
-    end
-
-    it "does not provide details for non-pods" do
-      resource[:kind] = "Service"
-      details.must_be_nil
     end
 
     it "is missing without resource" do
@@ -54,32 +53,37 @@ describe Kubernetes::ResourceStatus do
     end
 
     it "is waiting" do
-      assert_request :get, /events/, to_return: {body: {items: []}.to_json} do
-        details.must_equal "Waiting (Running, Unknown)"
-      end
+      events.clear
+      expect_event_request { details.must_equal "Waiting (Running, Unknown)" }
     end
 
     it "waits when resources are missing" do
       events[0].merge!(type: "Warning", reason: "FailedScheduling")
-      assert_request :get, /events/, to_return: {body: {items: events}.to_json} do
-        details.must_equal "Waiting for resources (Running, Unknown)"
-      end
+      expect_event_request { details.must_equal "Waiting for resources (Running, Unknown)" }
     end
 
     it "errors when bad events happen" do
       events[0].merge!(type: "Warning", reason: "Boom")
-      assert_request :get, /events/, to_return: {body: {items: events}.to_json} do
-        details.must_equal "Error event"
+      expect_event_request { details.must_equal "Error event" }
+    end
+
+    describe "non-pods" do
+      before { resource[:kind] = "Service" }
+
+      it "knows created non-pods" do
+        events.clear
+        expect_event_request { details.must_equal "Live" }
+      end
+
+      it "knows failed non-pods" do
+        events[0].merge!(type: "Warning", reason: "Boom")
+        expect_event_request { details.must_equal "Error event" }
       end
     end
   end
 
   describe "#events" do
-    let(:result) do
-      assert_request :get, /events/, to_return: {body: {items: events}.to_json} do
-        status.events
-      end
-    end
+    let(:result) { expect_event_request { status.events } }
 
     it "finds events" do
       result.size.must_equal 1

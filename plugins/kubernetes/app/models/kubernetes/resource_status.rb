@@ -5,7 +5,7 @@ module Kubernetes
     attr_reader :resource, :role, :deploy_group, :kind, :details, :live, :finished, :pod
     attr_writer :details
 
-    def initialize(resource:, role: nil, deploy_group:, prerequisite: false, start:, kind: resource.fetch(:kind))
+    def initialize(resource:, role: nil, deploy_group:, prerequisite: false, start:, kind:)
       @resource = resource
       @kind = kind
       @role = role
@@ -39,6 +39,15 @@ module Kubernetes
         else
           @details = "Waiting (#{@pod.phase}, #{@pod.reason})"
         end
+      else
+        # NOTE: non-pods are never "Missing" because we create them manually
+        @finished = true
+        if events.any? { |e| e.fetch(:type) != 'Normal' }
+          @details = "Error event"
+        else
+          @details = "Live"
+          @live = true
+        end
       end
     end
 
@@ -46,7 +55,7 @@ module Kubernetes
       # do not rely on uid, when creation fails we don't get one
       SamsonKubernetes.retry_on_connection_errors do
         events = @client.get_events(
-          namespace: @resource.dig_fetch(:metadata, :namespace),
+          namespace: @resource.dig(:metadata, :namespace),
           field_selector: "involvedObject.name=#{@resource.dig_fetch(:metadata, :name)},involvedObject.kind=#{@kind}"
         ).fetch(:items)
 
