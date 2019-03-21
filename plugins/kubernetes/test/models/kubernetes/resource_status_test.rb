@@ -14,7 +14,7 @@ describe Kubernetes::ResourceStatus do
     )
   end
   let(:resource) { {kind: 'Pod', metadata: {name: 'foo', namespace: 'default'}, status: {phase: "Running"}} }
-  let(:events) { [{metadata: {creationTimestamp: 30.seconds.from_now.utc.iso8601}}] }
+  let(:events) { [{lastTimestamp: 30.seconds.from_now.utc.iso8601}] }
 
   describe "#check" do
     let(:details) do
@@ -86,14 +86,14 @@ describe Kubernetes::ResourceStatus do
     end
 
     it "ignores previous events" do
-      events.first[:metadata][:creationTimestamp] = 30.seconds.ago.utc.iso8601
+      events.first[:lastTimestamp] = 30.seconds.ago.utc.iso8601
       result.size.must_equal 0
     end
 
     it "sorts" do
       new = 60.seconds.from_now.utc.iso8601
-      events.unshift metadata: {creationTimestamp: new}
-      events.push metadata: {creationTimestamp: new}
+      events.unshift lastTimestamp: new
+      events.push lastTimestamp: new
       result.first.must_equal events[1]
     end
   end

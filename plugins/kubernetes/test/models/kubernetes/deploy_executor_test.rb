@@ -407,7 +407,7 @@ describe Kubernetes::DeployExecutor do
                 type: 'Warning',
                 reason: 'Unhealthy',
                 message: "kubelet, ip-12-34-56-78 Liveness probe failed: Get http://12.34.56.78/ping",
-                metadata: {creationTimestamp: 1.minute.from_now.iso8601}
+                lastTimestamp: 1.minute.from_now.iso8601
               }
             ]
           }.to_json
@@ -432,7 +432,7 @@ describe Kubernetes::DeployExecutor do
                 type: 'Warning',
                 reason: 'FailedScheduling',
                 message: "0/20 nodes are available: 17 Insufficient cpu, 3 Insufficient memory.",
-                metadata: {creationTimestamp: 1.minute.from_now.iso8601}
+                lastTimestamp: 1.minute.from_now.iso8601
               }
             ]
           }.to_json
@@ -611,14 +611,14 @@ describe Kubernetes::DeployExecutor do
                   type: 'Warning',
                   message: "fit failure on node (ip-1-2-3-4)\nfit failure on node (ip-2-3-4-5)",
                   count: 4,
-                  metadata: {creationTimestamp: 1.hour.from_now.utc.iso8601}
+                  lastTimestamp: 1.hour.from_now.utc.iso8601
                 },
                 {
                   reason: 'FailedScheduling',
                   type: 'Warning',
                   message: "fit failure on node (ip-2-3-4-5)\nfit failure on node (ip-1-2-3-4)",
                   count: 1,
-                  metadata: {creationTimestamp: 1.hour.from_now.utc.iso8601}
+                  lastTimestamp: 1.hour.from_now.utc.iso8601
                 }
               ]
             }.to_json
@@ -649,13 +649,13 @@ describe Kubernetes::DeployExecutor do
                   reason: 'Foobar',
                   type: 'Warning',
                   count: 1,
-                  metadata: {creationTimestamp: 1.hour.from_now.utc.iso8601}
+                  lastTimestamp: 1.hour.from_now.utc.iso8601
                 },
                 {
                   reason: 'Foobar',
                   type: 'Warning',
                   count: 1,
-                  metadata: {creationTimestamp: 1.hour.from_now.utc.iso8601}
+                  lastTimestamp: 1.hour.from_now.utc.iso8601
                 }
               ]
             }.to_json
@@ -676,7 +676,7 @@ describe Kubernetes::DeployExecutor do
                   type: 'Warning',
                   message: 'Foobar',
                   count: 1,
-                  metadata: {creationTimestamp: 1.hour.ago.utc.iso8601}
+                  lastTimestamp: 1.hour.ago.utc.iso8601
                 }
               ]
             }.to_json
