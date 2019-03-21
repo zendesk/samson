@@ -45,6 +45,45 @@ describe Samson::Secrets::HashicorpVaultBackend do
     end
   end
 
+  describe ".history" do
+    before { Samson::Secrets::VaultServer.update_all(versioned_kv: true) }
+
+    it "reads simple" do
+      versions_body = {data: {foo: "bar", versions: {}}}
+      assert_vault_request :get, "production/foo/pod2/bar", versioned_kv: "metadata", body: versions_body.to_json do
+        backend.history('production/foo/pod2/bar').must_equal(foo: "bar", versions: {})
+      end
+    end
+
+    it "ignores missing" do
+      assert_vault_request :get, "production/foo/pod2/bar", versioned_kv: "metadata", status: 404 do
+        backend.history('production/foo/pod2/bar').must_be_nil
+      end
+    end
+
+    it "resolves versions" do
+      id = "production/foo/pod2/bar"
+      versions_body = {data: {versions: {"v1" => {foo: "bar"}}}}
+      version_body = {data: {data: {vault: 1}, metadata: {v1: 1}}}
+      assert_vault_request :get, id, versioned_kv: "metadata", body: versions_body.to_json do
+        assert_vault_request :get, "#{id}?version=v1", versioned_kv: "data", body: version_body.to_json do
+          result = backend.history('production/foo/pod2/bar')
+          result[:versions].each_value { |item| item.delete_if { |_, v| v.nil? } }
+          result.must_equal versions: {v1: {metadata: {v1: 1}, value: 1}}
+        end
+      end
+    end
+
+    it "does not resolve unrecoverable versions" do
+      id = "production/foo/pod2/bar"
+      versions_body = {data: {versions: {"v1" => {foo: "bar", destroyed: true}}}}
+      assert_vault_request :get, id, versioned_kv: "metadata", body: versions_body.to_json do
+        result = backend.history('production/foo/pod2/bar')
+        result.must_equal versions: {v1: {metadata: {foo: "bar", destroyed: true}}}
+      end
+    end
+  end
+
   describe ".read_multi" do
     it "returns values as hash" do
       assert_vault_request :get, "production/foo/pod2/bar", body: {data: {vault: "SECRET"}}.to_json do

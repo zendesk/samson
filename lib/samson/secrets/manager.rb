@@ -37,6 +37,19 @@ module Samson
           data
         end
 
+        def history(id, include_value: false)
+          history = backend.history(id) || raise(ActiveRecord::RecordNotFound)
+          unless include_value
+            last_value = nil
+            history.fetch(:versions).each_value do |data|
+              current_value = data[:value]
+              data[:value] = (last_value == current_value ? "(unchanged)" : "(changed)")
+              last_value = current_value
+            end
+          end
+          history
+        end
+
         # useful for console sessions
         def move(from, to)
           copy(from, to)
