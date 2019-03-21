@@ -4,13 +4,13 @@ module JsonRenderer
   end
 
   class << self
-    # make sure we are not including sensitive/unsupported associations
-    def validate_includes(requested, allowed)
+    # make sure we are not using sensitive/unsupported values or methods.
+    def validate_allowed(field, requested, allowed)
       forbidden = (requested - allowed.map(&:to_s))
       return if forbidden.empty?
       raise(
         JsonRenderer::ForbiddenIncludesError,
-        "Forbidden includes [#{forbidden.join(",")}] found, allowed includes are [#{allowed.join(", ")}]"
+        "Forbidden #{field} [#{forbidden.join(",")}] found, allowed #{field} are [#{allowed.join(", ")}]"
       )
     end
 
@@ -42,11 +42,19 @@ module JsonRenderer
 
   def render_as_json(namespace, resource, status: :ok, allowed_includes: [])
     # validate includes
-    requested_includes = (params[:includes] || "").split(",")
-    JsonRenderer.validate_includes(requested_includes, allowed_includes)
+    requested_includes = permit_requested(:includes, allowed_includes)
+
+    # validate inlines
+    requested_inlines =
+      if obj = Array(resource).first
+        respond_inlines = (resource_klass = obj.class).respond_to?(:allowed_inlines)
+        permit_requested(:inlines, respond_inlines ? resource_klass.allowed_inlines : [])
+      else
+        []
+      end
 
     # prepare resources for include collection
-    resource_json = resource.as_json
+    resource_json = resource.as_json(methods: requested_inlines)
     resource_list =
       if resource.is_a?(ActiveRecord::Base)
         [[resource, resource_json]]
@@ -63,5 +71,12 @@ module JsonRenderer
     render status: status, json: json
   rescue ActiveRecord::AssociationNotFoundError, JsonRenderer::ForbiddenIncludesError
     render status: 400, json: {status: 400, error: $!.message}
+  end
+
+  def permit_requested(field, allowed = [])
+    requested = params[field].to_s.split(",")
+    return [] if requested.empty?
+    JsonRenderer.validate_allowed(field, requested, allowed)
+    requested
   end
 end

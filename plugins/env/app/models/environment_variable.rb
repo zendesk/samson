@@ -5,6 +5,7 @@ class EnvironmentVariable < ActiveRecord::Base
   FAILED_LOOKUP_MARK = ' X' # SpaceX
 
   include GroupScope
+  extend Inlinable
   audited
 
   belongs_to :parent, polymorphic: true # Resource they are set on
@@ -13,6 +14,9 @@ class EnvironmentVariable < ActiveRecord::Base
 
   include ValidatesLengthsFromDatabase
   validates_lengths_from_database only: :value
+
+  allow_inline delegate :name, to: :parent, prefix: true, allow_nil: true
+  allow_inline delegate :name, to: :scope, prefix: true, allow_nil: true
 
   class << self
     # preview parameter can be used to not raise an error,

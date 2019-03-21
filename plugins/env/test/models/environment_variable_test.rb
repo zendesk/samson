@@ -258,6 +258,12 @@ describe EnvironmentVariable do
     end
   end
 
+  describe ".allowed_inlines" do
+    it "allows inline" do
+      EnvironmentVariable.allowed_inlines.count.must_equal 2
+    end
+  end
+
   describe "#auditing_enabled" do
     it "creates audits for regular vars" do
       assert_difference "Audited::Audit.count", +1 do
