@@ -7,6 +7,7 @@ describe Kubernetes::Api::Pod do
   let(:pod_name) { 'test_name' }
   let(:pod_attributes) do
     {
+      kind: "Pod",
       metadata: {
         name: pod_name,
         namespace: 'the-namespace',
@@ -120,46 +121,19 @@ describe Kubernetes::Api::Pod do
     end
   end
 
-  describe "#name" do
-    it 'reads ' do
-      pod.name.must_equal 'test_name'
-    end
-  end
-
-  describe "#namespace" do
-    it "reads" do
-      pod.namespace.must_equal 'the-namespace'
-    end
-  end
-
-  describe "#deploy_group_id" do
-    it 'is the label' do
-      pod.deploy_group_id.must_equal 123
-    end
-  end
-
-  describe "#role_id" do
-    it 'is the label' do
-      pod.role_id.must_equal 234
-    end
-  end
-
-  describe "#containers" do
+  describe "#container_names" do
     it 'reads' do
-      pod.containers.first[:name].must_equal 'container1'
-    end
-  end
-
-  describe "#annotations" do
-    it 'creates when missing' do
-      pod.annotations.must_equal({})
-      pod.annotations[:x] = 1
-      pod.annotations.must_equal(x: 1)
+      pod.container_names.must_equal ['container1']
     end
 
-    it 'reads' do
-      pod_attributes[:metadata][:annotations] = {x: 1}
-      pod.annotations.must_equal x: 1
+    it "finds modern json init containers" do
+      pod_attributes[:spec][:initContainers] = [{name: "foo"}]
+      pod.container_names.must_equal ['container1', 'foo']
+    end
+
+    it "finds old json init containers" do
+      pod_attributes[:metadata][:annotations] = {'pod.beta.kubernetes.io/init-containers': '[{"name": "foo"}]'}
+      pod.container_names.must_equal ['container1', 'foo']
     end
   end
 
@@ -267,7 +241,7 @@ describe Kubernetes::Api::Pod do
 
   describe "#events_indicate_failure?" do
     def events_indicate_failure?
-      stub_request(:get, events_url).to_return(body: {items: events}.to_json)
+      pod_with_client.instance_variable_set(:@events, events)
       pod_with_client.events_indicate_failure?
     end
 
@@ -280,29 +254,9 @@ describe Kubernetes::Api::Pod do
       refute events_indicate_failure?
     end
 
-    it "retries on errors" do
-      request = stub_request(:get, events_url).to_timeout
-      assert_raises(Kubeclient::HttpError) { pod_with_client.events_indicate_failure? }
-      assert_requested request, times: 4
-    end
-
-    describe "with bad events" do
-      before { event[:type] = "Warning" }
-
-      it "is true" do
-        assert events_indicate_failure?
-      end
-
-      # not sure if this happens, just making sure ... also makes our fixtures simpler
-      it "is true when pod never started" do
-        assert pod_attributes[:status].delete(:startTime)
-        assert events_indicate_failure?
-      end
-
-      it "is false when events are for a previous generation" do
-        event[:metadata][:creationTimestamp] = "1111"
-        refute events_indicate_failure?
-      end
+    it "is true with bad events" do
+      event[:type] = "Warning"
+      assert events_indicate_failure?
     end
 
     describe "probe failures" do
@@ -367,7 +321,7 @@ describe Kubernetes::Api::Pod do
 
   describe "#waiting_for_resources?" do
     def waiting_for_resources?
-      stub_request(:get, events_url).to_return(body: {items: events}.to_json)
+      pod_with_client.instance_variable_set(:@events, events)
       pod_with_client.waiting_for_resources?
     end
 
@@ -390,41 +344,6 @@ describe Kubernetes::Api::Pod do
       event[:type] = "Warning"
       event[:reason] = "FailedScheduling"
       assert waiting_for_resources?
-    end
-  end
-
-  describe "#init_containers" do
-    it "is empty for no containers" do
-      pod.init_containers.must_equal []
-    end
-
-    it "finds modern json containers" do
-      pod_attributes[:spec][:initContainers] = [{foo: "bar"}]
-      pod.init_containers.must_equal [{foo: "bar"}]
-    end
-
-    it "finds old json containers" do
-      pod_attributes[:metadata][:annotations] = {'pod.beta.kubernetes.io/init-containers': '[{"foo": "bar"}]'}
-      pod.init_containers.must_equal [{foo: "bar"}]
-    end
-  end
-
-  describe "#events" do
-    it "returns events" do
-      stub_request(:get, events_url).to_return(body: {items: events}.to_json)
-      pod_with_client.events.size.must_equal 1
-    end
-
-    it "caches events" do
-      request = stub_request(:get, events_url).to_return(body: {items: events}.to_json)
-      2.times { pod_with_client.events.size.must_equal 1 }
-      assert_requested request, times: 1
-    end
-
-    it "reloads events" do
-      request = stub_request(:get, events_url).to_return(body: {items: events}.to_json)
-      2.times { pod_with_client.events(reload: true).size.must_equal 1 }
-      assert_requested request, times: 2
     end
   end
 end
