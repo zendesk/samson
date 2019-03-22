@@ -5,11 +5,7 @@
   <div class="csv-users-filters clearfix">
     <%= form_tag new_csv_export_path(format: :csv, type: :deploy_group_usage), method: :get, class: "form-horizontal" do %>
       <%= hidden_field_tag :type, "deploy_group_usage" %>
-      <div class="form-group">
-        <div class="col-lg-offset-2 col-lg-10">
-          <%= submit_tag "Download Deploy Group Usage Report", class: 'btn btn-default' %>
-        </div>
-      </div>
+      <%= submit_tag "Download Deploy Group Usage Report", class: 'btn btn-default' %>
     <% end %>
   </div>
 
