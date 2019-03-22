@@ -49,11 +49,13 @@ module Kubernetes
         reasons.reject(&:blank?).uniq.join("/").presence || "Unknown"
       end
 
+      # TODO: move into resource_status.rb
       def container_names
         (@pod.dig(:spec, :containers) + self.class.init_containers(@pod)).map { |c| c.fetch(:name) }.uniq
       end
 
       # tries to get logs from current or previous pod depending on if it restarted
+      # TODO: move into resource_status.rb
       def logs(container, end_time)
         fetch_logs(container, end_time, previous: restarted?)
       rescue *SamsonKubernetes.connection_errors # not found or pod is initializing
