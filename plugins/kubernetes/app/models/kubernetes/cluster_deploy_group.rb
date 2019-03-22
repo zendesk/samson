@@ -3,7 +3,8 @@ module Kubernetes
   class ClusterDeployGroup < ActiveRecord::Base
     self.table_name = 'kubernetes_cluster_deploy_groups'
 
-    belongs_to :cluster, class_name: 'Kubernetes::Cluster', foreign_key: :kubernetes_cluster_id
+    belongs_to :cluster,
+      class_name: 'Kubernetes::Cluster', foreign_key: :kubernetes_cluster_id, inverse_of: :cluster_deploy_groups
     belongs_to :deploy_group, inverse_of: :cluster_deploy_group
 
     validates :cluster, presence: true

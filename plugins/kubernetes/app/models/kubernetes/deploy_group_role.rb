@@ -8,9 +8,9 @@ module Kubernetes
 
     audited
 
-    belongs_to :project
-    belongs_to :deploy_group
-    belongs_to :kubernetes_role, class_name: 'Kubernetes::Role'
+    belongs_to :project, inverse_of: :kubernetes_roles
+    belongs_to :deploy_group, inverse_of: :kubernetes_deploy_group_roles
+    belongs_to :kubernetes_role, class_name: 'Kubernetes::Role', inverse_of: :kubernetes_deploy_group_roles
 
     validates :requests_cpu, :requests_memory, :limits_memory, :limits_cpu, :replicas, presence: true
     validates :requests_cpu, numericality: {greater_than_or_equal_to: 0}

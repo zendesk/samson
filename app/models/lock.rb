@@ -12,7 +12,7 @@ class Lock < ActiveRecord::Base
   include SoftDeleteWithDestroy
 
   belongs_to :resource, polymorphic: true, optional: true
-  belongs_to :user
+  belongs_to :user, inverse_of: :locks
   belongs_to :environment, optional: true
 
   before_validation :nil_out_blank_resource_type

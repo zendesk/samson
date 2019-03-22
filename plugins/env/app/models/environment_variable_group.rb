@@ -13,7 +13,7 @@ class EnvironmentVariableGroup < ActiveRecord::Base
   default_scope -> { order(:name) }
 
   has_many :project_environment_variable_groups, dependent: :destroy
-  has_many :projects, through: :project_environment_variable_groups
+  has_many :projects, through: :project_environment_variable_groups, inverse_of: :environment_variable_groups
 
   validates :name, presence: true
 

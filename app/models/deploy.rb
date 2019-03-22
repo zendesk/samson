@@ -6,11 +6,11 @@ class Deploy < ActiveRecord::Base
 
   include SoftDeleteWithDestroy
 
-  belongs_to :stage, touch: true
-  belongs_to :build, optional: true
-  belongs_to :project
-  belongs_to :job
-  belongs_to :buddy, -> { unscope(where: "deleted_at") }, class_name: 'User', optional: true
+  belongs_to :stage, touch: true, inverse_of: :deploys
+  belongs_to :build, optional: true, inverse_of: :deploys
+  belongs_to :project, inverse_of: :deploys
+  belongs_to :job, inverse_of: :deploy
+  belongs_to :buddy, -> { unscope(where: "deleted_at") }, class_name: 'User', optional: true, inverse_of: nil
 
   default_scope { order(id: :desc) }
 

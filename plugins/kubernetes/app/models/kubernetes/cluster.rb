@@ -11,8 +11,9 @@ module Kubernetes
     has_many :cluster_deploy_groups,
       class_name: 'Kubernetes::ClusterDeployGroup',
       foreign_key: :kubernetes_cluster_id,
-      dependent: nil
-    has_many :deploy_groups, through: :cluster_deploy_groups
+      dependent: nil,
+      inverse_of: :cluster
+    has_many :deploy_groups, through: :cluster_deploy_groups, inverse_of: :kubernetes_cluster
 
     validates :name, presence: true, uniqueness: true
     validates :config_filepath, presence: true

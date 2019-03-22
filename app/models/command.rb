@@ -6,10 +6,10 @@ class Command < ActiveRecord::Base
   audits_on_association(:stages, :stage_commands, audit_name: :script, &:script)
 
   has_many :stage_commands, dependent: nil
-  has_many :stages, through: :stage_commands
-  has_many :projects, foreign_key: :build_command_id, dependent: nil
+  has_many :stages, through: :stage_commands, inverse_of: :commands
+  has_many :projects, foreign_key: :build_command_id, dependent: nil, inverse_of: :build_command
 
-  belongs_to :project, optional: true
+  belongs_to :project, optional: true, inverse_of: :commands
 
   validates :command, presence: true
 

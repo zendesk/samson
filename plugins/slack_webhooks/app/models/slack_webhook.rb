@@ -4,7 +4,7 @@ class SlackWebhook < ActiveRecord::Base
   validate :validate_url
   validate :validate_used
 
-  belongs_to :stage
+  belongs_to :stage, inverse_of: :slack_webhooks
 
   def deliver_for?(deploy_phase, deploy)
     case deploy_phase
