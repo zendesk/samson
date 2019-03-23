@@ -40,6 +40,10 @@ class DeployGroup < ActiveRecord::Base
     super || (lock.resource_type == "Environment" && lock.resource_equal?(environment))
   end
 
+  def as_json(options = {})
+    super({except: [:name_sortable]}.merge(options))
+  end
+
   private
 
   def generated_name_sortable
