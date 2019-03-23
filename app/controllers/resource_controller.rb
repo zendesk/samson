@@ -5,8 +5,6 @@ require 'csv'
 class ResourceController < ApplicationController
   ADD_MORE = 'Save and add another'
 
-  include JsonRenderer
-
   def index(paginate: true)
     assign_resources(
       if paginate
