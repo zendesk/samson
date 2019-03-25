@@ -163,9 +163,14 @@ module Kubernetes
       # print events for non-resources
       non_pod_statuses.each { |s| print_events(s) }
 
-      # print logs for 1 pod per role
       log_end_time = Integer(ENV['KUBERNETES_LOG_TIMEOUT'] || '20').seconds.from_now
-      sample_pod_statuses = pod_statuses.reject(&:live).select(&:resource).group_by(&:role).each_value.map(&:first)
+
+      sample_pod_statuses = pod_statuses.
+        reject(&:live). # do not debug working ones
+        select(&:resource). # cannot show anything if we don't know the name
+        sort_by { |s| s.finished ? 0 : 1 }. # prefer failed over waiting
+        group_by(&:role).each_value.map(&:first) # 1 per role since they should fail for similar reasons
+
       sample_pod_statuses.each do |status|
         print_events(status)
         print_logs(status, log_end_time)
