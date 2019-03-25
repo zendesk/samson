@@ -3,14 +3,14 @@ module Kubernetes
   class ReleaseDoc < ActiveRecord::Base
     self.table_name = 'kubernetes_release_docs'
 
-    belongs_to :kubernetes_role, class_name: 'Kubernetes::Role'
-    belongs_to :kubernetes_release, class_name: 'Kubernetes::Release'
-    belongs_to :deploy_group
+    belongs_to :kubernetes_role, class_name: 'Kubernetes::Role', inverse_of: nil
+    belongs_to :kubernetes_release, class_name: 'Kubernetes::Release', inverse_of: :release_docs
+    belongs_to :deploy_group, inverse_of: nil
 
     serialize :resource_template, JSON
     delegate :build_selectors, to: :verification_template
 
-    validates :deploy_group, presence: true
+    validates :deploy_group, presence: true, inverse_of: nil
     validates :kubernetes_role, presence: true
     validates :kubernetes_release, presence: true
     validate :validate_config_file, on: :create

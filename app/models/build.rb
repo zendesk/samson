@@ -4,9 +4,9 @@ class Build < ActiveRecord::Base
   SHA256_REGEX = /\A(sha256:)?[0-9a-f]{64}\Z/i.freeze
   DIGEST_REGEX = /\A[\w.-]+[\w.-]*(:\d+)?[\w.\/-]*@sha256:[0-9a-f]{64}\Z/i.freeze
 
-  belongs_to :project
+  belongs_to :project, inverse_of: :builds
   belongs_to :docker_build_job, class_name: 'Job', optional: true
-  belongs_to :creator, class_name: 'User', foreign_key: 'created_by'
+  belongs_to :creator, class_name: 'User', foreign_key: 'created_by', inverse_of: :builds
   has_many :deploys, dependent: nil
 
   before_validation :nil_out_blanks

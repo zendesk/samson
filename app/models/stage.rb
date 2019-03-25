@@ -12,20 +12,21 @@ class Stage < ActiveRecord::Base
 
   audited except: [:order]
 
-  belongs_to :project, touch: true
+  belongs_to :project, touch: true, inverse_of: :stages
 
   has_many :deploys, dependent: :destroy
   has_many :webhooks, dependent: :destroy
   has_many :outbound_webhooks, dependent: :destroy
 
-  belongs_to :template_stage, class_name: "Stage", optional: true
-  has_many :clones, class_name: "Stage", foreign_key: "template_stage_id", dependent: nil
+  belongs_to :template_stage, class_name: "Stage", optional: true, inverse_of: :clones
+  has_many :clones, class_name: "Stage", foreign_key: "template_stage_id", dependent: nil, inverse_of: :template_stage
 
   has_many :stage_commands, autosave: true, dependent: :destroy
+  has_many :commands, through: :stage_commands, inverse_of: :stages
   private :stage_commands, :stage_commands= # must use ordering via script/command_ids/command_ids=
 
   has_many :deploy_groups_stages, dependent: :destroy
-  has_many :deploy_groups, through: :deploy_groups_stages
+  has_many :deploy_groups, through: :deploy_groups_stages, inverse_of: :stages
 
   default_scope { order(:order) }
 

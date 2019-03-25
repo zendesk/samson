@@ -9,11 +9,12 @@ class DeployGroup < ActiveRecord::Base
 
   default_scope { order(:name_sortable) }
 
-  belongs_to :environment
-  belongs_to :vault_server, class_name: 'Samson::Secrets::VaultServer', optional: true
+  belongs_to :environment, inverse_of: :deploy_groups
+  belongs_to :vault_server, class_name: 'Samson::Secrets::VaultServer', optional: true, inverse_of: :deploy_groups
   has_many :deploy_groups_stages, dependent: :destroy
-  has_many :stages, through: :deploy_groups_stages
-  has_many :template_stages, -> { where(is_template: true) }, through: :deploy_groups_stages, source: :stage
+  has_many :stages, through: :deploy_groups_stages, inverse_of: :deploy_groups
+  has_many :template_stages, -> { where(is_template: true) },
+    through: :deploy_groups_stages, source: :stage, inverse_of: nil
 
   delegate :production?, to: :environment
 

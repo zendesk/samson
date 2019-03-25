@@ -33,11 +33,13 @@ module Kubernetes
     has_many :kubernetes_deploy_group_roles,
       class_name: 'Kubernetes::DeployGroupRole',
       foreign_key: :kubernetes_role_id,
-      dependent: :destroy
+      dependent: :destroy,
+      inverse_of: :kubernetes_role
     has_many :stage_roles,
       class_name: "Kubernetes::StageRole",
       foreign_key: :kubernetes_role_id,
-      dependent: :destroy
+      dependent: :destroy,
+      inverse_of: :kubernetes_role
 
     before_validation :nilify_service_name
     before_validation :strip_config_file

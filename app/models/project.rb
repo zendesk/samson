@@ -44,8 +44,10 @@ class Project < ActiveRecord::Base
   has_many :outbound_webhooks, dependent: :destroy
   has_many :commands, dependent: :destroy
   has_many :user_project_roles, dependent: :destroy
-  has_many :users, through: :user_project_roles
+  has_many :users, through: :user_project_roles, inverse_of: :projects
   has_many :secret_sharing_grants, dependent: :destroy
+  has_many :jobs, dependent: nil
+  has_many :stars, dependent: :destroy
 
   belongs_to :build_command, class_name: 'Command', optional: true
 

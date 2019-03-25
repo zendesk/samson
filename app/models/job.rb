@@ -1,10 +1,12 @@
 # frozen_string_literal: true
 class Job < ActiveRecord::Base
-  belongs_to :project
-  belongs_to :user, -> { unscope(where: :deleted_at) }
-  belongs_to :canceller, -> { unscope(where: "deleted_at") }, class_name: 'User', optional: true
+  belongs_to :project, inverse_of: :jobs
+  belongs_to :user, -> { unscope(where: :deleted_at) }, inverse_of: :jobs
+  belongs_to :canceller, -> { unscope(where: "deleted_at") },
+    class_name: 'User', optional: true, inverse_of: nil
 
   has_one :deploy, dependent: nil
+  has_one :build, dependent: nil, inverse_of: :docker_build_job
 
   # Used by status_panel
   alias_attribute :start_time, :created_at

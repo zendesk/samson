@@ -3,7 +3,7 @@ class Release < ActiveRecord::Base
   NUMBER_REGEX = /\A#{Samson::RELEASE_NUMBER}\z/.freeze
   VERSION_REGEX = /\Av(#{Samson::RELEASE_NUMBER})\z/.freeze
 
-  belongs_to :project, touch: true
+  belongs_to :project, touch: true, inverse_of: :releases
   belongs_to :author, polymorphic: true
 
   before_validation :assign_release_number

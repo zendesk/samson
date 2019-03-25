@@ -5,6 +5,15 @@ SingleCov.not_covered!
 
 # kitchen sink for 1-off tests
 describe "cleanliness" do
+  def all_models
+    roots = (Samson::Hooks.plugins.map(&:folder).map { |f| "#{f}/" } + [""])
+    models = Dir["{#{roots.join(",")}}app/models/**/*.rb"].grep_v(/\/concerns\//)
+    models.size.must_be :>, 20
+    models.map! { |f| f.sub(/.*\/plugins\/[^\/]+\//, "").sub("app/models/", "") }
+    models.each { |f| require f }
+    ActiveRecord::Base.descendants
+  end
+
   def assert_content(files)
     files -= [File.expand_path(__FILE__).sub("#{Rails.root}/", '')]
     bad = files.map do |f|
@@ -291,24 +300,40 @@ describe "cleanliness" do
   end
 
   it "explicity defines what should happen to dependencies" do
-    roots = (Samson::Hooks.plugins.map(&:folder) + [""])
-    models = Dir["{#{roots.join(",")}}app/models/**/*.rb"].grep_v(/\/concerns\//)
-    models.size.must_be :>, 20
-    models.map! { |f| f.sub(/plugins\/[^\/]+\//, "").sub("app/models/", "") }
-    models.each { |f| require f }
-
-    bad = ActiveRecord::Base.descendants.flat_map do |model|
+    bad = all_models.flat_map do |model|
       model.reflect_on_all_associations.map do |association|
-        next if association.is_a?(ActiveRecord::Reflection::BelongsToReflection)
-        next if association.name == :audits
-        next if association.options.key?(:through)
-        next if association.options.key?(:dependent)
+        next if association.is_a?(ActiveRecord::Reflection::BelongsToReflection) # cleans itself up
+        next if association.name == :audits # should never be destroyed
+        next if association.options.key?(:through) # already cleaned up via through relation
+        next if association.options.key?(:dependent) # already defined
         "#{model.name} #{association.name}"
       end
     end.compact
     assert(
       bad.empty?,
-      "These assocations need a :dependent defined (most likely :destroy or nil)\n#{bad.join("\n")}"
+      "These associations need a :dependent defined (most likely :destroy or nil)\n#{bad.join("\n")}"
+    )
+  end
+
+  it "links all dependencies both ways so dependencies get deleted reliably" do
+    bad = (all_models - [Audited::Audit]).flat_map do |model|
+      model.reflect_on_all_associations.map do |association|
+        next if association.name == :audits # should not be cleaned up and added by external helper
+        next if association.options[:polymorphic] # TODO: should verify all possible types have a cleanup association
+        next if association.options.fetch(:inverse_of, false).nil? # disabled on purpose
+        next if association.inverse_of
+        "#{model.name} #{association.name}"
+      end
+    end.compact
+    assert(
+      bad.empty?,
+      <<~TEXT
+        These associations need an inverse association.
+        For example project has stages and stage has project.
+        If automatic connection does not work, use `:inverse_of` option on the association.
+        If inverse association is missing AND the inverse should not destroyed when dependency is destroyed, use `inverse_of: nil`.
+        #{bad.join("\n")}
+      TEXT
     )
   end
 end

@@ -10,8 +10,8 @@ class Webhook < ActiveRecord::Base
   }
   validate :validate_not_auto_deploying_without_buddy
 
-  belongs_to :project
-  belongs_to :stage
+  belongs_to :project, inverse_of: :webhooks
+  belongs_to :stage, inverse_of: :webhooks
 
   def self.for_branch(branch)
     where(branch: ['', branch])

@@ -9,8 +9,11 @@ DeployGroup.class_eval do
     inverse_of: :deploy_group,
     dependent: :destroy
   )
-  has_one :kubernetes_cluster, class_name: 'Kubernetes::Cluster', through: :cluster_deploy_group, source: :cluster
+  has_one :kubernetes_cluster,
+    class_name: 'Kubernetes::Cluster', through: :cluster_deploy_group, source: :cluster, inverse_of: :deploy_groups
   has_many :kubernetes_deploy_group_roles, class_name: 'Kubernetes::DeployGroupRole', dependent: :destroy
+  has_many :kubernetes_usage_limits,
+    class_name: 'Kubernetes::UsageLimit', dependent: :destroy, inverse_of: :scope, as: :scope
 
   accepts_nested_attributes_for(
     :cluster_deploy_group,

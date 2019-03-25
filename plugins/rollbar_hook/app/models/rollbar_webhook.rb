@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 class RollbarWebhook < ActiveRecord::Base
-  belongs_to :stage
+  belongs_to :stage, inverse_of: :rollbar_webhooks
   validates :webhook_url, :access_token, :environment, presence: true
   validate :validate_secret_exists
 

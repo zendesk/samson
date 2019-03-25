@@ -4,7 +4,7 @@ class Kubernetes::UsageLimit < ActiveRecord::Base
   audited
 
   self.table_name = 'kubernetes_usage_limits'
-  belongs_to :project, optional: true
+  belongs_to :project, optional: true, inverse_of: :kubernetes_usage_limits
   belongs_to :scope, polymorphic: true, optional: true
 
   validates :cpu, :memory, presence: true
