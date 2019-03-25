@@ -185,8 +185,11 @@ module Kubernetes
     end
 
     def resource_identifier(status, exact: true)
-      name = (exact ? (status.resource&.dig(:metadata, :name) || status.role.name) : status.role.name)
-      "#{status.deploy_group.name} #{status.role.name} #{status.kind} #{name}"
+      id = "#{status.deploy_group.name} #{status.role.name} #{status.kind}"
+      if exact && name = status.resource&.dig(:metadata, :name)
+        id += " #{name}"
+      end
+      id
     end
 
     # show why container failed to boot

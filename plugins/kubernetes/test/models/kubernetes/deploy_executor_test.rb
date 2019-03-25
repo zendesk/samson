@@ -123,7 +123,7 @@ describe Kubernetes::DeployExecutor do
 
     it "succeeds" do
       assert execute, out
-      out.must_include "resque-worker: Live\n"
+      out.must_include "resque-worker Pod: Live\n"
       out.must_include "SUCCESS"
       out.must_include waiting_message
       out.wont_include "BigDecimal" # properly serialized configs
@@ -132,7 +132,7 @@ describe Kubernetes::DeployExecutor do
     it "watches resources until they are stable" do
       Kubernetes::DeployExecutor.any_instance.stubs(:time_left).returns(2, 1, 0)
       assert execute, out
-      out.must_include "resque-worker: Live\n"
+      out.must_include "resque-worker Pod: Live\n"
       out.must_include "SUCCESS"
       out.scan(/Testing for stability/).size.must_equal 3, out
     end
@@ -146,15 +146,15 @@ describe Kubernetes::DeployExecutor do
       job.project.update_column :docker_image_building_disabled, true
 
       assert execute, out
-      out.must_include "resque-worker: Live\n"
+      out.must_include "resque-worker Pod: Live\n"
       out.must_include "SUCCESS"
     end
 
     it "can deploy roles with 0 replicas to disable them" do
       worker_role.update_column(:replicas, 0)
       assert execute, out
-      out.wont_include "resque-worker: Live\n"
-      out.must_include "app-server: Live\n"
+      out.wont_include "resque-worker Pod: Live\n"
+      out.must_include "app-server Pod: Live\n"
     end
 
     it "does not test for stability when not deploying any pods" do
@@ -189,7 +189,7 @@ describe Kubernetes::DeployExecutor do
       pod_reply.fetch(:items).clear
       Kubernetes::DeployExecutor.any_instance.stubs(:time_left).returns(2, 1, 0)
       refute execute, out
-      out.must_include "Pod 100 resque-worker Pod resque-worker: Missing"
+      out.must_include "Pod 100 resque-worker Pod: Missing"
       out.must_match /TIMEOUT.*\n\nDebug:/ # not showing missing pod statuses after deploy
     end
 
@@ -338,13 +338,13 @@ describe Kubernetes::DeployExecutor do
         out.wont_include "other roles" # not announcing that we have more to deploy
         out.wont_include "stability" # not testing for stability since it's only 1 completed pod
 
-        out.must_include "resque-worker: Live\n"
+        out.must_include "resque-worker Pod: Live\n"
         out.must_include "SUCCESS"
       end
 
       it "runs prerequisites and then the deploy" do
         assert execute, out
-        out.must_include "resque-worker: Live\n"
+        out.must_include "resque-worker Pod: Live\n"
         out.must_include "SUCCESS"
         out.must_include "stability" # testing deploy for stability
         out.must_include "deploying prerequisite" # announcing that we deploy prerequisites first
@@ -370,7 +370,7 @@ describe Kubernetes::DeployExecutor do
       worker_role.update_column(:replicas, 2)
       pod_reply[:items] << pod_reply[:items].first
       assert execute, out
-      out.scan(/resque-worker: Live/).count.must_equal 2
+      out.scan(/resque-worker Pod: Live/).count.must_equal 2
       out.must_include "SUCCESS"
     end
 
@@ -380,7 +380,7 @@ describe Kubernetes::DeployExecutor do
 
       refute execute, out
 
-      out.must_include "resque-worker: Waiting (Pending, Unknown)\n"
+      out.must_include "resque-worker Pod: Waiting (Pending, Unknown)\n"
     end
 
     it "stops when detecting a restart" do
@@ -388,7 +388,7 @@ describe Kubernetes::DeployExecutor do
 
       refute execute
 
-      out.must_include "resque-worker: Restarted\n"
+      out.must_include "resque-worker Pod pod-resque-worker: Restarted\n"
       out.must_include "UNSTABLE"
     end
 
@@ -399,7 +399,7 @@ describe Kubernetes::DeployExecutor do
 
       refute execute
 
-      out.must_include "Pod 100 resque-worker Pod resque-worker: Restarted\n"
+      out.must_include "Pod 100 resque-worker Pod: Restarted\n"
       out.must_include "UNSTABLE"
     end
 
@@ -408,7 +408,7 @@ describe Kubernetes::DeployExecutor do
 
       refute execute
 
-      out.must_include "resque-worker: Failed\n"
+      out.must_include "resque-worker Pod: Failed\n"
       out.must_include "UNSTABLE"
     end
 
@@ -430,7 +430,7 @@ describe Kubernetes::DeployExecutor do
 
       refute execute
 
-      out.must_include "resque-worker: Error event\n"
+      out.must_include "resque-worker Pod: Error event\n"
       out.must_include "UNSTABLE"
 
       # 4 resources + once for first pod, then stops + 4 different resource events + once to debug failed pod
@@ -459,7 +459,7 @@ describe Kubernetes::DeployExecutor do
 
       refute execute
 
-      out.must_include "resque-worker: Waiting for resources (Pending, Unknown)\n"
+      out.must_include "resque-worker Pod: Waiting for resources (Pending, Unknown)\n"
     end
 
     it "stops when taking too long to go live" do
@@ -477,7 +477,7 @@ describe Kubernetes::DeployExecutor do
     it "waits when deploy is running but Unknown" do
       pod_status[:conditions][0][:status] = "False"
       refute execute, out
-      out.must_include "resque-worker: Waiting (Running, Unknown)\n"
+      out.must_include "resque-worker Pod: Waiting (Running, Unknown)\n"
     end
 
     it "fails when pod is failing to boot" do
@@ -490,13 +490,13 @@ describe Kubernetes::DeployExecutor do
 
       out.must_include "READY"
       out.must_include "UNSTABLE"
-      out.must_include "resque-worker: Restarted"
+      out.must_include "resque-worker Pod pod-resque-worker: Restarted"
     end
 
     it "shows error when pod could not be found" do
       pod_reply[:items].clear
       refute execute, out
-      out.must_include "resque-worker: Missing\n"
+      out.must_include "resque-worker Pod: Missing\n"
     end
 
     it "fails when resource has error events" do
@@ -525,7 +525,7 @@ describe Kubernetes::DeployExecutor do
 
         assert execute, out
 
-        out.scan(/resque-worker: Live/).count.must_equal 1
+        out.scan(/resque-worker Pod: Live/).count.must_equal 1, out
         out.must_include "(autoscaled role, only showing one pod)"
         out.must_include "SUCCESS"
       end
@@ -539,7 +539,8 @@ describe Kubernetes::DeployExecutor do
 
         refute execute
 
-        out.scan(/resque-worker: Restarted/).count.must_equal 2
+        out.scan(/resque-worker Pod: Restarted/).count.must_equal 1, out
+        out.scan(/resque-worker Pod pod-resque-worker: Restarted/).count.must_equal 1, out
         out.must_include "(autoscaled role, only showing one pod)"
         out.must_include "DONE"
       end
@@ -549,7 +550,7 @@ describe Kubernetes::DeployExecutor do
 
         refute execute, out
 
-        out.must_include "resque-worker: Waiting (Running, Unknown)"
+        out.must_include "resque-worker Pod: Waiting (Running, Unknown)"
       end
     end
 
@@ -570,7 +571,7 @@ describe Kubernetes::DeployExecutor do
 
         refute execute
 
-        out.must_include "resque-worker: Restarted\n"
+        out.must_include "resque-worker Pod: Restarted\n"
         out.must_include "UNSTABLE"
         out.must_include rollback_indicator
         out.must_include "DONE" # DONE is shown ... we got past the rollback
@@ -581,7 +582,7 @@ describe Kubernetes::DeployExecutor do
       it "deletes when there was no previous deployed resource" do
         refute execute
 
-        out.must_include "resque-worker: Restarted\n"
+        out.must_include "resque-worker Pod: Restarted\n"
         out.must_include "UNSTABLE"
         out.must_include "Deleting"
         out.wont_include rollback_indicator
@@ -595,7 +596,7 @@ describe Kubernetes::DeployExecutor do
 
         refute execute
 
-        out.must_include "resque-worker: Restarted\n"
+        out.must_include "resque-worker Pod: Restarted\n"
         out.must_include "UNSTABLE"
         out.must_include "DONE" # DONE is shown ... we got past the rollback
         out.must_include "FAILED: Weird error" # rollback error cause is shown
@@ -607,7 +608,7 @@ describe Kubernetes::DeployExecutor do
 
         refute execute
 
-        out.must_include "resque-worker: Restarted\n"
+        out.must_include "resque-worker Pod: Restarted\n"
         out.must_include "UNSTABLE"
         out.must_include "DONE" # DONE is shown ... we got past the rollback
       end
@@ -648,7 +649,7 @@ describe Kubernetes::DeployExecutor do
         refute execute
 
         # failed
-        out.must_include "resque-worker: Restarted\n"
+        out.must_include "resque-worker Pod: Restarted\n"
         out.must_include "UNSTABLE"
 
         # correct debugging output
