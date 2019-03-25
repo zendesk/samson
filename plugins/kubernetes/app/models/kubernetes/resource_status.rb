@@ -31,7 +31,7 @@ module Kubernetes
           @details = "Live"
           @live = true
           @finished = @pod.completed?
-        elsif (@pod.events = events) && @pod.waiting_for_resources?
+        elsif (@pod.events = events(type: "Warning")) && @pod.waiting_for_resources?
           @details = "Waiting for resources (#{@pod.phase}, #{@pod.reason})"
         elsif @pod.events_indicate_failure?
           @details = "Error event"
@@ -42,7 +42,7 @@ module Kubernetes
       else
         # NOTE: non-pods are never "Missing" because we create them manually
         @finished = true
-        if events.any? { |e| e.fetch(:type) != 'Normal' }
+        if events(type: "Warning").any?
           @details = "Error event"
         else
           @details = "Live"
@@ -51,12 +51,17 @@ module Kubernetes
       end
     end
 
-    def events
-      # do not rely on uid, when creation fails we don't get one
+    # do not rely on uid, when creation fails we don't get one
+    def events(type: nil)
+      selector = [
+        "involvedObject.name=#{@resource.dig_fetch(:metadata, :name)}",
+        "involvedObject.kind=#{@kind}",
+      ]
+      selector << "type=#{type}" if type
       SamsonKubernetes.retry_on_connection_errors do
         events = @client.get_events(
           namespace: @resource.dig(:metadata, :namespace),
-          field_selector: "involvedObject.name=#{@resource.dig_fetch(:metadata, :name)},involvedObject.kind=#{@kind}"
+          field_selector: selector.join(",")
         ).fetch(:items)
 
         # ignore events from before the deploy, comparing strings for speed

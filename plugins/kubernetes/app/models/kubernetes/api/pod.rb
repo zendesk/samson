@@ -81,7 +81,6 @@ module Kubernetes
       def events_indicating_failure
         @events_indicating_failure ||= begin
           bad = @events.dup
-          bad.reject! { |e| e.fetch(:type) == 'Normal' }
           bad.reject! { |e| ignorable_hpa_event?(e) }
           bad.reject! do |e|
             e[:reason] == "Unhealthy" && e[:message] =~ /\A\S+ness probe failed/ && !probe_failed_to_often?(e)
