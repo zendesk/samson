@@ -245,18 +245,13 @@ describe Kubernetes::Api::Pod do
       pod_with_client.events_indicate_failure?
     end
 
+    it "is true" do
+      assert events_indicate_failure?
+    end
+
     it "is false when there are no events" do
       events.clear
       refute events_indicate_failure?
-    end
-
-    it "is false when there are Normal events" do
-      refute events_indicate_failure?
-    end
-
-    it "is true with bad events" do
-      event[:type] = "Warning"
-      assert events_indicate_failure?
     end
 
     describe "probe failures" do
