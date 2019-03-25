@@ -33,26 +33,32 @@ class TerminalExecutor
   end
 
   def execute(*commands, timeout: @timeout)
-    script_as_executable(script(commands)) do |command|
-      output, _, pid = PTY.spawn(whitelisted_env, command, in: '/dev/null', unsetenv_others: true)
-      record_pid(pid) do
-        begin
-          Timeout.timeout(timeout) do
-            stream from: output, to: @output
-            _pid, status = Process.wait2(pid)
-            status.success?
+    # do not log everything or log secrets
+    log = commands.first
+    log += "..." if commands.size > 1
+
+    ActiveSupport::Notifications.instrument("execute.terminal_executor.samson", script: log) do
+      script_as_executable(script(commands)) do |command|
+        output, _, pid = PTY.spawn(whitelisted_env, command, in: '/dev/null', unsetenv_others: true)
+        record_pid(pid) do
+          begin
+            Timeout.timeout(timeout) do
+              stream from: output, to: @output
+              _pid, status = Process.wait2(pid)
+              status.success?
+            end
+          rescue Timeout::Error
+            @output.puts "Timeout: execution took longer then #{timeout}s and was terminated"
+            cancel timeout: KILL_TIMEOUT
+            false
+          rescue Errno::ECHILD
+            @output.puts "#{$!.class}: #{$!.message}"
+            cancel timeout: KILL_TIMEOUT
+            false
+          rescue JobQueue::Cancel
+            cancel timeout: @cancel_timeout
+            raise
           end
-        rescue Timeout::Error
-          @output.puts "Timeout: execution took longer then #{timeout}s and was terminated"
-          cancel timeout: KILL_TIMEOUT
-          false
-        rescue Errno::ECHILD
-          @output.puts "#{$!.class}: #{$!.message}"
-          cancel timeout: KILL_TIMEOUT
-          false
-        rescue JobQueue::Cancel
-          cancel timeout: @cancel_timeout
-          raise
         end
       end
     end
