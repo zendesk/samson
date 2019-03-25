@@ -196,4 +196,10 @@ describe DeployGroup do
       refute deploy_group.locked_by?(Lock.new(resource: environments(:staging)))
     end
   end
+
+  describe "#as_json" do
+    it "does not render internal read-only column" do
+      deploy_group.as_json.keys.wont_include "name_sortable"
+    end
+  end
 end
