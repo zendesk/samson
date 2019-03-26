@@ -25,6 +25,22 @@ ActiveSupport::Notifications.subscribe("execute_job.samson") do |*args|
   Samson.statsd.histogram "execute_shell.time", event.duration, tags: tags
 end
 
+# report and log timing, plain names so git-grep works
+[
+  ["execute.command_executor.samson", "command_executor.execute", []],
+  ["execute.terminal_executor.samson", "terminal_executor.execute", []],
+  ["request.rest_client.samson", "rest_client.request", [:method]],
+  ["request.vault.samson", "vault.request", [:method]],
+  ["request.faraday.samson", "faraday.request", [:method]],
+  ["wait_for_build.samson", "builds.time.wait_time", [:external, :project]]
+].each do |topic, metric, tagged|
+  ActiveSupport::Notifications.subscribe(topic) do |_, start, finish, _, payload|
+    duration = 1000.0 * (finish - start)
+    Rails.logger.debug(message: topic, duration: "#{duration.round(1)}ms", **payload)
+    Samson.statsd.timing metric, duration, tags: tagged.map { |k| "#{k}:#{payload.fetch(k)}" }
+  end
+end
+
 ActiveSupport::Notifications.subscribe("job_queue.samson") do |*, payload|
   [[:deploys, true], [:jobs, false]].each do |(type, is_deploy)|
     metrics = payload.fetch(type)
@@ -46,16 +62,6 @@ end
 
 ActiveSupport::Notifications.subscribe("system_stats.samson") do |*, payload|
   payload.each { |key, value| Samson.statsd.gauge key.to_s, value }
-end
-
-ActiveSupport::Notifications.subscribe("wait_for_build.samson") do |*args|
-  event = ActiveSupport::Notifications::Event.new(*args)
-  tags = [
-    "project:#{event.payload.fetch(:project)}",
-    "external:#{event.payload.fetch(:external)}"
-  ]
-
-  Samson.statsd.timing "builds.time.wait_time", event.duration, tags: tags
 end
 
 # basic web stats

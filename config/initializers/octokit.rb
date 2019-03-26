@@ -38,11 +38,3 @@ Octokit.api_endpoint = Rails.application.config.samson.github.api_url
 Octokit.web_endpoint = Rails.application.config.samson.github.web_url
 
 GITHUB = Octokit::Client.new(access_token: token)
-
-# Log github request timing so it is more obvious what we spent our time on
-Sawyer::Response.prepend(Module.new do
-  def initialize(*)
-    super
-    Rails.logger.info("GITHUB #{@env.method.upcase} (#{timing}s) #{@env.url}")
-  end
-end)

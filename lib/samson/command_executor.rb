@@ -13,14 +13,16 @@ module Samson
         popen_options = {unsetenv_others: true, err: err}
         popen_options[:chdir] = dir if dir
 
-        Timeout.timeout(timeout) do
-          begin
-            pio = IO.popen(env, command.map(&:to_s), popen_options)
-            output = pio.read
-            pio.close
-            [$?.success?, output]
-          rescue Errno::ENOENT
-            [false, "No such file or directory - #{command.first}"]
+        ActiveSupport::Notifications.instrument("execute.command_executor.samson", script: command.shelljoin) do
+          Timeout.timeout(timeout) do
+            begin
+              pio = IO.popen(env, command.map(&:to_s), popen_options)
+              output = pio.read
+              pio.close
+              [$?.success?, output]
+            rescue Errno::ENOENT
+              [false, "No such file or directory - #{command.first}"]
+            end
           end
         end
       rescue Timeout::Error

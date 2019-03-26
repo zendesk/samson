@@ -9,3 +9,10 @@ Kubeclient::Client.prepend(Module.new do
     raise
   end
 end)
+
+# instrument all kube-client calls since that is the only thing using rest-client
+(class << RestClient::Request; self; end).prepend(Module.new do
+  def execute(args)
+    ActiveSupport::Notifications.instrument("request.rest_client.samson", args.slice(:method, :url)) { super }
+  end
+end)
