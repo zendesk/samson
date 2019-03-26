@@ -57,7 +57,8 @@ module Samson
         needed.empty? # stop the waiting when we got everything
       end
 
-      all
+      # avoid N+1
+      all.each { |build| cache_project(build) }
     end
 
     def self.detect_build_by_selector!(builds, dockerfile, image, fail:, project:)
@@ -143,17 +144,21 @@ module Samson
     end
 
     def wait_for_build_completion(build)
-      if build.reload.active?
-        @output.puts("Waiting for Build #{build.url} to finish.")
-      else
+      unless cache_project(build.reload).active?
         @output.puts("Build #{build.url} is finished.")
         return
       end
 
+      @output.puts("Waiting for Build #{build.url} to finish.")
       loop do
         sleep TICK
-        break unless build.reload.active?
+        break unless cache_project(build.reload).active?
       end
+    end
+
+    def cache_project(build)
+      build.project = @job.project if build.project_id == @job.project_id
+      build
     end
 
     def ensure_build_is_succeeded(build)

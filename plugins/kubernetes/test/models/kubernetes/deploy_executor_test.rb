@@ -166,9 +166,38 @@ describe Kubernetes::DeployExecutor do
       out.wont_include "Deploy status after"
     end
 
-    it "does limited amounts of queries" do
-      assert_sql_queries(29) do
-        assert execute, out
+    describe "N+1" do
+      before do
+        # trigger preloads
+        pod_reply
+        executor
+      end
+
+      it "does limited amounts of queries" do
+        assert_sql_queries(16) do
+          assert execute, out
+        end
+      end
+
+      it "does not do nplus1 queries" do
+        assert_nplus1_queries(0) do
+          assert execute, out
+        end
+      end
+
+      it "does not do nplus1 queries for multiple deploy-groups" do
+        deploy_group = deploy_groups(:pod1)
+        stage.deploy_groups_stages.create!(deploy_group: deploy_group)
+        deploy_groups(:pod1).cluster_deploy_group.update_column(:namespace, 'staging')
+        2.times do |i|
+          copy = pod_reply[:items][i].deep_dup
+          copy.dig_set [:metadata, :labels, :deploy_group_id], deploy_group.id
+          pod_reply[:items] << copy
+        end
+
+        assert_nplus1_queries(1) do
+          assert execute, out
+        end
       end
     end
 
