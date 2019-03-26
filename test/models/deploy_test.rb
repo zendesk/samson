@@ -668,6 +668,23 @@ describe Deploy do
     end
   end
 
+  describe "#cycle_time" do
+    before do
+      DeployMetrics.any_instance.stubs(:cycle_time).returns(
+        pr_production: 50,
+        staging_production: 40
+      )
+    end
+
+    it "shows pr_production cycle_time" do
+      deploy.cycle_time[:pr_production].must_equal 50
+    end
+
+    it "shows staging_production cycle_time" do
+      deploy.cycle_time[:staging_production].must_equal 40
+    end
+  end
+
   describe "#as_json" do
     it "includes simple methods status" do
       deploy.as_json.fetch("status").must_equal "succeeded"

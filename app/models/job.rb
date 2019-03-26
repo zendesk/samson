@@ -164,7 +164,7 @@ class Job < ActiveRecord::Base
       project: project.permalink,
       type: deploy ? 'deploy' : 'build',
       status: status,
-      cycle_time: DeployMetrics.new(deploy).cycle_time
+      cycle_time: deploy&.cycle_time || {}
     }
     ActiveSupport::Notifications.instrument('job_status.samson', payload)
   end

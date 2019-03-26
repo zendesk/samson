@@ -385,7 +385,7 @@ describe Job do
         project: project.permalink,
         type: job&.deploy ? 'deploy' : 'build',
         status: 'succeeded',
-        cycle_time: DeployMetrics.new(job&.deploy).cycle_time
+        cycle_time: job&.deploy&.cycle_time || {}
       )
 
       job.send(:report_state)
@@ -399,7 +399,7 @@ describe Job do
         project: project.permalink,
         type: job&.deploy ? 'deploy' : 'build',
         status: 'succeeded',
-        cycle_time: DeployMetrics.new(job&.deploy).cycle_time
+        cycle_time: job&.deploy&.cycle_time || {}
       )
 
       job.send(:report_state)
