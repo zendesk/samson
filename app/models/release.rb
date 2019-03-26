@@ -6,7 +6,6 @@ class Release < ActiveRecord::Base
   belongs_to :project, touch: true, inverse_of: :releases
   belongs_to :author, class_name: "User", inverse_of: nil
 
-  before_validation :assign_author_type
   before_validation :assign_release_number
   before_validation :covert_ref_to_sha
 
@@ -43,10 +42,6 @@ class Release < ActiveRecord::Base
 
   def version
     "v#{number}"
-  end
-
-  def assign_author_type
-    self.author_type = "User"
   end
 
   def assign_release_number

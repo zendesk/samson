@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_03_11_225109) do
+ActiveRecord::Schema.define(version: 2019_03_26_183413) do
 
   create_table "audits" do |t|
     t.integer "auditable_id", null: false
@@ -406,7 +406,6 @@ ActiveRecord::Schema.define(version: 2019_03_11_225109) do
     t.string "commit", null: false
     t.string "number", limit: 20, default: "1", null: false
     t.integer "author_id", null: false
-    t.string "author_type", null: false
     t.datetime "created_at"
     t.datetime "updated_at"
     t.index ["project_id", "number"], name: "index_releases_on_project_id_and_number", unique: true
