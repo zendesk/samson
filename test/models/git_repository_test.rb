@@ -267,12 +267,9 @@ describe GitRepository do
   end
 
   describe "#file_content" do
-    before do
-      create_repo_without_tags
-      repository.send(:ensure_mirror_current)
-    end
+    before { create_repo_without_tags }
 
-    let!(:sha) { repository.commit_from_ref('master') }
+    let!(:sha) { execute_on_remote_repo('git rev-parse master').strip }
 
     it 'finds content' do
       repository.file_content('foo', sha).must_equal "monkey"
@@ -286,36 +283,59 @@ describe GitRepository do
       repository.file_content('foox', 'a' * 40).must_be_nil
     end
 
-    it "always updates for non-shas" do
-      repository.expects(:sha_exist?).never
-      repository.expects(:ensure_mirror_current)
-      repository.file_content('foox', 'a' * 41).must_be_nil
-    end
+    describe "when checkout exists" do
+      # create a checkout without marking "mirror_current?"
+      before { Project.new(id: project.id, repository_url: repo_temp_dir).repository.send(:ensure_mirror_current) }
 
-    it "does not update when sha exists to save time" do
-      repository.expects(:ensure_mirror_current).never
-      repository.file_content('foo', sha).must_equal "monkey"
-    end
-
-    it "updates when sha is missing" do
-      repository.expects(:ensure_mirror_current)
-      repository.file_content('foo', 'a' * 40).must_be_nil
-    end
-
-    describe "pull: false" do
-      before { repository.expects(:update!).never }
-
-      it "finds known" do
-        repository.file_content('foo', 'HEAD', pull: false).must_equal 'monkey'
+      it "updates for non-shas" do
+        repository.expects(:ensure_mirror_current)
+        repository.file_content('foox', 'a' * 41).must_be_nil
       end
 
-      it "ignores unknown" do
-        repository.file_content('foo', 'aaaaaaaaa', pull: false).must_be_nil
+      it "does not update when sha exists to save time" do
+        repository.expects(:ensure_mirror_current).never
+        repository.file_content('foo', sha).must_equal "monkey"
       end
 
-      it "ignores when repo does not exist" do
-        FileUtils.rm_rf(repository.repo_cache_dir)
-        repository.file_content('foo', 'HEAD', pull: false).must_be_nil
+      it "updates when sha is missing" do
+        repository.expects(:ensure_mirror_current)
+        repository.file_content('foo', 'a' * 40).must_be_nil
+      end
+
+      it "caches" do
+        Samson::CommandExecutor.expects(:execute).times(2).returns([true, "x"])
+        4.times { repository.file_content('foo', sha).must_equal "x" }
+      end
+
+      it "does not pull when mirror is current" do
+        repository.send(:ensure_mirror_current)
+        repository.expects(:ensure_mirror_current).never
+        repository.file_content('foo', 'a' * 40, pull: true).must_be_nil
+      end
+
+      describe "pull: false" do
+        before { repository.expects(:ensure_mirror_current).never }
+
+        it "finds known" do
+          repository.file_content('foo', 'HEAD', pull: false).must_equal 'monkey'
+        end
+
+        it "ignores unknown" do
+          repository.file_content('foo', 'aaaaaaaaa', pull: false).must_be_nil
+        end
+
+        it "ignores when repo does not exist" do
+          FileUtils.rm_rf(repository.repo_cache_dir)
+          repository.file_content('foo', 'HEAD', pull: false).must_be_nil
+        end
+
+        it "does not cache when requesting for an update" do
+          repository.unstub(:ensure_mirror_current)
+          repository.expects(:ensure_mirror_current)
+          Samson::CommandExecutor.expects(:execute).times(2).returns([true, "x"])
+          repository.file_content('foo', 'HEAD', pull: false).must_equal "x"
+          4.times { repository.file_content('foo', 'HEAD', pull: true).must_equal "x" }
+        end
       end
     end
   end
@@ -396,6 +416,20 @@ describe GitRepository do
       repository.prune_worktree
       `cd #{repository.repo_cache_dir} && git worktree list`.split("\n").size.must_equal 1
       repository.executor.output.string.wont_include "prune"
+    end
+  end
+
+  describe "#instance_cache" do
+    it "caches" do
+      c = 0
+      2.times { repository.send(:instance_cache, 1) { c += 1 }.must_equal c }
+      c.must_equal 1
+    end
+
+    it "caches nils" do
+      c = 0
+      2.times { repository.send(:instance_cache, 1) { c += 1; nil }.must_be_nil }
+      c.must_equal 1
     end
   end
 end
