@@ -4,14 +4,13 @@ require 'csv'
 class DeployMetricsCsvPresenter
   class << self
     def to_csv
-      CSV.generate do |csv|
-        csv << csv_header
+      Enumerator.new do |yielder|
+        yielder << CSV.generate_line(csv_header)
 
-        # deploy metrics only applicable to succeeded production deployment
         production_stages = Stage.select(&:production?)
         deploys = Deploy.succeeded.where(stage: production_stages).includes(:job, stage: :project)
         deploys.each do |deploy|
-          csv << csv_line(deploy)
+          yielder << CSV.generate_line(csv_line(deploy))
         end
       end
     end

@@ -38,7 +38,7 @@ class CsvExportsController < ApplicationController
           send_data DeployGroupUsageCsvPresenter.to_csv, type: :csv, filename: "DeployGroupUsage_#{date_time_now}.csv"
         elsif params[:type] == "deploy_metrics"
           date_time_now = Time.now.strftime "%Y%m%d_%H%M"
-          send_data DeployMetricsCsvPresenter.to_csv, type: :csv, filename: "DeployMetrics_#{date_time_now}.csv"
+          send_csv_stream(DeployMetricsCsvPresenter.to_csv, "DeployMetrics_#{date_time_now}.csv")
         else
           render body: "not found", status: :not_found
         end
@@ -141,5 +141,21 @@ class CsvExportsController < ApplicationController
     end
 
     filter
+  end
+
+  def send_csv_stream(body_enum, filename)
+    # to stream the content
+    headers.delete("Content-Length")
+    # don't cache anything from this endpoint
+    headers["Cache-Control"] = "no-cache"
+    # tell the browser that this content is in CSV format
+    headers["Content-Type"] = "text/csv"
+    # set filename
+    headers["Content-Disposition"] = "attachment; filename=\"#{filename}\""
+    # make sure nothing is buffered by proxy server
+    headers["X-Accel-Buffering"] = "no"
+    response.status = 200
+    # body_enum here must be an enumerator for the stream to work
+    self.response_body = body_enum
   end
 end

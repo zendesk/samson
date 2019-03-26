@@ -142,6 +142,11 @@ describe CsvExportsController do
         describe "deploy_metrics type" do
           it "returns csv" do
             get :new, params: {format: :csv, type: "deploy_metrics"}
+            @response.headers.key?("Content-Length").must_equal false
+            @response.headers["Cache-Control"].must_equal "no-cache"
+            @response.headers["Content-Type"].must_equal "text/csv"
+            @response.headers["Content-Disposition"].must_include "DeployMetrics"
+            @response.headers["X-Accel-Buffering"].must_equal "no"
             assert_response :success
           end
         end

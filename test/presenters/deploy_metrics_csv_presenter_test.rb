@@ -11,7 +11,7 @@ describe DeployMetricsCsvPresenter do
       production_stages = Stage.select(&:production?)
       deploys = Deploy.succeeded.where(stage: production_stages).includes(:job, stage: :project)
       expected_csv_rows += deploys.size
-      DeployMetricsCsvPresenter.to_csv.split("\n").size.must_equal expected_csv_rows
+      DeployMetricsCsvPresenter.to_csv.count.must_equal expected_csv_rows
     end
   end
 
