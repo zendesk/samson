@@ -15,7 +15,7 @@ class Project < ActiveRecord::Base
     }
   ] + Samson::Hooks.fire(:project_docker_build_method_options).flatten(1)
 
-  has_soft_deletion default_scope: true unless self < SoftDeletion::Core
+  has_soft_deletion default_scope: true unless self < SoftDeletion::Core # uncovered
   audited
 
   include Lockable
@@ -298,13 +298,17 @@ class Project < ActiveRecord::Base
   end
 
   def valid_repository_url
+    return if errors.include?(:repository_url)
     return if repository.valid_url?
 
+    # use private url if that would be valid, unsetting @repository to clear the cache
     if repository_url.to_s.start_with?('http')
       old_repository_url = repository_url
+
       @repository = nil
       self.repository_url = private_repository_url
       return if repository.valid_url?
+
       @repository = nil
       self.repository_url = old_repository_url
     end

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 6
+SingleCov.covered!
 
 describe GitRepository do
   include GitRepoTestHelper
@@ -129,6 +129,10 @@ describe GitRepository do
       repository.commit_from_ref("master ; rm #{file}").must_be_nil
       assert File.exist?(file)
     end
+
+    it 'fails when mirror could not be updated' do
+      repository.commit_from_ref('master').must_be_nil
+    end
   end
 
   describe "#fuzzy_tag_from_ref" do
@@ -153,6 +157,10 @@ describe GitRepository do
         git checkout -b v1
       SHELL
       repository.fuzzy_tag_from_ref('v1').must_equal 'v1'
+    end
+
+    it 'fails when mirror could not be updated' do
+      repository.fuzzy_tag_from_ref('master').must_be_nil
     end
   end
 
@@ -212,6 +220,12 @@ describe GitRepository do
 
   describe "#checkout_workspace" do
     before { create_repo_with_an_additional_branch }
+
+    it "fails without reference" do
+      Dir.mktmpdir do |temp_dir|
+        assert_raises(ArgumentError) { repository.checkout_workspace(temp_dir, '') }
+      end
+    end
 
     [true, false].each do |full_checkout|
       describe "with full_checkout #{full_checkout}" do
@@ -298,6 +312,11 @@ describe GitRepository do
       it "ignores unknown" do
         repository.file_content('foo', 'aaaaaaaaa', pull: false).must_be_nil
       end
+
+      it "ignores when repo does not exist" do
+        FileUtils.rm_rf(repository.repo_cache_dir)
+        repository.file_content('foo', 'HEAD', pull: false).must_be_nil
+      end
     end
   end
 
@@ -315,20 +334,34 @@ describe GitRepository do
       refute MultiLock.locks[lock_key]
     end
 
+    it "does not log waiting when not waiting" do
+      repository.send(:exclusive) {}
+      repository.executor.output.string.must_equal ""
+    end
+
     describe "when already locked" do
-      before { MultiLock.locks[lock_key] = true }
+      before do
+        MultiLock.stubs(:sleep).with { sleep 0.1 } # make test sleep 0.1 instead of 1
+        MultiLock.locks[lock_key] = true
+      end
 
       it 'fails to execute' do
         time = Benchmark.realtime do
-          repository.send(:exclusive, timeout: 1) { raise "NOPE" }
+          repository.send(:exclusive, timeout: 0.1) { raise "NEVER" }
         end
-        time.must_be :>, 0.2
+        time.must_be :>, 0.1
         assert MultiLock.locks[lock_key] # still locked
       end
 
       it 'executes error callback if it cannot lock' do
-        repository.send(:executor).output.expects(:write).at_least_once
-        refute(repository.send(:exclusive, timeout: 1)) { raise "NOPE" }
+        refute(repository.send(:exclusive, timeout: 0.1)) { raise "NEVER" }
+        repository.executor.output.string.must_equal "Waiting for repository lock for true\n"
+      end
+
+      it 'logs once every 10 tries' do
+        refute(repository.send(:exclusive, timeout: 1.1)) { raise "NEVER" }
+        repository.executor.output.string.
+          must_equal("Waiting for repository lock for true\nWaiting for repository lock for true\n")
       end
     end
   end

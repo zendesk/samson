@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 3
+SingleCov.covered!
 
 describe Project do
   let(:project) { projects(:test) }
@@ -205,13 +205,6 @@ describe Project do
       clone_repository(project)
     end
 
-    it 'does not validate with a bad repo url' do
-      Project.any_instance.unstub(:valid_repository_url)
-      project = Project.new(id: 9999, name: 'demo_apps', repository_url: 'my_bad_url')
-      project.valid?.must_equal false
-      project.errors.messages.must_equal repository_url: ["is not valid or accessible"]
-    end
-
     it 'converts repo url with trailing slash' do
       project = Project.new(id: 9999, name: 'demo_apps', repository_url: 'https://example.com/foo/bar/')
       project.valid?.must_equal true
@@ -242,6 +235,28 @@ describe Project do
     it 'can initialize with a local repo' do
       project = Project.new(name: 'demo_apps', repository_url: '/foo/bar/.git')
       project.save!
+    end
+  end
+
+  describe "#valid_repository_url" do
+    before { Project.any_instance.unstub(:valid_repository_url) }
+
+    it 'is valid with a valid url' do
+      project = Project.new(id: 9999, name: 'demo_apps', repository_url: 'x')
+      project.repository.expects(:valid_url?).returns(true)
+      assert_valid project
+    end
+
+    it 'is invalid with a bad repo url' do
+      project = Project.new(id: 9999, name: 'demo_apps', repository_url: 'my_bad_url')
+      refute_valid project
+      project.errors.messages.must_equal repository_url: ["is not valid or accessible"]
+    end
+
+    it 'is invalid without repo url' do
+      project = Project.new(id: 9999, name: 'demo_apps', repository_url: '')
+      refute_valid project
+      project.errors.messages.must_equal permalink: ["can't be blank"], repository_url: ["can't be blank"]
     end
   end
 
@@ -313,8 +328,13 @@ describe Project do
       project.last_deploy_by_stage.must_equal([deploys(:succeeded_production_test)])
     end
 
-    it "returns nil when nothing was found" do
+    it "returns nil when no stage was found" do
       Stage.update_all(deleted_at: Time.now)
+      project.last_deploy_by_stage.must_be_nil
+    end
+
+    it "returns nil when no deploy was found" do
+      Deploy.update_all(deleted_at: Time.now)
       project.last_deploy_by_stage.must_be_nil
     end
   end
