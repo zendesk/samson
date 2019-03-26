@@ -74,14 +74,12 @@ class GitRepository
   # updates the repo only if sha is not found, to not pull unnecessarily
   # @return [content, nil]
   def file_content(file, sha, pull: true)
-    if !pull
-      return unless mirrored?
-    elsif sha.match?(Build::SHA1_REGEX)
-      (mirrored? && sha_exist?(sha)) || ensure_mirror_current
-    else
-      ensure_mirror_current
+    pull = false if mirror_current? # no need to pull when we are up-to-date
+    instance_cache [:file_content, file, sha, pull] do
+      next if !pull && !mirrored?
+      ensure_mirror_current if pull && (!sha.match?(Build::SHA1_REGEX) || !sha_exist?(sha))
+      capture_stdout "git", "show", "#{sha}:#{file}"
     end
-    capture_stdout "git", "show", "#{sha}:#{file}"
   end
 
   def update_mirror
@@ -99,8 +97,12 @@ class GitRepository
 
   # @returns [true, false]
   def ensure_mirror_current
-    return @mirror_current unless @mirror_current.nil?
+    return @mirror_current if mirror_current?
     @mirror_current = update_mirror
+  end
+
+  def mirror_current?
+    !@mirror_current.nil?
   end
 
   # makes sure that only 1 repository is doing mirror/clone at any given time
@@ -168,6 +170,10 @@ class GitRepository
 
   def mirrored?
     Dir.exist?(repo_cache_dir)
+  end
+
+  def instance_cache(key)
+    (@instance_cache ||= {}).fetch(key) { @instance_cache[key] = yield }
   end
 
   # success: stdout as string
