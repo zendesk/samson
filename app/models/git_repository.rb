@@ -68,10 +68,7 @@ class GitRepository
   add_tracer :clean!
 
   def valid_url?
-    return false if repository_url.blank?
-    output = capture_stdout "git", "-c", "core.askpass=true", "ls-remote", "-h", repository_url, dir: '.'
-    Rails.logger.error("Repository Path '#{repository_url}' is unreachable") unless output
-    !!output
+    !!capture_stdout("git", "-c", "core.askpass=true", "ls-remote", "-h", repository_url, dir: '.')
   end
 
   # updates the repo only if sha is not found, to not pull unnecessarily
@@ -108,10 +105,11 @@ class GitRepository
 
   # makes sure that only 1 repository is doing mirror/clone at any given time
   # also print to the job output when we are waiting for a lock so user knows to be patient
-  # @returns [block result, false on lock timeout]
+  # @returns block result or false on lock timeout
   def exclusive(timeout: 10.minutes)
+    counter = 0
     log_wait = proc do |owner|
-      if Rails.env.test? || (Time.now.to_i % 10) == 0
+      if (counter += 1) % 10 == 1
         executor.output.write("Waiting for repository lock for #{owner}\n")
       end
     end
