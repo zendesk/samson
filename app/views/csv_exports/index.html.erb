@@ -7,7 +7,6 @@
     <% if DeployGroup.enabled? %>
       <p><%= link_to "New Deploy Group Usage Report", new_csv_export_path(type: :deploy_group_usage) %></p>
     <% end %>
-    <p><%= link_to "New Deploy Metrics Report", new_csv_export_path(type: :deploy_metrics) %></p>
   </div>
   <% if @csv_exports.empty? %>
     <p>No current CSV Reports was found!</p>

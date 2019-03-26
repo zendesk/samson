@@ -135,10 +135,6 @@ class Deploy < ActiveRecord::Base
     updated_at - start_time
   end
 
-  def cycle_time
-    DeployMetrics.new(self).cycle_time
-  end
-
   def self.start_deploys_waiting_for_restart!
     pending.reorder(nil).reject(&:waiting_for_buddy?).each do |deploy|
       deploy.touch # HACK: refresh is immediate with update
