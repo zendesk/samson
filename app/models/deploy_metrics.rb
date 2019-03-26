@@ -13,7 +13,7 @@ class DeployMetrics
   end
 
   def cycle_time
-    return {} unless @deploy&.production && @deploy&.status == "succeeded"
+    return {} unless @deploy.production && @deploy.status == "succeeded"
 
     stages = @deploy.project.stages
     production_stages, staging_stages = stages.partition(&:production?)
