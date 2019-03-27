@@ -5,6 +5,7 @@ class Deploy < ActiveRecord::Base
   has_soft_deletion default_scope: true
 
   include SoftDeleteWithDestroy
+  extend Inlinable
 
   belongs_to :stage, touch: true, inverse_of: :deploys
   belongs_to :build, optional: true, inverse_of: :deploys
@@ -17,6 +18,8 @@ class Deploy < ActiveRecord::Base
   validates_presence_of :reference
   validate :validate_stage_is_unlocked, on: :create
   validate :validate_stage_uses_deploy_groups_properly, on: :create
+
+  allow_inline :previous_commit
 
   delegate(
     :started_by?, :cancel, :status, :user, :output, :active?, :finished?, *Job::VALID_STATUSES.map { |s| "#{s}?" },
@@ -97,6 +100,10 @@ class Deploy < ActiveRecord::Base
     stage.deploys.succeeded.after(self).first
   end
 
+  def previous_commit
+    previous_succeeded_deploy&.commit
+  end
+
   def changeset
     @changeset ||= changeset_to(previous_succeeded_deploy)
   end
@@ -133,10 +140,6 @@ class Deploy < ActiveRecord::Base
 
   def duration
     updated_at - start_time
-  end
-
-  def cycle_time
-    DeployMetrics.new(self).cycle_time
   end
 
   def self.start_deploys_waiting_for_restart!
