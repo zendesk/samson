@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative "../../test_helper"
 
-SingleCov.covered! uncovered: 4
+SingleCov.covered!
 
 describe Kubernetes::Role do
   include GitRepoTestHelper
@@ -181,18 +181,18 @@ describe Kubernetes::Role do
       end
     end
 
-    describe "with invalid role" do
-      before do
-        config_content.push config_content.first
-        write_config 'kubernetes/a.json', config_content.to_json
-      end
+    it 'shows an error when config is invalid' do
+      config_content.push config_content.first # error: multiple primary resources
+      write_config 'kubernetes/a.json', config_content.to_json
+      assert_raises(Samson::Hooks::UserError) { Kubernetes::Role.seed! project, 'HEAD' }
+      project.kubernetes_roles.must_equal []
+    end
 
-      it 'blows up so the controller can show an error' do
-        assert_raises Samson::Hooks::UserError do
-          Kubernetes::Role.seed! project, 'HEAD'
-        end
-        project.kubernetes_roles.must_equal []
-      end
+    it "allows not having a primary resource" do
+      config_content[0][:kind] = "ConfigMap"
+      write_config 'kubernetes/a.json', config_content.to_json
+      Kubernetes::Role.seed! project, 'HEAD'
+      project.kubernetes_roles.map(&:name).must_equal ["some-role"]
     end
 
     it "generates a unique resource_name when metadata.name is already in use" do
@@ -366,9 +366,24 @@ describe Kubernetes::Role do
       end
     end
 
-    it "ignores unknown units" do
+    it "ignores unknown memory units" do
       assert config_content_yml.sub!('100M', '200T')
       role.defaults.must_be_nil
+    end
+
+    it "ignores unknown cpu units" do
+      assert config_content_yml.sub!('500m', '500x')
+      role.defaults.must_be_nil
+    end
+
+    it "ignores without limits" do
+      assert config_content_yml.sub!('limits', 'foos')
+      role.defaults.must_be_nil
+    end
+
+    it "uses limits for requests memory when requests was unreadable" do
+      assert config_content_yml.sub!('50M', '50x') # requests memory
+      role.defaults[:requests_memory].must_equal role.defaults[:limits_memory]
     end
 
     it "ignores units that do not fit the metric" do
