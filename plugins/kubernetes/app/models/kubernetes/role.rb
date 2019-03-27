@@ -174,8 +174,7 @@ module Kubernetes
           map { |f| "#{folder}/#{f}" }
 
         files.grep(/\.(yml|yaml|json)$/).map do |path|
-          next unless file_contents = project.repository.file_content(path, git_ref)
-          Kubernetes::RoleConfigFile.new(file_contents, path)
+          Kubernetes::RoleConfigFile.new(project.repository.file_content(path, git_ref), path)
         end.compact
       end
     end

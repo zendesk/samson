@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative "../../test_helper"
 
-SingleCov.covered! uncovered: 4
+SingleCov.covered!
 
 describe Kubernetes::Role do
   include GitRepoTestHelper
@@ -366,9 +366,24 @@ describe Kubernetes::Role do
       end
     end
 
-    it "ignores unknown units" do
+    it "ignores unknown memory units" do
       assert config_content_yml.sub!('100M', '200T')
       role.defaults.must_be_nil
+    end
+
+    it "ignores unknown cpu units" do
+      assert config_content_yml.sub!('500m', '500x')
+      role.defaults.must_be_nil
+    end
+
+    it "ignores without limits" do
+      assert config_content_yml.sub!('limits', 'foos')
+      role.defaults.must_be_nil
+    end
+
+    it "uses limits for requests memory when requests was unreadable" do
+      assert config_content_yml.sub!('50M', '50x') # requests memory
+      role.defaults[:requests_memory].must_equal role.defaults[:limits_memory]
     end
 
     it "ignores units that do not fit the metric" do
