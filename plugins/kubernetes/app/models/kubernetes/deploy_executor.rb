@@ -11,7 +11,7 @@ module Kubernetes
     WAIT_FOR_LIVE = Integer(ENV.fetch('KUBERNETES_WAIT_FOR_LIVE', '600'))
     WAIT_FOR_PREREQUISITES = Integer(ENV.fetch('KUBERNETES_WAIT_FOR_PREREQUISITES', WAIT_FOR_LIVE))
     STABILITY_CHECK_DURATION = Integer(ENV.fetch('KUBERNETES_STABILITY_CHECK_DURATION', 1.minute))
-    TICK = Integer(ENV.fetch('KUBERNETES_STABILITY_CHECK_TICK', 2.seconds))
+    TICK = Integer(ENV.fetch('KUBERNETES_STABILITY_CHECK_TICK', 10.seconds))
     RESTARTED = "Restarted"
 
     def initialize(job, output)
@@ -70,7 +70,8 @@ module Kubernetes
 
       loop do
         statuses = resource_statuses(release_docs)
-        if statuses.select { |s| s.kind == "Pod" }.none?
+        interesting = statuses.select { |s| s.kind == "Pod" || !s.live } # ignore boring things that rarely fail
+        if interesting.none?
           @output.puts "No pods were created"
           return success, statuses
         end
@@ -79,10 +80,10 @@ module Kubernetes
         too_many_not_ready = (not_ready_statuses.size > allowed_not_ready(statuses.size))
 
         if waiting_for_ready
-          print_statuses(statuses)
+          print_statuses("Deploy status:", interesting, exact: false)
           if too_many_not_ready
             if stopped = not_ready_statuses.select(&:finished).presence
-              unstable!("resources failed", stopped)
+              print_statuses("UNSTABLE, resources failed:", stopped, exact: true)
               return false, statuses
             elsif time_left(wait_start_time, timeout) == 0
               @output.puts "TIMEOUT, pods took too long to get live"
@@ -97,8 +98,7 @@ module Kubernetes
           end
         else
           if too_many_not_ready
-            print_statuses(statuses)
-            unstable!("resources not ready", not_ready_statuses)
+            print_statuses("UNSTABLE, resources not ready:", not_ready_statuses, exact: true)
             return false, statuses
           else
             remaining = time_left(wait_start_time, STABILITY_CHECK_DURATION)
@@ -223,13 +223,6 @@ module Kubernetes
       end
     end
 
-    def unstable!(message, bad_release_statuses)
-      @output.puts "UNSTABLE: #{message}"
-      bad_release_statuses.select(&:resource).each do |status|
-        @output.puts "  #{resource_identifier(status)}: #{status.details}"
-      end
-    end
-
     def pod_statuses(pods, release_doc)
       group = release_doc.deploy_group
       role = release_doc.kubernetes_role
@@ -266,17 +259,10 @@ module Kubernetes
       statuses
     end
 
-    def print_statuses(statuses)
-      return if @last_status_output && @last_status_output > 10.seconds.ago
-      @last_status_output = Time.now
-
-      @output.puts "Deploy status:"
-
-      # ignore boring things that rarely fail
-      statuses = statuses.select { |s| s.kind == "Pod" || !s.live }
-
+    def print_statuses(message, statuses, exact:)
+      @output.puts message
       statuses.each do |status|
-        @output.puts "  #{resource_identifier(status, exact: false)}: #{status.details}"
+        @output.puts "  #{resource_identifier(status, exact: exact)}: #{status.details}"
       end
     end
 
