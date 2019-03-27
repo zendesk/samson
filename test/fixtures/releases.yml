@@ -3,4 +3,3 @@ test:
   commit: abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd
   number: "123"
   author: deployer
-  author_type: User

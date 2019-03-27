@@ -33,7 +33,7 @@ NUM_PROJECTS.times do |i|
   project.stages.create!(name: "Master", deploy_groups: [pod98, pod99])
   project.stages.create!(name: "Pod1", deploy_groups: [pod1])
   project.stages.create!(name: "Pod100", deploy_groups: [pod100])
-  project.releases.create!(commit: "123456", author_id: 1, author_type: "User")
+  project.releases.create!(commit: "123456", author_id: 1)
 
   job = Job.find_or_create_by!(
     command: 'true',
