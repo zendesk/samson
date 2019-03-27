@@ -23,8 +23,6 @@ class CsvExportsController < ApplicationController
           render :new_users
         elsif params[:type] == "deploy_group_usage"
           render :new_deploy_group_usage
-        elsif params[:type] == "deploy_metrics"
-          render :new_deploy_metrics
         else
           @csv_export = CsvExport.new
         end
@@ -36,9 +34,6 @@ class CsvExportsController < ApplicationController
         elsif params[:type] == "deploy_group_usage"
           date_time_now = Time.now.strftime "%Y%m%d_%H%M"
           send_data DeployGroupUsageCsvPresenter.to_csv, type: :csv, filename: "DeployGroupUsage_#{date_time_now}.csv"
-        elsif params[:type] == "deploy_metrics"
-          date_time_now = Time.now.strftime "%Y%m%d_%H%M"
-          send_data DeployMetricsCsvPresenter.to_csv, type: :csv, filename: "DeployMetrics_#{date_time_now}.csv"
         else
           render body: "not found", status: :not_found
         end
