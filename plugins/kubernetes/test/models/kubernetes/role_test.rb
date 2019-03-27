@@ -181,18 +181,18 @@ describe Kubernetes::Role do
       end
     end
 
-    describe "with invalid role" do
-      before do
-        config_content.push config_content.first
-        write_config 'kubernetes/a.json', config_content.to_json
-      end
+    it 'shows an error when config is invalid' do
+      config_content.push config_content.first # error: multiple primary resources
+      write_config 'kubernetes/a.json', config_content.to_json
+      assert_raises(Samson::Hooks::UserError) { Kubernetes::Role.seed! project, 'HEAD' }
+      project.kubernetes_roles.must_equal []
+    end
 
-      it 'blows up so the controller can show an error' do
-        assert_raises Samson::Hooks::UserError do
-          Kubernetes::Role.seed! project, 'HEAD'
-        end
-        project.kubernetes_roles.must_equal []
-      end
+    it "allows not having a primary resource" do
+      config_content[0][:kind] = "ConfigMap"
+      write_config 'kubernetes/a.json', config_content.to_json
+      Kubernetes::Role.seed! project, 'HEAD'
+      project.kubernetes_roles.map(&:name).must_equal ["some-role"]
     end
 
     it "generates a unique resource_name when metadata.name is already in use" do

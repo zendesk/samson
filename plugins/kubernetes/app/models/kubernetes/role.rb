@@ -65,26 +65,28 @@ module Kubernetes
       if configs.empty?
         raise Samson::Hooks::UserError, "No configs found in kubernetes folder or invalid git ref #{git_ref}"
       end
+      existing = where(project: project, deleted_at: nil).to_a
 
       configs.each do |config_file|
-        scope = where(project: project)
+        # ignore existing role
+        next if existing.any? { |r| r.config_file == config_file.path }
 
-        next if scope.where(config_file: config_file.path, deleted_at: nil).exists?
-        resource = config_file.primary
-        name = resource.fetch(:metadata).fetch(:labels).fetch(:role)
+        resource = config_file.primary || config_file.elements.first
+        name = resource.dig_fetch(:metadata, :labels, :role)
+
+        # ensure we have a globally unique resource name
+        resource_name = resource.dig_fetch(:metadata, :name)
+        if where(deleted_at: nil, resource_name: resource_name).exists?
+          resource_name = "#{project.permalink}-#{resource_name}".tr('_', '-')
+        end
 
         # service
         if service = config_file.services.first
-          service_name = service[:metadata][:name]
-          if where(service_name: service_name).exists?
+          service_name = service.dig_fetch(:metadata, :name)
+          # ensure we have a globally unique service name
+          if service_name && where(deleted_at: nil, service_name: service_name).exists?
             service_name << "#{GENERATED}#{rand(9999999)}"
           end
-        end
-
-        # ensure we have a unique resource name
-        resource_name = resource.fetch(:metadata).fetch(:name)
-        if where(resource_name: resource_name).exists?
-          resource_name = "#{project.permalink}-#{resource_name}".tr('_', '-')
         end
 
         project.kubernetes_roles.create!(
