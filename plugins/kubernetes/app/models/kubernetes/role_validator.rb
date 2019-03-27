@@ -9,7 +9,7 @@ module Kubernetes
       'APIService', 'ClusterRoleBinding', 'ClusterRole', 'CustomResourceDefinition', 'Namespace'
     ].freeze
     IMMUTABLE_NAME_KINDS = [
-      'APIService', 'CustomResourceDefinition', 'ConfigMap', 'Role', 'ClusterRole', 'Namespace'
+      'APIService', 'CustomResourceDefinition', 'ConfigMap', 'Role', 'ClusterRole', 'Namespace', 'ClusterRoleBinding'
     ].freeze
 
     # we either generate multiple names or allow custom names
