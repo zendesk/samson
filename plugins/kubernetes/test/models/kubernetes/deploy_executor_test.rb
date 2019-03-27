@@ -821,6 +821,42 @@ describe Kubernetes::DeployExecutor do
     end
   end
 
+  describe "#print_statuses" do
+    let(:status) do
+      Kubernetes::ResourceStatus.new(
+        resource: nil,
+        role: kubernetes_roles(:app_server),
+        deploy_group: deploy_groups(:pod1),
+        start: nil,
+        kind: "Pod"
+      )
+    end
+
+    it "renders" do
+      executor.send(:print_statuses, "Hey:", [status], exact: false)
+      out.must_equal "Hey:\n  Pod1 app-server Pod: \n"
+    end
+
+    it "does not summarizes with moderate ammount of pods" do
+      executor.send(:print_statuses, "Hey:", Array.new(3) { status.dup }, exact: false)
+      out.must_equal "Hey:\n  Pod1 app-server Pod: \n  Pod1 app-server Pod: \n  Pod1 app-server Pod: \n"
+    end
+
+    it "does not summarizes when summary would be equal number of lines" do
+      statuses = Array.new(20) { status.dup }
+      statuses.each_slice(2).each_with_index do |group, i|
+        group.each { |s| s.instance_variable_set(:@details, i) }
+      end
+      executor.send(:print_statuses, "Hey:", statuses, exact: false)
+      out.wont_include "identical"
+    end
+
+    it "summarizes when too many identical statuses are shown" do
+      executor.send(:print_statuses, "Hey:", Array.new(20) { status.dup }, exact: false)
+      out.must_equal "Hey:\n  Pod1 app-server Pod: \n  ... 19 identical\n"
+    end
+  end
+
   describe "#show_failure_cause" do
     it "prints details but does not fail when something goes wrong" do
       Kubernetes::DeployExecutor.any_instance.stubs(:build_selectors).returns([])

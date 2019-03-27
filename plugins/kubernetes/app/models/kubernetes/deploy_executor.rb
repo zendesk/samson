@@ -261,8 +261,14 @@ module Kubernetes
 
     def print_statuses(message, statuses, exact:)
       @output.puts message
-      statuses.each do |status|
-        @output.puts "  #{resource_identifier(status, exact: exact)}: #{status.details}"
+      lines = statuses.map do |status|
+        "  #{resource_identifier(status, exact: exact)}: #{status.details}"
+      end
+
+      # for big deploys, do not print all the identical pods
+      lines.group_by(&:itself).each_value do |group|
+        group = [group.first, "  ... #{group.size - 1} identical"] if lines.size >= 10 && group.size > 2
+        group.each { |l| @output.puts l }
       end
     end
 
