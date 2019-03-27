@@ -114,14 +114,6 @@ describe CsvExportsController do
             @response.body.must_include "Download Deploy Group Usage Report"
           end
         end
-
-        describe "deploy_metrics type" do
-          it "renders form options" do
-            get :new, params: {type: :deploy_metrics}
-            assert_select "h1", "Deploy Metrics Report"
-            @response.body.must_include "Download Deploy Metrics Report"
-          end
-        end
       end
 
       describe "as csv" do
@@ -135,13 +127,6 @@ describe CsvExportsController do
         describe "deploy_group_usage type" do
           it "returns csv" do
             get :new, params: {format: :csv, type: "deploy_group_usage"}
-            assert_response :success
-          end
-        end
-
-        describe "deploy_metrics type" do
-          it "returns csv" do
-            get :new, params: {format: :csv, type: "deploy_metrics"}
             assert_response :success
           end
         end

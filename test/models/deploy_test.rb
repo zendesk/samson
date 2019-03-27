@@ -214,6 +214,16 @@ describe Deploy do
     end
   end
 
+  describe "#previous_commit" do
+    it "return the commit of previous succeeded deploy" do
+      deploy1 = create_deploy!(job: create_job!(commit: "1"))
+      create_deploy!(job: create_job!(commit: "2", status: "errored"))
+      deploy3 = create_deploy!(job: create_job!(commit: "3"))
+
+      deploy3.previous_commit.must_equal deploy1.commit
+    end
+  end
+
   describe "#changeset" do
     it "creates a changeset to the previous deploy" do
       deploy.changeset.commit.must_equal "abcabcaaabcabcaaabcabcaaabcabcaaabcabca1"
@@ -665,23 +675,6 @@ describe Deploy do
     it "shows duration" do
       deploy.updated_at = deploy.start_time + 25
       deploy.duration.must_equal 25
-    end
-  end
-
-  describe "#cycle_time" do
-    before do
-      DeployMetrics.any_instance.stubs(:cycle_time).returns(
-        pr_production: 50,
-        staging_production: 40
-      )
-    end
-
-    it "shows pr_production cycle_time" do
-      deploy.cycle_time[:pr_production].must_equal 50
-    end
-
-    it "shows staging_production cycle_time" do
-      deploy.cycle_time[:staging_production].must_equal 40
     end
   end
 
