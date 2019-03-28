@@ -1,7 +1,13 @@
 # frozen_string_literal: true
 module SamsonEnv
-  HELP_TEXT = "$VAR / ${VAR} replacements supported. Priority is DeployGroup, Environment, All. " \
-    "Secrets can be used with secret://key_of_secret."
+  HELP_TEXT = <<~TEXT.html_safe
+    <ul>
+      <li>$VAR / ${VAR} replacements supported</li>
+      <li>Priority is Deploy, Stage, Project, DeployGroup, Environment, All</li>
+      <li>Secrets can be used with secret://key_of_secret</li>
+      <li>env vars are written to .env{.deploy-group} files and need to be loaded by the app via Dotenv library or <code>set -a;source .env;set +a</code></li>
+    </ul>
+  TEXT
 
   class Engine < Rails::Engine
   end
