@@ -156,12 +156,8 @@ module Kubernetes
       end
     end
 
-    def keep_name?
-      template.dig(:metadata, :annotations, :'samson/keep_name') == 'true'
-    end
-
     def set_service_name
-      return if keep_name?
+      return if Kubernetes::RoleValidator.keep_name?(template)
       template[:metadata][:name] = generate_service_name(template[:metadata][:name])
     end
 
@@ -339,7 +335,7 @@ module Kubernetes
     end
 
     def set_name
-      name = if keep_name?
+      name = if Kubernetes::RoleValidator.keep_name?(template)
         template.dig_fetch(:metadata, :name)
       else
         @doc.kubernetes_role.resource_name

@@ -70,6 +70,10 @@ module Kubernetes
       raise Samson::Hooks::UserError, errors.join(", ") if errors.any?
     end
 
+    def self.keep_name?(e)
+      e.dig(:metadata, :annotations, :'samson/keep_name') == 'true'
+    end
+
     private
 
     def validate_name
@@ -89,12 +93,20 @@ module Kubernetes
       @errors << "Only use a maximum of 1 template with containers, found: #{templates.size}"
     end
 
-    # template_filler.rb sets name for everything except for ConfigMaps and Service so we need to make sure
-    # users dont use the same kind otherwise they get a duplicate name
+    # template_filler.rb sets name for everything except for IMMUTABLE_NAME_KINDS, keep_name, and Service
+    # we make sure users dont use the same name on the same kind twice, to avoid them overwriting each other
     def validate_name_kinds_are_unique
-      kinds = map_attributes([:kind]) - ALLOWED_DUPLICATE_KINDS
-      return if kinds.uniq.size == kinds.size
-      @errors << "Only use a maximum of 1 of each kind in a role (except #{ALLOWED_DUPLICATE_KINDS.join(" and ")})"
+      # ignore service if we generate their names
+      elements = @elements.reject { |e| !e[:kind] || (e[:kind] == "Service" && !self.class.keep_name?(e)) }
+
+      # group by kind+name and to sure we have no duplicates
+      groups = elements.group_by do |e|
+        user_supplied = (ALLOWED_DUPLICATE_KINDS.include?(e.fetch(:kind)) || self.class.keep_name?(e))
+        [e.fetch(:kind), user_supplied ? e.dig(:metadata, :name) : "hardcoded"]
+      end.values
+      return if groups.all? { |group| group.size == 1 }
+
+      @errors << "Only use a maximum of 1 of each kind in a role (except #{ALLOWED_DUPLICATE_KINDS.to_sentence})"
     end
 
     def validate_api_version
