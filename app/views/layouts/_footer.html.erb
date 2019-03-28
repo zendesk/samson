@@ -10,14 +10,12 @@
       <% if link = ENV['HELP_LINK'] %>
         <li><%= link.html_safe %></li>
       <% end %>
-
-      <% if version = Rails.application.config.samson.version %>
+      <% if SAMSON_VERSION %>
         <li>
-          <%= link_to version.first(7), "https://github.com/zendesk/samson/commit/#{version}",
+          <%= link_to SAMSON_VERSION.first(7), "https://github.com/zendesk/samson/commit/#{SAMSON_VERSION}",
               title: "Currently deployed samson version since #{Rails.application.config.samson.start_time.to_s(:db)}", class: "sha" %>
         </li>
       <% end %>
-
     </div>
   </div>
 </div>

@@ -12,7 +12,7 @@ if token = ENV['ROLLBAR_ACCESS_TOKEN']
         config.web_base = web_base
       end
       config.use_thread # use threads for async notifications (waits for them at_exit)
-      config.code_version = version.first(7)
+      config.code_version = version.first(7) if version
       config.populate_empty_backtraces = true
       config.logger = Rails.logger
 
