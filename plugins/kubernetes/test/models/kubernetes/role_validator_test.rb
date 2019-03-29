@@ -181,13 +181,6 @@ describe Kubernetes::RoleValidator do
       errors.must_be_nil
     end
 
-    it "allows duplicate ConfigMaps" do
-      role[0][:kind] = "ConfigMap"
-      role[0][:spec][:template][:spec].delete :containers
-      role << role[0].dup
-      errors.must_be_nil
-    end
-
     it "reports numeric cpu" do
       role.first[:spec][:template][:spec][:containers].first[:resources] = {limits: {cpu: 1}}
       errors.must_include "Numeric cpu resources are not supported"
@@ -264,10 +257,34 @@ describe Kubernetes::RoleValidator do
       errors.must_include "Needs apiVersion specified"
     end
 
-    it "fails when there are duplicate kinds" do
-      role[0][:kind] = "foo"
-      role[1][:kind] = "foo"
-      errors.to_s.must_include "Only use a maximum of 1 of each kind in a role"
+    describe "#validate_name_kinds_are_unique" do
+      before { role.each { |r| r[:kind] = "foo" } }
+
+      it "fails when there are duplicate kinds" do
+        errors.to_s.must_include "Only use a maximum of 1 of each kind in a role"
+      end
+
+      it "fails when services use hardcoded but duplicate names" do
+        role.each do |r|
+          r[:kind] = "Service"
+          r[:metadata][:name] = "same"
+          r.dig_set([:metadata, :annotations], "samson/keep_name": "true")
+        end
+        errors.to_s.must_include "Only use a maximum of 1 of each kind in a role"
+      end
+
+      it "allows duplicate kinds with distinct names" do
+        role.each { |r| r.dig_set([:metadata, :annotations], "samson/keep_name": "true") }
+        refute errors
+      end
+
+      it "allows duplicate IMMUTABLE_NAME_KINDS with different names" do
+        role[0][:kind] = "ConfigMap"
+        role[0][:spec][:template][:spec].delete :containers
+        role << role[0].deep_dup
+        role[0][:metadata][:name] = "other"
+        errors.must_be_nil
+      end
     end
 
     describe "#validate_team_labels" do
