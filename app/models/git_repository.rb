@@ -17,6 +17,7 @@ class GitRepository
     @repository_url = repository_url
     @repository_directory = repository_dir
     @executor = executor
+    @instance_cache = {}
   end
 
   def checkout_workspace(work_dir, git_reference)
@@ -130,17 +131,21 @@ class GitRepository
   end
 
   def clone!
+    @instance_cache.clear
     executor.execute "git -c core.askpass=true clone --mirror #{repository_url} #{repo_cache_dir}"
   end
   add_tracer :clone!
 
   def update!
+    @instance_cache.clear
     executor.execute("cd #{repo_cache_dir}", 'git fetch -p')
   end
   add_tracer :update!
 
   def sha_exist?(sha)
-    !!capture_stdout("git", "cat-file", "-t", sha)
+    instance_cache [:sha_exist?, sha] do
+      !!capture_stdout("git", "cat-file", "-t", sha)
+    end
   end
 
   def checkout(git_reference, work_dir)
@@ -173,7 +178,7 @@ class GitRepository
   end
 
   def instance_cache(key)
-    (@instance_cache ||= {}).fetch(key) { @instance_cache[key] = yield }
+    @instance_cache.fetch(key) { @instance_cache[key] = yield }
   end
 
   # success: stdout as string

@@ -307,6 +307,11 @@ describe GitRepository do
         4.times { repository.file_content('foo', sha).must_equal "x" }
       end
 
+      it "caches sha too" do
+        Samson::CommandExecutor.expects(:execute).times(3).returns([true, "x"])
+        4.times { |i| repository.file_content("foo-#{i.odd?}", sha).must_equal "x" }
+      end
+
       it "does not pull when mirror is current" do
         repository.send(:ensure_mirror_current)
         repository.expects(:ensure_mirror_current).never
