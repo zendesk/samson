@@ -11,6 +11,7 @@ Samson.statsd.namespace = "samson.app"
 
 Samson.statsd.event "Startup", "Samson startup" if ENV['SERVER_MODE']
 
+# tested via test/lib/samson/time_sum_test.rb
 ActiveSupport::Notifications.subscribe("execute_job.samson") do |_, start, finish, _, payload|
   duration = 1000.0 * (finish - start)
   tags = [
@@ -22,7 +23,13 @@ ActiveSupport::Notifications.subscribe("execute_job.samson") do |_, start, finis
   production = payload.fetch(:production)
   tags << "production:#{production}" unless production.nil?
 
-  Samson.statsd.timing "execute_shell.time", duration, tags: tags
+  Samson.statsd.batch do |statsd|
+    statsd.timing "execute_shell.time", duration, tags: tags
+    (payload[:parts] || {}).each do |part, time|
+      statsd.timing "execute_shell.parts", time, tags: tags + ["part:#{part}"]
+    end
+  end
+  Rails.logger.info(payload.merge(total: duration, message: "Job execution finished"))
 end
 
 # report and log timing, plain names so git-grep works
