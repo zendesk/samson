@@ -295,7 +295,8 @@ describe JobExecution do
   end
 
   it "reports to statsd" do
-    Samson.statsd.expects(:histogram).
+    Samson.statsd.stubs(:timing)
+    Samson.statsd.expects(:timing).
       with('execute_shell.time', anything, tags: ['project:duck', 'stage:stage4', 'production:false'])
     assert execute_job("master")
   end
