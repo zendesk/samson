@@ -139,7 +139,7 @@ module Samson
 
       def key_granted?(key_parts)
         if Samson::Secrets::Manager.sharing_grants? && key_parts.fetch(:project_permalink) == "global"
-          @shared_keys ||= SecretSharingGrant.where(project: @project).pluck(:key)
+          @shared_keys ||= @project.secret_sharing_grants.map(&:key)
           @shared_keys.include?(key_parts.fetch(:key))
         else
           true
