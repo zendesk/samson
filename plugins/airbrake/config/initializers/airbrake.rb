@@ -11,7 +11,7 @@ if key = ENV['AIRBRAKE_API_KEY']
       config.project_id = ENV.fetch('AIRBRAKE_PROJECT_ID')
       config.project_key = key
 
-      config.app_version = version.first(7)
+      config.app_version = version.first(7) if version
       raise 'This must run after config/initializers/ ' if Rails.application.config.filter_parameters.empty?
       config.blacklist_keys = Rails.application.config.filter_parameters
 
