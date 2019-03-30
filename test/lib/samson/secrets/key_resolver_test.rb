@@ -16,6 +16,15 @@ describe Samson::Secrets::KeyResolver do
       resolver.expand('ABC', 'bar').must_equal [["ABC", "global/global/global/bar"]]
     end
 
+    it "reuses project grants" do
+      # pretend everything is preloaded
+      resolver
+      project.secret_sharing_grants
+      deploy_group.environment
+
+      assert_sql_queries(0) { resolver.expand('ABC', 'bar') }
+    end
+
     it "expands symbols" do
       resolver.expand(:ABC, 'bar').must_equal [["ABC", "global/global/global/bar"]]
     end
