@@ -22,7 +22,7 @@ module Samson
         end
 
         # Not implemented, just bogus values to be able to debug UI in development+test
-        def history(_id)
+        def history(*)
           {
             foo: "bar",
             versions: {

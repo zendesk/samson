@@ -37,8 +37,8 @@ module Samson
           data
         end
 
-        def history(id, include_value: false)
-          history = backend.history(id) || raise(ActiveRecord::RecordNotFound)
+        def history(id, include_value: false, **options)
+          history = backend.history(id, options) || raise(ActiveRecord::RecordNotFound)
           unless include_value
             last_value = nil
             history.fetch(:versions).each_value do |data|

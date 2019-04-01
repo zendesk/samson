@@ -26,8 +26,9 @@ module Samson
 
         # history with full versions
         # see https://www.vaultproject.io/api/secret/kv/kv-v2.html#read-secret-metadata
-        def history(id)
+        def history(id, resolve: false)
           return unless history = vault_action(:read_metadata, vault_path(id, :encode))
+          return history unless resolve
           history.fetch(:versions).each do |version, metadata|
             metadata.replace(metadata: metadata.dup)
             next if metadata.dig(:metadata, :destroyed)

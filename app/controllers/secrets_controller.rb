@@ -48,7 +48,7 @@ class SecretsController < ApplicationController
   end
 
   def history
-    @history = Samson::Secrets::Manager.history(id)
+    @history = Samson::Secrets::Manager.history(id, resolve: true)
   end
 
   def new

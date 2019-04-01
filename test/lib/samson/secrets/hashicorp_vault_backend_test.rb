@@ -61,13 +61,23 @@ describe Samson::Secrets::HashicorpVaultBackend do
       end
     end
 
+    it "does not resolve versions by default" do
+      id = "production/foo/pod2/bar"
+      versions_body = {data: {versions: {"v1" => {foo: "bar"}}}}
+      assert_vault_request :get, id, versioned_kv: "metadata", body: versions_body.to_json do
+        result = backend.history('production/foo/pod2/bar')
+        result[:versions].each_value { |item| item.delete_if { |_, v| v.nil? } }
+        result.must_equal versions: {v1: {foo: "bar"}}
+      end
+    end
+
     it "resolves versions" do
       id = "production/foo/pod2/bar"
       versions_body = {data: {versions: {"v1" => {foo: "bar"}}}}
       version_body = {data: {data: {vault: 1}, metadata: {v1: 1}}}
       assert_vault_request :get, id, versioned_kv: "metadata", body: versions_body.to_json do
         assert_vault_request :get, "#{id}?version=v1", versioned_kv: "data", body: version_body.to_json do
-          result = backend.history('production/foo/pod2/bar')
+          result = backend.history('production/foo/pod2/bar', resolve: true)
           result[:versions].each_value { |item| item.delete_if { |_, v| v.nil? } }
           result.must_equal versions: {v1: {metadata: {v1: 1}, value: 1}}
         end
@@ -78,7 +88,7 @@ describe Samson::Secrets::HashicorpVaultBackend do
       id = "production/foo/pod2/bar"
       versions_body = {data: {versions: {"v1" => {foo: "bar", destroyed: true}}}}
       assert_vault_request :get, id, versioned_kv: "metadata", body: versions_body.to_json do
-        result = backend.history('production/foo/pod2/bar')
+        result = backend.history('production/foo/pod2/bar', resolve: true)
         result.must_equal versions: {v1: {metadata: {foo: "bar", destroyed: true}}}
       end
     end
