@@ -230,9 +230,9 @@ metadata.annotations.samson-set-via-env-json-metadata.labels.custom: SOME_ENV_VA
 ```
 Then configure an ENV var with that same name and a value that is valid JSON.
 
-### Allow randomly not-ready pods during redines check
+### Allow randomly not-ready pods during readiness check
 
-Set `KUBERNETES_ALLOW_NOT_READY_PERCENT=10` to allow up to 10% of pods being not-ready,
+Set `KUBERNETES_ALLOW_NOT_READY_PERCENT=10` to allow up to 10% of pods per role being not-ready,
 this is useful when dealing with large deployments that have some random failures.
 
 ### Disabling service selector validation

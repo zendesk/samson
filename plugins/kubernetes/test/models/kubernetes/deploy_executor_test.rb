@@ -392,7 +392,7 @@ describe Kubernetes::DeployExecutor do
     it "fails when release has errors" do
       Kubernetes::Release.any_instance.expects(:persisted?).at_least_once.returns(false)
       e = assert_raises(Samson::Hooks::UserError) { execute }
-      e.message.must_equal "Failed to create release: []" # inspected errros
+      e.message.must_equal "Failed to create release: []" # inspected errors
     end
 
     it "shows status of each individual pod when there is more than 1 per deploy group" do
@@ -439,6 +439,13 @@ describe Kubernetes::DeployExecutor do
 
       out.must_include "resque-worker Pod: Failed\n"
       out.must_include "UNSTABLE"
+    end
+
+    it "ignores allowed percentage of failures" do
+      with_env KUBERNETES_ALLOW_NOT_READY_PERCENT: "34" do # 1/3 allowed to fail
+        pod_status[:phase] = "Failed"
+        assert execute
+      end
     end
 
     it "stops when detecting a failure via events" do
