@@ -315,7 +315,7 @@ module Kubernetes
 
     def grouped_deploy_group_roles
       @grouped_deploy_group_roles ||= begin
-        ignored_role_ids = @job.deploy.stage.kubernetes_roles.where(ignored: true).pluck(:kubernetes_role_id)
+        ignored_role_ids = @job.deploy.stage.kubernetes_stage_roles.where(ignored: true).pluck(:kubernetes_role_id)
         deploy_group_roles = Kubernetes::DeployGroupRole.where(
           project_id: @job.project_id,
           deploy_group: @job.deploy.stage.deploy_groups.map(&:id)

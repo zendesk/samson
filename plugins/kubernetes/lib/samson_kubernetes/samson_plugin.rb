@@ -39,7 +39,7 @@ end
 Samson::Hooks.callback(:stage_permitted_params) do
   [
     :kubernetes,
-    {kubernetes_roles_attributes: [:kubernetes_role_id, :ignored, :_destroy, :id]}
+    {kubernetes_stage_roles_attributes: [:kubernetes_role_id, :ignored, :_destroy, :id]}
   ]
 end
 Samson::Hooks.callback(:deploy_permitted_params) { [:kubernetes_rollback, :kubernetes_reuse_build] }

@@ -25,7 +25,7 @@ module Kubernetes
 
     # The matrix is a list of deploy group and its roles + deploy-group-roles
     def self.matrix(stage)
-      ignored_role_ids = stage.kubernetes_roles.where(ignored: true).pluck(:kubernetes_role_id)
+      ignored_role_ids = stage.kubernetes_stage_roles.where(ignored: true).pluck(:kubernetes_role_id)
       project_dg_roles = Kubernetes::DeployGroupRole.where(
         project_id: stage.project_id,
         deploy_group_id: stage.deploy_groups.map(&:id)

@@ -6,8 +6,8 @@ Stage.class_eval do
   after_create :seed_kubernetes_roles
   validate :validate_not_using_non_kubernetes_rollback, if: :kubernetes?
 
-  has_many :kubernetes_roles, class_name: "Kubernetes::StageRole", dependent: :destroy
-  accepts_nested_attributes_for :kubernetes_roles,
+  has_many :kubernetes_stage_roles, class_name: "Kubernetes::StageRole", dependent: :destroy
+  accepts_nested_attributes_for :kubernetes_stage_roles,
     allow_destroy: true,
     reject_if: ->(a) { a[:kubernetes_role_id].blank? }
 
