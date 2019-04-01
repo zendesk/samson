@@ -305,7 +305,7 @@ describe Kubernetes::DeployExecutor do
         end
 
         it "passes when ignored" do
-          stage.kubernetes_roles.create!(kubernetes_role: worker_role.kubernetes_role, ignored: true)
+          stage.kubernetes_stage_roles.create!(kubernetes_role: worker_role.kubernetes_role, ignored: true)
           execute
           out.must_include "SUCCESS"
         end

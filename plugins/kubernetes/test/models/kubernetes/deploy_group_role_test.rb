@@ -101,7 +101,7 @@ describe Kubernetes::DeployGroupRole do
     end
 
     it "ignores stage-roles that are ignored" do
-      stage.kubernetes_roles.create!(kubernetes_role: kubernetes_roles(:resque_worker), ignored: true)
+      stage.kubernetes_stage_roles.create!(kubernetes_role: kubernetes_roles(:resque_worker), ignored: true)
       Kubernetes::DeployGroupRole.matrix(stage).must_equal(
         [[
           stage.deploy_groups.first,
