@@ -51,6 +51,12 @@ class SecretsController < ApplicationController
     @history = Samson::Secrets::Manager.history(id, resolve: true)
   end
 
+  def revert
+    version = params.require(:version)
+    Samson::Secrets::Manager.revert(id, to: version, user: current_user)
+    redirect_to secret_path(id), notice: "Reverted to #{version}!"
+  end
+
   def new
     render :show
   end

@@ -34,6 +34,7 @@ describe SecretsController do
     unauthorized :get, :new
     unauthorized :get, :show, id: 'production/foo/group/bar'
     unauthorized :get, :history, id: 'production/foo/group/bar'
+    unauthorized :post, :revert, id: 'production/foo/group/bar'
     unauthorized :patch, :update, id: 'production/foo/group/bar'
     unauthorized :delete, :destroy, id: 'production/foo/group/bar'
   end
@@ -190,9 +191,16 @@ describe SecretsController do
       end
     end
 
+    describe '#revert' do
+      it "is unauthrized" do
+        post :revert, params: {id: secret, version: 'v1'}
+        assert_response :unauthorized
+      end
+    end
+
     describe '#update' do
       it "is unauthrized" do
-        put :update, params: {id: secret, secret: {value: 'xxx'}}
+        put :update, params: {id: secret.id, secret: {value: 'xxx'}}
         assert_response :unauthorized
       end
     end
@@ -409,6 +417,15 @@ describe SecretsController do
           do_update
           assert_response :unauthorized
         end
+      end
+    end
+
+    describe '#revert' do
+      it "reverts" do
+        post :revert, params: {id: secret.id, version: 'v1'}
+        assert flash[:notice]
+        assert_redirected_to secret_path(secret.id)
+        secret.reload.updater_id.must_equal users(:project_admin).id
       end
     end
 

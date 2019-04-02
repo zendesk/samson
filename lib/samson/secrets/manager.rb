@@ -31,8 +31,8 @@ module Samson
         end
 
         # reads a single id and raises ActiveRecord::RecordNotFound if it is not found
-        def read(id, include_value: false)
-          data = backend.read(id) || raise(ActiveRecord::RecordNotFound)
+        def read(id, *args, include_value: false)
+          data = backend.read(id, *args) || raise(ActiveRecord::RecordNotFound)
           data.delete(:value) unless include_value
           data
         end
@@ -48,6 +48,12 @@ module Samson
             end
           end
           history
+        end
+
+        def revert(id, to:, user:)
+          old = read(id, to, include_value: true)
+          old[:user_id] = user.id
+          write(id, old)
         end
 
         # useful for console sessions
