@@ -71,7 +71,6 @@
   $(function(){
     $("fieldset").not(".unfoldable").each(function(_, fieldset){
       var fieldset = $(fieldset);
-      var form_elements = fieldset.find('> *').not('legend');
 
       var filled = fieldset.find(':input').filter(function(_, el){
         if(el.type == "checkbox" || el.type == "radio") {
@@ -85,7 +84,7 @@
 
       if(filled.size() == 0) {
         fieldset.find('legend').
-          click(function(){ form_elements.toggle() }).click().
+          click(function(){ fieldset.find('> *').not('legend').toggle() }).click().
           css('cursor', 'pointer').
           append(' &#x2304;');
       }
