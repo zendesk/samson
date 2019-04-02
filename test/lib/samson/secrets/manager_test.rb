@@ -155,6 +155,15 @@ describe Samson::Secrets::Manager do
     end
   end
 
+  describe ".revert" do
+    it "reverts a secret to an older version" do
+      Samson::Secrets::Manager.revert(secret.id, to: "v2", user: users(:project_admin))
+      current = Samson::Secrets::Manager.read(secret.id, include_value: true)
+      current[:value].must_equal "MY-SECRET"
+      current[:updater_id].must_equal users(:project_admin).id
+    end
+  end
+
   describe ".move" do
     def move
       Samson::Secrets::Manager.move "global/foo/global/bar", "global/baz/global/bar"
