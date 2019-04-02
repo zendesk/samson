@@ -77,11 +77,10 @@ module Kubernetes
         end
 
         ready_statuses, not_ready_statuses = statuses.partition(&:live)
-        too_many_not_ready = (not_ready_statuses.size > allowed_not_ready(statuses.size))
 
         if waiting_for_ready
           print_statuses("Deploy status:", interesting, exact: false)
-          if too_many_not_ready
+          if too_many_not_ready?(statuses)
             if stopped = not_ready_statuses.select(&:finished).presence
               print_statuses("UNSTABLE, resources failed:", stopped, exact: true)
               return false, statuses
@@ -97,7 +96,7 @@ module Kubernetes
             wait_start_time = Time.now.to_i
           end
         else
-          if too_many_not_ready
+          if too_many_not_ready?(statuses)
             print_statuses("UNSTABLE, resources not ready:", not_ready_statuses, exact: true)
             return false, statuses
           else
@@ -388,6 +387,12 @@ module Kubernetes
         rollback(release_docs) if @job.deploy.kubernetes_rollback
         @output.puts "DONE"
         false
+      end
+    end
+
+    def too_many_not_ready?(statuses)
+      statuses.group_by(&:role).each_value.any? do |group|
+        group.count { |s| !s.live } > allowed_not_ready(group.size)
       end
     end
 

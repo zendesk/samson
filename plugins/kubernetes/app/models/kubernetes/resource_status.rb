@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 # TODO: merge plugins/kubernetes/app/models/kubernetes/api/pod.rb into here
+# TODO: rename live to ready to be more consistent with deploy_executor
 module Kubernetes
   class ResourceStatus
     attr_reader :resource, :role, :deploy_group, :kind, :details, :live, :finished, :pod
