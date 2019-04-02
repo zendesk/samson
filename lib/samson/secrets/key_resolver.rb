@@ -61,6 +61,11 @@ module Samson
 
       private
 
+      # cache since we use this for every secret
+      def ids
+        @ids ||= Samson::Secrets::Manager.ids
+      end
+
       def find_keys(secret_key, env_name, id_list)
         if secret_key.end_with?(WILDCARD)
           expand_wildcard_keys(env_name, secret_key, id_list)
@@ -108,7 +113,7 @@ module Samson
 
       # find the first id that exists, preserving priority in possible_ids
       def expand_simple_key(env_name, possible_ids)
-        if found = (possible_ids & Samson::Secrets::Manager.ids).first
+        if found = (possible_ids & ids).first
           [[env_name, found]]
         else
           []
@@ -118,9 +123,8 @@ module Samson
       # FOO_* with foo_* -> [[FOO_BAR, a/a/a/foo_bar], [FOO_BAZ, a/a/a/foo_baz]]
       def expand_wildcard_keys(env_name, secret_key, possible_ids)
         # look through all keys to check which ones match
-        all = Samson::Secrets::Manager.ids
         matched = possible_ids.flat_map do |id|
-          all.select { |a| a.start_with?(id.delete('*')) }
+          ids.select { |a| a.start_with?(id.delete('*')) }
         end
 
         # pick the most specific id per key, they are already sorted ... [a/b/c/d, a/a/a/d] -> [a/b/c/d]
