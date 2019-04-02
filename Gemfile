@@ -49,6 +49,7 @@ gem 'diffy'
 gem 'validates_lengths_from_database'
 gem 'large_object_store'
 gem 'parallel'
+gem 'stackprof'
 
 # treat included plugins like gems
 Dir[File.join(Bundler.root, 'plugins/*/')].each { |f| gemspec path: f }
@@ -102,7 +103,6 @@ group :development, :test do
   gem 'flay'
   gem 'parallel_tests'
   gem 'forking_test_runner'
-  gem 'stackprof'
 end
 
 group :test do
