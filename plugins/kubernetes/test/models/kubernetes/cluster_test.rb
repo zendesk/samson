@@ -166,4 +166,22 @@ describe Kubernetes::Cluster do
       cluster.errors.full_messages.must_equal []
     end
   end
+
+  describe "#config_contexts" do
+    before { cluster.instance_variable_set(:@kubeconfig, nil) }
+
+    it "shows available contexts" do
+      cluster.config_contexts.must_equal ["test"]
+    end
+
+    it "shows empty when file is not set" do
+      cluster.config_filepath = ""
+      cluster.config_contexts.must_equal []
+    end
+
+    it "shows empty when file is invalid" do
+      cluster.config_filepath = "Gemfile"
+      cluster.config_contexts.must_equal []
+    end
+  end
 end

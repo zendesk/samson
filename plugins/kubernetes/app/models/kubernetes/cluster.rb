@@ -24,15 +24,30 @@ module Kubernetes
     before_destroy :ensure_unused
 
     def client(type)
-      (@client ||= {})[type] ||= build_client(type)
+      (@client ||= {})[type] ||= begin
+        context = kubeconfig.context(config_context)
+        endpoint = context.api_endpoint
+        endpoint += '/apis' unless type.match? /^v\d+/ # TODO: remove by fixing via https://github.com/abonas/kubeclient/issues/284
+
+        Kubeclient::Client.new(
+          endpoint,
+          type,
+          ssl_options: context.ssl_options,
+          auth_options: context.auth_options,
+          timeouts: {open: 2, read: 10},
+          as: :parsed_symbolized
+        )
+      end
     end
 
     def namespaces
-      client('v1').get_namespaces.fetch(:items).map { |ns| ns.dig(:metadata, :name) } - %w[kube-system]
+      client('v1').get_namespaces.fetch(:items).map { |ns| ns.dig(:metadata, :name) } - ["kube-system"]
     end
 
-    def kubeconfig
-      @kubeconfig ||= Kubeclient::Config.read(config_filepath)
+    def config_contexts
+      (config_filepath? ? kubeconfig.contexts : [])
+    rescue StandardError
+      []
     end
 
     def schedulable_nodes
@@ -54,25 +69,14 @@ module Kubernetes
 
     private
 
+    def kubeconfig
+      @kubeconfig ||= Kubeclient::Config.read(config_filepath)
+    end
+
     def connection_valid?
       client('v1').api_valid?
     rescue *SamsonKubernetes.connection_errors
       false
-    end
-
-    def build_client(type)
-      context = kubeconfig.context(config_context)
-      endpoint = context.api_endpoint
-      endpoint += '/apis' unless type.match? /^v\d+/ # TODO: remove by fixing via https://github.com/abonas/kubeclient/issues/284
-
-      Kubeclient::Client.new(
-        endpoint,
-        type,
-        ssl_options: context.ssl_options,
-        auth_options: context.auth_options,
-        timeouts: {open: 2, read: 10},
-        as: :parsed_symbolized
-      )
     end
 
     def test_client_connection
