@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 class Kubernetes::ClustersController < ResourceController
   PUBLIC = [:index, :show].freeze
+  HIDDEN = "-- hidden --"
   before_action :authorize_admin!, except: PUBLIC
   before_action :authorize_super_admin!, except: PUBLIC + [:seed_ecr]
   before_action :set_resource, only: [:show, :edit, :update, :destroy, :seed_ecr, :new, :create]
@@ -27,12 +28,22 @@ class Kubernetes::ClustersController < ResourceController
     redirect_to({action: :index}, notice: "Seeded!")
   end
 
+  def edit
+    @kubernetes_cluster.client_cert = HIDDEN if @kubernetes_cluster.client_cert?
+    @kubernetes_cluster.client_key = HIDDEN if @kubernetes_cluster.client_key?
+    super
+  end
+
   private
 
   def resource_params
-    super.permit(
-      :name, :config_filepath, :config_context, :description, :ip_prefix, deploy_group_ids: []
+    params = super.permit(
+      :name, :config_filepath, :config_context, :description, :ip_prefix,
+      :auth_method, :api_endpoint, :verify_ssl, :client_cert, :client_key,
+      deploy_group_ids: []
     )
+    params.delete_if { |_, v| v == HIDDEN }
+    params
   end
 
   def new_config_filepath

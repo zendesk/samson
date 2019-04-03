@@ -27,7 +27,7 @@ describe "db" do
   it "can dump the schema without diff" do
     tasks["db:schema:dump"]
     if ActiveRecord::Base.connection.adapter_name.match?(/mysql/i)
-      File.read("db/schema.rb").wont_include "4294967295"
+      File.read("db/schema.rb").wont_include "4294967295", "replace 4294967295 with 1073741823"
       `git diff -- db/schema.rb`.must_equal ""
     end
   end

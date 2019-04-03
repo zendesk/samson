@@ -9,13 +9,6 @@
   </div>
 
   <div class="form-group">
-    <label class="col-lg-2 control-label">Config filepath</label>
-    <div class="col-lg-4">
-      <p class="form-control-static"><%= @kubernetes_cluster.config_filepath %></p>
-    </div>
-  </div>
-
-  <div class="form-group">
     <label class="col-lg-2 control-label">Description</label>
     <div class="col-lg-4">
       <p class="form-control-static"><%= @kubernetes_cluster.description %></p>
@@ -23,18 +16,65 @@
   </div>
 
   <div class="form-group">
-    <label class="col-lg-2 control-label">URL</label>
+    <label class="col-lg-2 control-label">IP prefix</label>
     <div class="col-lg-4">
-      <p class="form-control-static"><%= @kubernetes_cluster.client('v1').api_endpoint rescue "Error finding api endpoint: #{$!}" %></p>
+      <p class="form-control-static"><%= @kubernetes_cluster.ip_prefix %></p>
     </div>
   </div>
 
-  <div class="form-group">
-    <label class="col-lg-2 control-label">Context</label>
-    <div class="col-lg-4">
-      <p class="form-control-static"><%= @kubernetes_cluster.config_context %></p>
+  <% case @kubernetes_cluster.auth_method %>
+  <% when "context" %>
+    <div class="form-group">
+      <label class="col-lg-2 control-label">Context</label>
+      <div class="col-lg-4">
+        <p class="form-control-static"><%= @kubernetes_cluster.config_context %></p>
+      </div>
     </div>
-  </div>
+
+    <div class="form-group">
+      <label class="col-lg-2 control-label">Config filepath</label>
+      <div class="col-lg-4">
+        <p class="form-control-static"><%= @kubernetes_cluster.config_filepath %></p>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="col-lg-2 control-label">URL</label>
+      <div class="col-lg-4">
+        <p class="form-control-static"><%= @kubernetes_cluster.client('v1').api_endpoint rescue "Error finding api endpoint: #{$!}" %></p>
+      </div>
+    </div>
+  <% when "database" %>
+    <div class="form-group">
+      <label class="col-lg-2 control-label">URL</label>
+      <div class="col-lg-4">
+        <p class="form-control-static"><%= @kubernetes_cluster.api_endpoint %></p>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="col-lg-2 control-label">Client Cert</label>
+      <div class="col-lg-4">
+        <p class="form-control-static"><%= @kubernetes_cluster.client_cert? ? "YES" : "NO" %></p>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="col-lg-2 control-label">Client Key</label>
+      <div class="col-lg-4">
+        <p class="form-control-static"><%= @kubernetes_cluster.client_key? ? "YES" : "NO" %></p>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="col-lg-2 control-label">Verify SSL</label>
+      <div class="col-lg-4">
+        <p class="form-control-static"><%= @kubernetes_cluster.verify_ssl? ? "YES" : "NO" %></p>
+      </div>
+    </div>
+  <% else %>
+    Unsupported auth method
+  <% end %>
 
   <div class="form-group">
     <label class="col-lg-2 control-label">Deploy Groups</label>
