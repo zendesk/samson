@@ -141,7 +141,18 @@ module Kubernetes
     def raw_template
       @raw_template ||= begin
         file = kubernetes_role.config_file
-        content = kubernetes_release.project.repository.file_content(file, kubernetes_release.git_sha)
+        repository = kubernetes_release.project.repository
+        content = repository.file_content(file, kubernetes_release.git_sha)
+        # TODO: opt-in
+        Dir.mktmpdir do |dir|
+          File.write(File.basename(file), content)
+          File.write(
+            "kustomization.yaml",
+            # TODO: fail when file does not exist ? ... or make it ignore ?
+            repository.file_content(File.dirname(file) + "/kustomization.yaml", kubernetes_release.git_sha)
+          )
+          content = `kustomize build #{dir}` # TODO: handle error + escape inputs
+        end
         RoleConfigFile.new(content, file).elements
       end
     end
