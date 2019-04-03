@@ -140,6 +140,16 @@ describe Kubernetes::Cluster do
       result.must_be_instance_of Gem::Version
       result.version.must_equal '1.5.0'
     end
+
+    it 'retries when on random errors' do
+      Samson::Retry.expects(:sleep)
+      replies = [{status: 404}, {body: '{"gitVersion": "v1.6.0"}'}]
+      assert_request :get, 'http://foobar.server/version', to_return: replies, times: 2 do
+        cluster.server_version
+        Rails.cache.read(cluster.cache_key).must_equal '1.6.0' # cache correctly set
+        cluster.server_version
+      end
+    end
   end
 
   describe "#ensure_unused" do
