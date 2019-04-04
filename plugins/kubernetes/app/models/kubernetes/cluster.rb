@@ -6,6 +6,10 @@ module Kubernetes
     self.table_name = 'kubernetes_clusters'
     audited
 
+    include AttrEncryptedSupport
+    attr_encrypted :client_cert
+    attr_encrypted :client_key
+
     IP_PREFIX_PATTERN = /\A(?:[\d]{1,3}\.){0,2}[\d]{1,3}\z/.freeze # also used in js
 
     has_many :cluster_deploy_groups,
@@ -16,23 +20,51 @@ module Kubernetes
     has_many :deploy_groups, through: :cluster_deploy_groups, inverse_of: :kubernetes_cluster
 
     validates :name, presence: true, uniqueness: true
-    validates :config_filepath, presence: true
-    validates :config_context, presence: true
     validates :ip_prefix, format: IP_PREFIX_PATTERN, allow_blank: true
     validate :test_client_connection
 
     before_destroy :ensure_unused
 
     def client(type)
-      (@client ||= {})[type] ||= build_client(type)
+      (@client ||= {})[type] ||= begin
+        case auth_method
+        when "context"
+          context = kubeconfig.context(config_context)
+          endpoint = context.api_endpoint
+          ssl_options = context.ssl_options
+          auth_options = context.auth_options
+        when "database"
+          endpoint = api_endpoint
+          ssl_options = {
+            client_cert: client_cert_object,
+            client_key: client_key_object,
+            verify_ssl: verify_ssl
+          }
+          auth_options = {}
+        else raise "Unsupported auth method #{auth_method}"
+        end
+
+        endpoint += '/apis' unless type.match? /^v\d+/ # TODO: remove by fixing via https://github.com/abonas/kubeclient/issues/284
+
+        Kubeclient::Client.new(
+          endpoint,
+          type,
+          ssl_options: ssl_options,
+          auth_options: auth_options,
+          timeouts: {open: 2, read: 10},
+          as: :parsed_symbolized
+        )
+      end
     end
 
     def namespaces
-      client('v1').get_namespaces.fetch(:items).map { |ns| ns.dig(:metadata, :name) } - %w[kube-system]
+      client('v1').get_namespaces.fetch(:items).map { |ns| ns.dig(:metadata, :name) } - ["kube-system"]
     end
 
-    def kubeconfig
-      @kubeconfig ||= Kubeclient::Config.read(config_filepath)
+    def config_contexts
+      (config_filepath? ? kubeconfig.contexts : [])
+    rescue StandardError
+      []
     end
 
     def schedulable_nodes
@@ -52,44 +84,60 @@ module Kubernetes
       Gem::Version.new(version)
     end
 
+    def as_json(**options)
+      ignored = [
+        :encrypted_client_cert, :encrypted_client_cert_iv, :client_cert,
+        :encrypted_client_key, :encrypted_client_key_iv, :client_key,
+        :encryption_key_sha
+      ]
+      super(except: ignored, **options)
+    end
+
     private
+
+    def client_key_object
+      (OpenSSL::PKey::RSA.new(client_key) if client_key?)
+    end
+
+    def client_cert_object
+      (OpenSSL::X509::Certificate.new(client_cert) if client_cert?)
+    end
+
+    def kubeconfig
+      @kubeconfig ||= Kubeclient::Config.read(config_filepath)
+    end
 
     def connection_valid?
       client('v1').api_valid?
-    rescue *SamsonKubernetes.connection_errors
+    rescue StandardError
       false
     end
 
-    def build_client(type)
-      context = kubeconfig.context(config_context)
-      endpoint = context.api_endpoint
-      endpoint += '/apis' unless type.match? /^v\d+/ # TODO: remove by fixing via https://github.com/abonas/kubeclient/issues/284
-
-      Kubeclient::Client.new(
-        endpoint,
-        type,
-        ssl_options: context.ssl_options,
-        auth_options: context.auth_options,
-        timeouts: {open: 2, read: 10},
-        as: :parsed_symbolized
-      )
-    end
-
     def test_client_connection
-      unless File.file?(config_filepath)
-        errors.add(:config_filepath, "File does not exist")
-        return
+      case auth_method
+      when "context"
+        return errors.add(:config_filepath, "must be set") unless config_filepath?
+        return errors.add(:config_filepath, "file does not exist") unless File.file?(config_filepath)
+        return errors.add(:config_context, "must be set") unless config_context?
+        return errors.add(:config_context, "not found") unless config_contexts.include?(config_context)
+      when "database"
+        return errors.add(:api_endpoint, "must be set") unless api_endpoint?
+        begin
+          client_cert_object
+        rescue StandardError
+          errors.add(:client_cert, "is invalid")
+        end
+
+        begin
+          client_key_object
+        rescue StandardError
+          errors.add(:client_key, "is invalid")
+        end
+      else
+        errors.add(:auth_method, "pick 'context' or 'database'")
       end
 
-      unless kubeconfig.contexts.include?(config_context)
-        errors.add(:config_context, "Context not found")
-        return
-      end
-
-      unless connection_valid?
-        errors.add(:config_context, "Could not connect to API Server")
-        return
-      end
+      errors.add(:base, "Could not connect to API Server") unless connection_valid?
     end
 
     def ensure_unused

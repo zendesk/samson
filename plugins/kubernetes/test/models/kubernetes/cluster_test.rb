@@ -6,13 +6,15 @@ SingleCov.covered!
 describe Kubernetes::Cluster do
   let(:cluster) { create_kubernetes_cluster }
 
+  before { Kubernetes::Cluster.any_instance.stubs(:connection_valid?).returns(true) }
+
   describe 'validations' do
     it "is valid" do
       assert_valid cluster
     end
 
     describe "test_client_connection" do
-      before { cluster.class.any_instance.unstub(:connection_valid?) }
+      before { Kubernetes::Cluster.any_instance.unstub(:connection_valid?) }
 
       it "is valid" do
         body = {versions: ['v1']}.to_json
@@ -33,14 +35,62 @@ describe Kubernetes::Cluster do
         end
       end
 
-      it "is invalid when config file does not exist" do
-        cluster.config_filepath = 'nope'
+      it "is invalid with unsupported auth_method" do
+        cluster.auth_method = "wut"
         refute_valid cluster
       end
 
-      it "is invalid when context is not in file" do
-        cluster.config_context = 'nope'
-        refute_valid cluster
+      describe "auth_method context" do
+        def cluster(attributes = {})
+          create_kubernetes_cluster(attributes)
+        end
+
+        it "is invalid without config_context" do
+          refute_valid cluster(config_context: "")
+        end
+
+        it "is invalid when context is not in file" do
+          refute_valid cluster(config_context: 'nope')
+        end
+
+        it "is invalid without config_filepath" do
+          refute_valid cluster(config_filepath: "")
+        end
+
+        it "is invalid when config file does not exist" do
+          refute_valid cluster(config_filepath: 'nope')
+        end
+      end
+
+      describe "auth_method database" do
+        def cluster(attributes = {})
+          create_kubernetes_cluster(
+            {auth_method: "database", api_endpoint: "http://foobar.server"}.merge(attributes)
+          )
+        end
+
+        it "is valid" do
+          body = {versions: ['v1']}.to_json
+          assert_request(:get, "http://foobar.server/api", to_return: {body: body}) do
+            assert_valid cluster
+          end
+        end
+
+        it "is invalid without api_endpoint" do
+          refute_valid cluster(api_endpoint: "")
+        end
+
+        it "is invalid with bad api_context" do
+          refute_valid cluster(api_endpoint: "wut")
+        end
+
+        it "is invalid with invalid cert" do
+          refute_valid cluster(client_cert: "wut")
+        end
+
+        it "is invalid with invalid key" do
+          refute_valid cluster(client_key: "wut")
+        end
       end
     end
 
@@ -164,6 +214,35 @@ describe Kubernetes::Cluster do
     it "destroys when unused" do
       assert cluster.destroy
       cluster.errors.full_messages.must_equal []
+    end
+  end
+
+  describe "#config_contexts" do
+    before { cluster.instance_variable_set(:@kubeconfig, nil) }
+
+    it "shows available contexts" do
+      cluster.config_contexts.must_equal ["test"]
+    end
+
+    it "shows empty when file is not set" do
+      cluster.config_filepath = ""
+      cluster.config_contexts.must_equal []
+    end
+
+    it "shows empty when file is invalid" do
+      cluster.config_filepath = "Gemfile"
+      cluster.config_contexts.must_equal []
+    end
+  end
+
+  describe "#as_json" do
+    it "does not leak secrets" do
+      cluster.as_json.keys.must_equal(
+        [
+          "id", "name", "description", "config_filepath", "config_context", "created_at", "updated_at", "ip_prefix",
+          "auth_method", "api_endpoint", "verify_ssl"
+        ]
+      )
     end
   end
 end

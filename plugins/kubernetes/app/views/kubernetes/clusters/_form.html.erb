@@ -1,4 +1,4 @@
-<% config_contexts = (@kubernetes_cluster.config_filepath ? @kubernetes_cluster.kubeconfig.contexts : []) rescue [] %>
+<% config_contexts = @kubernetes_cluster.config_contexts %>
 
 <section>
   <%= form_for @kubernetes_cluster, html: { class: "form-horizontal" } do |form| %>
@@ -7,20 +7,34 @@
     <fieldset>
       <%= form.input :name, required: true %>
       <%= form.input :description %>
-      <%= form.input :config_filepath, label: 'Config File path', pattern: /\A\/.*\z/, help: 'Absolute paths only', required: true %>
-      <%= form.input :config_context, label: 'Context', required: true do %>
-        <% if config_contexts.any? %>
-          <% config_contexts.unshift @kubernetes_cluster.config_context unless config_contexts.include?(@kubernetes_cluster.config_context) %>
-          <%= form.select :config_context, config_contexts, {}, { class: 'form-control' } %>
-        <% else %>
-          <%= form.text_field :config_context, class: "form-control" %>
-        <% end %>
-      <% end %>
       <%= form.input :ip_prefix,
           label: "IP prefix",
           pattern: Kubernetes::Cluster::IP_PREFIX_PATTERN,
           help: "First 1 to 3 sections of an IPv4 address to replace Service clusterIP, for example 123.231"
       %>
+
+      <%= form.input :auth_method do %>
+        <%= form.select :auth_method, ["context", "database"] %>
+      <% end %>
+
+      <div class="auth_via_field" data-method="context">
+        <%= form.input :config_filepath, label: 'Config File path', pattern: /\A\/.*\z/, help: 'Absolute paths only' %>
+        <%= form.input :config_context, label: 'Context' do %>
+          <% if config_contexts.any? %>
+            <% config_contexts.unshift @kubernetes_cluster.config_context unless config_contexts.include?(@kubernetes_cluster.config_context) %>
+            <%= form.select :config_context, config_contexts, {}, { class: 'form-control' } %>
+          <% else %>
+            <%= form.text_field :config_context, class: "form-control" %>
+          <% end %>
+        <% end %>
+      </div>
+
+      <div class="auth_via_field" data-method="database">
+        <%= form.input :api_endpoint, help: "http://foo.bar" %>
+        <%= form.input :client_cert, as: :text_area, input_html: { rows: 3 } %>
+        <%= form.input :client_key, as: :text_area, input_html: { rows: 3 } %>
+        <%= form.input :verify_ssl, as: :check_box %>
+      </div>
 
       <%= form.actions delete: true do %>
         <% if Samson::Hooks.active_plugin?('aws_ecr') && SamsonAwsEcr::Engine.active? && @kubernetes_cluster.persisted? %>
@@ -41,3 +55,15 @@
     });
   </script>
 <% end %>
+
+<script>
+  // show fields depending on what auth method user picks
+  // - timeout so field does not get shrunk to 3px after unfolding
+  setTimeout(function(){
+    $("#kubernetes_cluster_auth_method").change(function(){
+      var current = $(this).val();
+      $(".auth_via_field[data-method=" + current + "]").show();
+      $(".auth_via_field[data-method!=" + current + "]").hide();
+    }).trigger("change");
+  }, 0)
+</script>

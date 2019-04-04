@@ -10,6 +10,8 @@ describe Kubernetes::ClustersController do
 
   let(:cluster) { create_kubernetes_cluster }
 
+  before { Kubernetes::Cluster.any_instance.stubs(:connection_valid?).returns(true) }
+
   unauthorized :get, :index
   unauthorized :get, :show, id: 1
 
@@ -154,6 +156,15 @@ describe Kubernetes::ClustersController do
         assert_template :edit
       end
 
+      it "does not expose secrets" do
+        cluster.client_key = "xxx"
+        cluster.client_cert = "yyy"
+        cluster.save!(validate: false)
+        get :edit, params: {id: cluster.id}
+        assigns(:kubernetes_cluster).client_cert.must_equal "-- hidden --"
+        assigns(:kubernetes_cluster).client_key.must_equal "-- hidden --"
+      end
+
       it "does not blow up when client cannot connect" do
         cluster.update_column(:config_filepath, 'nope.txt')
         get :edit, params: {id: cluster.id}
@@ -168,6 +179,12 @@ describe Kubernetes::ClustersController do
         patch :update, params: {id: cluster.id, kubernetes_cluster: {name: "NEW"}}
         assert_redirected_to cluster
         cluster.reload.name.must_equal "NEW"
+      end
+
+      it "does not store magic hidden value" do
+        cluster.update_attribute(:client_key, 'aaa')
+        patch :update, params: {id: cluster.id, kubernetes_cluster: {client_key: "-- hidden --"}}
+        cluster.reload.client_key.must_equal 'aaa'
       end
 
       it "shows errors when it fails to update" do

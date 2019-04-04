@@ -27,14 +27,14 @@ class ActiveSupport::TestCase
     end
   end
 
-  def create_kubernetes_cluster(attr = {})
-    Kubernetes::Cluster.any_instance.stubs(connection_valid?: true)
-    cluster_attr = {
+  def create_kubernetes_cluster(attributes = {})
+    cluster = Kubernetes::Cluster.new({
       name: 'Foo',
       config_filepath: File.join(File.dirname(__FILE__), 'cluster_config.yml'),
       config_context: 'test'
-    }.merge(attr)
-    Kubernetes::Cluster.create!(cluster_attr)
+    }.merge(attributes))
+    cluster.save!(validate: false)
+    cluster
   end
 
   def kubernetes_fake_raw_template

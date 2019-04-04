@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 require 'attr_encrypted'
 
+# TODO: make as_json exclude the encryp* columns
 module AttrEncryptedSupport
   encryption_key_raw = (ENV['ATTR_ENCRYPTED_KEY'] || Rails.application.secrets.secret_key_base)
   ENCRYPTION_KEY = encryption_key_raw[0...32]

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_03_26_183413) do
+ActiveRecord::Schema.define(version: 2019_04_03_202316) do
 
   create_table "audits" do |t|
     t.integer "auditable_id", null: false
@@ -210,6 +210,14 @@ ActiveRecord::Schema.define(version: 2019_03_26_183413) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.string "ip_prefix"
+    t.string "auth_method", default: "context", null: false
+    t.string "api_endpoint"
+    t.text "encrypted_client_cert"
+    t.string "encrypted_client_cert_iv"
+    t.text "encrypted_client_key"
+    t.string "encrypted_client_key_iv"
+    t.string "encryption_key_sha"
+    t.boolean "verify_ssl", default: false, null: false
   end
 
   create_table "kubernetes_deploy_group_roles", id: :integer do |t|
