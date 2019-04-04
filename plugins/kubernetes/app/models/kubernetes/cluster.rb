@@ -84,15 +84,6 @@ module Kubernetes
       Gem::Version.new(version)
     end
 
-    def as_json(**options)
-      ignored = [
-        :encrypted_client_cert, :encrypted_client_cert_iv, :client_cert,
-        :encrypted_client_key, :encrypted_client_key_iv, :client_key,
-        :encryption_key_sha
-      ]
-      super(except: ignored, **options)
-    end
-
     private
 
     def client_key_object

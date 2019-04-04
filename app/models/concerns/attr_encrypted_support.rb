@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 require 'attr_encrypted'
 
-# TODO: make as_json exclude the encryp* columns
 module AttrEncryptedSupport
   encryption_key_raw = (ENV['ATTR_ENCRYPTED_KEY'] || Rails.application.secrets.secret_key_base)
   ENCRYPTION_KEY = encryption_key_raw[0...32]
@@ -9,7 +8,17 @@ module AttrEncryptedSupport
 
   def self.included(base)
     base.send :before_validation, :store_encryption_key_sha
-    base.extend Defaults
+    base.extend ClassMethods
+  end
+
+  def as_json(except: [], **options)
+    except += [
+      :encryption_key_sha,
+      *self.class.encrypted_attributes.keys.flat_map do |column|
+        [column, :"encrypted_#{column}_iv", :"encrypted_#{column}"]
+      end
+    ]
+    super(except: except, **options)
   end
 
   private
@@ -20,7 +29,7 @@ module AttrEncryptedSupport
   end
 
   # use the same defaults everywhere
-  module Defaults
+  module ClassMethods
     def attr_encrypted(column)
       super(column, key: ENCRYPTION_KEY, algorithm: 'aes-256-cbc')
     end
