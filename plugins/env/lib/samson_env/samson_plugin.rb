@@ -128,10 +128,13 @@ Samson::Hooks.callback :stage_permitted_params do
   AcceptsEnvironmentVariables::ASSIGNABLE_ATTRIBUTES
 end
 
-if ENV["DEPLOY_ENV_VARS"] != "false" # uncovered
-  # Adds the deploy env vars view to the deploy form in order to add
-  # specific environment vars per deploy
-  Samson::Hooks.view :deploy_form, 'samson_env/deploy_form'
+env_vars_flag = ENV["DEPLOY_ENV_VARS"]
+if env_vars_flag != "false" # uncovered
+  if env_vars_flag != 'api_only' # uncovered
+    # Adds the deploy env vars view to the deploy form in order to add
+    # specific environment vars per deploy
+    Samson::Hooks.view :deploy_form, 'samson_env/deploy_form'
+  end
 
   # Allows environment vars as valid parameters for the deploy model
   Samson::Hooks.callback :deploy_permitted_params do
