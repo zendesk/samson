@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 module GroupScope
+  GROUP_SCOPE_TYPE_PRIORITY = ["DeployGroup", "Environment", nil].freeze
+
   def self.included(base)
-    base.validates :scope_type, inclusion: ["Environment", "DeployGroup", nil]
+    base.validates :scope_type, inclusion: GROUP_SCOPE_TYPE_PRIORITY
     base.belongs_to :scope, polymorphic: true, optional: true
   end
 
@@ -31,14 +33,6 @@ module GroupScope
   end
 
   def priority
-    [
-      (project? ? 0 : 1),
-      case scope_type
-      when nil then 2
-      when "Environment" then 1
-      when "DeployGroup" then 0
-      else raise "Unsupported scope #{scope_type}"
-      end
-    ]
+    GROUP_SCOPE_TYPE_PRIORITY.index(scope_type) || raise("Unsupported scope #{scope_type}")
   end
 end

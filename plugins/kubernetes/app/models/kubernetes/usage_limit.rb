@@ -15,12 +15,11 @@ class Kubernetes::UsageLimit < ActiveRecord::Base
     all.sort_by(&:priority).detect { |l| l.send(:matches?, project, deploy_group) }
   end
 
-  private
-
-  # used by `priority` from GroupScope
-  def project?
-    project_id
+  def priority
+    [project_id ? 0 : 1, super]
   end
+
+  private
 
   def matches?(project, deploy_group)
     (!project_id || project_id == project.id) && matches_scope?(deploy_group)

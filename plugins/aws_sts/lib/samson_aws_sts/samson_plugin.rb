@@ -72,8 +72,8 @@ Samson::Hooks.callback :stage_permitted_params do
   ]
 end
 
-Samson::Hooks.callback :deploy_env do |deploy|
-  next {} if deploy.stage.aws_sts_iam_role_arn.blank?
+Samson::Hooks.callback :deploy_env do |deploy, _deploy_group, *|
+  next {} if deploy.stage&.aws_sts_iam_role_arn.blank?
 
   SamsonAwsSts::Client.new(SamsonAwsSts.sts_client).deploy_env_vars(deploy)
 end

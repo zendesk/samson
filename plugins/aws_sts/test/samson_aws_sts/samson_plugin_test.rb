@@ -66,7 +66,7 @@ describe SamsonAwsSts do
     end
   end
 
-  describe 'deploy_env_vars callback' do
+  describe :deploy_env do
     it 'calls SamsonAwsSts.deploy_env_vars' do
       stage.aws_sts_iam_role_arn = "some_arn"
 

@@ -54,7 +54,7 @@ class EnvironmentVariableGroupsController < ApplicationController
       @project = Project.find(params[:project_id])
     end
 
-    @groups = SamsonEnv.env_groups(@project, deploy_groups, preview: true)
+    @groups = SamsonEnv.env_groups(Deploy.new(project: @project), deploy_groups, preview: true)
 
     respond_to do |format|
       format.html

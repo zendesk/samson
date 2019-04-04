@@ -3,6 +3,7 @@ require 'validates_lengths_from_database'
 
 class EnvironmentVariable < ActiveRecord::Base
   FAILED_LOOKUP_MARK = ' X' # SpaceX
+  PARENT_PRIORITY = ["Deploy", "Stage", "Project"].freeze
 
   include GroupScope
   extend Inlinable
@@ -22,24 +23,22 @@ class EnvironmentVariable < ActiveRecord::Base
     # preview parameter can be used to not raise an error,
     # but return a value with a helpful message
     # also used by an external plugin
-    def env(project, deploy_group, preview: false, resolve_secrets: true)
+    def env(deploy, deploy_group, preview: false, resolve_secrets: true)
       env = {}
-      if (env_repo_name = ENV["DEPLOYMENT_ENV_REPO"]) && project.use_env_repo
-        env = env_vars_from_repo(env_repo_name, project, deploy_group)
+      if deploy_group && (env_repo_name = ENV["DEPLOYMENT_ENV_REPO"]) && deploy.project.use_env_repo
+        env.merge! env_vars_from_repo(env_repo_name, deploy.project, deploy_group)
       end
-      env.merge!(env_vars_from_db(project, deploy_group))
+      env.merge! env_vars_from_db(deploy, deploy_group)
+
       resolve_dollar_variables(env)
-      resolve_secrets(project, deploy_group, env, preview: preview) if resolve_secrets
+      resolve_secrets(deploy.project, deploy_group, env, preview: preview) if resolve_secrets
+
       env
     end
 
     # scopes is given as argument since it needs to be cached
     def sort_by_scopes(variables, scopes)
       variables.sort_by { |x| [x.name, scopes.index { |_, s| s == x.scope_type_and_id } || 999] }
-    end
-
-    def nested_variables(project)
-      project.environment_variables + project.environment_variable_groups.flat_map(&:environment_variables)
     end
 
     # env_scopes is given as argument since it needs to be cached
@@ -50,8 +49,13 @@ class EnvironmentVariable < ActiveRecord::Base
       end.join("\n")
     end
 
-    def env_vars_from_db(project, deploy_group)
-      variables = nested_variables(project)
+    private
+
+    def env_vars_from_db(deploy, deploy_group)
+      variables =
+        deploy.environment_variables +
+        (deploy.stage&.environment_variables || []) +
+        deploy.project.nested_environment_variables
       variables.sort_by!(&:priority)
       variables.each_with_object({}) do |ev, all|
         all[ev.name] = ev.value if !all[ev.name] && ev.matches_scope?(deploy_group)
@@ -65,8 +69,6 @@ class EnvironmentVariable < ActiveRecord::Base
     rescue StandardError => e
       raise Samson::Hooks::UserError, "Cannot download env file #{path} from #{env_repo_name} (#{e.message})"
     end
-
-    private
 
     def resolve_dollar_variables(env)
       env.each do |k, value|
@@ -92,13 +94,13 @@ class EnvironmentVariable < ActiveRecord::Base
     end
   end
 
-  # used by `priority` from GroupScope
-  def project?
-    parent_type == "Project"
+  def priority
+    [PARENT_PRIORITY.index(parent_type) || 999, super]
   end
 
   private
 
+  # callback for audited
   def auditing_enabled
     parent_type != "Deploy" && super
   end

@@ -13,24 +13,24 @@ module SamsonEnv
   end
 
   class << self
-    def write_env_files(dir, project, deploy_groups)
-      return unless groups = env_groups(project, deploy_groups)
+    def write_env_files(dir, deploy, deploy_groups)
+      return unless groups = env_groups(deploy, deploy_groups)
       write_dotenv("#{dir}/.env", groups)
     end
 
-    def env_groups(project, deploy_groups, **kwargs)
+    def env_groups(deploy, deploy_groups, **kwargs)
       groups =
         if deploy_groups.any?
           deploy_groups.map do |deploy_group|
             [
               ".#{deploy_group.name.parameterize}",
-              EnvironmentVariable.env(project, deploy_group, **kwargs)
+              EnvironmentVariable.env(deploy, deploy_group, **kwargs)
             ]
           end
         else
-          [["", EnvironmentVariable.env(project, nil, **kwargs)]]
+          [["", EnvironmentVariable.env(deploy, nil, **kwargs)]]
         end
-      return groups if groups.any? { |_, data| data.present? }
+      groups if groups.any? { |_, data| data.present? }
     end
 
     # https://github.com/bkeepers/dotenv/pull/188
@@ -53,6 +53,7 @@ module SamsonEnv
   end
 end
 
+# TODO: lazy load environment variables via changeset to make preview for new deploy show entered deploy env vars
 Samson::Hooks.view :project_form, "samson_env/fields"
 Samson::Hooks.view :manage_menu, "samson_env/manage_menu"
 Samson::Hooks.view :deploy_confirmation_tab_nav, "samson_env/deploy_tab_nav"
@@ -69,16 +70,16 @@ Samson::Hooks.callback :project_permitted_params do
 end
 
 Samson::Hooks.callback :after_deploy_setup do |dir, job|
-  if stage = job.deploy&.stage
-    SamsonEnv.write_env_files(dir, stage.project, stage.deploy_groups.to_a)
-  end
+  next unless deploy = job.deploy
+  SamsonEnv.write_env_files(dir, deploy, deploy.stage.deploy_groups.to_a)
 end
 
 Samson::Hooks.callback :before_docker_build do |tmp_dir, build, _|
-  SamsonEnv.write_env_files(tmp_dir, build.project, [])
+  SamsonEnv.write_env_files(tmp_dir, Deploy.new(project: build.project), [])
 end
 
-Samson::Hooks.callback :deploy_group_env do |*args|
+# TODO: not used for write_env_files
+Samson::Hooks.callback :deploy_env do |*args|
   EnvironmentVariable.env(*args)
 end
 
@@ -127,12 +128,6 @@ Samson::Hooks.callback :stage_permitted_params do
   AcceptsEnvironmentVariables::ASSIGNABLE_ATTRIBUTES
 end
 
-# Injects specific environment variables for the stage when they were set in the form
-# NOTE: does not resolve secrets or dollar variables on purpose
-Samson::Hooks.callback :deploy_env do |deploy|
-  deploy.stage.environment_variables.each_with_object({}) { |var, h| h[var.name] = var.value }
-end
-
 if ENV["DEPLOY_ENV_VARS"] != "false" # uncovered
   # Adds the deploy env vars view to the deploy form in order to add
   # specific environment vars per deploy
@@ -141,11 +136,5 @@ if ENV["DEPLOY_ENV_VARS"] != "false" # uncovered
   # Allows environment vars as valid parameters for the deploy model
   Samson::Hooks.callback :deploy_permitted_params do
     AcceptsEnvironmentVariables::ASSIGNABLE_ATTRIBUTES
-  end
-
-  # Injects specific environment variables for the deploy when they were set in the form
-  # NOTE: does not resolve secrets or dollar variables on purpose
-  Samson::Hooks.callback :deploy_env do |deploy|
-    deploy.environment_variables.each_with_object({}) { |var, h| h[var.name] = var.value }
   end
 end

@@ -79,4 +79,17 @@ describe Kubernetes::UsageLimit do
       Kubernetes::UsageLimit.most_specific(project, deploy_group).must_equal found
     end
   end
+
+  describe "#priority" do
+    let(:limit) { create_limit(scope: environments(:staging)) }
+
+    it "is high with project" do
+      limit.priority.must_equal [0, 1]
+    end
+
+    it "is low when global" do
+      limit.project = nil
+      limit.priority.must_equal [1, 1]
+    end
+  end
 end

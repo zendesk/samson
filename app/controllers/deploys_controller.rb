@@ -47,12 +47,9 @@ class DeploysController < ApplicationController
     end
   end
 
-  # TODO: use permitted deploy-params here and not pull from all params
+  # TODO: remove the `reference` params and use `deploy[reference]`
   def new
-    defaults = {reference: @stage.default_reference}
-    deploy_params = params.except(:project_id, :stage_id).permit(:reference).merge(stage: @stage)
-
-    @deploy = current_project.deploys.build(defaults.merge(deploy_params))
+    @deploy = stage.deploys.new({reference: params[:reference] || @stage.default_reference}.merge(deploy_params))
   end
 
   def create
@@ -79,7 +76,7 @@ class DeploysController < ApplicationController
   end
 
   def confirm
-    @changeset = Deploy.new(stage: stage, reference: reference, project: current_project).changeset
+    @changeset = stage.deploys.new(deploy_params).changeset
     render 'changeset', layout: false
   end
 
@@ -187,20 +184,12 @@ class DeploysController < ApplicationController
     pagy(deploys, page: params[:page], items: 30)
   end
 
-  def deploy_permitted_params
-    self.class.deploy_permitted_params
-  end
-
-  def reference
-    deploy_params[:reference].strip
-  end
-
   def stage
     @stage ||= current_project.stages.find_by_param!(params[:stage_id])
   end
 
   def deploy_params
-    params.require(:deploy).permit(deploy_permitted_params)
+    params.fetch(:deploy, {}).permit(self.class.deploy_permitted_params).merge(project: current_project)
   end
 
   def find_deploy
