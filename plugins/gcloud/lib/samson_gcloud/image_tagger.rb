@@ -19,7 +19,7 @@ module SamsonGcloud
           next unless digest.match?(/(^|\/|\.)gcr.io\//) # gcr.io or https://gcr.io or region like asia.gcr.io
           base = digest.split('@').first
 
-          tags.each { |tag| tag_image(tag, base, digest, output) }
+          Samson::Parallelizer.map(tags) { |tag| tag_image(tag, base, digest, output) }
         end
       end
 
