@@ -17,28 +17,4 @@ module WebhooksHelper
   def sources_for_select(sources)
     sources.map { |source| [source.titleize, source] }.to_a
   end
-
-  def webhook_help_text(source)
-    case source
-    when 'generic'
-      help_text = <<~HTML.html_safe
-        Generic endpoint to start deploys, expects payload in the form of:
-        <br>
-        <pre>
-        {
-          deploy: {
-            branch: &ltname&gt,
-            commit: {
-              sha: &ltsha&gt,
-              message: &ltmessage&gt
-            }
-          }
-        }
-        </pre>
-      HTML
-      additional_info(help_text)
-    else
-      ''
-    end
-  end
 end
