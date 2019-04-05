@@ -214,6 +214,11 @@ ActiveSupport::TestCase.class_eval do
   ensure
     silence_warnings { base.const_set(name, old) }
   end
+
+  def self.only_callbacks_for_plugin(callback)
+    plugin_name = caller(1..1).first[/\/plugins\/([^\/]+)/, 1] || raise("not called from a plugin")
+    around { |t| Samson::Hooks.only_callbacks_for_plugin(plugin_name, callback, &t) }
+  end
 end
 
 # Helpers for controller tests

@@ -18,7 +18,7 @@ describe SamsonGitlab do
       Samson::Hooks.fire(:changeset_api_request, changeset, method)
     end
 
-    around { |t| Samson::Hooks.only_callbacks_for_plugin('gitlab', :changeset_api_request, &t) }
+    only_callbacks_for_plugin :changeset_api_request
 
     it "skips non-gitlab" do
       project.stubs(:gitlab?).returns(false)

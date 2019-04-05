@@ -8,7 +8,7 @@ describe SamsonRollbar do
   describe 'error callback' do
     let(:exception) { mock('exception') }
 
-    around { |t| Samson::Hooks.only_callbacks_for_plugin('rollbar', :error, &t) }
+    only_callbacks_for_plugin :error
 
     it 'reports error' do
       Rollbar.expects(:error).with(exception, foo: 'bar').returns(123)
