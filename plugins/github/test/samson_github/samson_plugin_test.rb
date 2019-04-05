@@ -10,7 +10,7 @@ describe SamsonDatadog do
   describe :stage_permitted_params do
     it "lists extra keys" do
       Samson::Hooks.fire(:stage_permitted_params).must_include(
-        [:update_github_pull_requests, :use_github_deployment_api]
+        [:update_github_pull_requests, :use_github_deployment_api, :github_pull_request_comment]
       )
     end
   end

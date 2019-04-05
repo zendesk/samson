@@ -14,7 +14,8 @@ Samson::Hooks.view :stage_form, "samson_github/fields"
 Samson::Hooks.callback :stage_permitted_params do
   [
     :update_github_pull_requests,
-    :use_github_deployment_api
+    :use_github_deployment_api,
+    :github_pull_request_comment
   ]
 end
 

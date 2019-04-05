@@ -36,7 +36,12 @@ module Samson
           end
         else
           input_html[:class] ||= "form-control"
-          content = label(attribute, label, class: "col-lg-2 control-label")
+          content = if label.present?
+            label(attribute, label, class: 'col-lg-2 control-label')
+          else
+            # Spacer with no label, useful for subfields or fields that are already under a different header
+            content_tag(:div, '', class: 'col-lg-2 control-label')
+          end
           content << content_tag(:div, class: 'col-lg-4', &block)
           content << help
         end

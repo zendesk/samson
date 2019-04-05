@@ -31,6 +31,10 @@ describe Samson::FormBuilder do
       builder.input(:name, label: "Ho Ho").must_include 'for="user_name">Ho Ho</label>'
     end
 
+    it "can handle a blank label" do
+      builder.input(:name, label: '').must_include '<div class="col-lg-2 control-label"></div>'
+    end
+
     it "can change field type" do
       builder.input(:name, as: :text_area).must_include '<textarea '
     end
