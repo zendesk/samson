@@ -16,7 +16,7 @@ describe SamsonDatadog do
   end
 
   describe :after_deploy do
-    around { |t| Samson::Hooks.only_callbacks_for_plugin('github', :after_deploy, &t) }
+    only_callbacks_for_plugin :after_deploy
 
     describe "with github notifications enabled" do
       before { stage.update_github_pull_requests = true }
@@ -54,7 +54,7 @@ describe SamsonDatadog do
   end
 
   describe :before_deploy do
-    around { |t| Samson::Hooks.only_callbacks_for_plugin('github', :before_deploy, &t) }
+    only_callbacks_for_plugin :before_deploy
 
     it "creates a github deployment" do
       stage.use_github_deployment_api = true
@@ -75,7 +75,7 @@ describe SamsonDatadog do
 
     let(:status_url) { "#{SamsonGithub::STATUS_URL}/api/v2/status.json" }
 
-    around { |t| Samson::Hooks.only_callbacks_for_plugin('github', :repo_provider_status, &t) }
+    only_callbacks_for_plugin :repo_provider_status
 
     it "reports good response" do
       assert_request(:get, status_url, to_return: {body: {status: {indicator: 'none'}}.to_json}) do
@@ -110,7 +110,7 @@ describe SamsonDatadog do
       Samson::Hooks.fire(:changeset_api_request, changeset, method)
     end
 
-    around { |t| Samson::Hooks.only_callbacks_for_plugin('github', :changeset_api_request, &t) }
+    only_callbacks_for_plugin :changeset_api_request
 
     it "skips non-gitlab" do
       project.stubs(:github?).returns(false)

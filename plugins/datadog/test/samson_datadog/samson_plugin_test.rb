@@ -30,7 +30,7 @@ describe SamsonDatadog do
   end
 
   describe :before_deploy do
-    around { |t| Samson::Hooks.only_callbacks_for_plugin("datadog", :before_deploy, &t) }
+    only_callbacks_for_plugin :before_deploy
 
     it 'sends notification on before hook' do
       SamsonDatadog.expects(:send_notification).with(deploy, additional_tags: ['started'], now: true)
@@ -39,7 +39,7 @@ describe SamsonDatadog do
   end
 
   describe :after_deploy do
-    around { |t| Samson::Hooks.only_callbacks_for_plugin("datadog", :after_deploy, &t) }
+    only_callbacks_for_plugin :after_deploy
 
     it 'sends notification on after hook' do
       stage.stubs(:send_datadog_notifications?).returns(true)

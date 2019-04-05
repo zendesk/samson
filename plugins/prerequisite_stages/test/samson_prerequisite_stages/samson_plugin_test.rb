@@ -30,7 +30,7 @@ describe SamsonPrerequisiteStages do
 
   describe 'event callbacks' do
     describe 'before_deploy callback' do
-      around { |t| Samson::Hooks.only_callbacks_for_plugin("prerequisite_stages", :before_deploy, &t) }
+      only_callbacks_for_plugin :before_deploy
 
       it 'raises if a prerequisite stage has not been deployed for ref' do
         stage1.expects(:undeployed_prerequisite_stages).with(deploy.reference).returns([stage2])
@@ -50,7 +50,7 @@ describe SamsonPrerequisiteStages do
     end
 
     describe 'ref_status callback' do
-      around { |t| Samson::Hooks.only_callbacks_for_plugin("prerequisite_stages", :ref_status, &t) }
+      only_callbacks_for_plugin :ref_status
 
       it 'returns status if stage does not meet prerequisites' do
         stage1.expects(:undeployed_prerequisite_stages).with(deploy.reference).returns([stage2])

@@ -86,7 +86,7 @@ describe SamsonEnv do
   describe :deploy_env do
     let(:deploy) { deploys(:succeeded_test) }
 
-    around { |t| Samson::Hooks.only_callbacks_for_plugin("env", :deploy_env, &t) }
+    only_callbacks_for_plugin :deploy_env
 
     it "adds env variables" do
       deploy_group = deploy_groups(:pod1)
