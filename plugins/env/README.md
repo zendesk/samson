@@ -10,6 +10,7 @@ Can be used to have 1-off settings that differ from the project.
 
 Can be used to have generic stages to run one-off jobs or other tasks that need to be parameterized on each run.
 Since these pose a compliance problem, they can be disabled with the samson environment variable `DEPLOY_ENV_VARS=false`.
+Alternatively, only allow it via the API by using `DEPLOY_ENV_VARS=api_only`.
 
 ## API
 
