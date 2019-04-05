@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 1
+SingleCov.covered!
 
 describe SamsonAwsSts do
   let(:stage) { stages(:test_staging) }
@@ -66,14 +66,18 @@ describe SamsonAwsSts do
     end
   end
 
-  describe :deploy_env do
+  describe :deploy_execution_env do
+    only_callbacks_for_plugin :deploy_execution_env
+
     it 'calls SamsonAwsSts.deploy_env_vars' do
       stage.aws_sts_iam_role_arn = "some_arn"
+      SamsonAwsSts.expects(:sts_client).returns(Aws::STS::Client.new(stub_responses: true))
+      Samson::Hooks.fire(:deploy_execution_env, stage.deploys.last).first.keys.must_include :STS_AWS_ACCESS_KEY_ID
+    end
 
-      SamsonAwsSts.stubs(:sts_client).returns(Aws::STS::Client.new(stub_responses: true))
-      Samson::Hooks.only_callbacks_for_plugin('samson_aws_sts', :deploy_env) do
-        Samson::Hooks.fire(:deploy_env, stage.deploys.last)
-      end
+    it 'ignores when not active' do
+      SamsonAwsSts.expects(:sts_client).never
+      Samson::Hooks.fire(:deploy_execution_env, stage.deploys.last).must_equal [{}]
     end
   end
 end

@@ -147,7 +147,7 @@ describe JobExecution do
     freeze_time
     job.update(command: 'env | sort')
     Samson::Hooks.with_callback(
-      :deploy_env,
+      :deploy_execution_env,
       ->(*) { {ADDITIONAL_EXPORT1: "yes"} },
       ->(*) { {ADDITIONAL_EXPORT2: "yes"} }
     ) do

@@ -204,8 +204,7 @@ class JobExecution
       PROJECT_REPOSITORY: @job.project.repository_url
     )
 
-    deploy = @job.deploy || Deploy.new(project: @job.project)
-    Samson::Hooks.fire(:deploy_env, deploy, nil).compact.inject(env, :merge!)
+    Samson::Hooks.fire(:deploy_execution_env, @job.deploy).compact.inject(env, :merge!) if @job.deploy
     base_commands(dir, env) + @job.commands
   end
 
