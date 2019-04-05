@@ -525,23 +525,16 @@ describe Kubernetes::TemplateFiller do
         keys.size.must_be :>, 5
       end
 
-      it "adds env from deploy_group_env hook" do
-        Samson::Hooks.with_callback(:deploy_group_env, ->(p, dg, _) { {FromEnv: "#{p.name}-#{dg.name}"} }) do
-          container.fetch(:env).must_include(name: 'FromEnv', value: 'Foo-Pod1')
-        end
-      end
-
       it "adds env from deploy_env hook" do
-        Samson::Hooks.with_callback(:deploy_env, ->(d) { {FromEnv: "$FOO secret://noooo #{d.user.name}"} }) do
+        Samson::Hooks.with_callback(:deploy_env, ->(d, *) { {FromEnv: "$FOO secret://noooo #{d.user.name}"} }) do
           container.fetch(:env).must_include(name: 'FromEnv', value: '$FOO secret://noooo Super Admin')
         end
       end
 
-      it "overrides container env with deploy_group_env so samson can modify env variables" do
+      it "overrides container env with deploy_env so samson can modify env variables" do
         raw_template[:spec][:template][:spec][:containers].first[:env] = [{name: 'FromEnv', value: 'THIS-IS-BAD'}]
         # plugins can return string or symbol keys, we should be prepared for both
-        callback = ->(*) { {'FromEnv' => "THIS-IS-MEH", FromEnv: "THIS-IS-GOOD"} }
-        Samson::Hooks.with_callback(:deploy_group_env, callback) do
+        Samson::Hooks.with_callback(:deploy_env, ->(*) { {'FromEnv' => "THIS-IS-MEH", FromEnv: "THIS-IS-GOOD"} }) do
           container.fetch(:env).select { |e| e[:name] == 'FromEnv' }.must_equal(
             [{name: 'FromEnv', value: 'THIS-IS-GOOD'}]
           )

@@ -83,17 +83,35 @@ describe SamsonEnv do
     end
   end
 
-  describe :deploy_group_env do
+  describe :deploy_env do
+    let(:deploy) { deploys(:succeeded_test) }
+
+    around { |t| Samson::Hooks.only_callbacks_for_plugin("env", :deploy_env, &t) }
+
     it "adds env variables" do
       deploy_group = deploy_groups(:pod1)
       project.environment_variables.create!(name: "WORLD1", value: "hello", scope: environments(:staging))
       project.environment_variables.create!(name: "WORLD2", value: "hello", scope: deploy_group)
       project.environment_variables.create!(name: "WORLD3", value: "hello")
-      all = Samson::Hooks.fire(:deploy_group_env, project, deploy_group).inject({}, :merge!)
+      all = Samson::Hooks.fire(:deploy_env, Deploy.new(project: project), deploy_group).inject({}, :merge!)
 
       refute all["WORLD1"]
       all["WORLD2"].must_equal "hello"
       all["WORLD3"].must_equal "hello"
+    end
+
+    it "is empty" do
+      Samson::Hooks.fire(:deploy_env, deploy, deploy_groups(:pod1)).must_equal [{}]
+    end
+
+    it "adds stage env variables" do
+      deploy.stage.environment_variables.build(name: "Foo", value: "bar")
+      Samson::Hooks.fire(:deploy_env, deploy, deploy_groups(:pod1)).must_equal [{"Foo" => "bar"}]
+    end
+
+    it "adds deploy env variables" do
+      deploy.environment_variables.build(name: "Foo", value: "bar")
+      Samson::Hooks.fire(:deploy_env, deploy, deploy_groups(:pod1)).must_equal [{"Foo" => "bar"}]
     end
   end
 
@@ -210,26 +228,6 @@ describe SamsonEnv do
         view.wont_include checkbox
         view.wont_include repo_link
       end
-    end
-  end
-
-  describe :deploy_env do
-    let(:deploy) { deploys(:succeeded_test) }
-
-    around { |t| Samson::Hooks.only_callbacks_for_plugin("env", :deploy_env, &t) }
-
-    it "is empty" do
-      Samson::Hooks.fire(:deploy_env, deploy).must_equal [{}, {}]
-    end
-
-    it "adds stage env variables" do
-      deploy.stage.environment_variables.build(name: "Foo", value: "bar")
-      Samson::Hooks.fire(:deploy_env, deploy).must_equal [{"Foo" => "bar"}, {}]
-    end
-
-    it "adds deploy env variables" do
-      deploy.environment_variables.build(name: "Foo", value: "bar")
-      Samson::Hooks.fire(:deploy_env, deploy).must_equal [{}, {"Foo" => "bar"}]
     end
   end
 

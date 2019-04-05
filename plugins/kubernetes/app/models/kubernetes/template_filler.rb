@@ -468,8 +468,8 @@ module Kubernetes
         env[:BLUE_GREEN] = blue_green_color if blue_green_color
 
         # env from plugins
-        plugin_envs = Samson::Hooks.fire(:deploy_group_env, project, @doc.deploy_group, resolve_secrets: false)
-        plugin_envs += Samson::Hooks.fire(:deploy_env, @doc.kubernetes_release.deploy) if @doc.kubernetes_release.deploy
+        deploy = @doc.kubernetes_release.deploy || Deploy.new(project: project)
+        plugin_envs = Samson::Hooks.fire(:deploy_env, deploy, @doc.deploy_group, resolve_secrets: false)
         plugin_envs.compact.inject(env, :merge!)
       end
     end

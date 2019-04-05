@@ -1,5 +1,4 @@
-<% environment_variables << EnvironmentVariable.new %>
-<%= form.fields_for :environment_variables, environment_variables do |fields| %>
+<%= form.fields_for :environment_variables, environment_variables + [EnvironmentVariable.new] do |fields| %>
   <div class="form-group">
     <div class="col-lg-3">
       <%= fields.text_field :name, class: "form-control", placeholder: "Name" %>

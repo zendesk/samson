@@ -43,19 +43,19 @@ describe GroupScope do
     end
 
     it "is higher with project" do
-      EnvironmentVariable.new(parent_type: 'Project').priority.must_equal [0, 2]
+      EnvironmentVariable.new(parent_type: 'Project').priority.must_equal [2, 2]
     end
 
     it "is lower without project" do
-      EnvironmentVariable.new.priority.must_equal [1, 2]
+      EnvironmentVariable.new.priority.must_equal [999, 2]
     end
 
     it "is higher with deploy group" do
-      EnvironmentVariable.new(scope_type: 'DeployGroup').priority.must_equal [1, 0]
+      EnvironmentVariable.new(scope_type: 'DeployGroup').priority.must_equal [999, 0]
     end
 
     it "is lower with environment" do
-      EnvironmentVariable.new(scope_type: 'Environment').priority.must_equal [1, 1]
+      EnvironmentVariable.new(scope_type: 'Environment').priority.must_equal [999, 1]
     end
   end
 

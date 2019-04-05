@@ -20,9 +20,12 @@ Project.class_eval do
   end
 
   def serialized_environment_variables
-    variables = EnvironmentVariable.nested_variables(self)
     @env_scopes ||= Environment.env_deploy_group_array # cache since each save needs them twice
-    EnvironmentVariable.serialize(variables, @env_scopes)
+    EnvironmentVariable.serialize(nested_environment_variables, @env_scopes)
+  end
+
+  def nested_environment_variables
+    [self, *environment_variable_groups].flat_map(&:environment_variables)
   end
 
   private

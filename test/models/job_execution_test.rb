@@ -148,8 +148,8 @@ describe JobExecution do
     job.update(command: 'env | sort')
     Samson::Hooks.with_callback(
       :deploy_env,
-      ->(_job) { {ADDITIONAL_EXPORT1: "yes"} },
-      ->(_job) { {ADDITIONAL_EXPORT2: "yes"} }
+      ->(*) { {ADDITIONAL_EXPORT1: "yes"} },
+      ->(*) { {ADDITIONAL_EXPORT2: "yes"} }
     ) do
       execute_job
       lines = job.output.split "\n"

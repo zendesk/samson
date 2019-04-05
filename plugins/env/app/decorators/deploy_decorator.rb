@@ -12,7 +12,7 @@ Deploy.class_eval do
   private
 
   def serialized_environment_variables
-    if groups = SamsonEnv.env_groups(project, stage.deploy_groups, preview: true, resolve_secrets: false)
+    if groups = SamsonEnv.env_groups(self, stage.deploy_groups, preview: true, resolve_secrets: false)
       groups.map do |name, data|
         name = name.empty? ? '' : "# #{name.delete('.').titleize}\n"
         "#{name}#{SamsonEnv.generate_dotenv(data)}"

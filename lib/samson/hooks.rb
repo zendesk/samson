@@ -42,7 +42,6 @@ module Samson
       :build_permitted_params,
       :buildkite_release_params,
       :can,
-      :deploy_group_env,
       :deploy_group_includes,
       :deploy_group_permitted_params,
       :deploy_permitted_params,
