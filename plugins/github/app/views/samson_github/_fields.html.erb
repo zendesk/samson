@@ -1,5 +1,14 @@
 <fieldset>
   <legend>GitHub</legend>
-  <%= form.input :update_github_pull_requests, as: :check_box, label: "Comment on Pull Requests after deployment" %>
-  <%= form.input :use_github_deployment_api, as: :check_box, label: "Use GitHub Deployment API" %>
+  <%= form.input :update_github_pull_requests,
+        as: :check_box,
+        label: 'Comment on Pull Requests after deployment'
+  %>
+  <%= form.input :github_pull_request_comment,
+        as: :text_area,
+        label: '',
+        help: 'Customize comment message. Supports replacement of <code>%{stage_name}</code> and <code>%{reference}</code>'.html_safe,
+        input_html: { placeholder: "Default: #{GithubNotification::DEFAULT_MESSAGE}" }
+  %>
+  <%= form.input :use_github_deployment_api, as: :check_box, label: 'Use GitHub Deployment API' %>
 </fieldset>

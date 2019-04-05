@@ -549,6 +549,7 @@ ActiveRecord::Schema.define(version: 2019_04_03_202316) do
     t.string "aws_sts_iam_role_arn"
     t.integer "aws_sts_iam_role_session_duration"
     t.boolean "allow_redeploy_previous_when_failed", default: false, null: false
+    t.string "github_pull_request_comment"
     t.index ["project_id", "permalink"], name: "index_stages_on_project_id_and_permalink", unique: true, length: { permalink: 191 }
     t.index ["template_stage_id"], name: "index_stages_on_template_stage_id"
   end
