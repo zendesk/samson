@@ -3,48 +3,122 @@
 <%= render 'projects/header', project: @project, tab: "webhooks" %>
 
 <% inbound_webhooks = @project.webhooks %>
-<% outbound_webhooks = @project.outbound_webhooks %>
-
 <section class="tabs">
-  <h2>Inbound Webhooks</h2>
-  <p>In order to automatically trigger a deploy to a stage, add a branch &rarr; stage mapping below
-  and paste in the project's webhook URL to your CI service of choice.</p>
+  <h2>
+    Inbound Webhooks
+    <%= additional_info "Allows CI or source-code provider to trigger a release or deploy." %>
+  </h2>
 
-  <dl>
-    <% Samson::Integration::SOURCES.each do |source| %>
-      <dt>
-        <%= source.titleize %><%= webhook_help_text source %>
-      </dt>
-      <dd><%= send("integrations_#{source}_deploy_url", @project.token) %>
-        <% if source == 'github' && token = Integrations::GithubController.secret_token %>
-          <br/>
-          <% if current_user.admin_for?(@project) %>
-            (Set <%= link_to "secret token", "javascript:prompt('Copy this token', '#{token}')" %> in <%= link_to 'hook settings', "https://github.com/#{@project.repository_path}/settings/hooks" %>)
+  <details>
+    <summary>Callback URLs</summary>
+
+    <dl>
+      <% Samson::Integration::SOURCES.each do |source| %>
+        <dt>
+          <% if source == 'generic' %>
+            <details>
+              <summary><%= source.titleize %></summary>
+              Generic endpoint to start deploys, expects post payload in the form of:
+              <pre><%= <<~TEXT
+                curl -H 'Content-Type: application/json' \\
+                  -d '{"deploy":{"branch":"master","commit":{"sha":"abc","message":"hi"}}}' \\
+                  #{integrations_generic_deploy_url(@project.token)}
+               TEXT
+              %></pre>
+            </details>
           <% else %>
-            (Secret token required, ask a project admin)
+            <%= source.titleize %>
           <% end %>
-        <% end %>
-      </dd>
-    <% end %>
-  </dl>
-
-  <% if inbound_webhooks.any? %>
-    <h2>Webhooks mappings</h2>
-    <ul>
-      <% inbound_webhooks.each do |webhook| %>
-        <li>
-          <strong><%= webhook.branch.blank? ? 'Any' : webhook.branch %></strong>
-          branch &rarr;
-          <strong><%= webhook.stage&.name || "Deleted stage" %></strong>
-          stage for:
-          <%= webhook.source.humanize %>
-          (<%= link_to "remove", [@project, webhook], method: :delete %>)
-        </li>
+        </dt>
+        <dd>
+          <%= send("integrations_#{source}_deploy_url", @project.token) %>
+          <% if source == 'github' && token = Integrations::GithubController.secret_token %>
+            <br/>
+            <% if current_user.admin_for?(@project) %>
+              (Set <%= link_to "secret token", "javascript:prompt('Copy this token', '#{token}')" %> in <%= link_to 'hook settings', "https://github.com/#{@project.repository_path}/settings/hooks" %>)
+            <% else %>
+              (Secret token required, ask a project admin)
+            <% end %>
+          <% end %>
+        </dd>
       <% end %>
-    </ul>
+    </dl>
+  </details>
+
+  <% if hook = WebhookRecorder.read(@project) %>
+    <details>
+      <summary>Last request <%= relative_time Time.parse(hook.fetch(:time)) %></summary>
+      <table class="table" id="latest_response">
+        <tr>
+          <th>Request</th>
+          <td>
+            <% if current_user.admin_for?(current_project) %>
+              <pre><%= hook.fetch(:request_headers).map { |k,v| "#{k}: #{v}" }.join("\n") %></pre>
+              Raw params:
+              <pre><%= JSON.pretty_generate(hook.fetch(:request_params)) %></pre>
+            <% else %>
+              ... visible for admins ...
+            <% end %>
+          </td>
+        </tr>
+        <tr>
+          <th>Response</th>
+          <td>
+            Status: <%= hook.fetch(:response_code) %><br/>
+            Body:
+            <% body = hook.fetch(:response_body) %>
+            <pre><%= body.start_with?('{') ? (JSON.pretty_generate(JSON.parse(body)) rescue body) : body %></pre>
+          </td>
+        </tr>
+        <tr>
+          <th>Logs</th>
+          <td>
+            <pre><%= hook.fetch(:log) %></pre>
+          </td>
+        </tr>
+      </table>
+    </details>
   <% end %>
 
-  <h2>Add webhook mapping</h2>
+  <p>
+    <ul>
+      <li>
+        <% if branch = @project.release_branch.presence %>
+          <strong><%= branch %></strong> branch
+        <% else %>
+          No branch
+        <% end %>
+        &rarr;
+        <%= link_to "Release", project_releases_path(@project) %>
+        <%= additional_info "Samson can automatically create a new Release when a inbound webhook arrives ('Release branch' project setting)" %>
+      </li>
+      <li>
+        <%= link_to "Release", project_releases_path(@project) %>
+        &rarr;
+        <% if stages = @project.stages.where(deploy_on_release: true).presence %>
+          <%= safe_join stages.map { |s| link_to_resource s }, ", " %>
+        <% else %>
+          None
+        <% end %>
+        <%= additional_info "Release can trigger a deploy to selected stages ('Automatically deploy new releases' stage setting)" %>
+      </li>
+      <% if inbound_webhooks.empty? %>
+        <li>No inbound rules configured</li>
+      <% else %>
+        <% inbound_webhooks.each do |webhook| %>
+          <li>
+            <strong><%= webhook.branch.blank? ? 'Any' : webhook.branch %></strong>
+            branch &rarr;
+            <strong><%= webhook.stage&.name || "Deleted stage" %></strong>
+            stage for:
+            <%= webhook.source.humanize %>
+            (<%= link_to_delete [@project, webhook] %>)
+          </li>
+        <% end %>
+      <% end %>
+    </ul>
+  </p>
+
   <%= form_for [:project, ((@resource.is_a?(Webhook) && @resource) || Webhook.new)], html: { class: "form-inline" } do |form| %>
     <%= render 'shared/errors', object: form.object %>
     <div class="form-group">
@@ -61,80 +135,47 @@
       <%= form.select :source, webhook_sources_for_select(Samson::Integration::SOURCES), {}, class: "form-control" %>
     </div>
 
-    <p></p>
-
-    <%= form.submit "Add webhook", class: "btn btn-primary" %>
+    <%= form.submit "Add", class: "btn btn-primary" %>
   <% end %>
 
-  <% if hook = WebhookRecorder.read(@project) %>
-    <h2>Latest webhook</h2>
-    <table class="table" id="latest_response">
-      <tr><th>Arrived</th><td><%= hook.fetch(:time) %></td></tr>
-      <tr>
-        <th>Request</th>
-        <td>
-          <% if current_user.admin_for?(current_project) %>
-            <pre><%= hook.fetch(:request_headers).map { |k,v| "#{k}: #{v}" }.join("\n") %></pre>
-            Raw params:
-            <pre><%= JSON.pretty_generate(hook.fetch(:request_params)) %></pre>
-          <% else %>
-            ... visible for admins ...
-          <% end %>
-        </td>
-      </tr>
-      <tr>
-        <th>Response</th>
-        <td>
-          Status: <%= hook.fetch(:response_code) %><br/>
-          Body:
-          <% body = hook.fetch(:response_body) %>
-          <pre><%= body.start_with?('{') ? (JSON.pretty_generate(JSON.parse(body)) rescue body) : body %></pre>
-        </td>
-      </tr>
-      <tr>
-        <th>Log</th>
-        <td>
-          <pre><%= hook.fetch(:log) %></pre>
-        </td>
-      </tr>
-    </table>
-  <% end %>
-  <h2></h2>
-
-  <h2>Outbound Webhooks</h2>
-  <p>Outbound webhooks POST to an external url after a deploy has finished. The request body will contain deploy, stage, and project information.</p>
+  <% outbound_webhooks = @project.outbound_webhooks %>
+  <h2>
+    Outbound Webhooks
+    <%= additional_info "POST to an external url after a deploy has finished. The request body will contain deploy, stage, and project information." %>
+  </h2>
   <% if @project.deploys.last %>
-    <p>
-      <%= link_to 'Example payload', '#', class: 'toggle', data: {target: '#payload-sample'} %>
-    </p>
-    <% example = JSON.pretty_generate(OutboundWebhook.deploy_as_json(@project.deploys.last)) %>
-    <pre id='payload-sample' style='display:none'><%= example %></pre>
+    <details>
+      <summary>Example payload</summary>
+      <pre><%= JSON.pretty_generate(OutboundWebhook.deploy_as_json(@project.deploys.last)) %></pre>
+    </details>
   <% else %>
     <p>Deploy this project at least once to see a sample payload.</p>
   <% end %>
 
-  <% if outbound_webhooks.any? %>
-    <h2>Webhooks mappings</h2>
-    <ul>
-      <% outbound_webhooks.each do |outbound_webhook| %>
-        <li>
-          POST to
-          <strong><%= outbound_webhook.url %></strong>
-          on the
-          <strong><%= outbound_webhook.stage.name %></strong>
-          stage
-          <strong>
-          <% if outbound_webhook.username.present? %>
-            <%= "with Basic Auth as #{outbound_webhook.username}" %>
-          <% end %>
-          </strong>
-          (<%= link_to "remove", [@project, outbound_webhook], method: :delete %>)
-        </li>
-      <% end %>
-    </ul>
-  <% end %>
+  <p>
+    <% if outbound_webhooks.empty? %>
+      No outbound rules configured
+    <% else %>
+      <ul>
+        <% outbound_webhooks.each do |outbound_webhook| %>
+          <li>
+            POST to
+            <strong><%= outbound_webhook.url %></strong>
+            on the
+            <strong><%= outbound_webhook.stage.name %></strong>
+            stage
+            <strong>
+            <% if outbound_webhook.username.present? %>
+              <%= "with Basic Auth as #{outbound_webhook.username}" %>
+            <% end %>
+            </strong>
+            <%= link_to_delete [@project, outbound_webhook] %>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  </p>
 
-  <h2>Add an outbound webhook</h2>
   <%= form_for [:project, ((@resource.is_a?(OutboundWebhook) && @resource) || OutboundWebhook.new)], html: { class: 'form-inline' } do |form| %>
     <%= render 'shared/errors', object: form.object %>
     <div class="form-group">
@@ -149,9 +190,8 @@
     <div class="form-group">
       <%= form.text_field :password, class: "form-control", placeholder: "Password (optional)", type: "password" %>
     </div>
-    <p></p>
     <div class="form-group">
-      <%= form.submit "Add Outbound Webhook", class: "btn btn-primary" %>
+      <%= form.submit "Add", class: "btn btn-primary" %>
     </div>
   <% end %>
 </section>

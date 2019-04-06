@@ -26,14 +26,4 @@ describe WebhooksHelper do
       ]
     end
   end
-
-  describe '#webhook_help_text' do
-    it 'renders help text for ci_pipeline source' do
-      webhook_help_text('generic').must_include('Generic endpoint to start deploys')
-    end
-
-    it 'renders nothing if no source matches' do
-      webhook_help_text('badabingbadaboom').must_equal ''
-    end
-  end
 end
