@@ -128,6 +128,11 @@ Samson::Hooks.callback :stage_permitted_params do
   AcceptsEnvironmentVariables::ASSIGNABLE_ATTRIBUTES
 end
 
+# TODO: remove this, just for backwards compatibility and broken since it does not check scope
+Samson::Hooks.callback :deploy_execution_env do |deploy|
+  deploy.stage.environment_variables.each_with_object({}) { |var, h| h[var.name] = var.value }
+end
+
 env_vars_flag = ENV["DEPLOY_ENV_VARS"]
 if env_vars_flag != "false" # uncovered
   if env_vars_flag != 'api_only' # uncovered

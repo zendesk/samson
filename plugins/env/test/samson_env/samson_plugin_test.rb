@@ -83,6 +83,17 @@ describe SamsonEnv do
     end
   end
 
+  describe :deploy_execution_env do
+    let(:deploy) { deploys(:succeeded_test) }
+
+    only_callbacks_for_plugin :deploy_execution_env
+
+    it "adds for stages" do
+      deploy.stage.environment_variables.create!(name: "WORLD", value: "hello")
+      Samson::Hooks.fire(:deploy_execution_env, deploy).must_equal [{"WORLD" => "hello"}]
+    end
+  end
+
   describe :deploy_env do
     let(:deploy) { deploys(:succeeded_test) }
 
