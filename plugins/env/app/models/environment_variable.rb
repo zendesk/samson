@@ -3,7 +3,7 @@ require 'validates_lengths_from_database'
 
 class EnvironmentVariable < ActiveRecord::Base
   FAILED_LOOKUP_MARK = ' X' # SpaceX
-  PARENT_PRIORITY = ["Deploy", "Stage", "Project"].freeze
+  PARENT_PRIORITY = ["Deploy", "Stage", "Project", "EnvironmentVariableGroup"].freeze
 
   include GroupScope
   extend Inlinable
@@ -12,6 +12,7 @@ class EnvironmentVariable < ActiveRecord::Base
   belongs_to :parent, polymorphic: true # Resource they are set on
 
   validates :name, presence: true
+  validates :parent_type, inclusion: PARENT_PRIORITY
 
   include ValidatesLengthsFromDatabase
   validates_lengths_from_database only: :value

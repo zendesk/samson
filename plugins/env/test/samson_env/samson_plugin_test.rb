@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 3
+SingleCov.covered!
 
 describe SamsonEnv do
   let(:deploy) { deploys(:succeeded_test) }
@@ -35,31 +35,37 @@ describe SamsonEnv do
       project.environment_variables.create!(name: "WORLD", value: "hello")
     end
 
-    describe ".env" do
-      describe "without groups" do
-        before { stage.deploy_groups.delete_all }
+    it "writes group .env files" do
+      fire
+      Dir[".env*"].sort.must_equal [".env.pod-100"]
+      File.read(".env.pod-100").must_equal "HELLO=\"world\"\nWORLD=\"hello\"\n"
+    end
 
-        it "does not modify when no variables were specified" do
-          EnvironmentVariable.delete_all
-          project.environment_variables.reload
-          fire
-          File.exist?(".env").must_equal false
-        end
+    it "removes base .env  file if it exists" do # not sure why we do this
+      File.write(".env", "X")
+      fire
+      refute File.exist?(".env")
+    end
 
-        it "writes to .env" do
-          fire
-          File.read(".env").must_equal "HELLO=\"world\"\nWORLD=\"hello\"\n"
-          ("%o" % File.stat(".env").mode).must_equal "100640"
-        end
+    it "does not fail when executing job without deploy" do
+      stubs(:deploy).returns(nil)
+      fire
+    end
+
+    describe "without deploy groups" do
+      before { stage.deploy_groups.delete_all }
+
+      it "does not modify when no variables were specified" do
+        EnvironmentVariable.delete_all
+        project.environment_variables.reload
+        fire
+        File.exist?(".env").must_equal false
       end
 
-      describe "with deploy groups" do
-        it "deletes the base file" do
-          fire
-
-          File.read(".env.pod-100").must_equal "HELLO=\"world\"\nWORLD=\"hello\"\n"
-          refute File.exist?(".env")
-        end
+      it "writes to .env" do
+        fire
+        File.read(".env").must_equal "HELLO=\"world\"\nWORLD=\"hello\"\n"
+        ("%o" % File.stat(".env").mode).must_equal "100640"
       end
     end
   end
@@ -127,10 +133,14 @@ describe SamsonEnv do
   end
 
   describe :link_parts_for_resource do
+    def fire(var)
+      proc = Samson::Hooks.fire(:link_parts_for_resource).to_h.fetch(var.class.name)
+      proc.call(var)
+    end
+
     it "links to env var" do
       var = project.environment_variables.create!(name: "WORLD3", value: "hello")
-      proc = Samson::Hooks.fire(:link_parts_for_resource).to_h.fetch("EnvironmentVariable")
-      proc.call(var).must_equal ["WORLD3 on Foo", EnvironmentVariable]
+      fire(var).must_equal ["WORLD3 on Foo", EnvironmentVariable]
     end
 
     it "links to scoped env var" do
@@ -140,14 +150,18 @@ describe SamsonEnv do
         value: "hello",
         scope_type_and_id: "Environment-#{environments(:production).id}"
       )
-      proc = Samson::Hooks.fire(:link_parts_for_resource).to_h.fetch("EnvironmentVariable")
-      proc.call(var).must_equal ["WORLD3 for Production on Bar", EnvironmentVariable]
+      fire(var).must_equal ["WORLD3 for Production on Bar", EnvironmentVariable]
     end
 
     it "links to env var group" do
       group = EnvironmentVariableGroup.create!(name: "FOO")
-      proc = Samson::Hooks.fire(:link_parts_for_resource).to_h.fetch("EnvironmentVariableGroup")
-      proc.call(group).must_equal ["FOO", group]
+      fire(group).must_equal ["FOO", group]
+    end
+
+    it "does not crash with deleted parent" do
+      var = project.environment_variables.create!(name: "WORLD3", value: "hello")
+      var.reload.parent_id = 123
+      fire(var).must_equal ["WORLD3 on Deleted", EnvironmentVariable]
     end
   end
 
