@@ -19,18 +19,18 @@ module LocksHelper
     icon_tag "warning-sign"
   end
 
-  def global_lock
-    return @global_lock if defined?(@global_lock)
-    @global_lock = Lock.global.first
+  def global_locks
+    return @global_locks if defined?(@global_locks)
+    @global_locks = Lock.global
   end
 
-  def render_lock(resource)
-    lock = (resource == :global ? global_lock : Lock.for_resource?(resource).first)
-    render '/locks/lock', lock: lock if lock
+  def render_locks(resource)
+    locks = (resource == :global ? global_locks : Lock.for_resource(resource))
+    render partial: '/locks/lock', collection: locks, as: :lock if locks.any?
   end
 
   def resource_lock_icon(resource)
-    return unless lock = Lock.for_resource?(resource).first
+    return unless lock = Lock.for_resource(resource).first
     text = (lock.warning? ? "#{warning_icon} Warning" : "#{lock_icon} Locked")
     content_tag :span, text.html_safe, class: "label label-warning", title: strip_tags(lock.summary)
   end

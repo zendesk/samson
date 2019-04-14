@@ -1,6 +1,6 @@
 <%= page_title "#{@environment.new_record? ? 'New' : 'Edit'} Environment" %>
 
-<%= render_lock @environment %>
+<%= render_locks @environment %>
 
 <section>
   <%= form_for @environment, html: { class: "form-horizontal" } do |form| %>

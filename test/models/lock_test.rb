@@ -206,7 +206,7 @@ describe Lock do
       stage # trigger find
       Lock.send :all_cached
       assert_sql_queries 0 do
-        Lock.for_resource?(stage).must_equal []
+        Lock.for_resource(stage).must_equal []
       end
     end
 
@@ -215,7 +215,7 @@ describe Lock do
       lock = Lock.create!(user: user)
       Lock.send :all_cached
       assert_sql_queries 0 do
-        Lock.for_resource?(stage).must_equal [lock]
+        Lock.for_resource(stage).must_equal [lock]
       end
     end
 
@@ -224,12 +224,12 @@ describe Lock do
       before { lock } # trigger create
 
       it "combines locks" do
-        Lock.for_resource?(stage).must_equal [lock, global]
+        Lock.for_resource(stage).must_equal [lock, global]
       end
 
       it "sorts locks for display, so .first will be the highest priority" do
         lock.update_column(:warning, true)
-        Lock.for_resource?(stage).must_equal [global, lock]
+        Lock.for_resource(stage).must_equal [global, lock]
       end
     end
   end

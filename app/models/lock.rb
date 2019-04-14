@@ -32,13 +32,13 @@ class Lock < ActiveRecord::Base
 
     # normally there are very few locks, so we grab them all and filter down to avoid lookups
     # sorted by priority(warning) and specificity(type)
-    def for_resource?(resource)
+    def for_resource(resource)
       matching_locks = all_cached.select { |l| resource.locked_by?(l) }
       matching_locks.sort_by! { |l| [l.warning? ? 1 : 0, RESOURCE_TYPES.index(l.resource_type)] }
     end
 
     def locked_for?(resource, user)
-      locks = for_resource?(resource)
+      locks = for_resource(resource)
       locks.any? { |l| !l.warning? && l.user.id != user&.id }
     end
 
@@ -81,7 +81,7 @@ class Lock < ActiveRecord::Base
   end
 
   def reason
-    description.blank? ? "Description not given" : description
+    description.presence || "Description not given"
   end
 
   # avoid loading resource if we do not have to, which is uncacheable since it is polymorphic
