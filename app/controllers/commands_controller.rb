@@ -8,9 +8,7 @@ class CommandsController < ResourceController
   before_action :authorize_custom_project_admin!, except: PUBLIC
 
   def destroy
-    # Destroy specific stage command usage if `stage_id` is passed in to allow for inline deletion
     remove_stage_usage_if_exists
-
     super
   end
 
@@ -59,6 +57,7 @@ class CommandsController < ResourceController
     end
   end
 
+  # Destroy specific stage command usage if `stage_id` is passed in to allow for inline deletion
   def remove_stage_usage_if_exists
     return if params[:stage_id].nil?
     StageCommand.find_by(stage_id: params[:stage_id], command_id: @command.id)&.destroy
