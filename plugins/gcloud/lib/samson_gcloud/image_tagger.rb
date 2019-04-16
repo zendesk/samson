@@ -7,40 +7,24 @@ module SamsonGcloud
       # Note: not tagging builds from different project since that would be confusing ...
       # ideally do not tag any builds for projects that use shared builds ... but that is hard to know atm
       def tag(deploy, output)
-        return unless ENV["DOCKER_FEATURE"]
-        return unless deploy.succeeded?
-        return unless builds = deploy.project.builds.
-          where(git_sha: deploy.job.commit).where.not(docker_repo_digest: nil).to_a.presence
+        return unless needs_tag?(deploy)
 
-        tags = tags(deploy)
+        builds = deploy.project.builds.
+          where(git_sha: deploy.job.commit).
+          where.not(docker_repo_digest: nil)
 
         builds.each do |build|
           digest = build.docker_repo_digest
           next unless digest.match?(/(^|\/|\.)gcr.io\//) # gcr.io or https://gcr.io or region like asia.gcr.io
           base = digest.split('@').first
-
-          tags.each { |tag| tag_image(tag, base, digest, output) }
+          tag_image PRODUCTION_TAG, base, digest, output
         end
       end
 
       private
 
-      def tags(deploy)
-        tags = []
-        stage = deploy.stage
-
-        if stage.production? && !stage.no_code_deployed?
-          tags << PRODUCTION_TAG
-        end
-
-        if env_permalink = stage.environments&.first&.permalink
-          tags << "env-#{env_permalink}"
-        end
-
-        tags << "stage-#{stage.permalink}"
-
-        # From docker distro: https://tinyurl.com/ycgh7qsp
-        tags.grep(/^[\w][\w.-]{0,127}$/)
+      def needs_tag?(deploy)
+        ENV["DOCKER_FEATURE"] && deploy.succeeded? && deploy.stage.production? && !deploy.stage.no_code_deployed?
       end
 
       def tag_image(tag, base, digest, job_output)

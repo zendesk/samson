@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 2
+SingleCov.covered!
 
 describe SamsonGcloud::ImageTagger do
-  let(:deploy) { deploys(:succeeded_test) }
+  let(:deploy) { deploys(:succeeded_production_test) }
   let(:build) { builds(:docker_build) }
 
   describe ".tag" do
@@ -23,7 +23,7 @@ describe SamsonGcloud::ImageTagger do
 
     let(:auth_options) { ['--account', 'acc', '--project', '123'] }
     let(:output) { OutputBuffer.new }
-    let(:output_serialized) { output.messages.gsub(/\[.*?\] /, "") }
+    let(:output_serialized) { output.messages.gsub(/\[.*?\] /, "[TIME] ") }
 
     before do
       build.update_columns(
@@ -34,67 +34,29 @@ describe SamsonGcloud::ImageTagger do
     end
 
     it "tags" do
-      assert_tagged_with 'stage-staging'
-      tag
-      output_serialized.must_include "\nOUT"
-    end
-
-    it 'includes timestamp' do
-      assert_tagged_with 'stage-staging'
-      tag
-      output_serialized.must_include "Tagging GCR image:\n"
-    end
-
-    it 'does not tag with invalid stage permalink' do
-      deploy.stage.update_column(:permalink, '%$!')
-      tag
-    end
-
-    it 'tags with environment permalink' do
-      with_env DEPLOY_GROUP_FEATURE: 'true' do
-        deploy.stage.environments.first.update_column(:permalink, 'muchstaging')
-
-        assert_tagged_with 'env-muchstaging'
-        assert_tagged_with 'stage-staging'
-
-        tag
-
-        output_serialized.must_include "\nOUT"
-      end
-    end
-
-    it 'does not tag with invalid environment permalink' do
-      with_env DEPLOY_GROUP_FEATURE: 'true' do
-        deploy.stage.environments.first.update_column(:permalink, '%$!')
-
-        assert_tagged_with 'stage-staging'
-
-        tag
-      end
-    end
-
-    it 'tags with production if stage is production' do
-      deploy.stage.expects(:production?).returns(true)
-
       assert_tagged_with 'production'
-      assert_tagged_with 'stage-staging'
-
-      deploy.stage.permalink.wont_equal 'production'
-
       tag
-
-      output_serialized.must_include "\nOUT"
+      output_serialized.must_include "OUT"
+      output_serialized.must_include "[TIME] Tagging GCR image:\n"
     end
 
-    it 'does not tag with production if stage does not deploy code' do
+    it 'does not tag if stage does not deploy code' do
       deploy.stage.update_column(:no_code_deployed, true)
-      deploy.stage.expects(:production?).returns(true)
-
-      assert_tagged_with 'stage-staging'
-
       tag
+      output_serialized.must_equal ""
+    end
 
-      output_serialized.must_include "\nOUT"
+    it 'does not tag non-prod' do
+      Stage.any_instance.expects(:production?).returns(false)
+      tag
+      output_serialized.must_equal ""
+    end
+
+    it 'does not tag without DOCKER_FEATURE' do
+      with_env DOCKER_FEATURE: nil do
+        tag
+        output_serialized.must_equal ""
+      end
     end
 
     it "tags other regions" do
@@ -123,7 +85,7 @@ describe SamsonGcloud::ImageTagger do
 
     it "includes options from ENV var" do
       with_env(GCLOUD_OPTIONS: '--foo "bar baz"') do
-        assert_tagged_with 'stage-staging', opts: ['--foo', 'bar baz']
+        assert_tagged_with 'production', opts: ['--foo', 'bar baz']
         tag
       end
     end
