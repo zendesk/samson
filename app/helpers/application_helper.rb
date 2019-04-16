@@ -124,7 +124,7 @@ module ApplicationHelper
     end
   end
 
-  def icon_tag(type, options = {})
+  def icon_tag(type, **options)
     css_classes = "glyphicon glyphicon-#{type}"
 
     if klass = options[:class]
@@ -134,33 +134,30 @@ module ApplicationHelper
     content_tag :i, '', options.merge(class: css_classes)
   end
 
-  def link_to_delete(path, options = {})
-    text = options[:text] || 'Delete'
-    disabled_reason = options[:disabled]
-    if disabled_reason
-      content_tag :span, text, title: disabled_reason, class: 'mouseover'
+  def link_to_delete(path, text: 'Delete', question: nil, remove_container: false, disabled: false, **options)
+    if disabled
+      content_tag :span, text, title: disabled, class: 'mouseover'
     else
-      resource = Array(path).last
       message =
-        if question = options.delete(:question)
+        if question
           question
-        elsif resource.is_a?(ActiveRecord::Base)
+        elsif path.is_a?(ActiveRecord::Base)
+          resource = path
+          name, path = link_parts_for_resource(resource)
+          "Delete #{resource.class.name.split("::").last} #{name} ?"
+        elsif (resource = Array(path).last) && resource.is_a?(ActiveRecord::Base)
           "Delete this #{resource.class.name.split("::").last} ?"
         else
-          "Are you sure ?"
+          "Really delete ?"
         end
       options[:data] = {confirm: message, method: :delete}
-      if container = options[:remove_container]
-        options[:data][:remove_container] = container
+      if remove_container
+        options[:data][:remove_container] = remove_container
         options[:data][:remote] = true
         options[:class] = "remove_container"
       end
       link_to text, path, options
     end
-  end
-
-  def link_to_delete_button(path, options = {})
-    link_to_delete(path, options.merge(text: icon_tag('remove') + ' Delete', class: 'btn btn-danger'))
   end
 
   # Flash type -> Bootstrap alert class
