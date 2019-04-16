@@ -34,11 +34,7 @@
         </div>
       <% end %>
 
-      <%= form.actions do %>
-        <% disabled = "Can only delete unused commands." if usages %>
-        <%= link_to_delete(@command, disabled: disabled) if @command.persisted? %> |
-        <%= link_to_history(@command) %>
-      <% end %>
+      <%= form.actions delete: true, history: true %>
     </fieldset>
   <% end %>
 </section>
