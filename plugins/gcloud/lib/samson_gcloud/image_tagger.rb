@@ -17,7 +17,9 @@ module SamsonGcloud
           digest = build.docker_repo_digest
           next unless digest.match?(/(^|\/|\.)gcr.io\//) # gcr.io or https://gcr.io or region like asia.gcr.io
           base = digest.split('@').first
-          tag_image PRODUCTION_TAG, base, digest, output
+          cache_last_tagged [base, PRODUCTION_TAG], digest do
+            tag_image PRODUCTION_TAG, base, digest, output
+          end
         end
       end
 
@@ -38,6 +40,16 @@ module SamsonGcloud
           #{output.strip}
         TEXT
         job_output.puts "FAILED" unless success
+        success
+      end
+
+      def cache_last_tagged(key, value)
+        old = Rails.cache.read(key)
+        if old == value
+          Rails.cache.write(key, value) # refresh the cache expiration
+        else
+          Rails.cache.write(key, value) if yield # mark as tagged
+        end
       end
     end
   end

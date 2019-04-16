@@ -46,6 +46,17 @@ describe SamsonGcloud::ImageTagger do
       output_serialized.must_equal ""
     end
 
+    it "does not tag when already tagged" do
+      assert_tagged_with 'production'
+      2.times { tag }
+      output_serialized.scan(/OUT/).size.must_equal 1
+    end
+
+    it "tries again when tagging failed" do
+      Samson::CommandExecutor.expects(:execute).returns([false, 'x']).times(2)
+      2.times { tag }
+    end
+
     it 'does not tag non-prod' do
       Stage.any_instance.expects(:production?).returns(false)
       tag
