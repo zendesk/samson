@@ -287,7 +287,13 @@ describe ApplicationHelper do
 
     it "can ask a question" do
       link_to_delete("/foo", question: "Foo?").must_equal(
-        "<a data-confirm=\"Foo?\" data-method=\"delete\" href=\"/foo\">Delete</a>"
+        "<a data-method=\"delete\" data-confirm=\"Foo?\" href=\"/foo\">Delete</a>"
+      )
+    end
+
+    it "can ask to type" do
+      link_to_delete("/foo", type_to_delete: true).must_equal(
+        "<a data-method=\"delete\" data-type-to-delete=\"Really delete ?\" href=\"/foo\">Delete</a>"
       )
     end
   end

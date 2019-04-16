@@ -134,7 +134,9 @@ module ApplicationHelper
     content_tag :i, '', options.merge(class: css_classes)
   end
 
-  def link_to_delete(path, text: 'Delete', question: nil, remove_container: false, disabled: false, **options)
+  def link_to_delete(
+    path, text: 'Delete', question: nil, type_to_delete: false, remove_container: false, disabled: false, **options
+  )
     if disabled
       content_tag :span, text, title: disabled, class: 'mouseover'
     else
@@ -150,7 +152,12 @@ module ApplicationHelper
         else
           "Really delete ?"
         end
-      options[:data] = {confirm: message, method: :delete}
+      options[:data] = {method: :delete}
+      if type_to_delete
+        options[:data][:type_to_delete] = message
+      else
+        options[:data][:confirm] = message
+      end
       if remove_container
         options[:data][:remove_container] = remove_container
         options[:data][:remote] = true
