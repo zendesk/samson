@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
-# we don't want rails overhead when booting the server and behave like the real app server
+
+# avoid rails overhead when booting the server and behave like the real app server
 if ["s", "server"].include?(ARGV[0])
   require 'json'
   raise "No options supported, use puma directly" unless ARGV.size == 1
@@ -8,6 +9,11 @@ if ["s", "server"].include?(ARGV[0])
   ENV["RAILS_LOG_TO_STDOUT"] ||= "1"
   ENV["PORT"] ||= "3000"
   exec *JSON.parse(File.read("Dockerfile")[/^CMD (.*)/, 1])
+end
+
+# start production console in sandbox mode, disable with --no-sandbox
+if ENV["RAILS_ENV"] == "production" && ["c", "console"].include?(ARGV[0]) && !ARGV.include?("--no-sandbox")
+  ARGV.push "--sandbox"
 end
 
 APP_PATH = File.expand_path('../config/application', __dir__)
