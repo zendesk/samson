@@ -70,7 +70,7 @@ describe RestartSignalHandler do
 
     it "notifies error notifier when an exception happens and keeps samson running" do
       RestartSignalHandler.any_instance.expects(:wait_for_active_jobs_to_stop).raises("Whoops")
-      ErrorNotifier.expects(:notify)
+      Samson::ErrorNotifier.expects(:notify)
       silence_thread_exceptions do
         assert_raises(RuntimeError) { handle }.message.must_equal "Whoops"
       end
@@ -94,7 +94,7 @@ describe RestartSignalHandler do
       Thread.expects(:new) # ignore background runner
       handler = RestartSignalHandler.listen
 
-      ErrorNotifier.expects(:notify).with('Hard restarting, requests will be lost', sync: true)
+      Samson::ErrorNotifier.expects(:notify).with('Hard restarting, requests will be lost', sync: true)
       handler.expects(:output).with('Error: Sending SIGTERM to hard restart')
       Process.expects(:kill).with(:SIGTERM, Process.pid)
       handler.expects(:sleep)

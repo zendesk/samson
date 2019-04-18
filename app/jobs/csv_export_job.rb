@@ -35,7 +35,7 @@ class CsvExportJob
     csv_export.delete_file
     csv_export.status! :failed
     Rails.logger.error("Export #{csv_export.id} failed with error #{e}")
-    ErrorNotifier.notify(e, error_message: "Export #{csv_export.id} failed.")
+    Samson::ErrorNotifier.notify(e, error_message: "Export #{csv_export.id} failed.")
   end
 
   # Helper method to removes the default soft_deletion scope for these models for the report

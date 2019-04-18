@@ -27,7 +27,7 @@ module RollbarDashboards
         data.fetch(:result).map { |item_hash| item_hash.fetch(:item) }
       end
     rescue StandardError
-      ErrorNotifier.notify($!)
+      Samson::ErrorNotifier.notify($!)
       nil
     end
 
@@ -49,7 +49,7 @@ module RollbarDashboards
       end
     rescue StandardError
       Rails.logger.error "Failed to create RQL job"
-      ErrorNotifier.notify($!)
+      Samson::ErrorNotifier.notify($!)
       nil
     end
 
@@ -78,7 +78,7 @@ module RollbarDashboards
       nil
     rescue StandardError
       Rails.logger.error "Error retrieving RQL job #{id} result"
-      ErrorNotifier.notify($!)
+      Samson::ErrorNotifier.notify($!)
       nil
     end
   end

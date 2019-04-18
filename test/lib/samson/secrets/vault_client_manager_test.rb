@@ -93,7 +93,7 @@ describe Samson::Secrets::VaultClientManager do
     end
 
     it "does not fail when a single server fails" do
-      ErrorNotifier.expects(:notify).times(2)
+      Samson::ErrorNotifier.expects(:notify).times(2)
       assert_vault_request :get, '?list=true', status: 500, times: 2 do
         manager.list_recursive.must_equal []
       end
@@ -111,7 +111,7 @@ describe Samson::Secrets::VaultClientManager do
     end
 
     it "does not prevent renewing all tokens when a single renew fails" do
-      ErrorNotifier.expects(:notify).times(2)
+      Samson::ErrorNotifier.expects(:notify).times(2)
       assert_request(
         :put,
         "http://vault-land.com/v1/auth/token/renew-self",

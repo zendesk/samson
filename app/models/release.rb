@@ -59,7 +59,7 @@ class Release < ActiveRecord::Base
   rescue Octokit::NotFound
     false
   rescue Octokit::Error => e
-    ErrorNotifier.notify(
+    Samson::ErrorNotifier.notify(
       e, parameters: {
         repository_path: project.repository_path, commit: commit, other_commit: other_commit
       }

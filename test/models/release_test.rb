@@ -170,13 +170,13 @@ describe Release do
 
     it "is false on error and reports to error notifier" do
       stub_github_api(url, {}, 400)
-      ErrorNotifier.expects(:notify)
+      Samson::ErrorNotifier.expects(:notify)
       refute release.contains_commit?("NEW")
     end
 
     it "returns false on 404 and does not report to error notifier since it is common" do
       stub_github_api(url, {}, 404)
-      ErrorNotifier.expects(:notify).never
+      Samson::ErrorNotifier.expects(:notify).never
       refute release.contains_commit?("NEW")
     end
   end

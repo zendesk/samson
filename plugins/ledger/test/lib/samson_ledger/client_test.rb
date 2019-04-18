@@ -46,7 +46,7 @@ describe SamsonLedger::Client do
 
     it "does not stop all deploys when ledger does not reply" do
       sent = stub_request(:post, "https://foo.bar/api/v1/events").to_timeout
-      ErrorNotifier.expects(:notify)
+      Samson::ErrorNotifier.expects(:notify)
       SamsonLedger::Client.post_deployment(deploy)
       assert_requested(sent)
     end

@@ -407,7 +407,7 @@ describe JobExecution do
     end
 
     it "records exceptions to output" do
-      ErrorNotifier.expects(:notify)
+      Samson::ErrorNotifier.expects(:notify)
       job.expects(:running!).raises("Oh boy")
       perform
       execution.output.messages.must_include "JobExecution failed: Oh boy"
@@ -417,7 +417,7 @@ describe JobExecution do
     end
 
     it "does not spam exception notifier on user erorrs" do
-      ErrorNotifier.expects(:notify).never
+      Samson::ErrorNotifier.expects(:notify).never
       job.expects(:running!).raises(Samson::Hooks::UserError, "Oh boy")
       perform
       execution.output.messages.must_include "JobExecution failed: Oh boy"
@@ -425,7 +425,7 @@ describe JobExecution do
 
     it "does not show error backtraces in production to hide internals" do
       with_hidden_errors do
-        ErrorNotifier.expects(:notify)
+        Samson::ErrorNotifier.expects(:notify)
         job.expects(:running!).raises("Oh boy")
         perform
         execution.output.messages.must_include "JobExecution failed: Oh boy"
@@ -435,7 +435,7 @@ describe JobExecution do
 
     it "shows exception notifier error location" do
       with_hidden_errors do
-        ErrorNotifier.expects(:notify).with { |_e, o| assert o.key?(:sync) }.returns('foo')
+        Samson::ErrorNotifier.expects(:notify).with { |_e, o| assert o.key?(:sync) }.returns('foo')
         job.expects(:running!).raises("Oh boy")
         perform
         execution.output.messages.must_include "Error URL: foo"

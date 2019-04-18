@@ -32,7 +32,7 @@ describe RollbarDashboards::Client do
     end
 
     it 'returns nil if a json parse error occurs' do
-      ErrorNotifier.expects(:notify)
+      Samson::ErrorNotifier.expects(:notify)
       assert_request(:get, endpoint, to_return: {body: '<definitely>notjson</definitely>'}) do
         RollbarDashboards::Client.new(dashboard).top_errors.must_be_nil
       end
@@ -70,7 +70,7 @@ describe RollbarDashboards::Client do
     end
 
     it 'returns nil if an error occurs' do
-      ErrorNotifier.expects(:notify)
+      Samson::ErrorNotifier.expects(:notify)
       assert_request(:post, endpoint, with: with, to_return: {body: '<definitely>notjson</definitely>'}) do
         RollbarDashboards::Client.new(dashboard).create_rql_job(query).must_be_nil
       end
@@ -126,7 +126,7 @@ describe RollbarDashboards::Client do
     end
 
     it 'returns nil if an error occurs' do
-      ErrorNotifier.expects(:notify)
+      Samson::ErrorNotifier.expects(:notify)
       assert_request(:get, endpoint, to_return: {body: '{}'}) do
         RollbarDashboards::Client.new(dashboard).rql_job_result(1).must_be_nil
       end

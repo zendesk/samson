@@ -868,7 +868,7 @@ describe Kubernetes::DeployExecutor do
     it "prints details but does not fail when something goes wrong" do
       Kubernetes::DeployExecutor.any_instance.stubs(:build_selectors).returns([])
       with_env KUBERNETES_LOG_TIMEOUT: "foo" do
-        ErrorNotifier.expects(:notify).returns("Details")
+        Samson::ErrorNotifier.expects(:notify).returns("Details")
         executor.send(:show_failure_cause, [])
       end
       output.string.must_equal <<~TEXT
@@ -881,7 +881,7 @@ describe Kubernetes::DeployExecutor do
   describe "#show_logs_on_deploy_if_requested" do
     it "prints erros but continues to not block the deploy" do
       Kubernetes::DeployExecutor.any_instance.stubs(:build_selectors).returns([])
-      ErrorNotifier.expects(:notify).returns("Details")
+      Samson::ErrorNotifier.expects(:notify).returns("Details")
       executor.send(:show_logs_on_deploy_if_requested, 123)
       output.string.must_equal "  Error showing logs: Details\n"
     end

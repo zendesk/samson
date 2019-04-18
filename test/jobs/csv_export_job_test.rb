@@ -36,7 +36,7 @@ describe CsvExportJob do
     after { File.chmod(0o755, File.dirname(deploy_export.path_file)) }
 
     it "sets :failed" do
-      ErrorNotifier.expects(:notify)
+      Samson::ErrorNotifier.expects(:notify)
       CsvExportJob.new(deploy_export).perform
       assert deploy_export.status?('failed'), "Not Finished"
     end

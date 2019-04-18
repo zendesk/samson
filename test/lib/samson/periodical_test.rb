@@ -78,7 +78,7 @@ describe Samson::Periodical do
 
     it "sends errors to error notifier" do
       Lock.expects(:remove_expired_locks).raises custom_error
-      ErrorNotifier.expects(:notify).
+      Samson::ErrorNotifier.expects(:notify).
         with(instance_of(custom_error), error_message: "Samson::Periodical remove_expired_locks failed")
       Samson::Periodical.run_once(:remove_expired_locks)
     end
@@ -110,7 +110,8 @@ describe Samson::Periodical do
     end
 
     it "sends errors to error notifier" do
-      ErrorNotifier.expects(:notify).with(instance_of(ArgumentError), error_message: "Samson::Periodical foo failed")
+      Samson::ErrorNotifier.expects(:notify).
+        with(instance_of(ArgumentError), error_message: "Samson::Periodical foo failed")
       Samson::Periodical.register(:foo, 'bar', now: true) { raise ArgumentError }
       tasks = Samson::Periodical.run
       sleep 0.05 # let task execute
@@ -118,7 +119,8 @@ describe Samson::Periodical do
     end
 
     it "does not block server boot when initial run is inline and fails" do
-      ErrorNotifier.expects(:notify).with(instance_of(ArgumentError), error_message: "Samson::Periodical foo failed")
+      Samson::ErrorNotifier.expects(:notify).
+        with(instance_of(ArgumentError), error_message: "Samson::Periodical foo failed")
       Samson::Periodical.register(:foo, 'bar') { raise ArgumentError }
       tasks = Samson::Periodical.run
       tasks.first.shutdown
@@ -197,7 +199,7 @@ describe Samson::Periodical do
     end
 
     it 'correctly counts down when task raised' do
-      ErrorNotifier.expects(:notify)
+      Samson::ErrorNotifier.expects(:notify)
       Samson::Periodical.register(:foo, 'bar', active: true, now: true) { raise }
       tasks = Samson::Periodical.run
       sleep 0.01 # Allow task to finish

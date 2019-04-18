@@ -190,7 +190,7 @@ describe Project do
       project = Project.new(id: 9999, name: 'demo_apps', repository_url: repository_url)
       project.repository.expects(:clone!).returns(false)
       expected_message = "Could not clone git repository #{project.repository_url} for project #{project.name}"
-      ErrorNotifier.expects(:notify).with(expected_message)
+      Samson::ErrorNotifier.expects(:notify).with(expected_message)
       clone_repository(project)
     end
 
@@ -201,7 +201,7 @@ describe Project do
       expected_message =
         "Could not clone git repository #{project.repository_url} for project #{project.name} - #{error}"
       Rails.logger.expects(:error).with(expected_message)
-      ErrorNotifier.expects(:notify).once
+      Samson::ErrorNotifier.expects(:notify).once
       clone_repository(project)
     end
 

@@ -1,10 +1,10 @@
 # frozen_string_literal: true
-#
-require_relative '../test_helper'
+
+require_relative '../../test_helper'
 
 SingleCov.covered!
 
-describe ErrorNotifier do
+describe Samson::ErrorNotifier do
   describe '.notify' do
     it 'displays debug info if result if a string' do
       callback = ->(*) { 'dummy message' }
@@ -13,7 +13,7 @@ describe ErrorNotifier do
       error.set_backtrace('foobar')
 
       Samson::Hooks.with_callback(:error, callback) do
-        ErrorNotifier.notify(error).must_equal 'dummy message'
+        Samson::ErrorNotifier.notify(error).must_equal 'dummy message'
       end
     end
 
@@ -21,7 +21,7 @@ describe ErrorNotifier do
       exception = ArgumentError.new('motherofgod')
       exception.set_backtrace(["neatbacktraceyougotthere"])
       e = assert_raises RuntimeError do
-        ErrorNotifier.notify(exception)
+        Samson::ErrorNotifier.notify(exception)
       end
 
       expected_message = "ErrorNotifier caught exception: motherofgod. Use ErrorNotifier.expects(:notify)" \
@@ -37,7 +37,7 @@ describe ErrorNotifier do
 
       Rails.logger.expects(:error).with('ErrorNotifier: ArgumentError - oh no! - foobar')
 
-      ErrorNotifier.notify(error)
+      Samson::ErrorNotifier.notify(error)
     end
 
     it 'can log error if exception is a string' do
@@ -45,13 +45,13 @@ describe ErrorNotifier do
 
       Rails.logger.expects(:error).with('ErrorNotifier: Oh no!')
 
-      ErrorNotifier.notify('Oh no!')
+      Samson::ErrorNotifier.notify('Oh no!')
     end
   end
 
   describe 'user information placeholder' do
     it 'has the same placeholder as what is in 500.html' do
-      File.read("public/500.html").must_include(ErrorNotifier::USER_INFORMATION_PLACEHOLDER)
+      File.read("public/500.html").must_include(Samson::ErrorNotifier::USER_INFORMATION_PLACEHOLDER)
     end
   end
 end

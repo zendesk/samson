@@ -191,7 +191,7 @@ class CommitStatus
   end
 
   def generate_error_status_and_report(exception)
-    error_url = ErrorNotifier.notify(exception, sync: true)
+    error_url = Samson::ErrorNotifier.notify(exception, sync: true)
     {
       state: "missing",
       statuses: [{

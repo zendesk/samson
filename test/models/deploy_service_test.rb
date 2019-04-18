@@ -253,7 +253,7 @@ describe DeployService do
       it "does not fail all callbacks when 1 callback fails" do
         service.stubs(:send_deploy_update) # other callbacks
         service.expects(:send_deploy_update).with(finished: true).raises # last callback
-        ErrorNotifier.expects(:notify)
+        Samson::ErrorNotifier.expects(:notify)
         DeployMailer.expects(:deploy_email).returns(stub(deliver_now: true))
         run_deploy
       end

@@ -2,7 +2,7 @@
 
 if key = ENV['AIRBRAKE_API_KEY']
   ActiveSupport.on_load(:samson_version) do |version|
-    Airbrake.user_information_placeholder = ErrorNotifier::USER_INFORMATION_PLACEHOLDER
+    Airbrake.user_information_placeholder = Samson::ErrorNotifier::USER_INFORMATION_PLACEHOLDER
     Airbrake.user_information = # replaces replaces user_information_placeholder on 500 pages
       "<br/><br/>Error number: <a href='https://airbrake.io/locate/{{error_id}}'>{{error_id}}</a>" +
         ((link = ENV['HELP_LINK']) ? "<br/><br/>#{link}" : "")
