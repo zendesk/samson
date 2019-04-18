@@ -36,7 +36,7 @@ describe DeployMailer do
   describe "#bypass_email" do
     it "delivers" do
       stub_empty_changeset
-      BuddyCheck.expects(:bypass_email_addresses).returns(["a@b.com"])
+      Samson::BuddyCheck.expects(:bypass_email_addresses).returns(["a@b.com"])
       DeployMailer.bypass_email(deploy, user).deliver_now
       subject.from.must_equal ['deploys@samson-deployment.com']
       subject.subject.must_include "BYPASS"

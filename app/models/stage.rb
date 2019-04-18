@@ -118,7 +118,7 @@ class Stage < ActiveRecord::Base
   end
 
   def deploy_requires_approval?
-    BuddyCheck.enabled? && !no_code_deployed? && production_for_approval?
+    Samson::BuddyCheck.enabled? && !no_code_deployed? && production_for_approval?
   end
   alias_method :production_for_approval?, :production?
 

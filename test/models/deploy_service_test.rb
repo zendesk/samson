@@ -28,7 +28,7 @@ describe DeployService do
     end
 
     describe "when buddy check is needed" do
-      before { BuddyCheck.stubs(:enabled?).returns(true) }
+      before { Samson::BuddyCheck.stubs(:enabled?).returns(true) }
       let(:deploy) { deploys(:succeeded_production_test) }
 
       def create_previous_deploy(ref, stage, succeeded: true, bypassed: false, commit: nil)
@@ -54,7 +54,7 @@ describe DeployService do
 
         it "does not start the deploy, if past grace period" do
           service.expects(:confirm_deploy).never
-          travel BuddyCheck.grace_period + 1.minute do
+          travel Samson::BuddyCheck.grace_period + 1.minute do
             service.deploy(stage_production_2, reference: ref1)
           end
         end

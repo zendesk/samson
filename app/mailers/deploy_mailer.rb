@@ -13,7 +13,7 @@ class DeployMailer < ApplicationMailer
     prepare_mail(deploy)
     mail(
       subject: "[BYPASS]#{deploy_subject(deploy)}",
-      to: BuddyCheck.bypass_email_addresses,
+      to: Samson::BuddyCheck.bypass_email_addresses,
       cc: user.email
     )
   end
