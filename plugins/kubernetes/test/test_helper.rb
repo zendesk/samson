@@ -174,3 +174,13 @@ class ActiveSupport::TestCase
     stub_request(:get, 'http://foobar.server/version').to_return(body: '{"gitVersion": "v1.5.0"}')
   end
 end
+
+Kubeclient::Client.class_eval do
+  def fetch_entities
+    x = super
+    puts ">>>>> fetch_entities #{x}"
+    puts caller
+    puts "<<<<<"
+    x
+  end
+end
