@@ -340,5 +340,11 @@ describe Kubernetes::Api::Pod do
       event[:reason] = "FailedScheduling"
       assert waiting_for_resources?
     end
+
+    it "is waiting when bad event is FailedAttachVolume" do
+      event[:type] = "Warning"
+      event[:reason] = "FailedAttachVolume"
+      assert waiting_for_resources?
+    end
   end
 end
