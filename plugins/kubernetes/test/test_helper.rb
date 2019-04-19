@@ -178,9 +178,12 @@ end
 Kubeclient::Client.class_eval do
   def fetch_entities
     x = super
-    puts ">>>>> fetch_entities #{x}"
-    puts caller
-    puts "<<<<<"
+    if @api_version == "extensions/v1beta1" && x["resources"].none? { |r| r["name"] == "deployments" }
+      puts ">>>>> fetch_entities #{@api_version} #{x}"
+      puts caller
+      puts "<<<<<"
+      raise
+    end
     x
   end
 end
