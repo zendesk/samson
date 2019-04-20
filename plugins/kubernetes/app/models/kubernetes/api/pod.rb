@@ -4,7 +4,7 @@ module Kubernetes
     class Pod
       INIT_CONTAINER_KEY = :'pod.beta.kubernetes.io/init-containers'
       INGORED_AUTOSCALE_EVENT_REASONS = %w[FailedGetMetrics FailedRescale].freeze
-      WAITING_FOR_RESOURCES = ["FailedScheduling", "FailedCreatePodSandBox"].freeze
+      WAITING_FOR_RESOURCES = ["FailedScheduling", "FailedCreatePodSandBox", "FailedAttachVolume"].freeze
 
       attr_writer :events
 
