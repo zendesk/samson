@@ -26,7 +26,7 @@ module Kubernetes
     before_destroy :ensure_unused
 
     def client(type)
-      (@client ||= {})[type] ||= begin
+      (@client ||= {})[[Thread.current.object_id, type]] ||= begin
         case auth_method
         when "context"
           context = kubeconfig.context(config_context)
