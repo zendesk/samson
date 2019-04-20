@@ -144,7 +144,7 @@ describe RollbarDashboards::DashboardsController do
       end
 
       it 'renders no items when items are nil' do
-        ErrorNotifier.expects(:notify)
+        Samson::ErrorNotifier.expects(:notify)
         stub_deploy_rql_query(query)
 
         assert_create_rql_job do

@@ -152,7 +152,7 @@ module Kubernetes
       log_end = Time.now # here to be consistent for all pods
       statuses.each { |status| print_logs(status, log_end) }
     rescue StandardError
-      info = ErrorNotifier.notify($!, sync: true)
+      info = Samson::ErrorNotifier.notify($!, sync: true)
       @output.puts "  Error showing logs: #{info || "See samson logs for details"}"
     end
 
@@ -175,7 +175,7 @@ module Kubernetes
         print_logs(status, log_end_time)
       end
     rescue
-      info = ErrorNotifier.notify($!, sync: true)
+      info = Samson::ErrorNotifier.notify($!, sync: true)
       @output.puts "Error showing failure cause: #{info}"
     ensure
       @output.puts(

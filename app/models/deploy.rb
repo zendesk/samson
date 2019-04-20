@@ -184,7 +184,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def self.expired
-    threshold = BuddyCheck.time_limit.ago
+    threshold = Samson::BuddyCheck.time_limit.ago
     stale = where(buddy_id: nil).joins(:job).where(jobs: {status: 'pending'}).where("jobs.created_at < ?", threshold)
     stale.select(&:waiting_for_buddy?)
   end

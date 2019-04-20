@@ -87,7 +87,7 @@ class JobExecution
       rescue => exception
         message = "Finish hook failed: #{exception.message}"
         output.puts message
-        ErrorNotifier.notify(exception, error_message: message, parameters: {job_url: job.url})
+        Samson::ErrorNotifier.notify(exception, error_message: message, parameters: {job_url: job.url})
       end
     end
   end
@@ -241,7 +241,7 @@ class JobExecution
   def report_error(exception)
     return if exception.is_a?(Samson::Hooks::UserError) # do not spam us with users issues
 
-    ErrorNotifier.notify(
+    Samson::ErrorNotifier.notify(
       exception,
       error_message: exception.message,
       parameters: {job_id: @job.id},

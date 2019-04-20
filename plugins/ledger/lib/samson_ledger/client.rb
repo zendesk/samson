@@ -13,7 +13,7 @@ module SamsonLedger
       def post_deployment(deploy)
         post_event(deploy) if ledger_token && ledger_base_url && !deploy.stage.no_code_deployed?
       rescue StandardError
-        ErrorNotifier.notify($!, notice: true)
+        Samson::ErrorNotifier.notify($!, notice: true)
       end
 
       private

@@ -419,7 +419,7 @@ describe Deploy do
   end
 
   describe ".expired" do
-    let(:threshold) { BuddyCheck.time_limit.ago }
+    let(:threshold) { Samson::BuddyCheck.time_limit.ago }
     let(:other) { deploys(:succeeded_production_test) }
 
     before do

@@ -255,7 +255,7 @@ class Project < ActiveRecord::Base
     Thread.new do
       begin
         unless repository.commit_from_ref "HEAD" # bogus command to trigger clone
-          ErrorNotifier.notify("Could not clone git repository #{repository_url} for project #{name}")
+          Samson::ErrorNotifier.notify("Could not clone git repository #{repository_url} for project #{name}")
         end
       rescue => e
         # we are in a Thread so report errors or they disappear
@@ -284,7 +284,7 @@ class Project < ActiveRecord::Base
   def alert_clone_error!(exception)
     message = "Could not clone git repository #{repository_url} for project #{name}"
     Rails.logger.error("#{message} - #{exception.message}")
-    ErrorNotifier.notify(
+    Samson::ErrorNotifier.notify(
       exception,
       error_message: message,
       parameters: {

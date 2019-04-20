@@ -351,7 +351,7 @@ describe Stage do
 
   describe "#deploy_requires_approval?" do
     before do
-      BuddyCheck.stubs(enabled?: true)
+      Samson::BuddyCheck.stubs(enabled?: true)
       stage.production = true
     end
 
@@ -360,7 +360,7 @@ describe Stage do
     end
 
     it "does not require approval when buddy check is disabled" do
-      BuddyCheck.unstub(:enabled?)
+      Samson::BuddyCheck.unstub(:enabled?)
       refute stage.deploy_requires_approval?
     end
 

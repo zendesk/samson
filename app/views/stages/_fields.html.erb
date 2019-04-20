@@ -12,7 +12,7 @@
   <% else %>
     <%= form.input :production, as: :check_box,
           label: 'Impacts production',
-          help: "Deploys to production need to pass a buddy check when BuddyCheck is enabled."
+          help: "Deploys to production need to pass a buddy check when Samson::BuddyCheck is enabled."
     %>
   <% end %>
 
@@ -23,7 +23,7 @@
       " When selected with '#{no_code_label}' and '#{confirm_label}' is disabled the stage can be directly executed."
   %>
 
-  <% help = "Bypass " + [("buddy check" if BuddyCheck.enabled?), "release tracking"].compact.to_sentence \
+  <% help = "Bypass " + [("buddy check" if Samson::BuddyCheck.enabled?), "release tracking"].compact.to_sentence \
       + ". Must be a global admin to change."
   %>
   <%= form.input :no_code_deployed, as: :check_box, label: no_code_label, help: help, input_html: {disabled: !can_change_no_code_deployed?} %>

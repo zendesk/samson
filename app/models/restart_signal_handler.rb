@@ -58,7 +58,7 @@ class RestartSignalHandler
     hard_restart
   rescue
     output "Failed #{$!.message} ... restart manually when all deploys have finished"
-    ErrorNotifier.notify($!, sync: true)
+    Samson::ErrorNotifier.notify($!, sync: true)
     raise
   end
 
@@ -66,7 +66,7 @@ class RestartSignalHandler
   # this means that we lose all requests until Samson is booted up again. This is bad, but better
   # than hanging forever.
   def hard_restart
-    ErrorNotifier.notify('Hard restarting, requests will be lost', sync: true)
+    Samson::ErrorNotifier.notify('Hard restarting, requests will be lost', sync: true)
     output 'Error: Sending SIGTERM to hard restart'
     Process.kill(:SIGTERM, Process.pid)
     sleep 5

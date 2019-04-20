@@ -96,7 +96,8 @@ class DeployService
   end
 
   def latest_approved_deploy(reference, project)
-    Deploy.where(reference: reference).where('buddy_id is NOT NULL AND started_at > ?', BuddyCheck.grace_period.ago).
+    Deploy.where(reference: reference).
+      where('buddy_id is NOT NULL AND started_at > ?', Samson::BuddyCheck.grace_period.ago).
       includes(:stage).
       where(stages: {project_id: project}).
       reorder('started_at desc').

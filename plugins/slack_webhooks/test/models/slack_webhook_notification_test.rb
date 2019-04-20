@@ -79,7 +79,7 @@ describe SlackWebhookNotification do
       notification = stub_notification
       stub_request(:post, endpoint).to_timeout
       Rails.logger.expects(:error)
-      ErrorNotifier.expects(:notify)
+      Samson::ErrorNotifier.expects(:notify)
       notification.deliver :after_deploy
     end
   end

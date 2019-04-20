@@ -32,7 +32,7 @@ module Samson
           begin
             with_retries { vault_client.kv.list_recursive(path) }
           rescue
-            ErrorNotifier.notify(
+            Samson::ErrorNotifier.notify(
               $!,
               error_message: "Error talking to vault server #{vault_client.address} during list_recursive"
             )
@@ -71,7 +71,7 @@ module Samson
           begin
             with_retries { client.auth_token.renew_self }
           rescue
-            ErrorNotifier.notify($!, vault_server_id: id)
+            Samson::ErrorNotifier.notify($!, vault_server_id: id)
           end
         end
       end

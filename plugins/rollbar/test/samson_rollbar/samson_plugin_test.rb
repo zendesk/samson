@@ -24,7 +24,7 @@ describe SamsonRollbar do
       end
 
       it "ignores disabled reporter, so other reporters can show their url" do
-        # the [nil] means that what other reporters send is shown to the user, see ErrorNotifier#notify
+        # the [nil] means that what other reporters send is shown to the user, see Samson::ErrorNotifier#notify
         Samson::Hooks.fire(:error, exception, foo: 'bar', sync: true).must_equal [nil]
       end
     end

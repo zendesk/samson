@@ -28,7 +28,7 @@ describe DeployService do
     end
 
     describe "when buddy check is needed" do
-      before { BuddyCheck.stubs(:enabled?).returns(true) }
+      before { Samson::BuddyCheck.stubs(:enabled?).returns(true) }
       let(:deploy) { deploys(:succeeded_production_test) }
 
       def create_previous_deploy(ref, stage, succeeded: true, bypassed: false, commit: nil)
@@ -54,7 +54,7 @@ describe DeployService do
 
         it "does not start the deploy, if past grace period" do
           service.expects(:confirm_deploy).never
-          travel BuddyCheck.grace_period + 1.minute do
+          travel Samson::BuddyCheck.grace_period + 1.minute do
             service.deploy(stage_production_2, reference: ref1)
           end
         end
@@ -253,7 +253,7 @@ describe DeployService do
       it "does not fail all callbacks when 1 callback fails" do
         service.stubs(:send_deploy_update) # other callbacks
         service.expects(:send_deploy_update).with(finished: true).raises # last callback
-        ErrorNotifier.expects(:notify)
+        Samson::ErrorNotifier.expects(:notify)
         DeployMailer.expects(:deploy_email).returns(stub(deliver_now: true))
         run_deploy
       end

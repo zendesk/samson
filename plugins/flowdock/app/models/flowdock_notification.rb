@@ -23,7 +23,7 @@ class FlowdockNotification
     flowdock_service.notify_inbox(subject, content, deploy_url)
   rescue Flowdock::ApiError => error
     Rails.logger.error("Could not deliver flowdock message: #{error.message}")
-    ErrorNotifier.notify(error, error_message: 'Could not deliver flowdock message')
+    Samson::ErrorNotifier.notify(error, error_message: 'Could not deliver flowdock message')
   end
 
   def default_buddy_request_message

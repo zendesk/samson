@@ -22,7 +22,7 @@ module Samson
         return unless exception
         Rails.logger.error "(#{time})  with error #{exception}"
         Rails.logger.error exception.backtrace.join("\n")
-        ErrorNotifier.notify(exception, error_message: "Samson::Periodical #{@task_name} failed")
+        Samson::ErrorNotifier.notify(exception, error_message: "Samson::Periodical #{@task_name} failed")
       end
     end
 
