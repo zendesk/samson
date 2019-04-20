@@ -29,7 +29,7 @@ describe Samson::TimeSum do
     it "logs" do
       Rails.logger.expects(:info).with do |payload|
         payload[:message].must_equal "Job execution finished"
-        assert payload[:parts][:db].between?(0, 5)
+        (0..5).must_include(payload[:parts][:db])
         true
       end
       result = Samson::TimeSum.instrument("execute_job.samson", project: "foo", stage: "bar", production: false) do
