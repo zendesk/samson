@@ -15,10 +15,7 @@ module SamsonAirbrake
   end
 end
 
-Samson::Hooks.callback :error do |exception, options|
-  sync = options[:sync]
-  options = options.without(:sync)
-
+Samson::Hooks.callback :error do |exception, sync: false, **options|
   if sync
     SamsonAirbrake::Engine.exception_debug_info(Airbrake.notify_sync(exception, options))
   else

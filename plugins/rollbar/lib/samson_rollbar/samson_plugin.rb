@@ -8,9 +8,7 @@ module SamsonRollbar
   end
 end
 
-Samson::Hooks.callback :error do |exception, options|
-  sync = options[:sync]
-  options = options.without(:sync)
+Samson::Hooks.callback :error do |exception, sync: false, **options|
   data = Rollbar.error(exception, options)
 
   if sync
