@@ -13,7 +13,7 @@
 <div class="admin-actions">
   <% if current_user.admin? %>
     <div class="pull-right">
-      <%= render partial: "locks/button", collection: global_locks, as: :lock, resource: nil, prefix: "Global " %>
+      <%= render "locks/button", lock: global_locks.first, resource: nil, prefix: "Global " %>
       <%= link_to "New", new_project_path, class: "btn btn-default" %>
     </div>
   <% end %>

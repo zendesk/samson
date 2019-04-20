@@ -34,4 +34,14 @@ module LocksHelper
     text = (lock.warning? ? "#{warning_icon} Warning" : "#{lock_icon} Locked")
     content_tag :span, text.html_safe, class: "label label-warning", title: strip_tags(lock.summary)
   end
+
+  def lock_affected(lock)
+    if lock.resource_type == "Stage"
+      "stage"
+    elsif lock.resource
+      link_to_resource lock.resource
+    else
+      link_to "ALL STAGES", projects_path
+    end
+  end
 end

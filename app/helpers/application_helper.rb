@@ -72,10 +72,9 @@ module ApplicationHelper
   # tested via link_to_resource
   def link_parts_for_resource(resource)
     case resource
-    when Project, DeployGroup, User, Samson::Secrets::VaultServer then [resource.name, resource]
+    when Project, DeployGroup, Environment, User, Samson::Secrets::VaultServer then [resource.name, resource]
     when Command then ["Command ##{resource.id}", resource]
     when UserProjectRole then ["Role for ##{resource.user.name}", resource.user]
-    when Environment then [resource.name, dashboard_path(resource)]
     when Stage then
       name = resource.name
       name = (resource.lock.warning? ? warning_icon : lock_icon) + " " + name if resource.lock

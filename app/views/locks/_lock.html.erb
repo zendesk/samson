@@ -1,8 +1,8 @@
 <div class="alert alert-warning">
   <% if lock.warning? %>
-    <%= warning_icon %> <%= lock.affected %> Warning:
+    <%= warning_icon %> <%= lock_affected(lock) %> Warning:
   <% else %>
-    <%= lock_icon %> Deployments to <%= lock.affected %> were locked
+    <%= lock_icon %> Deployments to <%= lock_affected(lock) %> were locked
   <% end %>
   <%= sanitize lock.reason %>
   <i>

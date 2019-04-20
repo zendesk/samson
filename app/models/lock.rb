@@ -93,16 +93,6 @@ class Lock < ActiveRecord::Base
     self.delete_at = seconds.present? ? Time.now + seconds.to_i : nil
   end
 
-  def affected
-    if resource_type == "Stage"
-      "stage"
-    elsif resource
-      resource.name
-    else
-      "ALL STAGES"
-    end
-  end
-
   private
 
   def expire_all_cached

@@ -257,4 +257,11 @@ class CurrentUserConcernTest < ActionController::TestCase
       end
     end
   end
+
+  describe "#can?" do
+    it "does not override when scope is passed as nil since that has special meaning" do
+      AccessControl.expects(:can?).with(nil, :write, :locks, nil)
+      @controller.send(:can?, :write, :locks, nil)
+    end
+  end
 end
