@@ -210,6 +210,9 @@ module Kubernetes
             if client.respond_to? method
               client.send(method, *args)
             else
+
+              puts $last_kubeclient_fetch.inspect
+
               raise(
                 Samson::Hooks::UserError,
                 "apiVersion #{@template.fetch(:apiVersion)} does not support #{kind}. " \

@@ -175,15 +175,10 @@ class ActiveSupport::TestCase
   end
 end
 
+$last_kubeclient_fetch = {}
+
 Kubeclient::Client.class_eval do
   def fetch_entities
-    x = super
-    if @api_version == "extensions/v1beta1" && x["resources"].none? { |r| r["name"] == "deployments" }
-      puts ">>>>> fetch_entities #{@api_version} #{x}"
-      puts caller
-      puts "<<<<<"
-      raise
-    end
-    x
+    $last_kubeclient_fetch[@api_version] = super
   end
 end
