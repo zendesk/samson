@@ -174,11 +174,3 @@ class ActiveSupport::TestCase
     stub_request(:get, 'http://foobar.server/version').to_return(body: '{"gitVersion": "v1.5.0"}')
   end
 end
-
-$last_kubeclient_fetch = {}
-
-Kubeclient::Client.class_eval do
-  def fetch_entities
-    $last_kubeclient_fetch[@api_version] = super
-  end
-end

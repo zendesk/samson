@@ -211,7 +211,8 @@ module Kubernetes
               client.send(method, *args)
             else
 
-              puts $last_kubeclient_fetch.inspect
+              sleep 0.1
+              puts "NOW #{method} -- #{client.respond_to? method}"
 
               raise(
                 Samson::Hooks::UserError,
