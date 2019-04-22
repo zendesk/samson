@@ -2,7 +2,7 @@
 # rubocop:disable Metrics/LineLength
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 1
+SingleCov.covered!
 
 describe ApplicationHelper do
   include LocksHelper
@@ -257,14 +257,22 @@ describe ApplicationHelper do
     end
 
     it "shows common message for paths" do
-      link_to_delete("/foo").must_include "Are you sure ?"
+      link_to_delete("/foo").must_include "Really delete ?"
     end
 
-    it "shows detailed message for resource" do
-      link_to_delete([projects(:test), stages(:test_staging)]).must_include "Delete this Stage ?"
+    it "shows detailed message for resource given as array" do
+      link = link_to_delete([projects(:test), stages(:test_staging)])
+      link.must_include "Delete this Stage ?"
+      link.must_include "/projects/foo/stages/staging"
     end
 
-    it "builds a hint for when disabled" do
+    it "can link directly to a resource" do
+      link = link_to_delete(stages(:test_staging))
+      link.must_include "Delete Stage Staging ?"
+      link.must_include "/projects/foo/stages/staging"
+    end
+
+    it "builds a hint when disabled" do
       link_to_delete("/foo", disabled: "Foo").must_equal(
         "<span title=\"Foo\" class=\"mouseover\">Delete</span>"
       )
@@ -279,16 +287,14 @@ describe ApplicationHelper do
 
     it "can ask a question" do
       link_to_delete("/foo", question: "Foo?").must_equal(
-        "<a data-confirm=\"Foo?\" data-method=\"delete\" href=\"/foo\">Delete</a>"
+        "<a data-method=\"delete\" data-confirm=\"Foo?\" href=\"/foo\">Delete</a>"
       )
     end
-  end
 
-  describe "#link_to_delete_button" do
-    it "builds a button" do
-      result = link_to_delete_button("/foo")
-      result.must_include "Delete"
-      result.must_include "Delete"
+    it "can ask to type" do
+      link_to_delete("/foo", type_to_delete: true).must_equal(
+        "<a data-method=\"delete\" data-type-to-delete=\"Really delete ?\" href=\"/foo\">Delete</a>"
+      )
     end
   end
 
@@ -352,6 +358,21 @@ describe ApplicationHelper do
       projects(:test).soft_delete!(validate: false)
       stage = stages(:test_staging)
       link_to_resource(stage).must_equal "Staging"
+    end
+  end
+
+  describe "#audited_classes" do
+    after { ApplicationHelper.class_variable_set(:@@audited_classes, nil) }
+
+    # we know this reaches inside because of coverage is 100%
+    it "works when in test" do
+      audited_classes
+    end
+
+    it "works when not in test" do
+      Rails.env.stubs(:test?).returns(false)
+      Rails.application.config.stubs(:eager_load).returns(true)
+      audited_classes
     end
   end
 

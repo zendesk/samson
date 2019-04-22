@@ -18,7 +18,6 @@
 
     <% if admin_for_project? %>
       <%= link_to "Edit", edit_project_stage_path(@project, @stage), class: "btn btn-default" %>
-      <%= link_to_delete_button([@project, @stage]) %>
     <% end %>
 
     <div class="pull-right">

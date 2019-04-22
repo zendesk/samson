@@ -28,6 +28,6 @@
 
     <%= Samson::Hooks.render_views(:project_form, self, form: form) %>
 
-    <%= form.actions delete: current_user.admin_for?(@project) %>
+    <%= form.actions delete: (:type if can?(:write, :projects, @project)) %>
   </fieldset>
 <% end %>
