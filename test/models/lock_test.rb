@@ -62,28 +62,6 @@ describe Lock do
     end
   end
 
-  describe "#affected" do
-    it "is everything for global" do
-      lock.resource = nil
-      lock.affected.must_equal "ALL STAGES"
-    end
-
-    it "is environment for environment" do
-      lock.resource = environment
-      lock.affected.must_equal "Production"
-    end
-
-    it "is project name for Project" do
-      lock.resource = project
-      lock.affected.must_equal "Foo"
-    end
-
-    it "is stage for stage" do
-      lock.resource = stage
-      lock.affected.must_equal "stage"
-    end
-  end
-
   describe ".global" do
     it "does not find local" do
       Lock.global.must_be_empty

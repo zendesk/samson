@@ -104,4 +104,30 @@ describe LocksHelper do
       warning_icon.must_include "warning"
     end
   end
+
+  describe "#lock_affected" do
+    let(:user) { users(:deployer) }
+    let(:stage) { stages(:test_staging) }
+    let(:lock) { Lock.create!(user: user, resource: stage) }
+
+    it "is everything for global" do
+      lock.resource = nil
+      lock_affected(lock).must_equal "<a href=\"/projects\">ALL STAGES</a>"
+    end
+
+    it "is environment for environment" do
+      lock.resource = environments(:production)
+      lock_affected(lock).must_equal "<a href=\"/environments/production\">Production</a>"
+    end
+
+    it "is project name for Project" do
+      lock.resource = projects(:test)
+      lock_affected(lock).must_equal "<a href=\"/projects/foo\">Foo</a>"
+    end
+
+    it "shows simple text for stage since user can only see it on that page" do
+      lock.resource = stage
+      lock_affected(lock).must_equal "stage"
+    end
+  end
 end

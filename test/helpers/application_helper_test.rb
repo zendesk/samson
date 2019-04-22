@@ -317,7 +317,7 @@ describe ApplicationHelper do
     end
 
     it "links to environments" do
-      link_to_resource(environments(:production)).must_equal "<a href=\"/dashboards/production\">Production</a>"
+      link_to_resource(environments(:production)).must_equal "<a href=\"/environments/production\">Production</a>"
     end
 
     it "links to deploy_groups" do
