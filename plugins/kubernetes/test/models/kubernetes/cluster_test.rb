@@ -131,6 +131,10 @@ describe Kubernetes::Cluster do
       cluster.client('v1').object_id.must_equal cluster.client('v1').object_id
     end
 
+    it 'caches per thread to avoid race conditions of method definition' do
+      cluster.client('v1').object_id.wont_equal Thread.new { cluster.client('v1').object_id }.value
+    end
+
     it 'can build for other types' do
       cluster.client('policy/v1beta1').api_endpoint.to_s.must_equal 'http://foobar.server/apis'
     end
