@@ -24,7 +24,10 @@ describe SamsonGcloud::ImageBuilder do
 
     around { |test| Dir.mktmpdir { |dir| Dir.chdir(dir) { test.call } } }
 
-    before { Dir.mkdir 'some-dir' }
+    before do
+      SamsonGcloud::ImageBuilder.stubs(:gcloud_version).returns(Gem::Version.new("300.0.0"))
+      Dir.mkdir 'some-dir'
+    end
 
     it "builds using a custom cloudbuild.yml" do
       build_image
@@ -153,6 +156,37 @@ describe SamsonGcloud::ImageBuilder do
       File.write("some-dir/.gcloudignore", "X")
       build_image
       File.read("some-dir/.gcloudignore").must_equal "X"
+    end
+
+    it "works when gcloud is old" do
+      SamsonGcloud::ImageBuilder.unstub(:gcloud_version)
+      SamsonGcloud::ImageBuilder.expects(:gcloud_version).returns(Gem::Version.new("0.0.0"))
+      build_image # no test, just for coverage
+    end
+  end
+
+  describe ".gcloud_version" do
+    before do
+      SamsonGcloud::ImageBuilder.instance_variable_set(:@gcloud_version, nil)
+    end
+
+    after do
+      SamsonGcloud::ImageBuilder.remove_instance_variable(:@gcloud_version)
+    end
+
+    it "knows versions" do
+      SamsonGcloud::ImageBuilder.expects(:`).returns("Google Cloud SDK 300.0.0")
+      SamsonGcloud::ImageBuilder.send(:gcloud_version).to_s.must_equal "300.0.0"
+    end
+
+    it "uses new when something went wrong" do
+      SamsonGcloud::ImageBuilder.expects(:`).returns("whoops")
+      SamsonGcloud::ImageBuilder.send(:gcloud_version).to_s.must_equal "9999"
+    end
+
+    it "caches" do
+      SamsonGcloud::ImageBuilder.expects(:`).returns("Google Cloud SDK 300.0.0")
+      2.times { SamsonGcloud::ImageBuilder.send(:gcloud_version) }
     end
   end
 end
