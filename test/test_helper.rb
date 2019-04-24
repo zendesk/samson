@@ -219,6 +219,11 @@ ActiveSupport::TestCase.class_eval do
     plugin_name = caller(1..1).first[/\/plugins\/([^\/]+)/, 1] || raise("not called from a plugin")
     around { |t| Samson::Hooks.only_callbacks_for_plugin(plugin_name, callback, &t) }
   end
+
+  def self.before_and_after(&block)
+    before(&block)
+    after(&block)
+  end
 end
 
 # Helpers for controller tests
