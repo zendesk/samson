@@ -41,8 +41,9 @@ module SamsonGcloud
 
         prevent_upload_of_ignored_files(dir, build)
 
+        container = (gcloud_version >= Gem::Version.new("238.0.0") ? [] : ["container"])
         command = [
-          "gcloud", "container", "builds", "submit", ".",
+          "gcloud", *container, "builds", "submit", ".",
           "--timeout", executor.timeout, "--config", config, *SamsonGcloud.cli_options
         ]
 
@@ -58,6 +59,10 @@ module SamsonGcloud
       end
 
       private
+
+      def gcloud_version
+        @gcloud_version ||= Gem::Version.new(`gcloud version`[/Google Cloud SDK (.*)/, 1] || "9999")
+      end
 
       def prevent_upload_of_ignored_files(dir, build)
         ignore = "#{dir}/.gcloudignore"
