@@ -362,7 +362,7 @@ describe ApplicationHelper do
   end
 
   describe "#audited_classes" do
-    after { ApplicationHelper.class_variable_set(:@@audited_classes, nil) }
+    before_and_after { ApplicationHelper.class_variable_set(:@@audited_classes, nil) }
 
     # we know this reaches inside because of coverage is 100%
     it "works when in test" do
