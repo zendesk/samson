@@ -4,8 +4,6 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe OutputBuffer do
-  include OutputBufferSupport
-
   let(:buffer) { OutputBuffer.new }
 
   before { freeze_time }
@@ -16,7 +14,7 @@ describe OutputBuffer do
     listener1 = build_listener
     listener2 = build_listener
 
-    wait_for_listeners(buffer, 2)
+    sleep 0.1
 
     buffer.write("hello")
     buffer.write("world")
@@ -31,7 +29,7 @@ describe OutputBuffer do
 
     listener = build_listener
 
-    wait_for_listeners(buffer)
+    sleep 0.1
 
     buffer.close
 
