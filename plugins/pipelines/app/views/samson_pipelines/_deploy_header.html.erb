@@ -1,5 +1,17 @@
 <% if triggering_deploy = deploy.triggering_deploy %>
   <div class="alert alert-info">
-    Triggered via <%= link_to "Deploy ##{triggering_deploy.id}", project_deploy_path(deploy.project, triggering_deploy) %>
+    Triggered via <%= link_to "#{triggering_deploy.short_reference} to #{triggering_deploy.stage&.name}", [@project, triggering_deploy] %>
+  </div>
+<% elsif triggered_deploys = Deploy.where(triggering_deploy_id: deploy).presence %>
+  <div class="alert alert-info">
+    Triggered deploys:
+    <ul>
+      <% triggered_deploys.each do |deploy| %>
+        <%= link_to [@project, deploy] do %>
+          <%= deploy.stage&.name %>
+          <%= status_badge deploy.status %>
+        <% end %>
+      <% end %>
+    </ul>
   </div>
 <% end %>
