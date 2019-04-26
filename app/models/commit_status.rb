@@ -74,8 +74,8 @@ class CommitStatus
     base_url = "repos/#{@project.repository_path}/commits/#{@reference}"
     preview_header = {Accept: 'application/vnd.github.antiope-preview+json'}
 
-    check_suites = GITHUB.get("#{base_url}/check-suites", headers: preview_header)[:check_suites]
-    checks = GITHUB.get("#{base_url}/check-runs", headers: preview_header)
+    check_suites = GITHUB.get("#{base_url}/check-suites", headers: preview_header).to_attrs.fetch(:check_suites)
+    checks = GITHUB.get("#{base_url}/check-runs", headers: preview_header).to_attrs
 
     overall_state = check_suites.
       map { |suite| check_state_equivalent(suite[:conclusion]) }.
@@ -91,7 +91,30 @@ class CommitStatus
       }
     end
 
+    statuses += pending_check_statuses(check_suites, checks)
+
     {state: overall_state || 'pending', statuses: statuses}
+  end
+
+  def pending_check_statuses(check_suites, checks)
+    reported = checks[:check_runs].map { |c| c.dig_fetch(:check_suite, :id) }
+    pending_suites = check_suites.reject { |s| reported.include?(s.fetch(:id)) }
+    pending_suites.map do |suite|
+      name = suite.dig_fetch(:app, :name)
+      {
+        state: "pending",
+        description: "Check #{name.inspect} has not reported yet",
+        context: name,
+        target_url: github_pr_checks_url(suite),
+        updated_at: Time.now
+      }
+    end
+  end
+
+  # convert github api url to html url without doing another request for the PR
+  def github_pr_checks_url(suite)
+    return unless pr = suite.fetch(:pull_requests).first
+    pr.dig(:url).sub('://api.', '://').sub('/repos/', '/').sub('/pulls/', '/pull/') + "/checks"
   end
 
   def github_status
