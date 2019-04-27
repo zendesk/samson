@@ -21,7 +21,7 @@ describe ReleasesController do
         }
       ]
     }
-    check_suite_response = {check_suites: [{conclusion: 'success'}]}
+    check_suite_response = {check_suites: [{conclusion: 'success', id: 1}]}
     check_run_response = {
       check_runs: [
         {
@@ -30,6 +30,7 @@ describe ReleasesController do
           name: 'Travis CI',
           html_url: 'https://coolbeans.com',
           started_at: Time.now.iso8601,
+          check_suite: {id: 1}
         }
       ]
     }

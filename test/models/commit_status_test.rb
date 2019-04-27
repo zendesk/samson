@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 1
+SingleCov.covered!
 
 describe CommitStatus do
   def self.deploying_a_previous_release
@@ -17,8 +17,12 @@ describe CommitStatus do
     end
   end
 
-  def failure!
+  def stub_github_api_failure
     stub_github_api(url, nil, 404)
+  end
+
+  def stub_github_api_success
+    stub_github_api(url, statuses: [{foo: "bar", updated_at: 1.day.ago}], state: "success")
   end
 
   def build_status(stage_param: stage, reference_param: reference)
@@ -30,10 +34,6 @@ describe CommitStatus do
   let(:status) { build_status }
 
   describe "using state api" do
-    def success!
-      stub_github_api(url, statuses: [{foo: "bar", updated_at: 1.day.ago}], state: "success")
-    end
-
     def stub_checks_api(commit_status: status)
       commit_status.stubs(:github_check).returns(state: 'pending', statuses: [])
     end
@@ -44,24 +44,24 @@ describe CommitStatus do
 
     describe "#state" do
       it "returns state" do
-        success!
+        stub_github_api_success
         status.state.must_equal 'success'
       end
 
       it "is missing when not found" do
-        failure!
+        stub_github_api_failure
         status.state.must_equal 'missing'
       end
 
       it "works without stage" do
-        success!
+        stub_github_api_success
         s = status
         s.instance_variable_set(:@stage, nil)
         s.state.must_equal "success"
       end
 
       it "does not cache changing references" do
-        request = success!
+        request = stub_github_api_success
         status.state.must_equal 'success'
         new_status = build_status
         stub_checks_api(commit_status: new_status)
@@ -73,7 +73,7 @@ describe CommitStatus do
         let(:reference) { 'v4.2' }
 
         it "caches github state accross instances" do
-          request = success!
+          request = stub_github_api_success
           status.state.must_equal 'success'
           new_status = build_status
           stub_checks_api(commit_status: new_status)
@@ -82,7 +82,7 @@ describe CommitStatus do
         end
 
         it "can expire cache" do
-          request = success!
+          request = stub_github_api_success
           status.state.must_equal 'success'
           status.expire_cache reference
           new_status = build_status
@@ -96,7 +96,7 @@ describe CommitStatus do
         deploying_a_previous_release
 
         it "warns" do
-          success!
+          stub_github_api_success
           assert_sql_queries 10 do
             status.state.must_equal 'error'
           end
@@ -106,13 +106,13 @@ describe CommitStatus do
           deploys(:succeeded_test).update_column(:stage_id, deploy.stage_id) # need 2 succeeded deploys on same stage
           deploys(:succeeded_test).update_column(:reference, 'v4.1') # old is lower
           deploy.update_column(:reference, 'v4.3') # new is higher
-          success!
+          stub_github_api_success
           status.state.must_equal 'error'
         end
 
         it "ignores when previous deploy was the same or lower" do
           deploy.update_column(:reference, reference)
-          success!
+          stub_github_api_success
           status.state.must_equal 'success'
         end
 
@@ -120,7 +120,7 @@ describe CommitStatus do
           before { deploy.update_column(:reference, 'v4.10') }
 
           it "warns" do
-            success!
+            stub_github_api_success
             status.state.must_equal 'error'
             status.statuses[1][:description].must_equal(
               "v4.10 was deployed to deploy groups in this stage by Production"
@@ -131,7 +131,7 @@ describe CommitStatus do
             other = deploys(:succeeded_test)
             other.update_column(:reference, 'v4.9')
 
-            success!
+            stub_github_api_success
             status.state.must_equal 'error'
             status.statuses[1][:description].must_equal(
               "v4.9, v4.10 was deployed to deploy groups in this stage by Staging, Production"
@@ -141,13 +141,13 @@ describe CommitStatus do
 
         it "ignores when previous deploy was not a version" do
           deploy.update_column(:reference, 'master')
-          success!
+          stub_github_api_success
           status.state.must_equal 'success'
         end
 
         it "ignores when previous deploy was failed" do
           deploy.job.update_column(:status, 'faild')
-          success!
+          stub_github_api_success
           status.state.must_equal 'success'
         end
       end
@@ -155,7 +155,7 @@ describe CommitStatus do
 
     describe "#statuses" do
       it "returns list" do
-        success!
+        stub_github_api_success
         status.statuses.map { |s| s[:foo] }.must_equal ["bar"]
       end
 
@@ -167,15 +167,22 @@ describe CommitStatus do
       end
 
       it "returns Reference context for release/show display" do
-        failure!
+        stub_github_api_failure
         status.statuses.map { |s| s[:context] }.must_equal ["Reference"]
+      end
+
+      it "does not add release status when not deploying a release" do
+        with_env DEPLOY_GROUP_FEATURE: "true" do
+          stub_github_api_success
+          status.statuses.map { |s| s[:foo] }.must_equal ["bar"]
+        end
       end
 
       describe "when deploying a previous release" do
         deploying_a_previous_release
 
         it "merges" do
-          success!
+          stub_github_api_success
           status.statuses.each { |s| s.delete(:updated_at) }.must_equal [
             {foo: "bar"},
             {state: "Old Release", description: "v4.3 was deployed to deploy groups in this stage by Production"}
@@ -233,13 +240,14 @@ describe CommitStatus do
               name: 'Travis CI',
               html_url: 'https://coolbeans.com',
               started_at: Time.now,
+              check_suite: {id: 1}
             }
           ]
         )
       end
 
       it 'returns state' do
-        stub_github_api(check_suite_url, check_suites: [{conclusion: 'success'}])
+        stub_github_api(check_suite_url, check_suites: [{conclusion: 'success', id: 1}])
 
         status.state.must_equal 'success'
       end
@@ -251,13 +259,13 @@ describe CommitStatus do
       end
 
       it 'returns pending if check suite does not have conclusion yet' do
-        stub_github_api(check_suite_url, check_suites: [{conclusion: nil}])
+        stub_github_api(check_suite_url, check_suites: [{conclusion: nil, id: 1}])
 
         status.state.must_equal 'pending'
       end
 
       it 'maps check status to state equivalent' do
-        stub_github_api(check_suite_url, check_suites: [{conclusion: 'action_required'}])
+        stub_github_api(check_suite_url, check_suites: [{conclusion: 'action_required', id: 1}])
 
         status.state.must_equal 'error'
       end
@@ -266,12 +274,12 @@ describe CommitStatus do
         stub_github_api(
           check_suite_url,
           check_suites: [
-            {conclusion: 'action_required'},
-            {conclusion: 'cancelled'},
-            {conclusion: 'timed_out'},
-            {conclusion: 'failure'},
-            {conclusion: 'success'},
-            {conclusion: 'neutral'}
+            {conclusion: 'action_required', id: 1},
+            {conclusion: 'cancelled', id: 1},
+            {conclusion: 'timed_out', id: 1},
+            {conclusion: 'failure', id: 1},
+            {conclusion: 'success', id: 1},
+            {conclusion: 'neutral', id: 1}
           ]
         )
 
@@ -283,7 +291,7 @@ describe CommitStatus do
 
         stub_github_api(
           check_suite_url,
-          check_suites: [{conclusion: 'bingbong'}]
+          check_suites: [{conclusion: 'bingbong', id: 1}]
         )
 
         e = assert_raises RuntimeError do
@@ -295,7 +303,18 @@ describe CommitStatus do
     end
 
     describe '#statuses' do
-      before { stub_github_api(check_suite_url, check_suites: []) }
+      before do
+        freeze_time
+        stub_github_api(
+          check_suite_url, check_suites: [
+            {
+              id: 1,
+              pull_requests: [{url: "https://api.github.com/foo/bar/pulls/123"}],
+              app: {name: "My App"}
+            }
+          ]
+        )
+      end
 
       let(:started_at) { '2018-10-12 20:55:58 UTC'.to_time(:utc) }
 
@@ -307,6 +326,7 @@ describe CommitStatus do
             name: 'Travis CI',
             html_url: 'https://coolbeans.com',
             started_at: started_at,
+            check_suite: {id: 1}
           }]
         )
 
@@ -329,6 +349,7 @@ describe CommitStatus do
             name: 'Travis CI',
             html_url: 'https://coolbeans.com',
             started_at: started_at,
+            check_suite: {id: 1}
           }]
         )
 
@@ -344,6 +365,7 @@ describe CommitStatus do
       end
 
       it 'gives help message when no statuses are present' do
+        stub_github_api(check_suite_url, check_suites: [])
         stub_github_api(check_run_url, check_runs: [])
 
         status.statuses.must_equal([{
@@ -351,6 +373,41 @@ describe CommitStatus do
           description: "No status was reported for this commit on GitHub. " \
           "See https://developer.github.com/v3/checks/ and https://github.com/blog/1227-commit-status-api for details."
         }])
+      end
+
+      it 'shows pending suites' do
+        stub_github_api(check_run_url, check_runs: [])
+
+        status.statuses.must_equal(
+          [{
+            state: "pending",
+            description: "Check \"My App\" has not reported yet",
+            context: "My App",
+            target_url: "https://github.com/foo/bar/pull/123/checks",
+            updated_at: Time.now
+          }]
+        )
+      end
+
+      it 'shows pending suites without PRs' do
+        stub_github_api(
+          check_suite_url, check_suites: [{
+            id: 1,
+            pull_requests: [],
+            app: {name: "My App"}
+          }]
+        )
+        stub_github_api(check_run_url, check_runs: [])
+
+        status.statuses.must_equal(
+          [{
+            state: "pending",
+            description: "Check \"My App\" has not reported yet",
+            context: "My App",
+            target_url: nil,
+            updated_at: Time.now
+          }]
+        )
       end
     end
   end
