@@ -49,7 +49,6 @@ describe CommitStatus do
       end
 
       it "is missing when not found" do
-        Samson::ErrorNotifier.expects(:notify)
         failure!
         status.state.must_equal 'missing'
       end
@@ -168,7 +167,6 @@ describe CommitStatus do
       end
 
       it "returns Reference context for release/show display" do
-        Samson::ErrorNotifier.expects(:notify)
         failure!
         status.statuses.map { |s| s[:context] }.must_equal ["Reference"]
       end
@@ -188,8 +186,6 @@ describe CommitStatus do
       describe "with client error" do
         before do
           GITHUB.expects(:get).raises(Octokit::ClientError)
-          Samson::ErrorNotifier.expects(:notify).returns('http://errorurl.com')
-
           freeze_time
         end
 
@@ -197,8 +193,7 @@ describe CommitStatus do
           expected_status = [{
             context: "Reference", # for releases/show.html.erb
             state: "missing",
-            description: "There was a problem getting the status for reference 'master'." \
-                         " See http://errorurl.com for details",
+            description: "Unable to get commit status.",
             updated_at: Time.now
           }]
 
@@ -209,8 +204,7 @@ describe CommitStatus do
           expected_status = [{
             context: "Reference", # for releases/show.html.erb
             state: "missing",
-            description: "There was a problem getting the status for reference 'v123'." \
-                         " See http://errorurl.com for details",
+            description: "Unable to get commit status.",
             updated_at: Time.now
           }]
 

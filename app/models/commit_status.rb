@@ -58,8 +58,8 @@ class CommitStatus
     static = @reference.match?(Build::SHA1_REGEX) || @reference.match?(Release::VERSION_REGEX)
     expires_in = ->(reply) { cache_duration(reply) }
     Samson::DynamicTtlCache.cache_fetch_if static, cache_key(@reference), expires_in: expires_in do
-      checks_result = with_octokit_client_error_rescue { github_check }
-      status_result = with_octokit_client_error_rescue { github_status }
+      checks_result = octokit_error_as_status('checks') { github_check }
+      status_result = octokit_error_as_status('status') { github_status }
 
       results_with_statuses = [checks_result, status_result].select { |result| result[:statuses].any? }
 
@@ -184,21 +184,16 @@ class CommitStatus
     @deploy_scope ||= Deploy.reorder(nil).succeeded.where(stage_id: @stage.influencing_stage_ids).group(:stage_id)
   end
 
-  def with_octokit_client_error_rescue
+  def octokit_error_as_status(type)
     yield
-  rescue Octokit::ClientError
-    generate_error_status_and_report($!)
-  end
-
-  def generate_error_status_and_report(exception)
-    error_url = Samson::ErrorNotifier.notify(exception, sync: true)
+  rescue Octokit::ClientError => e
+    Rails.logger.error(e) # log error for further debugging if it's not 404.
     {
       state: "missing",
       statuses: [{
         context: "Reference", # for releases/show.html.erb
         state: "missing",
-        description: "There was a problem getting the status for reference '#{@reference}'." \
-                       " See #{error_url} for details",
+        description: "Unable to get commit #{type}.",
         updated_at: Time.now # needed for #cache_duration
       }]
     }
