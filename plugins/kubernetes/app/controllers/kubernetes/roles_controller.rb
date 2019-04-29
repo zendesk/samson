@@ -13,7 +13,7 @@ class Kubernetes::RolesController < ResourceController
     begin
       Kubernetes::Role.seed!(@project, params[:ref].presence || DEFAULT_BRANCH)
     rescue Samson::Hooks::UserError
-      flash[:error] = $!.message
+      flash[:error] = helpers.simple_format($!.message)
     end
     redirect_to action: :index
   end
