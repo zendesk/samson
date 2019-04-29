@@ -6,10 +6,11 @@ module Kubernetes
     VALID_LABEL_VALUE = /\A[a-zA-Z0-9]([-a-zA-Z0-9.]*[a-zA-Z0-9])?\z/.freeze # also used in js ... cannot use /i
 
     NAMESPACELESS_KINDS = [
-      'APIService', 'ClusterRoleBinding', 'ClusterRole', 'CustomResourceDefinition', 'Namespace'
+      'APIService', 'ClusterRoleBinding', 'ClusterRole', 'CustomResourceDefinition', 'Namespace', 'PodSecurityPolicy'
     ].freeze
     IMMUTABLE_NAME_KINDS = [
-      'APIService', 'CustomResourceDefinition', 'ConfigMap', 'Role', 'ClusterRole', 'Namespace'
+      'APIService', 'CustomResourceDefinition', 'ConfigMap', 'Role', 'ClusterRole', 'Namespace', 'PodSecurityPolicy',
+      'ClusterRoleBinding'
     ].freeze
 
     # we either generate multiple names or allow custom names
@@ -82,6 +83,7 @@ module Kubernetes
 
     def validate_namespace
       elements = @elements.reject { |e| NAMESPACELESS_KINDS.include? e[:kind] }
+      return if elements.empty?
       namespaces = map_attributes([:metadata, :namespace], elements: elements)
       @errors << "Namespaces need to be unique" if namespaces.uniq.size != 1
     end
