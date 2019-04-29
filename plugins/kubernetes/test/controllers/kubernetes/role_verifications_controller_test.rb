@@ -28,7 +28,7 @@ describe Kubernetes::RoleVerificationsController do
 
       it "fails nicely with borked template" do
         post :create, params: {role: "---"}
-        assigns[:errors].must_include "Error found when parsing test.yml"
+        assigns[:errors].must_include "Error found when validating test.yml"
       end
 
       it "reports invalid json" do

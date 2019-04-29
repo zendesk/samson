@@ -44,7 +44,7 @@ module Kubernetes
       end
 
       if errors = Kubernetes::RoleValidator.new(@elements).validate
-        raise Samson::Hooks::UserError, "Error found when parsing #{path}\n#{errors.join("\n")}"
+        raise Samson::Hooks::UserError, "Error found when validating #{path}\n#{errors.join("\n")}"
       end
     end
 
