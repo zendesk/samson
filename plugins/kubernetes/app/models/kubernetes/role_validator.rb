@@ -83,6 +83,7 @@ module Kubernetes
 
     def validate_namespace
       elements = @elements.reject { |e| NAMESPACELESS_KINDS.include? e[:kind] }
+      return if elements.empty?
       namespaces = map_attributes([:metadata, :namespace], elements: elements)
       @errors << "Namespaces need to be unique" if namespaces.uniq.size != 1
     end
