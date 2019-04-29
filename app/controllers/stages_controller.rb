@@ -21,7 +21,7 @@ class StagesController < ResourceController
       end
       format.json do
         render_as_json :stage, @stage, allowed_includes: [
-          :last_deploy, :last_succeeded_deploy, :active_deploy
+          :last_deploy, :last_succeeded_deploy, :active_deploy, :lock
         ] do |reply|
           # deprecated way of inclusion, do not add more
           if params[:include] == "kubernetes_matrix"
