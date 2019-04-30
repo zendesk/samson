@@ -89,7 +89,7 @@ module Kubernetes
     end
 
     def add_pod_disruption_budget
-      return unless deployment = raw_template.detect { |r| r[:kind] == "Deployment" }
+      return unless deployment = raw_template.detect { |r| ["Deployment", "StatefulSet"].include? r[:kind] }
 
       min_available = deployment.dig(:metadata, :annotations, :"samson/minAvailable")
       return if min_available == "disabled"
