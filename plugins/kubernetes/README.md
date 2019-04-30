@@ -172,7 +172,7 @@ Samson can add a dynamic PodDisruptionBudget by setting `metadata.annotations.sa
 
 To remove it, set to '0', deploy, delete it from the template.
 
-Samson can auto-add a `PodDisruptionBudget` for every `Deployment` by setting for example `KUBERNETES_AUTO_MIN_AVAILABLE=80%`.
+Samson can auto-add a `PodDisruptionBudget` for every `Deployment`/`StatefulSet` by setting for example `KUBERNETES_AUTO_MIN_AVAILABLE=80%`.
 Users can opt-out by setting `metadata.annotations.samson/minAvailable: disabled`.
 
 ### Blue/Green Deployment
