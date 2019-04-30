@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../../test_helper'
 
-SingleCov.covered! uncovered: (ENV["TRAVIS"] ? 2 : 1)
+SingleCov.covered!
 
 describe Samson::Periodical do
   def with_registered
@@ -14,7 +14,16 @@ describe Samson::Periodical do
   end
   let(:custom_error) { Class.new(StandardError) }
 
-  after { maxitest_kill_extra_threads } # concurrent leaves a bunch of threads running
+  # kill all threads that concurrent leaves behind and make it create new ones when called again
+  # otherwise TimerTask will not start depending on test ordering because it has dead threads inside
+  # can reproduce locally by adding a 2.times around `it "runs after interval"`
+  after do
+    maxitest_kill_extra_threads
+    Concurrent.global_timer_set.send(:initialize)
+    Concurrent.global_io_executor.send(:initialize)
+  end
+
+  before_and_after { Samson::Periodical.instance_variable_set(:@env_settings, nil) }
 
   around do |test|
     begin
@@ -28,11 +37,9 @@ describe Samson::Periodical do
   around do |test|
     begin
       old_registered = Samson::Periodical.instance_variable_get(:@registered).deep_dup
-      Samson::Periodical.instance_variable_set(:@env_settings, nil)
       test.call
     ensure
       Samson::Periodical.instance_variable_set(:@registered, old_registered)
-      Samson::Periodical.instance_variable_set(:@env_settings, nil)
     end
   end
 
@@ -88,13 +95,22 @@ describe Samson::Periodical do
   describe ".run" do
     with_env PERIODICAL: 'foo'
 
-    it "runs active tasks" do
-      x = 2
-      Samson::Periodical.register(:foo, 'bar') { x = 1 }
+    it "runs tasks immediately" do
+      ran = []
+      Samson::Periodical.register(:foo, 'bar') { ran << 1 }
       tasks = Samson::Periodical.run
       sleep 0.05 # let task execute
       tasks.first.shutdown
-      x.must_equal 1
+      ran.size.must_equal 1
+    end
+
+    it "runs after interval" do
+      ran = []
+      Samson::Periodical.register(:foo, 'bar', execution_interval: 0.02) { ran << 1 }
+      tasks = Samson::Periodical.run
+      sleep 0.1 # let task execute
+      tasks.first.shutdown
+      ran.size.must_be :>=, 2
     end
 
     it "does not run inactive tasks" do
@@ -104,9 +120,12 @@ describe Samson::Periodical do
 
     it 'does not run tasks when disabled' do
       Samson::Periodical.enabled = false
-
-      Samson::Periodical.register(:bar, 'bar') {}
-      Samson::Periodical.run.must_equal []
+      ran = []
+      Samson::Periodical.register(:foo, 'bar', execution_interval: 0.02) { ran << 1 }
+      tasks = Samson::Periodical.run
+      sleep 0.05 # let task execute
+      tasks.first.shutdown
+      ran.size.must_equal 0
     end
 
     it "sends errors to error notifier" do
@@ -184,15 +203,14 @@ describe Samson::Periodical do
     end
 
     it 'counts running tasks' do
-      skip if ENV['TRAVIS'] # TODO: this fails on travis :(
       mutex = Mutex.new.lock
       Samson::Periodical.register(:foo, 'bar', active: true, now: true) { mutex.lock }
       tasks = Samson::Periodical.run
-      sleep 0.01 # Allow task to start
+      sleep 0.02 # Allow task to start
 
       Samson::Periodical.running_task_count.must_equal 1
       mutex.unlock
-      sleep 0.01 # Allow task to finish
+      sleep 0.02 # Allow task to finish
 
       Samson::Periodical.running_task_count.must_equal 0
       tasks.first.shutdown
@@ -202,7 +220,7 @@ describe Samson::Periodical do
       Samson::ErrorNotifier.expects(:notify)
       Samson::Periodical.register(:foo, 'bar', active: true, now: true) { raise }
       tasks = Samson::Periodical.run
-      sleep 0.01 # Allow task to finish
+      sleep 0.02 # Allow task to finish
 
       Samson::Periodical.running_task_count.must_equal 0
       tasks.first.shutdown
