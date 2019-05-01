@@ -241,7 +241,7 @@ GEM
       thor (~> 0.18)
     byebug (8.2.2)
     coderay (1.1.1)
-    concurrent-ruby (1.0.5)
+    concurrent-ruby (1.1.5)
     connection_pool (2.2.1)
     crack (0.4.3)
       safe_yaml (~> 1.0.0)

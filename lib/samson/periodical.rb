@@ -30,6 +30,7 @@ module Samson
       attr_accessor :enabled
 
       def register(name, description, options = {}, &block)
+        raise if options[:execution_interval]&.<= 0.01 # uncovered: avoid fishy code in concurrent around <=0.01
         registered[name] = TASK_DEFAULTS.
           merge(env_settings(name)).
           merge(block: block, description: description).
@@ -49,7 +50,7 @@ module Samson
           # run at startup so we are in a consistent and clean state after a restart
           # not using TimerTask `now` option since then initial constant loading would happen in multiple threads
           # and we run into fun autoload errors like `LoadError: Unable to autoload constant Job` in development/test
-          unless config[:now]
+          if !config[:now] && enabled
             ActiveRecord::Base.connection_pool.with_connection do
               run_once(name)
             end
