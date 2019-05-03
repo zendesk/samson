@@ -810,6 +810,19 @@ describe Kubernetes::TemplateFiller do
       end
     end
 
+    describe "progressDeadlineSeconds" do
+      around { |t| stub_const Kubernetes::TemplateFiller, :WAIT_FOR_LIVE, '10', &t }
+
+      it "sets a default value" do
+        template.to_hash.dig_fetch(:spec, :progressDeadlineSeconds).must_equal('10')
+      end
+
+      it "does not overwrite" do
+        raw_template[:spec][:progressDeadlineSeconds] = '1000'
+        template.to_hash.dig_fetch(:spec, :progressDeadlineSeconds).must_equal('1000')
+      end
+    end
+
     describe "HorizontalPodAutoscaler" do
       before do
         raw_template[:kind] = "HorizontalPodAutoscaler"

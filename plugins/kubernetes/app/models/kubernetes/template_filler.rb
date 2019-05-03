@@ -9,6 +9,7 @@ module Kubernetes
     KUBERNETES_ADD_PRESTOP = Samson::EnvCheck.set?('KUBERNETES_ADD_PRESTOP')
     SECRET_PREFIX = "secret/"
     DOCKERFILE_NONE = 'none'
+    WAIT_FOR_LIVE = Integer(ENV.fetch('KUBERNETES_WAIT_FOR_LIVE', '600'))
 
     def initialize(release_doc, template, index:)
       @doc = release_doc
@@ -43,7 +44,10 @@ module Kubernetes
           set_replica_target || validate_replica_target_is_supported
 
           make_stateful_set_match_service if kind == 'StatefulSet'
-          set_pre_stop if kind == 'Deployment'
+          if kind == 'Deployment'
+            set_pre_stop
+            set_progress_deadline
+          end
 
           set_name
           set_spec_template_metadata
@@ -541,6 +545,10 @@ module Kubernetes
         next if samson_container_config(container, :"samson/preStop") == "disabled"
         (container[:lifecycle] ||= {})[:preStop] ||= {exec: {command: ["sleep", "3"]}}
       end
+    end
+
+    def set_progress_deadline
+      template.fetch(:spec)[:progressDeadlineSeconds] ||= WAIT_FOR_LIVE
     end
 
     def init_containers

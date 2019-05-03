@@ -498,16 +498,26 @@ describe Kubernetes::DeployExecutor do
       out.must_include "resque-worker Pod: Waiting for resources (Pending, Unknown)\n"
     end
 
-    it "stops when taking too long to go live" do
+    it "stops when detecting deployment progress timeout" do
       pod_status[:phase] = "Pending"
-      refute execute, out
-      out.must_include "TIMEOUT"
-    end
+      request = stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/events}).
+        to_return(
+          body: {
+            items: [
+              {
+                type: 'Progressing',
+                reason: 'ProgressDeadlineExceeded'
+              }
+            ]
+          }.to_json
+        )
 
-    it "waits when less then expected pods are found" do
-      Kubernetes::ReleaseDoc.any_instance.stubs(:desired_pod_count).returns(2)
-      refute execute, out
-      out.must_include "TIMEOUT"
+      refute execute
+
+      out.must_include "ProgressDeadlineExceeded\n"
+
+      # 4 resources + once for first pod, then stops + 4 different resource events + once to debug failed pod
+      assert_requested request, times: 10
     end
 
     it "waits when deploy is running but Unknown" do

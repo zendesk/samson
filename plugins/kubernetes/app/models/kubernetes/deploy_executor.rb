@@ -8,7 +8,6 @@ module Kubernetes
     if ENV['KUBE_WAIT_FOR_LIVE'] && !ENV["KUBERNETES_WAIT_FOR_LIVE"]
       raise "Use KUBERNETES_WAIT_FOR_LIVE with seconds instead of KUBE_WAIT_FOR_LIVE" # uncovered
     end
-    WAIT_FOR_LIVE = Integer(ENV.fetch('KUBERNETES_WAIT_FOR_LIVE', '600'))
     WAIT_FOR_PREREQUISITES = Integer(ENV.fetch('KUBERNETES_WAIT_FOR_PREREQUISITES', WAIT_FOR_LIVE))
     STABILITY_CHECK_DURATION = Integer(ENV.fetch('KUBERNETES_STABILITY_CHECK_DURATION', 1.minute))
     TICK = Integer(ENV.fetch('KUBERNETES_STABILITY_CHECK_TICK', 10.seconds))
@@ -44,7 +43,7 @@ module Kubernetes
       end
 
       if deploys.any?
-        return false unless deploy_and_watch(deploys, timeout: WAIT_FOR_LIVE)
+        return false unless deploy_and_watch(deploys)
       end
 
       true
@@ -83,9 +82,6 @@ module Kubernetes
           if too_many_not_ready?(statuses)
             if stopped = not_ready_statuses.select(&:finished).presence
               print_statuses("UNSTABLE, resources failed:", stopped, exact: true)
-              return false, statuses
-            elsif time_left(wait_start_time, timeout) == 0
-              @output.puts "TIMEOUT, pods took too long to get live"
               return false, statuses
             end
           elsif ready_statuses.all?(&:finished)
