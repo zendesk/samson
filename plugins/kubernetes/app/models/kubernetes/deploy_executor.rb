@@ -85,6 +85,7 @@ module Kubernetes
               print_statuses("UNSTABLE, resources failed:", stopped, exact: true)
               return false, statuses
             elsif time_left(wait_start_time, timeout) == 0
+              # TODO: don't do this if we're watching deployment progress
               @output.puts "TIMEOUT, pods took too long to get live"
               return false, statuses
             end
@@ -124,8 +125,16 @@ module Kubernetes
         resources = doc.resources.reject { |r| r.is_a?(Kubernetes::Resource::Pod) }
 
         resources.map! do |resource|
+          resource_hash =
+            if ResourceStatus.deployment_progress?(resource.template)
+              resource.fetch_resource || resource.template
+            else
+              # avoid extra fetches and show events when create failed
+              resource.template
+            end
+
           ResourceStatus.new(
-            resource: resource.template, # avoid extra fetches and show events when create failed
+            resource: resource_hash,
             kind: resource.kind,
             role: doc.kubernetes_role,
             deploy_group: doc.deploy_group,

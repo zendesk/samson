@@ -78,6 +78,12 @@ module Kubernetes
         @resource = fetch_resource
       end
 
+      def fetch_resource
+        ignore_404 do
+          request(:get, name, namespace)
+        end
+      end
+
       def uid
         resource&.dig_fetch(:metadata, :uid)
       end
@@ -179,12 +185,6 @@ module Kubernetes
 
       def persistent_fields
         []
-      end
-
-      def fetch_resource
-        ignore_404 do
-          request(:get, name, namespace)
-        end
       end
 
       def pods

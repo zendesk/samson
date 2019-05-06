@@ -6,6 +6,10 @@ module Kubernetes
     attr_reader :resource, :role, :deploy_group, :kind, :details, :live, :finished, :pod
     attr_writer :details
 
+    def self.deployment_progress?(resource)
+      resource[:kind] == "Deployment" && resource.dig(:spec, :progressDeadlineSeconds)
+    end
+
     def initialize(resource:, role: nil, deploy_group:, prerequisite: false, start:, kind:)
       @resource = resource
       @kind = kind
@@ -40,6 +44,8 @@ module Kubernetes
         else
           @details = "Waiting (#{@pod.phase}, #{@pod.reason})"
         end
+      elsif self.class.deployment_progress?(@resource)
+        check_deployment
       else
         # NOTE: non-pods are never "Missing" because we create them manually
         @finished = true
@@ -49,6 +55,30 @@ module Kubernetes
           @details = "Live"
           @live = true
         end
+      end
+    end
+
+    # Deployment opted into
+    # https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#progressing-deployment
+    def check_deployment
+      conditions = @resource[:status][:condition].each_with_object({}) { |c, all| all[c[:type].to_sym] = c }
+      progress = conditions[:Progressing] || { reason: "Progress not found" }
+
+      if progress[:status] == "False"
+        @details = "Progress stopped: #{progress[:reason]}"
+        @finished = true
+      elsif conditions.dig(:Available, :status) == "True"
+        @details = "Live"
+        @live = true
+        @finished = true
+      elsif conditions.dig(:ReplicaFailure, :status) == "True"
+        @details = "Failed to create replicas"
+        @finished = true
+      elsif events(type: "Warning").any?
+        @details = "Error event"
+        @finished = true
+      else
+        @details = "Waiting for progress (#{progress[:reason]})"
       end
     end
 
