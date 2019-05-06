@@ -57,6 +57,21 @@ describe LocksController do
   as_a :project_deployer do
     unauthorized :post, :create, lock: {description: 'xyz'}
 
+    describe '#index' do
+      it "doesn't paginate" do
+        2.times { create_lock stage }
+        get :index, format: :json, params: {per_page: 1}
+        json = JSON.parse(response.body)
+        json['locks'].count.must_equal 2
+      end
+
+      it "refuses to render html" do
+        assert_raises ActionController::UnknownFormat do
+          get :index
+        end
+      end
+    end
+
     describe "with global lock" do
       before { global_lock }
       unauthorized :delete, :destroy, resource_id: "", resource_type: ""

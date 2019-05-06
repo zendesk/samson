@@ -115,7 +115,7 @@ class ResourceController < ApplicationController
   end
 
   def search_resources
-    resource_class
+    resource_class.all
   end
 
   # hook

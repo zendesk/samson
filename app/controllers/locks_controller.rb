@@ -4,6 +4,10 @@ class LocksController < ResourceController
   before_action :set_resource, only: [:create, :destroy]
   before_action :authorize_resource!
 
+  def index
+    super(paginate: false) if request.format.json?
+  end
+
   def create
     respond_to do |format|
       format.html do
