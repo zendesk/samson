@@ -7,10 +7,12 @@
     Triggered deploys:
     <ul>
       <% triggered_deploys.each do |deploy| %>
-        <%= link_to [@project, deploy] do %>
-          <%= deploy.stage&.name %>
-          <%= status_badge deploy.status %>
-        <% end %>
+        <li>
+          <%= link_to [@project, deploy] do %>
+            <%= deploy.stage&.name %>
+            <%= status_badge deploy.status %>
+          <% end %>
+        </li>
       <% end %>
     </ul>
   </div>
