@@ -65,18 +65,30 @@ module Kubernetes
     # once they are working check if they are stable (for apps only, since jobs are finished and will not change)
     def wait_for_resources_to_complete(release_docs, timeout)
       waiting_for_ready = true
+      waiting_for_resources = true
       wait_start_time = Time.now.to_i
       @output.puts "Waiting for resources to come up" unless release_docs.all?(&:delete_resource)
 
       loop do
         statuses = resource_statuses(release_docs)
         interesting = statuses.select { |s| s.kind == "Pod" || !s.live } # ignore boring things that rarely fail
+        pods = interesting.select { |s| s.kind == "Pod" }
+
         if interesting.none?
           @output.puts "No pods were created"
           return success, statuses
         end
 
         ready_statuses, not_ready_statuses = statuses.partition(&:live)
+
+        # First we allow waiting for resources and then we wait for pods to become live. This gives
+        # us two time windows for timeouts instead of waiting for resources to become available and
+        # ready within the WAIT_FOR_LIVE window. Primary goal is to allow node bootstrapping time
+        # when using a cluster autoscaling mechanism.
+        if waiting_for_resources && pods.none?(&:waiting_for_resources?)
+          waiting_for_resources = false
+          wait_start_time = Time.now.to_i # reset wait start so the live check has reasonable time
+        end
 
         if waiting_for_ready
           print_statuses("Deploy status:", interesting, exact: false)
@@ -85,7 +97,8 @@ module Kubernetes
               print_statuses("UNSTABLE, resources failed:", stopped, exact: true)
               return false, statuses
             elsif time_left(wait_start_time, timeout) == 0
-              @output.puts "TIMEOUT, pods took too long to get live"
+              timeout_cause = waiting_for_resources ? "took too long to get cluster resources" : "pods took too long to get live"
+              @output.puts "TIMEOUT, #{timeout_cause}"
               return false, statuses
             end
           elsif ready_statuses.all?(&:finished)
