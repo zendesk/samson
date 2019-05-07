@@ -85,7 +85,7 @@ module Kubernetes
         # us two time windows for timeouts instead of waiting for resources to become available and
         # ready within the WAIT_FOR_LIVE window. Primary goal is to allow node bootstrapping time
         # when using a cluster autoscaling mechanism.
-        if waiting_for_resources && pods.none?(&:waiting_for_resources?)
+        if waiting_for_resources && pods.none?(&:waiting_for_capacity?)
           waiting_for_resources = false
           wait_start_time = Time.now.to_i # reset wait start so the live check has reasonable time
         end

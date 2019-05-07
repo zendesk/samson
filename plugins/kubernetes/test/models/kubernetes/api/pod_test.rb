@@ -314,37 +314,37 @@ describe Kubernetes::Api::Pod do
     end
   end
 
-  describe "#waiting_for_resources?" do
-    def waiting_for_resources?
+  describe "#waiting_for_capacity?" do
+    def waiting_for_capacity?
       pod_with_client.instance_variable_set(:@events, events)
-      pod_with_client.waiting_for_resources?
+      pod_with_client.waiting_for_capacity?
     end
 
     it "is not waiting when all is good" do
-      refute waiting_for_resources?
+      refute waiting_for_capacity?
     end
 
     it "is not waiting when bad" do
       event[:type] = "Warning"
-      refute waiting_for_resources?
+      refute waiting_for_capacity?
     end
 
     it "is not waiting when bad and FailedScheduling" do
       event[:type] = "Warning"
       events << event.dup.merge(reason: "FailedScheduling")
-      refute waiting_for_resources?
+      refute waiting_for_capacity?
     end
 
     it "is waiting when bad event is FailedScheduling" do
       event[:type] = "Warning"
       event[:reason] = "FailedScheduling"
-      assert waiting_for_resources?
+      assert waiting_for_capacity?
     end
 
     it "is waiting when bad event is FailedAttachVolume" do
       event[:type] = "Warning"
       event[:reason] = "FailedAttachVolume"
-      assert waiting_for_resources?
+      assert waiting_for_capacity?
     end
   end
 end

@@ -32,7 +32,7 @@ module Kubernetes
           @details = "Live"
           @live = true
           @finished = @pod.completed?
-        elsif (@pod.events = events(type: "Warning")) && @pod.waiting_for_resources?
+        elsif (@pod.events = events(type: "Warning")) && @pod.waiting_for_capacity?
           @details = "Waiting for resources (#{@pod.phase}, #{@pod.reason})"
         elsif @pod.events_indicate_failure?
           @details = "Error event"
