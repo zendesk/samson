@@ -5,6 +5,12 @@ require "kubeclient"
 SingleCov.covered!
 
 describe SamsonKubernetes do
+  describe :project_permitted_params do
+    it "adds ours" do
+      Samson::Hooks.fire(:project_permitted_params).flatten(1).must_include :kubernetes_rollout_timeout
+    end
+  end
+
   describe :stage_permitted_params do
     it "adds ours" do
       Samson::Hooks.fire(:stage_permitted_params).flatten(1).must_include :kubernetes
