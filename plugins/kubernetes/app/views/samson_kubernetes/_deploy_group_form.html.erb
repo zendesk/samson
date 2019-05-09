@@ -4,5 +4,5 @@
     <%= cluster_form.collection_select(:kubernetes_cluster_id, Kubernetes::Cluster.all, :id, :name, { include_blank: true }, { class: 'form-control' }) %>
   <% end %>
 
-  <%= cluster_form.input :namespace, label: "Kubernetes Namespace" %>
+  <%= cluster_form.input :namespace, label: "Kubernetes Namespace", help: "Used when metadata.namespace is not set" %>
 <% end %>

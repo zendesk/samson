@@ -120,16 +120,15 @@ describe Kubernetes::TemplateFiller do
       template.to_hash[:spec][:revisionHistoryLimit].must_equal 1
     end
 
-    it "keeps namespaces when cluster-service is set" do
+    it "keeps namespaces when set" do
       raw_template[:metadata][:namespace] = "default"
-      raw_template[:metadata][:labels][:"kubernetes.io/cluster-service"] = 'true'
       template.to_hash[:metadata][:namespace].must_equal 'default'
     end
 
-    it "keeps namespaces when keep_namespace is set" do
-      raw_template[:metadata][:namespace] = "default"
-      raw_template[:metadata][:annotations] = {"samson/keep_namespace": 'true'}
-      template.to_hash[:metadata][:namespace].must_equal 'default'
+    it "keeps namespaces when nil is set for 1-off namespace-less kinds" do
+      raw_template[:metadata][:namespace] = nil
+      template.stubs(:set_image_pull_secrets) # secret pulling does not work namespace, but deployments never have none
+      template.to_hash[:metadata][:namespace].must_equal nil
     end
 
     it "can verify without builds" do
@@ -207,13 +206,12 @@ describe Kubernetes::TemplateFiller do
     end
 
     describe "configmap" do
-      it "only modifies namespace since there is no template" do
+      it "modifies nothing" do
         raw_template[:kind] = "ConfigMap"
         raw_template.delete(:spec)
-        raw_template[:metadata][:namespace] = 'old'
         result = template.to_hash
-        result[:metadata][:namespace].must_equal 'pod1'
-        refute result[:spec]
+        result[:metadata].delete(:annotations)
+        result.must_equal raw_template
       end
     end
 

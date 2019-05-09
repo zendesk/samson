@@ -26,7 +26,6 @@ module Kubernetes
       return ["Only hashes supported"] unless @elements.all? { |e| e.is_a?(Hash) }
       validate_name
       validate_name_kinds_are_unique
-      validate_namespace
       validate_single_primary_kind
       validate_api_version
       validate_containers
@@ -79,13 +78,6 @@ module Kubernetes
 
     def validate_name
       @errors << "Needs a metadata.name" unless map_attributes([:metadata, :name]).all?
-    end
-
-    def validate_namespace
-      elements = @elements.reject { |e| NAMESPACELESS_KINDS.include? e[:kind] }
-      return if elements.empty?
-      namespaces = map_attributes([:metadata, :namespace], elements: elements)
-      @errors << "Namespaces need to be unique" if namespaces.uniq.size != 1
     end
 
     # multiple pods in a single role will make validations misbehave (recommend they all have the same role etc)

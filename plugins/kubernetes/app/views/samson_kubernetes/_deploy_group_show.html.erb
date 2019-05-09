@@ -12,7 +12,10 @@
 </div>
 
 <div class="form-group">
-  <label class="col-lg-2 control-label">Kubernetes Namespace</label>
+  <label class="col-lg-2 control-label">
+    Kubernetes Namespace
+    <%= additional_info "Used when metadata.namespace is not set" %>
+  </label>
   <div class="col-lg-4">
     <p class="form-control-static"><%= @deploy_group.kubernetes_namespace %></p>
   </div>
