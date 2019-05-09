@@ -222,6 +222,12 @@ describe Kubernetes::DeployExecutor do
       out.must_match /TIMEOUT.*\n\nDebug:/ # not showing missing pod statuses after deploy
     end
 
+    it "can use custom timeout" do
+      project.kubernetes_rollout_timeout = 123
+      executor.expects(:deploy_and_watch).with(anything, timeout: 123).returns(true)
+      assert execute, out
+    end
+
     describe "invalid configs" do
       before { build.delete } # build needs to be created -> assertion fails
       around { |test| refute_difference('Build.count') { refute_difference('Release.count', &test) } }

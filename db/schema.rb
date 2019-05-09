@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_04_03_202316) do
+ActiveRecord::Schema.define(version: 2019_05_08_231523) do
 
   create_table "audits" do |t|
     t.integer "auditable_id", null: false
@@ -404,6 +404,7 @@ ActiveRecord::Schema.define(version: 2019_04_03_202316) do
     t.boolean "kubernetes_allow_writing_to_root_filesystem", default: false, null: false
     t.boolean "jenkins_status_checker", default: false, null: false
     t.boolean "use_env_repo", default: false, null: false
+    t.integer "kubernetes_rollout_timeout"
     t.index ["build_command_id"], name: "index_projects_on_build_command_id"
     t.index ["permalink"], name: "index_projects_on_permalink", unique: true, length: 191
     t.index ["token"], name: "index_projects_on_token", unique: true, length: 191

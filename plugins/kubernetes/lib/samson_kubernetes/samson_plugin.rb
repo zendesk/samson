@@ -22,6 +22,7 @@ module SamsonKubernetes
 end
 
 Samson::Hooks.view :project_tabs_view, 'samson_kubernetes/project_tab'
+Samson::Hooks.view :project_form, "samson_kubernetes/project_form"
 Samson::Hooks.view :manage_menu, 'samson_kubernetes/manage_menu'
 Samson::Hooks.view :stage_form, "samson_kubernetes/stage_form"
 Samson::Hooks.view :stage_show, "samson_kubernetes/stage_show"
@@ -43,6 +44,7 @@ Samson::Hooks.callback(:stage_permitted_params) do
   ]
 end
 Samson::Hooks.callback(:deploy_permitted_params) { [:kubernetes_rollback, :kubernetes_reuse_build] }
+Samson::Hooks.callback(:project_permitted_params) { [:kubernetes_rollout_timeout] }
 Samson::Hooks.callback(:link_parts_for_resource) do
   [
     "Kubernetes::Cluster",
