@@ -4,7 +4,7 @@
 # NOTE: not perfect and can be circumvented with multiline sql statements or `;`
 module Samson
   module ReadonlyDb
-    ALLOWED = ["SELECT ", "SHOW ", "SET  @@SESSION.", "EXPLAIN ", "PRAGMA "].freeze
+    ALLOWED = ["SELECT ", "SHOW ", "SET  @@SESSION.", "SET NAMES", "EXPLAIN ", "PRAGMA "].freeze
     PROMPT_CHANGE = ["(", "(readonly "].freeze
     PROMPTS = [:PROMPT_I, :PROMPT_N].freeze
 
