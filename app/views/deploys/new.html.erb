@@ -17,12 +17,13 @@
 
       <div class="form-group">
         <%= form.label :reference, "Reference", class: "col-lg-2 control-label" %>
+        <div class="col-lg-4">
         <% if @stage.no_reference_selection %>
           <%= form.object.reference = @stage.default_reference.presence || 'master' %>
           <%= form.hidden_field :reference, id: 'disable_js_hooks' %>
           <%= additional_info "Reference selection is disabled for this stage." %>
         <% else %>
-          <div id="scrollable-dropdown-menu" class="col-lg-4">
+          <div id="scrollable-dropdown-menu">
             <%= form.text_field :reference,
                 class: "form-control",
                 autofocus: true,
@@ -32,12 +33,18 @@
             %>
           </div>
         <% end %>
-      </div>
+        </div>
+        <div class="col-lg-6">
+          <div id="ref-problem-warning" class="col-lg-10 popover show right alert alert-warning hidden" style="max-width: 100%">
+            <div class="arrow" style="top: 20px"></div>
 
-      <div class="form-group">
-        <div id="ref-problem-warning" class="col-lg-5 col-lg-offset-2 alert alert-warning hidden">
-          <p>Problems detected:</p>
-          <ul id="ref-problem-list"></ul>
+            <h3 class="popover-title">Problems detected:
+              <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+            </h3>
+            <div class="popover-content">
+              <ul id="ref-problem-list"></ul>
+            </div>
+          </div>
         </div>
       </div>
 
