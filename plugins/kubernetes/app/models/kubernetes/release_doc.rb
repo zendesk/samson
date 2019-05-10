@@ -118,7 +118,6 @@ module Kubernetes
         kind: "PodDisruptionBudget",
         metadata: {
           name: kubernetes_role.resource_name,
-          namespace: deployment.dig(:metadata, :namespace),
           labels: deployment.dig_fetch(:metadata, :labels).dup,
           annotations: annotations
         },
@@ -127,6 +126,9 @@ module Kubernetes
           selector: {matchLabels: deployment.dig_fetch(:spec, :selector, :matchLabels).dup}
         }
       }
+      if deployment[:metadata].key? :namespace
+        budget[:metadata][:namespace] = deployment.dig(:metadata, :namespace)
+      end
       budget[:delete] = true if target == 0
       raw_template << budget
     end

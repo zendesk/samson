@@ -194,8 +194,7 @@ module Kubernetes
     end
 
     def set_namespace
-      return if template.dig(:metadata, :labels, :'kubernetes.io/cluster-service') == 'true'
-      return if template.dig(:metadata, :annotations, :'samson/keep_namespace') == 'true'
+      return if template[:metadata].key?(:namespace)
       template[:metadata][:namespace] = @doc.deploy_group.kubernetes_namespace
     end
 

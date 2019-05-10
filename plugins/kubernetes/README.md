@@ -190,12 +190,11 @@ Set `KUBERNETES_NO_CPU_LIMIT_ALLOWED=1`, see [#2820](https://github.com/zendesk/
 Knowing which team owns each component is useful, set `KUBERNETES_ENFORCE_TEAMS=true`
 to make all kubernetes deploys that do not use a `metadata.labels.team` / `spec.template.metadata.labels.team` fail.
 
-### Using custom namespace
+### Resources without namespace
 
-Samson overrides each resources namespace with to the deploygroups `kubernetes_namespace`.
+Samson sets namespaces to the deploygroups `kubernetes_namespace` if no `metadata.namespace` is set in the resource.
 
-To make Samson not override the namespace, set `metadata.annotations.samson/keep_namespace: 'true'`
-(or `metadata.labels.kubernetes.io/cluster-service: 'true'`)
+For namespace-less resources, set `metadata.namespace:` (which will result in `nil`)
 
 ### Using custom resource names
 

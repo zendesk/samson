@@ -252,18 +252,6 @@ describe Kubernetes::RoleValidator do
       errors.must_include "Needs apiVersion specified"
     end
 
-    describe "#validate_namespace" do
-      it "reports non-unique namespaces since that would break pod fetching" do
-        role.first[:metadata][:namespace] = "default"
-        errors.to_s.must_include "Namespaces need to be unique"
-      end
-
-      it "allows only namespace-less resources" do
-        role.each { |r| r[:kind] = "ClusterRole" }
-        errors.must_be_nil
-      end
-    end
-
     describe "#validate_name_kinds_are_unique" do
       before { role.each { |r| r[:kind] = "foo" } }
 
