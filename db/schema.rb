@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_05_08_231523) do
+ActiveRecord::Schema.define(version: 2019_05_10_213218) do
 
   create_table "audits" do |t|
     t.integer "auditable_id", null: false
@@ -235,6 +235,14 @@ ActiveRecord::Schema.define(version: 2019_05_08_231523) do
     t.index ["project_id", "deploy_group_id", "kubernetes_role_id"], name: "index_kubernetes_deploy_group_roles_on_project_dg_kr", unique: true
   end
 
+  create_table "kubernetes_namespaces" do |t|
+    t.string "name", null: false
+    t.string "comment", limit: 512
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_kubernetes_namespaces_on_name", unique: true, length: 191
+  end
+
   create_table "kubernetes_release_docs", id: :integer do |t|
     t.integer "kubernetes_role_id", null: false
     t.integer "kubernetes_release_id", null: false
@@ -405,7 +413,9 @@ ActiveRecord::Schema.define(version: 2019_05_08_231523) do
     t.boolean "jenkins_status_checker", default: false, null: false
     t.boolean "use_env_repo", default: false, null: false
     t.integer "kubernetes_rollout_timeout"
+    t.integer "kubernetes_namespace_id"
     t.index ["build_command_id"], name: "index_projects_on_build_command_id"
+    t.index ["kubernetes_namespace_id"], name: "index_projects_on_kubernetes_namespace_id"
     t.index ["permalink"], name: "index_projects_on_permalink", unique: true, length: 191
     t.index ["token"], name: "index_projects_on_token", unique: true, length: 191
   end

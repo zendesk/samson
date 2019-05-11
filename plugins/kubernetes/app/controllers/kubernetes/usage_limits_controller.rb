@@ -3,7 +3,7 @@ class Kubernetes::UsageLimitsController < ResourceController
   ALL = 'all'
 
   before_action :authorize_admin!, except: [:show, :index]
-  before_action :set_resource, only: [:show, :edit, :update, :destroy, :new, :create]
+  before_action :set_resource, only: [:show, :update, :destroy, :new, :create]
 
   def index
     if project_id = params[:project_id]

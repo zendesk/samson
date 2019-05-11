@@ -32,5 +32,6 @@ Samson::Application.routes.draw do
       end
     end
     resources :usage_limits, except: [:edit]
+    resources :namespaces, except: [:edit]
   end
 end
