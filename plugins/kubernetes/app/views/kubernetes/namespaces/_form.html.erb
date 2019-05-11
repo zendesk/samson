@@ -1,3 +1,5 @@
+<%= breadcrumb Kubernetes::Namespace, (@kubernetes_namespace.new_record? ? "New" : @kubernetes_namespace) %>
+
 <section>
   <%= form_for @kubernetes_namespace, html: { class: "form-horizontal" } do |form| %>
     <%= render 'shared/errors', object: form.object %>

@@ -43,6 +43,7 @@ describe Kubernetes::NamespacesController do
       before { Kubernetes::Cluster.any_instance.stubs(connection_valid?: true) } # avoid real connection
 
       it "redirects on success" do
+        @controller.expects(:create_callback)
         post :create, params: {kubernetes_namespace: {name: "foo"}}
         namespace = Kubernetes::Namespace.find_by_name!("foo")
         assert_redirected_to "http://test.host/kubernetes/namespaces/#{namespace.id}"
@@ -81,6 +82,43 @@ describe Kubernetes::NamespacesController do
           delete :destroy, params: {id: namespace.id}
           assert_redirected_to "/kubernetes/namespaces"
         end
+      end
+    end
+
+    describe "#create_callback" do
+      before { @controller.instance_variable_set(:@kubernetes_namespace, namespace) }
+
+      it "creates a namespace" do
+        assert_request(:get, "http://foobar.server/api/v1/namespaces/test", to_return: {status: 404}) do
+          assert_request(:post, "http://foobar.server/api/v1/namespaces", to_return: {body: "{}"}) do
+            @controller.send(:create_callback)
+          end
+        end
+        flash[:alert].must_be_nil
+      end
+
+      it "shows creation errors" do
+        assert_request(:get, "http://foobar.server/api/v1/namespaces/test", to_return: {status: 404}) do
+          assert_request(:post, "http://foobar.server/api/v1/namespaces", to_timeout: [], times: 4) do
+            @controller.send(:create_callback)
+          end
+        end
+        flash[:alert].must_equal <<~TEXT.rstrip
+          <p>Error creating namespace in some clusters:
+          <br />Failed to create namespace in cluster test: Timed out connecting to server</p>
+        TEXT
+      end
+
+      it "adds annotation if namespace exists" do
+        assert_request(:get, "http://foobar.server/api/v1/namespaces/test", to_return: {body: "{}"}) do
+          assert_request(:patch, "http://foobar.server/api/v1/namespaces/test", to_return: {body: "{}"}) do
+            @controller.send(:create_callback)
+          end
+        end
+        flash[:alert].must_equal <<~TEXT.rstrip
+          <p>Error creating namespace in some clusters:
+          <br />Namespace already exists in cluster test</p>
+        TEXT
       end
     end
   end
