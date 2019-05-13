@@ -40,7 +40,8 @@ class ActiveSupport::TestCase
   def kubernetes_fake_raw_template
     role = Kubernetes::RoleConfigFile.new(
       read_kubernetes_sample_file('kubernetes_deployment.yml'),
-      'config/app_server.yml'
+      'config/app_server.yml',
+      namespace: nil
     )
     Kubernetes::ReleaseDoc.any_instance.stubs(raw_template: role.elements)
   end

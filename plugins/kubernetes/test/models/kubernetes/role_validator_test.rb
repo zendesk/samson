@@ -40,10 +40,12 @@ describe Kubernetes::RoleValidator do
       ]
     end
     let(:role_json) { role.to_json }
-    let(:errors) do
+    let(:namespace) { "foo" }
+    let(:validator) do
       elements = Kubernetes::Util.parse_file(role_json, 'fake.json').map(&:deep_symbolize_keys)
-      Kubernetes::RoleValidator.new(elements).validate
+      Kubernetes::RoleValidator.new(elements, namespace: namespace)
     end
+    let(:errors) { validator.validate }
 
     it "works" do
       errors.must_be_nil
@@ -67,12 +69,13 @@ describe Kubernetes::RoleValidator do
 
     it "fails nicely with false" do
       elements = Kubernetes::Util.parse_file('---', 'fake.yml')
-      errors = Kubernetes::RoleValidator.new(elements).validate
+      errors = Kubernetes::RoleValidator.new(elements, namespace: namespace).validate
       errors.must_equal ["No content found"]
     end
 
     it "fails nicely with bad template" do
-      Kubernetes::RoleValidator.new(["bad", {kind: "Good"}]).validate.must_equal ["Only hashes supported"]
+      Kubernetes::RoleValidator.new(["bad", {kind: "Good"}], namespace: namespace).
+        validate.must_equal ["Only hashes supported"]
     end
 
     it "allows invalid types" do
@@ -166,7 +169,6 @@ describe Kubernetes::RoleValidator do
       it "allows #{kind} to not have a namespace" do
         role[0][:metadata].delete(:namespace)
         role[0][:kind] = kind
-        role[1][:metadata][:namespace] = 'other'
         refute errors
       end
     end
@@ -250,6 +252,36 @@ describe Kubernetes::RoleValidator do
     it "fails when apiVersion is missing" do
       role[1].delete(:apiVersion)
       errors.must_include "Needs apiVersion specified"
+    end
+
+    describe "#validate_namespace" do
+      it "passes with correct namespaces" do
+        role.each { |e| e[:metadata][:namespace] = "foo" }
+        errors.must_equal nil
+      end
+
+      it "passes without namespaces" do
+        role.each { |e| e[:metadata].delete(:namespace) }
+        errors.must_equal nil
+      end
+
+      it "fails with forced default namespace" do
+        role[0][:metadata][:namespace] = nil
+        errors.must_equal ["Only use namespace \"foo\", not [nil]"]
+      end
+
+      describe "with invalid namespace" do
+        before { role[0][:metadata][:namespace] = "bar" }
+
+        it "passes when namespace is not configured" do
+          validator.instance_variable_set(:@namespace, nil)
+          errors.must_equal nil
+        end
+
+        it "fails with invalid namespace" do
+          errors.must_equal ["Only use namespace \"foo\", not [\"bar\"]"]
+        end
+      end
     end
 
     describe "#validate_name_kinds_are_unique" do
@@ -508,7 +540,7 @@ describe Kubernetes::RoleValidator do
 
   describe '.map_attributes' do
     def call(path, elements)
-      Kubernetes::RoleValidator.new(elements).send(:map_attributes, path)
+      Kubernetes::RoleValidator.new(elements, namespace: nil).send(:map_attributes, path)
     end
 
     it "finds simple" do

@@ -144,7 +144,7 @@ module Kubernetes
       @raw_template ||= begin
         file = kubernetes_role.config_file
         content = kubernetes_release.project.repository.file_content(file, kubernetes_release.git_sha)
-        RoleConfigFile.new(content, file).elements
+        RoleConfigFile.new(content, file, namespace: kubernetes_release.project.kubernetes_namespace&.name).elements
       end
     end
   end

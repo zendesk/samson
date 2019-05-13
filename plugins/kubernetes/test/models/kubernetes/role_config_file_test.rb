@@ -5,19 +5,19 @@ SingleCov.covered!
 
 describe Kubernetes::RoleConfigFile do
   let(:content) { read_kubernetes_sample_file('kubernetes_deployment.yml') }
-  let(:config_file) { Kubernetes::RoleConfigFile.new(content, 'some-file.yml') }
+  let(:config_file) { Kubernetes::RoleConfigFile.new(content, 'some-file.yml', namespace: nil) }
 
   describe "#initialize" do
     it "fails with a message that points to the broken file" do
       e = assert_raises Samson::Hooks::UserError do
-        Kubernetes::RoleConfigFile.new(content, 'some-file.json')
+        Kubernetes::RoleConfigFile.new(content, 'some-file.json', namespace: nil)
       end
       e.message.must_include 'some-file.json'
     end
 
     it "fails when empty" do
       e = assert_raises Samson::Hooks::UserError do
-        Kubernetes::RoleConfigFile.new("", 'some-file.json')
+        Kubernetes::RoleConfigFile.new("", 'some-file.json', namespace: nil)
       end
       e.message.must_include 'some-file.json'
     end

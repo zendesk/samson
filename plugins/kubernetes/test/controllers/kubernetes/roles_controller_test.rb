@@ -57,7 +57,7 @@ describe Kubernetes::RolesController do
 
         # verify that the template is valid
         template = response.body[/<pre>(.*)<\/pre>/m, 1]
-        Kubernetes::RoleConfigFile.new(template, 'app-server.yml')
+        Kubernetes::RoleConfigFile.new(template, 'app-server.yml', namespace: nil)
       end
     end
   end
