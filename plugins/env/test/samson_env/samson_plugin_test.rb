@@ -10,14 +10,9 @@ describe SamsonEnv do
 
   describe :project_permitted_params do
     it "adds params" do
-      Samson::Hooks.fire(:project_permitted_params).must_include(
-        [
-          {
-            environment_variables_attributes: [:name, :value, :scope_type_and_id, :_destroy, :id],
-            environment_variable_group_ids: []
-          },
-          :use_env_repo
-        ]
+      Samson::Hooks.fire(:project_permitted_params).flatten.must_include(
+        environment_variables_attributes: [:name, :value, :scope_type_and_id, :_destroy, :id],
+        environment_variable_group_ids: []
       )
     end
   end

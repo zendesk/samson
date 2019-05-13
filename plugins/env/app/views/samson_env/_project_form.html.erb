@@ -15,6 +15,15 @@
     %>
   <% end %>
 
+  <% if defined?(EnvironmentVariable) && folder = EnvironmentVariable.config_service_folder(@project, required: false) %>
+    <%= form.input(
+        :config_service,
+        label: "Use Config service",
+        help: "Use config service to manage deployment environment variables, base url is #{folder}"
+      )
+    %>
+  <% end %>
+
   <% scopes = Environment.env_deploy_group_array %>
   <% sorted_env_vars = EnvironmentVariable.sort_by_scopes(form.object.environment_variables, scopes) %>
   <% sorted_env_vars << EnvironmentVariable.new %>

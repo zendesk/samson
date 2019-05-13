@@ -157,5 +157,4 @@
       setupEnvGroupPreview($(input));
     });
   });
-
 }());
