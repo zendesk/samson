@@ -30,7 +30,7 @@ module Kubernetes
       (resource[:spec] || {}).keys.grep(/template$/i)
     end
 
-    def initialize(content, path)
+    def initialize(content, path, **args)
       @path = path
 
       if content.blank?
@@ -43,7 +43,7 @@ module Kubernetes
         raise Samson::Hooks::UserError, "Error found when parsing #{path}\n#{$!.message}"
       end
 
-      if errors = Kubernetes::RoleValidator.new(@elements).validate
+      if errors = Kubernetes::RoleValidator.new(@elements, **args).validate
         raise Samson::Hooks::UserError, "Error found when validating #{path}\n#{errors.join("\n")}"
       end
     end

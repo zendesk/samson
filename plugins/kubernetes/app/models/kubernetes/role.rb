@@ -104,7 +104,7 @@ module Kubernetes
       project.kubernetes_roles.not_deleted.select do |role|
         path = role.config_file
         next unless file_contents = project.repository.file_content(path, git_sha)
-        Kubernetes::RoleConfigFile.new(file_contents, path) # run validations
+        Kubernetes::RoleConfigFile.new(file_contents, path, namespace: nil) # run validations
       end
     end
 
@@ -140,12 +140,9 @@ module Kubernetes
     end
 
     def role_config_file(reference)
-      return unless raw_template = project.repository.file_content(config_file, reference, pull: false)
-      begin
-        RoleConfigFile.new(raw_template, config_file)
-      rescue Samson::Hooks::UserError
-        nil
-      end
+      self.class.role_config_file(project, config_file, reference)
+    rescue Samson::Hooks::UserError
+      nil
     end
 
     def manual_deletion_required?
@@ -173,11 +170,15 @@ module Kubernetes
         folder = 'kubernetes'
         files = project.repository.file_content(folder, git_ref).
           to_s.split("\n").
-          map { |f| "#{folder}/#{f}" }
+          map! { |f| "#{folder}/#{f}" }.
+          grep(/\.(yml|yaml|json)$/)
 
-        files.grep(/\.(yml|yaml|json)$/).map do |path|
-          Kubernetes::RoleConfigFile.new(project.repository.file_content(path, git_ref), path)
-        end.compact
+        files.map! { |path| role_config_file(project, path, git_ref) }
+      end
+
+      def role_config_file(project, path, git_ref)
+        return unless raw_template = project.repository.file_content(path, git_ref, pull: false)
+        Kubernetes::RoleConfigFile.new(raw_template, path, namespace: project.kubernetes_namespace&.name)
       end
     end
   end

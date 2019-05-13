@@ -16,7 +16,8 @@ module Kubernetes
     # we either generate multiple names or allow custom names
     ALLOWED_DUPLICATE_KINDS = ((['Service'] + IMMUTABLE_NAME_KINDS)).freeze
 
-    def initialize(elements)
+    def initialize(elements, namespace:)
+      @namespace = namespace
       @elements = elements.compact
     end
 
@@ -25,6 +26,7 @@ module Kubernetes
       return ["No content found"] if @elements.blank?
       return ["Only hashes supported"] unless @elements.all? { |e| e.is_a?(Hash) }
       validate_name
+      validate_namespace
       validate_name_kinds_are_unique
       validate_single_primary_kind
       validate_api_version
@@ -78,6 +80,17 @@ module Kubernetes
 
     def validate_name
       @errors << "Needs a metadata.name" unless map_attributes([:metadata, :name]).all?
+    end
+
+    def validate_namespace
+      return unless @namespace
+
+      namespaces = []
+      @elements.each { |e| namespaces << e.dig(:metadata, :namespace) if e[:metadata].key?(:namespace) }
+      namespaces.uniq!
+      return if namespaces.empty? || namespaces == [@namespace]
+
+      @errors << "Only use namespace #{@namespace.inspect}, not #{namespaces.inspect}"
     end
 
     # multiple pods in a single role will make validations misbehave (recommend they all have the same role etc)
