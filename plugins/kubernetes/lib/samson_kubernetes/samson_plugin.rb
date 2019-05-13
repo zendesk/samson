@@ -70,6 +70,12 @@ Samson::Hooks.callback(:link_parts_for_resource) do
     ->(limit) { ["Limit for #{limit.scope&.name} on #{limit.project&.name || "All"}", limit] }
   ]
 end
+Samson::Hooks.callback(:link_parts_for_resource) do
+  [
+    "Kubernetes::Namespace",
+    ->(namespace) { [namespace.name, namespace] }
+  ]
+end
 
 Samson::Hooks.callback(:deploy_group_includes) { :kubernetes_cluster }
 

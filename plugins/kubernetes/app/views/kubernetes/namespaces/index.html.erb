@@ -1,0 +1,28 @@
+<%= page_title "Kubernetes Namespaces" %>
+
+<br/>
+
+<section class="tabs kubernetes-section clearfix">
+  <div class="table table-hover table-condensed">
+    <table class="table">
+      <tr>
+        <th>Name</th>
+        <th></th>
+      </tr>
+
+      <% @kubernetes_namespaces.each do |namespace| %>
+        <tr>
+          <td><%= namespace.name %></td>
+          <td><%= link_to "Edit", namespace %></td>
+        </tr>
+      <% end %>
+    </table>
+  </div>
+
+  <div class="admin-actions">
+    <div class="pull-right">
+      <%= link_to "New", new_kubernetes_namespace_path, class: "btn btn-default" %>
+    </div>
+  </div>
+</section>
+

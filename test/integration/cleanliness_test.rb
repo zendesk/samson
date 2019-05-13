@@ -77,7 +77,8 @@ describe "cleanliness" do
       ["webhooks", "branch"]
     ]
 
-    assert bad.empty?, bad.map! { |table, string| "#{table} #{string} has an index without length" }.join("\n")
+    bad.map! { |table, string| "#{table} #{string} has a string index without length" }.join("\n")
+    assert bad.empty?, bad
   end
 
   it "does not have 3-state booleans (nil/false/true)" do
@@ -247,7 +248,7 @@ describe "cleanliness" do
       controller = f.sub('test/', 'app/').sub('_test.rb', '.rb')
       public_section = File.read(controller).split(/  (protected|private)$/).first
       controller_actions = public_section.scan(/def ([\w_]+)/).flatten - ['self']
-      raise "No actions in #{f} !?" if controller_actions.empty?
+      raise "No actions in #{f} !?" if controller_actions.empty? && !public_section.include?("< ResourceController")
 
       # find all actions tested to be unauthorized, viewer accessible, or public accessible
       test = File.read(f)
