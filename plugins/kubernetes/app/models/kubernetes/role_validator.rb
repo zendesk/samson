@@ -16,8 +16,8 @@ module Kubernetes
     # we either generate multiple names or allow custom names
     ALLOWED_DUPLICATE_KINDS = ((['Service'] + IMMUTABLE_NAME_KINDS)).freeze
 
-    def initialize(elements, namespace:)
-      @namespace = namespace
+    def initialize(elements, project:)
+      @project = project
       @elements = elements.compact
     end
 
@@ -82,15 +82,17 @@ module Kubernetes
       @errors << "Needs a metadata.name" unless map_attributes([:metadata, :name]).all?
     end
 
+    # not setting a namespace is safe to ignore, because teplate-filler overrides it with the configured namespace
+    # and that either sets the namespace or is ignored for namespace-less resources
     def validate_namespace
-      return unless @namespace
+      return unless namespace = @project&.kubernetes_namespace&.name
 
       namespaces = []
       @elements.each { |e| namespaces << e.dig(:metadata, :namespace) if e[:metadata].key?(:namespace) }
       namespaces.uniq!
-      return if namespaces.empty? || namespaces == [@namespace]
+      return if namespaces.empty? || namespaces == [namespace]
 
-      @errors << "Only use namespace #{@namespace.inspect}, not #{namespaces.inspect}"
+      @errors << "Only use configured namespace #{namespace.inspect}, not #{namespaces.inspect}"
     end
 
     # multiple pods in a single role will make validations misbehave (recommend they all have the same role etc)
@@ -103,7 +105,10 @@ module Kubernetes
     # template_filler.rb sets name for everything except for IMMUTABLE_NAME_KINDS, keep_name, and Service
     # we make sure users dont use the same name on the same kind twice, to avoid them overwriting each other
     def validate_name_kinds_are_unique
-      # ignore service if we generate their names
+      # do not validate on global since we hope to be on namespace soon
+      return if !@project || !@project.override_resource_names?
+
+      # ignore service since we generate their names
       elements = @elements.reject { |e| !e[:kind] || (e[:kind] == "Service" && !self.class.keep_name?(e)) }
 
       # group by kind+name and to sure we have no duplicates

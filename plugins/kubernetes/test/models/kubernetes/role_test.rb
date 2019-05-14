@@ -239,6 +239,14 @@ describe Kubernetes::Role do
       names = Kubernetes::Role.all.map(&:service_name)
       names.last.must_match /#{existing_name}-change-me-\d+/
     end
+
+    it "does not see service or resource when using manual naming" do
+      project.create_kubernetes_namespace!(name: "foo")
+      write_config 'kubernetes/a.json', config_content.to_json
+      Kubernetes::Role.seed! project, 'HEAD'
+      project.kubernetes_roles.map(&:resource_name).must_equal [nil]
+      project.kubernetes_roles.map(&:service_name).must_equal [nil]
+    end
   end
 
   describe '.configured_for_project' do

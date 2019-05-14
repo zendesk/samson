@@ -90,26 +90,14 @@ module Kubernetes
 
     def add_pod_disruption_budget
       return unless deployment = raw_template.detect { |r| ["Deployment", "StatefulSet"].include? r[:kind] }
+      return unless target = disruption_budget_target(deployment)
 
-      min_available = deployment.dig(:metadata, :annotations, :"samson/minAvailable")
-      return if min_available == "disabled"
-
-      # NOTE: this is a bit of overhead for 0 or 1 replica deployments, but we don't know if a bad budget existed before
-      min_available ||= ENV["KUBERNETES_AUTO_MIN_AVAILABLE"]
-      return unless min_available
-
-      target = if percent = min_available.to_s[/\A(\d+)\s*%\z/, 1] # "30%" -> 30 / "30 %" -> 30
-        percent = Integer(percent)
-        if percent >= 100
-          raise Samson::Hooks::UserError, "minAvailable of >= 100% would result in eviction deadlock, pick lower"
+      name =
+        if kubernetes_release.project.override_resource_names?
+          kubernetes_role.resource_name
         else
-          [((replica_target.to_f / 100) * percent).ceil, replica_target - 1].min
+          deployment.dig(:metadata, :name)
         end
-      else
-        [replica_target - 1, Integer(min_available)].min
-      end
-      target = 0 if target < 0
-
       annotations = (deployment.dig(:metadata, :annotations) || {}).dup
       annotations[:"samson/updateTimestamp"] = Time.now.utc.iso8601
 
@@ -117,7 +105,7 @@ module Kubernetes
         apiVersion: "policy/v1beta1",
         kind: "PodDisruptionBudget",
         metadata: {
-          name: kubernetes_role.resource_name,
+          name: name,
           labels: deployment.dig_fetch(:metadata, :labels).dup,
           annotations: annotations
         },
@@ -133,6 +121,28 @@ module Kubernetes
       raw_template << budget
     end
 
+    def disruption_budget_target(deployment)
+      min_available = deployment.dig(:metadata, :annotations, :"samson/minAvailable")
+      return if min_available == "disabled"
+
+      # NOTE: overhead for 0 or 1 replica deployments, but we don't know if a bad budget existed before
+      min_available ||= ENV["KUBERNETES_AUTO_MIN_AVAILABLE"]
+      return unless min_available
+
+      target = if percent = min_available.to_s[/\A(\d+)\s*%\z/, 1] # "30%" -> 30 / "30 %" -> 30
+        percent = Integer(percent)
+        if percent >= 100
+          raise Samson::Hooks::UserError, "minAvailable of >= 100% would result in eviction deadlock, pick lower"
+        else
+          [((replica_target.to_f / 100) * percent).ceil, replica_target - 1].min
+        end
+      else
+        [replica_target - 1, Integer(min_available)].min
+      end
+      target = 0 if target < 0
+      target
+    end
+
     def validate_config_file
       return unless kubernetes_role
       raw_template # trigger RoleConfigFile validations
@@ -144,7 +154,7 @@ module Kubernetes
       @raw_template ||= begin
         file = kubernetes_role.config_file
         content = kubernetes_release.project.repository.file_content(file, kubernetes_release.git_sha)
-        RoleConfigFile.new(content, file, namespace: kubernetes_release.project.kubernetes_namespace&.name).elements
+        RoleConfigFile.new(content, file, project: kubernetes_release.project).elements
       end
     end
   end

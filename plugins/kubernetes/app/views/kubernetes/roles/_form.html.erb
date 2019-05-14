@@ -5,11 +5,13 @@
   <fieldset>
     <%= form.input :name %>
     <%= form.input :config_file %>
-    <%= form.input :service_name, help: "Override service name with this name. Uses name from yml file if it starts with this name." %>
-    <%= form.input :resource_name,
-        pattern: Kubernetes::RoleValidator::VALID_LABEL_VALUE,
-        help: "Name for the resource this role will create (service/job), a-Z 0-9 and -"
-    %>
+    <% if @project.override_resource_names? %>
+      <%= form.input :service_name, help: "Override service name with this name. Uses name from yml file if it starts with this name." %>
+      <%= form.input :resource_name,
+          pattern: Kubernetes::RoleValidator::VALID_LABEL_VALUE,
+          help: "Name for the resource this role will create (service/job), a-Z 0-9 and -"
+      %>
+    <% end %>
     <% if @kubernetes_role.manual_deletion_required? %>
       <div class="alert-danger">
         <%= form.input :manual_deletion_acknowledged, as: :check_box, label: "I will manually delete the changed resource/service from all deploy groups before deploying (this will cause a short outage, deleting after deploying will result in undefined behavior with 2 copies running)" %>

@@ -40,12 +40,11 @@ module Kubernetes
             set_history_limit
           end
 
-          set_replica_target || validate_replica_target_is_supported
-
           make_stateful_set_match_service if kind == 'StatefulSet'
           set_pre_stop if kind == 'Deployment'
 
           set_name
+          set_replica_target || validate_replica_target_is_supported
           set_spec_template_metadata
           set_docker_image unless verification
           set_resource_usage
@@ -157,7 +156,7 @@ module Kubernetes
     end
 
     def set_service_name
-      return if Kubernetes::RoleValidator.keep_name?(template)
+      return if !project.override_resource_names? || Kubernetes::RoleValidator.keep_name?(template)
       template[:metadata][:name] = generate_service_name(template[:metadata][:name])
     end
 
@@ -193,14 +192,16 @@ module Kubernetes
       template[:spec][:clusterIP] = ip.join('.')
     end
 
+    # assumed to be validated by role_validator
     def set_namespace
       return if template[:metadata].key?(:namespace)
-      template[:metadata][:namespace] = @doc.deploy_group.kubernetes_namespace
+      template[:metadata][:namespace] = project.kubernetes_namespace&.name || @doc.deploy_group.kubernetes_namespace
     end
 
     # If the user renames the service the StatefulSet will not match it, so we fix.
     # Will not work with multiple services ... but that usecase hopefully does not exist.
     def make_stateful_set_match_service
+      return unless project.override_resource_names?
       return unless template[:spec][:serviceName]
       return unless service_name = @doc.kubernetes_role.service_name.presence
       template[:spec][:serviceName] = service_name
@@ -328,17 +329,18 @@ module Kubernetes
       return if @doc.replica_target == 1 || (@doc.replica_target == 0 && @doc.delete_resource)
       raise(
         Samson::Hooks::UserError,
-        "#{template[:kind]} #{@doc.kubernetes_role.resource_name} is set to #{@doc.replica_target} replicas, " \
+        "#{template[:kind]} #{template.dig(:metadata, :name)} is set to #{@doc.replica_target} replicas, " \
         "which is not supported. Set it to 1 replica to keep deploying it or marked it for deletion."
       )
     end
 
     def set_name
-      name = if Kubernetes::RoleValidator.keep_name?(template)
-        template.dig_fetch(:metadata, :name)
-      else
-        @doc.kubernetes_role.resource_name
-      end
+      name =
+        if !project.override_resource_names? || Kubernetes::RoleValidator.keep_name?(template)
+          template.dig_fetch(:metadata, :name)
+        else
+          @doc.kubernetes_role.resource_name
+        end
       name += "-#{blue_green_color}" if blue_green_color
       template.dig_set [:metadata, :name], name
     end

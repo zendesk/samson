@@ -280,7 +280,7 @@ ActiveRecord::Schema.define(version: 2019_05_14_231932) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
-    t.string "resource_name", null: false
+    t.string "resource_name"
     t.boolean "autoscaled", default: false, null: false
     t.boolean "blue_green", default: false, null: false
     t.index ["project_id"], name: "index_kubernetes_roles_on_project_id"

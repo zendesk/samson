@@ -158,6 +158,12 @@ describe Kubernetes::ReleaseDoc do
         create!.resource_template[2][:metadata][:namespace].must_equal 'default'
       end
 
+      it "keeps name when using custom namespace" do
+        doc.kubernetes_release.project.create_kubernetes_namespace!(name: "foo")
+        template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '30%'}
+        create!.resource_template[2][:metadata][:name].must_equal 'some-project-rc'
+      end
+
       it "supports multiproject" do
         metadata = template.dig(0, :metadata)
         metadata[:annotations] = {"samson/minAvailable": '30%', "samson/override_project_label": "true"}
