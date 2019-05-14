@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_05_10_213218) do
+ActiveRecord::Schema.define(version: 2019_05_14_215712) do
 
   create_table "audits" do |t|
     t.integer "auditable_id", null: false
@@ -455,8 +455,8 @@ ActiveRecord::Schema.define(version: 2019_05_10_213218) do
     t.integer "project_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["key"], name: "index_secret_sharing_grants_on_key", length: 50
-    t.index ["project_id", "key"], name: "index_secret_sharing_grants_on_project_id_and_key", unique: true, length: { key: 50 }
+    t.index ["key"], name: "index_secret_sharing_grants_on_key", length: 191
+    t.index ["project_id", "key"], name: "index_secret_sharing_grants_on_project_id_and_key", unique: true, length: { key: 160 }
   end
 
   create_table "secrets", id: false do |t|
