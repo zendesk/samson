@@ -56,8 +56,8 @@ class Command < ActiveRecord::Base
   def ensure_unused
     return if project&.deleted_at
     if usage_ids.any?
-      errors.add(:base, 'Can only delete when unused.')
-      throw(:abort)
+      errors.add :base, 'Can only delete when unused.'
+      throw :abort
     end
   end
 end

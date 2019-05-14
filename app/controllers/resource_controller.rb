@@ -91,7 +91,7 @@ class ResourceController < ApplicationController
           redirect_to(redirect_to_from_params || resources_path, notice: "Destroyed!")
         else
           error_message = <<~TEXT
-            #{resource_class.name} could not be destroyed because:
+            #{resource_class.name.split("::").last} could not be destroyed because:
             #{@resource.errors.full_messages.join(', ')}
           TEXT
 

@@ -48,13 +48,16 @@ module Samson
       end
     end
 
-    def actions(delete: false, history: false, label: 'Save', &block)
+    def actions(delete: false, delete_help: nil, history: false, label: 'Save', &block)
       content_tag :div, class: "form-group" do
         content_tag :div, class: "col-lg-offset-2 col-lg-10" do
           content = submit label, class: "btn btn-primary"
           resource = (delete.is_a?(Array) ? delete : object) # TODO: remove array support
           if object.persisted?
-            content << SPACER << @template.link_to_delete(resource, type_to_delete: (delete == :type)) if delete
+            if delete
+              content << SPACER << @template.link_to_delete(resource, type_to_delete: (delete == :type))
+              content << SPACER << @template.additional_info(delete_help) if delete_help
+            end
             content << (delete ? SEPARATOR : SPACER) << @template.link_to_history(resource) if history
           end
           content << @template.capture(&block) if block

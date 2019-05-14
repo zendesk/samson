@@ -140,6 +140,11 @@ describe Samson::FormBuilder do
       builder.actions(delete: [:admin, commands(:echo)]).must_include "Delete"
     end
 
+    it "can add help text to delete" do
+      template.expects(:url_for).with(builder.object).returns('/xxx')
+      builder.actions(delete: true, delete_help: "Bar").must_include 'data-content="Bar"'
+    end
+
     it "can include type_to_delete link" do
       template.expects(:url_for).with(builder.object).returns('/xxx')
       builder.actions(delete: :type).must_include "type-to-delete"

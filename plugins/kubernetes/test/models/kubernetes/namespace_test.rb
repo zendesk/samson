@@ -16,4 +16,15 @@ describe Kubernetes::Namespace do
       refute_valid namespace
     end
   end
+
+  describe "#ensure_unused" do
+    it "allows deletion when unused" do
+      assert namespace.destroy
+    end
+
+    it "does not allow deletion when used" do
+      namespace.projects << projects(:test)
+      refute namespace.destroy
+    end
+  end
 end
