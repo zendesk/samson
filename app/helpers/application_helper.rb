@@ -57,12 +57,13 @@ module ApplicationHelper
     items = items.map do |item|
       if item.is_a?(ActiveRecord::Base)
         link_parts_for_resource(item)
+      elsif item.is_a?(Class) && item < ActiveRecord::Base
+        [item.name.split("::").last.pluralize, item]
       else
         case item
         when String then [item, nil]
         when Array then item
-        else
-          raise ArgumentError, "Unsupported breadcrumb for #{item}"
+        else raise ArgumentError, "Unsupported breadcrumb for #{item}"
         end
       end
     end
