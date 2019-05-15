@@ -568,7 +568,7 @@ describe DeploysController do
       it "cancels the deploy" do
         Deploy.any_instance.expects(:cancel).once
         delete :destroy, params: {project_id: project.to_param, id: deploy.to_param}
-        flash[:error].must_be_nil
+        flash[:alert].must_be_nil
       end
     end
   end

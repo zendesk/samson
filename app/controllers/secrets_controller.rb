@@ -36,7 +36,7 @@ class SecretsController < ApplicationController
     end
     @pagy, @secrets = pagy_array(@secrets, page: params[:page], items: 50)
   rescue Samson::Secrets::BackendError => e
-    flash[:error] = e.message
+    flash[:alert] = e.message
     render html: "", layout: true
   end
 
@@ -151,7 +151,7 @@ class SecretsController < ApplicationController
   end
 
   def failure_response(message)
-    flash[:error] = message
+    flash[:alert] = message
     render :show
   end
 

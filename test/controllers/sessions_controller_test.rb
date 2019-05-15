@@ -85,7 +85,7 @@ describe SessionsController do
       it 'is not allowed to view anything' do
         @controller.send(:current_user).must_be_nil
         assert_template :new
-        request.flash[:error].wont_be_nil
+        request.flash[:alert].wont_be_nil
       end
     end
 
@@ -94,7 +94,7 @@ describe SessionsController do
       let(:role_id) { 1234 } # make new user invalid
 
       it 'does not log in' do
-        assert flash[:error]
+        assert flash[:alert]
         @controller.send(:current_user).must_be_nil
         assert_redirected_to root_path
       end
@@ -184,7 +184,7 @@ describe SessionsController do
       end
 
       it "sets a flash error" do
-        request.flash[:error].wont_be_nil
+        request.flash[:alert].wont_be_nil
       end
     end
   end
@@ -262,7 +262,7 @@ describe SessionsController do
       end
 
       it "sets a flash error" do
-        request.flash[:error].wont_be_nil
+        request.flash[:alert].wont_be_nil
       end
     end
   end
@@ -346,7 +346,7 @@ describe SessionsController do
       end
 
       it "sets a flash error" do
-        request.flash[:error].wont_be_nil
+        request.flash[:alert].wont_be_nil
       end
     end
 
@@ -437,7 +437,7 @@ describe SessionsController do
       end
 
       it "sets a flash error" do
-        request.flash[:error].wont_be_nil
+        request.flash[:alert].wont_be_nil
       end
     end
   end
@@ -518,7 +518,7 @@ describe SessionsController do
     end
 
     it "sets a flash error" do
-      request.flash[:error].wont_be_nil
+      request.flash[:alert].wont_be_nil
     end
   end
 
