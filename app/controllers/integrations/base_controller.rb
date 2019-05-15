@@ -73,7 +73,12 @@ class Integrations::BaseController < ApplicationController
   end
 
   def project
-    @project ||= Project.find_by_token(params[:token])
+    @project ||= begin
+      token = params[:token].to_s
+      scope = Project.where(token: token)
+      scope = scope.where(permalink: params[:project]) if params[:project]
+      scope.first
+    end
   end
 
   def contains_skip_token?(message)
@@ -105,6 +110,7 @@ class Integrations::BaseController < ApplicationController
     project || render(json: {deploy_ids: [], messages: 'Invalid token'}, status: :unauthorized)
   end
 
+  # rails removes filter_parameters from params, but not from paths
   def hide_token
     request.env["PATH_INFO"] =
       request.env["PATH_INFO"].sub(params[:token], "hidden-#{project&.permalink || "project-not-found"}-token")

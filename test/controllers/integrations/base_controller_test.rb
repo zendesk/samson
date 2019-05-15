@@ -154,6 +154,18 @@ describe Integrations::BaseController do
       @controller.request.env["PATH_INFO"].must_equal "/test/hidden-project-not-found-token"
     end
 
+    describe "project tokens" do
+      it "creates with project scoped token" do
+        post :create, params: {test_route: true, token: token, project: project.permalink}
+        assert_response :success
+      end
+
+      it "fails with incorrectly project scoped token" do
+        post :create, params: {test_route: true, token: token, project: "wut"}
+        assert_response :unauthorized
+      end
+    end
+
     describe "when deploy hooks are setup" do
       let(:deploy1) { deploys(:succeeded_test) }
       let(:deploy2) { deploys(:succeeded_production_test) }

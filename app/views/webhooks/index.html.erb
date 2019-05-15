@@ -14,6 +14,7 @@
 
     <dl>
       <% Samson::Integration::SOURCES.each do |source| %>
+        <% token_args = [@project.token, {project: @project.permalink}] %>
         <dt>
           <% if source == 'generic' %>
             <details>
@@ -22,7 +23,7 @@
               <pre><%= <<~TEXT
                 curl -H 'Content-Type: application/json' \\
                   -d '{"deploy":{"branch":"master","commit":{"sha":"abc","message":"hi"}}}' \\
-                  #{integrations_generic_deploy_url(@project.token)}
+                  #{integrations_generic_deploy_url(*token_args)}
                TEXT
               %></pre>
             </details>
@@ -31,11 +32,12 @@
           <% end %>
         </dt>
         <dd>
-          <%= send("integrations_#{source}_deploy_url", @project.token) %>
-          <% if source == 'github' && token = Integrations::GithubController.secret_token %>
+          <%= public_send "integrations_#{source}_deploy_url", *token_args %>
+          <% if source == 'github' && secret_token = Integrations::GithubController.secret_token %>
             <br/>
             <% if current_user.admin_for?(@project) %>
-              (Set <%= link_to "secret token", "javascript:prompt('Copy this token', '#{token}')" %> in <%= link_to 'hook settings', "https://github.com/#{@project.repository_path}/settings/hooks" %>)
+              (Set <%= link_to "secret token", "javascript:prompt('Copy this token', '#{secret_token}')" %> in
+              <%= link_to 'hook settings', "https://github.com/#{@project.repository_path}/settings/hooks" %>)
             <% else %>
               (Secret token required, ask a project admin)
             <% end %>
