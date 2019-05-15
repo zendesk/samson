@@ -243,3 +243,7 @@ this is useful when dealing with large deployments that have some random failure
 To debug services or to create resources that needs to reference a selector that doesn't include team/role (like a Gateway), you can disable selector validation with:
 
 `metadata.annotations.samson/service_selector_across_roles: "true"`
+
+### Blocking LoadBalancer usage
+
+Set `KUBERNETES_ALLOWED_LOAD_BALANCER_NAMESPACES=foo,bar` to block all other namespaces from using them.
