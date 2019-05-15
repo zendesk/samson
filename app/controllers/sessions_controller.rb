@@ -35,7 +35,7 @@ class SessionsController < ApplicationController
   end
 
   def failure
-    flash[:error] = "Could not log you in."
+    flash[:alert] = "Could not log you in."
     redirect_to root_path
   end
 
@@ -51,7 +51,7 @@ class SessionsController < ApplicationController
   def show_login_restriction
     logout!
 
-    flash[:error] = "Only #{restricted_email_domain} users are allowed to login"
+    flash[:alert] = "Only #{restricted_email_domain} users are allowed to login"
     render :new
   end
 
@@ -109,7 +109,7 @@ class SessionsController < ApplicationController
       user.update_column(:last_login_at, Time.now)
       flash[:notice] = "You have been logged in."
     else
-      flash[:error] = "Could not log you in."
+      flash[:alert] = "Could not log you in."
     end
 
     redirect_to_origin_or_default

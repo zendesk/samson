@@ -25,7 +25,7 @@ class ReleasesController < ApplicationController
     if @release.persisted?
       redirect_to [@project, @release]
     else
-      flash[:error] = @release.errors.full_messages.to_sentence
+      flash[:alert] = @release.errors.full_messages.to_sentence
       render action: :new
     end
   end

@@ -3,7 +3,7 @@ require 'ansible'
 require 'github/markdown'
 
 module ApplicationHelper
-  BOOTSTRAP_FLASH_MAPPINGS = {notice: :info, error: :danger, authorization_error: :danger, success: :success}.freeze
+  BOOTSTRAP_FLASH_MAPPINGS = {notice: :info, alert: :danger, authorization_error: :danger, success: :success}.freeze
   BOOTSTRAP_TOOLTIP_PROPS = {toggle: 'popover', placement: 'right', trigger: 'hover'}.freeze
 
   include Ansible
@@ -171,7 +171,7 @@ module ApplicationHelper
   def flash_messages
     flash.flat_map do |type, messages|
       type = type.to_sym
-      bootstrap_class = BOOTSTRAP_FLASH_MAPPINGS[type] || :info
+      bootstrap_class = BOOTSTRAP_FLASH_MAPPINGS.fetch(type)
       Array.wrap(messages).map do |message|
         [type, bootstrap_class, message]
       end

@@ -239,9 +239,9 @@ describe ApplicationHelper do
       flash_messages.must_equal []
     end
 
-    it "returns unknown" do
+    it "fails on unknown" do
       flash[:foo] = "bar"
-      flash_messages.must_equal [[:foo, :info, "bar"]]
+      assert_raises(KeyError) { flash_messages }
     end
 
     it "translates bootstrap classes" do
