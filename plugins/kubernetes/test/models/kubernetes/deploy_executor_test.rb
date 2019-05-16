@@ -210,7 +210,6 @@ describe Kubernetes::DeployExecutor do
     it "can delete resources" do
       Kubernetes::DeployGroupRole.update_all(delete_resource: true)
       assert execute, out
-      out.must_include "No pods were created"
       out.wont_include waiting_message
     end
 
@@ -447,9 +446,16 @@ describe Kubernetes::DeployExecutor do
       out.must_include "UNSTABLE"
     end
 
-    it "ignores allowed percentage of failures" do
-      with_env KUBERNETES_ALLOW_NOT_READY_PERCENT: "34" do # 1/3 allowed to fail
-        pod_status[:phase] = "Failed"
+    describe "percentage failure" do
+      with_env KUBERNETES_ALLOW_NOT_READY_PERCENT: "50" # 1/2 allowed to fail (counting pods)
+
+      it "fails when more than allowed amount fail" do
+        worker_role.update_column(:replicas, 3) # 2 pod per role is pending = 66%
+        refute execute
+      end
+
+      it "ignores when less than allowed amount fail" do
+        worker_role.update_column(:replicas, 2) # 1 pod per role is pending = 50%
         assert execute
       end
     end

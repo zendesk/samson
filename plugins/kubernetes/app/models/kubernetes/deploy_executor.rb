@@ -72,16 +72,13 @@ module Kubernetes
       loop do
         statuses = resource_statuses(release_docs)
         interesting = statuses.select { |s| s.kind == "Pod" || !s.live } # ignore boring things that rarely fail
-        if interesting.none?
-          @output.puts "No pods were created"
-          return success, statuses
-        end
-
-        ready_statuses, not_ready_statuses = statuses.partition(&:live)
+        ready_statuses, not_ready_statuses = interesting.partition(&:live)
+        failure = too_many_not_ready?(interesting)
 
         if waiting_for_ready
-          print_statuses("Deploy status:", interesting, exact: false)
-          if too_many_not_ready?(statuses)
+          print_statuses("Deploy status:", interesting, exact: false) if interesting.any?
+
+          if failure
             if stopped = not_ready_statuses.select(&:finished).presence
               print_statuses("UNSTABLE, resources failed:", stopped, exact: true)
               return false, statuses
@@ -97,7 +94,7 @@ module Kubernetes
             wait_start_time = Time.now.to_i
           end
         else
-          if too_many_not_ready?(statuses)
+          if failure
             print_statuses("UNSTABLE, resources not ready:", not_ready_statuses, exact: true)
             return false, statuses
           else
