@@ -26,9 +26,23 @@ class EnvironmentVariable < ActiveRecord::Base
     # also used by an external plugin
     def env(deploy, deploy_group, preview: false, resolve_secrets: true)
       env = {}
+
+      if deploy_group && deploy.project.config_service?
+        begin
+          url = config_service_folder(deploy.project, required: true)
+          url += "/#{deploy_group.permalink}.yml" # TODO: version ?
+          response = Samson::Retry.with_retries(Faraday::Error, 3) { Faraday.get(url) }
+          raise "Invalid response #{response.status}" unless response.status == 200
+          env.merge! YAML.safe_load(response.body)
+        rescue StandardError => e
+          raise Samson::Hooks::UserError, "Error reading env vars from config service: #{e.message}"
+        end
+      end
+
       if deploy_group && (env_repo_name = ENV["DEPLOYMENT_ENV_REPO"]) && deploy.project.use_env_repo
         env.merge! env_vars_from_repo(env_repo_name, deploy.project, deploy_group)
       end
+
       env.merge! env_vars_from_db(deploy, deploy_group)
 
       resolve_dollar_variables(env)
@@ -48,6 +62,12 @@ class EnvironmentVariable < ActiveRecord::Base
       sorted.map do |var|
         "#{var.name}=#{var.value.inspect} # #{var.scope&.name || "All"}"
       end.join("\n")
+    end
+
+    def config_service_folder(project, required:)
+      url = ENV["CONFIG_SERVICE_URL"]
+      raise KeyError, "CONFIG_SERVICE_URL not set" if required && !url
+      "#{url}/samson/#{project.permalink}"
     end
 
     private

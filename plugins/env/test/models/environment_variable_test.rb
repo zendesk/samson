@@ -44,7 +44,7 @@ describe EnvironmentVariable do
       EnvironmentVariable.env(Deploy.new(project: Project.new), 123).must_equal({})
     end
 
-    describe "get env vars from GitHub" do
+    describe "env vars from GitHub" do
       with_env DEPLOYMENT_ENV_REPO: "organization/repo_name"
 
       before do
@@ -109,6 +109,53 @@ describe EnvironmentVariable do
         )
         expected_result = {"VAR_THREE" => "three", "VAR_FOUR" => "four"}
         EnvironmentVariable.env(deploy, deploy_group).wont_equal expected_result
+      end
+    end
+
+    describe "env vars from config service" do
+      let(:url) { "https://config.service/samson/foo/pod100.yml" }
+
+      with_env CONFIG_SERVICE_URL: "https://config.service"
+
+      before { project.config_service = true }
+
+      it "add to env hash" do
+        assert_request(:get, url, to_return: {body: {"FOO" => "one"}.to_yaml}) do
+          EnvironmentVariable.env(deploy, deploy_group).must_equal "FOO" => "one"
+        end
+      end
+
+      it "ignores without deploy group" do
+        EnvironmentVariable.env(deploy, nil).must_equal({})
+      end
+
+      it "shows error when api failed" do
+        assert_request(:get, url, to_return: {status: 404}) do
+          assert_raises(Samson::Hooks::UserError) do
+            EnvironmentVariable.env(deploy, deploy_group)
+          end
+        end
+      end
+
+      it "shows error when api times out" do
+        assert_request(:get, url, to_timeout: [], times: 4) do
+          assert_raises(Samson::Hooks::UserError) do
+            EnvironmentVariable.env(deploy, deploy_group)
+          end
+        end
+      end
+
+      it "refuses to deploy when configured but env var is missing" do
+        with_env CONFIG_SERVICE_URL: nil do
+          assert_raises(Samson::Hooks::UserError) do
+            EnvironmentVariable.env(deploy, deploy_group)
+          end
+        end
+      end
+
+      it "does not read env vars when project is not opted in" do
+        project.config_service = false
+        EnvironmentVariable.env(deploy, deploy_group)
       end
     end
 

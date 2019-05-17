@@ -54,7 +54,7 @@ module SamsonEnv
 end
 
 # TODO: lazy load environment variables via changeset to make preview for new deploy show entered deploy env vars
-Samson::Hooks.view :project_form, "samson_env/fields"
+Samson::Hooks.view :project_form, "samson_env/project_form"
 Samson::Hooks.view :manage_menu, "samson_env/manage_menu"
 Samson::Hooks.view :deploy_confirmation_tab_nav, "samson_env/deploy_tab_nav"
 Samson::Hooks.view :deploy_confirmation_tab_body, "samson_env/deploy_tab_body"
@@ -65,7 +65,8 @@ Samson::Hooks.callback :project_permitted_params do
     AcceptsEnvironmentVariables::ASSIGNABLE_ATTRIBUTES.merge(
       environment_variable_group_ids: []
     ),
-    :use_env_repo
+    :use_env_repo,
+    :config_service
   ]
 end
 
