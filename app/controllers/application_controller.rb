@@ -12,6 +12,7 @@ class ApplicationController < ActionController::Base
   include CurrentUser # must be after protect_from_forgery, so that authenticate! is called
   include JsonExceptions
   include JsonRenderer
+  include JsonPagination
   include Pagy::Backend
 
   # show error details to users and do not bother ExceptionNotifier

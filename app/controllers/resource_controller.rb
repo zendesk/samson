@@ -19,7 +19,9 @@ class ResourceController < ApplicationController
     )
     respond_to do |format|
       format.html
-      format.json { render_as_json resource_name.pluralize, @resources, allowed_includes: allowed_includes }
+      format.json do
+        render_as_json resource_name.pluralize, @resources, allowed_includes: allowed_includes, pagy: @pagy
+      end
       format.csv { render_as_csv @resources }
     end
   end
