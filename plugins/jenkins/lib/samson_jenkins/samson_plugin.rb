@@ -4,8 +4,8 @@ module SamsonJenkins
   end
 end
 
-Samson::Hooks.view :stage_form, "samson_jenkins/fields"
-Samson::Hooks.view :deploys_header, "samson_jenkins/deploys_header"
+Samson::Hooks.view :stage_form, "samson_jenkins"
+Samson::Hooks.view :deploys_header, "samson_jenkins"
 
 Samson::Hooks.callback :stage_permitted_params do
   [

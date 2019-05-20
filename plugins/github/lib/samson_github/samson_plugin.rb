@@ -9,7 +9,7 @@ module SamsonGithub
   end
 end
 
-Samson::Hooks.view :stage_form, "samson_github/fields"
+Samson::Hooks.view :stage_form, "samson_github"
 
 Samson::Hooks.callback :stage_permitted_params do
   [

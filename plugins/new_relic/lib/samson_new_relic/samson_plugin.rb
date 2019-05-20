@@ -40,9 +40,9 @@ end
 # Railties need to be loaded before the application is initialized
 SamsonNewRelic.setup_initializers
 
-Samson::Hooks.view :stage_form, "samson_new_relic/fields"
-Samson::Hooks.view :deploy_tab_nav, "samson_new_relic/deploy_tab_nav"
-Samson::Hooks.view :deploy_tab_body, "samson_new_relic/deploy_tab_body"
+Samson::Hooks.view :stage_form, "samson_new_relic"
+Samson::Hooks.view :deploy_tab_nav, "samson_new_relic"
+Samson::Hooks.view :deploy_tab_body, "samson_new_relic"
 
 Samson::Hooks.callback :stage_permitted_params do
   {new_relic_applications_attributes: [:id, :name, :_destroy]}

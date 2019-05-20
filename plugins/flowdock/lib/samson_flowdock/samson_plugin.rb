@@ -4,8 +4,8 @@ module SamsonFlowdock
   end
 end
 
-Samson::Hooks.view :stage_form, "samson_flowdock/fields"
-Samson::Hooks.view :deploy_view, "samson_flowdock/notify_buddy_box"
+Samson::Hooks.view :stage_form, "samson_flowdock"
+Samson::Hooks.view :deploy_view, "samson_flowdock"
 
 Samson::Hooks.callback :stage_clone do |old_stage, new_stage|
   new_stage.flowdock_flows.build(

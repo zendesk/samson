@@ -4,7 +4,7 @@ module SamsonZendesk
   end
 end
 
-Samson::Hooks.view :stage_form, "samson_zendesk/fields"
+Samson::Hooks.view :stage_form, "samson_zendesk"
 
 Samson::Hooks.callback :stage_permitted_params do
   :comment_on_zendesk_tickets

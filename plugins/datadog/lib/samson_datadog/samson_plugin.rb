@@ -12,8 +12,8 @@ module SamsonDatadog
   end
 end
 
-Samson::Hooks.view :stage_form, "samson_datadog/fields"
-Samson::Hooks.view :stage_show, "samson_datadog/show"
+Samson::Hooks.view :stage_form, "samson_datadog"
+Samson::Hooks.view :stage_show, "samson_datadog"
 
 Samson::Hooks.callback :stage_permitted_params do
   [
