@@ -153,8 +153,8 @@ module Samson
         hooks(name) << block
       end
 
-      def view(name, partial)
-        hooks(name) << partial
+      def view(name, plugin)
+        hooks(name) << (plugin.include?("/") ? plugin : "#{plugin}/#{name}")
       end
 
       def decorator(class_name, file)

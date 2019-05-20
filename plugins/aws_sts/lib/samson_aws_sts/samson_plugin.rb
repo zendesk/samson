@@ -63,7 +63,7 @@ module SamsonAwsSts
   end
 end
 
-Samson::Hooks.view :stage_form, 'samson_aws_sts/fields'
+Samson::Hooks.view :stage_form, 'samson_aws_sts'
 
 Samson::Hooks.callback :stage_permitted_params do
   [

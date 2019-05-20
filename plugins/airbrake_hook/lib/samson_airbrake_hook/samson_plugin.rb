@@ -53,6 +53,6 @@ Samson::Hooks.callback :after_deploy do |deploy, _|
   SamsonAirbrakeHook::Notification.deliver_for(deploy)
 end
 
-Samson::Hooks.view :stage_form, 'samson_airbrake_hook/stage_form'
+Samson::Hooks.view :stage_form, 'samson_airbrake_hook'
 
 Samson::Hooks.callback(:stage_permitted_params) { :notify_airbrake }

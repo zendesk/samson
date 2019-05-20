@@ -64,10 +64,10 @@ module SamsonGcloud
   end
 end
 
-Samson::Hooks.view :project_form_checkbox, "samson_gcloud/project_form_checkbox"
-Samson::Hooks.view :build_button, "samson_gcloud/build_button"
-Samson::Hooks.view :stage_form_checkbox, "samson_gcloud/stage_form_checkbox"
-Samson::Hooks.view :build_show, "samson_gcloud/build_show"
+Samson::Hooks.view :project_form_checkbox, "samson_gcloud"
+Samson::Hooks.view :build_button, "samson_gcloud"
+Samson::Hooks.view :stage_form_checkbox, "samson_gcloud"
+Samson::Hooks.view :build_show, "samson_gcloud"
 
 Samson::Hooks.callback :after_deploy do |deploy, job_execution|
   SamsonGcloud::ImageTagger.tag(deploy, job_execution.output) if ENV['GCLOUD_IMAGE_TAGGER'] == 'true'

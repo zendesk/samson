@@ -54,12 +54,12 @@ module SamsonEnv
 end
 
 # TODO: lazy load environment variables via changeset to make preview for new deploy show entered deploy env vars
-Samson::Hooks.view :project_form, "samson_env/project_form"
-Samson::Hooks.view :manage_menu, "samson_env/manage_menu"
+Samson::Hooks.view :project_form, "samson_env"
+Samson::Hooks.view :manage_menu, "samson_env"
 Samson::Hooks.view :deploy_confirmation_tab_nav, "samson_env/deploy_tab_nav"
 Samson::Hooks.view :deploy_confirmation_tab_body, "samson_env/deploy_tab_body"
-Samson::Hooks.view :deploy_tab_nav, "samson_env/deploy_tab_nav"
-Samson::Hooks.view :deploy_tab_body, "samson_env/deploy_tab_body"
+Samson::Hooks.view :deploy_tab_nav, "samson_env"
+Samson::Hooks.view :deploy_tab_body, "samson_env"
 Samson::Hooks.callback :project_permitted_params do
   [
     AcceptsEnvironmentVariables::ASSIGNABLE_ATTRIBUTES.merge(
@@ -122,7 +122,7 @@ end
 
 # Adds the stage env vars view to the stage form in order to add
 # specific environment vars per stage
-Samson::Hooks.view :stage_form, 'samson_env/stage_form'
+Samson::Hooks.view :stage_form, 'samson_env'
 
 # Allows environment vars as valid parameters for the stage model
 Samson::Hooks.callback :stage_permitted_params do
@@ -139,7 +139,7 @@ if env_vars_flag != "false" # uncovered
   if env_vars_flag != 'api_only' # uncovered
     # Adds the deploy env vars view to the deploy form in order to add
     # specific environment vars per deploy
-    Samson::Hooks.view :deploy_form, 'samson_env/deploy_form'
+    Samson::Hooks.view :deploy_form, 'samson_env'
   end
 
   # Allows environment vars as valid parameters for the deploy model

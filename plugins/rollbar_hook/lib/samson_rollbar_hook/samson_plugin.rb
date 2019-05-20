@@ -4,7 +4,7 @@ module SamsonRollbarHook
   end
 end
 
-Samson::Hooks.view :stage_form, 'samson_rollbar/stage_form'
+Samson::Hooks.view :stage_form, 'samson_rollbar'
 
 Samson::Hooks.callback :stage_permitted_params do
   {
