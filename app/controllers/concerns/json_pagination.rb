@@ -2,12 +2,12 @@
 module JsonPagination
   private
 
-  def add_pagination_links(json, pagy)
+  def add_json_pagination_links(json, pagy)
     # add custom headers to the response
-    add_headers(pagy)
+    add_json_pagination_headers(pagy)
 
     # Insert links at beginning
-    links = links(pagy)
+    links = json_pagination_links(pagy)
     if links.present?
       json_d = json.clone
       json.clear
@@ -16,7 +16,7 @@ module JsonPagination
     end
   end
 
-  def pages(pagy)
+  def json_pagination_pages(pagy)
     paging = {}
     paging[:first] = 1          unless pagy.page == 1
     paging[:last] = pagy.pages  unless pagy.page == pagy.pages
@@ -26,19 +26,19 @@ module JsonPagination
     paging
   end
 
-  def links(pagy)
+  def json_pagination_links(pagy)
     links = {}
     uri = request.env["PATH_INFO"]
 
     # Build pagination links
-    pages(pagy).each do |key, value|
+    json_pagination_pages(pagy).each do |key, value|
       query_params = request.query_parameters.merge(page: value)
       links[key] = "#{uri}?#{query_params.to_param}"
     end
     links
   end
 
-  def add_headers(pagy)
+  def add_json_pagination_headers(pagy)
     headers['X-PER-PAGE']      = pagy.offset
     headers["X-CURRENT-PAGE"]  = pagy.page
     headers["X-TOTAL-PAGES"]   = pagy.pages

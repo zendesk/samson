@@ -9,7 +9,7 @@ class WebhooksController < ResourceController
   def index
     respond_to do |format|
       format.html
-      format.json { render_as_json :webhooks, @project.webhooks }
+      format.json { render_as_json :webhooks, @project.webhooks, nil }
     end
   end
 

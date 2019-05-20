@@ -37,7 +37,7 @@ class DeploysController < ApplicationController
 
     respond_to do |format|
       format.json do
-        render_as_json :deploys, @deploys, allowed_includes: [:job, :project, :user, :stage]
+        render_as_json :deploys, @deploys, @pagy, allowed_includes: [:job, :project, :user, :stage]
       end
       format.csv do
         datetime = Time.now.strftime "%Y%m%d_%H%M"
@@ -96,7 +96,7 @@ class DeploysController < ApplicationController
           type: 'text/plain'
       end
       format.json do
-        render_as_json :deploy, @deploy, allowed_includes: [:job, :user, :project, :stage]
+        render_as_json :deploy, @deploy, nil, allowed_includes: [:job, :user, :project, :stage]
       end
     end
   end

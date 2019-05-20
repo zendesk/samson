@@ -40,7 +40,7 @@ module JsonRenderer
 
   private
 
-  def render_as_json(namespace, resource, status: :ok, allowed_includes: [], pagy: nil)
+  def render_as_json(namespace, resource, pagy, status: :ok, allowed_includes: [])
     # validate includes
     requested_includes = permit_requested(:includes, allowed_includes)
 
@@ -64,7 +64,7 @@ module JsonRenderer
 
     # build reply
     json = {namespace => resource_json}
-    add_pagination_links(json, pagy) if pagy
+    add_json_pagination_links(json, pagy) if pagy
     JsonRenderer.add_includes(json, resource_list, requested_includes)
 
     yield json if block_given?
