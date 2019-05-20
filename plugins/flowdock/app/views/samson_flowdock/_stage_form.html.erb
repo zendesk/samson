@@ -5,13 +5,13 @@
   <%
     stage = form.object
     stage.flowdock_flows.build if stage.flowdock_flows.last&.new_record?
-    description = [
-      'Name and API token of the Flowdock flow which should be notified of deploys.',
-      { class: 'col-lg-offset-2' }
-    ]
   %>
 
-  <%= form.fields_for_many :flowdock_flows, description do |flow_field| %>
+  <p class="col-lg-offset-2">
+    Name and API token of the Flowdock flow which should be notified of deploys.
+  </p>
+
+  <%= form.fields_for_many :flowdock_flows do |flow_field| %>
     <div class="col-lg-2 col-lg-offset-2">
       <%= flow_field.text_field :name, class: "form-control", placeholder: "Flow name" %>
     </div>
