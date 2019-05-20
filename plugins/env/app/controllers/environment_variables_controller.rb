@@ -6,6 +6,7 @@ class EnvironmentVariablesController < ApplicationController
     scope = EnvironmentVariable.where(search_params)
     @pagy, @environment_variables = pagy(scope, page: params[:page], items: 30)
     respond_to do |format|
+      format.html
       format.json do
         render_as_json :environment_variables, @environment_variables, @pagy
       end
