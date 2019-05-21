@@ -175,9 +175,10 @@ describe Samson::FormBuilder do
     end
   end
 
+  # NOTE: ideally don't use a plugin model, but we need something with accepts_nested_attributes_for
   describe '#fields_for_many' do
-    def render(args)
-      project.rollbar_dashboards_settings.build
+    def render(*args)
+      project.rollbar_dashboards_settings.build # TODO: this does not get rendered
       builder.fields_for_many(*args) do |p|
         p.text_field :base_url, placeholder: 'thing!'
       end
@@ -194,20 +195,13 @@ describe Samson::FormBuilder do
     let(:builder) { Samson::FormBuilder.new(:project, project, template, {}) }
 
     it 'renders' do
-      result = render([:rollbar_dashboards_settings, 'cool stuff!'])
-
-      result.must_include '<p>cool stuff!</p>'
+      result = render(:rollbar_dashboards_settings)
       result.must_include 'form-group'
       result.must_include 'checkbox'
     end
 
-    it 'can handle description options' do
-      result = render([:rollbar_dashboards_settings, ['cool stuff!', {class: 'cool-class'}]])
-      result.must_include '<p class="cool-class">'
-    end
-
-    it 'includes add new row link if option is true' do
-      result = render([:rollbar_dashboards_settings, 'cool stuff!', add_rows_allowed: true])
+    it 'can include add new row link' do
+      result = render(:rollbar_dashboards_settings, add_rows_allowed: true)
       result.must_include 'Add row'
     end
   end

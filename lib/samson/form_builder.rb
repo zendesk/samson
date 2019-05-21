@@ -67,12 +67,8 @@ module Samson
     end
 
     # Creates multi-row input field
-    def fields_for_many(association, description, add_rows_allowed: false)
+    def fields_for_many(association, add_rows_allowed: false)
       content = ''.html_safe
-      if description.is_a?(Array)
-        description, description_options = description
-      end
-      content << content_tag(:p, description, description_options || {})
       content << fields_for(association) do |a|
         content_tag(:div, class: 'form-group') do
           yield(a)
@@ -80,7 +76,6 @@ module Samson
         end
       end
       content << @template.link_to("Add row", "#", class: "duplicate_previous_row") if add_rows_allowed
-
       content
     end
 
