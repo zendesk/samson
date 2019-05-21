@@ -74,6 +74,12 @@ describe "JsonRenderer Integration" do
       )
     end
 
+    it "render with pagination links" do
+      get '/commands.json', params: {per_page: 1}
+      assert_response :success
+      json.keys.must_equal ['links', 'commands']
+    end
+
     describe '.allowed_inlines' do
       before do
         EnvironmentVariable.create!(name: 'FOO', value: 'bar', parent: projects(:test))

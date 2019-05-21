@@ -14,7 +14,12 @@ class DeployGroupsController < ResourceController
     respond_to do |format|
       format.html
       format.json do
-        render_as_json(:deploy_groups, @deploy_groups, allowed_includes: Samson::Hooks.fire(:deploy_group_includes))
+        render_as_json(
+          :deploy_groups,
+          @deploy_groups,
+          nil,
+          allowed_includes: Samson::Hooks.fire(:deploy_group_includes)
+        )
       end
     end
   end

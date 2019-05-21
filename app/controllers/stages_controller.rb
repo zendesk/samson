@@ -20,7 +20,7 @@ class StagesController < ResourceController
         @pagy, @deploys = pagy(@stage.deploys, page: params[:page], items: 15)
       end
       format.json do
-        render_as_json :stage, @stage, allowed_includes: [
+        render_as_json :stage, @stage, nil, allowed_includes: [
           :last_deploy, :last_succeeded_deploy, :active_deploy, :lock
         ] do |reply|
           # deprecated way of inclusion, do not add more
