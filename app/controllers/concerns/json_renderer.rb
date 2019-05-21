@@ -64,7 +64,7 @@ module JsonRenderer
 
     # build reply
     json = {namespace => resource_json}
-    add_json_pagination_links(json, pagy) if pagy
+    add_json_pagination(json, pagy) if pagy
     JsonRenderer.add_includes(json, resource_list, requested_includes)
 
     yield json if block_given?

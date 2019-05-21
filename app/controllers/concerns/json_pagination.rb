@@ -2,12 +2,12 @@
 module JsonPagination
   private
 
-  def add_json_pagination_links(json, pagy)
+  def add_json_pagination(json, pagy)
     # add custom headers to the response
     add_json_pagination_headers(pagy)
 
     # Insert links at beginning
-    links = json_pagination_links(pagy)
+    links = add_json_pagination_links(pagy)
     if links.present?
       json_d = json.clone
       json.clear
@@ -26,7 +26,7 @@ module JsonPagination
     paging
   end
 
-  def json_pagination_links(pagy)
+  def add_json_pagination_links(pagy)
     links = {}
     uri = request.env["PATH_INFO"]
 
