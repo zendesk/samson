@@ -7,7 +7,7 @@ class Kubernetes::RoleVerificationsController < ApplicationController
     input = params[:role].presence || '{}'
     filename = (input.start_with?('{', '[') ? 'test.json' : 'test.yml')
     begin
-      Kubernetes::RoleConfigFile.new(input, filename, namespace: nil)
+      Kubernetes::RoleConfigFile.new(input, filename, project: nil)
     rescue Samson::Hooks::UserError
       @errors = $!.message
     else

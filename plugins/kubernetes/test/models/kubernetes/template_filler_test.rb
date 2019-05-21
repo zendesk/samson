@@ -120,17 +120,6 @@ describe Kubernetes::TemplateFiller do
       template.to_hash[:spec][:revisionHistoryLimit].must_equal 1
     end
 
-    it "keeps namespaces when set" do
-      raw_template[:metadata][:namespace] = "default"
-      template.to_hash[:metadata][:namespace].must_equal 'default'
-    end
-
-    it "keeps namespaces when nil is set for 1-off namespace-less kinds" do
-      raw_template[:metadata][:namespace] = nil
-      template.stubs(:set_image_pull_secrets) # secret pulling does not work namespace, but deployments never have none
-      template.to_hash[:metadata][:namespace].must_equal nil
-    end
-
     it "can verify without builds" do
       doc.kubernetes_release.builds = []
       template.to_hash(verification: true)
@@ -152,24 +141,52 @@ describe Kubernetes::TemplateFiller do
       result[:spec][:template][:spec][:replicas].must_equal 2
     end
 
-    it "sets name for unknown non-primary kinds" do
-      raw_template[:kind] = "foobar"
-      raw_template[:spec][:template][:spec].delete(:containers)
-      template.to_hash[:metadata][:name].must_equal "test-app-server"
-    end
-
-    it "keeps resource name when keep_name is set" do
-      raw_template[:metadata][:name] = "foobar"
-      raw_template[:metadata][:annotations] = {"samson/keep_name": 'true'}
-      template.to_hash[:metadata][:name].must_equal 'foobar'
-    end
-
     ['CustomResourceDefinition', 'APIService'].each do |kind|
       it "does not set override name for #{kind} since it follows a fixed naming pattern" do
         raw_template[:kind] = kind
         raw_template[:metadata].delete(:namespace)
         template.to_hash[:metadata][:name].must_equal "some-project-rc"
         template.to_hash[:metadata][:namespace].must_equal nil
+      end
+    end
+
+    describe "name" do
+      it "sets name for unknown non-primary kinds" do
+        raw_template[:kind] = "foobar"
+        raw_template[:spec][:template][:spec].delete(:containers)
+        template.to_hash[:metadata][:name].must_equal "test-app-server"
+      end
+
+      it "keeps resource name when keep_name is set" do
+        raw_template[:metadata][:name] = "foobar"
+        raw_template[:metadata][:annotations] = {"samson/keep_name": 'true'}
+        template.to_hash[:metadata][:name].must_equal 'foobar'
+      end
+
+      it "keeps resource name when project namespace is set" do
+        raw_template[:metadata][:name] = "foobar"
+        project.create_kubernetes_namespace!(name: "bar")
+        template.to_hash[:metadata][:name].must_equal 'foobar'
+      end
+    end
+
+    describe "namespace" do
+      it "keeps namespaces when set" do
+        raw_template[:metadata][:namespace] = "default"
+        template.to_hash[:metadata][:namespace].must_equal 'default'
+      end
+
+      it "keeps namespaces when nil is set for 1-off namespace-less kinds" do
+        raw_template[:metadata][:namespace] = nil
+        # secret pulling does not work without namespace, but deployments never have none
+        template.stubs(:set_image_pull_secrets)
+        template.to_hash[:metadata][:namespace].must_equal nil
+      end
+
+      it "sets namespace from kubernetes_namespace" do
+        raw_template[:metadata].delete(:namespace)
+        project.create_kubernetes_namespace!(name: "bar")
+        template.to_hash[:metadata][:namespace].must_equal "bar"
       end
     end
 
@@ -223,23 +240,31 @@ describe Kubernetes::TemplateFiller do
         template.to_hash[:metadata][:name].must_equal 'some-project-rc'
       end
 
-      it "fills name" do
-        doc.kubernetes_role.update_column(:service_name, 'custom')
-        template.to_hash[:metadata][:name].must_equal 'custom'
-      end
-
-      it "keeps service name when keep_name is set" do
-        raw_template[:metadata][:name] = "foobar"
-        raw_template[:metadata][:annotations] = {"samson/keep_name": 'true'}
-        template.to_hash[:metadata][:name].must_equal 'foobar'
-      end
-
       it "fails when trying to fill for a generated service" do
         doc.kubernetes_role.update_column(:service_name, "app-server#{Kubernetes::Role::GENERATED}1211212")
         e = assert_raises Samson::Hooks::UserError do
           template.to_hash
         end
         e.message.must_include "Service name for role app-server was generated"
+      end
+
+      describe "name" do
+        it "fills name" do
+          doc.kubernetes_role.update_column(:service_name, 'custom')
+          template.to_hash[:metadata][:name].must_equal 'custom'
+        end
+
+        it "keeps service name when keep_name is set" do
+          raw_template[:metadata][:name] = "foobar"
+          raw_template[:metadata][:annotations] = {"samson/keep_name": 'true'}
+          template.to_hash[:metadata][:name].must_equal 'foobar'
+        end
+
+        it "keeps service name when project namespace is set" do
+          raw_template[:metadata][:name] = "foobar"
+          project.create_kubernetes_namespace!(name: "bar")
+          template.to_hash[:metadata][:name].must_equal 'foobar'
+        end
       end
 
       describe "when using multiple services" do
@@ -320,6 +345,11 @@ describe Kubernetes::TemplateFiller do
         it "does nothing when serviceName was not used" do
           raw_template[:spec].delete :serviceName
           service_name.must_be_nil
+        end
+
+        it "does nothing when names are manual" do
+          project.create_kubernetes_namespace!(name: "bar")
+          service_name.must_equal "unchanged"
         end
       end
     end

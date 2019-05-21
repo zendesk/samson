@@ -198,7 +198,7 @@ For namespace-less resources, set `metadata.namespace:` (which will result in `n
 
 ### Using custom resource names
 
-Samson overrides each resource name in a particular role with the resource and service name set in the UI to prevent
+When not using project namespaces samson overrides each resource name in a particular role with the resource and service name set in the UI to prevent
 collision between resources in the same namespace from different projects unintentionally.
 
 To make Samson leave your resource name alone, set `metadata.annotations.samson/keep_name: 'true'`

@@ -13,8 +13,10 @@
         <tr>
           <th>Name</th>
           <th>Config</th>
-          <th>Service Name</th>
-          <th>Resource</th>
+          <% if @project.override_resource_names? %>
+            <th>Service Name</th>
+            <th>Resource</th>
+          <% end %>
           <th></th>
         </tr>
 
@@ -22,8 +24,10 @@
           <tr>
             <td><%= link_to role.name, [@project, role] %></td>
             <td><%= role.config_file %></td>
-            <td><%= role.service_name %></td>
-            <td><%= role.resource_name %></td>
+            <% if @project.override_resource_names? %>
+              <td><%= role.service_name %></td>
+              <td><%= role.resource_name %></td>
+            <% end %>
             <td>
               <%= link_to 'Edit', [@project, role] if current_user.admin_for?(role.project) %>
             </td>

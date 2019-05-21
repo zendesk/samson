@@ -10,4 +10,8 @@ Project.class_eval do
     class_name: 'Kubernetes::Namespace', dependent: nil, inverse_of: :projects, optional: true
 
   scope :with_kubernetes_roles, -> { where(id: Kubernetes::Role.not_deleted.pluck(Arel.sql('distinct project_id'))) }
+
+  def override_resource_names?
+    !kubernetes_namespace_id?
+  end
 end
