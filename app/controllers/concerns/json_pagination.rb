@@ -6,13 +6,12 @@ module JsonPagination
     # add custom headers to the response
     add_json_pagination_headers(pagy)
 
-    # Insert links at beginning
     links = add_json_pagination_links(pagy)
     if links.present?
-      json_d = json.clone
-      json.clear
-      json["links"] = links
-      json.merge! json_d
+      # Pagination links are appened at the first place in JSON results.
+      # because it will be more hard to find links in large JSON.
+      json.delete("links")
+      json.replace({links: links}.merge(json))
     end
   end
 
