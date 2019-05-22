@@ -13,6 +13,10 @@
       <% end %>
     </fieldset>
 
-    <%= form.actions delete: true, history: true, delete_help: "Does not delete the namespace from the clusters." %>
+    <%= form.actions delete: true, history: true, delete_help: "Does not delete the namespace from the clusters." do %>
+      <% if @kubernetes_namespace.persisted? %>
+        <%= link_to "Sync", sync_kubernetes_namespace_path(@kubernetes_namespace), class: "btn btn-default", data: {method: :post} %>
+      <% end %>
+    <% end %>
   <% end %>
 </section>

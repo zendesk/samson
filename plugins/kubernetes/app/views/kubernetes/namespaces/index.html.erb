@@ -24,6 +24,7 @@
 
     <div class="pull-right">
       <%= link_to "New", new_kubernetes_namespace_path, class: "btn btn-default" %>
+      <%= link_to "Sync All", sync_all_kubernetes_namespaces_path, class: "btn btn-default", data: {method: :post} %>
     </div>
   </div>
 </section>
