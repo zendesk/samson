@@ -12,7 +12,10 @@
 
       <% @kubernetes_namespaces.each do |namespace| %>
         <tr>
-          <td><%= namespace.name %></td>
+          <td>
+            <%= namespace.name %>
+            <%= additional_info simple_format(namespace.comment) if namespace.comment? %>
+          </td>
           <td><%= link_to "Edit", namespace %></td>
         </tr>
       <% end %>
