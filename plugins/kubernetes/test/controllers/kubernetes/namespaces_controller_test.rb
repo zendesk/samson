@@ -29,6 +29,8 @@ describe Kubernetes::NamespacesController do
     unauthorized :get, :new
     unauthorized :post, :create
     unauthorized :patch, :update, id: 1
+    unauthorized :post, :sync_all
+    unauthorized :post, :sync, id: 1
   end
 
   as_a :admin do
@@ -85,6 +87,40 @@ describe Kubernetes::NamespacesController do
       end
     end
 
+    describe "#sync" do
+      it "syncs namespaces/clusters" do
+        assert_request(:get, "http://foobar.server/api/v1/namespaces/test", to_return: {status: 404}) do
+          assert_request(:post, "http://foobar.server/api/v1/namespaces", to_return: {body: '{}'}) do
+            post :sync, params: {id: namespace.id}
+          end
+        end
+        assert_redirected_to "http://test.host/kubernetes/namespaces/#{namespace.id}"
+        refute flash[:alert]
+      end
+    end
+
+    describe "#sync_all" do
+      it "syncs namespaces/clusters" do
+        assert_request(:get, "http://foobar.server/api/v1/namespaces/test", to_return: {status: 404}) do
+          assert_request(:post, "http://foobar.server/api/v1/namespaces", to_return: {body: '{}'}) do
+            post :sync_all
+          end
+        end
+        assert_redirected_to "http://test.host/kubernetes/namespaces"
+        refute flash[:alert]
+      end
+
+      it "shows errors" do
+        assert_request(:get, "http://foobar.server/api/v1/namespaces/test", to_return: {status: 404}) do
+          assert_request(:post, "http://foobar.server/api/v1/namespaces", to_return: {status: 404}) do
+            post :sync_all
+          end
+        end
+        assert_redirected_to "http://test.host/kubernetes/namespaces"
+        flash[:alert].must_include "Failed to create namespace test in cluster test: 404"
+      end
+    end
+
     describe "#create_callback" do
       before { @controller.instance_variable_set(:@kubernetes_namespace, namespace) }
 
@@ -94,7 +130,7 @@ describe Kubernetes::NamespacesController do
             @controller.send(:create_callback)
           end
         end
-        flash[:alert].must_be_nil
+        refute flash[:alert]
       end
 
       it "shows creation errors" do
@@ -104,8 +140,8 @@ describe Kubernetes::NamespacesController do
           end
         end
         flash[:alert].must_equal <<~TEXT.rstrip
-          <p>Error creating namespace in some clusters:
-          <br />Failed to create namespace in cluster test: Timed out connecting to server</p>
+          <p>Error upserting namespace in some clusters:
+          <br />Failed to create namespace test in cluster test: Timed out connecting to server</p>
         TEXT
       end
 
@@ -115,10 +151,7 @@ describe Kubernetes::NamespacesController do
             @controller.send(:create_callback)
           end
         end
-        flash[:alert].must_equal <<~TEXT.rstrip
-          <p>Error creating namespace in some clusters:
-          <br />Namespace already exists in cluster test</p>
-        TEXT
+        refute flash[:alert]
       end
     end
   end
