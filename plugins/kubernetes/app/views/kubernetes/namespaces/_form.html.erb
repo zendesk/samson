@@ -8,8 +8,14 @@
       <%= form.input :name, required: true, pattern: Kubernetes::Namespace::NAME_PATTERN, input_html: {disabled: form.object.persisted?} %>
       <%= form.input :comment, as: :text_area %>
 
-      <%= form.input :project_ids, label: 'Projects', help: "Adding a projects will remove it's kubernetes roles resource and service names AND move it from it's current namespace" do %>
-        <%= form.select :project_ids, Project.pluck(:name, :id), {}, multiple: true, **Samson::FormBuilder::LIVE_SELECT_OPTIONS %>
+      <%= form.input :projects, help: "Adding a projects will remove it's kubernetes roles resource and service names AND move it from it's current namespace" do %>
+        <% projects = Project.pluck(:name, :id) %>
+        <% (@kubernetes_namespace.projects + [Project.new]).each do |project| %>
+          <div>
+            <%= live_select_tag "kubernetes_namespace[project_ids][]", options_for_select(projects, project.id), include_blank: true %>
+          </div>
+        <% end %>
+        <%= link_to "Add row", "#", class: "duplicate_previous_row" %>
       <% end %>
     </fieldset>
 

@@ -39,7 +39,11 @@
     $new_row.find(':input').each(function(i, input){
       var $input = $(input);
       $.each(['id', 'name'], function(i, attr){
-        $input.attr(attr, $input.attr(attr).replace(/\d+/, function(n){ return ++n; }));
+        if($input.attr(attr)) { // simple duplications like foo[] might not have name/id
+          $input.attr(attr, $input.attr(attr).replace(/\d+/, function (n) {
+            return ++n;
+          }));
+        }
       });
     });
 
