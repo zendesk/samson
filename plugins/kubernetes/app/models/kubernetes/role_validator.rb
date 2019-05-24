@@ -104,6 +104,7 @@ module Kubernetes
 
     # template_filler.rb sets name for everything except for IMMUTABLE_NAME_KINDS, keep_name, and Service
     # we make sure users dont use the same name on the same kind twice, to avoid them overwriting each other
+    # if they run in the default namespace
     def validate_name_kinds_are_unique
       # do not validate on global since we hope to be on namespace soon
       return if !@project || !@project.override_resource_names?
@@ -140,7 +141,7 @@ module Kubernetes
         kind = resource[:kind]
 
         label_paths = metadata_paths(resource).map { |p| p + [:labels] } +
-          if resource.dig(:spec, :selector, :matchLabels)
+          if resource.dig(:spec, :selector, :matchLabels) || resource[:kind] == "Deployment"
             [[:spec, :selector, :matchLabels]]
           elsif resource.dig(:spec, :selector) && !allow_selector_cross_match?(resource)
             [[:spec, :selector]]

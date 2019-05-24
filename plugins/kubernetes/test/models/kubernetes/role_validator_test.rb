@@ -509,6 +509,14 @@ describe Kubernetes::RoleValidator do
         role.last[:spec][:selector][:project] = 'other'
         errors.must_include error_message
       end
+
+      it "reports deployments without selector, which would default to all labels (like team)" do
+        role.first[:spec].delete :selector
+        errors.must_equal [
+          "Missing project or role for Deployment spec.selector.matchLabels",
+          error_message
+        ]
+      end
     end
 
     describe "#validate_host_volume_paths" do
