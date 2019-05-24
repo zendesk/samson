@@ -23,6 +23,7 @@ class CommitStatus
       }
     ]
   }.freeze
+  IGNORE_PENDING_CHECKS = ENV["IGNORE_PENDING_COMMIT_CHECKS"].to_s.split(",").freeze
 
   def initialize(project, reference, stage: nil)
     @project = project
@@ -99,6 +100,7 @@ class CommitStatus
   def pending_check_statuses(check_suites, checks)
     reported = checks[:check_runs].map { |c| c.dig_fetch(:check_suite, :id) }
     pending_suites = check_suites.reject { |s| reported.include?(s.fetch(:id)) }
+    pending_suites.reject! { |s| IGNORE_PENDING_CHECKS.include?(s.dig(:app, :name)) }
     pending_suites.map do |suite|
       name = suite.dig_fetch(:app, :name)
       {
