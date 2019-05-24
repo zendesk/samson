@@ -389,6 +389,13 @@ describe CommitStatus do
         )
       end
 
+      it "does not show pending suites that are unreliable/unimportant" do
+        stub_const CommitStatus, :IGNORE_PENDING_CHECKS, ["My App"] do
+          stub_github_api(check_run_url, check_runs: [])
+          status.statuses.map { |s| s[:description].first(22) }.must_equal ["No status was reported"]
+        end
+      end
+
       it 'shows pending suites without PRs' do
         stub_github_api(
           check_suite_url, check_suites: [{
