@@ -40,6 +40,7 @@ class Kubernetes::ClustersController < ResourceController
     params = super.permit(
       :name, :config_filepath, :config_context, :description, :ip_prefix,
       :auth_method, :api_endpoint, :verify_ssl, :client_cert, :client_key,
+      :kritis_breakglass,
       deploy_group_ids: []
     )
     params.delete_if { |_, v| v == HIDDEN }

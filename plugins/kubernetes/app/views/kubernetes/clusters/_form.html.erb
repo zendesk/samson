@@ -13,6 +13,8 @@
           help: "First 1 to 3 sections of an IPv4 address to replace Service clusterIP, for example 123.231"
       %>
 
+      <%= form.input :kritis_breakglass, as: :check_box, help: "Make all resources skip kritis" %>
+
       <%= form.input :auth_method do %>
         <%= form.select :auth_method, ["context", "database"] %>
       <% end %>

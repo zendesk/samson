@@ -53,6 +53,7 @@ module Kubernetes
           set_image_pull_secrets
           set_resource_blue_green if blue_green_color
           set_init_containers
+          set_kritis_breakglass
         elsif kind == 'PodDisruptionBudget'
           set_name
           set_match_labels_blue_green if blue_green_color
@@ -405,6 +406,12 @@ module Kubernetes
 
     def project
       @project ||= @doc.kubernetes_release.project
+    end
+
+    def set_kritis_breakglass
+      return unless @doc.deploy_group.kubernetes_cluster.kritis_breakglass
+      template.dig_fetch(:metadata, :labels)[:"kritis.grafeas.io/tutorial"] = ""
+      template.dig_fetch(:metadata, :annotations)[:"kritis.grafeas.io/breakglass"] = "true"
     end
 
     # custom annotation we support here and in kucodiff
