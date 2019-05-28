@@ -226,6 +226,27 @@ describe CommitStatus do
   describe "using checks api" do
     let(:check_suite_url) { "repos/#{stage.project.repository_path}/commits/#{reference}/check-suites" }
     let(:check_run_url) { "repos/#{stage.project.repository_path}/commits/#{reference}/check-runs" }
+    let(:check_suites) do
+      [
+        {
+          id: 1,
+          pull_requests: [{url: "https://api.github.com/foo/bar/pulls/123"}],
+          app: {name: "My App"}
+        }
+      ]
+    end
+    let(:check_runs) do
+      [
+        {
+          conclusion: 'success',
+          output: {summary: '<script>alert("Attack!")</script>'},
+          name: 'Travis CI',
+          html_url: 'https://coolbeans.com',
+          started_at: started_at,
+          check_suite: {id: 1}
+        }
+      ]
+    end
 
     before { status.expects(:github_status).returns(state: 'pending', statuses: []) } # user only using Checks API
 
@@ -305,15 +326,7 @@ describe CommitStatus do
     describe '#statuses' do
       before do
         freeze_time
-        stub_github_api(
-          check_suite_url, check_suites: [
-            {
-              id: 1,
-              pull_requests: [{url: "https://api.github.com/foo/bar/pulls/123"}],
-              app: {name: "My App"}
-            }
-          ]
-        )
+        stub_github_api(check_suite_url, check_suites: check_suites)
       end
 
       let(:started_at) { '2018-10-12 20:55:58 UTC'.to_time(:utc) }
@@ -342,16 +355,7 @@ describe CommitStatus do
       end
 
       it 'sanitizes output' do
-        stub_github_api(
-          check_run_url, check_runs: [{
-            conclusion: 'success',
-            output: {summary: '<script>alert("Attack!")</script>'},
-            name: 'Travis CI',
-            html_url: 'https://coolbeans.com',
-            started_at: started_at,
-            check_suite: {id: 1}
-          }]
-        )
+        stub_github_api(check_run_url, check_runs: check_runs)
 
         status.statuses.must_equal(
           [{
@@ -390,9 +394,27 @@ describe CommitStatus do
       end
 
       it "does not show pending suites that are unreliable/unimportant" do
+        stub_github_api(check_run_url, check_runs: [])
         stub_const CommitStatus, :IGNORE_PENDING_CHECKS, ["My App"] do
-          stub_github_api(check_run_url, check_runs: [])
           status.statuses.map { |s| s[:description].first(22) }.must_equal ["No status was reported"]
+        end
+      end
+
+      it "passes when other statuses passed except the ignored unreliable" do
+        check_suites << {
+          id: 2,
+          conclusion: "success",
+          pull_requests: [{url: "https://api.github.com/foo/bar/pulls/123"}],
+          app: {name: "Other App"}
+        }
+        stub_github_api(check_suite_url, check_suites: check_suites)
+
+        check_runs.first[:check_suite][:id] = 2
+        stub_github_api(check_run_url, check_runs: check_runs)
+
+        stub_const CommitStatus, :IGNORE_PENDING_CHECKS, ["My App"] do
+          status.state.must_equal "success"
+          status.statuses.size.must_equal 1, status.statuses
         end
       end
 
@@ -424,7 +446,6 @@ describe CommitStatus do
       it 'prioritizes success of one api result over missing statuses of another' do
         status.expects(:github_check).returns(state: 'pending', statuses: [])
         status.expects(:github_status).returns(state: 'success', statuses: [{foo: "bar", updated_at: 1.day.ago}])
-
         status.state.must_equal('success')
       end
 
