@@ -262,7 +262,11 @@ module Kubernetes
           {name: "VAULT_TLS_VERIFY", value: vault_client.options.fetch(:ssl_verify).to_s},
           {name: "VAULT_MOUNT", value: Samson::Secrets::VaultClientManager::MOUNT},
           {name: "VAULT_PREFIX", value: Samson::Secrets::VaultClientManager::PREFIX}
-        ]
+        ],
+        resources: {
+          requests: {cpu: "100m", memory: "100M"},
+          limits: {cpu: "500m", memory: "256M"}
+        }
       }
       init_containers.unshift container
 
