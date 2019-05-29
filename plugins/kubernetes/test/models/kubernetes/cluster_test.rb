@@ -244,7 +244,7 @@ describe Kubernetes::Cluster do
       cluster.as_json.keys.must_equal(
         [
           "id", "name", "description", "config_filepath", "config_context", "created_at", "updated_at", "ip_prefix",
-          "auth_method", "api_endpoint", "verify_ssl"
+          "auth_method", "api_endpoint", "verify_ssl", "kritis_breakglass"
         ]
       )
     end

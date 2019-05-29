@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_05_14_231932) do
+ActiveRecord::Schema.define(version: 2019_05_28_173915) do
 
   create_table "audits" do |t|
     t.integer "auditable_id", null: false
@@ -218,6 +218,7 @@ ActiveRecord::Schema.define(version: 2019_05_14_231932) do
     t.string "encrypted_client_key_iv"
     t.string "encryption_key_sha"
     t.boolean "verify_ssl", default: false, null: false
+    t.boolean "kritis_breakglass", default: false, null: false
   end
 
   create_table "kubernetes_deploy_group_roles", id: :integer do |t|

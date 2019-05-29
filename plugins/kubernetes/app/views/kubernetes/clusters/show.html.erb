@@ -22,6 +22,15 @@
     </div>
   </div>
 
+  <div class="form-group">
+    <label class="col-lg-2 control-label">
+      Kritis Breakglass
+    </label>
+    <div class="col-lg-4">
+      <p class="form-control-static"><%= @kubernetes_cluster.kritis_breakglass ? "YES" : "NO" %></p>
+    </div>
+  </div>
+
   <% case @kubernetes_cluster.auth_method %>
   <% when "context" %>
     <div class="form-group">

@@ -965,6 +965,25 @@ describe Kubernetes::TemplateFiller do
         e.message.must_equal "Unable to set key samson/set_via_env_json-spec.foo: KeyError key not found: \"FOO\""
       end
     end
+
+    describe "set_kritis_breakglass" do
+      it "does not add by default" do
+        template.to_hash[:metadata][:labels].keys.must_equal [:project, :role]
+      end
+
+      describe "when requested" do
+        before { doc.deploy_group.kubernetes_cluster.update_column(:kritis_breakglass, true) }
+
+        it "adds when requested" do
+          template.to_hash[:metadata][:labels].keys.must_equal [:project, :role, :"kritis.grafeas.io/tutorial"]
+        end
+
+        it "does not add to non-runnables" do
+          raw_template[:kind] = "Service"
+          template.to_hash[:metadata][:labels].keys.must_equal [:project, :role]
+        end
+      end
+    end
   end
 
   describe "#verify" do
