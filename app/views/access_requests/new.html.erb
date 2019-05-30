@@ -9,7 +9,7 @@
     <%= form.input :manager_email, as: :email_field, required: true %>
     <%= form.input :reason, as: :text_area, required: true %>
     <%= form.input :project_ids, label: 'Projects', required: true do %>
-      <%= form.select :project_ids, @projects.pluck(:name, :id), {}, multiple: true, **Samson::FormBuilder::LIVE_SELECT_OPTIONS %>
+      <%= form.select :project_ids, @projects.pluck(:name, :id), {include_hidden: false}, multiple: true, **Samson::FormBuilder::LIVE_SELECT_OPTIONS %>
     <% end %>
     <%= form.input :role_id, required: true do %>
       <%= select_tag 'access_request[role_id]', options_from_collection_for_select(@roles, :id, :display_name),
