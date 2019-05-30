@@ -8,7 +8,7 @@
       <% release.release_docs.sort_by { |rd| DeployGroup.with_deleted{ rd.deploy_group&.name_sortable }}.each do |release_doc| %>
         <div>
           <h3><%= release_doc.deploy_group.name %> - <%= link_to release_doc.kubernetes_role.name, [@project, release_doc.kubernetes_role] %></h3>
-          <pre><%= release_doc.resource_template.map(&:deep_stringify_keys).to_yaml %></pre>
+          <pre><%= release_doc.resource_template.map(&:deep_stringify_keys).map(&:to_yaml).join("\n") %></pre>
         </div>
       <% end %>
     <% else %>
