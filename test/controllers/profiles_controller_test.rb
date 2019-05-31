@@ -24,6 +24,24 @@ describe ProfilesController do
         put :update, params: {user: {name: 'Hans'}}
         assert_template :show
       end
+
+      describe 'github username' do
+        it 'updates with valid username' do
+          put :update, params: {user: {github_username: 'foo'}}
+          user.reload.github_username.must_equal 'foo'
+        end
+
+        it 'doesn`t update with invalid username' do
+          put :update, params: {user: {github_username: 'foo_5$'}}
+          user.reload.github_username.wont_equal 'foo_5$'
+        end
+
+        it 'validates uniqueness for username' do
+          User.create!(name: "Mr.2", email: "2@example.com", external_id: "1232", github_username: 'foo')
+          put :update, params: {user: {github_username: 'foo'}}
+          user.reload.github_username.wont_equal 'foo'
+        end
+      end
     end
   end
 end

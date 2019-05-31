@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 require 'omniauth/github_authorization'
+require 'pry'
 
 class SessionsController < ApplicationController
   skip_before_action :login_user
@@ -11,7 +12,7 @@ class SessionsController < ApplicationController
 
   def github
     return show_login_restriction unless role_id = github_authorization.role_id
-    login(role_id: custom_role_or_default(role_id))
+    login(role_id: custom_role_or_default(role_id), github_username: github_authorization.login)
   end
 
   def google
