@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 require 'omniauth/github_authorization'
-require 'pry'
 
 class SessionsController < ApplicationController
   skip_before_action :login_user
