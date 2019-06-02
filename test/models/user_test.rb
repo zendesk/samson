@@ -201,6 +201,11 @@ describe User do
       User.search_by_criteria(search: "", email: user.email).map(&:name).must_equal [user.name]
     end
 
+    it "can filter by github username" do
+      user = users(:github_viewer)
+      User.search_by_criteria(github_username: user.github_username).map(&:name).must_equal [user.name]
+    end
+
     it "ignores empty integration" do
       User.search_by_criteria(search: "", integration: "").map(&:name).sort.must_equal User.all.map(&:name).sort
     end
