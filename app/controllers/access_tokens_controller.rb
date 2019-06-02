@@ -43,7 +43,6 @@ class AccessTokensController < ResourceController
   end
 
   def render_resource_as_json(**args)
-    super unless action_name == 'create'
     # Override constraints in Doorkeeper::AccessToken
     render_as_json resource_name, @resource.serializable_hash, nil, **args, allowed_includes: nil
   end
