@@ -40,6 +40,7 @@ viewer:
 github_viewer:
   name: "GitHub Viewer"
   email: "gh+viewer@example.com"
+  github_username: "githubuser"
   role_id: <%= Role::VIEWER.id %>
   external_id: 'github-3'
   <<: *DEFAULTS

@@ -61,6 +61,9 @@ class User < ActiveRecord::Base
     if email = criteria[:email].presence
       scope = scope.where(email: email)
     end
+    if username = criteria[:github_username].presence
+      scope = scope.where(github_username: username)
+    end
     if criteria.key?(:integration)
       value = criteria[:integration]
       if !value.nil? && value != ''

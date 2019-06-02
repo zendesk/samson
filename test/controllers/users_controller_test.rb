@@ -74,6 +74,12 @@ describe UsersController do
         assigns(:users).must_equal [users(:super_admin)]
       end
 
+      it 'succeeds and search with github username' do
+        get :index, params: {github_username: 'githubuser', format: :json}
+        assert_response :success
+        assigns(:users).must_equal [users(:github_viewer)]
+      end
+
       it 'succeeds and with search as empty fetches all users' do
         get :index, params: {search: ''}
 
