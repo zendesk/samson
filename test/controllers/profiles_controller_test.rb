@@ -35,12 +35,6 @@ describe ProfilesController do
           put :update, params: {user: {github_username: 'foo_5$'}}
           user.reload.github_username.wont_equal 'foo_5$'
         end
-
-        it 'validates uniqueness for username' do
-          User.create!(name: "Mr.2", email: "2@example.com", external_id: "1232", github_username: 'foo')
-          put :update, params: {user: {github_username: 'foo'}}
-          user.reload.github_username.wont_equal 'foo'
-        end
       end
     end
   end
