@@ -20,7 +20,7 @@ function refStatusTypeahead(options){
       limit: 100,
       prefetch: {
         url: prefetchUrl,
-        ttl: 30000,
+        ttl: 30000, // ms cache ttl
         filter: function (references) {
           return $.map(references, function (reference) {
             return {value: reference};
@@ -58,11 +58,13 @@ function refStatusTypeahead(options){
 
   function check_status(ref) {
     $submit_button.prop("disabled", false);
+    $reference.addClass("loading");
 
     $.ajax({
       url: $("#new_deploy").data("commit-status-url"),
       data: { ref: ref },
       success: function(response) {
+        $reference.removeClass("loading");
         switch(response.state) {
           case "success":
             $ref_status_container.addClass("hidden");
