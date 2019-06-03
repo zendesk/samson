@@ -29,6 +29,24 @@ describe User do
     end
   end
 
+  describe 'github username' do
+    let(:user) { User.create!(name: 'github', email: 'github@test.com', external_id: 'xyz', github_username: 'foo') }
+    it 'updates with valid username' do
+      user.github_username.must_equal 'foo'
+    end
+
+    it 'doesn`t update with invalid username' do
+      user.github_username = 'foo_5$'
+      refute user.valid?
+    end
+
+    it 'validates uniqueness for username' do
+      User.create!(name: "Mr.2", email: "2@example.com", external_id: "1232", github_username: 'bar')
+      user.github_username = 'bar'
+      refute user.valid?
+    end
+  end
+
   describe "#time_format" do
     let(:user) { User.create!(name: "jimbob", email: 'test@test.com', external_id: 'xyz') }
 
@@ -199,6 +217,11 @@ describe User do
     it "can filter by email" do
       user = users(:admin)
       User.search_by_criteria(search: "", email: user.email).map(&:name).must_equal [user.name]
+    end
+
+    it "can filter by github username" do
+      user = users(:github_viewer)
+      User.search_by_criteria(github_username: user.github_username).map(&:name).must_equal [user.name]
     end
 
     it "ignores empty integration" do

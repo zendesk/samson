@@ -451,12 +451,17 @@ describe SessionsController do
           name: "Test User",
           email: "test@example.org",
           role_id: Role::ADMIN.id,
+          github_username: 'testuser',
           external_id: 'strange-bug'
         }
       end
 
       it "creates a new user" do
         user.persisted?.must_equal(true)
+      end
+
+      it 'sets the github username' do
+        user.reload.github_username.must_equal auth_hash[:github_username]
       end
 
       it "sets the role_id" do
