@@ -26,7 +26,7 @@ sudo apt-get install mysql-dev pg-dev nodejs
 brew install postgresql sqlite mysql
 
 bin/setup # Run the setup script to use the test credentials.
-rails s
+./bin/rails s
 open http://localhost:3000
 ```
 
