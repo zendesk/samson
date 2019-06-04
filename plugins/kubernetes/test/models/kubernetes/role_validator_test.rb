@@ -428,6 +428,14 @@ describe Kubernetes::RoleValidator do
         errors.must_equal nil
       end
 
+      it "allows good containers" do
+        role[0][:spec][:containers] << {
+          name: "foo",
+          resources: {requests: {cpu: "1m", memory: "1M"}, limits: {cpu: "1m", memory: "1M"}}
+        }
+        errors.must_equal nil
+      end
+
       it "fails without containers" do
         role[0][:spec][:containers].clear
         errors.must_equal ["All templates need spec.containers"]
@@ -440,7 +448,31 @@ describe Kubernetes::RoleValidator do
 
       it "fails without init container name" do
         role[0][:spec][:initContainers] = [{}]
-        errors.must_equal ["Containers need a name"]
+        errors.first.must_equal "Containers need a name"
+      end
+
+      it "fails with missing requests" do
+        role[0][:spec][:initContainers] = [{name: "foo"}]
+        errors.must_equal [
+          "Container foo is missing resources.requests.cpu",
+          "Container foo is missing resources.requests.memory",
+          "Container foo is missing resources.limits.cpu",
+          "Container foo is missing resources.limits.memory"
+        ]
+      end
+
+      it "allows missing resources on first container because it will be filled by samson" do
+        role[0][:spec][:containers].delete :resources
+      end
+
+      it "fails with missing resources on second container" do
+        role[0][:spec][:containers] << {name: "foo"}
+        errors.must_equal [
+          "Container foo is missing resources.requests.cpu",
+          "Container foo is missing resources.requests.memory",
+          "Container foo is missing resources.limits.cpu",
+          "Container foo is missing resources.limits.memory"
+        ]
       end
     end
 

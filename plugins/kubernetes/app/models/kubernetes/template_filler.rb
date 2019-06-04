@@ -379,6 +379,7 @@ module Kubernetes
       end
     end
 
+    # keep in sync with RoleValidator#validate_container_resources
     def set_resource_usage
       containers.first[:resources] = {
         requests: {cpu: @doc.requests_cpu.to_f, memory: "#{@doc.requests_memory}M"},

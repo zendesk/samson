@@ -30,11 +30,12 @@ module Kubernetes
       validate_name_kinds_are_unique
       validate_single_primary_kind
       validate_api_version
-      validate_containers
+      validate_containers_exist
       validate_container_name
+      validate_container_resources
       validate_job_restart_policy
       validate_pod_disruption_budget
-      validate_numeric_limits
+      validate_numeric_cpu_limits
       validate_project_and_role_consistent
       validate_team_labels
       validate_not_matching_team
@@ -127,12 +128,13 @@ module Kubernetes
     end
 
     # spec actually allows this, but blows up when used
-    def validate_numeric_limits
-      [:requests, :limits].each do |scope|
-        base = [:spec, :containers, :resources, scope, :cpu]
-        types = map_attributes(base, elements: templates).flatten(1).map(&:class)
-        next if (types - [NilClass, String]).none?
-        @errors << "Numeric cpu resources are not supported"
+    def validate_numeric_cpu_limits
+      (pod_containers + init_containers).flatten(1).each do |container|
+        [:requests, :limits].each do |scope|
+          path = [:resources, scope, :cpu]
+          next if [NilClass, String].include?(container.dig(*path).class)
+          @errors << "Numeric cpu resources are not supported"
+        end
       end
     end
 
@@ -211,7 +213,7 @@ module Kubernetes
         "OnDelete will be supported soon but is brittle/rough, prefer RollingUpdate on kubernetes 1.7+."
     end
 
-    def validate_containers
+    def validate_containers_exist
       return if pod_containers.all? { |c| c.is_a?(Array) && c.any? }
       @errors << "All templates need spec.containers"
     end
@@ -222,6 +224,22 @@ module Kubernetes
         @errors << "Containers need a name"
       elsif bad = names.grep_v(VALID_LABEL_VALUE).presence
         @errors << "Container name #{bad.join(", ")} did not match #{VALID_LABEL_VALUE.source}"
+      end
+    end
+
+    # keep in sync with TemplateFiller#set_resource_usage
+    def validate_container_resources
+      (pod_containers.map { |c| c[1..-1] || [] } + init_containers).flatten(1).each do |container|
+        [
+          [:resources, :requests, :cpu],
+          [:resources, :requests, :memory],
+          [:resources, :limits, :cpu],
+          [:resources, :limits, :memory],
+        ].each do |path|
+          next if container.dig(*path)
+          name = container[:name] || container[:image] || "unknown"
+          @errors << "Container #{name} is missing #{path.join(".")}"
+        end
       end
     end
 
