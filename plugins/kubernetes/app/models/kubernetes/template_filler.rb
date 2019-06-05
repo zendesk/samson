@@ -78,8 +78,21 @@ module Kubernetes
     private
 
     def set_via_env_json
-      (template[:metadata][:annotations] || {}).dup.each do |k, v|
+      data = {}
+
+      # collect set_via_env_json set one by one
+      (template.dig(:metadata, :annotations) || {}).dup.each do |k, v|
         next unless path = k[/^(?:samson\/set_via_env_json|samson-set-via-env-json)-(.*)/, 1]
+        data[path] = v
+      end
+
+      # collect set_via_env_json as yaml
+      if yaml = template.dig(:metadata, :annotations, :"samson/set_via_env_json")
+        data.merge!(YAML.safe_load(yaml))
+      end
+
+      # set values
+      data.each do |path, v|
         path = path.split(/\.(labels|annotations)\./) # make sure we do not split inside of labels or annotations
         path[0..0] = path[0].split(".")
         path.map! { |k| k.match?(/^\d+$/) ? Integer(k) : k.to_sym }
@@ -87,7 +100,7 @@ module Kubernetes
         begin
           template.dig_set(path, JSON.parse(static_env.fetch(v), symbolize_names: true))
         rescue KeyError, JSON::ParserError => e
-          raise Samson::Hooks::UserError, "Unable to set key #{k}: #{e.class} #{e.message}"
+          raise Samson::Hooks::UserError, "Unable to set path #{path.join(".")}: #{e.class} #{e.message}"
         end
       end
     end

@@ -915,6 +915,13 @@ describe Kubernetes::TemplateFiller do
         template.to_hash[:spec][:foo].must_equal "bar"
       end
 
+      it "supports yaml for long names above 64 chars limit" do
+        raw_template[:metadata][:annotations] = {
+          "samson/set_via_env_json": "spec.foo: FOO"
+        }
+        template.to_hash[:spec][:foo].must_equal "bar"
+      end
+
       it "sets podless roles" do
         raw_template[:spec] = {}
         template.to_hash[:spec][:foo].must_equal "bar"
@@ -947,7 +954,7 @@ describe Kubernetes::TemplateFiller do
         }
         e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
         e.message.must_equal(
-          "Unable to set key samson/set_via_env_json-foo.bar.foo: KeyError key not found: [:foo, :bar]"
+          "Unable to set path foo.bar.foo: KeyError key not found: [:foo, :bar]"
         )
       end
 
@@ -955,14 +962,14 @@ describe Kubernetes::TemplateFiller do
         environment.update_column(:value, 'foo')
         e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
         e.message.must_equal(
-          "Unable to set key samson/set_via_env_json-spec.foo: JSON::ParserError 765: unexpected token at 'foo'"
+          "Unable to set path spec.foo: JSON::ParserError 765: unexpected token at 'foo'"
         )
       end
 
       it "fails nicely with env is missing" do
         environment.update_column(:name, 'BAR')
         e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
-        e.message.must_equal "Unable to set key samson/set_via_env_json-spec.foo: KeyError key not found: \"FOO\""
+        e.message.must_equal "Unable to set path spec.foo: KeyError key not found: \"FOO\""
       end
     end
 
