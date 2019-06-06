@@ -437,4 +437,24 @@ describe GitRepository do
       c.must_equal 1
     end
   end
+
+  describe "#timeout" do
+    it "defaults to 600 seconds" do
+      TerminalExecutor.any_instance.expects(:execute).with(
+        "git -c core.askpass=true clone --mirror #{project.repository_url} #{repository.repo_cache_dir}",
+        timeout: 600
+      ).returns true
+      assert repository.send(:clone!)
+    end
+
+    it "uses GIT_CMD_TIMEOUT" do
+      with_env GIT_CMD_TIMEOUT: '1800' do
+        TerminalExecutor.any_instance.expects(:execute).with(
+          "git -c core.askpass=true clone --mirror #{project.repository_url} #{repository.repo_cache_dir}",
+          timeout: 1800
+        ).returns true
+        assert repository.send(:clone!)
+      end
+    end
+  end
 end

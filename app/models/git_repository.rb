@@ -6,6 +6,7 @@ class GitRepository
 
   attr_accessor :executor # others set this to listen in on commands being executed
   attr_accessor :full_checkout
+  attr_reader :timeout
 
   # The directory in which repositories should be cached.
   # TODO: find out and comment why this needs to be settable or make read-only self. method
@@ -16,6 +17,8 @@ class GitRepository
   def initialize(repository_url:, repository_dir:, executor:)
     @repository_url = repository_url
     @repository_directory = repository_dir
+    # Defaults to 10 minutes
+    @timeout = Integer(ENV.fetch('GIT_CMD_TIMEOUT', '600')).seconds
     @executor = executor
     @instance_cache = {}
   end
@@ -132,13 +135,16 @@ class GitRepository
 
   def clone!
     @instance_cache.clear
-    executor.execute "git -c core.askpass=true clone --mirror #{repository_url} #{repo_cache_dir}"
+    executor.execute(
+      "git -c core.askpass=true clone --mirror #{repository_url} #{repo_cache_dir}",
+      timeout: @timeout
+    )
   end
   add_tracer :clone!
 
   def update!
     @instance_cache.clear
-    executor.execute("cd #{repo_cache_dir}", 'git fetch -p')
+    executor.execute("cd #{repo_cache_dir}", 'git fetch -p', timeout: @timeout)
   end
   add_tracer :update!
 
@@ -153,12 +159,14 @@ class GitRepository
       executor.execute(
         "git clone #{repo_cache_dir} #{work_dir.shellescape}",
         "cd #{work_dir.shellescape}",
-        "git checkout --quiet #{git_reference.shellescape}"
+        "git checkout --quiet #{git_reference.shellescape}",
+        timeout: @timeout
       )
     else
       executor.execute(
         "cd #{repo_cache_dir}",
-        "git worktree add #{work_dir.shellescape} #{git_reference.shellescape} --force"
+        "git worktree add #{work_dir.shellescape} #{git_reference.shellescape} --force",
+        timeout: @timeout
       )
     end
   end
@@ -169,7 +177,8 @@ class GitRepository
     executor.execute(
       "cd #{pwd}",
       "git submodule sync --recursive",
-      "git submodule update --init --recursive"
+      "git submodule update --init --recursive",
+      timeout: @timeout
     )
   end
 
@@ -187,7 +196,7 @@ class GitRepository
     success, output = Samson::CommandExecutor.execute(
       *command,
       whitelist_env: ['HOME', 'PATH'],
-      timeout: 30.minutes,
+      timeout: @timeout,
       err: '/dev/null',
       dir: dir
     )
