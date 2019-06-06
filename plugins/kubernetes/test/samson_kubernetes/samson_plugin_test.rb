@@ -110,7 +110,7 @@ describe SamsonKubernetes do
           raise OpenSSL::SSL::SSLError
         end
       end
-      count.must_equal 6
+      count.must_equal SamsonKubernetes::API_RETRIES + 1
     end
 
     it "retries generic kubeclient errors" do
@@ -121,7 +121,7 @@ describe SamsonKubernetes do
           raise Kubeclient::HttpError.new(123, 'x', nil)
         end
       end
-      count.must_equal 6
+      count.must_equal SamsonKubernetes::API_RETRIES + 1
     end
 
     it "does not retry 404s" do

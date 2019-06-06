@@ -135,7 +135,8 @@ describe Kubernetes::NamespacesController do
 
       it "shows creation errors" do
         assert_request(:get, "http://foobar.server/api/v1/namespaces/test", to_return: {status: 404}) do
-          assert_request(:post, "http://foobar.server/api/v1/namespaces", to_timeout: [], times: 6) do
+          retries = SamsonKubernetes::API_RETRIES
+          assert_request(:post, "http://foobar.server/api/v1/namespaces", to_timeout: [], times: retries + 1) do
             @controller.send(:create_callback)
           end
         end
