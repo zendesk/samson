@@ -5,10 +5,33 @@ module Kubernetes
     # not perfect since the actual rules are stricter
     VALID_LABEL_VALUE = /\A[a-zA-Z0-9]([-a-zA-Z0-9.]*[a-zA-Z0-9])?\z/.freeze # also used in js ... cannot use /i
 
+    # TODO: lookup dynamically
     NAMESPACELESS_KINDS = [
-      'APIService', 'ClusterRoleBinding', 'ClusterRole', 'CustomResourceDefinition', 'Namespace', 'PodSecurityPolicy',
+      'ComponentStatus',
+      'Namespace',
+      'Node',
+      'PersistentVolume',
+      'MutatingWebhookConfiguration',
+      'ValidatingWebhookConfiguration',
+      'CustomResourceDefinition',
+      'APIService',
+      'TokenReview',
+      'SelfSubjectAccessReview',
+      'SelfSubjectRulesReview',
+      'SubjectAccessReview',
+      'CertificateSigningRequest',
+      'PodSecurityPolicy',
+      'NodeMetrics',
+      'PodSecurityPolicy',
+      'ClusterRoleBinding',
+      'ClusterRole',
+      'PriorityClass',
+      'StorageClass',
+      'VolumeAttachment',
       'ValidatingWebhookConfiguration'
     ].freeze
+
+    # for non-namespace deployments: names that should not be changed since they will break dependencies
     IMMUTABLE_NAME_KINDS = [
       'APIService', 'CustomResourceDefinition', 'ConfigMap', 'Role', 'ClusterRole', 'Namespace', 'PodSecurityPolicy',
       'ClusterRoleBinding'
