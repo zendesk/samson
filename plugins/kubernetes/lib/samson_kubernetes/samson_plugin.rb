@@ -17,7 +17,7 @@ module SamsonKubernetes
   end
 
   def self.retry_on_connection_errors(&block)
-    Samson::Retry.with_retries connection_errors, 3, only_if: NOT_A_404, &block
+    Samson::Retry.with_retries connection_errors, 5, only_if: NOT_A_404, wait_time: 0.1, &block
   end
 end
 
