@@ -42,7 +42,7 @@
     <%= form.input :periodical_deploy, as: :check_box, help: "Deploy every #{distance_of_time_in_words(interval)} if last deploy succeeded, enable automated deploy failure email to be alerted. " %>
   <% end %>
 
-  <% if @project.releases.any? %>
+  <% if @project.release_branch? %>
     <%= form.input :deploy_on_release, as: :check_box, label: "Automatically deploy new releases" %>
   <% end %>
 
