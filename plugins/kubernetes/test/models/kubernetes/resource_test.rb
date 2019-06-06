@@ -224,13 +224,13 @@ describe Kubernetes::Resource do
       end
 
       it "raises when a non 404 exception is raised" do
-        assert_request(:get, url, to_return: {status: 500}, times: 4) do
+        assert_request(:get, url, to_return: {status: 500}, times: 6) do
           assert_raises(Kubeclient::HttpError) { resource.exist? }
         end
       end
 
       it "raises SSL exception is raised" do
-        assert_request(:get, url, to_raise: OpenSSL::SSL::SSLError, times: 4) do
+        assert_request(:get, url, to_raise: OpenSSL::SSL::SSLError, times: 6) do
           assert_raises(OpenSSL::SSL::SSLError) { resource.exist? }
         end
       end
