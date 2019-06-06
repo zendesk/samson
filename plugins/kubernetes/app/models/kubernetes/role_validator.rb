@@ -6,7 +6,8 @@ module Kubernetes
     VALID_LABEL_VALUE = /\A[a-zA-Z0-9]([-a-zA-Z0-9.]*[a-zA-Z0-9])?\z/.freeze # also used in js ... cannot use /i
 
     NAMESPACELESS_KINDS = [
-      'APIService', 'ClusterRoleBinding', 'ClusterRole', 'CustomResourceDefinition', 'Namespace', 'PodSecurityPolicy'
+      'APIService', 'ClusterRoleBinding', 'ClusterRole', 'CustomResourceDefinition', 'Namespace', 'PodSecurityPolicy',
+      'ValidatingWebhookConfiguration'
     ].freeze
     IMMUTABLE_NAME_KINDS = [
       'APIService', 'CustomResourceDefinition', 'ConfigMap', 'Role', 'ClusterRole', 'Namespace', 'PodSecurityPolicy',
