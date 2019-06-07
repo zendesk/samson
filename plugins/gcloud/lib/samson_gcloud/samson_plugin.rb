@@ -26,7 +26,9 @@ module SamsonGcloud
 
       success = (status == SamsonGcloud::ImageScanner::SUCCESS)
       message = SamsonGcloud::ImageScanner.status(status)
-      message += ", see #{SamsonGcloud::ImageScanner.result_url(build.docker_repo_digest)}" unless success
+      if !success && url = SamsonGcloud::ImageScanner.result_url(build.docker_repo_digest)
+        message += ", see #{url}"
+      end
       output.puts message
 
       success || scan_optional
@@ -37,13 +39,13 @@ module SamsonGcloud
 
       status = SamsonGcloud::ImageScanner.scan(image)
       return if status == SamsonGcloud::ImageScanner::SUCCESS
+      result = SamsonGcloud::ImageScanner.status(status)
 
       message =
         if url = SamsonGcloud::ImageScanner.result_url(image)
-          result = SamsonGcloud::ImageScanner.status(status)
           "GCR scan result: #{result} for #{url}"
         else
-          "Image needs to be hosted on GCR to be scanned for vulnerabilities: #{image}."
+          "#{result}: #{image}"
         end
 
       raise Samson::Hooks::UserError, message
