@@ -162,6 +162,15 @@ class ActiveSupport::TestCase
       "resources" => [
         {"name" => "customresourcedefinitions", "namespaced" => true, "kind" => "CustomResourceDefinition"}
       ]
+    },
+    "rbac.authorization.k8s.io/v1" => {
+      "kind" => "APIResourceList",
+      "resources" => [
+        {"name" => "clusterrolebindings", "namespaced" => false, "kind" => "ClusterRoleBinding"},
+        {"name" => "clusterroles", "namespaced" => false, "kind" => "ClusterRole"},
+        {"name" => "rolebindings", "namespaced" => true, "kind" => "RoleBinding"},
+        {"name" => "roles", "namespaced" => true, "kind" => "Role"}
+      ]
     }
   }.freeze
 

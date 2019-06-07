@@ -43,12 +43,18 @@ module Kubernetes
     end
 
     def resources
-      @resources ||= resource_template.map do |t|
-        Kubernetes::Resource.build(
-          t, deploy_group,
-          autoscaled: kubernetes_role.autoscaled,
-          delete_resource: delete_resource
-        )
+      @resources ||= begin
+        resources = resource_template.map do |t|
+          Kubernetes::Resource.build(
+            t, deploy_group,
+            autoscaled: kubernetes_role.autoscaled,
+            delete_resource: delete_resource
+          )
+        end
+        resources.sort_by do |r|
+          Kubernetes::RoleConfigFile::DEPLOY_SORT_ORDER.index(r.kind) ||
+            Kubernetes::RoleConfigFile::DEPLOY_SORT_ORDER.size # default to maximum value
+        end
       end
     end
 
