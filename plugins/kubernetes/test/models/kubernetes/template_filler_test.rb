@@ -845,11 +845,14 @@ describe Kubernetes::TemplateFiller do
       end
 
       it "matches the resource name" do
+        template.to_hash.dig_fetch(:metadata, :name).must_equal("test-app-server")
         template.to_hash.dig_fetch(:spec, :scaleTargetRef, :name).must_equal("test-app-server")
       end
 
-      it "sets the name" do
-        template.to_hash.dig_fetch(:metadata, :name).must_equal("test-app-server")
+      it "does not change names when using namespaces" do
+        project.create_kubernetes_namespace!(name: "bar")
+        template.to_hash.dig_fetch(:metadata, :name).must_equal("some-project-rc")
+        template.to_hash.dig_fetch(:spec, :scaleTargetRef).must_equal({})
       end
     end
 

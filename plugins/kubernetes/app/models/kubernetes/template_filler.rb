@@ -170,7 +170,7 @@ module Kubernetes
     end
 
     def set_service_name
-      return if !project.override_resource_names? || Kubernetes::RoleValidator.keep_name?(template)
+      return if keep_name?
       template[:metadata][:name] = generate_service_name(template[:metadata][:name])
     end
 
@@ -354,7 +354,7 @@ module Kubernetes
 
     def set_name
       name =
-        if !project.override_resource_names? || Kubernetes::RoleValidator.keep_name?(template)
+        if keep_name?
           template.dig_fetch(:metadata, :name)
         else
           @doc.kubernetes_role.resource_name
@@ -363,7 +363,12 @@ module Kubernetes
       template.dig_set [:metadata, :name], name
     end
 
+    def keep_name?
+      !project.override_resource_names? || Kubernetes::RoleValidator.keep_name?(template)
+    end
+
     def set_hpa_scale_target_name
+      return if keep_name?
       template.dig_set [:spec, :scaleTargetRef, :name], @doc.kubernetes_role.resource_name
     end
 
