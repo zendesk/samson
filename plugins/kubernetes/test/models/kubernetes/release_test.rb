@@ -142,9 +142,14 @@ describe Kubernetes::Release do
 
     it "scoped statefulset for previous release since they do not update their labels when using patch" do
       resource = {spec: {template: {metadata: {labels: {release_id: 123}}}}}
-      Kubernetes::Resource.expects(:build).returns(stub(
-        is_a?: true, patch_replace?: true, resource: resource, namespace: 'pod1'
-      ))
+      resource_mock = mock(
+        is_a?: true,
+        patch_replace?: true,
+        resource: resource,
+        kind: "StatefulSet",
+        namespace: 'pod1'
+      )
+      Kubernetes::Resource.expects(:build).returns(resource_mock)
       release = kubernetes_releases(:test_release)
       release.clients[0][1].must_equal namespace: "pod1", label_selector: "release_id=123,deploy_group_id=431971589"
     end

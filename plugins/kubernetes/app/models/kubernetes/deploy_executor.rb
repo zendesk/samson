@@ -367,7 +367,7 @@ module Kubernetes
           [release_doc]
         end
       end
-      Samson::Parallelizer.map(resources, db: true, &:deploy)
+      resources.map(&:deploy)
     end
 
     def deploy_and_watch(release_docs, timeout:)

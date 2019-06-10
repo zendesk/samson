@@ -6,6 +6,37 @@ module Kubernetes
   class RoleConfigFile
     attr_reader :path, :elements
 
+    # from https://github.com/helm/helm/blob/release-2.13/pkg/tiller/kind_sorter.go#L29
+    DEPLOY_SORT_ORDER = [
+      "Namespace",
+      "ResourceQuota",
+      "LimitRange",
+      "PodSecurityPolicy",
+      "PodDisruptionBudget",
+      "Secret",
+      "ConfigMap",
+      "StorageClass",
+      "PersistentVolume",
+      "PersistentVolumeClaim",
+      "ServiceAccount",
+      "CustomResourceDefinition",
+      "ClusterRole",
+      "ClusterRoleBinding",
+      "Role",
+      "RoleBinding",
+      "Service",
+      "DaemonSet",
+      "Pod",
+      "ReplicationController",
+      "ReplicaSet",
+      "Deployment",
+      "StatefulSet",
+      "Job",
+      "CronJob",
+      "Ingress",
+      "APIService",
+    ].freeze
+
     DEPLOY_KINDS = ['Deployment', 'DaemonSet', 'StatefulSet'].freeze
     SERVICE_KINDS = ['Service'].freeze
     PREREQUISITE = [:metadata, :annotations, :'samson/prerequisite'].freeze
