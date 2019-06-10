@@ -27,7 +27,8 @@ module Kubernetes
       'ClusterRole',
       'PriorityClass',
       'StorageClass',
-      'VolumeAttachment'
+      'VolumeAttachment',
+      'ImageSecurityPolicy'
     ].freeze
 
     # for non-namespace deployments: names that should not be changed since they will break dependencies
