@@ -5,6 +5,9 @@ cache:
     - tmp/rubocop_cache
     - node_modules
 sudo: false
+services:
+- mysql
+- postgresql
 branches:
   only: master
 env:
