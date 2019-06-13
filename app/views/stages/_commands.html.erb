@@ -28,16 +28,9 @@
     <% end %>
     <%= render 'new_command' %>
   </div>
+
+  <%= button_tag 'Add Stage Command', class: 'btn btn-primary stage-command-button', type: 'button' %>
 </fieldset>
-
-<hr/>
-
-<%= button_tag(
-      'Add Stage Command',
-      class: 'btn btn-primary stage-command-button',
-      type: 'button'
-    )
-%>
 
 <script>
   $(function() {
