@@ -957,7 +957,7 @@ describe Kubernetes::TemplateFiller do
         }
         e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
         e.message.must_equal(
-          "Unable to set path foo.bar.foo: KeyError key not found: [:foo, :bar]"
+          "Unable to set path foo.bar.foo for Deployment in role app-server: KeyError key not found: [:foo, :bar]"
         )
       end
 
@@ -965,14 +965,17 @@ describe Kubernetes::TemplateFiller do
         environment.update_column(:value, 'foo')
         e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
         e.message.must_equal(
-          "Unable to set path spec.foo: JSON::ParserError 765: unexpected token at 'foo'"
+          "Unable to set path spec.foo for Deployment in role app-server: " \
+          "JSON::ParserError 765: unexpected token at 'foo'"
         )
       end
 
       it "fails nicely with env is missing" do
         environment.update_column(:name, 'BAR')
         e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
-        e.message.must_equal "Unable to set path spec.foo: KeyError key not found: \"FOO\""
+        e.message.must_equal(
+          "Unable to set path spec.foo for Deployment in role app-server: KeyError key not found: \"FOO\""
+        )
       end
     end
 

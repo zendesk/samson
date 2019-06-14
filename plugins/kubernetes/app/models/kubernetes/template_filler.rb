@@ -100,7 +100,11 @@ module Kubernetes
         begin
           template.dig_set(path, JSON.parse(static_env.fetch(v), symbolize_names: true))
         rescue KeyError, JSON::ParserError => e
-          raise Samson::Hooks::UserError, "Unable to set path #{path.join(".")}: #{e.class} #{e.message}"
+          raise(
+            Samson::Hooks::UserError,
+            "Unable to set path #{path.join(".")} for #{template[:kind]} in role #{@doc.kubernetes_role.name}: " \
+            "#{e.class} #{e.message}"
+          )
         end
       end
     end
