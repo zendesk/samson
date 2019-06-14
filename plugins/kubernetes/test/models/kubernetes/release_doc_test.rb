@@ -171,6 +171,18 @@ describe Kubernetes::ReleaseDoc do
         create!.resource_template[2][:metadata][:labels][:project].must_equal 'foo'
       end
 
+      it "does not copy random annotations like secrets/set_via_env etc" do
+        template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '30%'}
+        create!.resource_template[2][:metadata][:annotations].keys.sort.must_equal [
+          :"samson/deploy_url", :"samson/updateTimestamp"
+        ]
+      end
+
+      it "copies keep-name so name stays in sync with the deployment" do
+        template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '30%', "samson/keep_name": 'true'}
+        assert create!.resource_template[2][:metadata][:annotations].key?(:"samson/keep_name")
+      end
+
       it "deletes when set to 0" do
         template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '0'}
         create!.resource_template[2][:delete].must_equal true

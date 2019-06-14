@@ -102,7 +102,8 @@ module Kubernetes
         rescue KeyError, JSON::ParserError => e
           raise(
             Samson::Hooks::UserError,
-            "Unable to set path #{path.join(".")} for #{template[:kind]} in role #{@doc.kubernetes_role.name}: #{e.class} #{e.message}"
+            "Unable to set path #{path.join(".")} for #{template[:kind]} in role #{@doc.kubernetes_role.name}: " \
+            "#{e.class} #{e.message}"
           )
         end
       end
