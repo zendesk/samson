@@ -296,20 +296,6 @@ describe Kubernetes::Resource do
         resource.desired_pod_count.must_equal 3
       end
 
-      it "expects a constant number of pods when using autoscaling" do
-        assert_request(:get, url, to_return: {body: {spec: {replicas: 4}}.to_json}) do
-          autoscaled!
-          resource.desired_pod_count.must_equal 4
-        end
-      end
-
-      it "uses template amount when creating with autoscaling" do
-        assert_request(:get, url, to_return: {status: 404}) do
-          autoscaled!
-          resource.desired_pod_count.must_equal 2
-        end
-      end
-
       it "is 1 when not set for primary" do
         template[:spec].delete :replicas
         resource.desired_pod_count.must_equal 1

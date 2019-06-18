@@ -27,7 +27,7 @@
     <% end %>
 
     <% [
-         [:replicas, "Replicas"],
+         [:replicas, @kubernetes_deploy_group_role.kubernetes_role&.autoscaled? ? "Min Replicas" : "Replicas"],
          [:requests_cpu, 'Requests CPU Cores'],
          [:requests_memory, 'Requests Memory in MB'],
          [:limits_cpu, 'Limits CPU Cores'],

@@ -229,7 +229,16 @@ module Kubernetes
         Integer(labels.fetch(:role_id)) == role.id && Integer(labels.fetch(:deploy_group_id)) == group.id
       end
 
-      statuses = Array.new(release_doc.desired_pod_count).each_with_index.map do |_, i|
+      # when autoscaling there might be more than min pods, so we need to check all of them to find the healthiest
+      # NOTE: we should be able to remove the `role.autoscaled?` check, just keeping it to minimize blast radius
+      max_pods =
+        if role.autoscaled?
+          [release_doc.desired_pod_count, pods.size].max
+        else
+          release_doc.desired_pod_count
+        end
+
+      statuses = Array.new(max_pods) do |i|
         ResourceStatus.new(
           resource: pods[i],
           kind: "Pod",
@@ -241,7 +250,7 @@ module Kubernetes
       end.each(&:check)
 
       # If a role is autoscaled, there is a chance pods can be deleted during a deployment.
-      # Sort them by "most alive" and use the first one, so we ensure at least one pods works.
+      # Sort them by "most alive" and use the min ones, so we ensure at least that number of pods work.
       if role.autoscaled?
         statuses.sort_by! do |status|
           if status.live
@@ -249,8 +258,8 @@ module Kubernetes
           else
             status.finished ? 1 : 0
           end
-        end.slice!(1..-1)
-        statuses.each { |s| s.details += " (autoscaled role, only showing one pod)" }
+        end
+        statuses = statuses.first(release_doc.desired_pod_count)
       end
 
       statuses

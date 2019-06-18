@@ -16,7 +16,7 @@ describe DeployGroupRolesHelper do
 
     it "shows autoscaled" do
       role.autoscaled = true
-      kubernetes_deploy_group_role_replica(role, dgr).must_include "3<i title=\"Replicas managed"
+      kubernetes_deploy_group_role_replica(role, dgr).must_include "3 <i title=\"Replicas managed"
     end
 
     it "shows deleted" do

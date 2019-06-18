@@ -18,8 +18,10 @@
       </div>
     <% end %>
 
-    <%= form.input :autoscaled, label: "Replicas managed externally", as: :check_box, help: "Deploying will not change replicas count. Use this when autoscaling deployments." %>
-    <%= form.input :blue_green, as: :check_box, label: "Blue/Green Deployment", help: "Starts a new isolated deployment shifting between blue and green sufixes, switching service selectors if successfully deployed and deleting previous resources, all active resources must be deleted manually when switching this" %>
+    <%= form.input :autoscaled, label: "Replicas managed externally", as: :check_box,
+          help: "<ul><li>Deploying will not change replica counts</li><li>Replica counts are used as the minimum number of replicas that need to be live</li><li>Use when autoscaling Deployments</li></ul>".html_safe %>
+    <%= form.input :blue_green, as: :check_box, label: "Blue/Green Deployment",
+          help: "Starts a new isolated deployment shifting between blue and green suffixes, switching service selectors if successfully deployed and deleting previous resources, all active resources must be deleted manually when switching this" %>
 
     <div class="form-group">
       <div class="col-lg-offset-2 col-lg-10">
