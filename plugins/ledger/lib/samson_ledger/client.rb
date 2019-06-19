@@ -74,8 +74,7 @@ module SamsonLedger
       end
 
       def post(data)
-        connection = Faraday.new(url: ledger_base_url + LEDGER_PATH)
-        connection.post do |request|
+        Faraday.post ledger_base_url + LEDGER_PATH do |request|
           request.headers['Content-Type'] = "application/json"
           request.headers['Authorization'] = "Token token=#{ledger_token}"
           request.body = data.to_json

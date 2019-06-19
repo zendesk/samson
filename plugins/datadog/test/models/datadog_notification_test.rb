@@ -17,26 +17,16 @@ describe DatadogNotification do
   describe '#deliver' do
     def expected_body(overrides = {})
       {
-        msg_text: 'super-admin@example.com deployed staging to Staging',
-        date_happened: 1388607000,
-        msg_title: 'Super Admin deployed staging to Staging',
-        priority: 'normal',
-        parent: nil,
-        tags: ['deploy'],
-        aggregation_key: '123',
-        alert_type: 'success',
-        event_type: 'deploy',
-        source_type_name: 'samson',
         title: 'Super Admin deployed staging to Staging',
         text: 'super-admin@example.com deployed staging to Staging',
-        host: '',
-        device: nil
+        alert_type: 'success',
+        source_type_name: 'samson',
+        date_happened: 1388607000,
+        tags: ['deploy']
       }.merge(overrides).to_json
     end
 
-    before { Digest::MD5.expects(:hexdigest).returns(123) }
-
-    let(:url) { 'https://app.datadoghq.com/api/v1/events?api_key=dapikey' }
+    let(:url) { 'https://api.datadoghq.com/api/v1/events?api_key=dapikey' }
 
     it 'delivers correct notification with deploy updated_at' do
       assert_request(:post, url, with: {body: expected_body}) do
@@ -63,8 +53,7 @@ describe DatadogNotification do
 
       expected_values = {
         alert_type: 'info',
-        title: 'Super Admin is deploying staging to Staging',
-        msg_title: 'Super Admin is deploying staging to Staging'
+        title: 'Super Admin is deploying staging to Staging'
       }
 
       assert_request(:post, url, with: {body: expected_body(expected_values)}) do
@@ -77,8 +66,7 @@ describe DatadogNotification do
 
       expected_values = {
         alert_type: 'error',
-        title: 'Super Admin failed to deploy staging to Staging',
-        msg_title: 'Super Admin failed to deploy staging to Staging'
+        title: 'Super Admin failed to deploy staging to Staging'
       }
       assert_request(:post, url, with: {body: expected_body(expected_values)}) do
         notification.deliver
@@ -86,15 +74,12 @@ describe DatadogNotification do
     end
 
     it 'logs success message if status is 202' do
-      Rails.logger.expects(:info).with('Sending Datadog notification...')
-      Rails.logger.expects(:info).with('Sent Datadog notification')
       assert_request(:post, url, with: {body: expected_body}, to_return: {status: 202}) do
         notification.deliver
       end
     end
 
     it 'logs failure message if status is not 202' do
-      Rails.logger.expects(:info).with('Sending Datadog notification...')
       Rails.logger.expects(:info).with('Failed to send Datadog notification: 400')
       assert_request(:post, url, with: {body: expected_body}, to_return: {status: 400}) do
         notification.deliver

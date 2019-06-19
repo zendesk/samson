@@ -76,8 +76,6 @@ describe OutboundWebhook do
     before do
       @webhook = OutboundWebhook.create!(selected_webhook)
       @connection = @webhook.send(:connection)
-
-      assert_equal selected_webhook[:url], @connection.url_prefix.to_s
     end
 
     describe "with no authorization" do

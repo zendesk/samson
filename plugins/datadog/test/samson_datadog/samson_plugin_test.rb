@@ -9,7 +9,7 @@ describe SamsonDatadog do
 
   describe '.send_notification' do
     it 'sends notification' do
-      stage.stubs(:send_datadog_notifications?).returns(true)
+      stage.datadog_tags = "foo"
       dd_notification_mock = mock
       dd_notification_mock.expects(:deliver).with(additional_tags: ['started'])
       DatadogNotification.expects(:new).with(deploy).returns(dd_notification_mock)
