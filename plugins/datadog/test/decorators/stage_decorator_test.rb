@@ -11,9 +11,8 @@ describe Stage do
       Stage.new.datadog_monitors.must_equal []
     end
 
-    it "splits multiple monitors" do
-      stage = Stage.new(datadog_monitor_ids: "1,2, 3")
-      stage.datadog_monitors.map(&:id).must_equal [1, 2, 3]
+    it "is returns monitors" do
+      Stage.new(datadog_monitor_queries_attributes: {0 => {query: "123"}}).datadog_monitors.map(&:id).must_equal [123]
     end
   end
 

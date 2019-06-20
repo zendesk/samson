@@ -25,7 +25,7 @@ describe SamsonDatadog do
 
   describe :stage_permitted_params do
     it 'lists extra keys' do
-      Samson::Hooks.fire(:stage_permitted_params).must_include [:datadog_tags, :datadog_monitor_ids]
+      Samson::Hooks.fire(:stage_permitted_params).flatten(1).must_include :datadog_tags
     end
   end
 

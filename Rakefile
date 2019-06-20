@@ -98,6 +98,7 @@ task :flay do
     'app/views/secrets/index.html.erb', # simple html
     'plugins/kubernetes/app/models/kubernetes/deploy_group_role.rb', # similar but slightly different validations
     'plugins/flowdock/app/views/samson_flowdock/_fields.html.erb', # simple html
+    'plugins/datadog/app/views/samson_datadog/_stage_form.html.erb', # simple html
   ]
   flay = Flay.run([*files, '--mass', '25']) # mass threshold is shown mass / occurrences
   abort "Code duplication found" if flay.report.any?
