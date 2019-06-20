@@ -12,6 +12,7 @@ describe Stage do
     end
 
     it "is returns monitors" do
+      stub_request(:get, "https://api.datadoghq.com/api/v1/monitor/123?api_key=dapikey&application_key=dappkey")
       Stage.new(datadog_monitor_queries_attributes: {0 => {query: "123"}}).datadog_monitors.map(&:id).must_equal [123]
     end
   end

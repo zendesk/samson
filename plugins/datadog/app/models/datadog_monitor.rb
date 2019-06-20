@@ -8,20 +8,35 @@ class DatadogMonitor
 
   attr_reader :id
 
-  def self.get(id)
-    begin
-      url = "https://api.datadoghq.com/api/v1/monitor/#{id}?api_key=#{API_KEY}&application_key=#{APP_KEY}"
+  class << self
+    # returns raw data
+    def get(id)
+      request("/api/v1/monitor/#{id}", fallback: {})
+    end
+
+    # returns pre-filled [DatadogMonitor]
+    def list(params)
+      data = request("/api/v1/monitor", params: params, fallback: [{id: 0}])
+      data.map { |d| new(d[:id], d) }
+    end
+
+    private
+
+    def request(path, params: {}, fallback:)
+      query = params.merge(api_key: API_KEY, application_key: APP_KEY).to_query
+      url = "https://api.datadoghq.com#{path}?#{query}"
       response = Faraday.new(request: {open_timeout: 2, timeout: 4}).get(url)
       raise "Bad response #{response.status}" unless response.success?
       JSON.parse(response.body, symbolize_names: true)
     rescue StandardError => e
       Rails.logger.error("Datadog error #{e}")
-      {}
+      fallback
     end
   end
 
-  def initialize(id)
+  def initialize(id, response = nil)
     @id = Integer(id)
+    @response = response
   end
 
   def state

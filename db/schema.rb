@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_06_20_184209) do
+ActiveRecord::Schema.define(version: 2019_06_21_145446) do
 
   create_table "audits" do |t|
     t.integer "auditable_id", null: false
@@ -543,7 +543,6 @@ ActiveRecord::Schema.define(version: 2019_06_20_184209) do
     t.text "dashboard"
     t.boolean "email_committers_on_automated_deploy_failure", default: false, null: false
     t.string "static_emails_on_automated_deploy_failure"
-    t.string "datadog_monitor_ids"
     t.string "jenkins_job_names"
     t.string "next_stage_ids"
     t.boolean "no_code_deployed", default: false, null: false
