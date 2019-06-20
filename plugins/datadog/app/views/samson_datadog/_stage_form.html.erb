@@ -3,9 +3,9 @@
   <div class="col-lg-offset-2">
     <div class="form-group">
       <div class="col-lg-6">
-        <%= form.text_field :datadog_tags, class: "form-control", placeholder: "Datadog tags" %>
+        <%= form.text_field :datadog_tags, class: "form-control", placeholder: "Datadog deploy event tags" %>
         <span class="help-block">
-          Tags that should be used on deploy events, separated by <code>;</code><br/>
+          Tags that should be used on deploy events (in addition to started/finished tags), separated by <code>;</code><br/>
           Leave empty to not send notifications.
         </span>
       </div>
@@ -15,7 +15,7 @@
       <div class="col-lg-6">
         <%= form.text_field :datadog_monitor_ids, class: "form-control", placeholder: "Datadog Monitor Ids" %>
         <span class="help-block">
-          Datadog monitor ids (comma separated)
+          Datadog monitor ids to show on the stage page (comma separated)
         </span>
       </div>
     </div>

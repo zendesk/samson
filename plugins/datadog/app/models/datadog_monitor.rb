@@ -1,31 +1,39 @@
 # frozen_string_literal: true
-require 'dogapi'
+require 'faraday'
 
 class DatadogMonitor
   API_KEY = ENV["DATADOG_API_KEY"]
   APP_KEY = ENV["DATADOG_APPLICATION_KEY"]
+  SUBDOMAIN = ENV["DATADOG_SUBDOMAIN"] || "app"
 
   attr_reader :id
 
   def initialize(id)
-    @id = id.to_i
+    @id = Integer(id)
   end
 
-  def status
-    case response['overall_state']
-    when "OK" then :pass
-    when "Alert" then :fail
-    else :error
-    end
+  def state
+    response[:overall_state]
   end
 
   def name
-    response['name'] || 'error'
+    response[:name] || 'api error'
+  end
+
+  def url
+    "https://#{SUBDOMAIN}.datadoghq.com/monitors/#{id}"
   end
 
   private
 
   def response
-    @response ||= Dogapi::Client.new(API_KEY, APP_KEY, "").get_monitor(id).last
+    @response ||=
+      begin
+        url = "https://api.datadoghq.com/api/v1/monitor/#{@id}?api_key=#{API_KEY}&application_key=#{APP_KEY}"
+        JSON.parse(Faraday.get(url).body, symbolize_names: true)
+      rescue StandardError => e
+        Rails.logger.error("Datadog error #{e}")
+        {}
+      end
   end
 end

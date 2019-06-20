@@ -45,7 +45,7 @@ PATH
   remote: plugins/datadog
   specs:
     samson_datadog (0.0.0)
-      dogapi (~> 1.9)
+      faraday
 
 PATH
   remote: plugins/env
@@ -250,8 +250,6 @@ GEM
     ddtrace (0.14.2)
       msgpack
     diffy (3.2.0)
-    dogapi (1.21.0)
-      multi_json
     dogstatsd-ruby (3.0.0)
     domain_name (0.5.20180417)
       unf (>= 0.0.5, < 1.0.0)

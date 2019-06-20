@@ -17,25 +17,13 @@ describe DatadogMonitor do
   end
 
   let(:monitor) { DatadogMonitor.new(123) }
-  let(:monitor_url) { "https://app.datadoghq.com/api/v1/monitor/123?api_key=dapikey&application_key=dappkey" }
+  let(:monitor_url) { "https://api.datadoghq.com/api/v1/monitor/123?api_key=dapikey&application_key=dappkey" }
   let(:api_response) { JSON.parse('{"name":"Monitor Slow foo","query":"max(last_30m):max:foo.metric.time.max{*} > 20000","overall_state":"Ok","type":"metric alert","message":"This is mostly informative... @foo@bar.com","org_id":1234,"id":123,"options":{"notify_no_data":false,"no_data_timeframe":60,"notify_audit":false,"silenced":{}}}') } # rubocop:disable Metrics/LineLength
 
-  describe "#status" do
-    it "passes when it passes" do
+  describe "#state" do
+    it "returns state" do
       assert_datadog("OK") do
-        monitor.status.must_equal :pass
-      end
-    end
-
-    it "fails when it fails" do
-      assert_datadog("Alert") do
-        monitor.status.must_equal :fail
-      end
-    end
-
-    it "errors when it times out" do
-      assert_datadog_timeout do
-        silence_stderr { monitor.status.must_equal :error }
+        monitor.state.must_equal "OK"
       end
     end
   end
@@ -47,18 +35,25 @@ describe DatadogMonitor do
       end
     end
 
-    it "is error when request times out" do
+    it "is error when request fails" do
       assert_datadog_timeout do
-        silence_stderr { monitor.name.must_equal "error" }
+        silence_stderr { monitor.name.must_equal "api error" }
       end
+    end
+  end
+
+  describe "#url" do
+    it "builds a url" do
+      monitor.url.must_equal "https://app.datadoghq.com/monitors/123"
     end
   end
 
   describe "caching" do
     it "caches the api response" do
-      Dogapi::Client.any_instance.expects(:get_monitor).returns([{}])
-      monitor.name
-      monitor.status
+      assert_datadog("OK") do
+        monitor.name
+        monitor.state
+      end
     end
   end
 end

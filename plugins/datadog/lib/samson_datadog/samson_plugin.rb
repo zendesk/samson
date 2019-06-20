@@ -5,7 +5,7 @@ module SamsonDatadog
 
   class << self
     def send_notification(deploy, **kwargs)
-      if deploy.stage.send_datadog_notifications?
+      if deploy.stage.datadog_tags.present?
         DatadogNotification.new(deploy).deliver(**kwargs)
       end
     end

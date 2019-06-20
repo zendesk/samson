@@ -37,14 +37,4 @@ describe Stage do
       stage.datadog_tags_as_array.must_equal []
     end
   end
-
-  describe "#send_datadog_notifications?" do
-    it "is false when there are no tags" do
-      Stage.new.send_datadog_notifications?.must_equal false
-    end
-
-    it "is true when there are tags" do
-      Stage.new(datadog_tags: "a").send_datadog_notifications?.must_equal true
-    end
-  end
 end
