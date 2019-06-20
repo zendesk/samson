@@ -108,7 +108,7 @@ module Kubernetes
       allowed = ENV["KUBERNETES_ALLOWED_LOAD_BALANCER_NAMESPACES"].to_s.split(",")
       return if allowed.empty?
       bad = @elements.map do |e|
-        next unless e[:kind] == "LoadBalancer"
+        next unless e[:kind] == "Service" && e.dig(:spec, :type) == "LoadBalancer"
         namespace = e.dig(:metadata, :namespace) || "unset"
         namespace unless allowed.include?(namespace)
       end.compact
