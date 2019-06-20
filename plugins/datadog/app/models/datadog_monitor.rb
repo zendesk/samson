@@ -30,7 +30,8 @@ class DatadogMonitor
     @response ||=
       begin
         url = "https://api.datadoghq.com/api/v1/monitor/#{@id}?api_key=#{API_KEY}&application_key=#{APP_KEY}"
-        JSON.parse(Faraday.get(url).body, symbolize_names: true)
+        body = Faraday.new(request: {open_timeout: 2, timeout: 4}).get(url).body
+        JSON.parse(body, symbolize_names: true)
       rescue StandardError => e
         Rails.logger.error("Datadog error #{e}")
         {}
