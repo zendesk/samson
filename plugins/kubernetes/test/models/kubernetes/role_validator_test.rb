@@ -586,10 +586,7 @@ describe Kubernetes::RoleValidator do
     end
 
     describe "#validate_load_balancer" do
-      before do
-        role[0][:kind] = "LoadBalancer"
-        role[0][:metadata][:namespace] = "foo"
-      end
+      before { role[1][:metadata][:namespace] = "foo" }
 
       it "allows when not configured" do
         errors.must_be_nil
