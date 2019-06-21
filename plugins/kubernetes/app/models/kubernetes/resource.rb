@@ -90,7 +90,7 @@ module Kubernetes
         if @delete_resource
           0
         else
-          replica_source.dig(:spec, :replicas) || (RoleConfigFile.primary?(@template) ? 1 : 0)
+          @template.dig(:spec, :replicas) || (RoleConfigFile.primary?(@template) ? 1 : 0)
         end
       end
 
@@ -98,11 +98,6 @@ module Kubernetes
 
       def error_location
         "#{name} #{namespace} #{@deploy_group.name}"
-      end
-
-      # when autoscaling we expect as many pods as we currently have
-      def replica_source
-        (@autoscaled && resource) || @template
       end
 
       def backoff_wait(backoff, reason)
@@ -165,6 +160,7 @@ module Kubernetes
         # when autoscaling on a resource with replicas we should keep replicas constant
         # (not setting replicas will make it use the default of 1)
         path = [:spec, :replicas]
+        replica_source = (@autoscaled && resource) || @template
         copy.dig_set(path, replica_source.dig(*path)) if @template.dig(*path)
 
         # copy fields

@@ -151,6 +151,7 @@ describe Kubernetes::DeployExecutor do
     end
 
     it "can deploy roles with 0 replicas to disable them" do
+      pod_reply[:items].shift # remove the worker pod
       worker_role.update_column(:replicas, 0)
       assert execute, out
       out.wont_include "resque-worker Pod: Live\n"
@@ -563,18 +564,16 @@ describe Kubernetes::DeployExecutor do
     describe "an autoscaled role" do
       before do
         worker_role.kubernetes_role.update_column(:autoscaled, true)
-        worker_role.update_column(:replicas, 2)
       end
 
-      it "only requires one pod to go live when a role is autoscaled" do
-        pod_reply[:items] << pod_reply[:items].first.deep_dup
+      it "only requires min pods to go live when a role is autoscaled" do
+        pod_reply[:items] << pod_reply[:items].first.deep_dup # 2 pods exist because the deployment is autoscaled
 
         worker_is_unstable
 
         assert execute, out
 
         out.scan(/resque-worker Pod: Live/).count.must_equal 1, out
-        out.must_include "(autoscaled role, only showing one pod)"
         out.must_include "SUCCESS"
       end
 
@@ -589,7 +588,6 @@ describe Kubernetes::DeployExecutor do
 
         out.scan(/resque-worker Pod: Restarted/).count.must_equal 1, out
         out.scan(/resque-worker Pod pod-resque-worker: Restarted/).count.must_equal 1, out
-        out.must_include "(autoscaled role, only showing one pod)"
         out.must_include "DONE"
       end
 
