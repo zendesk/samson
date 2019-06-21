@@ -4,10 +4,10 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe DatadogMonitor do
-  def assert_datadog(state, &block)
+  def assert_datadog(state:, status: 200, &block)
     assert_request(
       :get, monitor_url,
-      to_return: {body: api_response.merge("overall_state" => state).to_json},
+      to_return: {body: api_response.merge("overall_state" => state).to_json, status: status},
       &block
     )
   end
@@ -22,7 +22,7 @@ describe DatadogMonitor do
 
   describe "#state" do
     it "returns state" do
-      assert_datadog("OK") do
+      assert_datadog(state: "OK") do
         monitor.state.must_equal "OK"
       end
     end
@@ -30,13 +30,19 @@ describe DatadogMonitor do
 
   describe "#name" do
     it "is there" do
-      assert_datadog("OK") do
+      assert_datadog(state: "OK") do
         monitor.name.must_equal "Monitor Slow foo"
       end
     end
 
-    it "is error when request fails" do
+    it "is error when request times out" do
       assert_datadog_timeout do
+        silence_stderr { monitor.name.must_equal "api error" }
+      end
+    end
+
+    it "is error when request fails" do
+      assert_datadog(state: "OK", status: 404) do
         silence_stderr { monitor.name.must_equal "api error" }
       end
     end
@@ -50,7 +56,7 @@ describe DatadogMonitor do
 
   describe "caching" do
     it "caches the api response" do
-      assert_datadog("OK") do
+      assert_datadog(state: "OK") do
         monitor.name
         monitor.state
       end

@@ -2,21 +2,36 @@
   <legend>Datadog</legend>
   <div class="col-lg-offset-2">
     <div class="form-group">
+      <h3>Deploy events with tags <%= additional_info "In addition to started/finished tags), separated by <code>;</code><br/>Leave empty to not send notifications.".html_safe %></h3>
       <div class="col-lg-6">
         <%= form.text_field :datadog_tags, class: "form-control", placeholder: "Datadog deploy event tags" %>
-        <span class="help-block">
-          Tags that should be used on deploy events (in addition to started/finished tags), separated by <code>;</code><br/>
-          Leave empty to not send notifications.
-        </span>
       </div>
     </div>
 
     <div class="form-group">
+      <h3>Datadog monitors <%= additional_info "Monitors to show on the stage page" %></h3>
+
       <div class="col-lg-6">
-        <%= form.text_field :datadog_monitor_ids, class: "form-control", placeholder: "Datadog Monitor Ids" %>
-        <span class="help-block">
-          Datadog monitor ids to show on the stage page (comma separated)
-        </span>
+        <%= form.fields_for :datadog_monitor_queries, @stage.datadog_monitor_queries + [DatadogMonitorQuery.new] do |fields| %>
+          <div class="form-group">
+            <div class="col-lg-3">
+              <%= fields.text_field :query, class: "form-control", placeholder: "ID" %>
+            </div>
+
+            <% if fields.object.persisted? %>
+              <div class="col-lg-6">
+                <%= fields.object.monitors.first&.name %>
+              </div>
+              <div class="col-lg-1 checkbox">
+                <%= fields.label :_destroy do %>
+                  <%= fields.check_box :_destroy if fields.object.persisted? %>
+                  Delete
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+        <%= link_to "Add row", "#", class: "duplicate_previous_row" %>
       </div>
     </div>
   </div>

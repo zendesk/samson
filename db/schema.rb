@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_05_27_160620) do
+ActiveRecord::Schema.define(version: 2019_06_20_184209) do
 
   create_table "audits" do |t|
     t.integer "auditable_id", null: false
@@ -72,6 +72,12 @@ ActiveRecord::Schema.define(version: 2019_05_27_160620) do
     t.datetime "updated_at", null: false
     t.string "filters", default: "{}", null: false
     t.string "status", default: "pending", null: false
+  end
+
+  create_table "datadog_monitor_queries" do |t|
+    t.string "query", null: false
+    t.integer "stage_id", null: false
+    t.index ["stage_id"], name: "index_datadog_monitor_queries_on_stage_id"
   end
 
   create_table "deploy_groups", id: :integer do |t|

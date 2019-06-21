@@ -19,7 +19,8 @@ class DatadogNotification
         "error"
       end
 
-    response = Faraday.post "https://api.datadoghq.com/api/v1/events?api_key=#{DatadogMonitor::API_KEY}" do |request|
+    url = "https://api.datadoghq.com/api/v1/events?api_key=#{DatadogMonitor::API_KEY}"
+    response = Faraday.new(request: {open_timeout: 2, timeout: 4}).post(url) do |request|
       request.body = {
         title: @deploy.summary,
         text: "#{@deploy.user.email} deployed #{@deploy.short_reference} to #{@stage.name}",
