@@ -72,7 +72,7 @@ module DeploysHelper
       project_stage_deploys_path(
         @project,
         @deploy.stage,
-        deploy: Samson::RedeployParams.new(@deploy).to_hash
+        deploy: Samson::RedeployParams.new(@deploy, exact: false).to_hash
       ),
       html_options
   end

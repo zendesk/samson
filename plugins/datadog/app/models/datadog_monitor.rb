@@ -51,6 +51,14 @@ class DatadogMonitor
     "https://#{SUBDOMAIN}.datadoghq.com/monitors/#{@id}"
   end
 
+  def reload
+    @response = nil
+  end
+
+  def alert?
+    state == "Alert"
+  end
+
   private
 
   def response

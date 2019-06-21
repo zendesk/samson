@@ -58,21 +58,25 @@ class DeployService
     send_deploy_update
   end
 
-  private
-
-  def redeploy_previous_succeeded(failed_deploy, output)
-    unless previous = failed_deploy.previous_succeeded_deploy
-      output.puts("Deploy failed, cannot find any previous succeeded deploy")
-      return
-    end
-    reference = previous.exact_reference
-    attributes = Samson::RedeployParams.new(previous).to_hash.merge(
-      reference: reference,
-      buddy: failed_deploy.buddy, # deploy was approved to be reverted if it fails
+  def redeploy(deploy)
+    attributes = Samson::RedeployParams.new(deploy, exact: true).to_hash.merge(
+      buddy: deploy.buddy, # deploy was approved to be reverted if it fails
       redeploy_previous_when_failed: false # prevent cascading redeploys
     )
-    redeploy = deploy(previous.stage, attributes)
-    output.puts("Deploy failed, redeploying previously succeeded (#{previous.url} #{reference}) with #{redeploy.url}")
+    deploy(deploy.stage, attributes)
+  end
+
+  private
+
+  def redeploy_previous_succeeded(deploy, output)
+    unless previous = deploy.previous_succeeded_deploy
+      output.puts "Deploy failed, cannot find any previous succeeded deploy"
+      return
+    end
+    redeployed = redeploy previous # TODO: there is a change this deploy is not persisted
+    output.puts(
+      "Deploy failed, redeploying previously succeeded (#{previous.url} #{redeployed.reference}) with #{redeployed.url}"
+    )
   end
 
   def update_average_deploy_time(deploy)

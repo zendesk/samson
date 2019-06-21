@@ -4,10 +4,11 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe DatadogMonitor do
-  def assert_datadog(state:, status: 200, &block)
+  def assert_datadog(state:, status: 200, times: 1, &block)
     assert_request(
       :get, monitor_url,
       to_return: {body: api_response.merge("overall_state" => state).to_json, status: status},
+      times: times,
       &block
     )
   end
@@ -24,6 +25,14 @@ describe DatadogMonitor do
     it "returns state" do
       assert_datadog(state: "OK") do
         monitor.state.must_equal "OK"
+      end
+    end
+  end
+
+  describe "#alert?" do
+    it "is alert when alerting" do
+      assert_datadog(state: "Alert") do
+        monitor.alert?.must_equal true
       end
     end
   end
@@ -59,6 +68,14 @@ describe DatadogMonitor do
       assert_datadog(state: "OK") do
         monitor.name
         monitor.state
+      end
+    end
+
+    it "expires the cache when reloaded" do
+      assert_datadog(state: "OK", times: 2) do
+        monitor.name
+        monitor.reload
+        monitor.name
       end
     end
   end
