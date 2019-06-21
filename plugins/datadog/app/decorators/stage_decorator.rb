@@ -7,7 +7,8 @@ Stage.class_eval do
     datadog_tags.to_s.split(";").map(&:strip!)
   end
 
+  # also preloading the monitors in parallel for speed
   def datadog_monitors
-    datadog_monitor_queries.flat_map(&:monitors)
+    Samson::Parallelizer.map(datadog_monitor_queries) { |q| q.monitors.each(&:name) }.flatten(1)
   end
 end

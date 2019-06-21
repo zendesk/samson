@@ -62,4 +62,26 @@ describe DatadogMonitor do
       end
     end
   end
+
+  describe ".list" do
+    let(:url) { "https://api.datadoghq.com/api/v1/monitor?api_key=dapikey&application_key=dappkey" }
+
+    it "finds multiple" do
+      assert_request(:get, url, to_return: {body: [{id: 1, name: "foo"}].to_json}) do
+        DatadogMonitor.list({}).map(&:name).must_equal ["foo"]
+      end
+    end
+
+    it "adds params" do
+      assert_request(:get, url + "&foo=bar", to_return: {body: [{id: 1, name: "foo"}].to_json}) do
+        DatadogMonitor.list(foo: "bar")
+      end
+    end
+
+    it "shows api error in the UI when it fails" do
+      assert_request(:get, url, to_timeout: []) do
+        DatadogMonitor.list({}).map(&:name).must_equal ["api error"]
+      end
+    end
+  end
 end

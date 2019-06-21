@@ -12,15 +12,16 @@
       <h3>Datadog monitors <%= additional_info "Monitors to show on the stage page" %></h3>
 
       <div class="col-lg-6">
+        <% @stage.datadog_monitors # trigger parallel preload %>
         <%= form.fields_for :datadog_monitor_queries, @stage.datadog_monitor_queries + [DatadogMonitorQuery.new] do |fields| %>
           <div class="form-group">
-            <div class="col-lg-3">
-              <%= fields.text_field :query, class: "form-control", placeholder: "ID" %>
+            <div class="col-lg-6">
+              <%= fields.text_field :query, class: "form-control", placeholder: "ID or comma separated tags" %>
             </div>
 
             <% if fields.object.persisted? %>
-              <div class="col-lg-6">
-                <%= fields.object.monitors.first&.name %>
+              <div class="col-lg-5">
+                <%= fields.object.monitors.first&.name %> <%= "#{fields.object.monitors.size - 1} more" if fields.object.monitors.size > 1 %>
               </div>
               <div class="col-lg-1 checkbox">
                 <%= fields.label :_destroy do %>
