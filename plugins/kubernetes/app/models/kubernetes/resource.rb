@@ -137,8 +137,11 @@ module Kubernetes
       end
 
       def ensure_not_updating_match_labels
-        # blue-green deply is allowed to do this, see template_filler.rb + deploy_executor.rb
+        # blue-green deploy is allowed to do this, see template_filler.rb + deploy_executor.rb
         return if @template.dig(:spec, :selector, :matchLabels, :blue_green)
+
+        # allow manual migration when user is aware of the issue and wants to do manual cleanup
+        return if @template.dig(:metadata, :annotations, :"samson/allow_updating_match_labels") == "true"
 
         static = [:spec, :selector, :matchLabels]
         # fallback is only for tests that use simple replies
