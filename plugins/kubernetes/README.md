@@ -247,3 +247,14 @@ To debug services or to create resources that needs to reference a selector that
 ### Blocking LoadBalancer usage
 
 Set `KUBERNETES_ALLOWED_LOAD_BALANCER_NAMESPACES=foo,bar` to block all other namespaces from using them.
+
+### Updating matchLabels
+
+Samson will by default block updating `matchLabels` since it leads to abandoned pods.
+
+If you still want to change a matchLabel, for example project/role:
+
+ - set `metadata.annotations.samson/allow_updating_match_labels: "true"`
+ - deploy with renamed project/role
+ - manually delete pods from old Deployment (`kubectl delete pods -l project=old-name,role=old-role`)
+ - unset annotations from step 1

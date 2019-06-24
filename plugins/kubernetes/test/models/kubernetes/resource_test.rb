@@ -69,7 +69,7 @@ describe Kubernetes::Resource do
       content = File.read(File.expand_path("../../../app/models/kubernetes/resource.rb", __dir__))
       restore_usages = content.scan('restore_template do').size
       template_modified = content.scan(/@template.*(=|dig_set|delete)/).size
-      template_modified.must_equal restore_usages + 4
+      template_modified.must_equal restore_usages + 5
     end
 
     it "falls back to using VersionedUpdate" do
@@ -162,6 +162,16 @@ describe Kubernetes::Resource do
               "Updating spec.selector.matchLabels from {:foo=>\"baz\"} to {:foo=>\"bar\"} " \
               "can only be done by deleting and redeploying or old pods would not be deleted."
             )
+          end
+        end
+
+        it "explains why it is a bad idea" do
+          old = {spec: {selector: {matchLabels: {foo: "baz"}}}}
+          resource.template[:metadata][:annotations] = {"samson/allow_updating_match_labels": "true"}
+          assert_request(:get, url, to_return: {body: old.to_json}) do
+            assert_request(:put, url, to_return: {body: "{}"}) do
+              resource.deploy
+            end
           end
         end
 
