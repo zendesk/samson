@@ -56,6 +56,7 @@ module Samson
       :project_permitted_params,
       :ref_status,
       :release_deploy_conditions,
+      :resolve_docker_image_tag,
       :stage_clone,
       :stage_permitted_params,
       :trace_method,

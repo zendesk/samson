@@ -51,6 +51,10 @@ module SamsonGcloud
       raise Samson::Hooks::UserError, message
     end
 
+    def gcr?(image)
+      image.match?(/(^|\/|\.)gcr.io\//) # gcr.io or https://gcr.io or region like asia.gcr.io
+    end
+
     def cli_options(project: nil)
       Shellwords.split(ENV.fetch('GCLOUD_OPTIONS', '')) +
         ["--account", account, "--project", project || self.project]
@@ -102,4 +106,8 @@ end
 
 Samson::Hooks.callback :ensure_docker_image_has_no_vulnerabilities do |stage, image|
   SamsonGcloud.ensure_docker_image_has_no_vulnerabilities stage, image
+end
+
+Samson::Hooks.callback :resolve_docker_image_tag do |image|
+  SamsonGcloud::TagResolver.resolve_docker_image_tag image if ENV["GCLOUD_PROJECT"]
 end

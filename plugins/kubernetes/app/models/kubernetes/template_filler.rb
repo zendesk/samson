@@ -71,8 +71,7 @@ module Kubernetes
     end
 
     def build_selectors
-      all = containers + init_containers
-      all.each_with_index.map { |c, i| build_selector_for_container(c, first: i == 0, scan: true) }.compact
+      all_containers.each_with_index.map { |c, i| build_selector_for_container(c, first: i == 0) }.compact
     end
 
     private
@@ -109,15 +108,11 @@ module Kubernetes
       end
     end
 
-    def build_selector_for_container(container, first:, scan:)
+    def build_selector_for_container(container, first:)
       dockerfile = samson_container_config(container, :"samson/dockerfile") ||
         (!first && ENV['KUBERNETES_ADDITIONAL_CONTAINERS_WITHOUT_DOCKERFILE'] ? DOCKERFILE_NONE : 'Dockerfile')
 
-      if dockerfile == DOCKERFILE_NONE
-        stage = @doc.kubernetes_release&.deploy&.stage
-        Samson::Hooks.fire :ensure_docker_image_has_no_vulnerabilities, stage, container.fetch(:image) if scan && stage
-        return
-      end
+      return if dockerfile == DOCKERFILE_NONE
 
       if project.docker_image_building_disabled?
         # also supporting dockerfile would make sense if external builds did not have image_name,
@@ -291,8 +286,8 @@ module Kubernetes
       # mark the container as not needing a dockerfile without making the pod invalid for kubelet
       pod_annotations[samson_container_config_key(container, "samson/dockerfile")] = DOCKERFILE_NONE
 
-      # share secrets volume between all containers
-      containers.each do |container|
+      # share secrets volume between all pod containers
+      pod_containers.each do |container|
         (container[:volumeMounts] ||= []).push secret_vol
       end
 
@@ -340,8 +335,8 @@ module Kubernetes
           template
         else
           # custom resource that has replicas set on itself or it's template
-          containers = [template] + (template[:spec] || {}).values_at(*RoleConfigFile.template_keys(template))
-          containers.detect { |c| c.dig(*key) }
+          templates = [template] + (template[:spec] || {}).values_at(*RoleConfigFile.template_keys(template))
+          templates.detect { |c| c.dig(*key) }
         end
 
       target&.dig_set key, @doc.replica_target
@@ -403,27 +398,31 @@ module Kubernetes
 
     # keep in sync with RoleValidator#validate_container_resources
     def set_resource_usage
-      containers.first[:resources] = {
+      container = pod_containers.first
+      container[:resources] = {
         requests: {cpu: @doc.requests_cpu.to_f, memory: "#{@doc.requests_memory}M"},
         limits: {cpu: @doc.limits_cpu.to_f, memory: "#{@doc.limits_memory}M"}
       }
-      containers.first[:resources][:limits].delete(:cpu) if @doc.no_cpu_limit
+      container[:resources][:limits].delete(:cpu) if @doc.no_cpu_limit
     end
 
     def set_docker_image
       builds = @doc.kubernetes_release.builds
-      set_docker_image_for_containers(builds, containers + init_containers)
-    end
+      all_containers.each_with_index do |container, i|
+        # set image from a build or by resolving the tag
+        if build_selector = build_selector_for_container(container, first: i == 0)
+          build = Samson::BuildFinder.detect_build_by_selector!(
+            builds, *build_selector,
+            fail: true, project: project
+          )
+          container[:image] = build.docker_repo_digest
+        elsif resolved = Samson::Hooks.fire(:resolve_docker_image_tag, container.fetch(:image)).compact.first
+          container[:image] = resolved
+        end
 
-    def set_docker_image_for_containers(builds, containers)
-      containers.each_with_index do |container, i|
-        next unless build_selector = build_selector_for_container(container, first: i == 0, scan: false)
-        build = Samson::BuildFinder.detect_build_by_selector!(
-          builds, *build_selector,
-          fail: true, project: project
-        )
-        container[:image] = build.docker_repo_digest
-        container[:imagePullPolicy] = 'IfNotPresent' if container[:imagePullPolicy] == 'Always'
+        # verify there are no vulnerabilities
+        stage = @doc.kubernetes_release.deploy.stage
+        Samson::Hooks.fire(:ensure_docker_image_has_no_vulnerabilities, stage, container.fetch(:image))
       end
     end
 
@@ -439,7 +438,7 @@ module Kubernetes
 
     # custom annotation we support here and in kucodiff
     def missing_env
-      test_env = containers.flat_map { |c| c[:env] ||= [] }
+      test_env = pod_containers.flat_map { |c| c[:env] ||= [] }
       (required_env - test_env.map { |e| e.fetch(:name) }).presence
     end
 
@@ -472,7 +471,7 @@ module Kubernetes
         }
       end
 
-      containers.each do |c|
+      pod_containers.each do |c|
         env = (c[:env] ||= [])
         env.concat all
 
@@ -525,7 +524,7 @@ module Kubernetes
     # we replace all secrets from the env here and they are expanded by expand_secret_annotations later
     def convert_secret_env_to_annotations
       converted = []
-      containers.each do |c|
+      pod_containers.each do |c|
         c.fetch(:env).reject! do |var|
           next unless value = var[:value]
           next true if converted.include?(value)
@@ -572,7 +571,7 @@ module Kubernetes
 
     def set_pre_stop
       return unless KUBERNETES_ADD_PRESTOP
-      containers.each do |container|
+      pod_containers.each do |container|
         next if samson_container_config(container, :"samson/preStop") == "disabled"
         (container[:lifecycle] ||= {})[:preStop] ||= {exec: {command: ["sleep", "3"]}}
       end
@@ -582,8 +581,12 @@ module Kubernetes
       @init_containers ||= (pod_template ? Api::Pod.init_containers(pod_template) : [])
     end
 
-    def containers
+    def pod_containers
       pod_template ? pod_template.dig_fetch(:spec, :containers) : []
+    end
+
+    def all_containers
+      pod_containers + init_containers
     end
   end
 end

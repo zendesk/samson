@@ -420,11 +420,6 @@ describe Kubernetes::TemplateFiller do
           )
         end
 
-        it "overrides Always imagePullPolicy since it does not make sense and slows us down" do
-          add_init_container imagePullPolicy: 'Always', name: 'foo'
-          init_containers[0]["imagePullPolicy"].must_equal "IfNotPresent"
-        end
-
         describe "when project does not build images" do
           before do
             project.docker_image_building_disabled = true
@@ -439,6 +434,37 @@ describe Kubernetes::TemplateFiller do
             build.update_column(:image_name, 'nope')
             e = assert_raises(Samson::Hooks::UserError) { container.fetch(:image).must_equal image }
             e.message.must_include "Did not find build for image_name \"truth_service\""
+          end
+        end
+
+        describe "when using hardcoded image" do
+          before do
+            raw_template[:spec][:template][:spec][:containers][0][:'samson/dockerfile'] = 'none'
+            raw_template[:spec][:template][:spec][:containers][0][:image] = 'foo'
+          end
+
+          it "calls vulnerability scanner for digests" do
+            image = "foo.com/example/bar@sha256:#{"a" * 64}"
+            raw_template[:spec][:template][:spec][:containers][0][:image] = image
+            SamsonGcloud.expects(:ensure_docker_image_has_no_vulnerabilities).
+              with(anything, image)
+            result
+          end
+
+          it "calls vulnerability scanner for resolved tags" do
+            Samson::Hooks.with_callback(:resolve_docker_image_tag, ->(*) { "resolved-digest" }) do
+              SamsonGcloud.expects(:ensure_docker_image_has_no_vulnerabilities).
+                with(anything, "resolved-digest")
+              result
+            end
+          end
+
+          it "does not modify image when resolve fails" do
+            Samson::Hooks.with_callback(:resolve_docker_image_tag, ->(*) { nil }) do
+              SamsonGcloud.expects(:ensure_docker_image_has_no_vulnerabilities).
+                with(anything, "foo")
+              result
+            end
           end
         end
       end
@@ -1080,13 +1106,6 @@ describe Kubernetes::TemplateFiller do
     it "returns empty when resource has no containers" do
       raw_template.delete :spec
       template.build_selectors.must_equal []
-    end
-
-    it "calls vulnerability scanner for hardcoded images" do
-      raw_template[:spec][:template][:spec][:containers][0][:'samson/dockerfile'] = 'none'
-      raw_template[:spec][:template][:spec][:containers][0][:image] = 'foo.com/example/bar'
-      SamsonGcloud.expects(:ensure_docker_image_has_no_vulnerabilities)
-      template.build_selectors
     end
 
     describe "when user selected to not enforce docker images" do

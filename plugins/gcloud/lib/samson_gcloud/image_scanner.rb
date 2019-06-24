@@ -33,7 +33,7 @@ module SamsonGcloud
         when SUCCESS then "No vulnerabilities found"
         when FOUND then "Vulnerabilities found"
         when ERROR then "Error retrieving vulnerabilities"
-        when UNSUPPORTED then "Only full gcr repos with shas are supported for scanning"
+        when UNSUPPORTED then "Only full gcr repos in #{SamsonGcloud.project} with shas are supported for scanning"
         else raise "Unknown id #{id}"
         end
       end
@@ -100,7 +100,7 @@ module SamsonGcloud
             timeout: 5,
             whitelist_env: ["PATH"]
           )
-          raise "GCLOUD ERROR: #{success}" unless success
+          raise "GCLOUD ERROR: #{result}" unless success
           result
         end
       end

@@ -15,7 +15,7 @@ module SamsonGcloud
 
         builds.each do |build|
           digest = build.docker_repo_digest
-          next unless digest.match?(/(^|\/|\.)gcr.io\//) # gcr.io or https://gcr.io or region like asia.gcr.io
+          next unless SamsonGcloud.gcr?(digest)
           base = digest.split('@').first
           cache_last_tagged [base, PRODUCTION_TAG], digest do
             tag_image PRODUCTION_TAG, base, digest, output

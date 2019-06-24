@@ -89,7 +89,7 @@ describe SamsonGcloud do
       it "shows unsupported" do
         SamsonGcloud::ImageScanner.expects(:scan).returns SamsonGcloud::ImageScanner::UNSUPPORTED
         fire.must_equal [true]
-        output.string.must_include "Only full gcr repos with shas are supported for scanning"
+        output.string.must_include "Only full gcr repos in example with shas are supported for scanning"
       end
 
       it "does not wait when a scan is not required" do
@@ -157,8 +157,21 @@ describe SamsonGcloud do
       it "shows when image is not scannable because image is not on GCR" do
         image.replace('foo_image')
         e = assert_raises(Samson::Hooks::UserError) { fire }
-        e.message.must_include "Only full gcr repos with shas are supported for scanning: foo_image"
+        e.message.must_include "Only full gcr repos in example with shas are supported for scanning: foo_image"
       end
+    end
+  end
+
+  describe :resolve_docker_image_tag do
+    it "resolves the tag" do
+      SamsonGcloud::TagResolver.expects(:resolve_docker_image_tag).returns "bar"
+      with_env GCLOUD_PROJECT: "foo" do
+        Samson::Hooks.fire(:resolve_docker_image_tag, "foo").must_include "bar"
+      end
+    end
+
+    it "does not resolve when not configured" do
+      Samson::Hooks.fire(:resolve_docker_image_tag, "foo").must_equal [nil]
     end
   end
 
@@ -173,6 +186,19 @@ describe SamsonGcloud do
       with_env(GCLOUD_ACCOUNT: 'acc', GCLOUD_PROJECT: 'proj') do
         SamsonGcloud.cli_options.must_equal ['--account', 'acc', '--project', 'proj']
       end
+    end
+  end
+
+  describe ".gcr?" do
+    it "knows when on gcr" do
+      assert SamsonGcloud.gcr?("gcr.io/foo")
+      assert SamsonGcloud.gcr?("https://gcr.io/foo")
+      assert SamsonGcloud.gcr?("foo.gcr.io/foo")
+    end
+
+    it "knows when not on gcr" do
+      refute SamsonGcloud.gcr?("gcrio/foo")
+      refute SamsonGcloud.gcr?("gomicloud.io/foo")
     end
   end
 
