@@ -4,7 +4,7 @@ Stage.class_eval do
   accepts_nested_attributes_for :datadog_monitor_queries, allow_destroy: true, reject_if: ->(a) { a[:query].blank? }
 
   def datadog_tags_as_array
-    datadog_tags.to_s.split(";").map(&:strip!)
+    datadog_tags.to_s.split(";").each(&:strip!)
   end
 
   # also preloading the monitors in parallel for speed
