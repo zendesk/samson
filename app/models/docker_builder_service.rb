@@ -5,7 +5,6 @@ class DockerBuilderService
 
   def initialize(build)
     @build = build
-    @output = OutputBuffer.new
   end
 
   def run(tag_as_latest: false)
@@ -19,12 +18,12 @@ class DockerBuilderService
     job = @build.create_docker_job
     @build.save!
 
-    @execution = JobExecution.new(@build.git_sha, job, output: @output) do |_, tmp_dir|
+    @execution = JobExecution.new(@build.git_sha, job) do |_, tmp_dir|
       if @build.docker_repo_digest = build_image(tmp_dir, tag_as_latest: tag_as_latest)
         @build.save!
         true
       else
-        @output.puts("Docker build failed (image id not found in response)")
+        @execution.output.puts("Docker build failed (image id not found in response)")
         false
       end
     end
@@ -36,7 +35,7 @@ class DockerBuilderService
       Samson::Hooks.fire(:after_docker_build, @build)
     end
 
-    JobQueue.perform_later(@execution)
+    JobQueue.perform_later @execution
   end
 
   private
@@ -58,7 +57,7 @@ class DockerBuilderService
 
   def before_docker_build(tmp_dir)
     Samson::Hooks.fire(:before_docker_repository_usage, @build)
-    Samson::Hooks.fire(:before_docker_build, tmp_dir, @build, @output)
+    Samson::Hooks.fire(:before_docker_build, tmp_dir, @build, @execution.output)
     execute_build_command(tmp_dir, @build.project.build_command)
   end
   add_tracer :before_docker_build
