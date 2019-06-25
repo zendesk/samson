@@ -20,17 +20,6 @@ module Kubernetes
       @reference = job.deploy.reference
     end
 
-    # restart_signal_handler.rb calls this to show details about all running job-executions
-    # and show something that identifies the deploy
-    # TODO: change to .details and call that from restart_signal_handler and job_execution
-    def pid
-      "Kubernetes-deploy-#{object_id}"
-    end
-
-    def pgid
-      pid
-    end
-
     def execute(*)
       verify_kubernetes_templates!
       @release = create_release

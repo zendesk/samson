@@ -149,8 +149,7 @@ class JobExecution
     Samson::TimeSum.instrument "execute_job.samson", payload do
       payload[:success] =
         if kubernetes?
-          @executor = Kubernetes::DeployExecutor.new(@job, @output)
-          @executor.execute
+          Kubernetes::DeployExecutor.new(@job, @output).execute
         else
           @executor.execute(*cmds)
         end
