@@ -24,20 +24,6 @@ describe Kubernetes::DeployExecutor do
     deploy.update_column :kubernetes, true
   end
 
-  describe "#pid" do
-    it "returns a fake pid" do
-      Kubernetes::DeployExecutor.any_instance.stubs(:build_selectors).returns([])
-      executor.pid.must_include "Kubernetes"
-    end
-  end
-
-  describe "#pgid" do
-    it "returns a fake pid" do
-      Kubernetes::DeployExecutor.any_instance.stubs(:build_selectors).returns([])
-      executor.pgid.must_include "Kubernetes"
-    end
-  end
-
   describe "#execute" do
     def execute
       stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/pods\?}).
