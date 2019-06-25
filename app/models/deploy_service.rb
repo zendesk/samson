@@ -48,7 +48,7 @@ class DeployService
     job_execution.on_finish { notify_outbound_webhooks(deploy) }
     job_execution.on_finish do
       if deploy.redeploy_previous_when_failed? && deploy.status == "failed"
-        redeploy_previous_succeeded(deploy, job_execution.output)
+        redeploy_previous(deploy, job_execution.output)
       end
     end
     job_execution.on_finish { Samson::Hooks.fire(:after_deploy, deploy, job_execution) }
@@ -68,15 +68,23 @@ class DeployService
 
   private
 
-  def redeploy_previous_succeeded(deploy, output)
+  def redeploy_previous(deploy, output)
+    output.puts "Deploy failed, attempting redeploy of previous succeeded deploy ..."
+
     unless previous = deploy.previous_succeeded_deploy
-      output.puts "Deploy failed, cannot find any previous succeeded deploy"
-      return
+      return output.puts "Cannot find any previous succeeded deploy"
     end
-    redeployed = redeploy previous # TODO: there is a change this deploy is not persisted
-    output.puts(
-      "Deploy failed, redeploying previously succeeded (#{previous.url} #{redeployed.reference}) with #{redeployed.url}"
-    )
+
+    if previous.exact_reference == deploy.exact_reference
+      return output.puts "Previous succeeded deploy is the same reference #{deploy.exact_reference}"
+    end
+
+    if (redeployed = redeploy(previous)).new_record?
+      errors = redeployed.errors.full_messages.join(", ")
+      return output.puts "Redeploy of #{deploy.exact_reference} failed: #{errors}"
+    end
+
+    output.puts "Redeploying previously succeeded (#{previous.url} #{redeployed.reference}) with #{redeployed.url}"
   end
 
   def update_average_deploy_time(deploy)
@@ -94,7 +102,7 @@ class DeployService
     env = {STAGE: stage.permalink}
 
     group_names = stage.deploy_groups.pluck(:env_value).join(" ")
-    env[:DEPLOY_GROUPS] = group_names if group_names.present?
+    env[:DEPLOY_GROUPS] = group_names if group_names.present? # uncovered
 
     env
   end
@@ -113,7 +121,7 @@ class DeployService
     return false if deploy.changeset_to(last_deploy).commits.any?
     return false if stage_script_changed_after?(last_deploy)
 
-    deploy.buddy = (last_deploy.buddy == @user ? last_deploy.job.user : last_deploy.buddy)
+    deploy.buddy = (last_deploy.buddy == @user ? last_deploy.job.user : last_deploy.buddy) # uncovered
     deploy.started_at = Time.now
     deploy.save!
 
