@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 4
+SingleCov.covered!
 
 describe DeployService do
   let(:project) { deploy.project }
@@ -22,6 +22,15 @@ describe DeployService do
       DeployNotificationsChannel.expects(:broadcast).with(1).times(2)
       assert_difference "Job.count", +1 do
         assert_difference "Deploy.count", +1 do
+          service.deploy(stage, reference: reference)
+        end
+      end
+    end
+
+    it "does nothing when deploy had errors" do
+      refute_difference "Job.count" do
+        refute_difference "Deploy.count" do
+          Deploy.any_instance.expects(:valid?).returns(false)
           service.deploy(stage, reference: reference)
         end
       end
@@ -134,6 +143,17 @@ describe DeployService do
 
         deploy_one.job.reload.status.must_equal 'running'
         deploy_two.job.reload.status.must_equal 'cancelled'
+      end
+
+      it "does not cancel pending deploys when they just got de-queued" do
+        deploy = create_deployment(user, 'v1', stage, 'pending')
+
+        JobQueue.expects(:queued?).returns(false)
+        JobQueue.expects(:dequeue).never
+
+        service.deploy(stage, reference: reference)
+
+        deploy.job.reload.status.must_equal 'pending'
       end
 
       it "does not cancel queued deploys for other users" do
@@ -279,17 +299,30 @@ describe DeployService do
       end
 
       let(:deploy_args) { [] }
+      let(:previous) { deploys(:succeeded_production_test) }
 
       before do
         service # cache instance
         deploy.redeploy_previous_when_failed = true
-        deploy.stubs(:previous_succeeded_deploy).returns(deploys(:succeeded_production_test))
+        deploy.stubs(:previous_succeeded_deploy).returns(previous)
         Job.any_instance.stubs(:status).returns("failed")
       end
 
       it "redeploys previous if deploy failed" do
         run_deploy true
         deploy_args.dig(0, 1, :reference).must_equal "v1.0"
+      end
+
+      it "does nothing when previous deploy was the same" do
+        previous.update_column :reference, "abcabca"
+        run_deploy false
+        deploy_args.must_equal []
+      end
+
+      it "does nothing when new deploy had errors" do
+        deploy.stubs(:new_record?).returns(true)
+        run_deploy true
+        job_execution.output.messages.must_include "Redeploy of abcabca failed"
       end
 
       it "does nothing when it cannot find a previous deploy" do
@@ -304,9 +337,10 @@ describe DeployService do
       end
 
       it "uses short sha if not a versioned release" do
-        deploys(:succeeded_production_test).update_column(:reference, 'master')
+        previous.job.update_column(:commit, 'bbbbccccdddd')
+        previous.update_column(:reference, 'master')
         run_deploy true
-        deploy_args.dig(0, 1, :reference).must_equal "abcabca"
+        deploy_args.dig(0, 1, :reference).must_equal "bbbbccc"
       end
     end
   end
