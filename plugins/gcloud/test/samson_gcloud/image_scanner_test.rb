@@ -122,7 +122,8 @@ describe SamsonGcloud::ImageScanner do
       SamsonGcloud::ImageScanner.status(1).must_equal "No vulnerabilities found"
       SamsonGcloud::ImageScanner.status(2).must_equal "Vulnerabilities found"
       SamsonGcloud::ImageScanner.status(3).must_equal "Error retrieving vulnerabilities"
-      SamsonGcloud::ImageScanner.status(4).must_equal "Only full gcr repos with shas are supported for scanning"
+      SamsonGcloud::ImageScanner.status(4).
+        must_equal "Only full gcr repos in proj with shas are supported for scanning"
     end
 
     it "raises on invalid status" do
