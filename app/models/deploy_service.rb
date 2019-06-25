@@ -35,9 +35,7 @@ class DeployService
   end
 
   def confirm_deploy(deploy)
-    stage = deploy.stage
-
-    job_execution = JobExecution.new(deploy.reference, deploy.job, env: construct_env(stage))
+    job_execution = JobExecution.new(deploy.reference, deploy.job)
     job_execution.on_start { send_before_notifications(deploy, job_execution) }
 
     # independent so each one can fail and report errors
@@ -96,15 +94,6 @@ class DeployService
     new_average = (old_average + ((deploy.duration - old_average) / number_of_deploys))
 
     stage.update_column(:average_deploy_time, new_average)
-  end
-
-  def construct_env(stage)
-    env = {STAGE: stage.permalink}
-
-    group_names = stage.deploy_groups.pluck(:env_value).join(" ")
-    env[:DEPLOY_GROUPS] = group_names if group_names.present? # uncovered
-
-    env
   end
 
   def latest_approved_deploy(reference, project)
