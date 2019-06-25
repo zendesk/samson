@@ -22,6 +22,11 @@ describe Stage do
       stage.datadog_tags_as_array.must_equal []
     end
 
+    it "works when not stripping" do
+      stage.datadog_tags = " foo;bar;baz"
+      stage.datadog_tags_as_array.must_equal ["foo", "bar", "baz"]
+    end
+
     it "returns an array of the tags" do
       stage.datadog_tags = " foo; bar; baz "
       stage.datadog_tags_as_array.must_equal ["foo", "bar", "baz"]
