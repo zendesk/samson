@@ -10,7 +10,7 @@ describe DatadogMonitorQuery do
     def assert_id_request(to_return: {body: '{"overall_state":"OK"}'}, &block)
       assert_request(
         :get,
-        "https://api.datadoghq.com/api/v1/monitor/123?api_key=dapikey&application_key=dappkey",
+        "#{api_url}/monitor/123?api_key=dapikey&application_key=dappkey&group_states=alert",
         to_return: to_return,
         &block
       )
@@ -19,9 +19,11 @@ describe DatadogMonitorQuery do
     def assert_tag_request(response, &block)
       q = "foo:bar,bar:vaz"
       query.query = q
-      url = "https://api.datadoghq.com/api/v1/monitor?api_key=dapikey&application_key=dappkey&monitor_tags=#{q}"
+      url = "#{api_url}/monitor?api_key=dapikey&application_key=dappkey&group_states=alert&monitor_tags=#{q}"
       assert_request(:get, url, to_return: {body: response.to_json}, &block)
     end
+
+    let(:api_url) { "https://api.datadoghq.com/api/v1" }
 
     it "is valid" do
       assert_id_request do
@@ -68,6 +70,14 @@ describe DatadogMonitorQuery do
         assert_valid query
       end
     end
+
+    it "does not allow source without target" do
+      assert_id_request do
+        query.fail_deploy_on_alert = true
+        query.match_target = "foo"
+        refute_valid query
+      end
+    end
   end
 
   describe "#monitors" do
@@ -77,6 +87,22 @@ describe DatadogMonitorQuery do
 
     it "caches monitors so we can preload them in parallel" do
       query.monitors.object_id.must_equal query.monitors.object_id
+    end
+  end
+
+  describe "#url" do
+    it "builds for monitors" do
+      query.url.must_equal "https://app.datadoghq.com/monitors/123"
+    end
+
+    it "builds for simple tags" do
+      query.query = "foo"
+      query.url.must_equal "https://app.datadoghq.com/monitors/manage?q=foo"
+    end
+
+    it "does not use + when searching for multiple tags because datadog UI does not support it" do
+      query.query = "foo,bar"
+      query.url.must_equal "https://app.datadoghq.com/monitors/manage?q=foo%20bar"
     end
   end
 end

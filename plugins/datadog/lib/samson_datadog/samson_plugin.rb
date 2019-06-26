@@ -15,7 +15,7 @@ module SamsonDatadog
         deploy.stage.datadog_monitor_queries.
           select(&:fail_deploy_on_alert?).
           flat_map(&:monitors).
-          reject(&:alert?)
+          reject { |m| m.state(deploy.stage.deploy_groups) == "Alert" }
     end
 
     def validate_deploy(deploy, job_execution)
@@ -23,7 +23,12 @@ module SamsonDatadog
       return true unless deploy.succeeded?
       return true unless deploy.datadog_monitors_for_validation&.any?
 
-      unless alerting = deploy.datadog_monitors_for_validation.each(&:reload).select(&:alert?).presence
+      alerting =
+        deploy.datadog_monitors_for_validation.
+        each(&:reload).
+        select { |m| m.state(deploy.stage.deploy_groups) == "Alert" }
+
+      if alerting.none?
         job_execution.output.puts "No datadog monitors alerting"
         return true
       end
@@ -40,7 +45,7 @@ Samson::Hooks.view :stage_show, "samson_datadog"
 Samson::Hooks.callback :stage_permitted_params do
   [
     :datadog_tags,
-    {datadog_monitor_queries_attributes: [:query, :fail_deploy_on_alert, :_destroy, :id]}
+    {datadog_monitor_queries_attributes: [:query, :fail_deploy_on_alert, :match_target, :match_source, :_destroy, :id]}
   ]
 end
 
