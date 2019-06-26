@@ -291,6 +291,13 @@ describe DeployService do
       run_deploy
     end
 
+    it "fails a deploy when verification fails" do
+      Samson::Hooks.with_callback(:validate_deploy, ->(*) { false }) do
+        run_deploy
+      end
+      deploy.reload.status.must_equal "failed"
+    end
+
     describe "with redeploy_previous_when_failed" do
       def run_deploy(redeploy)
         service.deploy(stage, reference: reference)

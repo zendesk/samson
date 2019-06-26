@@ -10,40 +10,26 @@ module SamsonDatadog
       end
     end
 
-    def store_rollback_monitors(deploy)
-      deploy.datadog_monitors_for_rollback =
+    def store_validation_monitors(deploy)
+      deploy.datadog_monitors_for_validation =
         deploy.stage.datadog_monitor_queries.
-          select(&:rollback_on_alert?).
+          select(&:fail_deploy_on_alert?).
           flat_map(&:monitors).
           reject(&:alert?)
     end
 
-    def rollback_deploy(deploy, job_execution)
-      # not logging anything to reduce spam, since users did not enable datadog monitors
-      return if !deploy.succeeded? || !deploy.datadog_monitors_for_rollback&.any?
+    def validate_deploy(deploy, job_execution)
+      # not logging anything for common cases to reduce spam
+      return true unless deploy.succeeded?
+      return true unless deploy.datadog_monitors_for_validation&.any?
 
-      unless alerting = deploy.datadog_monitors_for_rollback.each(&:reload).select(&:alert?).presence
-        return job_execution.output.puts "No datadog monitors alerting"
+      unless alerting = deploy.datadog_monitors_for_validation.each(&:reload).select(&:alert?).presence
+        job_execution.output.puts "No datadog monitors alerting"
+        return true
       end
 
       job_execution.output.puts "Alert on datadog monitors:\n#{alerting.map { |m| "#{m.name} #{m.url}" }.join("\n")}"
-
-      unless previous_deploy = deploy.previous_succeeded_deploy
-        return job_execution.output.puts "No previous successful commit for rollback found"
-      end
-
-      if previous_deploy.commit == deploy.commit # prevents cascading/useless rollbacks when monitor is always broken
-        return job_execution.output.puts "No rollback to #{previous_deploy.exact_reference}, it is the same commit"
-      end
-
-      rollback = DeployService.new(deploy.user).redeploy(deploy)
-
-      if rollback.persisted?
-        job_execution.output.puts "Triggered rollback to previous commit #{rollback.exact_reference} #{rollback.url}"
-      else
-        errors = rollback.errors.full_messages.join(", ")
-        job_execution.output.puts "Error triggering rollback to previous commit #{rollback.exact_reference} #{errors}"
-      end
+      false # mark deploy as failed
     end
   end
 end
@@ -54,16 +40,19 @@ Samson::Hooks.view :stage_show, "samson_datadog"
 Samson::Hooks.callback :stage_permitted_params do
   [
     :datadog_tags,
-    {datadog_monitor_queries_attributes: [:query, :rollback_on_alert, :_destroy, :id]}
+    {datadog_monitor_queries_attributes: [:query, :fail_deploy_on_alert, :_destroy, :id]}
   ]
 end
 
 Samson::Hooks.callback :before_deploy do |deploy, _|
   SamsonDatadog.send_notification(deploy, additional_tags: ['started'], now: true)
-  SamsonDatadog.store_rollback_monitors(deploy)
+  SamsonDatadog.store_validation_monitors(deploy)
 end
 
-Samson::Hooks.callback :after_deploy do |deploy, job_execution|
+Samson::Hooks.callback :validate_deploy do |deploy, job_execution|
+  SamsonDatadog.validate_deploy(deploy, job_execution)
+end
+
+Samson::Hooks.callback :after_deploy do |deploy, _job_execution|
   SamsonDatadog.send_notification(deploy, additional_tags: ['finished'])
-  SamsonDatadog.rollback_deploy(deploy, job_execution)
 end

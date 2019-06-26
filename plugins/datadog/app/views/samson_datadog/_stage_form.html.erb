@@ -26,10 +26,10 @@
             </div>
 
             <div class="col-lg-3 checkbox">
-              <%= fields.label :rollback_on_alert do %>
-                <%= fields.check_box :rollback_on_alert %>
-                Rollback on Alert
-                <%= additional_info "Rollback stage to last successful commit if monitors alert after the deploy, but did not alert before." %>
+              <%= fields.label :fail_deploy_on_alert do %>
+                <%= fields.check_box :fail_deploy_on_alert %>
+                Fail Deploy on Alert
+                <%= additional_info "Fail deploy if monitors alerts after the deploy, but did not alert before." %>
               <% end %>
             </div>
 

@@ -63,7 +63,8 @@ module Samson
       :trace_scope,
       :asynchronous_performance_tracer,
       :repo_provider_status,
-      :changeset_api_request
+      :changeset_api_request,
+      :validate_deploy
     ].freeze
 
     # Hooks that are slow and we want performance info on

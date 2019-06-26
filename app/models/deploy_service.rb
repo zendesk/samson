@@ -39,6 +39,9 @@ class DeployService
     job_execution.on_start { send_before_notifications(deploy, job_execution) }
 
     # independent so each one can fail and report errors
+    job_execution.on_finish do
+      deploy.job.failed! unless Samson::Hooks.fire(:validate_deploy, deploy, job_execution).all?
+    end
     job_execution.on_finish { update_average_deploy_time(deploy) }
     job_execution.on_finish { send_deploy_update finished: true }
     job_execution.on_finish { send_deploy_email(deploy) }
@@ -49,6 +52,7 @@ class DeployService
         redeploy_previous(deploy, job_execution.output)
       end
     end
+    # TODO: isolate failure by running each callback in a single on_finish
     job_execution.on_finish { Samson::Hooks.fire(:after_deploy, deploy, job_execution) }
 
     JobQueue.perform_later(job_execution, queue: deploy.job_execution_queue_name)
