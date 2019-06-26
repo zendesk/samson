@@ -36,9 +36,14 @@ class DeployService
 
   def confirm_deploy(deploy)
     job_execution = JobExecution.new(deploy.reference, deploy.job)
-    job_execution.on_start { send_before_notifications(deploy, job_execution) }
+
+    job_execution.on_start { Samson::Hooks.fire(:before_deploy, deploy, job_execution) }
+    job_execution.on_start { send_before_notifications(deploy) }
 
     # independent so each one can fail and report errors
+    job_execution.on_finish do
+      deploy.job.failed! unless Samson::Hooks.fire(:validate_deploy, deploy, job_execution).all?
+    end
     job_execution.on_finish { update_average_deploy_time(deploy) }
     job_execution.on_finish { send_deploy_update finished: true }
     job_execution.on_finish { send_deploy_email(deploy) }
@@ -49,6 +54,7 @@ class DeployService
         redeploy_previous(deploy, job_execution.output)
       end
     end
+    # TODO: isolate failure by running each callback in a single on_finish
     job_execution.on_finish { Samson::Hooks.fire(:after_deploy, deploy, job_execution) }
 
     JobQueue.perform_later(job_execution, queue: deploy.job_execution_queue_name)
@@ -122,14 +128,11 @@ class DeployService
       any? { |a| a.audited_changes&.key?("script") }
   end
 
-  def send_before_notifications(deploy, job_execution)
-    Samson::Hooks.fire(:before_deploy, deploy, job_execution)
-
+  def send_before_notifications(deploy)
     if deploy.bypassed_approval?
       DeployMailer.bypass_email(deploy, user).deliver_now
     end
   end
-  add_tracer :send_before_notifications
 
   def send_deploy_email(deploy)
     if emails = deploy.stage.notify_email_addresses.presence

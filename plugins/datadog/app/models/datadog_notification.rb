@@ -31,8 +31,8 @@ class DatadogNotification
       }.to_json
     end
 
-    unless response.success?
-      Rails.logger.info "Failed to send Datadog notification: #{response.status}"
-    end
+    raise "Failed to send Datadog notification: #{response.status}" unless response.success?
+  rescue StandardError => e
+    Samson::ErrorNotifier.notify(e)
   end
 end

@@ -24,8 +24,8 @@ describe Samson::ErrorNotifier do
         Samson::ErrorNotifier.notify(exception)
       end
 
-      expected_message = "ErrorNotifier caught exception: motherofgod. Use ErrorNotifier.expects(:notify)" \
-        " to silence in tests"
+      expected_message = "Samson::ErrorNotifier caught exception: motherofgod." \
+        " Use Samson::ErrorNotifier.expects(:notify) to silence in tests"
       e.message.must_equal expected_message
       e.backtrace.must_equal ['neatbacktraceyougotthere']
     end

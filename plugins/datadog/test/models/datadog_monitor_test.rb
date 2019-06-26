@@ -45,6 +45,7 @@ describe DatadogMonitor do
     end
 
     it "is error when request times out" do
+      Samson::ErrorNotifier.expects(:notify)
       assert_datadog_timeout do
         silence_stderr { monitor.name.must_equal "api error" }
       end
@@ -95,8 +96,16 @@ describe DatadogMonitor do
       end
     end
 
-    it "shows api error in the UI when it fails" do
+    it "shows api error in the UI when it times out" do
+      Samson::ErrorNotifier.expects(:notify)
       assert_request(:get, url, to_timeout: []) do
+        DatadogMonitor.list({}).map(&:name).must_equal ["api error"]
+      end
+    end
+
+    it "shows api error in the UI when it fails" do
+      Samson::ErrorNotifier.expects(:notify)
+      assert_request(:get, url, to_return: {status: 500}) do
         DatadogMonitor.list({}).map(&:name).must_equal ["api error"]
       end
     end
