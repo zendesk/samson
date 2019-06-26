@@ -80,8 +80,15 @@ describe DatadogNotification do
     end
 
     it 'logs failure message if status is not 202' do
-      Rails.logger.expects(:info).with('Failed to send Datadog notification: 400')
+      Samson::ErrorNotifier.expects(:notify)
       assert_request(:post, url, with: {body: expected_body}, to_return: {status: 400}) do
+        notification.deliver
+      end
+    end
+
+    it "notifies of errors but does not block deploys when datadog is unreachable" do
+      Samson::ErrorNotifier.expects(:notify)
+      assert_request(:post, url, with: {body: expected_body}, to_timeout: []) do
         notification.deliver
       end
     end

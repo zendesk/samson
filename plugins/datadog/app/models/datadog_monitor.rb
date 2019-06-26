@@ -26,10 +26,15 @@ class DatadogMonitor
       query = params.merge(api_key: API_KEY, application_key: APP_KEY).to_query
       url = "https://api.datadoghq.com#{path}?#{query}"
       response = Faraday.new(request: {open_timeout: 2, timeout: 4}).get(url)
-      raise "Bad response #{response.status}" unless response.success?
-      JSON.parse(response.body, symbolize_names: true)
+      if response.success?
+        JSON.parse(response.body, symbolize_names: true)
+      elsif response.status == 404 # bad stage config, not our problem
+        fallback
+      else # datadog down, notify
+        raise "Bad response #{response.status}"
+      end
     rescue StandardError => e
-      Rails.logger.error("Datadog error #{e}")
+      Samson::ErrorNotifier.notify(e)
       fallback
     end
   end
