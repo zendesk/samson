@@ -27,6 +27,7 @@ describe Kubernetes::Role do
   let(:pod) do
     {
       kind: 'Pod',
+      apiVersion: 'v1',
       metadata: {name: 'foo', labels: {role: 'migrate', project: 'bar'}},
       spec: {containers: [{name: 'foo', resources: {limits: {cpu: '0.5', memory: '300M'}}}]}
     }
@@ -73,6 +74,8 @@ describe Kubernetes::Role do
     end
 
     describe "resource_name" do
+      before { role.manual_deletion_acknowledged = true }
+
       it "is invalid when blank" do
         role.resource_name = ""
         refute_valid role
@@ -86,6 +89,19 @@ describe Kubernetes::Role do
       it "is invalid when it cannot be used in kubernetes" do
         role.resource_name = "sfsdf__F"
         refute_valid role
+      end
+    end
+
+    describe "manual_deletion_acknowledged" do
+      before { role.resource_name = 'XXX' }
+
+      it "is invalid when not acknowledged" do
+        refute_valid role
+      end
+
+      it "is valid when acknowledged" do
+        role.manual_deletion_acknowledged = true
+        assert_valid role
       end
     end
   end
@@ -165,18 +181,18 @@ describe Kubernetes::Role do
       end
     end
 
-    describe "with invalid role" do
-      before do
-        config_content.push config_content.first
-        write_config 'kubernetes/a.json', config_content.to_json
-      end
+    it 'shows an error when config is invalid' do
+      config_content.push config_content.first # error: multiple primary resources
+      write_config 'kubernetes/a.json', config_content.to_json
+      assert_raises(Samson::Hooks::UserError) { Kubernetes::Role.seed! project, 'HEAD' }
+      project.kubernetes_roles.must_equal []
+    end
 
-      it 'blows up so the controller can show an error' do
-        assert_raises Samson::Hooks::UserError do
-          Kubernetes::Role.seed! project, 'HEAD'
-        end
-        project.kubernetes_roles.must_equal []
-      end
+    it "allows not having a primary resource" do
+      config_content[0][:kind] = "ConfigMap"
+      write_config 'kubernetes/a.json', config_content.to_json
+      Kubernetes::Role.seed! project, 'HEAD'
+      project.kubernetes_roles.map(&:name).must_equal ["some-role"]
     end
 
     it "generates a unique resource_name when metadata.name is already in use" do
@@ -223,6 +239,14 @@ describe Kubernetes::Role do
       names = Kubernetes::Role.all.map(&:service_name)
       names.last.must_match /#{existing_name}-change-me-\d+/
     end
+
+    it "does not see service or resource when using manual naming" do
+      project.create_kubernetes_namespace!(name: "foo")
+      write_config 'kubernetes/a.json', config_content.to_json
+      Kubernetes::Role.seed! project, 'HEAD'
+      project.kubernetes_roles.map(&:resource_name).must_equal [nil]
+      project.kubernetes_roles.map(&:service_name).must_equal [nil]
+    end
   end
 
   describe '.configured_for_project' do
@@ -258,7 +282,7 @@ describe Kubernetes::Role do
     end
 
     it "raises when a role is invalid so the deploy is cancelled" do
-      assert config_content_yml.sub!('Deployment', 'Broken')
+      assert config_content_yml.sub!('project: some-project', 'project: project-invalid')
       write_config role.config_file, config_content_yml
 
       assert_raises Samson::Hooks::UserError do
@@ -309,16 +333,13 @@ describe Kubernetes::Role do
     end
 
     it "does not fail without spec" do
+      labels = {project: 'some-project', role: 'some-role'}
       map = {
         kind: 'ConfigMap',
-        metadata: {
-          name: 'datadog'
-        },
+        apiVersion: 'v1',
+        metadata: {name: 'datadog', labels: labels},
         namespace: 'default',
-        labels: {
-          project: 'some-project',
-          role: 'some-role'
-        }
+        labels: labels
       }.to_yaml
       config_content_yml.prepend("#{map}\n---\n")
       role.defaults.must_equal(
@@ -339,7 +360,6 @@ describe Kubernetes::Role do
 
     {
       '10000000' => 10,
-      '10000000000m' => 10,
       '10000K' => 10,
       '10000Ki' => 10,
       '10M' => 10,
@@ -354,8 +374,28 @@ describe Kubernetes::Role do
       end
     end
 
-    it "ignores unknown units" do
+    it "ignores unknown memory units" do
       assert config_content_yml.sub!('100M', '200T')
+      role.defaults.must_be_nil
+    end
+
+    it "ignores unknown cpu units" do
+      assert config_content_yml.sub!('500m', '500x')
+      role.defaults.must_be_nil
+    end
+
+    it "ignores without limits" do
+      assert config_content_yml.sub!('limits', 'foos')
+      role.defaults.must_be_nil
+    end
+
+    it "uses limits for requests memory when requests was unreadable" do
+      assert config_content_yml.sub!('50M', '50x') # requests memory
+      role.defaults[:requests_memory].must_equal role.defaults[:limits_memory]
+    end
+
+    it "ignores units that do not fit the metric" do
+      assert config_content_yml.sub!('100M', '200m')
       role.defaults.must_be_nil
     end
 
@@ -365,7 +405,7 @@ describe Kubernetes::Role do
     end
 
     it "ignores when config is invalid" do
-      assert config_content_yml.sub!('Deployment', 'Deploymentx')
+      assert config_content_yml.sub!('Service', 'Deployment')
       refute role.defaults
     end
   end
@@ -393,6 +433,27 @@ describe Kubernetes::Role do
       role.config_file = ' whoops '
       role.save!
       role.config_file.must_equal 'whoops'
+    end
+  end
+
+  describe "#manual_deletion_required?" do
+    it "is not required when new" do
+      refute Kubernetes::Role.new(service_name: "foo").manual_deletion_required?
+    end
+
+    it "is not required when adding" do
+      role.service_name = "xxx"
+      refute role.manual_deletion_required?
+    end
+
+    it "required when changing" do
+      role.resource_name = "xxx"
+      assert role.manual_deletion_required?
+    end
+
+    it "required when removing" do
+      role.resource_name = nil
+      assert role.manual_deletion_required?
     end
   end
 end

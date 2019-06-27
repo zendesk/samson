@@ -2,7 +2,7 @@
 require_relative '../test_helper'
 require 'ar_multi_threaded_transactional_tests'
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 1
 
 describe Job do
   include GitRepoTestHelper
@@ -50,24 +50,6 @@ describe Job do
 
     it "is not started by different user" do
       job.started_by?(users(:viewer)).must_equal false
-    end
-  end
-
-  describe "#can_be_cancelled_by?" do
-    it "can be cancelled by user that started the job" do
-      job.can_be_cancelled_by?(job.user).must_equal true
-    end
-
-    it "can be cancelled by admin " do
-      job.can_be_cancelled_by?(user).must_equal true
-    end
-
-    it "can be cancelled by admin of this project" do
-      job.can_be_cancelled_by?(users(:project_admin)).must_equal true
-    end
-
-    it "cannot be cancelled by other users" do
-      job.can_be_cancelled_by?(users(:viewer)).must_equal false
     end
   end
 
@@ -179,18 +161,18 @@ describe Job do
     end
   end
 
-  describe "#update_output!" do
-    it "updates output" do
-      job.update_output!("foo")
-      job.output.must_equal "foo"
-    end
-  end
-
   describe "#update_git_references!" do
     it "updates git references" do
       job.update_git_references!(commit: "foo", tag: "bar")
       job.commit.must_equal "foo"
       job.tag.must_equal "bar"
+    end
+
+    it "expires the deploy" do
+      job.deploy = deploys(:succeeded_test)
+      Rails.cache.fetch(job.deploy) { 1 }
+      job.update_git_references!(commit: "foo", tag: "bar")
+      Rails.cache.fetch(job.deploy) { 2 }.must_equal 2
     end
   end
 
@@ -282,12 +264,17 @@ describe Job do
     with_full_job_execution
 
     it "cancels an executing job" do
+      # get the job running
       ex = JobExecution.new('master', job) { sleep 10 }
       JobQueue.perform_later(ex)
       sleep 0.1 # make the job spin up properly
-
       assert JobQueue.executing?(ex.id)
+
+      # cancel it
       job.cancel(user)
+      maxitest_wait_for_extra_threads
+
+      # it is cancelled ?
       assert job.cancelled? # job execution callbacks sets it to cancelled
       job.canceller.must_equal user
     end
@@ -320,6 +307,7 @@ describe Job do
 
       job.cancel(user)
       executing_job.cancel(user)
+      maxitest_wait_for_extra_threads
 
       assert job.cancelled?
       refute JobQueue.queued?(job.id)
@@ -348,25 +336,73 @@ describe Job do
     end
   end
 
-  describe "#append_output!" do
-    before { job.update_column(:output, "before") }
+  describe "#status!" do
+    it 'updates' do
+      job.update_column(:status, 'pending')
 
-    it "adds to empty" do
-      job.update_column(:output, nil)
-      job.append_output!("Hello")
-      job.reload.output.must_equal "Hello"
+      job.send(:status!, 'succeeded')
+
+      job.status.must_equal 'succeeded'
     end
 
-    it "adds output" do
-      job.append_output!("Hello")
-      job.reload.output.must_equal "beforeHello"
+    it 'reports state' do
+      job.expects(:report_state)
+
+      job.send(:status!, 'succeeded')
     end
 
-    it "adds from different models" do
-      job2 = Job.find(job.id)
-      job.append_output!("Hello")
-      job2.append_output!("World")
-      job.reload.output.must_equal "beforeHelloWorld"
+    it 'does not notify if job is not finished' do
+      job.expects(:report_state).never
+
+      job.send(:status!, 'pending')
+    end
+
+    it 'updates deploy updated_at' do
+      job = jobs(:succeeded_test)
+      deploy = job.deploy
+
+      freeze_time do
+        deploy.update_column(:updated_at, 1.day.ago)
+        deploy.updated_at.wont_equal Time.now
+
+        job.send(:status!, 'succeeded')
+
+        deploy.updated_at.must_equal Time.now
+      end
+    end
+  end
+
+  describe "#report_state" do
+    def assert_instrument(with)
+      ActiveSupport::Notifications.expects(:instrument).with('job_status.samson', with)
+    end
+
+    let(:job) { jobs(:succeeded_test) }
+
+    it 'reports for deploy' do
+      assert_instrument(
+        stage: job&.deploy&.stage&.permalink,
+        project: project.permalink,
+        type: job&.deploy ? 'deploy' : 'build',
+        status: 'succeeded',
+        cycle_time: DeployMetrics.new(job&.deploy).cycle_time
+      )
+
+      job.send(:report_state)
+    end
+
+    it 'reports for build' do
+      job = jobs(:running_test) # job without deploy
+      job.update_column(:status, 'succeeded')
+      assert_instrument(
+        stage: job&.deploy&.stage&.permalink,
+        project: project.permalink,
+        type: job&.deploy ? 'deploy' : 'build',
+        status: 'succeeded',
+        cycle_time: DeployMetrics.new(job&.deploy).cycle_time
+      )
+
+      job.send(:report_state)
     end
   end
 end

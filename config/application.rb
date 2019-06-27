@@ -1,9 +1,15 @@
 # frozen_string_literal: true
 require_relative 'boot'
-require 'rails/all'
+require 'active_record/railtie'
+require 'action_controller/railtie'
+require 'action_view/railtie'
+require 'action_mailer/railtie'
+require 'action_cable/engine'
+require 'rails/test_unit/railtie'
+require 'sprockets/railtie'
 
 if (google_domain = ENV["GOOGLE_DOMAIN"]) && !ENV['EMAIL_DOMAIN']
-  warn "Stop using deprecated GOOGLE_DOMAIN"
+  Rails.logger.warn "Stop using deprecated GOOGLE_DOMAIN"
   ENV["EMAIL_DOMAIN"] = google_domain.sub('@', '')
 end
 
@@ -11,22 +17,10 @@ Bundler.require(:preload)
 Bundler.require(:assets) if Rails.env.development? || ENV["PRECOMPILE"]
 
 ###
-# Railties need to be loaded before the application is defined
-if ['development', 'staging'].include?(Rails.env)
+# Railties need to be loaded before the application is initialized
+if ['development', 'staging'].include?(Rails.env) && ENV["SERVER_MODE"]
   require 'rack-mini-profiler' # side effect: removes expires headers
-end
-
-if ['staging', 'production'].include?(Rails.env)
-  require 'airbrake'
-  require 'airbrake/user_informer'
-  require 'newrelic_rpm'
-else
-  # avoids circular dependencies warning
-  # https://discuss.newrelic.com/t/circular-require-in-ruby-agent-lib-new-relic-agent-method-tracer-rb/42737
-  require 'new_relic/control'
-
-  # needed even in dev/test mode
-  require 'new_relic/agent/method_tracer'
+  Rack::MiniProfiler.config.authorization_mode = :allow_all
 end
 # END Railties
 ###
@@ -39,7 +33,7 @@ module Samson
     # Settings in config/environments/* take precedence over those specified here.
     # Application configuration should go into files in config/initializers
     # -- all .rb files in that directory are automatically loaded.
-    config.load_defaults 5.1
+    config.load_defaults 5.2
 
     deprecated_url = ->(var) do
       url = ENV[var].presence
@@ -49,10 +43,10 @@ module Samson
 
     config.eager_load_paths << "#{config.root}/lib"
 
-    if Rails.env.test?
+    case ENV["CACHE_STORE"]
+    when "memory"
       config.cache_store = :memory_store
-    else
-      servers = []
+    when "memcached"
       options = {
         value_max_bytes: 3000000,
         compress: true,
@@ -72,8 +66,12 @@ module Samson
           socket_timeout: 1.5,
           socket_failure_delay: 0.2
         )
+      else
+        servers = ["localhost:11211"]
       end
       config.cache_store = :mem_cache_store, servers, options
+    else
+      raise "Set CACHE_STORE environment variable to either memory or memcached"
     end
 
     # Allow streaming
@@ -88,11 +86,6 @@ module Samson
     config.samson.email.prefix = ENV["EMAIL_PREFIX"].presence || "DEPLOY"
     config.samson.email.sender_domain = ENV["EMAIL_SENDER_DOMAIN"].presence || "samson-deployment.com"
 
-    # Email notifications
-    config.samson.project_created_email = ENV["PROJECT_CREATED_NOTIFY_ADDRESS"]
-    config.samson.project_deleted_email = ENV["PROJECT_DELETED_NOTIFY_ADDRESS"].presence ||
-      ENV["PROJECT_CREATED_NOTIFY_ADDRESS"]
-
     # Tired of the i18n deprecation warning
     config.i18n.enforce_available_locales = true
 
@@ -106,8 +99,6 @@ module Samson
     config.samson.github.deploy_team = ENV["GITHUB_DEPLOY_TEAM"].presence
     config.samson.github.web_url = deprecated_url.call("GITHUB_WEB_URL") || 'https://github.com'
     config.samson.github.api_url = deprecated_url.call("GITHUB_API_URL") || 'https://api.github.com'
-    config.samson.github.status_url = deprecated_url.call("GITHUB_STATUS_URL") || 'https://status.github.com'
-    config.samson.references_cache_ttl = ENV['REFERENCES_CACHE_TTL'].presence || 10.minutes
 
     # Configuration for LDAP
     config.samson.ldap = ActiveSupport::OrderedOptions.new
@@ -129,11 +120,13 @@ module Samson
     config.samson.auth.gitlab = Samson::EnvCheck.set?("AUTH_GITLAB")
     config.samson.auth.bitbucket = Samson::EnvCheck.set?("AUTH_BITBUCKET")
 
-    config.samson.uri = URI(ENV["DEFAULT_URL"] || 'http://localhost:3000')
-    config.sse_rails_engine.access_control_allow_origin = config.samson.uri.to_s
+    config.samson.uri = URI(
+      ENV["DEFAULT_URL"] ||
+      ((app = ENV["HEROKU_APP_NAME"]) && "https://#{app}.herokuapp.com") ||
+      'http://localhost:3000'
+    )
 
-    config.samson.stream_origin = ENV['STREAM_ORIGIN'].presence || config.samson.uri.to_s
-    config.samson.deploy_origin = ENV['DEPLOY_ORIGIN'].presence || config.samson.uri.to_s
+    raise if ENV['STREAM_ORIGIN'] || ENV['DEPLOY_ORIGIN'] # alert users with deprecated options, remove 2019-05-01
 
     config.samson.deploy_timeout = Integer(ENV["DEPLOY_TIMEOUT"] || 2.hours.to_i)
 
@@ -166,21 +159,36 @@ module Samson
 
         # Token used to request badges
         config.samson.badge_token = \
-          Digest::MD5.hexdigest('badge_token' + Samson::Application.config.secret_key_base)
+          Digest::MD5.hexdigest('badge_token' + (ENV['BADGE_TOKEN_BASE'] || Samson::Application.config.secret_key_base))
       end
     end
 
     config.active_support.deprecation = :raise
 
     # avoid permission errors in production and cleanliness test failures in test
-    config.active_record.dump_schema_after_migration = Rails.env.development?
+    config.active_record.dump_schema_after_migration = Rails.env.development? && ENV["RAILS_DUMP_SCHEMA"] != "false"
   end
 
   RELEASE_NUMBER = '\d+(:?\.\d+)*'
 end
 
+# Configure sensitive parameters which will be filtered from the log files + errors
+# Must be here instead of in an initializer because plugin initializers run before app initializers
+# Used in plugins/airbrake + rollbar which do not support the 'foo.bar' syntax as rails does
+# https://github.com/airbrake/airbrake-ruby/issues/137
+Samson::Application.config.session_key = :"_samson_session_#{Rails.env}"
+Rails.application.config.filter_parameters.concat [
+  :password, :value, :value_hashed, :token, :access_token, Samson::Application.config.session_key, 'HTTP_AUTHORIZATION'
+]
+
+# Avoid starting up another background thread if we don't need it, see lib/samson/boot_check.rb
+if ["test", "development"].include?(Rails.env)
+  ActiveRecord::ConnectionAdapters::ConnectionPool::Reaper.define_method(:run) {}
+end
+
 require 'samson/hooks'
 
+require_relative "../lib/samson/syslog_formatters"
 require_relative "../lib/samson/logging"
 require_relative "../lib/samson/initializer_logging"
 require_relative "../app/models/job_queue" # need to load early or dev reload will lose the .enabled

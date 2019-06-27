@@ -6,7 +6,7 @@ SingleCov.covered!
 describe EnvironmentsController do
   let(:json) { JSON.parse(response.body) }
 
-  as_a_viewer do
+  as_a :viewer do
     describe "#index" do
       it 'renders' do
         get :index
@@ -40,7 +40,7 @@ describe EnvironmentsController do
     unauthorized :put, :update, id: 1
   end
 
-  as_a_super_admin do
+  as_a :super_admin do
     describe "#new" do
       it 'renders' do
         get :new
@@ -53,7 +53,7 @@ describe EnvironmentsController do
       it 'creates an environment' do
         assert_difference 'Environment.count', +1 do
           post :create, params: {environment: {name: 'gamma', production: true}}
-          assert_redirected_to environments_path
+          assert_redirected_to "/environments/gamma"
         end
       end
 
@@ -65,8 +65,9 @@ describe EnvironmentsController do
       end
     end
 
-    describe '#delete' do
+    describe '#destroy' do
       it 'succeeds' do
+        DeployGroupsStage.delete_all
         env = environments(:production)
         delete :destroy, params: {id: env}
         assert_redirected_to environments_path
@@ -83,11 +84,9 @@ describe EnvironmentsController do
     describe '#update' do
       let(:environment) { environments(:production) }
 
-      before { request.env["HTTP_REFERER"] = environments_url }
-
       it 'save' do
         post :update, params: {environment: {name: 'Test Update', production: false, permalink: 'foo'}, id: environment}
-        assert_redirected_to environments_path
+        assert_redirected_to environment_path('foo')
         environment.reload
         environment.name.must_equal 'Test Update'
         environment.permalink.must_equal 'foo'

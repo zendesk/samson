@@ -6,12 +6,12 @@ SingleCov.covered!
 describe GkeClustersController do
   with_env GCLOUD_ACCOUNT: "foo", GCLOUD_PROJECT: "bar"
 
-  as_an_admin do
+  as_a :admin do
     unauthorized :get, :new
     unauthorized :post, :create
   end
 
-  as_a_super_admin do
+  as_a :super_admin do
     describe "#new" do
       it "renders" do
         get :new
@@ -21,7 +21,7 @@ describe GkeClustersController do
 
     describe "#create" do
       def do_create(gcp_project: 'pp', cluster_name: 'cc', zone: 'zz')
-        post :create, params: { gke_cluster: { gcp_project: gcp_project, cluster_name: cluster_name, zone: zone } }
+        post :create, params: {gke_cluster: {gcp_project: gcp_project, cluster_name: cluster_name, zone: zone}}
       end
 
       let(:expected_file) { "#{ENV["GCLOUD_GKE_CLUSTERS_FOLDER"]}/pp-cc.yml" }
@@ -51,7 +51,7 @@ describe GkeClustersController do
         Samson::CommandExecutor.expects(:execute).returns([false, "foo"])
         do_create
         assert_response :success
-        flash[:error].must_include(
+        flash[:alert].must_include(
           "gcloud container clusters get-credentials --zone zz cc --account foo --project pp foo"
         )
       end
@@ -61,7 +61,7 @@ describe GkeClustersController do
         File.write expected_file, "hellp"
         do_create
         assert_response :success
-        flash[:error].must_equal "File #{expected_file} already exists and cannot be overwritten automatically."
+        flash[:alert].must_equal "File #{expected_file} already exists and cannot be overwritten automatically."
       end
 
       it 're-renders new if invalid gke cluster is submitted' do

@@ -5,7 +5,8 @@
 
 $(function () {
   // Shows confirmation dropdown using Github comparison
-  var changesetLoaded = false,
+  var activeTab,
+      changesetLoaded = false,
       confirmed = true,
       $container = $(".deploy-details"),
       $placeholderPanes = $container.find(".changeset-placeholder"),
@@ -51,19 +52,24 @@ $(function () {
   }
   toggleConfirmed();
 
-  // when changing the reference users need to check 'Review' again to get updated commit listings
+  // when changing the reference users need to 'Review' again to see updated commit listings
   refStatusTypeahead({changed: function() { if(confirmed) { toggleConfirmed(); } }});
 
-  function showDeployConfirmationTab($this) {
-    var $navTabs = $this.find("#deploy-confirmation .nav-tabs"),
-        hasActivePane = $this.find(".tab-pane.active").length === 0;
+  function storeActiveTab($this) {
+    activeTab = $this.find('.nav-tabs li.active a').attr('href');
+  }
+
+  function showActiveTab($this) {
+    var $navTabs = $this.find("#deploy-confirmation .nav-tabs");
+    var tabToMakeActive = $navTabs.find('[href="' + activeTab + '"]');
 
     // We need to switch to another tab and then switch back in order for
     // the plugin to detect that the DOM node has been replaced.
     $navTabs.find("a").tab("show");
 
-    // If there is no active pane defined, show first pane
-    if (hasActivePane) {
+    if(tabToMakeActive.length !== 0) {
+      tabToMakeActive.tab('show');
+    } else {
       $navTabs.find("a:first").tab("show");
     }
   }
@@ -82,9 +88,9 @@ $(function () {
       toggleConfirmed();
       $("#deploy-confirmation").show();
 
-      showDeployConfirmationTab($this);
+      storeActiveTab($this);
 
-      $container.empty();
+      $('.changeset-content').remove();
       $container.append($placeholderPanes);
 
       $.ajax({
@@ -94,8 +100,7 @@ $(function () {
         success: function(data) {
           $placeholderPanes.detach();
           $container.append(data);
-
-          showDeployConfirmationTab($this);
+          showActiveTab($this);
         }
       });
 
@@ -111,14 +116,14 @@ function toggleOutputToolbar() {
 }
 
 function waitUntilEnabled(path) {
-  $.ajax({
-    url: path,
-    success: function(data, status, xhr) {
-      if(xhr.status == 204) {
-        window.location.reload();
+  setInterval(function() {
+    $.ajax({
+      url: path,
+      success: function(data, status, xhr) {
+        if(xhr.status == 204) {
+          window.location.reload();
+        }
       }
-    }
-  });
-
-  setTimeout(function() { waitUntilEnabled(path); }, 5000);
+    });
+  }, 5000);
 }

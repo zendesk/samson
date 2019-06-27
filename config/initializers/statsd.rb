@@ -11,22 +11,60 @@ Samson.statsd.namespace = "samson.app"
 
 Samson.statsd.event "Startup", "Samson startup" if ENV['SERVER_MODE']
 
-ActiveSupport::Notifications.subscribe("execute_job.samson") do |*args|
-  event = ActiveSupport::Notifications::Event.new(*args)
+# tested via test/lib/samson/time_sum_test.rb
+ActiveSupport::Notifications.subscribe("execute_job.samson") do |_, start, finish, _, payload|
+  duration = 1000.0 * (finish - start)
   tags = [
-    "project:#{event.payload.fetch(:project)}",
-    "stage:#{event.payload.fetch(:stage)}",
+    "project:#{payload.fetch(:project)}",
+    "stage:#{payload.fetch(:stage)}",
   ]
 
   # only for deploys report if things were run in production
-  production = event.payload.fetch(:production)
+  production = payload.fetch(:production)
   tags << "production:#{production}" unless production.nil?
 
-  Samson.statsd.histogram "execute_shell.time", event.duration, tags: tags
+  Samson.statsd.batch do |statsd|
+    statsd.timing "execute_shell.time", duration, tags: tags
+    (payload[:parts] || {}).each do |part, time|
+      statsd.timing "execute_shell.parts", time, tags: tags + ["part:#{part}"]
+    end
+  end
+  Rails.logger.info(payload.merge(total: duration, message: "Job execution finished"))
+end
+
+# report and log timing, plain names so git-grep works
+[
+  ["execute.command_executor.samson", "command_executor.execute", []],
+  ["execute.terminal_executor.samson", "terminal_executor.execute", []],
+  ["request.rest_client.samson", "rest_client.request", [:method]],
+  ["request.vault.samson", "vault.request", [:method]],
+  ["request.faraday.samson", "faraday.request", [:method]],
+  ["wait_for_build.samson", "builds.time.wait_time", [:external, :project]]
+].each do |topic, metric, tagged|
+  ActiveSupport::Notifications.subscribe(topic) do |_, start, finish, _, payload|
+    duration = 1000.0 * (finish - start)
+    Rails.logger.debug(message: topic, duration: "#{duration.round(1)}ms", **payload)
+    Samson.statsd.timing metric, duration, tags: tagged.map { |k| "#{k}:#{payload.fetch(k)}" }
+  end
 end
 
 ActiveSupport::Notifications.subscribe("job_queue.samson") do |*, payload|
-  payload.each { |key, value| Samson.statsd.gauge "job.#{key}", value }
+  [[:deploys, true], [:jobs, false]].each do |(type, is_deploy)|
+    metrics = payload.fetch(type)
+    metrics.each { |key, value| Samson.statsd.gauge "job.#{key}", value, tags: ["deploy:#{is_deploy}"] }
+  end
+end
+
+ActiveSupport::Notifications.subscribe("job_status.samson") do |*, payload|
+  tags = [
+    "project:#{payload.fetch(:project)}",
+    "stage:#{payload.fetch(:stage)}",
+  ]
+
+  payload.fetch(:cycle_time).each do |key, value|
+    Samson.statsd.timing "jobs.deploy.cycle_time.#{key}", value * 1000, tags: tags
+  end
+  Samson.statsd.increment "jobs.#{payload.fetch(:type)}.#{payload.fetch(:status)}", tags: tags
 end
 
 ActiveSupport::Notifications.subscribe("system_stats.samson") do |*, payload|
@@ -34,27 +72,28 @@ ActiveSupport::Notifications.subscribe("system_stats.samson") do |*, payload|
 end
 
 # basic web stats
-ActiveSupport::Notifications.subscribe("process_action.action_controller") do |*args|
-  event = ActiveSupport::Notifications::Event.new(*args)
-  controller = "controller:#{event.payload.fetch(:controller)}"
-  action = "action:#{event.payload.fetch(:action)}"
-  format = "format:#{event.payload[:format] || 'all'}"
+ActiveSupport::Notifications.subscribe("process_action.action_controller") do |_, start, finish, _, payload|
+  duration = 1000.0 * (finish - start)
+  controller = "controller:#{payload.fetch(:controller)}"
+  action = "action:#{payload.fetch(:action)}"
+  format = "format:#{payload[:format] || 'all'}"
   format = "format:all" if format == "format:*/*"
-  status = event.payload[:status] || 401 # unauthorized redirect/error has no status because it is a `throw`
+  # Unauthorized and 500s have no status because it is a `throw`
+  # samson/vendor/bundle/gems/actionpack-5.1.4/lib/action_controller/metal/instrumentation.rb:35
+  status = payload[:status] || 'THR'
   tags = [controller, action, format]
 
   # db and view runtime are not set for actions without db/views
   # db_runtime does not work ... always returns 0 when running in server mode ... works fine locally and on console
-  Samson.statsd.histogram "web.request.time", event.duration, tags: tags
-  Samson.statsd.histogram "web.db_query.time", event.payload[:db_runtime].to_i, tags: tags
-  Samson.statsd.histogram "web.view.time", event.payload[:view_runtime].to_i, tags: tags
+  Samson.statsd.timing "web.request.time", duration, tags: tags
+  Samson.statsd.timing "web.db_query.time", payload[:db_runtime].to_i, tags: tags
+  Samson.statsd.timing "web.view.time", payload[:view_runtime].to_i, tags: tags
   Samson.statsd.increment "web.request.status.#{status}", tags: tags
 end
 
-# test: enable local airbrake, see airbrake.rb
-# will not report for ignored errors from airbrake.rb
-Airbrake.add_filter do |notice|
-  notice[:errors].each do |error|
-    Samson.statsd.increment "airbrake_error_sent", tags: ["class:#{error[:type]}"]
-  end
+# test: enable local exception backend (ex: plugins/samson_airbrake/config/initializers/airbrake.rb)
+# will also report for errors ignored by config/initializers/ignored_errors.rb
+Samson::Hooks.callback(:ignore_error) do |error_class_name|
+  Samson.statsd.increment "errors.count", tags: ["class:#{error_class_name}"]
+  false
 end

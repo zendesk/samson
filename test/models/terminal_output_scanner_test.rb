@@ -59,4 +59,43 @@ describe TerminalOutputScanner do
     source << [:finished, "foo"]
     tokens.must_equal [[:finished, "foo"]]
   end
+
+  describe "#to_s" do
+    let(:source) { OutputBuffer.new }
+    let(:string) { TerminalOutputScanner.new(source).to_s }
+
+    before { Time.stubs(:now).returns Time.parse('2018-01-01') }
+
+    it "fails when output is still open and would hang forever" do
+      assert_raises(RuntimeError) { string }
+    end
+
+    it "aggregates the output into a single string" do
+      ["hel", "lo", "\n", "world\n"].map { |x| source.write x }
+      source.close
+      string.must_equal "[00:00:00] hello\n[00:00:00] world\n"
+    end
+
+    it "replaces lines correctly" do
+      source.write "hello\rworld\n"
+      source.close
+      string.must_equal "world\n"
+    end
+
+    it "only shows latest when message was replaced" do
+      source.write "foo"
+      source.write "bar\n"
+      source.write "baz\n", :replace
+      source.puts "baz2"
+      source.close
+      string.must_equal "[00:00:00] baz\n[00:00:00] baz2\n"
+    end
+
+    it "ignores other events" do
+      source.write "hello\n"
+      source.write "world\n", :finished
+      source.close
+      string.must_equal "[00:00:00] hello\n"
+    end
+  end
 end

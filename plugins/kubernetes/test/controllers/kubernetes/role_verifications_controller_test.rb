@@ -4,7 +4,7 @@ require_relative '../../test_helper'
 SingleCov.covered!
 
 describe Kubernetes::RoleVerificationsController do
-  as_a_viewer do
+  as_a :viewer do
     describe '#new' do
       it "renders" do
         get :new
@@ -14,7 +14,7 @@ describe Kubernetes::RoleVerificationsController do
 
     describe '#create' do
       it "succeeds when valid" do
-        Kubernetes::RoleVerifier.any_instance.expects(:verify).returns nil
+        Kubernetes::RoleValidator.any_instance.expects(:validate).returns nil
         post :create, params: {role: {}.to_json}
         assert flash.now[:notice], assigns[:errors]
         assert_template :new
@@ -28,7 +28,7 @@ describe Kubernetes::RoleVerificationsController do
 
       it "fails nicely with borked template" do
         post :create, params: {role: "---"}
-        assigns[:errors].must_include "Error found when parsing test.yml"
+        assigns[:errors].must_include "Error found when validating test.yml"
       end
 
       it "reports invalid json" do

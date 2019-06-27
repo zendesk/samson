@@ -7,5 +7,5 @@
 
   <hr>
 
-  <%= form.actions %>
+  <%= form.actions delete: (:type if can?(:write, :stages, @project)) %>
 <% end %>

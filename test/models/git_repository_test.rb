@@ -22,25 +22,6 @@ describe GitRepository do
     repository.send(:repository_directory).must_equal project.repository_directory
   end
 
-  describe "#create_workspace" do
-    it 'clones a repository' do
-      Dir.mktmpdir do |dir|
-        create_repo_without_tags
-        FileUtils.mv(repo_temp_dir, repository.repo_cache_dir)
-
-        repository.send(:create_workspace, dir).must_equal true
-        Dir.exist?("#{dir}/.git").must_equal true
-      end
-    end
-
-    it "returns false when clone fails" do
-      Dir.mktmpdir do |dir|
-        repository.send(:create_workspace, dir).must_equal false
-        Dir.exist?("#{dir}/.git").must_equal false
-      end
-    end
-  end
-
   describe "#ensure_mirror_current" do
     def call
       repository.send(:ensure_mirror_current)
@@ -95,20 +76,11 @@ describe GitRepository do
       public = file.split(/^  private$/).first
       methods = public.scan(/^  def ([a-z_\?\!]+)(.*?)^  end/m)
       methods.size.must_be :>, 5 # making sure the logic is sound
+      methods.delete_if { |method, _| ["update_mirror", "prune_worktree"].include?(method) }
       methods.each do |name, body|
         next if ["initialize", "repo_cache_dir", "clean!", "valid_url?"].include?(name)
         body.must_include "ensure_mirror_current", "Expected #{name} to update the repo with ensure_mirror_current"
       end
-    end
-  end
-
-  describe "#checkout" do
-    it 'switches to a different branch' do
-      create_repo_with_an_additional_branch
-      repository.send(:checkout, 'master', repo_temp_dir).must_equal(true)
-      Dir.chdir(repo_temp_dir) { current_branch.must_equal('master') }
-      repository.send(:checkout, 'test_user/test_branch', repo_temp_dir).must_equal(true)
-      Dir.chdir(repo_temp_dir) { current_branch.must_equal('test_user/test_branch') }
     end
   end
 
@@ -157,6 +129,10 @@ describe GitRepository do
       repository.commit_from_ref("master ; rm #{file}").must_be_nil
       assert File.exist?(file)
     end
+
+    it 'fails when mirror could not be updated' do
+      repository.commit_from_ref('master').must_be_nil
+    end
   end
 
   describe "#fuzzy_tag_from_ref" do
@@ -181,6 +157,10 @@ describe GitRepository do
         git checkout -b v1
       SHELL
       repository.fuzzy_tag_from_ref('v1').must_equal 'v1'
+    end
+
+    it 'fails when mirror could not be updated' do
+      repository.fuzzy_tag_from_ref('master').must_be_nil
     end
   end
 
@@ -241,19 +221,31 @@ describe GitRepository do
   describe "#checkout_workspace" do
     before { create_repo_with_an_additional_branch }
 
-    it 'creates a repository' do
+    it "fails without reference" do
       Dir.mktmpdir do |temp_dir|
-        assert repository.checkout_workspace(temp_dir, 'test_user/test_branch')
-        Dir.chdir(temp_dir) { current_branch.must_equal('test_user/test_branch') }
+        assert_raises(ArgumentError) { repository.checkout_workspace(temp_dir, '') }
       end
     end
 
-    it 'checks out submodules' do
-      add_submodule_to_repo
-      Dir.mktmpdir do |temp_dir|
-        assert repository.checkout_workspace(temp_dir, 'master')
-        Dir.exist?("#{temp_dir}/submodule").must_equal true
-        File.read("#{temp_dir}/submodule/bar").must_equal "banana\n"
+    [true, false].each do |full_checkout|
+      describe "with full_checkout #{full_checkout}" do
+        before { repository.full_checkout = full_checkout }
+
+        it 'creates a repository' do
+          Dir.mktmpdir do |temp_dir|
+            assert repository.checkout_workspace(temp_dir, 'test_user/test_branch')
+            Dir.chdir(temp_dir) { current_branch.must_equal('test_user/test_branch') }
+          end
+        end
+
+        it 'checks out submodules' do
+          add_submodule_to_repo
+          Dir.mktmpdir do |temp_dir|
+            assert repository.checkout_workspace(temp_dir, 'master')
+            Dir.exist?("#{temp_dir}/submodule").must_equal true
+            File.read("#{temp_dir}/submodule/bar").must_equal "banana\n"
+          end
+        end
       end
     end
   end
@@ -275,12 +267,9 @@ describe GitRepository do
   end
 
   describe "#file_content" do
-    before do
-      create_repo_without_tags
-      repository.send(:ensure_mirror_current)
-    end
+    before { create_repo_without_tags }
 
-    let!(:sha) { repository.commit_from_ref('master') }
+    let!(:sha) { execute_on_remote_repo('git rev-parse master').strip }
 
     it 'finds content' do
       repository.file_content('foo', sha).must_equal "monkey"
@@ -294,31 +283,64 @@ describe GitRepository do
       repository.file_content('foox', 'a' * 40).must_be_nil
     end
 
-    it "always updates for non-shas" do
-      repository.expects(:sha_exist?).never
-      repository.expects(:ensure_mirror_current)
-      repository.file_content('foox', 'a' * 41).must_be_nil
-    end
+    describe "when checkout exists" do
+      # create a checkout without marking "mirror_current?"
+      before { Project.new(id: project.id, repository_url: repo_temp_dir).repository.send(:ensure_mirror_current) }
 
-    it "does not update when sha exists to save time" do
-      repository.expects(:ensure_mirror_current).never
-      repository.file_content('foo', sha).must_equal "monkey"
-    end
-
-    it "updates when sha is missing" do
-      repository.expects(:ensure_mirror_current)
-      repository.file_content('foo', 'a' * 40).must_be_nil
-    end
-
-    describe "pull: false" do
-      before { repository.expects(:update!).never }
-
-      it "finds known" do
-        repository.file_content('foo', 'HEAD', pull: false).must_equal 'monkey'
+      it "updates for non-shas" do
+        repository.expects(:ensure_mirror_current)
+        repository.file_content('foox', 'a' * 41).must_be_nil
       end
 
-      it "ignores unknown" do
-        repository.file_content('foo', 'aaaaaaaaa', pull: false).must_be_nil
+      it "does not update when sha exists to save time" do
+        repository.expects(:ensure_mirror_current).never
+        repository.file_content('foo', sha).must_equal "monkey"
+      end
+
+      it "updates when sha is missing" do
+        repository.expects(:ensure_mirror_current)
+        repository.file_content('foo', 'a' * 40).must_be_nil
+      end
+
+      it "caches" do
+        Samson::CommandExecutor.expects(:execute).times(2).returns([true, "x"])
+        4.times { repository.file_content('foo', sha).must_equal "x" }
+      end
+
+      it "caches sha too" do
+        Samson::CommandExecutor.expects(:execute).times(3).returns([true, "x"])
+        4.times { |i| repository.file_content("foo-#{i.odd?}", sha).must_equal "x" }
+      end
+
+      it "does not pull when mirror is current" do
+        repository.send(:ensure_mirror_current)
+        repository.expects(:ensure_mirror_current).never
+        repository.file_content('foo', 'a' * 40, pull: true).must_be_nil
+      end
+
+      describe "pull: false" do
+        before { repository.expects(:ensure_mirror_current).never }
+
+        it "finds known" do
+          repository.file_content('foo', 'HEAD', pull: false).must_equal 'monkey'
+        end
+
+        it "ignores unknown" do
+          repository.file_content('foo', 'aaaaaaaaa', pull: false).must_be_nil
+        end
+
+        it "ignores when repo does not exist" do
+          FileUtils.rm_rf(repository.repo_cache_dir)
+          repository.file_content('foo', 'HEAD', pull: false).must_be_nil
+        end
+
+        it "does not cache when requesting for an update" do
+          repository.unstub(:ensure_mirror_current)
+          repository.expects(:ensure_mirror_current)
+          Samson::CommandExecutor.expects(:execute).times(2).returns([true, "x"])
+          repository.file_content('foo', 'HEAD', pull: false).must_equal "x"
+          4.times { repository.file_content('foo', 'HEAD', pull: true).must_equal "x" }
+        end
       end
     end
   end
@@ -337,20 +359,34 @@ describe GitRepository do
       refute MultiLock.locks[lock_key]
     end
 
+    it "does not log waiting when not waiting" do
+      repository.send(:exclusive) {}
+      repository.executor.output.string.must_equal ""
+    end
+
     describe "when already locked" do
-      before { MultiLock.locks[lock_key] = true }
+      before do
+        MultiLock.stubs(:sleep).with { sleep 0.1 } # make test sleep 0.1 instead of 1
+        MultiLock.locks[lock_key] = true
+      end
 
       it 'fails to execute' do
         time = Benchmark.realtime do
-          repository.send(:exclusive, timeout: 1) { raise "NOPE" }
+          repository.send(:exclusive, timeout: 0.1) { raise "NEVER" }
         end
-        time.must_be :>, 0.2
+        time.must_be :>, 0.1
         assert MultiLock.locks[lock_key] # still locked
       end
 
       it 'executes error callback if it cannot lock' do
-        repository.send(:executor).output.expects(:write).at_least_once
-        refute(repository.send(:exclusive, timeout: 1)) { raise "NOPE" }
+        refute(repository.send(:exclusive, timeout: 0.1)) { raise "NEVER" }
+        repository.executor.output.string.must_equal "Waiting for repository lock for true\n"
+      end
+
+      it 'logs once every 10 tries' do
+        refute(repository.send(:exclusive, timeout: 1.1)) { raise "NEVER" }
+        repository.executor.output.string.
+          must_equal("Waiting for repository lock for true\nWaiting for repository lock for true\n")
       end
     end
   end
@@ -373,6 +409,32 @@ describe GitRepository do
     it "ignores monkey-patching" do
       MultiLock.expects(:lock).yields
       call.must_equal callsite
+    end
+  end
+
+  describe "#prune_worktree" do
+    it "silently prunes" do
+      create_repo_without_tags
+      Dir.mktmpdir do |dir|
+        repository.checkout_workspace dir, 'master'
+      end
+      repository.prune_worktree
+      `cd #{repository.repo_cache_dir} && git worktree list`.split("\n").size.must_equal 1
+      repository.executor.output.string.wont_include "prune"
+    end
+  end
+
+  describe "#instance_cache" do
+    it "caches" do
+      c = 0
+      2.times { repository.send(:instance_cache, 1) { c += 1 }.must_equal c }
+      c.must_equal 1
+    end
+
+    it "caches nils" do
+      c = 0
+      2.times { repository.send(:instance_cache, 1) { c += 1; nil }.must_be_nil }
+      c.must_equal 1
     end
   end
 end

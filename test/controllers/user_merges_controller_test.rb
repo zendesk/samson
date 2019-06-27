@@ -4,12 +4,12 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe UserMergesController do
-  as_an_admin do
+  as_a :admin do
     unauthorized :get, :new, user_id: 1
     unauthorized :post, :create, user_id: 1
   end
 
-  as_a_super_admin do
+  as_a :super_admin do
     describe "#new" do
       it "renders" do
         get :new, params: {user_id: users(:admin).id}

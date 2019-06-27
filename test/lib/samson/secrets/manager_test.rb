@@ -4,6 +4,17 @@ require_relative '../../../test_helper'
 SingleCov.covered!
 
 describe Samson::Secrets::Manager do
+  def create_sercret_with_cache_bypass
+    Samson::Secrets::DbBackend::Secret.create!(
+      id: 'production/foo/pod2/hello',
+      value: 'MY-SECRET',
+      visible: false,
+      comment: 'this is secret',
+      updater_id: users(:admin).id,
+      creator_id: users(:admin).id
+    )
+  end
+
   let(:secret) { create_secret 'production/foo/pod2/hello' }
 
   describe ".allowed_project_prefixes" do
@@ -131,6 +142,65 @@ describe Samson::Secrets::Manager do
     end
   end
 
+  describe ".history" do
+    it "reads values" do
+      data = Samson::Secrets::Manager.history(secret.id, include_value: true)
+      data.fetch(:versions).values.map { |v| v.fetch(:value) }.must_equal ["v1", "v2", "v2", "v3"]
+    end
+
+    it "reads diff" do
+      data = Samson::Secrets::Manager.history(secret.id)
+      data.fetch(:versions).values.map { |v| v.fetch(:value) }.
+        must_equal ["(changed)", "(changed)", "(unchanged)", "(changed)"]
+    end
+  end
+
+  describe ".revert" do
+    it "reverts a secret to an older version" do
+      Samson::Secrets::Manager.revert(secret.id, to: "v2", user: users(:project_admin))
+      current = Samson::Secrets::Manager.read(secret.id, include_value: true)
+      current[:value].must_equal "MY-SECRET"
+      current[:updater_id].must_equal users(:project_admin).id
+    end
+  end
+
+  describe ".move" do
+    def move
+      Samson::Secrets::Manager.move "global/foo/global/bar", "global/baz/global/bar"
+    end
+
+    before do
+      create_secret "global/foo/global/bar" # create
+      create_secret "global/foo/global/bar", user_id: users(:deployer).id # update
+    end
+
+    it "moves and cleanes up the old" do
+      old = Samson::Secrets::Manager.read "global/foo/global/bar", include_value: true
+
+      move
+
+      moved = Samson::Secrets::Manager.read("global/baz/global/bar", include_value: true)
+      moved.except(:updated_at, :created_at).must_equal(old.except(:updated_at, :created_at))
+      refute Samson::Secrets::Manager.exist?("global/foo/global/bar")
+    end
+
+    it "fails when target exists" do
+      create_secret "global/baz/global/bar"
+      e = assert_raises { move }
+      e.message.must_equal "global/baz/global/bar already exists"
+    end
+  end
+
+  describe ".rename_project" do
+    it "copies secrets and tells user how many were copied" do
+      create_secret "global/bar/global/bar" # create a bogus secret to make sure we filter
+      secret # trigger creation
+      Samson::Secrets::Manager.rename_project("foo", "baz").must_equal 1
+      assert Samson::Secrets::Manager.read('production/foo/pod2/hello')
+      assert Samson::Secrets::Manager.read('production/baz/pod2/hello')
+    end
+  end
+
   describe ".exist?" do
     it "is true when when it exists" do
       Samson::Secrets::Manager.exist?(secret.id).must_equal true
@@ -193,17 +263,7 @@ describe Samson::Secrets::Manager do
   end
 
   describe ".ids" do
-    # raw insert to bypass cache
-    let(:secret) do
-      Samson::Secrets::DbBackend::Secret.create!(
-        id: 'production/foo/pod2/hello',
-        value: 'MY-SECRET',
-        visible: false,
-        comment: 'this is secret',
-        updater_id: users(:admin).id,
-        creator_id: users(:admin).id
-      )
-    end
+    let(:secret) { create_sercret_with_cache_bypass }
 
     it "lists ids" do
       secret # trigger creation
@@ -251,6 +311,18 @@ describe Samson::Secrets::Manager do
       with_env SECRET_STORAGE_SHARING_GRANTS: 'true' do
         assert Samson::Secrets::Manager.sharing_grants?
       end
+    end
+  end
+
+  describe ".expire_lookup_cache" do
+    it "expires the cache" do
+      Samson::Secrets::Manager.ids
+
+      create_sercret_with_cache_bypass
+      Samson::Secrets::Manager.ids.must_equal []
+
+      Samson::Secrets::Manager.expire_lookup_cache
+      Samson::Secrets::Manager.ids.must_equal ["production/foo/pod2/hello"]
     end
   end
 end

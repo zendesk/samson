@@ -1,8 +1,24 @@
 # frozen_string_literal: true
 class Project < ActiveRecord::Base
-  has_soft_deletion default_scope: true unless self < SoftDeletion::Core
+  # Used as part of temporary abstract attribute for docker build radio buttons
+  DEFAULT_DOCKER_BUILD_METHOD = 'samson'
+  DOCKER_BUILD_METHODS = [
+    {
+      label: 'Docker images built externally',
+      method: 'docker_image_building_disabled',
+      help_text: 'Disable local building of docker images, they must be added via api.'
+    },
+    {
+      label: 'Samson manages docker images',
+      method: DEFAULT_DOCKER_BUILD_METHOD,
+      help_text: ''
+    }
+  ] + Samson::Hooks.fire(:project_docker_build_method_options).flatten(1)
+
+  has_soft_deletion default_scope: true unless self < SoftDeletion::Core # uncovered
   audited
 
+  include Lockable
   include Permalinkable
   include Searchable
   include SoftDeleteWithDestroy
@@ -22,14 +38,16 @@ class Project < ActiveRecord::Base
   has_many :builds, dependent: :destroy
   has_many :releases, dependent: :destroy
   has_many :stages, dependent: :destroy
-  has_many :deploys
-  has_many :jobs, -> { order(id: :desc) }
+  has_many :deploys, dependent: nil
+  has_many :jobs, -> { order(id: :desc) }, dependent: nil
   has_many :webhooks, dependent: :destroy
   has_many :outbound_webhooks, dependent: :destroy
   has_many :commands, dependent: :destroy
   has_many :user_project_roles, dependent: :destroy
-  has_many :users, through: :user_project_roles
+  has_many :users, through: :user_project_roles, inverse_of: :projects
   has_many :secret_sharing_grants, dependent: :destroy
+  has_many :jobs, dependent: nil
+  has_many :stars, dependent: :destroy
 
   belongs_to :build_command, class_name: 'Command', optional: true
 
@@ -56,16 +74,37 @@ class Project < ActiveRecord::Base
     scope
   }
 
+  # Forms use abstract "docker_build_method " attribute
+  def docker_build_method
+    return "docker_image_building_disabled" if force_external_build?
+    active = DOCKER_BUILD_METHODS.map { |h| h.fetch(:method) }.detect do |build_method|
+      build_method != DEFAULT_DOCKER_BUILD_METHOD && send("#{build_method}?")
+    end
+
+    active || DEFAULT_DOCKER_BUILD_METHOD
+  end
+
+  def docker_build_method=(selected_method)
+    DOCKER_BUILD_METHODS.each do |method|
+      send("#{method[:method]}=", false) unless method[:method] == DEFAULT_DOCKER_BUILD_METHOD
+    end
+    send("#{selected_method}=", true) unless selected_method == DEFAULT_DOCKER_BUILD_METHOD
+  end
+
   def docker_repo(registry, dockerfile)
     File.join(registry.base, docker_image(dockerfile))
   end
 
   def docker_image(dockerfile)
-    name = permalink_base
-    if suffix = dockerfile.gsub(/^Dockerfile\.?|\/Dockerfile\.?/, '').presence
-      name << "-#{suffix.parameterize}"
+    if suffix = dockerfile.dup.gsub!(/(^|\/)Dockerfile\.?/, '')
+      if suffix.present?
+        "#{permalink_base}-#{suffix.parameterize}"
+      else
+        permalink_base
+      end
+    else
+      dockerfile
     end
-    name
   end
 
   def dockerfile_list
@@ -128,25 +167,59 @@ class Project < ActiveRecord::Base
   end
 
   def repository
-    @repository ||= GitRepository.new(repository_url: repository_url, repository_dir: repository_directory)
+    @repository ||= GitRepository.new(
+      repository_url: repository_url,
+      repository_dir: repository_directory,
+      executor: TerminalExecutor.new(StringIO.new, project: self)
+    )
   end
 
   def last_deploy_by_group(before_time, include_failed_deploys: false)
     releases = deploys_by_group(before_time, include_failed_deploys)
-    releases.map { |group_id, deploys| [group_id, deploys.sort_by(&:updated_at).last] }.to_h
+    releases.map { |group_id, deploys| [group_id, deploys.max_by(&:updated_at)] }.to_h
   end
 
   def last_deploy_by_stage
-    return unless found = deploys.select('max(deploys.id) as id').reorder(nil).group(:stage_id).successful.presence
+    return unless found = deploys.select('max(deploys.id) as id').reorder(nil).group(:stage_id).succeeded.presence
     Deploy.find(found.map(&:id)).select(&:stage).sort_by { |d| d.stage.order }.presence
+  end
+
+  def deployed_reference_to_non_production_stage?(reference)
+    return false unless commit = repository.commit_from_ref(reference)
+
+    stages.joins(deploys: :job).where(
+      jobs: {status: 'succeeded', commit: commit}
+    ).distinct.any? { |stage| !stage.production? }
   end
 
   def url
     Rails.application.routes.url_helpers.project_url(self)
   end
 
-  def as_json
-    super(except: [:token, :deleted_at], methods: [:repository_path])
+  def environment_variables_with_scope
+    scopes = Environment.env_deploy_group_array
+    EnvironmentVariable.sort_by_scopes(
+      environment_variables, scopes
+    )
+  end
+
+  def as_json(methods: [], **options)
+    super(
+      {
+        except: [:token, :deleted_at],
+        methods: [
+          :repository_path,
+        ] + methods
+      }.merge(options)
+    )
+  end
+
+  def docker_image_building_disabled?
+    force_external_build? ? true : docker_image_building_disabled
+  end
+
+  def force_external_build?
+    ENV['DOCKER_FORCE_EXTERNAL_BUILD'].present?
   end
 
   private
@@ -161,13 +234,10 @@ class Project < ActiveRecord::Base
 
   def deploys_by_group(before, include_failed_deploys = false)
     stages.each_with_object({}) do |stage, result|
-      stage_filter = include_failed_deploys ? stage.deploys : stage.deploys.successful.where(release: true)
+      stage_filter = include_failed_deploys ? stage.deploys : stage.deploys.succeeded.where(release: true)
       deploy = stage_filter.where("deploys.updated_at <= ?", before.to_s(:db)).first
       next unless deploy
-      stage.deploy_groups.sort_by(&:natural_order).each do |deploy_group|
-        result[deploy_group.id] ||= []
-        result[deploy_group.id] << deploy
-      end
+      stage.deploy_groups.pluck(:id).each { |id| (result[id] ||= []) << deploy }
     end
   end
 
@@ -185,7 +255,7 @@ class Project < ActiveRecord::Base
     Thread.new do
       begin
         unless repository.commit_from_ref "HEAD" # bogus command to trigger clone
-          Airbrake.notify("Could not clone git repository #{repository_url} for project #{name}")
+          Samson::ErrorNotifier.notify("Could not clone git repository #{repository_url} for project #{name}")
         end
       rescue => e
         # we are in a Thread so report errors or they disappear
@@ -199,7 +269,11 @@ class Project < ActiveRecord::Base
   end
 
   def clean_old_repository
-    GitRepository.new(repository_url: repository_url_was, repository_dir: old_repository_dir).clean!
+    GitRepository.new(
+      repository_url: repository_url_was,
+      repository_dir: old_repository_dir,
+      executor: TerminalExecutor.new(StringIO.new, project: self)
+    ).clean!
     @repository, @repository_directory = nil
   end
 
@@ -210,7 +284,7 @@ class Project < ActiveRecord::Base
   def alert_clone_error!(exception)
     message = "Could not clone git repository #{repository_url} for project #{name}"
     Rails.logger.error("#{message} - #{exception.message}")
-    Airbrake.notify(
+    Samson::ErrorNotifier.notify(
       exception,
       error_message: message,
       parameters: {
@@ -224,13 +298,17 @@ class Project < ActiveRecord::Base
   end
 
   def valid_repository_url
+    return if errors.include?(:repository_url)
     return if repository.valid_url?
 
+    # use private url if that would be valid, unsetting @repository to clear the cache
     if repository_url.to_s.start_with?('http')
       old_repository_url = repository_url
+
       @repository = nil
       self.repository_url = private_repository_url
       return if repository.valid_url?
+
       @repository = nil
       self.repository_url = old_repository_url
     end

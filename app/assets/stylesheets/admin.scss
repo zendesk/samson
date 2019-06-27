@@ -1,7 +1,7 @@
-.admin-actions {
-  .pagination {
-    margin: 0;
-  }
+// make records after pagination appear on the same line, visible with multi-pages
+.pagination {
+  line-height: 35px;
+  display: inline;
 }
 
 .force-form-inline {

@@ -1,4 +1,6 @@
 # frozen_string_literal: true
+require 'yaml'
+
 # example setup for docker-for-mac with kubernetes
 # running without validations it works even when docker is not running
 project = Project.create!(
@@ -12,11 +14,14 @@ groupk = DeployGroup.create!(
   environment: master
 )
 
+k8s_config_path = ENV['KUBECONFIG'] || "#{ENV['HOME']}/.kube/config"
+k8s_context = 'docker-for-desktop'
+k8s_context = YAML.load_file(k8s_config_path).fetch('current-context') if File.exist?(k8s_config_path)
 cluster = Kubernetes::Cluster.new(
   name: "local",
   description: "setup via seeds",
-  config_filepath: File.expand_path("~/.kube/config"),
-  config_context: "docker-for-desktop"
+  config_filepath: k8s_config_path,
+  config_context: k8s_context
 )
 cluster.save!(validate: false)
 
@@ -25,6 +30,10 @@ Kubernetes::ClusterDeployGroup.new(
   deploy_group: groupk,
   namespace: 'default'
 ).save!(validate: false)
+
+# rails 5.2.1 bug that runs validations again
+# TODO: report issue or remove and see if test/integration/tasks_test.rb still fails
+groupk = groupk.class.find(groupk.id)
 
 Stage.new(
   name: 'Master',

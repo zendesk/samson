@@ -6,7 +6,7 @@ SingleCov.covered!
 describe DashboardsController do
   let(:environment) { environments(:production) }
 
-  as_a_viewer do
+  as_a :viewer do
     describe '#show' do
       before { Project.any_instance.stubs(:valid_repository_url).returns(true) }
 

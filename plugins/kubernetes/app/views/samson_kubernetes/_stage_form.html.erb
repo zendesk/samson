@@ -1,14 +1,39 @@
 <fieldset>
   <legend>Kubernetes</legend>
   <%= form.input :kubernetes, as: :check_box, label: "Deploy via kubernetes / ignore commands" %>
+
+  <h3>Role config (optional)</h3>
+  <% @stage.kubernetes_stage_roles.build %>
+  <% roles = @project.kubernetes_roles.not_deleted.pluck(:name, :id).unshift ["", nil] %>
+  <%= form.fields_for :kubernetes_stage_roles, @stage.kubernetes_stage_roles do |fields| %>
+    <div class="form-group">
+      <div class="col-lg-3">
+        <%= fields.select :kubernetes_role_id, roles, {}, Samson::FormBuilder::LIVE_SELECT_OPTIONS %>
+      </div>
+
+      <div class="col-lg-2">
+        <%= fields.input :ignored, as: :check_box %>
+      </div>
+
+      <% if fields.object.persisted? %>
+        <div class="col-lg-1 checkbox">
+          <%= fields.label :_destroy do %>
+            <%= fields.check_box :_destroy %>
+            Delete
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+  <%= link_to "Add row", "#", class: "duplicate_previous_row" %>
 </fieldset>
 
 <script>
   $(function(){
-    // hide command section when kubernetes is selected
+    // hide commands sections when kubernetes is selected
     var $checkbox = $("#stage_kubernetes");
     $checkbox.change(function(){
-      $("#commands").parent('fieldset').toggle(!$(this).is(':checked'))
+      $("#commands").parent('fieldset').toggle(!$(this).is(':checked'));
     });
     $checkbox.trigger('change');
   });

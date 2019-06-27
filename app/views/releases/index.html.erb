@@ -2,41 +2,45 @@
 
 <%= render 'projects/header', project: @project, tab: "releases" %>
 
-<% cache [@project, @releases.current_page, deployer_for_project?] do %>
-  <section class="clearfix tabs">
+<section class="clearfix tabs">
+  <% if @project.release_branch.blank? %>
+    <div class="alert alert-warning">
+      <p>Configure a <%= link_to "release branch", edit_project_path(@project, anchor: "project_release_branch") %> to automatically create releases whenever a branch is pushed to.</p>
+    </div>
+  <% end %>
+
+  <% if @releases.any? %>
+    <table class="table table-hover release-list">
+      <thead>
+        <tr>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th>Deployed to</th>
+          <th>Created</th>
+          <th></th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <%= render partial: 'release', collection: @releases %>
+      </tbody>
+    </table>
+
+    <%= paginate @pagy %>
+
     <p class="pull-right">
       <%= link_to "Create release manually", new_project_release_path(@project), class: "btn btn-default" %>
     </p>
+  <% elsif @project.release_branch.present? %>
+    <div class="alert alert-warning">
+      <p>No release created from release branch <%= @project.release_branch %>.</p>
+      <p>Add a webhook to samson from your CI to trigger releases on green builds or from your Code host to get releases on merge.</p>
+      <p>Samsons Github user needs write permisson to the repo to create tags.</p>
 
-    <% if @project.release_branch.blank? %>
-      <div class="alert alert-warning">
-        <p>Configure a <%= link_to "release branch", edit_project_path(@project, anchor: "project_release_branch") %> to automatically create releases whenever a branch is pushed to.</p>
-      </div>
-    <% end %>
-
-    <% if @releases.any? %>
-      <table class="table table-hover release-list">
-        <thead>
-          <tr>
-            <th></th>
-            <th>Deployed to</th>
-            <th>Created</th>
-            <th></th>
-          </tr>
-        </thead>
-
-        <tbody>
-          <%= render partial: 'release', collection: @releases %>
-        </tbody>
-      </table>
-
-      <%= paginate @releases %>
-    <% elsif @project.release_branch.present? %>
-      <div class="alert alert-warning">
-        <p>No release created from release branch <%= @project.release_branch %>.</p>
-        <p>Add a webhook to samson from your CI to trigger releases on green builds or from your Code host to get releases on merge.</p>
-        <p>Samsons Github user needs write permisson to the repo to create tags.</p>
-      </div>
-    <% end %>
-  </section>
-<% end %>
+      <p>
+        <%= link_to "Create release manually", new_project_release_path(@project), class: "btn btn-default" %>
+      </p>
+    </div>
+  <% end %>
+</section>

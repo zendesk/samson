@@ -26,14 +26,14 @@ pod101 = DeployGroup.unscoped.find_or_create_by!(name: 'Pod101', environment: st
 
 NUM_PROJECTS.times do |i|
   project_name = "Project#{i}"
-  next unless Project.unscoped.where(name: project_name).count.zero?
+  next unless Project.unscoped.where(name: project_name).count == 0
   project = Project.create!(name: project_name, repository_url: "git@github.com:samson-test-org/example-project.git")
   project.stages.create!(name: "Production", deploy_groups: [pod1, pod2, pod3, pod4, pod5, pod6])
   project.stages.create!(name: "Staging", deploy_groups: [pod100, pod101])
   project.stages.create!(name: "Master", deploy_groups: [pod98, pod99])
   project.stages.create!(name: "Pod1", deploy_groups: [pod1])
   project.stages.create!(name: "Pod100", deploy_groups: [pod100])
-  project.releases.create!(commit: "123456", author_id: 1, author_type: "User")
+  project.releases.create!(commit: "123456", author_id: 1)
 
   job = Job.find_or_create_by!(
     command: 'true',

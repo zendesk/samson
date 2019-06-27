@@ -6,7 +6,7 @@ require 'bundler/setup'
 # anything loaded before coverage will be uncovered
 require 'single_cov'
 SingleCov::APP_FOLDERS << 'decorators' << 'presenters'
-SingleCov.setup :minitest unless defined?(Spring)
+SingleCov.setup :minitest, branches: true unless defined?(Spring)
 
 # rake adds these, but we don't need them / want to be consistent with using `ruby x_test.rb`
 $LOAD_PATH.delete 'lib'
@@ -19,6 +19,7 @@ require 'rails-controller-testing'
 Rails::Controller::Testing.install
 require 'maxitest/autorun'
 require 'maxitest/timeout'
+require 'maxitest/threads'
 require 'webmock/minitest'
 require 'mocha/setup'
 
@@ -35,14 +36,6 @@ ActiveRecord::Migration.check_pending!
 
 Samson::Hooks.symlink_plugin_fixtures
 
-# Use AD::IntegrationTest for the base class when describing a controller
-# https://github.com/blowmage/minitest-rails/issues/195
-class ActionController::TestCase
-  register_spec_type(self) do |desc|
-    desc.is_a?(Class) && desc < ActionController::Metal
-  end
-end
-
 ActiveRecord::Base.logger.level = 1
 WebMock.disable_net_connect!(allow: 'codeclimate.com')
 
@@ -50,6 +43,7 @@ Dir["test/support/*"].each { |f| require File.expand_path(f) }
 
 # Helpers for all tests
 ActiveSupport::TestCase.class_eval do
+  include ApplicationHelper
   include Warden::Test::Helpers
 
   fixtures :all
@@ -70,7 +64,7 @@ ActiveSupport::TestCase.class_eval do
 
   def refute_valid_on(model, attribute, message)
     assert_predicate model, :invalid?
-    assert_equal message, model.errors.full_messages_for(attribute)
+    assert_includes model.errors.full_messages_for(attribute), message
   end
 
   def freeze_time
@@ -80,7 +74,7 @@ ActiveSupport::TestCase.class_eval do
   # record hook and their arguments called during a given block
   def record_hooks(callback, &block)
     called = []
-    Samson::Hooks.with_callback(callback, lambda { |*args| called << args }, &block)
+    Samson::Hooks.with_callback(callback, ->(*args) { called << args }, &block)
     called
   end
 
@@ -90,6 +84,15 @@ ActiveSupport::TestCase.class_eval do
     yield
   ensure
     $VERBOSE = old
+  end
+
+  def capture_stdout
+    old = $stdout
+    $stdout = StringIO.new
+    yield
+    $stdout.string
+  ensure
+    $stdout = old
   end
 
   undef :assert_nothing_raised
@@ -128,7 +131,7 @@ ActiveSupport::TestCase.class_eval do
     yield
   ensure
     # the `if old` is here to not blow up with nil.each when setting the env failed
-    old.each { |k, v| ENV[k] = v } if old
+    old&.each { |k, v| ENV[k] = v }
   end
 
   def self.with_env(env)
@@ -196,8 +199,30 @@ ActiveSupport::TestCase.class_eval do
     ENV['DOCKER_REGISTRIES'] = old
   end
 
-  def stub_github_status_check
-    stub_request(:get, "#{Rails.application.config.samson.github.status_url}/api/status.json").to_return(body: "{}")
+  def silence_thread_exceptions
+    old = Thread.report_on_exception
+    Thread.report_on_exception = false
+    yield
+  ensure
+    Thread.report_on_exception = old
+  end
+
+  def stub_const(base, name, value)
+    old = base.const_get(name)
+    silence_warnings { base.const_set(name, value) }
+    yield
+  ensure
+    silence_warnings { base.const_set(name, old) }
+  end
+
+  def self.only_callbacks_for_plugin(callback)
+    plugin_name = caller(1..1).first[/\/plugins\/([^\/]+)/, 1] || raise("not called from a plugin")
+    around { |t| Samson::Hooks.only_callbacks_for_plugin(plugin_name, callback, &t) }
+  end
+
+  def self.before_and_after(&block)
+    before(&block)
+    after(&block)
   end
 end
 
@@ -211,20 +236,11 @@ ActionController::TestCase.class_eval do
       end
     end
 
-    %w[super_admin admin deployer viewer project_admin project_deployer].each do |user|
-      article = (user == "admin" ? "an" : "a")
-      define_method "as_#{article}_#{user}" do |&block|
-        describe "as #{article} #{user}" do
-          let(:user) { users(user) }
-
-          def self.let(*args)
-            raise "Cannot override :user in as_a_*" if args.first.to_sym == :user
-            super
-          end
-
-          before { login_as(self.user) }
-          instance_eval(&block)
-        end
+    def as_a(type, &block)
+      describe "as a #{type}" do
+        let(:user) { users(type) }
+        before { login_as(user) }
+        instance_exec(&block)
       end
     end
 
@@ -279,11 +295,11 @@ ActionController::TestCase.class_eval do
     middleware = Rails.application.config.middleware.detect { |m| m.name == 'Warden::Manager' }
     manager = Warden::Manager.new(nil, &middleware.block)
     request.env['warden'] = Warden::Proxy.new(request.env, manager)
-    stub_github_status_check
   end
 
   after do
     Warden.test_reset!
+    ActionMailer::Base.deliveries.clear
   end
 
   # overrides warden/test/helpers.rb which does not work in controller tests
@@ -317,7 +333,15 @@ ActionController::TestCase.class_eval do
 end
 
 ActionDispatch::IntegrationTest.class_eval do
-  before do
-    stub_github_status_check
+  def self.as_a(type, &block)
+    describe "as a #{type}" do
+      before { ApplicationController.any_instance.stubs(current_user: users(type), login_user: true) }
+      instance_exec(&block)
+    end
+  end
+
+  # bring back helper that was removed in rails 5
+  def assigns(name)
+    @controller.instance_variable_get(:"@#{name}")
   end
 end

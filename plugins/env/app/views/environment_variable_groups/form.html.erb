@@ -1,6 +1,10 @@
-<% title = (@group.new_record? ? "New group" : "Edit #{@group.name}") %>
+<%
+  title = (@group.new_record? ? "New group" : "Edit #{@group.name}")
+  can_edit = can?(:write, :environment_variable_groups, @group)
+  disabled = can_edit ? '' : 'disabled'
+  crumbs = [["Environment variables", EnvironmentVariableGroup]]
+%>
 
-<% crumbs = [["Environment variables", EnvironmentVariableGroup]] %>
 <% if @group.new_record? %>
   <%= manual_breadcrumb(crumbs + [[title, nil]]) %>
 <% else %>
@@ -10,8 +14,14 @@
 <%= page_title title %>
 
 <section>
+  <% if !can_edit %>
+    <div class="alert alert-warning">
+      You must either be an admin or have project admin privileges for all projects that use this environment group to
+      edit it.
+    </div>
+  <% end %>
   <%= form_for @group, html: { class: "form-horizontal" } do |form| %>
-    <fieldset>
+    <fieldset <%= disabled %>>
       <%= form.input :name %>
       <%= form.input :comment, as: :text_area, input_html: {size: "80x4"} %>
     </fieldset>
@@ -23,19 +33,15 @@
       </fieldset>
     <% end %>
 
-    <fieldset>
+    <fieldset <%= disabled %>>
       <legend>
         Environment variables
         <%= additional_info SamsonEnv::HELP_TEXT %>
       </legend>
       <%= render "samson_env/environment_variables", form: form %> |
       <%= link_to "Preview", preview_environment_variable_groups_path(group_id: @group.id) %>
-
-      <% if can? :write, :environment_variable_groups, @group %>
-        <hr>
-
-        <%= form.actions delete: (@group.projects.length > 0 ? false : @group) %>
-      <% end %>
+      <hr>
+      <%= form.actions delete: (@group.projects.length == 0) %>
     </fieldset>
   <% end %>
 </section>

@@ -1,0 +1,13 @@
+<% if ENV['JENKINS_STATUS_CHECKER'] && @stage.production? && project.jenkins_status_checker %>
+  <div class="form-group">
+    <div class="alert col-lg-5 col-lg-offset-2">
+      <p>Jenkins Status Checker:</p>
+      <ul>
+        <% JenkinsStatusChecker.instance.checklist.each do |item| %>
+          <li><%= item %></li>
+        <% end %>
+      </ul>
+    </div>
+  </div>
+<% end %>
+

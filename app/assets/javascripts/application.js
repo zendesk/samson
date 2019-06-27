@@ -16,7 +16,6 @@
 //= require jquery-ujs
 //= require jquery-cookie
 //= require jquery-ui
-//= require angular
 //= require underscore
 //= require moment
 //= require bootstrap/alert
@@ -25,8 +24,9 @@
 //= require bootstrap/tooltip
 //= require bootstrap/popover
 //= require bootstrap-select
+//= require bootstrap-datetimepicker
 //= require x-editable/dist/bootstrap3-editable/js/bootstrap-editable
-//= require app
+//= require cable
 //= require underscore_mixins
 //= require jstimezonedetect
 //= require_tree .

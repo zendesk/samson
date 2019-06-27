@@ -6,28 +6,92 @@ SingleCov.covered!
 describe Kubernetes::Cluster do
   let(:cluster) { create_kubernetes_cluster }
 
+  before { Kubernetes::Cluster.any_instance.stubs(:connection_valid?).returns(true) }
+
   describe 'validations' do
     it "is valid" do
       assert_valid cluster
     end
 
-    it "is invalid when api version is wrong" do
-      cluster.class.any_instance.unstub(:connection_valid?)
-      assert_request(:get, "http://foobar.server/api", to_return: {body: '{}'}) do
+    describe "test_client_connection" do
+      before { Kubernetes::Cluster.any_instance.unstub(:connection_valid?) }
+
+      it "is valid" do
+        body = {versions: ['v1']}.to_json
+        assert_request(:get, "http://foobar.server/api", to_return: {body: body}) do
+          assert_valid cluster
+        end
+      end
+
+      it "is invalid when api version is wrong" do
+        assert_request(:get, "http://foobar.server/api", to_return: {body: '{}'}) do
+          refute_valid cluster
+        end
+      end
+
+      it "is invalid when api is dead" do
+        assert_request(:get, "http://foobar.server/api", to_return: {status: 404}) do
+          refute_valid cluster
+        end
+      end
+
+      it "is invalid with unsupported auth_method" do
+        cluster.auth_method = "wut"
         refute_valid cluster
       end
-    end
 
-    it "is invalid when api is dead" do
-      cluster.class.any_instance.unstub(:connection_valid?)
-      assert_request(:get, "http://foobar.server/api", to_return: {status: 404}) do
-        refute_valid cluster
+      describe "auth_method context" do
+        def cluster(attributes = {})
+          create_kubernetes_cluster(attributes)
+        end
+
+        it "is invalid without config_context" do
+          refute_valid cluster(config_context: "")
+        end
+
+        it "is invalid when context is not in file" do
+          refute_valid cluster(config_context: 'nope')
+        end
+
+        it "is invalid without config_filepath" do
+          refute_valid cluster(config_filepath: "")
+        end
+
+        it "is invalid when config file does not exist" do
+          refute_valid cluster(config_filepath: 'nope')
+        end
       end
-    end
 
-    it "is invalid when config file does not exist" do
-      cluster.config_filepath = 'nope'
-      refute_valid cluster
+      describe "auth_method database" do
+        def cluster(attributes = {})
+          create_kubernetes_cluster(
+            {auth_method: "database", api_endpoint: "http://foobar.server"}.merge(attributes)
+          )
+        end
+
+        it "is valid" do
+          body = {versions: ['v1']}.to_json
+          assert_request(:get, "http://foobar.server/api", to_return: {body: body}) do
+            assert_valid cluster
+          end
+        end
+
+        it "is invalid without api_endpoint" do
+          refute_valid cluster(api_endpoint: "")
+        end
+
+        it "is invalid with bad api_context" do
+          refute_valid cluster(api_endpoint: "wut")
+        end
+
+        it "is invalid with invalid cert" do
+          refute_valid cluster(client_cert: "wut")
+        end
+
+        it "is invalid with invalid key" do
+          refute_valid cluster(client_key: "wut")
+        end
+      end
     end
 
     describe "ip_prefix" do
@@ -60,38 +124,26 @@ describe Kubernetes::Cluster do
 
   describe '#client' do
     it 'creates a client' do
-      cluster.client.must_be_kind_of Kubeclient::Client
+      cluster.client('v1').must_be_kind_of Kubeclient::Client
     end
-  end
 
-  describe '#extension_client' do
-    it 'creates a client' do
-      cluster.extension_client.must_be_kind_of Kubeclient::Client
+    it 'caches' do
+      cluster.client('v1').object_id.must_equal cluster.client('v1').object_id
     end
-  end
 
-  describe '#autoscaling_client' do
-    it 'creates a client' do
-      cluster.autoscaling_client.must_be_kind_of Kubeclient::Client
+    it 'caches per thread to avoid race conditions of method definition' do
+      cluster.client('v1').object_id.wont_equal Thread.new { cluster.client('v1').object_id }.value
     end
-  end
 
-  describe '#apps_client' do
-    it 'creates a client' do
-      cluster.apps_client.must_be_kind_of Kubeclient::Client
-    end
-  end
-
-  describe '#batch_client' do
-    it 'creates a client' do
-      cluster.batch_client.must_be_kind_of Kubeclient::Client
+    it 'can build for other types' do
+      cluster.client('policy/v1beta1').api_endpoint.to_s.must_equal 'http://foobar.server/apis'
     end
   end
 
   describe "#namespaces" do
     it 'ignores kube-system because it is internal and should not be deployed too' do
       items = [{metadata: {name: 'N1'}}, {metadata: {name: 'N2'}}, {metadata: {name: 'kube-system'}}]
-      assert_request(:get, "http://foobar.server/api/v1/namespaces", to_return: {body: {items: items, }.to_json}) do
+      assert_request(:get, "http://foobar.server/api/v1/namespaces", to_return: {body: {items: items,}.to_json}) do
         cluster.namespaces.must_equal ['N1', 'N2']
       end
     end
@@ -128,6 +180,32 @@ describe Kubernetes::Cluster do
     end
   end
 
+  describe '#server_version' do
+    it 'caches the clusters server version' do
+      assert_request :get, 'http://foobar.server/version', to_return: {body: '{"gitVersion": "v1.6.0"}'}, times: 1 do
+        cluster.server_version
+        Rails.cache.read(cluster.cache_key).must_equal '1.6.0' # cache correctly set
+        cluster.server_version
+      end
+    end
+
+    it 'returns the server version as a Gem::Version object' do
+      result = cluster.server_version
+      result.must_be_instance_of Gem::Version
+      result.version.must_equal '1.5.0'
+    end
+
+    it 'retries when on random errors' do
+      Samson::Retry.expects(:sleep)
+      replies = [{status: 404}, {body: '{"gitVersion": "v1.6.0"}'}]
+      assert_request :get, 'http://foobar.server/version', to_return: replies, times: 2 do
+        cluster.server_version
+        Rails.cache.read(cluster.cache_key).must_equal '1.6.0' # cache correctly set
+        cluster.server_version
+      end
+    end
+  end
+
   describe "#ensure_unused" do
     it "does not destroy used" do
       Kubernetes::ClusterDeployGroup.any_instance.stubs(:validate_namespace_exists)
@@ -140,6 +218,35 @@ describe Kubernetes::Cluster do
     it "destroys when unused" do
       assert cluster.destroy
       cluster.errors.full_messages.must_equal []
+    end
+  end
+
+  describe "#config_contexts" do
+    before { cluster.instance_variable_set(:@kubeconfig, nil) }
+
+    it "shows available contexts" do
+      cluster.config_contexts.must_equal ["test"]
+    end
+
+    it "shows empty when file is not set" do
+      cluster.config_filepath = ""
+      cluster.config_contexts.must_equal []
+    end
+
+    it "shows empty when file is invalid" do
+      cluster.config_filepath = "Gemfile"
+      cluster.config_contexts.must_equal []
+    end
+  end
+
+  describe "#as_json" do
+    it "does not leak secrets" do
+      cluster.as_json.keys.must_equal(
+        [
+          "id", "name", "description", "config_filepath", "config_context", "created_at", "updated_at", "ip_prefix",
+          "auth_method", "api_endpoint", "verify_ssl", "kritis_breakglass"
+        ]
+      )
     end
   end
 end

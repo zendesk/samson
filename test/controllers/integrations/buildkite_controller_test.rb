@@ -42,7 +42,7 @@ describe Integrations::BuildkiteController do
   end
 
   test_regular_commit 'Buildkite',
-    failed: { build: { state: 'failed' }}, no_mapping: { build: { branch: 'non-existent-branch' } }
+    failed: {build: {state: 'failed'}}, no_mapping: {build: {branch: 'non-existent-branch'}}
 
   it_ignores_skipped_commits
 
@@ -51,16 +51,18 @@ describe Integrations::BuildkiteController do
   end
 
   context 'when the buildkite_release_params hook gets trigger' do
-    let(:buildkite_build_number) { lambda { |_, _| [[:number, 9]] } }
+    let(:buildkite_build_number) { ->(_, _) { [[:number, 9]] } }
     before do
       project.releases.destroy_all
       project.builds.destroy_all
       Integrations::BuildkiteController.any_instance.stubs(:project).returns(project)
       project.stubs(:create_release?).returns(true)
       Build.any_instance.stubs(:validate_git_reference).returns(true)
+      GitRepository.any_instance.stubs(:commit_from_ref).returns('v1')
     end
 
     it 'creates the release with the buildkite build number' do
+      stub_request(:get, "https://api.github.com/repos/bar/foo/releases/tags/v9")
       assert_request(:post, "https://api.github.com/repos/bar/foo/releases") do
         Samson::Hooks.with_callback(:buildkite_release_params, buildkite_build_number) do |_|
           post :create, params: payload.merge(token: project.token, test_route: true)

@@ -5,9 +5,23 @@ SingleCov.covered!
 
 describe Samson::BootCheck do
   describe ".check" do
-    it "warns about loaded models in regular mode" do
-      e = assert_raises(RuntimeError) { Samson::BootCheck.check }
-      e.message.must_include "should not be loaded"
+    describe "in regular mode" do
+      it "warns about loaded models/threads/mocha in regular mode" do
+        e = assert_raises(RuntimeError) { Samson::BootCheck.check }
+        e.message.must_include "User"
+        e.message.must_include "thread"
+        e.message.must_include "mocha"
+      end
+
+      it "does not warn when everything is ok" do
+        Thread.stubs(:list).returns([1])
+        Samson::BootCheck.expects(:const_defined?)
+        ActiveRecord::Base.expects(:descendants).returns([])
+        ActionController::Base.expects(:descendants).returns([])
+        Samson::BootCheck.check
+      ensure
+        Thread.unstub(:list)
+      end
     end
 
     describe "in server mode" do
@@ -21,7 +35,7 @@ describe Samson::BootCheck do
 
       it "fails when something is busy" do
         ActiveRecord::Base.connection_pool.expects(:stat).times(10).returns(busy: 1)
-        Samson::BootCheck.expects(:sleep).times(9)
+        Samson::Retry.expects(:sleep).times(9)
         e = assert_raises(RuntimeError) { Samson::BootCheck.check }
         e.message.must_include "Do not use AR on the main thread"
       end

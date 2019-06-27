@@ -1,4 +1,4 @@
-Notify Assertible after successful deploys.
+Notify Assertible after succeeded deploys.
 
 Following environment variables must be set:
  - `ASSERTIBLE_DEPLOY_TOKEN`

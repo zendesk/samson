@@ -1,0 +1,25 @@
+<fieldset>
+  <legend>
+    Docker
+  </legend>
+  <% form_obj = form.object %>
+  <% if form_obj.force_external_build? %>
+    <%= form.hidden_field :docker_build_method, value: "docker_image_building_disabled" if form_obj.new_record? %>
+    <span>
+      Configured to use externally built docker images only.
+      <% if url = ENV["EXTERNAL_IMAGES_DETAILS_URL"] %>
+        <%= link_to "Details", url %>
+      <% end %>
+    </span>
+  <% else %>
+    <%= form.input :docker_build_method, help: docker_build_methods_help_text do %>
+      <%= form.select :docker_build_method,
+          Project::DOCKER_BUILD_METHODS.map { |method| [method[:label], method[:method]] },
+          {},
+          class: "form-control"
+      %>
+    <% end %>
+    <%= form.input :docker_release_branch, help: 'New commits on this branch will cause a docker image to be built when a webhook arrives.' %>
+  <% end %>
+  <%= form.input :dockerfiles, help: 'Space separated list of dockerfiles to build, default: Dockerfile' %>
+</fieldset>

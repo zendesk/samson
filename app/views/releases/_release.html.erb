@@ -2,7 +2,21 @@
   <td>
     <%= release_label(@project, release) %>
   </td>
-  <td><%= deployed_or_running_list @stages, release.version %></td>
+  <td>
+    <%= commit_status_icon CommitStatus.new(release.project, release.commit).state %>
+  </td>
+  <td>
+    <span style="white-space: nowrap">
+      <% release.changeset.authors.take(8).each do |user| %>
+        <%= github_user_avatar(user) %>
+      <% end %>
+    </span>
+  </td>
+  <td width="100%">
+    <% cache ["deployed-stages", release, @stages] do %>
+      <%= deployed_or_running_list @stages, release.version %>
+    <% end %>
+  </td>
   <td><%= relative_time(release.created_at) %></td>
   <td>
     <% if deployer_for_project? %>
@@ -11,5 +25,5 @@
   </td>
 </tr>
 <tr class="release-info collapse" data-url="<%= url_for [@project, release] %>">
-  <td colspan="4"></td>
+  <td colspan="6"></td>
 </tr>

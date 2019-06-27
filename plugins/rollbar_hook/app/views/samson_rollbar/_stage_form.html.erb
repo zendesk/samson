@@ -1,0 +1,34 @@
+<% if DeployGroup.enabled? %>
+  <fieldset>
+    <legend>Rollbar</legend>
+    <% stage = form.object %>
+    <% stage.rollbar_webhooks.build %>
+
+    <div class="col-lg-offset-2">
+      <b>Webhook URL:</b> https://api.rollbar.com/api/1/deploy/ unless you're using a self-hosted instance of Rollbar.<br>
+      <b>Access token:</b> Copy from Rollbars 'Deploys' area, supports secret lookup for example secret://rollbar_access_token<br>
+      <b>Environment:</b> Must match one from Rollbar 'Settings > General > Environments'
+      <br/><br/>
+
+      <%= form.fields_for :rollbar_webhooks do |rollbar_field| %>
+        <div class="form-group">
+          <div class="col-lg-4">
+            <%= rollbar_field.url_field :webhook_url, class: "form-control", placeholder: "Webhook URL"  %>
+          </div>
+
+          <div class="col-lg-3">
+            <%# TODO: do not render access token once it was entered %>
+            <%= rollbar_field.text_field :access_token, class: "form-control", placeholder: "Access token" %>
+          </div>
+
+          <div class="col-lg-3">
+            <%= rollbar_field.text_field :environment, class: "form-control", placeholder: "Environment" %>
+          </div>
+
+          <%= delete_checkbox rollbar_field %>
+        </div>
+      <% end %>
+      <%= link_to "Add row", "#", class: "duplicate_previous_row" %>
+    </div>
+  </fieldset>
+<% end %>

@@ -7,6 +7,7 @@ describe Kubernetes::Api::Pod do
   let(:pod_name) { 'test_name' }
   let(:pod_attributes) do
     {
+      kind: "Pod",
       metadata: {
         name: pod_name,
         namespace: 'the-namespace',
@@ -31,14 +32,19 @@ describe Kubernetes::Api::Pod do
       }
     }
   end
-  let(:pod) { Kubernetes::Api::Pod.new(Kubeclient::Resource.new(JSON.parse(pod_attributes.to_json))) }
+  let(:pod) { Kubernetes::Api::Pod.new(pod_attributes) }
   let(:pod_with_client) do
     Kubernetes::Api::Pod.new(
-      Kubeclient::Resource.new(JSON.parse(pod_attributes.to_json)),
-      client: deploy_groups(:pod1).kubernetes_cluster.client
+      pod_attributes,
+      client: deploy_groups(:pod1).kubernetes_cluster.client('v1')
     )
   end
   let(:start_time) { "2017-03-31T22:56:20Z" }
+  let(:events_url) do
+    "http://foobar.server/api/v1/namespaces/the-namespace/events?fieldSelector=involvedObject.name=test_name,involvedObject.kind=Pod"
+  end
+  let(:event) { {metadata: {creationTimestamp: start_time}, type: 'Normal'} }
+  let(:events) { [event] }
 
   describe "#live?" do
     it "is done" do
@@ -115,33 +121,19 @@ describe Kubernetes::Api::Pod do
     end
   end
 
-  describe "#name" do
-    it 'reads ' do
-      pod.name.must_equal 'test_name'
-    end
-  end
-
-  describe "#namespace" do
-    it "reads" do
-      pod.namespace.must_equal 'the-namespace'
-    end
-  end
-
-  describe "#deploy_group_id" do
-    it 'is the label' do
-      pod.deploy_group_id.must_equal 123
-    end
-  end
-
-  describe "#role_id" do
-    it 'is the label' do
-      pod.role_id.must_equal 234
-    end
-  end
-
-  describe "#containers" do
+  describe "#container_names" do
     it 'reads' do
-      pod.containers.first[:name].must_equal 'container1'
+      pod.container_names.must_equal ['container1']
+    end
+
+    it "finds modern json init containers" do
+      pod_attributes[:spec][:initContainers] = [{name: "foo"}]
+      pod.container_names.must_equal ['container1', 'foo']
+    end
+
+    it "finds old json init containers" do
+      pod_attributes[:metadata][:annotations] = {'pod.beta.kubernetes.io/init-containers': '[{"name": "foo"}]'}
+      pod.container_names.must_equal ['container1', 'foo']
     end
   end
 
@@ -187,26 +179,48 @@ describe Kubernetes::Api::Pod do
       pod_with_client.logs('some-container', 10.seconds.from_now).must_equal "HELLO\nWORLD\n"
     end
 
-    it "reads previous logs when container restarted so we see why it restarted" do
-      pod_attributes[:status][:containerStatuses].first[:restartCount] = 1
+    it "fetches previous logs when current logs are not available" do
+      stub_request(:get, "#{log_url}&follow=true").
+        to_raise(Kubeclient::HttpError.new('a', 'b', 'c'))
       stub_request(:get, "#{log_url}&previous=true").
         and_return(body: "HELLO")
       pod_with_client.logs('some-container', 10.seconds.from_now).must_equal "HELLO"
     end
 
-    it "fetches previous logs when current logs are not available" do
-      stub_request(:get, "#{log_url}&follow=true").
-        to_raise(KubeException.new('a', 'b', 'c'))
-      stub_request(:get, "#{log_url}&previous=true").
-        and_return(body: "HELLO")
-      pod_with_client.logs('some-container', 10.seconds.from_now).must_equal "HELLO"
+    describe "with restarted pod" do
+      def log_url
+        "#{super}&previous=true"
+      end
+
+      before do
+        pod_attributes[:status][:containerStatuses].first[:restartCount] = 1
+        pod_with_client.stubs(:sleep)
+      end
+
+      it "reads previous logs so we see why it restarted" do
+        logs = stub_request(:get, log_url).and_return(body: "HI")
+        pod_with_client.logs('some-container', 10.seconds.from_now).must_equal "HI"
+        assert_requested logs, times: 1
+      end
+
+      it "retries fetching previous logs if they were not yet available" do
+        logs = stub_request(:get, log_url).and_return([{body: "Unable to retrieve container logs foo"}, {body: "HI"}])
+        pod_with_client.logs('some-container', 10.seconds.from_now).must_equal "HI"
+        assert_requested logs, times: 2
+      end
+
+      it "fails fetching previous logs if they are never available" do
+        logs = stub_request(:get, log_url).and_return(body: "Unable to retrieve container logs foo")
+        pod_with_client.logs('some-container', 10.seconds.from_now).must_equal "Unable to retrieve container logs foo"
+        assert_requested logs, times: 3
+      end
     end
 
     it "does not crash when both log endpoints fails with a 404" do
       stub_request(:get, "#{log_url}&follow=true").
-        to_raise(KubeException.new('a', 'b', 'c'))
+        to_raise(Kubeclient::HttpError.new('a', 'b', 'c'))
       stub_request(:get, "#{log_url}&previous=true").
-        to_raise(KubeException.new('a', 'b', 'c'))
+        to_raise(Kubeclient::HttpError.new('a', 'b', 'c'))
       pod_with_client.logs('some-container', 10.seconds.from_now).must_be_nil
     end
 
@@ -226,49 +240,18 @@ describe Kubernetes::Api::Pod do
   end
 
   describe "#events_indicate_failure?" do
-    let(:events_url) do
-      "http://foobar.server/api/v1/namespaces/the-namespace/events?fieldSelector=involvedObject.name=test_name"
-    end
-    let(:event) { {metadata: {creationTimestamp: start_time}, type: 'Normal'} }
-    let(:events) { [event] }
-
     def events_indicate_failure?
-      stub_request(:get, events_url).to_return(body: {items: events}.to_json)
+      pod_with_client.instance_variable_set(:@events, events)
       pod_with_client.events_indicate_failure?
+    end
+
+    it "is true" do
+      assert events_indicate_failure?
     end
 
     it "is false when there are no events" do
       events.clear
       refute events_indicate_failure?
-    end
-
-    it "is false when there are Normal events" do
-      refute events_indicate_failure?
-    end
-
-    it "retries on errors" do
-      request = stub_request(:get, events_url).to_timeout
-      assert_raises(KubeException) { pod_with_client.events_indicate_failure? }
-      assert_requested request, times: 4
-    end
-
-    describe "with bad events" do
-      before { event[:type] = "Warning" }
-
-      it "is true" do
-        assert events_indicate_failure?
-      end
-
-      # not sure if this happens, just making sure ... also makes our fixtures simpler
-      it "is true when pod never started" do
-        assert pod_attributes[:status].delete(:startTime)
-        assert events_indicate_failure?
-      end
-
-      it "is false when events are for a previous generation" do
-        event[:metadata][:creationTimestamp] = "1111"
-        refute events_indicate_failure?
-      end
     end
 
     describe "probe failures" do
@@ -331,14 +314,37 @@ describe Kubernetes::Api::Pod do
     end
   end
 
-  describe "#init_containers" do
-    it "is empty for no containers" do
-      pod.init_containers.must_equal []
+  describe "#waiting_for_resources?" do
+    def waiting_for_resources?
+      pod_with_client.instance_variable_set(:@events, events)
+      pod_with_client.waiting_for_resources?
     end
 
-    it "finds init containers" do
-      pod_attributes[:metadata][:annotations] = {'pod.beta.kubernetes.io/init-containers': '[{"foo": "bar"}]'}
-      pod.init_containers.must_equal [{foo: "bar"}]
+    it "is not waiting when all is good" do
+      refute waiting_for_resources?
+    end
+
+    it "is not waiting when bad" do
+      event[:type] = "Warning"
+      refute waiting_for_resources?
+    end
+
+    it "is not waiting when bad and FailedScheduling" do
+      event[:type] = "Warning"
+      events << event.dup.merge(reason: "FailedScheduling")
+      refute waiting_for_resources?
+    end
+
+    it "is waiting when bad event is FailedScheduling" do
+      event[:type] = "Warning"
+      event[:reason] = "FailedScheduling"
+      assert waiting_for_resources?
+    end
+
+    it "is waiting when bad event is FailedAttachVolume" do
+      event[:type] = "Warning"
+      event[:reason] = "FailedAttachVolume"
+      assert waiting_for_resources?
     end
   end
 end

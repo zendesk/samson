@@ -1,9 +1,12 @@
 <div class="alert alert-warning">
   <% if lock.warning? %>
-    <%= warning_icon %> <%= lock.affected %> Warning:
+    <%= warning_icon %> <%= lock_affected(lock) %> Warning:
   <% else %>
-    <%= lock_icon %> Deployments to <%= lock.affected %> were locked
+    <%= lock_icon %> Deployments to <%= lock_affected(lock) %> were locked
   <% end %>
-  <%= sanitize lock.reason %> by <%= lock.locked_by %> <%= time_ago_in_words(lock.created_at) %>
-  ago<%= lock.expire_summary %>.
+  <%= sanitize lock.reason %>
+  <i>
+    by <%= lock.locked_by %> <%= render_time lock.created_at %>
+    <%= lock.expire_summary { |t| render_time(t) } %>.
+  </i>
 </div>

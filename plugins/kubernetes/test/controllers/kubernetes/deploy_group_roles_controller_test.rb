@@ -14,7 +14,7 @@ describe Kubernetes::DeployGroupRolesController do
   id = ActiveRecord::FixtureSet.identify(:test_pod1_app_server)
   project_id = ActiveRecord::FixtureSet.identify(:test)
 
-  as_a_viewer do
+  as_a :viewer do
     describe "#index" do
       before do
         # one different to test filtering
@@ -25,6 +25,12 @@ describe Kubernetes::DeployGroupRolesController do
         get :index
         assert_template :index
         assigns[:deploy_group_roles].must_include deploy_group_role
+      end
+
+      it "renders when deploy group got deleted" do
+        kubernetes_release_docs(:test_release_pod_1).deploy_group.update_column(:deleted_at, Time.now)
+        get :index
+        assert_template :index
       end
 
       it "renders as project tab" do
@@ -53,7 +59,7 @@ describe Kubernetes::DeployGroupRolesController do
       it "renders JSON" do
         get :show, params: {id: deploy_group_role.id}, format: :json
         assert_response :success
-        json.keys.must_equal ['deploy_group_role']
+        json.keys.must_equal ['kubernetes_deploy_group_role']
       end
 
       describe "rendering verification_template" do
@@ -68,8 +74,8 @@ describe Kubernetes::DeployGroupRolesController do
           GitRepository.any_instance.stubs(:commit_from_ref).with("master").returns(commit)
           get :show, params: {id: deploy_group_role.id, include: "verification_template"}, format: :json
           assert_response :success
-          json.keys.must_equal ['deploy_group_role']
-          json["deploy_group_role"].keys.must_include 'verification_template'
+          json.keys.must_equal ['kubernetes_deploy_group_role']
+          json["kubernetes_deploy_group_role"].keys.must_include 'verification_template'
         end
 
         it "can request exact ref" do
@@ -89,7 +95,7 @@ describe Kubernetes::DeployGroupRolesController do
       it "can prefill" do
         get :new, params: {kubernetes_deploy_group_role: {kubernetes_role_id: kubernetes_roles(:app_server).id}}
         assert_template :new
-        assigns(:deploy_group_role).kubernetes_role_id.must_equal kubernetes_roles(:app_server).id
+        assigns(:kubernetes_deploy_group_role).kubernetes_role_id.must_equal kubernetes_roles(:app_server).id
       end
     end
 
@@ -102,7 +108,7 @@ describe Kubernetes::DeployGroupRolesController do
     unauthorized :put, :update_many, project_id: 'foo'
   end
 
-  as_a_project_admin do
+  as_a :project_admin do
     describe "#create" do
       let(:params) do
         {
@@ -142,6 +148,27 @@ describe Kubernetes::DeployGroupRolesController do
         post :create, params: params
         assert_response :unauthorized
       end
+
+      describe "with no_cpu_limit" do
+        before do
+          deploy_group_role.destroy!
+          params[:kubernetes_deploy_group_role][:no_cpu_limit] = 'true'
+        end
+
+        it "cannot assign" do
+          assert_raises ActionController::UnpermittedParameters do
+            post :create, params: params
+          end
+        end
+
+        it "can assign when enabled" do
+          stub_const Kubernetes::DeployGroupRole, :NO_CPU_LIMIT_ALLOWED, true do
+            post :create, params: params
+            assert_response :redirect
+            assert Kubernetes::DeployGroupRole.last.no_cpu_limit
+          end
+        end
+      end
     end
 
     describe "#edit" do
@@ -167,9 +194,9 @@ describe Kubernetes::DeployGroupRolesController do
       end
 
       it "does not allow to circumvent project admin protection" do
-        put :update, params: {id: deploy_group_role.id, kubernetes_deploy_group_role: {project_id: 123}}
-        deploy_group_role.reload.project_id.must_equal projects(:test).id
-        assert_redirected_to deploy_group_role
+        assert_raises ActionController::UnpermittedParameters do
+          put :update, params: {id: deploy_group_role.id, kubernetes_deploy_group_role: {project_id: 123}}
+        end
       end
 
       it "does not allow updates for non-admins" do
@@ -216,6 +243,14 @@ describe Kubernetes::DeployGroupRolesController do
         error = flash[:alert]
         error.must_equal "<p>Roles failed to seed, fill them in manually.\n<br />app-server for Pod1: foo</p>"
         assert error.html_safe?
+      end
+
+      it "does not overflow cookies when trying to seed too many roles that all fail because of limit violations" do
+        deploy_group_role.errors.add :base, 'foo'
+        deploy_group_role.stubs(persisted?: false)
+        Kubernetes::DeployGroupRole.expects(:seed!).returns Array.new(10).fill(deploy_group_role)
+        post :seed, params: {stage_id: stage.id}
+        flash[:alert].scan("app-server for Pod1").size.must_equal 3
       end
     end
 

@@ -1,38 +1,33 @@
 AllCops:
   DisplayCopNames: true
-  TargetRubyVersion: 2.3
   Exclude:
     - db/schema.rb
     - vendor/**/*
     - tmp/**/*
     - node_modules/**/*
 
-LineLength:
+Metrics/LineLength:
   Max: 120
 
-ClassLength:
-  Enabled: false
-
-Layout/CommentIndentation:
+Metrics/ClassLength:
   Enabled: false
 
 Style/StringLiterals:
   Enabled: false
 
-HashSyntax:
-   EnforcedStyle: ruby19
-
 Style/SignalException:
   Enabled: false
 
+# make `a = {bar: 1}` look like `a = foo(bar: 1)`
 Layout/SpaceInsideHashLiteralBraces:
-  Enabled: false
+  EnforcedStyle: no_space
 
 Lint/AmbiguousOperator:
   Enabled: false
 
+# Always use `->`
 Style/Lambda:
-  Enabled: false
+  EnforcedStyle: literal
 
 Style/SpecialGlobalVars:
   Enabled: false
@@ -46,7 +41,7 @@ Metrics/AbcSize:
 Style/WordArray:
   Enabled: false
 
-Lint/EndAlignment:
+Layout/EndAlignment:
   EnforcedStyleAlignWith: variable
 
 Style/StringLiteralsInInterpolation:
@@ -55,14 +50,15 @@ Style/StringLiteralsInInterpolation:
 Style/NumericLiterals:
   Enabled: false
 
+# prefer simpler `a == 0` over `a.zero?`
 Style/NumericPredicate:
-  Enabled: false
+  EnforcedStyle: comparison
 
 Layout/FirstParameterIndentation:
   Enabled: false
 
 Layout/IndentHash:
-  Enabled: false
+  EnforcedStyle: consistent
 
 Layout/AlignParameters:
   EnforcedStyle: with_fixed_indentation
@@ -88,11 +84,8 @@ Style/Documentation:
 Style/Next:
   Enabled: false
 
-Metrics/CyclomaticComplexity:
-  Enabled: false
-
 Layout/MultilineMethodCallIndentation:
-  Enabled: false
+  Enabled: false # none of the EnforcedStyle options allow for consistent 2-space indent
 
 Lint/AmbiguousRegexpLiteral:
   Enabled: false
@@ -103,14 +96,7 @@ Layout/DotPosition:
 Style/ClassAndModuleChildren:
   Enabled: false
 
-# %w[] shows that it will return an array
-Style/PercentLiteralDelimiters:
-  PreferredDelimiters:
-    '%i': '[]'
-    '%w': '[]'
-    '%W': '[]'
-
-# for single `/` more readable
+# often single `/` is more readable as `/a\/b/`
 Style/RegexpLiteral:
   Enabled: false
 
@@ -138,13 +124,17 @@ Metrics/ParameterLists:
 Metrics/BlockLength:
   Enabled: false
 
+# Allow use of `if a = b(1, 2)` for simplified control flow
 Lint/AssignmentInCondition:
   Enabled: false
 
 Style/SingleLineBlockParams:
   Enabled: false
 
-Style/TrailingCommaInLiteral:
+Style/TrailingCommaInArrayLiteral:
+  Enabled: false
+
+Style/TrailingCommaInHashLiteral:
   Enabled: false
 
 Style/PerlBackrefs:
@@ -160,12 +150,6 @@ Naming/VariableNumber:
   Enabled: false
 
 Style/TernaryParentheses:
-  Enabled: false
-
-# should use, but is currently showing false positives / bugs
-# https://github.com/bbatsov/rubocop/issues/3551
-# https://github.com/bbatsov/rubocop/issues/3561
-Style/SafeNavigation:
   Enabled: false
 
 Style/SymbolArray:
@@ -189,6 +173,31 @@ Style/RescueStandardError:
 Style/FormatStringToken:
   Enabled: false
 
-# too many false-positives
-Performance/HashEachMethods:
+# we cannot enable this until breakman does not barf on ruby 2.5 blocks with rescue
+Style/RedundantBegin:
   Enabled: false
+
+Naming/UncommunicativeMethodParamName:
+  Enabled: false
+
+Layout/EmptyLineAfterGuardClause:
+  Enabled: false
+
+Style/IfInsideElse:
+  Enabled: false
+
+# Enable this once https://github.com/rubocop-hq/rubocop/issues/6410 is fixed
+Layout/AlignHash:
+  Enabled: false
+
+# Opt-in
+Layout/FirstHashElementLineBreak:
+  Enabled: true
+
+# Opt-in
+Layout/FirstMethodArgumentLineBreak:
+  Enabled: true
+
+# Opt-in
+Layout/FirstMethodParameterLineBreak:
+  Enabled: true

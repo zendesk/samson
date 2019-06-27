@@ -6,11 +6,11 @@ SingleCov.covered!
 describe NewRelicController do
   with_new_relic_plugin_enabled
 
-  as_a_viewer do
+  as_a :viewer do
     unauthorized :get, :show, project_id: :foo, stage_id: 1
   end
 
-  as_a_project_deployer do
+  as_a :project_deployer do
     describe "#show" do
       it "requires a project" do
         assert_raises(ActiveRecord::RecordNotFound) do
@@ -25,7 +25,7 @@ describe NewRelicController do
       end
 
       it "requires a NewReclic api key" do
-        silence_warnings { SamsonNewRelic::KEY = nil }
+        silence_warnings { SamsonNewRelic::API_KEY = nil }
         get :show, params: {project_id: projects(:test), stage_id: stages(:test_staging)}
         assert_response :precondition_failed
       end

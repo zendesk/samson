@@ -190,7 +190,7 @@ describe Project do
       project = Project.new(id: 9999, name: 'demo_apps', repository_url: repository_url)
       project.repository.expects(:clone!).returns(false)
       expected_message = "Could not clone git repository #{project.repository_url} for project #{project.name}"
-      Airbrake.expects(:notify).with(expected_message)
+      Samson::ErrorNotifier.expects(:notify).with(expected_message)
       clone_repository(project)
     end
 
@@ -201,15 +201,8 @@ describe Project do
       expected_message =
         "Could not clone git repository #{project.repository_url} for project #{project.name} - #{error}"
       Rails.logger.expects(:error).with(expected_message)
-      Airbrake.expects(:notify).once
+      Samson::ErrorNotifier.expects(:notify).once
       clone_repository(project)
-    end
-
-    it 'does not validate with a bad repo url' do
-      Project.any_instance.unstub(:valid_repository_url)
-      project = Project.new(id: 9999, name: 'demo_apps', repository_url: 'my_bad_url')
-      project.valid?.must_equal false
-      project.errors.messages.must_equal repository_url: ["is not valid or accessible"]
     end
 
     it 'converts repo url with trailing slash' do
@@ -242,6 +235,28 @@ describe Project do
     it 'can initialize with a local repo' do
       project = Project.new(name: 'demo_apps', repository_url: '/foo/bar/.git')
       project.save!
+    end
+  end
+
+  describe "#valid_repository_url" do
+    before { Project.any_instance.unstub(:valid_repository_url) }
+
+    it 'is valid with a valid url' do
+      project = Project.new(id: 9999, name: 'demo_apps', repository_url: 'x')
+      project.repository.expects(:valid_url?).returns(true)
+      assert_valid project
+    end
+
+    it 'is invalid with a bad repo url' do
+      project = Project.new(id: 9999, name: 'demo_apps', repository_url: 'my_bad_url')
+      refute_valid project
+      project.errors.messages.must_equal repository_url: ["is not valid or accessible"]
+    end
+
+    it 'is invalid without repo url' do
+      project = Project.new(id: 9999, name: 'demo_apps', repository_url: '')
+      refute_valid project
+      project.errors.messages.must_equal permalink: ["can't be blank"], repository_url: ["can't be blank"]
     end
   end
 
@@ -313,9 +328,48 @@ describe Project do
       project.last_deploy_by_stage.must_equal([deploys(:succeeded_production_test)])
     end
 
-    it "returns nil when nothing was found" do
+    it "returns nil when no stage was found" do
       Stage.update_all(deleted_at: Time.now)
       project.last_deploy_by_stage.must_be_nil
+    end
+
+    it "returns nil when no deploy was found" do
+      Deploy.update_all(deleted_at: Time.now)
+      project.last_deploy_by_stage.must_be_nil
+    end
+  end
+
+  describe "#deployed_reference_to_non_production_stage?" do
+    def stub_commit(found = true)
+      result = found ? deploy.job.commit : nil
+      project.repository.expects(:commit_from_ref).with(deploy.reference).returns(result)
+    end
+
+    let(:deploy) { deploys(:succeeded_test) }
+
+    it 'returns true if non production stage exists that deployed ref' do
+      stub_commit
+      project.deployed_reference_to_non_production_stage?(deploy.reference).must_equal true
+    end
+
+    it 'filters by job status' do
+      stub_commit
+      deploy.job.update_column(:status, 'failed')
+
+      project.deployed_reference_to_non_production_stage?(deploy.reference).must_equal false
+    end
+
+    it 'filters out production stages' do
+      stub_commit
+      deploy.update_column(:stage_id, stages(:test_production).id)
+
+      project.deployed_reference_to_non_production_stage?(deploy.reference).must_equal false
+    end
+
+    it 'returns false when reference cant be resolved' do
+      stub_commit(false)
+
+      project.deployed_reference_to_non_production_stage?(deploy.reference).must_equal false
     end
   end
 
@@ -358,6 +412,48 @@ describe Project do
     end
   end
 
+  describe '#docker_build_method' do
+    it 'is samson when no other build method is being used' do
+      project.docker_build_method.must_equal 'samson'
+    end
+
+    it 'is docker_image_building_disabled when attribute is set' do
+      project.update_column(:docker_image_building_disabled, true)
+      project.docker_build_method.must_equal 'docker_image_building_disabled'
+    end
+
+    it 'is build_with_gcb when attribute is set' do
+      project.update_columns(docker_image_building_disabled: false, build_with_gcb: true)
+      project.docker_build_method.must_equal 'build_with_gcb'
+    end
+  end
+
+  describe '#docker_build_method=' do
+    it 'updates attributes based on docker_build_method' do
+      project.docker_build_method = 'samson'
+      refute project.docker_image_building_disabled
+      refute project.build_with_gcb
+    end
+
+    it 'is disabled when external is selected' do
+      project.docker_build_method = 'docker_image_building_disabled'
+      assert project.docker_image_building_disabled
+      refute project.build_with_gcb
+    end
+
+    it 'is gcb when gcb building is selected' do
+      project.docker_build_method = 'build_with_gcb'
+      refute project.docker_image_building_disabled
+      assert project.build_with_gcb
+    end
+
+    it 'clears other build methods when a different one is set' do
+      project.update_column(:build_with_gcb, true)
+      project.docker_build_method = 'samson'
+      refute project.build_with_gcb
+    end
+  end
+
   describe '#docker_repo' do
     with_registries ["docker-registry.example.com/bar"]
 
@@ -379,6 +475,18 @@ describe Project do
 
     it "builds nonstandard" do
       project.docker_image("Dockerfile.baz").must_equal "foo-baz"
+    end
+
+    it "builds folders" do
+      project.docker_image("baz/Dockerfile").must_equal "foo-baz"
+    end
+
+    it "builds standard" do
+      project.docker_image("Dockerfile").must_equal "foo"
+    end
+
+    it "builds 1-off to allow flexibility" do
+      project.docker_image("wut").must_equal "wut"
     end
   end
 
@@ -516,6 +624,61 @@ describe Project do
 
     it "includes repository_path" do
       project.as_json.fetch("repository_path").must_equal "bar/foo"
+    end
+
+    it "includes environment variable groups when requested" do
+      project.as_json(include: :environment_variable_groups).keys.must_include "environment_variable_groups"
+    end
+
+    it "includes scoped environment variables when requested" do
+      project.as_json(include: :environment_variables_with_scope).keys.must_include "environment_variables_with_scope"
+    end
+  end
+
+  describe "#force_external_build?" do
+    it "defaults build method to 'docker_image_building_disabled' with env" do
+      with_env DOCKER_FORCE_EXTERNAL_BUILD: "1" do
+        project.force_external_build?.must_equal true
+        project.docker_build_method.must_equal("docker_image_building_disabled")
+      end
+    end
+
+    it "is false by default" do
+      project.force_external_build?.must_equal false
+    end
+  end
+
+  describe "#docker_image_building_disabled?" do
+    it "is false by default " do
+      project.docker_image_building_disabled?.must_equal false
+    end
+
+    it "disable docker image building with env" do
+      with_env DOCKER_FORCE_EXTERNAL_BUILD: "1" do
+        project.docker_image_building_disabled?.must_equal true
+      end
+    end
+  end
+
+  describe "#locked_by?" do
+    def lock(overrides = {})
+      @lock ||= Lock.create!({user: author, resource: project}.merge(overrides))
+    end
+
+    it 'returns true for project lock' do
+      lock # trigger lock creation
+      Lock.send :all_cached
+      assert_sql_queries 0 do
+        project.locked_by?(lock).must_equal true
+      end
+    end
+
+    it 'returns false for different project lock' do
+      lock(resource: projects(:other))
+      Lock.send :all_cached
+      assert_sql_queries 0 do
+        project.locked_by?(lock).must_equal false
+      end
     end
   end
 end

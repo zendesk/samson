@@ -1,0 +1,3 @@
+<% if ENV['JENKINS_STATUS_CHECKER'] %>
+  <%= form.input :jenkins_status_checker, label: 'Show Jenkins Status on new deploy page', as: :check_box %>
+<% end %>

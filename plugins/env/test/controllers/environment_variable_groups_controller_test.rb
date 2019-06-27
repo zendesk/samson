@@ -54,7 +54,7 @@ describe EnvironmentVariableGroupsController do
     p
   end
 
-  as_a_viewer do
+  as_a :viewer do
     unauthorized :get, :new
     unauthorized :post, :create
 
@@ -77,12 +77,42 @@ describe EnvironmentVariableGroupsController do
         get :index
         assert_response :success
       end
+
+      it "renders json" do
+        get :index, format: :json
+        assert_response :success
+        json_response = JSON.parse response.body
+        first_group = json_response['environment_variable_groups'].first
+        first_group.keys.must_include "name"
+        first_group.keys.must_include "variable_names"
+        first_group['name'].must_equal "G1"
+        first_group['variable_names'].must_equal ["X", "Y"]
+      end
+
+      it "renders with envionment_variables if present" do
+        get :index, params: {includes: "environment_variables", format: :json}
+        assert_response :success
+        project = JSON.parse(response.body)
+        project.keys.must_include "environment_variables"
+      end
     end
 
     describe "#show" do
+      def unauthorized_env_group
+        ProjectEnvironmentVariableGroup.create!(environment_variable_group: env_group, project: other_project)
+      end
+
       it "renders" do
         get :show, params: {id: env_group.id}
         assert_response :success
+      end
+
+      it 'disables fields if user cannot edit env group' do
+        unauthorized_env_group
+        get :show, params: {id: env_group.id}
+
+        assert_response :success
+        assert_select 'fieldset[disabled]', count: 2
       end
     end
 
@@ -106,7 +136,7 @@ describe EnvironmentVariableGroupsController do
 
     describe "a json GET to #preview" do
       it "succeeds" do
-        get :preview, params: {group_id: env_group.id, project_id: project.id }, format: :json
+        get :preview, params: {group_id: env_group.id, project_id: project.id}, format: :json
         assert_response :success
         json_response = JSON.parse response.body
         json_response['groups'].sort.must_equal [
@@ -117,7 +147,7 @@ describe EnvironmentVariableGroupsController do
       end
 
       it "only shows single deploy_group with filtering on" do
-        get :preview, params: {group_id: env_group.id, project_id: project.id, deploy_group: "pod2" }, format: :json
+        get :preview, params: {group_id: env_group.id, project_id: project.id, deploy_group: "pod2"}, format: :json
         assert_response :success
         json_response = JSON.parse response.body
         json_response['groups'].sort.must_equal [
@@ -127,13 +157,13 @@ describe EnvironmentVariableGroupsController do
 
       it "fails when deploy group is unknown" do
         assert_raises ActiveRecord::RecordNotFound do
-          get :preview, params: {group_id: env_group.id, project_id: project.id, deploy_group: "pod23" }, format: :json
+          get :preview, params: {group_id: env_group.id, project_id: project.id, deploy_group: "pod23"}, format: :json
         end
       end
     end
   end
 
-  as_a_project_admin do
+  as_a :project_admin do
     describe "#new" do
       it "renders" do
         get :new
@@ -233,7 +263,7 @@ describe EnvironmentVariableGroupsController do
     end
   end
 
-  as_an_admin do
+  as_a :admin do
     describe "#update" do
       before { env_group }
       it_updates

@@ -60,11 +60,19 @@ describe DockerRegistry do
     it "finds host with protocol" do
       DockerRegistry.new('https://foo.bar/baz').host.must_equal 'foo.bar'
     end
+
+    it "finds host with a non-standard port" do
+      DockerRegistry.new('foo.bar:5000/baz').host.must_equal 'foo.bar:5000'
+    end
   end
 
   describe "#base" do
     it "returns host and namespace" do
       DockerRegistry.new('foo.bar/baz').base.must_equal 'foo.bar/baz'
+    end
+
+    it "includes port in base" do
+      DockerRegistry.new('foo.bar:5000/baz').base.must_equal 'foo.bar:5000/baz'
     end
 
     it "returns host when no namespace was used" do

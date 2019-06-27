@@ -9,7 +9,7 @@ class ProjectMailerTest < ActionMailer::TestCase
 
   describe "#created_email" do
     it "contains user and project name" do
-      ProjectMailer.created_email(user, project).deliver_now
+      ProjectMailer.created_email('foo@exmaple.com', user, project).deliver_now
       mail_sent = ActionMailer::Base.deliveries.last
       assert mail_sent.subject.include?('Foo')
       assert mail_sent.body.include?('Admin')
@@ -19,7 +19,7 @@ class ProjectMailerTest < ActionMailer::TestCase
 
   describe "#deleted_email" do
     it "contains user and project name" do
-      ProjectMailer.deleted_email(user, project).deliver_now
+      ProjectMailer.deleted_email('foo@exmaple.com', user, project).deliver_now
       mail_sent = ActionMailer::Base.deliveries.last
       assert mail_sent.subject.include?('Foo')
       assert mail_sent.body.include?('Admin')

@@ -1,23 +1,23 @@
 # frozen_string_literal: true
 class Release < ActiveRecord::Base
-  NUMBER_REGEX = /\A#{Samson::RELEASE_NUMBER}\z/
-  VERSION_REGEX = /\Av(#{Samson::RELEASE_NUMBER})\z/
+  NUMBER_REGEX = /\A#{Samson::RELEASE_NUMBER}\z/.freeze
+  VERSION_REGEX = /\Av(#{Samson::RELEASE_NUMBER})\z/.freeze
 
-  belongs_to :project, touch: true
-  belongs_to :author, polymorphic: true
+  belongs_to :project, touch: true, inverse_of: :releases
+  belongs_to :author, class_name: "User", inverse_of: nil
 
   before_validation :assign_release_number
   before_validation :covert_ref_to_sha
 
-  validates :number, format: { with: NUMBER_REGEX, message: "may only contain numbers and decimals." }
-  validates :commit, format: { with: Build::SHA1_REGEX, message: "can only be a full sha"}, on: :create
+  validates :number, format: {with: NUMBER_REGEX, message: "may only contain numbers and decimals."}
+  validates :commit, format: {with: Build::SHA1_REGEX, message: "can only be a full sha"}, on: :create
 
   # DEFAULT_RELEASE_NUMBER is the default value assigned to release#number by the database.
   # This constant is here for convenience - the value that the database uses is in db/schema.rb.
   DEFAULT_RELEASE_NUMBER = "1"
 
   def changeset
-    @changeset ||= Changeset.new(project.repository_path, previous_release.try(:commit), commit)
+    @changeset ||= Changeset.new(project, previous_release&.commit, commit)
   end
 
   def previous_release
@@ -59,9 +59,11 @@ class Release < ActiveRecord::Base
   rescue Octokit::NotFound
     false
   rescue Octokit::Error => e
-    Airbrake.notify(e, parameters: {
-      repository_path: project.repository_path, commit: commit, other_commit: other_commit
-    })
+    Samson::ErrorNotifier.notify(
+      e, parameters: {
+        repository_path: project.repository_path, commit: commit, other_commit: other_commit
+      }
+    )
     false # Err on side of caution and cause a new release to be created.
   end
 

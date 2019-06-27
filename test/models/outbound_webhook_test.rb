@@ -11,6 +11,7 @@ describe OutboundWebhook do
       url: "https://testing.com/deploys"
     }
   end
+  let(:webhook) { OutboundWebhook.create(webhook_attributes) }
 
   describe '#create' do
     it 'creates the webhook' do
@@ -75,8 +76,6 @@ describe OutboundWebhook do
     before do
       @webhook = OutboundWebhook.create!(selected_webhook)
       @connection = @webhook.send(:connection)
-
-      assert_equal selected_webhook[:url], @connection.url_prefix.to_s
     end
 
     describe "with no authorization" do
@@ -113,6 +112,13 @@ describe OutboundWebhook do
       assert_request :post, "https://testing.com/deploys", to_return: {status: 400} do
         refute webhook.deliver(Deploy.new)
       end
+    end
+  end
+
+  describe "#as_json" do
+    it "does not show password" do
+      webhook.password = '123'
+      webhook.as_json.keys.wont_include 'password'
     end
   end
 

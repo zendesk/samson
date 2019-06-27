@@ -17,15 +17,15 @@ describe GkeCluster do
     end
 
     it 'is invalid if it is missing a gcp_project' do
-      refute_valid_on gke_cluster(gcp_project: nil), :gcp_project, ["Gcp project can't be blank"]
+      refute_valid_on gke_cluster(gcp_project: nil), :gcp_project, "Gcp project can't be blank"
     end
 
     it 'is invalid if it is missing a cluster_name' do
-      refute_valid_on gke_cluster(cluster_name: nil), :cluster_name, ["Cluster name can't be blank"]
+      refute_valid_on gke_cluster(cluster_name: nil), :cluster_name, "Cluster name can't be blank"
     end
 
     it 'is invalid if it is missing a zone' do
-      refute_valid_on gke_cluster(zone: nil), :zone, ["Zone can't be blank"]
+      refute_valid_on gke_cluster(zone: nil), :zone, "Zone can't be blank"
     end
   end
 end

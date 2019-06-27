@@ -1,35 +1,33 @@
 # frozen_string_literal: true
-require 'samson/integration'
 
-class WebhooksController < ApplicationController
+class WebhooksController < ResourceController
   include CurrentProject
 
   before_action :authorize_resource!
+  before_action :set_resource, only: [:show, :edit, :update, :destroy, :new, :create]
 
   def index
-  end
-
-  def create
-    webhook = current_project.webhooks.build(webhook_params)
-    if webhook.save
-      redirect_to project_webhooks_path(current_project), notice: "Webhook created!"
-    else
-      current_project.reload
-      flash[:alert] = "Error saving webhook: #{webhook.errors.full_messages.join(", ")}"
-      render :index
+    respond_to do |format|
+      format.html
+      format.json { render_as_json :webhooks, @project.webhooks, nil }
     end
   end
 
-  def destroy
-    webhook = current_project.webhooks.find(params[:id])
-    webhook.soft_delete!(validate: false)
-
-    redirect_to project_webhooks_path(current_project)
+  def create
+    super(template: :index)
   end
 
   private
 
-  def webhook_params
-    params.require(:webhook).permit(:branch, :stage_id, :source)
+  def resource_path
+    resources_path
+  end
+
+  def resources_path
+    [@project, 'webhooks']
+  end
+
+  def resource_params
+    super.permit(:branch, :source, :stage_id).merge(project: current_project)
   end
 end

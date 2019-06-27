@@ -7,7 +7,7 @@ describe StarsController do
   let(:current_user) { users(:viewer) }
   let(:project) { projects(:test) }
 
-  as_a_viewer do
+  as_a :viewer do
     describe "#create" do
       before { refute current_user.starred_project?(project) }
 

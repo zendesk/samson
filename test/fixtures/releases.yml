@@ -2,4 +2,4 @@ test:
   project: test
   commit: abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd
   number: "123"
-  author: deployer (User)
+  author: deployer

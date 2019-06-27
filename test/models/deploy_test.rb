@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 3
 
 describe Deploy do
   let(:project) { projects(:test) }
@@ -43,8 +43,8 @@ describe Deploy do
       "pending"    => "Deployer is about to deploy baz to Staging",
       "running"    => "Deployer is deploying baz to Staging",
       "succeeded"  => "Deployer deployed baz to Staging",
-      "cancelled"  => "Samson cancelled Deployer`s deploy of baz to Staging", # might not be done by the user
-      "cancelling" => "Samson is cancelling Deployer`s deploy of baz to Staging", # might not be done by the user
+      "cancelled"  => "Samson cancelled Deployer's deploy of baz to Staging", # might not be done by the user
+      "cancelling" => "Samson is cancelling Deployer's deploy of baz to Staging", # might not be done by the user
       "failed"     => "Deployer failed to deploy baz to Staging",
       "errored"    => "Deployer encountered an error deploying baz to Staging"
     }.each do |status, message|
@@ -57,7 +57,7 @@ describe Deploy do
     it "shows canceller when it was regularly cancelled" do
       deploy.job.status = "cancelled"
       deploy.job.canceller = users(:admin)
-      deploy.summary.must_equal "Admin cancelled Deployer`s deploy of baz to Staging"
+      deploy.summary.must_equal "Admin cancelled Deployer's deploy of baz to Staging"
     end
 
     describe "when buddy was required" do
@@ -185,22 +185,42 @@ describe Deploy do
     end
   end
 
-  describe "#previous_successful_deploy" do
+  describe "#previous_succeeded_deploy" do
     it "returns the deploy prior to that deploy" do
       deploy1 = create_deploy!
       deploy2 = create_deploy!
       deploy3 = create_deploy!
 
-      deploy2.previous_successful_deploy.must_equal deploy1
-      deploy3.previous_successful_deploy.must_equal deploy2
+      deploy2.previous_succeeded_deploy.must_equal deploy1
+      deploy3.previous_succeeded_deploy.must_equal deploy2
     end
 
-    it "excludes non-successful deploys" do
+    it "excludes non-succeeded deploys" do
       deploy1 = create_deploy!
       create_deploy!(job: create_job!(status: "errored"))
       deploy3 = create_deploy!
 
-      deploy3.previous_successful_deploy.must_equal deploy1
+      deploy3.previous_succeeded_deploy.must_equal deploy1
+    end
+  end
+
+  describe "#next_succeeded_deploy" do
+    it 'returns the next succeeded deploy' do
+      deploy1 = create_deploy!
+      create_deploy!(job: create_job!(status: "errored"))
+      deploy3 = create_deploy!
+
+      deploy1.next_succeeded_deploy.must_equal deploy3
+    end
+  end
+
+  describe "#previous_commit" do
+    it "return the commit of previous succeeded deploy" do
+      deploy1 = create_deploy!(job: create_job!(commit: "1"))
+      create_deploy!(job: create_job!(commit: "2", status: "errored"))
+      deploy3 = create_deploy!(job: create_job!(commit: "3"))
+
+      deploy3.previous_commit.must_equal deploy1.commit
     end
   end
 
@@ -340,9 +360,9 @@ describe Deploy do
     end
   end
 
-  describe ".successful" do
+  describe ".succeeded" do
     it "finds all succeeded deploys" do
-      Deploy.successful.must_equal [deploys(:succeeded_production_test), deploys(:succeeded_test)]
+      Deploy.succeeded.must_equal [deploys(:succeeded_production_test), deploys(:succeeded_test)]
     end
   end
 
@@ -378,8 +398,28 @@ describe Deploy do
     end
   end
 
+  describe ".next" do
+    let(:deploys) { Array.new(3).map { create_deploy! } }
+    let(:prod_stage) { stages(:test_production) }
+    let(:other_deploy) { create_deploy!(stage: prod_stage) }
+
+    before do
+      Deploy.delete_all
+      deploys
+      other_deploy
+    end
+
+    it 'scopes the records to deploys after the one passed in' do
+      stage.deploys.after(deploys[1]).first.must_equal deploys[2]
+    end
+
+    it 'properly scopes new deploys to the correct stage' do
+      stage.deploys.after(deploys[2]).must_equal []
+    end
+  end
+
   describe ".expired" do
-    let(:threshold) { BuddyCheck.time_limit.ago }
+    let(:threshold) { Samson::BuddyCheck.time_limit.ago }
     let(:other) { deploys(:succeeded_production_test) }
 
     before do
@@ -400,9 +440,9 @@ describe Deploy do
   end
 
   describe ".for_user" do
-    let!(:deploy_one) { create_deploy!(job_attributes: { user: user}) }
-    let!(:deploy_two) { create_deploy!(job_attributes: { user: user2}) }
-    let!(:deploy_three) { create_deploy!(job_attributes: { user: user}) }
+    let!(:deploy_one) { create_deploy!(job_attributes: {user: user}) }
+    let!(:deploy_two) { create_deploy!(job_attributes: {user: user2}) }
+    let!(:deploy_three) { create_deploy!(job_attributes: {user: user}) }
 
     it "finds  all the deploys for the given user" do
       Deploy.for_user(user).to_a.sort.must_equal([deploy_one, deploy_three])
@@ -443,6 +483,18 @@ describe Deploy do
     end
   end
 
+  describe "#exact_reference" do
+    it "returns versioned release" do
+      deploy = Deploy.new(reference: "v1", job: Job.new(commit: "abcdefgabcdefg"))
+      deploy.exact_reference.must_equal "v1"
+    end
+
+    it "returns short sha if reference is not exact" do
+      deploy = Deploy.new(reference: "master", job: Job.new(commit: "abcdefgabcdefg"))
+      deploy.exact_reference.must_equal "abcdefg"
+    end
+  end
+
   describe "#references?" do
     before do
       deploy.reference.wont_equal deploy.job.commit
@@ -472,7 +524,7 @@ describe Deploy do
 
   describe "#validate_stage_is_unlocked" do
     def deploy
-      create_deploy!(job_attributes: { user: user })
+      create_deploy!(job_attributes: {user: user})
     end
 
     it("can deploy") { deploy }
@@ -488,14 +540,14 @@ describe Deploy do
     end
 
     it "can update a deploy while something else is deployed" do
-      create_deploy!(job_attributes: { user: user, status: "running" })
+      create_deploy!(job_attributes: {user: user, status: "running"})
       deploys(:succeeded_test).update_attributes!(buddy_id: 123)
     end
   end
 
   describe "#validate_stage_uses_deploy_groups_properly" do
     def deploy
-      create_deploy!(job_attributes: { user: user })
+      create_deploy!(job_attributes: {user: user})
     end
 
     before do
@@ -524,13 +576,6 @@ describe Deploy do
     end
   end
 
-  describe "#cache_key" do
-    it "includes self and commit" do
-      deploys(:succeeded_test).cache_key.
-        must_equal ["deploys/178003093-20140101201000000000", "abcabcaaabcabcaaabcabcaaabcabcaaabcabca1"]
-    end
-  end
-
   describe ".csv_header" do
     it "has as many elements as csv_line does" do
       Deploy.csv_header.size.must_equal deploy.csv_line.size
@@ -552,77 +597,68 @@ describe Deploy do
     describe "with deleted objects" do
       before do
         # replicate worse case scenario where any referenced associations are soft deleted
-        prod_deploy.update_attributes(buddy_id: other_user.id)
+        prod_deploy.update_column(:buddy_id, other_user.id)
         prod_deploy.job.user.soft_delete!(validate: false)
         prod_deploy.buddy.soft_delete!(validate: false)
-        prod_deploy.stage.deploy_groups.first.environment.soft_delete!(validate: false)
-        # next 3 are false soft_deletions: there are dependent destroys that would result in
+        # next are fake soft_deletions: there are dependent destroys that would result in
         # deploy_groups_stages to be cleared which would make this test condition to likely
         # never occur in production but could exist
-        prod_deploy.stage.project.update_attribute(:deleted_at, Time.new(2016, 1, 1))
-        prod_deploy.stage.deploy_groups.first.update_attribute(:deleted_at, Time.now)
-        prod_deploy.stage.update_attribute(:deleted_at, Time.now)
+        prod_deploy.stage.deploy_groups.first.environment.update_column(:deleted_at, Time.now)
+        prod_deploy.stage.project.update_column(:deleted_at, Time.new(2016, 1, 1))
+        prod_deploy.stage.update_column(:deleted_at, Time.now)
         prod_deploy.reload
       end
 
       it "returns array with deleted object values with DeployGroups" do
         DeployGroup.stubs(enabled?: true)
-        prod.update_attribute(:production, false) # make sure response is from environment
+        prod.update_column(:production, false) # make sure response is from environment
 
         # the with_deleted calls would be done in CsvJob
-        Stage.with_deleted do
-          Project.with_deleted do
-            DeployGroup.with_deleted do
-              Environment.with_deleted do
-                prod_deploy.csv_line.must_equal [
-                  prod_deploy.id,
-                  project.name,
-                  prod_deploy.summary,
-                  prod_deploy.commit,
-                  job.status,
-                  prod_deploy.updated_at,
-                  prod_deploy.start_time,
-                  deployer.name,
-                  deployer.email,
-                  other_user.name,
-                  other_user.email,
-                  prod.name,
-                  environment.production,
-                  !prod.no_code_deployed, # Inverted because report is reporting as code deployed
-                  project.deleted_at,
-                  prod.deploy_group_names.join('|')
-                ]
-              end
-            end
-          end
+        CsvExportJob.new(nil).send(:with_deleted) do
+          prod_deploy.csv_line.must_equal [
+            prod_deploy.id,
+            project.name,
+            prod_deploy.summary,
+            prod_deploy.commit,
+            job.status,
+            prod_deploy.updated_at,
+            prod_deploy.start_time,
+            deployer.name,
+            deployer.email,
+            other_user.name,
+            other_user.email,
+            prod.name,
+            environment.production,
+            !prod.no_code_deployed, # Inverted because report is reporting as code deployed
+            project.deleted_at,
+            prod.deploy_group_names.join('|')
+          ]
         end
       end
 
       it "returns array with deleted object values without DeployGroups" do
         DeployGroup.stubs(enabled?: false)
 
-        # the with_deleted calls would be done in CsvJob
-        Stage.with_deleted do
-          Project.with_deleted do
-            prod_deploy.csv_line.must_equal [
-              prod_deploy.id,
-              project.name,
-              prod_deploy.summary,
-              prod_deploy.commit,
-              job.status,
-              prod_deploy.updated_at,
-              prod_deploy.start_time,
-              deployer.name,
-              deployer.email,
-              other_user.name,
-              other_user.email,
-              prod.name,
-              prod.production,
-              !prod.no_code_deployed, # Inverted because report is reporting as code deployed
-              project.deleted_at,
-              ''
-            ]
-          end
+        # the with_deleted as done in CsvExportJob
+        CsvExportJob.new(nil).send(:with_deleted) do
+          prod_deploy.csv_line.must_equal [
+            prod_deploy.id,
+            project.name,
+            prod_deploy.summary,
+            prod_deploy.commit,
+            job.status,
+            prod_deploy.updated_at,
+            prod_deploy.start_time,
+            deployer.name,
+            deployer.email,
+            other_user.name,
+            other_user.email,
+            prod.name,
+            prod.production,
+            !prod.no_code_deployed, # Inverted because report is reporting as code deployed
+            project.deleted_at,
+            ''
+          ]
         end
       end
     end

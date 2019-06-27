@@ -1,50 +1,8 @@
 # frozen_string_literal: true
-class AccessTokensController < ApplicationController
-  before_action :token_scope
-
-  def index
-    @access_tokens = token_scope
-  end
-
-  def new
-    @access_token = token_scope.new(
-      scopes: 'default',
-      application: ensure_personal_access_app
-    )
-  end
-
-  def create
-    token = token_scope.create!(
-      params.
-        require(:doorkeeper_access_token).
-        permit(:description, :scopes, :application_id)
-    )
-    redirect_to(
-      return_to_path,
-      notice: "Token created: copy this token, it will not be shown again: <b>#{token.token}</b>".html_safe
-    )
-  end
-
-  def destroy
-    token_scope.find(params.require(:id)).destroy!
-    redirect_to(
-      return_to_path,
-      notice: "Token deleted"
-    )
-  end
+class AccessTokensController < ResourceController
+  before_action :set_resource, except: [:index]
 
   private
-
-  def return_to_path
-    owner == current_user ? {action: :index} : owner
-  end
-
-  def ensure_personal_access_app
-    Doorkeeper::Application.where(name: 'Personal Access Token').first_or_create!(
-      scopes: '', # by default nothing is allowed ... scopes will come from access tokens
-      redirect_uri: 'https://example.com' # this app will never redirect
-    )
-  end
 
   def owner
     @owner ||= begin
@@ -58,7 +16,47 @@ class AccessTokensController < ApplicationController
     end
   end
 
-  def token_scope
+  def redirect_to_from_params
+    owner == current_user ? {action: :index} : owner
+  end
+
+  def redirect_after_save
+    redirect_to(
+      redirect_to_from_params,
+      notice: "Token created: copy this token, it will not be shown again: <b>#{@resource.token}</b>".html_safe
+    )
+  end
+
+  def ensure_personal_access_app
+    Doorkeeper::Application.where(name: 'Personal Access Token').first_or_create!(
+      scopes: '', # by default nothing is allowed ... scopes will come from access tokens
+      redirect_uri: 'https://example.com' # this app will never redirect
+    )
+  end
+
+  def resource_name
+    'access_token'
+  end
+
+  def resource_class
     owner.access_tokens
+  end
+
+  def render_resource_as_json(**args)
+    # Override constraints in Doorkeeper::AccessToken
+    render_as_json resource_name, @resource.serializable_hash, nil, **args, allowed_includes: nil
+  end
+
+  def resource_params
+    if action_name == 'new'
+      ActionController::Parameters.new(
+        scopes: 'default',
+        application: ensure_personal_access_app
+      ).permit!
+    else
+      params.
+        require(:doorkeeper_access_token).
+        permit(:description, :scopes, :application_id)
+    end
   end
 end

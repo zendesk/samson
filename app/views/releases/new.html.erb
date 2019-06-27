@@ -9,7 +9,7 @@
       </p>
     </div>
 
-    <%= form.input :commit, required: true, label: "SHA", input_html: { value: @project.deploys.first&.commit } %>
+    <%= form.input :commit, required: true, label: "SHA" %>
     <%= form.input :number, label: "Release number", input_html: { min: 1, step: 1, value: @release.number } %>
 
     <%= form.actions label: "Create release" %>

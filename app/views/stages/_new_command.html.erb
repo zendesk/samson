@@ -1,0 +1,12 @@
+<% command ||= '' %>
+
+<div class="row stage-bar bar">
+  <div class="new-command">
+    <%= text_area_tag 'stage[command_ids][]',
+          command,
+          class: "form-control",
+          rows: 4,
+          placeholder: "New stage command (e.x. 'cap production deploy')"
+    %>
+  </div>
+</div>

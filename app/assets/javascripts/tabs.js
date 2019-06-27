@@ -8,4 +8,9 @@ $(function () {
   $('.nav-tabs a[href^="#"]').click(function(){
     window.location.hash = this.hash;
   });
+
+  // Initialize popover tooltips in tab when tab is shown
+  $('a[data-toggle="tab"]').on('shown.bs.tab', function() {
+    $('.tab-content i[data-toggle="popover"]').popover();
+  });
 });

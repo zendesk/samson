@@ -5,9 +5,9 @@ SingleCov.covered!
 
 class CurrentUserConcernTest < ActionController::TestCase
   class CurrentUserTestController < ApplicationController
-    include CurrentUser
     include CurrentProject
     include CurrentStage
+    include CurrentUser
 
     def whodunnit
       render plain: Audited.store[:current_user].call.name
@@ -64,7 +64,7 @@ class CurrentUserConcernTest < ActionController::TestCase
     end
   end
 
-  as_a_viewer do
+  as_a :viewer do
     it "knows who did something" do
       get :whodunnit, params: {test_route: true}
       response.body.must_equal users(:viewer).name
@@ -99,7 +99,7 @@ class CurrentUserConcernTest < ActionController::TestCase
     unauthorized :get, :super_admin_action, test_route: true
   end
 
-  as_a_deployer do
+  as_a :deployer do
     authorized :get, :deployer_action, test_route: true
     unauthorized :get, :admin_action, test_route: true
     unauthorized :get, :super_admin_action, test_route: true
@@ -116,7 +116,7 @@ class CurrentUserConcernTest < ActionController::TestCase
     end
   end
 
-  as_a_project_deployer do
+  as_a :project_deployer do
     it "can access allowed projects" do
       get :project_deployer_action, params: {project_id: Project.first.id, test_route: true}
       assert_response :success
@@ -134,7 +134,7 @@ class CurrentUserConcernTest < ActionController::TestCase
     end
   end
 
-  as_a_project_admin do
+  as_a :project_admin do
     it "can access allowed projects" do
       get :project_admin_action, params: {project_id: Project.first.id, test_route: true}
       assert_response :success
@@ -147,7 +147,7 @@ class CurrentUserConcernTest < ActionController::TestCase
     end
   end
 
-  as_an_admin do
+  as_a :admin do
     authorized :get, :deployer_action, test_route: true
     authorized :get, :admin_action, test_route: true
     unauthorized :get, :super_admin_action, test_route: true
@@ -163,14 +163,14 @@ class CurrentUserConcernTest < ActionController::TestCase
     end
   end
 
-  as_a_super_admin do
+  as_a :super_admin do
     authorized :get, :deployer_action, test_route: true
     authorized :get, :admin_action, test_route: true
     authorized :get, :super_admin_action, test_route: true
   end
 
   describe "logging" do
-    as_a_viewer do
+    as_a :viewer do
       it "logs unautorized so we can see it in test output for easy debugging" do
         Rails.logger.expects(:warn)
         get :unauthorized_action, params: {test_route: true}
@@ -211,6 +211,13 @@ class CurrentUserConcernTest < ActionController::TestCase
       assert_response :success
     end
 
+    it "render without current projects" do
+      @controller.stubs(:respond_to?).with(:current_project, true).returns(false)
+      @controller.stubs(:respond_to?).with(:request).returns(true)
+      perform_get
+      assert_response :success
+    end
+
     it "fails for unknown controller" do
       @controller.unstub(:controller_name)
       e = assert_raises(ArgumentError) { perform_get }
@@ -243,19 +250,18 @@ class CurrentUserConcernTest < ActionController::TestCase
         assert_response :unauthorized
       end
 
-      # This still authorizes based on Project, but for the lock controller, it needs a Stage object
-      # passed to access control since locks are per Stage.  See app/models/access_control.rb#can? when
-      # the resource_namespace is :locks
-      it "renders when authorized via the stage" do
-        perform_get(project_id: projects(:test).id, id: stages(:test_staging).id)
-        assert_response :success
-      end
-
       it "fails when not authorized via the project" do
         users(:project_deployer).user_project_roles.delete_all
         perform_get(project_id: projects(:test).id)
         assert_response :unauthorized
       end
+    end
+  end
+
+  describe "#can?" do
+    it "does not override when scope is passed as nil since that has special meaning" do
+      AccessControl.expects(:can?).with(nil, :write, :locks, nil)
+      @controller.send(:can?, :write, :locks, nil)
     end
   end
 end

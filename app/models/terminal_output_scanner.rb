@@ -5,6 +5,8 @@
 # attention to newlines (`\n`) and carriage returns (`\r`). When a carriage
 # return is encountered, the scanner's cursor is reset to the start of the
 # current line, and the next data will overwrite that line.
+#
+# TODO: fix not returning buffer when last message is not a \n, for example "foo\n" + "bar" does not return bar
 class TerminalOutputScanner
   def initialize(source)
     @source = source
@@ -25,6 +27,20 @@ class TerminalOutputScanner
     end
   end
 
+  def to_s
+    raise "can only serialize a closed source or it would hang" unless @source.closed?
+    log = []
+
+    each do |event, data|
+      next unless [:replace, :append].include?(event)
+
+      log.pop if event == :replace
+      log.push data
+    end
+
+    log.join
+  end
+
   private
 
   def write(data)
@@ -41,12 +57,7 @@ class TerminalOutputScanner
 
       part.sub!(/^\r/, "") # chop off the leading \r
 
-      @state =
-        if part.start_with?("\n")
-          :append
-        else
-          :replace
-        end
+      @state = (part.start_with?("\n") ? :append : :replace)
     end
 
     @buffer << part

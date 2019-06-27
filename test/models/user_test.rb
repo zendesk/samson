@@ -29,6 +29,24 @@ describe User do
     end
   end
 
+  describe 'github username' do
+    let(:user) { User.create!(name: 'github', email: 'github@test.com', external_id: 'xyz', github_username: 'foo') }
+    it 'updates with valid username' do
+      user.github_username.must_equal 'foo'
+    end
+
+    it 'doesn`t update with invalid username' do
+      user.github_username = 'foo_5$'
+      refute user.valid?
+    end
+
+    it 'validates uniqueness for username' do
+      User.create!(name: "Mr.2", email: "2@example.com", external_id: "1232", github_username: 'bar')
+      user.github_username = 'bar'
+      refute user.valid?
+    end
+  end
+
   describe "#time_format" do
     let(:user) { User.create!(name: "jimbob", email: 'test@test.com', external_id: 'xyz') }
 
@@ -75,118 +93,6 @@ describe User do
       let(:email) { "" }
       it 'falls back to the default gravatar' do
         user.gravatar_url.must_equal('https://www.gravatar.com/avatar/default')
-      end
-    end
-  end
-
-  describe ".create_or_update_from_hash" do
-    let(:user) { User.create_or_update_from_hash(auth_hash) }
-
-    describe "with a new user" do
-      let(:auth_hash) do
-        {
-          name: "Test User",
-          email: "test@example.org",
-          role_id: Role::ADMIN.id,
-          external_id: 'strange-bug'
-        }
-      end
-
-      it "creates a new user" do
-        user.persisted?.must_equal(true)
-      end
-
-      it "sets the token" do
-        user.token.must_match(/[a-z0-9]+/)
-      end
-
-      it "sets the role_id" do
-        user.role_id.must_equal(Role::ADMIN.id)
-      end
-
-      describe "seeding" do
-        before { User.delete_all }
-
-        it "creates a super admin for the first user" do
-          user.role_id.must_equal(Role::SUPER_ADMIN.id)
-        end
-
-        describe "with seeded user" do
-          before { User.create!(name: "Mr.Seed", email: "seed@example.com", external_id: "123") } # same as db/seed.rb
-
-          it "creates a super admin for the first user after seeding" do
-            user.role_id.must_equal(Role::SUPER_ADMIN.id)
-          end
-
-          it "does not make everybody an amdin" do
-            User.create!(name: "Mr.2", email: "2@example.com", external_id: "1232")
-            user.role_id.must_equal(Role::ADMIN.id)
-          end
-        end
-      end
-    end
-
-    describe "with an existing user" do
-      let(:auth_hash) do
-        {
-          name: "Test User",
-          email: "test@example.org",
-          external_id: 9,
-          token: "abc123"
-        }
-      end
-
-      let!(:existing_user) { User.create!(name: "Test", external_id: 9) }
-
-      it "does not update the user" do
-        user.name.must_equal("Test")
-        user.token.wont_equal("abc123")
-      end
-
-      it "does update nil fields" do
-        user.email.must_equal("test@example.org")
-      end
-
-      it "is the same user" do
-        existing_user.id.must_equal(user.id)
-      end
-
-      describe "with a higher role_id" do
-        let(:auth_hash) do
-          {
-            name: "Test User",
-            email: "test@example.org",
-            external_id: 9,
-            role_id: Role::ADMIN.id
-          }
-        end
-
-        before do
-          existing_user.update_attributes!(role_id: Role::VIEWER.id)
-        end
-
-        it "is overwritten" do
-          user.role_id.must_equal(Role::ADMIN.id)
-        end
-      end
-
-      describe "with a lower role_id" do
-        let(:auth_hash) do
-          {
-            name: "Test User",
-            email: "test@example.org",
-            external_id: 9,
-            role_id: Role::VIEWER.id
-          }
-        end
-
-        before do
-          existing_user.update_attributes!(role_id: Role::ADMIN.id)
-        end
-
-        it "is ignored" do
-          user.role_id.must_equal(Role::ADMIN.id)
-        end
       end
     end
   end
@@ -311,6 +217,15 @@ describe User do
     it "can filter by email" do
       user = users(:admin)
       User.search_by_criteria(search: "", email: user.email).map(&:name).must_equal [user.name]
+    end
+
+    it "can filter by github username" do
+      user = users(:github_viewer)
+      User.search_by_criteria(github_username: user.github_username).map(&:name).must_equal [user.name]
+    end
+
+    it "ignores empty integration" do
+      User.search_by_criteria(search: "", integration: "").map(&:name).sort.must_equal User.all.map(&:name).sort
     end
 
     it "can filter by integration" do
@@ -485,12 +400,7 @@ describe User do
     end
 
     it "ignores unimportant changes" do
-      user.update_attributes!(updated_at: 1.second.from_now)
-      user.audits.size.must_equal 0
-    end
-
-    it "ignores sensitive changes" do
-      user.update_attributes!(token: 'secret')
+      user.update_attributes!(updated_at: 1.second.from_now, last_login_at: Time.now)
       user.audits.size.must_equal 0
     end
 

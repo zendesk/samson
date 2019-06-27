@@ -12,7 +12,7 @@ describe AuditsController do
 
   let(:stage) { stages(:test_staging) }
 
-  as_a_viewer do
+  as_a :viewer do
     describe "#index" do
       before { create_audit user }
 
@@ -41,7 +41,7 @@ describe AuditsController do
 
       it "does not N+1" do
         20.times { create_audit user }
-        assert_sql_queries 10 do
+        assert_sql_queries 8 do
           get :index
           assert_template :index
           assigns(:audits).size.must_equal 21

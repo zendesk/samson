@@ -7,25 +7,29 @@ class User < ActiveRecord::Base
   include HasRole
 
   TIME_FORMATS = ['local', 'utc', 'relative'].freeze
+  GITHUB_USERNAME_REGEX = /\A[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}\Z/i.freeze
 
   has_soft_deletion default_scope: true
+  include SoftDeleteWithDestroy
 
-  audited except: [:last_seen_at, :last_login_at, :token]
+  audited except: [:last_seen_at, :last_login_at]
 
-  has_many :commands
-  has_many :stars
+  has_many :stars, dependent: :destroy
   has_many :locks, dependent: :destroy
   has_many :user_project_roles, dependent: :destroy
-  has_many :projects, through: :user_project_roles
+  has_many :projects, through: :user_project_roles, inverse_of: :users
   has_many :csv_exports, dependent: :destroy
-  has_many :access_tokens, dependent: :destroy, class_name: 'Doorkeeper::AccessToken', foreign_key: :resource_owner_id
+  has_many :builds, dependent: nil, foreign_key: :created_by, inverse_of: :creator
+  has_many :jobs, dependent: nil, inverse_of: :user
+  has_many :access_tokens,
+    dependent: :destroy, class_name: 'Doorkeeper::AccessToken', foreign_key: :resource_owner_id, inverse_of: nil
 
-  validates :role_id, inclusion: { in: Role.all.map(&:id) }
+  validates :role_id, inclusion: {in: Role.all.map(&:id)}
 
-  before_create :set_token
-  validates :time_format, inclusion: { in: TIME_FORMATS }
+  validates :time_format, inclusion: {in: TIME_FORMATS}
   validates :external_id,
     uniqueness: {scope: :deleted_at}, presence: true, unless: :integration?, if: :external_id_changed?
+  validates :github_username, uniqueness: {case_sensitive: false}, format: GITHUB_USERNAME_REGEX, allow_blank: true
 
   before_soft_delete :destroy_user_project_roles
 
@@ -57,6 +61,9 @@ class User < ActiveRecord::Base
     if email = criteria[:email].presence
       scope = scope.where(email: email)
     end
+    if username = criteria[:github_username].presence
+      scope = scope.where(github_username: username)
+    end
     if criteria.key?(:integration)
       value = criteria[:integration]
       if !value.nil? && value != ''
@@ -87,29 +94,6 @@ class User < ActiveRecord::Base
     scope
   end
 
-  def self.create_or_update_from_hash(hash)
-    user = User.where(external_id: hash[:external_id].to_s).first || User.new
-
-    # attributes are always a string hash
-    attributes = user.attributes.merge(hash.stringify_keys) do |attribute, old, new|
-      if attribute == 'role_id'
-        if !User.where.not(email: 'seed@example.com').exists?
-          Role::SUPER_ADMIN.id # first user will be promoted to super admin
-        elsif new && (user.new_record? || new >= old)
-          new # existing users can upgrade
-        else
-          old
-        end
-      else
-        old.presence || new
-      end
-    end
-
-    user.attributes = attributes
-    user.save
-    user
-  end
-
   def name
     super.presence || email
   end
@@ -124,11 +108,11 @@ class User < ActiveRecord::Base
   end
 
   def admin_for?(project)
-    admin? || !!project_role_for(project).try(:admin?)
+    admin? || !!project_role_for(project)&.admin?
   end
 
   def deployer_for?(project)
-    deployer? || !!project_role_for(project).try(:deployer?)
+    deployer? || !!project_role_for(project)&.deployer?
   end
 
   def project_role_for(project)
@@ -136,10 +120,6 @@ class User < ActiveRecord::Base
   end
 
   private
-
-  def set_token
-    self.token = SecureRandom.hex
-  end
 
   def destroy_user_project_roles
     user_project_roles.each(&:destroy)

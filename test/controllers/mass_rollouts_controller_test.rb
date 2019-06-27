@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 7
 
 describe MassRolloutsController do
   def create_stages
@@ -9,18 +9,189 @@ describe MassRolloutsController do
     @controller.send(:create_all_stages)
   end
 
+  def create_deploy(stage, reference, status)
+    stage.deploys.create!(
+      reference: reference,
+      project: stage.project,
+      job: Job.create!(
+        project: stage.project,
+        user: User.first,
+        status: status,
+        command: 'blah'
+      )
+    )
+  end
+
   let(:deploy_group) { deploy_groups(:pod100) }
   let(:stage) { stages(:test_staging) }
 
-  as_a_project_admin do
-    unauthorized :get, :new, deploy_group_id: 1
+  as_a :project_deployer do
     unauthorized :post, :deploy, deploy_group_id: 1
+    unauthorized :get, :review_deploy, deploy_group_id: 1
+  end
+
+  as_a :deployer do
+    describe "#review_deploy" do
+      def review_deploy(options = {})
+        get :review_deploy, params: {deploy_group_id: deploy_group}.merge(options)
+      end
+
+      it "can drive list from console by building a url with needed ids" do
+        stage = stages(:test_production)
+        review_deploy stage_ids: [stage.id]
+        assert_response :success
+        assigns(:stages).must_equal [stage]
+      end
+
+      it "shows list of matching stages" do
+        review_deploy
+        assert_response :success
+        assigns(:stages).must_equal [stages(:test_staging)]
+      end
+
+      describe "status filter" do
+        it "complains about unknown status" do
+          review_deploy status: "wut"
+          assert_response :bad_request
+        end
+
+        it "finds undeployed stage" do
+          deploy_group.stages.first.deploys.delete_all
+          review_deploy status: "missing"
+          assigns(:stages).size.must_equal 1
+        end
+
+        it "finds deployed stage" do
+          review_deploy status: "succeeded"
+          assigns(:stages).size.must_equal 1
+        end
+      end
+
+      describe 'kubernetes filtering' do
+        let(:cluster) { kubernetes_clusters(:test_cluster) }
+
+        it "complains about unknown" do
+          review_deploy kubernetes: "wut"
+          assert_response :bad_request
+        end
+
+        it 'finds k8s stages' do
+          stages(:test_staging).update_column(:kubernetes, true)
+          review_deploy kubernetes: "true"
+          assigns(:stages).size.must_equal 1
+        end
+
+        it 'ignores non-kubernetes stages' do
+          review_deploy kubernetes: "false"
+          assigns(:stages).size.must_equal 1
+        end
+      end
+    end
+
+    describe "#deploy" do
+      def deploy(options = {})
+        post :deploy, params: {
+          reference_source: 'template',
+          deploy_group_id: deploy_groups(:pod2),
+          stage_ids: [stage.id]
+        }.merge(options)
+      end
+
+      let(:stage) { stages(:test_production) }
+      let(:template_stage) { stages(:test_production_pod) }
+      let(:template_deploy) { deploys(:succeeded_production_test) }
+
+      before do
+        # template stage in same env has a succeeded deploy
+        template_stage.update_column(:is_template, true)
+        template_deploy.update_column(:stage_id, template_stage.id)
+      end
+
+      it "ignores when user selected no stages" do
+        post :deploy, params: {reference_source: 'template', deploy_group_id: deploy_groups(:pod2)}
+        assert_redirected_to "/deploys"
+        flash[:alert].must_be_nil
+      end
+
+      it "deploys template reference and redirects to deploy list" do
+        assert_difference('Deploy.count', 1) { deploy }
+        deploy = stage.deploys.order('created_at desc').first
+        assert_redirected_to "/deploys?ids%5B%5D=#{deploy.id}"
+        deploy.reference.must_equal template_deploy.reference
+      end
+
+      it "re-deploys last succeeded deploy of the stage" do
+        template_deploy.update_column(:stage_id, stage.id)
+        assert_difference('Deploy.count', 1) { deploy reference_source: 'redeploy' }
+        deploy = stage.deploys.order('created_at desc').first
+        assert_redirected_to "/deploys?ids%5B%5D=#{deploy.id}"
+        deploy.reference.must_equal template_deploy.reference
+      end
+
+      it "does not deploy if template only failed to deploy" do
+        template_deploy.job.update_column(:status, "errored")
+        assert_difference('Deploy.count', 0) { deploy }
+        assert_redirected_to "/deploys"
+        flash[:alert].must_equal "No reference found http://www.test-url.com/projects/foo/stages/production"
+      end
+
+      it "does not deploy if deploy was invalid" do
+        Deploy.any_instance.expects(:valid?).returns false
+        assert_difference('Deploy.count', 0) { deploy }
+        assert_redirected_to "/deploys"
+        flash[:alert].must_equal "Validation error http://www.test-url.com/projects/foo/stages/production"
+      end
+
+      it "does not overflow the cookie with errors" do
+        Deploy.any_instance.expects(:valid?).times(20).returns false
+        stages = Array.new(20).fill(stage)
+        Stage.expects(:find).returns stages
+        assert_difference('Deploy.count', 0) { deploy }
+        assert_redirected_to "/deploys"
+        alert = flash[:alert]
+        alert.size.must_be :<, 1000
+        alert.must_include "10 more"
+      end
+
+      it "does not deploy if template was never deployed" do
+        template_deploy.delete
+        assert_difference('Deploy.count', 0) { deploy }
+        assert_redirected_to "/deploys"
+      end
+
+      it 'ignores stages not marked as template stages' do
+        template_stage.update_column(:is_template, false)
+        refute_difference('Deploy.count') { deploy }
+        assert_redirected_to "/deploys"
+      end
+
+      it 'ignores stages that have no template in the same environment' do
+        template_stage.deploy_groups.first.update_column(:environment_id, environments(:staging).id)
+        refute_difference('Deploy.count') { deploy }
+        assert_redirected_to "/deploys"
+      end
+
+      it 'ignores stages from other projects' do
+        template_stage.update_column(:project_id, 123)
+        refute_difference('Deploy.count') { deploy }
+        assert_redirected_to "/deploys"
+      end
+
+      it "fails on unknown reference_source" do
+        deploy reference_source: 'foo'
+        assert_response :bad_request
+      end
+    end
+  end
+
+  as_a :project_admin do
+    unauthorized :get, :new, deploy_group_id: 1
     unauthorized :post, :create, deploy_group_id: 1
     unauthorized :delete, :destroy, deploy_group_id: 1
     unauthorized :post, :merge, deploy_group_id: 1
   end
 
-  as_a_super_admin do
+  as_a :super_admin do
     describe "#new" do
       let(:env) { environments(:staging) }
       let(:deploy_group) { DeployGroup.create!(name: 'Pod 101', environment: env) }
@@ -43,107 +214,6 @@ describe MassRolloutsController do
         get :new, params: {deploy_group_id: deploy_group}
 
         refute assigns(:preexisting_stages).empty?
-      end
-    end
-
-    describe "#deploy" do
-      it "deploys all stages for this deploy_group" do
-        post :deploy, params: {deploy_group_id: deploy_group}
-        deploy = stage.deploys.order('created_at desc').first.id
-        assert_redirected_to "/deploys?ids%5B%5D=#{deploy}"
-      end
-
-      it 'ignores template_stages that have not been deployed yet' do
-        Deploy.delete_all
-
-        post :deploy, params: {deploy_group_id: deploy_group}
-        assert_redirected_to "/deploys" # with no ids  present.
-      end
-
-      it 'ignores template_stages with only a failed deploy' do
-        Job.update_all(status: :failed)
-
-        post :deploy, params: {deploy_group_id: deploy_group}
-        assert_redirected_to "/deploys" # with no ids  present.
-      end
-
-      it 'ignores failed deploy and takes last successful deploy' do
-        stage = deploy_group.stages.first
-
-        # verify the test is setup correctly.
-        assert stage.last_deploy.failed?
-        last_successful_deploy = stage.last_successful_deploy
-        assert last_successful_deploy.succeeded?
-
-        post :deploy, params: {deploy_group_id: deploy_group}
-        assert_equal Deploy.last.reference, last_successful_deploy.reference
-      end
-
-      it 'ignores stages with no deploy groups' do
-        DeployGroupsStage.delete_all
-
-        post :deploy, params: {deploy_group_id: deploy_group}
-        assert_redirected_to "/deploys" # with no ids  present.
-      end
-
-      it 'ignores stages that include only other deploy groups' do
-        env = environments(:staging)
-        new_dp = DeployGroup.create!(name: "foo", environment: env)
-        DeployGroupsStage.update_all(deploy_group_id: new_dp.id)
-
-        post :deploy, params: {deploy_group_id: deploy_group}
-        assert_redirected_to "/deploys" # with no ids  present.
-      end
-
-      it 'ignores projects with no template for this environment' do
-        Stage.update_all(is_template: false)
-
-        post :deploy, params: {deploy_group_id: deploy_group}
-        assert_redirected_to "/deploys" # with no ids  present.
-      end
-    end
-
-    describe "deploy for missing deploys" do
-      let(:env) { environments(:staging) }
-      let(:deploy_group) { DeployGroup.create!(name: 'pod102', environment: env) }
-
-      before do
-        create_stages
-
-        # Give it a successful deploy
-        new_stage = deploy_group.reload.stages.first
-        new_stage.deploys.create!(
-          reference: 'master',
-          project: stage.project,
-          job: Job.create!(
-            project: stage.project,
-            user: User.first,
-            status: "succeeded",
-            command: 'blah'
-          )
-        )
-      end
-
-      it "deploys undeployed stage" do
-        deploy_group.stages.first.deploys.delete_all
-
-        assert_difference 'Deploy.count', 1 do
-          post :deploy, params: {deploy_group_id: deploy_group, missing_only: "true"}
-        end
-      end
-
-      it "deploys 'failed deploy' stage" do
-        deploy_group.stages.first.deploys.last.job.update_column(:status, "failed")
-
-        assert_difference 'Deploy.count', 1 do
-          post :deploy, params: {deploy_group_id: deploy_group, missing_only: "true"}
-        end
-      end
-
-      it "ignores 'successfully deployed' stage" do
-        refute_difference 'Deploy.count' do
-          post :deploy, params: {deploy_group_id: deploy_group, missing_only: "true"}
-        end
       end
     end
 
@@ -194,7 +264,7 @@ describe MassRolloutsController do
         template_dgr.update_attributes!(deploy_group_id: template_stage.deploy_groups.first.id)
 
         assert_difference 'Stage.count', 1 do
-          post :create, params: { deploy_group_id: deploy_group }
+          post :create, params: {deploy_group_id: deploy_group}
         end
 
         stage = Stage.last
@@ -412,7 +482,6 @@ describe MassRolloutsController do
           project = Project.create!(
             name: "foo",
             include_new_deploy_groups: true,
-            permalink: "foo",
             repository_url: "https://github.com/samson-test-org/example-project.git"
           )
           Stage.create!(name: "foo tstage", project: project, is_template: true, deploy_groups: [template_deploy_group])

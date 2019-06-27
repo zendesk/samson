@@ -12,17 +12,13 @@
       "value": "all",
       "required": true
     },
-    "DEFAULT_URL": {
-      "description": "https://xyz.herokuapp.com",
-      "required": true
-    },
     "SECRET_TOKEN": {
       "description": "Token used to generate session secret",
       "generator": "secret",
       "required": true
     },
     "GITHUB_TOKEN": {
-      "description": "Token to fetch commit diff / PR status / create tags",
+      "description": "Token to fetch commit diff / PR status / create tags (Settings > Developer Settings > Personal Access Token), does not need any permissions",
       "required": true
     },
     "AUTH_GITHUB": {
@@ -49,18 +45,6 @@
       "description": "Fill in to use google auth",
       "required": false
     },
-    "AUTH_BITBUCKET": {
-      "description": "Set to 1 to use bitbucket auth",
-      "required": false
-    },
-    "BITBUCKET_CLIENT_ID": {
-      "description": "Fill in to use bitbucket auth",
-      "required": false
-    },
-    "BITBUCKET_CLIENT_SECRET": {
-      "description": "Fill in to use bitbucket auth",
-      "required": false
-    },
     "BUNDLE_WITHOUT": {
       "description": "Groups to ignore when bundling",
       "value": "mysql2:sqlite"
@@ -72,6 +56,15 @@
     "RAILS_LOG_TO_STDOUT": {
       "description": "Log to stdout so heroku can display logs",
       "value": "true"
+    },
+    "CACHE_STORE": {
+      "description": "Caching backend",
+      "value": "memcached",
+      "required": true
+    },
+    "PERIODICAL": {
+      "description": "Tasks to run periodically inside the server process",
+      "value": "stop_expired_deploys:60,remove_expired_locks:60,report_system_stats:60,report_process_stats:60,periodical_deploy:86400,cancel_stalled_builds:3600,repo_provider_status:60"
     }
   },
   "scripts": {

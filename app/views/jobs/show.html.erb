@@ -4,10 +4,6 @@
 
 <h1>
   <%= @project.name %>
-
-  <div class="pull-right">
-    <%= link_to "Back", project_jobs_path(@project), class: "btn btn-default" %>
-  </div>
 </h1>
 
 <div id="header" class="stream-header">
@@ -19,7 +15,7 @@
 </div>
 
 <section>
-  <div class="row" id="output" data-stream-url="<%= stream_path(@job) %>">
+  <div class="row" id="output">
     <%= render 'shared/output', job: @job, deployable: @job, hide: false %>
   </div>
 </section>

@@ -28,6 +28,9 @@ Stage.class_eval do
   # to load the soft delete methods
   has_soft_deletion default_scope: true
 
+  after_destroy :destroy_stage_pipeline
+  after_soft_delete :destroy_stage_pipeline
+
   def next_stages
     next_stage_ids.any? ? Stage.where(id: next_stage_ids) : []
   end
@@ -61,5 +64,13 @@ Stage.class_eval do
       end
     end
     true
+  end
+
+  def destroy_stage_pipeline
+    (project.stages - [self]).each do |s|
+      if s.next_stage_ids.delete(id)
+        s.save(validate: false)
+      end
+    end
   end
 end

@@ -26,18 +26,20 @@ describe SecretsController do
     }
   end
 
-  as_a_viewer do
+  as_a :viewer do
     before { create_secret 'production/foo/group/bar' }
 
     unauthorized :get, :index
     unauthorized :get, :duplicates
     unauthorized :get, :new
     unauthorized :get, :show, id: 'production/foo/group/bar'
+    unauthorized :get, :history, id: 'production/foo/group/bar'
+    unauthorized :post, :revert, id: 'production/foo/group/bar'
     unauthorized :patch, :update, id: 'production/foo/group/bar'
     unauthorized :delete, :destroy, id: 'production/foo/group/bar'
   end
 
-  as_a_project_deployer do
+  as_a :project_deployer do
     unauthorized :post, :create, secret: {
       environment_permalink: 'production',
       project_permalink: 'foo',
@@ -109,7 +111,7 @@ describe SecretsController do
       it 'raises when vault server is broken' do
         Samson::Secrets::Manager.expects(:lookup_cache).raises(Samson::Secrets::BackendError.new('this is my error'))
         get :index
-        assert flash[:error]
+        assert flash[:alert]
       end
     end
 
@@ -182,9 +184,23 @@ describe SecretsController do
       end
     end
 
+    describe '#history' do
+      it 'renders' do
+        get :history, params: {id: secret}
+        assert_template :history
+      end
+    end
+
+    describe '#revert' do
+      it "is unauthrized" do
+        post :revert, params: {id: secret, version: 'v1'}
+        assert_response :unauthorized
+      end
+    end
+
     describe '#update' do
       it "is unauthrized" do
-        put :update, params: {id: secret, secret: {value: 'xxx'}}
+        put :update, params: {id: secret.id, secret: {value: 'xxx'}}
         assert_response :unauthorized
       end
     end
@@ -197,7 +213,7 @@ describe SecretsController do
     end
   end
 
-  as_a_deployer do
+  as_a :deployer do
     describe '#index' do
       it 'renders template' do
         get :index
@@ -206,7 +222,7 @@ describe SecretsController do
     end
   end
 
-  as_a_project_admin do
+  as_a :project_admin do
     describe '#create' do
       it 'creates a secret' do
         post :create, params: {secret: attributes.merge(visible: 'false')}
@@ -220,23 +236,17 @@ describe SecretsController do
         secret.deprecated_at.must_equal nil
       end
 
-      it 'writes nil to deprecated_at to make vault work and not store strange values' do
-        attributes[:deprecated_at] = "0"
-        Samson::Secrets::Manager.expects(:write).with { |_, data| data.fetch(:deprecated_at).must_equal nil }
-        post :create, params: {secret: attributes}
-      end
-
       it 'does not override an existing secret' do
         attributes[:key] = secret.id.split('/').last
         post :create, params: {secret: attributes}
         refute flash[:notice]
-        assert flash[:error]
+        assert flash[:alert]
         assert_template :show
         secret.reload.value.must_equal 'MY-SECRET'
       end
 
       it "redirects to new form when user wants to create another secret" do
-        post :create, params: {secret: attributes, commit: SecretsController::ADD_MORE}
+        post :create, params: {secret: attributes, commit: ResourceController::ADD_MORE}
         flash[:notice].wont_be_nil
         redirect_params = attributes.except(:value).merge(visible: false, deprecated_at: nil)
         assert_redirected_to "/secrets/new?#{{secret: redirect_params}.to_query}"
@@ -245,7 +255,7 @@ describe SecretsController do
       it 'renders and sets the flash when invalid' do
         attributes[:key] = ''
         post :create, params: {secret: attributes}
-        assert flash[:error]
+        assert flash[:alert]
         assert_template :show
       end
 
@@ -259,6 +269,12 @@ describe SecretsController do
         Rails.logger.stubs(:info)
         Rails.logger.expects(:info).with { |message| message.include?("\"value\"=>\"[FILTERED]\"") }
         post :create, params: {secret: attributes}
+      end
+
+      it "does not store windows newlines in the backend" do
+        attributes[:value] = "foo\r\nbar\r\nbaz"
+        post :create, params: {secret: attributes}
+        Samson::Secrets::DbBackend::Secret.find('production/foo/pod2/hi').value.must_equal "foo\nbar\nbaz"
       end
     end
 
@@ -296,7 +312,7 @@ describe SecretsController do
         attributes[:visible] = "1"
         do_update
         assert_template :show
-        assert flash[:error]
+        assert flash[:alert]
       end
 
       it "does not allow backfills when secret was visible since value should have been visible" do
@@ -306,14 +322,14 @@ describe SecretsController do
         )
         do_update
         assert_template :show
-        assert flash[:error]
+        assert flash[:alert]
       end
 
       it 'fails to update when write fails' do
         Samson::Secrets::Manager.expects(:write).returns(false)
         do_update
         assert_template :show
-        assert flash[:error]
+        assert flash[:alert]
       end
 
       it "is does not allow updating key" do
@@ -323,18 +339,43 @@ describe SecretsController do
         secret.reload.id.must_equal 'production/foo/pod2/some_key'
       end
 
+      it "stores nil for falsy deprecated_at" do
+        Samson::Secrets::Manager.expects(:write).
+          with { |_id, data| data[:deprecated_at].must_be_nil }.
+          returns(true)
+        do_update
+        assert_redirected_to secrets_path
+      end
+
+      it 'writes truthy to deprecated_at' do
+        attributes[:deprecated_at] = "1"
+        Samson::Secrets::Manager.expects(:write).
+          with { |_, data| data.fetch(:deprecated_at).must_equal "1" }.
+          returns(true)
+        do_update
+        assert_redirected_to secrets_path
+      end
+
       describe 'duplicate secret key values' do
         def do_update(extras = {})
           secret
           create_secret 'production/foo/pod2/other_key', value: 'do-not-duplicate'
-          put :update, params: { id: secret, secret: attributes.merge(value: 'do-not-duplicate').merge(extras) }
+          put :update, params: {id: secret, secret: attributes.merge(value: 'do-not-duplicate').merge(extras)}
         end
 
         it 'shows validation error on duplicate secret' do
           do_update
 
           assert_response :success
-          assert flash[:error]
+          assert flash[:alert]
+        end
+
+        it 'changes value placeholder and makes it required on duplicate secret' do
+          do_update
+
+          assert_response :ok
+          assert_select '#secret_value[required=?]', 'required'
+          assert_select '#secret_value[placeholder]', count: 0
         end
 
         it 'allows duplicate secret if allow_duplicates is true' do
@@ -347,14 +388,14 @@ describe SecretsController do
           do_update(allow_duplicates: '0')
 
           assert_response :success
-          assert flash[:error]
+          assert flash[:alert]
         end
 
         it 'allows editing of an already existing duplicate value' do
           secret
           create_secret 'production/foo/pod2/other_key', value: secret.value
 
-          put :update, params: { id: secret, secret: { comment: 'hello', visible: '0' } }
+          put :update, params: {id: secret, secret: {comment: 'hello', visible: '0'}}
 
           assert_redirected_to secrets_path
         end
@@ -376,6 +417,15 @@ describe SecretsController do
           do_update
           assert_response :unauthorized
         end
+      end
+    end
+
+    describe '#revert' do
+      it "reverts" do
+        post :revert, params: {id: secret.id, version: 'v1'}
+        assert flash[:notice]
+        assert_redirected_to secret_path(secret.id)
+        secret.reload.updater_id.must_equal users(:project_admin).id
       end
     end
 
@@ -404,7 +454,7 @@ describe SecretsController do
     end
   end
 
-  as_an_admin do
+  as_a :admin do
     let(:secret) { create_global }
 
     describe '#create' do

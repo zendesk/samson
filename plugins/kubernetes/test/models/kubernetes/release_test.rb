@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../../test_helper'
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 1
 
 describe Kubernetes::Release do
   let(:build)  { builds(:docker_build) }
@@ -53,7 +53,9 @@ describe Kubernetes::Release do
       release
     end
 
-    before { Kubernetes::TemplateFiller.any_instance.stubs(:set_image_pull_secrets) }
+    before do
+      Kubernetes::TemplateFiller.any_instance.stubs(:set_image_pull_secrets)
+    end
 
     it 'creates with 1 role' do
       expect_file_contents_from_repo
@@ -108,7 +110,7 @@ describe Kubernetes::Release do
       it 'creates followup as green' do
         expect_file_contents_from_repo
         release.blue_green_color = "blue"
-        Kubernetes::Release.any_instance.expects(:previous_successful_release).returns(release)
+        Kubernetes::Release.any_instance.expects(:previous_succeeded_release).returns(release)
         assert_create_succeeds(release_params).blue_green_color.must_equal "green"
       end
     end
@@ -125,7 +127,7 @@ describe Kubernetes::Release do
         resourceVersion: "1",
         items: [{}, {}]
       }.to_json)
-      release.clients.map { |c, q| c.get_pods(q) }.first.size.must_equal 2
+      release.clients.map { |c, q| c.get_pods(q).fetch(:items) }.first.size.must_equal 2
     end
 
     it "can scope queries by resource namespace" do
@@ -135,14 +137,19 @@ describe Kubernetes::Release do
         resourceVersion: "1",
         items: [{}, {}]
       }.to_json)
-      release.clients.map { |c, q| c.get_pods(q) }.first.size.must_equal 2
+      release.clients.map { |c, q| c.get_pods(q).fetch(:items) }.first.size.must_equal 2
     end
 
     it "scoped statefulset for previous release since they do not update their labels when using patch" do
-      resource = {spec: {template: {metadata: {labels: {release_id: 123 }}}}}
-      Kubernetes::Resource.expects(:build).returns(stub(
-        is_a?: true, patch_replace?: true, resource: resource, namespace: 'pod1'
-      ))
+      resource = {spec: {template: {metadata: {labels: {release_id: 123}}}}}
+      resource_mock = mock(
+        is_a?: true,
+        patch_replace?: true,
+        resource: resource,
+        kind: "StatefulSet",
+        namespace: 'pod1'
+      )
+      Kubernetes::Resource.expects(:build).returns(resource_mock)
       release = kubernetes_releases(:test_release)
       release.clients[0][1].must_equal namespace: "pod1", label_selector: "release_id=123,deploy_group_id=431971589"
     end
@@ -170,21 +177,21 @@ describe Kubernetes::Release do
     end
   end
 
-  describe "#previous_successful_release" do
+  describe "#previous_succeeded_release" do
     before { release.deploy = deploys(:failed_staging_test) }
 
-    it "finds successful release" do
-      release.previous_successful_release.must_equal kubernetes_releases(:test_release)
+    it "finds succeeded release" do
+      release.previous_succeeded_release.must_equal kubernetes_releases(:test_release)
     end
 
     it "is nil when non was found" do
       deploys(:succeeded_test).delete
-      release.previous_successful_release.must_be_nil
+      release.previous_succeeded_release.must_be_nil
     end
 
     it "is ignores failed releases" do
       deploys(:succeeded_test).job.update_column(:status, 'failed')
-      release.previous_successful_release.must_be_nil
+      release.previous_succeeded_release.must_be_nil
     end
   end
 

@@ -18,7 +18,7 @@ describe ApplicationController do
   use_test_routes ApplicationTestController
 
   describe "#redirect_back" do
-    as_a_viewer do
+    as_a :viewer do
       it "redirects to fallback" do
         get :test_redirect_back, params: {test_route: true}
         assert_redirected_to '/fallback'
@@ -54,15 +54,15 @@ describe ApplicationController do
       end
 
       it "does not redirect to hacky url in redirect_to which might have come in via referrer" do
-        Rails.logger.expects(:error)
-        get :test_redirect_back, params: {test_route: true, redirect_to: 'http://hacks.com'}
-        assert_redirected_to '/fallback'
+        assert_raises do
+          get :test_redirect_back, params: {test_route: true, redirect_to: 'http://hacks.com'}
+        end.message.must_include "Invalid redirect_to parameter"
       end
 
       it "does not redirect to hacky hash in redirect_to" do
-        Rails.logger.expects(:error)
-        get :test_redirect_back, params: {test_route: true, redirect_to: {host: 'hacks.com', path: 'bar'}}
-        assert_redirected_to '/fallback'
+        assert_raises do
+          get :test_redirect_back, params: {test_route: true, redirect_to: {host: 'hacks.com', path: 'bar'}}
+        end.message.must_include "Invalid redirect_to parameter"
       end
 
       it "can set a notice" do
@@ -79,6 +79,33 @@ describe ApplicationController do
       request.env['requested_oauth_scopes'].must_equal ['default', 'application_test']
     end
   end
+
+  describe "Samson::Hooks::UserError" do
+    as_a :viewer do
+      before do
+        ApplicationTestController.any_instance.expects(:test_redirect_back).raises(Samson::Hooks::UserError, "Wut")
+      end
+
+      it "displays nice html message" do
+        get :test_redirect_back, params: {test_route: true}
+        assert_response :bad_request
+        response.body.must_equal "Wut"
+      end
+
+      it "displays nice json message" do
+        get :test_redirect_back, params: {test_route: true}, format: :json
+        assert_response :bad_request
+        response.body.must_equal "{\"status\":400,\"error\":\"Wut\"}"
+      end
+    end
+  end
+
+  describe "using_per_request_auth?" do
+    it 'cannot POST without authenticity_token when warden was not used (for controller tests)' do
+      request.env.delete 'warden'
+      refute @controller.send(:using_per_request_auth?)
+    end
+  end
 end
 
 describe "ApplicationController Integration" do
@@ -92,12 +119,6 @@ describe "ApplicationController Integration" do
 
     it 'can POST without authenticity_token when logging in via per request doorkeeper auth' do
       post '/locks', params: post_params, headers: {'Authorization' => "Bearer #{token.token}"}
-      assert_response :success
-    end
-
-    it 'can POST without authenticity_token when logging in via per request basic auth' do
-      auth = "Basic #{Base64.encode64(user.email + ':' + user.token).strip}"
-      post '/locks', params: post_params, headers: {'Authorization' => auth}
       assert_response :success
     end
 

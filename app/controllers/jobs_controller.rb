@@ -8,12 +8,18 @@ class JobsController < ApplicationController
   before_action :find_job, only: [:show, :destroy]
 
   def index
-    @jobs = @project.jobs.non_deploy.page(page)
+    @pagy, @jobs = pagy(@project.jobs.non_deploy, page: params[:page], items: 15)
   end
 
   def show
     respond_to do |format|
-      format.html
+      format.html do
+        if params[:header]
+          @deploy = @job.deploy
+          partial = (@deploy ? 'deploys/header' : 'jobs/header')
+          render partial: partial, layout: false
+        end
+      end
       format.text do
         datetime = @job.updated_at.strftime("%Y%m%d_%H%M%Z")
         send_data @job.output,
@@ -32,13 +38,8 @@ class JobsController < ApplicationController
   end
 
   def destroy
-    if @job.can_be_cancelled_by?(current_user)
-      @job.cancel(current_user)
-      flash[:notice] = "Cancelled!"
-    else
-      flash[:error] = "You are not allowed to cancel this job."
-    end
-
+    @job.cancel(current_user)
+    flash[:notice] = "Cancelled!"
     redirect_back fallback_location: [@project, @job]
   end
 

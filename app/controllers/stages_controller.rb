@@ -1,37 +1,37 @@
 # frozen_string_literal: true
-class StagesController < ApplicationController
+
+class StagesController < ResourceController
   include CurrentProject
 
   skip_before_action :login_user, if: :badge?
 
   before_action :authorize_resource!
   before_action :check_token, if: :badge?
-  before_action :find_stage, only: [:show, :edit, :update, :destroy, :clone]
+  before_action :set_resource, only: [:show, :edit, :update, :destroy, :clone, :new, :create]
+  helper_method :can_change_no_code_deployed?
 
   def index
-    @stages = @project.stages
-
-    respond_to do |format|
-      format.html
-      format.json { render json: {stages: @stages} }
-    end
+    super(paginate: !request.format.html?)
   end
 
   def show
     respond_to do |format|
       format.html do
-        @deploys = @stage.deploys.page(page)
+        @pagy, @deploys = pagy(@stage.deploys, page: params[:page], items: 15)
       end
       format.json do
-        stage = @stage.as_json
-        if params[:include].to_s.split(',').include?("kubernetes_matrix")
-          stage[:kubernetes_matrix] = Kubernetes::DeployGroupRole.matrix(@stage)
+        render_as_json :stage, @stage, nil, allowed_includes: [
+          :last_deploy, :last_succeeded_deploy, :active_deploy, :lock
+        ] do |reply|
+          # deprecated way of inclusion, do not add more
+          if params[:include] == "kubernetes_matrix"
+            reply[:stage][:kubernetes_matrix] = Kubernetes::DeployGroupRole.matrix(@stage)
+          end
         end
-        render json: { stage: stage }
       end
       format.svg do
         badge =
-          if deploy = @stage.last_successful_deploy
+          if deploy = @stage.last_succeeded_deploy
             "#{badge_safe(@stage.name)}-#{badge_safe(deploy.short_reference)}-green"
           else
             "#{badge_safe(@stage.name)}-None-red"
@@ -39,38 +39,6 @@ class StagesController < ApplicationController
         redirect_to "https://img.shields.io/badge/#{badge}.svg"
       end
     end
-  end
-
-  def new
-    @stage = @project.stages.new
-  end
-
-  def create
-    # Need to ensure project is already associated
-    @stage = @project.stages.build
-    @stage.attributes = stage_params
-
-    if @stage.save
-      redirect_to [@project, @stage]
-    else
-      render :new
-    end
-  end
-
-  def edit
-  end
-
-  def update
-    if @stage.update_attributes(stage_params)
-      redirect_to [@project, @stage]
-    else
-      render :edit
-    end
-  end
-
-  def destroy
-    @stage.soft_delete!(validate: false)
-    redirect_to @project
   end
 
   def reorder
@@ -81,8 +49,7 @@ class StagesController < ApplicationController
   def clone
     @stage = Stage.build_clone(@stage)
     if request.post?
-      @stage.attributes = stage_params
-      @stage.save!
+      @stage.update_attributes! resource_params
       render json: {stage: @stage}
     else
       render :new
@@ -90,6 +57,22 @@ class StagesController < ApplicationController
   end
 
   private
+
+  def search_resources
+    @project.stages
+  end
+
+  def resource_path
+    [@project, @stage]
+  end
+
+  def resources_path
+    @project
+  end
+
+  def can_change_no_code_deployed?
+    current_user.admin?
+  end
 
   def badge_safe(string)
     CGI.escape(string).
@@ -106,38 +89,45 @@ class StagesController < ApplicationController
     action_name == 'show' && request.format == Mime[:svg]
   end
 
-  def stage_params
-    params.require(:stage).permit(stage_permitted_params)
+  def resource_params
+    super.permit(stage_permitted_params).merge(project: current_project)
   end
 
-  def find_stage
-    return if @stage = current_project.stages.find_by_param(params[:id])
-    badge? ? head(:not_found) : raise(ActiveRecord::RecordNotFound)
+  def set_resource
+    if ['new', 'create'].include?(action_name)
+      super
+    else
+      return if assign_resource current_project.stages.find_by_param(params[:id])
+      badge? ? head(:not_found) : raise(ActiveRecord::RecordNotFound)
+    end
   end
 
   def stage_permitted_params
-    [
-      :name,
-      :command,
+    permitted_params = [
+      :builds_in_environment,
+      :cancel_queued_deploys,
       :confirm,
-      :permalink,
       :dashboard,
-      :production,
-      :notify_email_address,
+      :default_reference,
       :deploy_on_release,
       :email_committers_on_automated_deploy_failure,
-      :static_emails_on_automated_deploy_failure,
-      :no_code_deployed,
       :is_template,
-      :run_in_parallel,
-      :cancel_queued_deploys,
-      :periodical_deploy,
+      :name,
       :no_reference_selection,
-      :builds_in_environment,
+      :notify_email_address,
+      :periodical_deploy,
+      :permalink,
+      :production,
+      :run_in_parallel,
+      :allow_redeploy_previous_when_failed,
+      :static_emails_on_automated_deploy_failure,
+      :full_checkout,
       {
         deploy_group_ids: [],
         command_ids: []
       }
-    ] + Samson::Hooks.fire(:stage_permitted_params).flatten
+    ]
+    permitted_params << :no_code_deployed if can_change_no_code_deployed?
+    permitted_params + Samson::Hooks.fire(:stage_permitted_params).flatten
   end
 end

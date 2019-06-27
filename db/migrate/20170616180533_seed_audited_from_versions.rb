@@ -37,7 +37,9 @@ class SeedAuditedFromVersions < ActiveRecord::Migration[5.1]
       begin
         attributes['script'] ||= model.script if type == "Stage"
         attributes['next_stage_ids'] = model.next_stage_ids.to_yaml if type == "Stage"
-        attributes['project_roles'] = model.send(:role_hash, model.user_project_roles) if type == "User"
+        if type == "User"
+          attributes['project_roles'] = model.user_project_roles.map { |upr| [upr.project.permalink, upr.role_id] }.to_h
+        end
       rescue
         write "Error dumping complex current state for #{type}:#{id} -- #{$!}"
       end
@@ -65,7 +67,7 @@ class SeedAuditedFromVersions < ActiveRecord::Migration[5.1]
 
     return if diff == {} && version.event == "update"
 
-    if version.whodunnit =~ /^\d+$/
+    if version.whodunnit.match?(/^\d+$/)
       user_id = version.whodunnit
       username = nil
     else

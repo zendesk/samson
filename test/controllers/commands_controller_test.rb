@@ -13,7 +13,7 @@ describe CommandsController do
     p
   end
 
-  as_a_viewer do
+  as_a :viewer do
     command_id = ActiveRecord::FixtureSet.identify(:echo)
     command_params = {command: 'foo', project_id: ActiveRecord::FixtureSet.identify(:test)}
     unauthorized :post, :create, command: command_params
@@ -56,25 +56,25 @@ describe CommandsController do
     describe '#new' do
       it 'renders' do
         get :new
-        assert_template :show
+        assert_template :new
       end
     end
   end
 
-  as_a_project_admin do
+  as_a :project_admin do
     describe "#create" do
       let(:params) { {command: {command: 'hello', project_id: project.id}} }
 
       it "can create a command for an allowed project" do
         post :create, params: params
         flash[:notice].wont_be_nil
-        assert_redirected_to commands_path
+        assert_redirected_to command_path(Command.last)
       end
 
       it "fails for invalid command" do
         params[:command][:command] = ""
         post :create, params: params
-        assert_template :show
+        assert_template :new
       end
 
       it "cannot create for a global project" do
@@ -85,16 +85,17 @@ describe CommandsController do
     end
 
     describe '#update' do
-      let(:params) { {id: commands(:echo).id, command: {command: 'echo hi', project_id: project.id} } }
+      let(:command) { commands(:echo) }
+      let(:params) { {id: command.id, command: {command: 'echo hi', project_id: project.id}} }
 
       it "can update html" do
         patch :update, params: params
-        assert_redirected_to commands_path
+        assert_redirected_to command
         flash[:notice].wont_be_nil
       end
 
-      it "can update as js" do
-        patch :update, params: params, format: 'js'
+      it "can update as json" do
+        patch :update, params: params, format: 'json'
         assert_response :ok
       end
 
@@ -102,6 +103,13 @@ describe CommandsController do
         params[:id] = commands(:global).id
         patch :update, params: params
         assert_response :unauthorized
+      end
+
+      it "can update when not changing project" do
+        params[:command].delete(:project_id)
+        patch :update, params: params
+        assert_response :redirect
+        command.reload.project.wont_be_nil
       end
 
       describe "moving projects" do
@@ -115,7 +123,7 @@ describe CommandsController do
         it "can update when admin of both" do
           UserProjectRole.create!(role_id: Role::ADMIN.id, project: other_project, user: user)
           patch :update, params: params
-          assert_redirected_to commands_path
+          assert_redirected_to command
         end
       end
 
@@ -124,11 +132,11 @@ describe CommandsController do
 
         it "cannot update invalid as html" do
           patch :update, params: params
-          assert_template :show
+          assert_template :edit
         end
 
-        it "cannot update invalid as js" do
-          patch :update, params: params, format: 'js'
+        it "cannot update invalid as json" do
+          patch :update, params: params, format: 'json'
           assert_response :unprocessable_entity
         end
       end
@@ -149,27 +157,31 @@ describe CommandsController do
     end
   end
 
-  as_an_admin do
+  as_a :admin do
     describe "#create" do
       it "cannot create for a global project" do
         post :create, params: {command: {command: "hello"}}
-        assert_redirected_to commands_path
+        assert_redirected_to command_path(Command.last)
       end
     end
 
     describe '#update' do
       it "updates a project" do
-        put :update, params: {id: commands(:echo).id, command: { command: 'echo hi', project_id: other_project.id }}
-        assert_redirected_to commands_path
+        command = commands(:echo)
+        put :update, params: {id: command.id, command: {command: 'echo hi', project_id: other_project.id}}
+        assert_redirected_to command_path(command)
       end
 
       it "updates a global commands" do
-        put :update, params: {id: commands(:global).id, command: { command: 'echo hi' }}
-        assert_redirected_to commands_path
+        command = commands(:global)
+        put :update, params: {id: command.id, command: {command: 'echo hi'}}
+        assert_redirected_to command_path(command)
       end
     end
 
     describe '#destroy' do
+      let(:command) { commands(:echo) }
+
       it "fails with unknown id" do
         assert_raises ActiveRecord::RecordNotFound do
           delete :destroy, params: {id: 123123}
@@ -177,26 +189,73 @@ describe CommandsController do
       end
 
       describe 'valid' do
-        before do
-          StageCommand.delete_all
-          delete :destroy, params: {id: commands(:echo).id, format: format }
-        end
-
         describe 'html' do
           let(:format) { 'html' }
 
+          def delete_command(param_overrides = {})
+            params = {id: command.id, format: format}.merge(param_overrides)
+            delete :destroy, params: params
+          end
+
           it 'redirects' do
-            flash[:notice].wont_be_nil
+            StageCommand.delete_all
+
+            delete_command
+
+            assert flash[:notice]
             assert_redirected_to commands_path
           end
 
           it 'removes the command' do
-            Command.exists?(commands(:echo).id).must_equal(false)
+            StageCommand.delete_all
+
+            delete_command
+
+            Command.exists?(command.id).must_equal(false)
+          end
+
+          describe 'delete from stage edit' do
+            it 'removes stage command and command if stage is passed' do
+              stage = stages(:test_staging)
+              stage_command = stage_commands(:test_staging_echo)
+
+              command.stage_commands = [stage_command]
+
+              assert_difference 'StageCommand.count', -1 do
+                assert_difference 'Command.count', -1 do
+                  delete_command(stage_id: stage.id)
+                end
+              end
+
+              StageCommand.exists?(stage_command.id).must_equal false
+              Command.exists?(command.id).must_equal false
+            end
+
+            it 'removes stage command but not command if stage is passed but command is still in use elsewhere' do
+              stage_command_id = stage_commands(:test_staging_echo).id
+
+              assert_difference 'StageCommand.count', -1 do
+                assert_no_difference 'Command.count' do
+                  delete_command(stage_id: stages(:test_staging).id)
+                end
+              end
+
+              StageCommand.exists?(stage_command_id).must_equal false
+              Command.exists?(command.id).must_equal true
+            end
+
+            it 'removes command without stage command (command deselected)' do
+              StageCommand.delete_all
+
+              delete_command(stage_id: stages(:test_staging).id)
+
+              Command.exists?(command.id).must_equal(false)
+            end
           end
         end
 
-        describe 'js' do
-          let(:format) { 'js' }
+        describe 'json' do
+          let(:format) { 'json' }
 
           it 'responds ok' do
             assert_response :ok
@@ -205,22 +264,20 @@ describe CommandsController do
       end
 
       describe 'invalid' do
-        before { delete :destroy, params: {id: commands(:echo).id, format: format } }
+        before { delete :destroy, params: {id: command.id, format: format} }
 
         describe 'html' do
           let(:format) { 'html' }
 
           it 'fails' do
-            assert_template :show
-          end
-
-          it 'did not remove the command' do
-            Command.exists?(commands(:echo).id).must_equal(true)
+            Command.exists?(command.id).must_equal(true)
+            assert_redirected_to command
+            assert flash[:alert]
           end
         end
 
-        describe 'js' do
-          let(:format) { 'js' }
+        describe 'json' do
+          let(:format) { 'json' }
 
           it 'responds ok' do
             assert_response :unprocessable_entity

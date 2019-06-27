@@ -1,0 +1,12 @@
+# samson runs as a single server process, so we don't need redis
+test:
+  adapter: inline
+
+development:
+  adapter: async
+
+staging:
+  adapter: async
+
+production:
+  adapter: async

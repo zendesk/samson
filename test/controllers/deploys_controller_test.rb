@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 1
 
 describe DeploysController do
   def self.with_and_without_project(&block)
@@ -14,6 +14,11 @@ describe DeploysController do
     end
   end
 
+  def changeset(overrides = {})
+    attrs = {commits: [], files: [], pull_requests: [], jira_issues: []}.merge(overrides)
+    stub_everything('Changeset', attrs)
+  end
+
   let(:project) { job.project }
   let(:stage) { stages(:test_staging) }
   let(:admin) { users(:admin) }
@@ -22,7 +27,6 @@ describe DeploysController do
   let(:deploy) { deploys(:succeeded_test) }
   let(:deploy_service) { stub(deploy: nil, cancel: nil) }
   let(:deploy_called) { [] }
-  let(:changeset) { stub_everything(commits: [], files: [], pull_requests: [], jira_issues: []) }
   let(:json) { JSON.parse(@response.body) }
 
   it "routes" do
@@ -30,11 +34,13 @@ describe DeploysController do
       "/projects/1/stages/2/deploys/new",
       controller: "deploys", action: "new", project_id: "1", stage_id: "2"
     )
-    assert_routing({ method: "post", path: "/projects/1/stages/2/deploys" },
-      controller: "deploys", action: "create", project_id: "1", stage_id: "2")
+    assert_routing(
+      {method: "post", path: "/projects/1/stages/2/deploys"},
+      controller: "deploys", action: "create", project_id: "1", stage_id: "2"
+    )
   end
 
-  as_a_viewer do
+  as_a :viewer do
     describe "#active" do
       with_and_without_project do
         it "renders the template" do
@@ -69,6 +75,16 @@ describe DeploysController do
           response.body.must_include queued.id.to_s # renders as job
         end
       end
+
+      it 'renders active deploy expected time' do
+        Deploy.expects(:active).twice.returns([deploy])
+        deploy.expects(:active?).returns(true)
+        deploy.stage.expects(:average_deploy_time).returns(4.123)
+
+        get :active
+
+        response.body.must_include "(00:00:04)"
+      end
     end
 
     describe '#active_count' do
@@ -100,8 +116,21 @@ describe DeploysController do
 
     describe "#show" do
       it "renders" do
-        get :show, params: {project_id: project, id: deploy }
+        get :show, params: {project_id: project, id: deploy}
         assert_template :show
+      end
+
+      it "renders soft deleted" do
+        deploy.soft_delete!
+        get :show, params: {project_id: project, id: deploy, with_deleted: "Project,Stage,Deploy"}
+        assert_template :show
+      end
+
+      it "fails on missing params" do
+        deploy.soft_delete!
+        assert_raises ActiveRecord::RecordNotFound do
+          get :show, params: {project_id: project, id: deploy}
+        end
       end
 
       it "fails with unknown deploy" do
@@ -111,7 +140,7 @@ describe DeploysController do
       end
 
       describe "with format .text" do
-        before { get :show, params: {format: :text, project_id: project.to_param, id: deploy.to_param } }
+        before { get :show, params: {format: :text, project_id: project.to_param, id: deploy.to_param} }
 
         it "responds with a plain text file" do
           assert_equal response.content_type, "text/plain"
@@ -124,7 +153,7 @@ describe DeploysController do
 
       describe "with format .json" do
         it "renders without project" do
-          get :show, params: {format: :json, id: deploy.to_param }
+          get :show, params: {format: :json, id: deploy.to_param}
           json.keys.must_equal ['deploy']
           json['deploy']['id'].must_equal deploy.id
         end
@@ -144,10 +173,10 @@ describe DeploysController do
         Deploy.delete_all
         Job.delete_all
         cmd = 'cap staging deploy'
-        project = Project.first
+        project = projects(:test)
         job_def = {project_id: project.id, command: cmd, status: nil, user_id: admin.id}
         statuses = [
-          {status: 'failed', production: true },
+          {status: 'failed', production: true},
           {status: 'running', production: true},
           {status: 'succeeded', production: true},
           {status: 'succeeded', production: false}
@@ -173,7 +202,6 @@ describe DeploysController do
       it "renders with given ids" do
         get :index, params: {ids: [deploy.id]}
         assert_template :index
-        assigns[:deploys].limit_value.must_equal 1000
         assigns[:deploys].must_equal [deploy]
       end
 
@@ -181,6 +209,20 @@ describe DeploysController do
         assert_raises ActiveRecord::RecordNotFound do
           get :index, params: {ids: [121211221]}
         end
+      end
+
+      it "renders with soft_delete" do
+        deploy.soft_delete!
+        get :index, params: {with_deleted: "Project,Stage,Deploy"}
+        assert_template :index
+        assigns[:deploys].must_include deploy
+      end
+
+      it "skips deleted without params" do
+        deploy.soft_delete!
+        get :index
+        assert_template :index
+        assigns[:deploys].wont_include deploy
       end
 
       it "can scope by project" do
@@ -250,6 +292,20 @@ describe DeploysController do
         deploys["deploys"].count.must_equal 4
       end
 
+      it "filters by permalinks" do
+        Deploy.last.update_column(:project_id, projects(:other).id)
+
+        get :index, params: {search: {project_permalinks: 'foo,bar'}}, format: "json"
+        deploys['deploys'].count.must_equal 4
+      end
+
+      it 'filters by project and permalink' do
+        Deploy.last.update_column(:project_id, projects(:other).id)
+
+        get :index, params: {search: {project_name: 'Foo', project_permalinks: 'foo'}}, format: "json"
+        deploys['deploys'].count.must_equal 4
+      end
+
       it "filters by non-production via json" do
         get :index, params: {search: {production: 0}}, format: "json"
         assert_response :ok
@@ -311,6 +367,13 @@ describe DeploysController do
         assigns[:deploys].map(&:id).sort.must_equal expected.map(&:id).sort
       end
 
+      it "filters by deleted" do
+        Deploy.last.soft_delete!
+        get :index, params: {search: {deleted: "Project,Stage,Deploy"}}, format: "json"
+        assert_response :ok
+        deploys["deploys"].count.must_equal 1
+      end
+
       it "fails when filtering for unknown" do
         e = assert_raises RuntimeError do
           get :index, params: {search: {group: "Blob-#{environments(:production).id}"}}, format: "json"
@@ -326,7 +389,7 @@ describe DeploysController do
     unauthorized :post, :confirm, project_id: :foo, stage_id: 2
   end
 
-  as_a_project_deployer do
+  as_a :project_deployer do
     before do
       DeployService.stubs(:new).with(user).returns(deploy_service)
       deploy_service.stubs(:deploy).capture(deploy_called).returns(deploy)
@@ -338,12 +401,27 @@ describe DeploysController do
       it "sets stage and reference" do
         get :new, params: {project_id: project.to_param, stage_id: stage.to_param, reference: "abcd"}
         deploy = assigns(:deploy)
+        deploy.stage.must_equal stage
         deploy.reference.must_equal "abcd"
+      end
+
+      describe "with default reference" do
+        before { stage.update_column(:default_reference, 'pandas4lyfe') }
+
+        it "sets default reference" do
+          get :new, params: {project_id: project.to_param, stage_id: stage.to_param}
+          assigns(:deploy).reference.must_equal 'pandas4lyfe'
+        end
+
+        it "sets passed in reference over default reference" do
+          get :new, params: {project_id: project.to_param, stage_id: stage.to_param, reference: "abcd"}
+          assigns(:deploy).reference.must_equal "abcd"
+        end
       end
     end
 
     describe "#create" do
-      let(:params) { { deploy: { reference: "master" }} }
+      let(:params) { {deploy: {reference: "master"}} }
 
       before do
         post :create, params: params.merge(project_id: project.to_param, stage_id: stage.to_param, format: format)
@@ -357,7 +435,7 @@ describe DeploysController do
         end
 
         it "creates a deploy" do
-          deploy_called.each { |c| c[1] = c[1].to_h }
+          deploy_called.each { |c| c[1] = c[1].to_h.except(:project) }
           assert_equal [[stage, {"reference" => "master"}]], deploy_called
         end
 
@@ -378,7 +456,7 @@ describe DeploysController do
         end
 
         it "creates a deploy" do
-          deploy_called.each { |c| c[1] = c[1].to_h }
+          deploy_called.each { |c| c[1] = c[1].to_h.except(:project) }
           assert_equal [[stage, {"reference" => "master"}]], deploy_called
         end
 
@@ -393,14 +471,58 @@ describe DeploysController do
     end
 
     describe "#confirm" do
+      def confirm
+        post :confirm, params: {project_id: project.to_param, stage_id: stage.to_param, deploy: {reference: "master"}}
+      end
+
+      def pull_request_stub(data_overrides = {})
+        risks = data_overrides.delete(:risks)
+
+        attrs = {
+          number: 1,
+          title: 'Cool Stuff!',
+          additions: 0,
+          deletions: 0,
+        }.merge(data_overrides)
+
+        pr = Changeset::PullRequest.new('foo/bar', Sawyer::Resource.new(Sawyer::Agent.new(''), attrs))
+        pr.stubs(:parse_risks).returns(risks)
+        pr
+      end
+
       before do
         Deploy.delete_all # triggers more callbacks
-
-        post :confirm, params: {project_id: project.to_param, stage_id: stage.to_param, deploy: { reference: "master" }}
       end
 
       it "renders the template" do
+        confirm
         assert_template :changeset
+      end
+
+      it 'shows risks' do
+        pr = pull_request_stub(risks: 'The sky is falling!')
+        Deploy.any_instance.stubs(:changeset).returns(changeset(pull_requests: [pr]))
+
+        confirm
+
+        assert_response :success
+
+        assert_select 'h5' do
+          assert_select 'strong', text: '#1'
+          assert_select 'a[href=?]', 'https://github.com/foo/bar/pull/1', text: 'Cool Stuff!'
+        end
+        assert_select 'p', text: 'The sky is falling!'
+      end
+
+      it 'shows warning if risk is not found' do
+        pr = pull_request_stub
+        Deploy.any_instance.stubs(:changeset).returns(changeset(pull_requests: [pr]))
+
+        confirm
+
+        assert_response :success
+
+        assert_select 'i[class=?]', 'glyphicon glyphicon-alert deployment-alert'
       end
     end
 
@@ -430,28 +552,14 @@ describe DeploysController do
           delete :destroy, params: {project_id: project.to_param, id: deploy.to_param}
         end
 
-        it "cancels a deploy" do
-          flash[:error].must_be_nil
-        end
-      end
-
-      describe "with a deploy not owned by the user" do
-        before do
-          deploy_service.expects(:cancel).never
-          Deploy.any_instance.stubs(:started_by?).returns(false)
-          User.any_instance.stubs(:admin?).returns(false)
-
-          delete :destroy, params: {project_id: project.to_param, id: deploy.to_param}
-        end
-
-        it "doesn't cancel the deloy" do
-          flash[:error].wont_be_nil
+        it "redirects to project page" do
+          assert_redirected_to "/projects/foo/deploys/#{deploy.id}"
         end
       end
     end
   end
 
-  as_a_project_admin do
+  as_a :project_admin do
     before do
       DeployService.stubs(:new).with(user).returns(deploy_service)
     end
@@ -460,7 +568,7 @@ describe DeploysController do
       it "cancels the deploy" do
         Deploy.any_instance.expects(:cancel).once
         delete :destroy, params: {project_id: project.to_param, id: deploy.to_param}
-        flash[:error].must_be_nil
+        flash[:alert].must_be_nil
       end
     end
   end

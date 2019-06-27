@@ -8,16 +8,6 @@ describe DeployGroup do
   let(:environment) { environments(:production) }
   let(:deploy_group) { deploy_groups(:pod1) }
 
-  def self.it_expires_stage(method)
-    it "expires stages when #{method}" do
-      stage.deploy_groups << deploy_group
-      stage.update_column(:updated_at, 1.minute.ago)
-      old = stage.updated_at.to_s(:db)
-      deploy_group.send(method)
-      stage.reload.updated_at.to_s(:db).wont_equal old
-    end
-  end
-
   describe '.enabled?' do
     it 'is enabled when DEPLOY_GROUP_FEATURE is present' do
       with_env DEPLOY_GROUP_FEATURE: "1" do
@@ -92,6 +82,17 @@ describe DeployGroup do
     end
   end
 
+  describe "#soft_delete" do
+    it 'does not allow deleting while still being used' do
+      refute deploy_group.soft_delete(validate: false)
+    end
+
+    it 'allows deleting while not being used' do
+      deploy_group.deploy_groups_stages.delete_all
+      assert deploy_group.soft_delete!(validate: false)
+    end
+  end
+
   it 'queried by environment' do
     env = Environment.create!(name: 'env666')
     dg1 = DeployGroup.create!(name: 'Pod666', environment: env)
@@ -111,26 +112,19 @@ describe DeployGroup do
     end
   end
 
-  describe '#natural_order' do
-    it "sorts naturally" do
-      list = ['a11', 'a1', 'a22', 'b1', 'a12', 'a9']
-      sorted = list.map { |n| DeployGroup.new(name: n) }.sort_by(&:natural_order).map(&:name)
-      sorted.must_equal ['a1', 'a9', 'a11', 'a12', 'a22', 'b1']
+  describe "#generated_name_sortable" do
+    it "sets value" do
+      group = DeployGroup.create!(name: "Pod666 - the best", environment: environment)
+      group.name_sortable.must_equal "Pod00666 - the best"
     end
   end
 
-  it_expires_stage :save
-  it_expires_stage :destroy
-  it_expires_stage :soft_delete
-
-  describe "#destroy_deploy_groups_stages" do
-    let(:deploy_group) { deploy_groups(:pod100) }
-
-    it 'deletes deploy_groups_stages on destroy' do
-      assert_difference 'DeployGroupsStage.count', -1 do
-        deploy_group.destroy!
-      end
-    end
+  it "expires stages when saving" do
+    stage.deploy_groups << deploy_group
+    stage.update_column(:updated_at, 1.minute.ago)
+    old = stage.updated_at.to_s(:db)
+    deploy_group.save!
+    stage.reload.updated_at.to_s(:db).wont_equal old
   end
 
   describe "#template_stages" do
@@ -173,9 +167,39 @@ describe DeployGroup do
   describe "#pluck_stage_ids" do
     it "uses 1 cheap query" do
       deploy_group
-      queries = sql_queries { deploy_group.pluck_stage_ids.to_a }
-      queries.size.must_equal 1
+      queries = assert_sql_queries(1) { deploy_group.pluck_stage_ids.to_a }
       queries.first.wont_include "JOIN"
+    end
+  end
+
+  describe "#locked_by?" do
+    before { deploy_group }
+
+    it "is not locked by other" do
+      project = Project.first
+      assert_sql_queries 0 do
+        refute deploy_group.locked_by?(Lock.new(resource: project))
+      end
+    end
+
+    it "is locked by self" do
+      assert_sql_queries 0 do
+        assert deploy_group.locked_by?(Lock.new(resource: deploy_group))
+      end
+    end
+
+    it "is locked by own environment" do
+      assert deploy_group.locked_by?(Lock.new(resource: environment))
+    end
+
+    it "is not by locked other environment" do
+      refute deploy_group.locked_by?(Lock.new(resource: environments(:staging)))
+    end
+  end
+
+  describe "#as_json" do
+    it "does not render internal read-only column" do
+      deploy_group.as_json.keys.wont_include "name_sortable"
     end
   end
 end

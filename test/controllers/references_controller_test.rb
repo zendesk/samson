@@ -4,22 +4,31 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe ReferencesController do
-  before do
-    reference_service = ReferencesService.new(projects(:test))
-    reference_service.stubs(:find_git_references).returns(%w[master test_user/test_branch])
-    ReferencesService.stubs(:new).returns(reference_service)
-  end
-
-  as_a_viewer do
+  as_a :viewer do
     unauthorized :get, :index, project_id: :foo
   end
 
-  as_a_project_deployer do
+  as_a :project_deployer do
     describe '#index' do
-      it 'returns the git references for the project test' do
-        get :index, params: {project_id: projects(:test).to_param, format: :json}
+      let(:project) { projects(:test) }
+
+      include GitRepoTestHelper
+      with_project_on_remote_repo
+
+      it 'shows git references for the project' do
+        get :index, params: {project_id: project.to_param, format: :json}
         response.content_type.must_equal 'application/json'
-        assigns(:references).must_equal %w[master test_user/test_branch]
+        JSON.parse(response.body).must_equal ["master"]
+      end
+
+      it 'sorts tags/branches by length and shows new tags first' do
+        execute_on_remote_repo "git tag v2"
+        execute_on_remote_repo "git tag v1"
+        execute_on_remote_repo "git checkout -b foo"
+        execute_on_remote_repo "git checkout -b baz"
+        execute_on_remote_repo "git checkout -b bar"
+        get :index, params: {project_id: project.to_param, format: :json}
+        JSON.parse(response.body).must_equal ["v2", "v1", "foo", "baz", "bar", "master"]
       end
     end
   end

@@ -28,6 +28,27 @@ describe Stage do
         end
         assert_valid stage
       end
+
+      it "is not valid when using non-kubernetes rollback" do
+        stage.allow_redeploy_previous_when_failed = true
+        refute_valid stage
+      end
+    end
+  end
+
+  describe "#kubernetes_stage_roles" do
+    it "accepts attributes" do
+      stage = Stage.new(
+        kubernetes_stage_roles_attributes: {0 => {kubernetes_role_id: kubernetes_roles(:app_server).id, ignored: true}}
+      )
+      stage.kubernetes_stage_roles.size.must_equal 1
+    end
+
+    it "ignores blank attributes" do
+      stage = Stage.new(
+        kubernetes_stage_roles_attributes: {0 => {kubernetes_role_id: "", ignored: true}}
+      )
+      stage.kubernetes_stage_roles.size.must_equal 0
     end
   end
 
@@ -35,6 +56,7 @@ describe Stage do
     let(:stage) do
       stage = stages(:test_staging).dup
       stage.name = 'Another'
+      stage.permalink = nil
       stage
     end
 

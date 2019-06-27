@@ -19,11 +19,12 @@
       <%= form.input :name, required: true %>
       <%= form.input :address, as: :url_field, required: true %>
       <%= form.input :token, required: true, input_html: token_options %>
+      <%= form.input :versioned_kv, as: :check_box, label: "Using versioned key/value secret engine" %>
+      <%= form.input :preferred_reader, as: :check_box, help: "Read from this server when picking from multiple servers" %>
       <%= form.input :tls_verify, as: :check_box %>
       <%= form.input :ca_cert, as: :text_area, input_html: {size: '80x5', style: 'width: auto'} %>
 
-      <%= form.actions delete: @vault_server do %>
-        | <%= link_to_history @vault_server %>
+      <%= form.actions delete: true, history: true do %>
         <% if sync_targets %>
           | <%= link_to "Sync", "#", data: {target: "#sync_dialog"}, class: 'toggle' %>
         <% end %>

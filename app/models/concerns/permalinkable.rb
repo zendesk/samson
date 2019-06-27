@@ -4,19 +4,19 @@ module Permalinkable
 
   included do
     before_validation :generate_permalink, on: :create
-    validates :permalink, presence: true
+    validates :permalink, presence: true, format: /\A[a-z0-9\-_]*\z/
     validate :validate_unique_permalink
 
     # making permalink and soft-delete dependent is a bit weird, but if a model is important enough to have a permalink
     # then it should also be soft_deleted ... also otherwise setup order is non obvious and could fail silently
-    before_soft_delete :free_permalink_for_deletion
+    around_soft_delete :free_permalink_for_deletion
   end
 
   module ClassMethods
     # find by permalink or id
     def find_by_param(param)
       param = param.to_s
-      if param =~ /^\d+$/
+      if param.match?(/^\d+$/)
         where("permalink = ? OR id = ?", param, param).first
       else
         where(permalink: param).first
@@ -39,6 +39,7 @@ module Permalinkable
   end
 
   def generate_permalink
+    return if permalink.present?
     base = permalink_base.to_s.parameterize
     self.permalink = base
     self.permalink = "#{base}-#{SecureRandom.hex(4)}" if permalink_taken?
@@ -56,5 +57,11 @@ module Permalinkable
 
   def free_permalink_for_deletion
     self.permalink = "#{permalink}-deleted-#{Time.now.to_i}"
+    success = yield
+    self.permalink = permalink_was unless success
+    success
+  rescue StandardError
+    self.permalink = permalink_was
+    raise
   end
 end

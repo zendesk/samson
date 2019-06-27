@@ -5,15 +5,21 @@ require "kubeclient"
 SingleCov.covered!
 
 describe SamsonKubernetes do
+  describe :project_permitted_params do
+    it "adds ours" do
+      Samson::Hooks.fire(:project_permitted_params).flatten(1).must_include :kubernetes_rollout_timeout
+    end
+  end
+
   describe :stage_permitted_params do
     it "adds ours" do
-      Samson::Hooks.fire(:stage_permitted_params).must_include :kubernetes
+      Samson::Hooks.fire(:stage_permitted_params).flatten(1).must_include :kubernetes
     end
   end
 
   describe :deploy_permitted_params do
     it "adds ours" do
-      params = Samson::Hooks.fire(:deploy_permitted_params).flatten
+      params = Samson::Hooks.fire(:deploy_permitted_params).flatten(1)
       params.must_include :kubernetes_rollback
       params.must_include :kubernetes_reuse_build
     end
@@ -21,7 +27,7 @@ describe SamsonKubernetes do
 
   describe :deploy_group_permitted_params do
     it "adds ours" do
-      params = Samson::Hooks.fire(:deploy_group_permitted_params).flatten
+      params = Samson::Hooks.fire(:deploy_group_permitted_params).flatten(1)
       params.must_include cluster_deploy_group_attributes: [:kubernetes_cluster_id, :namespace]
     end
   end
@@ -42,13 +48,18 @@ describe SamsonKubernetes do
     end
 
     it "links to limit" do
-      limit = Kubernetes::UsageLimit.create!(memory: 10, cpu: 10)
-      link_parts(limit).must_equal ["Limit for  on All", limit]
+      limit = Kubernetes::UsageLimit.create!(memory: 10, cpu: 10, scope: environments(:production))
+      link_parts(limit).must_equal ["Limit for Production on All", limit]
     end
 
     it "links to cluster" do
       cluster = kubernetes_clusters(:test_cluster)
       link_parts(cluster).must_equal ["test", cluster]
+    end
+
+    it "links to namespace" do
+      namespace = kubernetes_namespaces(:test)
+      link_parts(namespace).must_equal ["test", namespace]
     end
   end
 
@@ -99,7 +110,29 @@ describe SamsonKubernetes do
           raise OpenSSL::SSL::SSLError
         end
       end
-      count.must_equal 4
+      count.must_equal SamsonKubernetes::API_RETRIES + 1
+    end
+
+    it "retries generic kubeclient errors" do
+      count = 0
+      assert_raises Kubeclient::HttpError do
+        SamsonKubernetes.retry_on_connection_errors do
+          count += 1
+          raise Kubeclient::HttpError.new(123, 'x', nil)
+        end
+      end
+      count.must_equal SamsonKubernetes::API_RETRIES + 1
+    end
+
+    it "does not retry 404s" do
+      count = 0
+      assert_raises Kubeclient::ResourceNotFoundError do
+        SamsonKubernetes.retry_on_connection_errors do
+          count += 1
+          raise Kubeclient::ResourceNotFoundError.new(404, 'x', nil)
+        end
+      end
+      count.must_equal 1
     end
   end
 end

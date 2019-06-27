@@ -1,5 +1,7 @@
 <%= page_title @deploy_group.name %>
 
+<%= render_locks @deploy_group %>
+
 <section class="form-horizontal">
   <div class="form-group">
     <label class="col-lg-2 control-label">$DEPLOY_GROUPS value</label>
@@ -70,55 +72,22 @@
 
   <%= Samson::Hooks.render_views(:deploy_group_show, self) %>
 
+  <% if DeployGroup.enabled? %>
+    <div class="form-group" id="mass_stage_creation" style="display: none">
+      <%= render 'mass_stage_creation_form' %>
+    </div>
+    <div class="form-group" id="mass_rollout" style="display: none">
+      <%= render 'mass_rollout_form' %>
+    </div>
+  <% end %>
+
   <div class="form-group">
-    <% if DeployGroup.enabled? %>
-      <div class="col-lg-offset-2 col-lg-10" style="display: none" id="mass_rollout">
-        <%= link_to "Create Stages ...",
-            new_deploy_group_mass_rollouts_path(@deploy_group),
-            class: "btn btn-default"
-        %>
-        <%= link_to "Deploy All Projects",
-            deploy_deploy_group_mass_rollouts_path(@deploy_group),
-            class: "btn btn-default",
-            data: {
-              method: "post",
-              confirm: "Deploys will be started for all stages."
-            }
-        %>
-        <%= link_to "Deploy Missing Projects",
-            deploy_deploy_group_mass_rollouts_path(@deploy_group, missing_only: "true"),
-            class: "btn btn-default",
-            data: {
-              method: "post",
-              confirm: "Deploys will be started for any stages that haven't yet been deployed or have failed all their deploys."
-            }
-        %>
-        <% cloned_stage_count = @deploy_group.stages.cloned.count %>
-        <%= link_to "Merge #{cloned_stage_count} Cloned Stages",
-            merge_deploy_group_mass_rollouts_path(@deploy_group),
-            class: "btn btn-default #{ 'disabled' if cloned_stage_count.zero? }",
-            data: {
-              method: "post",
-              confirm: "Stages will be deleted. Before deleting, each stage will have its Deploy Group added to the stage it was copied from. Stages affected are those cloned from a template stage, have exactly this deploy group, and are on a project that uses include_new_deploy_groups.\n\n" \
-                "Merge #{@deploy_group.stages.cloned.count} cloned stages now?"
-            }
-        %>
-        <%= link_to "Delete #{cloned_stage_count} Cloned Stages",
-            deploy_group_mass_rollouts_path(@deploy_group),
-            class: "btn btn-default #{ 'disabled' if cloned_stage_count.zero? }",
-            data: {
-              method: "delete",
-              confirm: "Cloned stages will be deleted. No stages will be merged into their templates. You will need to create a new stage to deploy the project to this deploy group."
-            }
-        %>
-      </div>
-    <% end %>
-    <br>
     <div class="col-lg-offset-2 col-lg-10" style="margin-top: 10px;">
       <%= link_to "Edit", edit_deploy_group_path(@deploy_group), class: "btn btn-primary" %>
-      <%= link_to "Back", deploy_groups_path, class: "btn btn-default" %>
+      <%= render "locks/button", lock: @deploy_group.lock, resource: @deploy_group %>
       | <%= link_to_history @deploy_group %>
       | <%= link_to "Deploys", deploys_path(search: {group: "DeployGroup-#{@deploy_group.id}"}) %>
+      | <%= link_to "Mass stage creation", "#", data: {target: "#mass_stage_creation"}, class: 'toggle' if DeployGroup.enabled? %>
       | <%= link_to "Mass rollout", "#", data: {target: "#mass_rollout"}, class: 'toggle' if DeployGroup.enabled? %>
       | <%= link_to "Missing config", missing_config_deploy_group_path(@deploy_group) %>
     </div>

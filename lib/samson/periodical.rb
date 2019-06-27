@@ -8,7 +8,6 @@ require 'concurrent'
 module Samson
   module Periodical
     TASK_DEFAULTS = {
-      now: true, # see TimerTask, run at startup so we are in a consistent and clean state after a restart
       execution_interval: 60, # see TimerTask
       timeout_interval: 10, # see TimerTask
       active: false
@@ -23,7 +22,7 @@ module Samson
         return unless exception
         Rails.logger.error "(#{time})  with error #{exception}"
         Rails.logger.error exception.backtrace.join("\n")
-        Airbrake.notify(exception, error_message: "Samson::Periodical #{@task_name} failed")
+        Samson::ErrorNotifier.notify(exception, error_message: "Samson::Periodical #{@task_name} failed")
       end
     end
 
@@ -31,6 +30,7 @@ module Samson
       attr_accessor :enabled
 
       def register(name, description, options = {}, &block)
+        raise if options[:execution_interval]&.<= 0.01 # uncovered: avoid fishy code in concurrent around <=0.01
         registered[name] = TASK_DEFAULTS.
           merge(env_settings(name)).
           merge(block: block, description: description).
@@ -46,11 +46,21 @@ module Samson
       def run
         registered.map do |name, config|
           next unless config.fetch(:active)
+
+          # run at startup so we are in a consistent and clean state after a restart
+          # not using TimerTask `now` option since then initial constant loading would happen in multiple threads
+          # and we run into fun autoload errors like `LoadError: Unable to autoload constant Job` in development/test
+          if !config[:now] && enabled
+            ActiveRecord::Base.connection_pool.with_connection do
+              run_once(name)
+            end
+          end
+
           with_consistent_start_time(config) do
             Concurrent::TimerTask.new(config) do
               track_running_count do
-                ActiveRecord::Base.connection_pool.with_connection do
-                  execute_block(config) if enabled
+                if enabled
+                  ActiveRecord::Base.connection_pool.with_connection { execute_block(config) }
                 end
               end
             end.with_observer(ExceptionReporter.new(name)).execute
@@ -59,7 +69,7 @@ module Samson
       end
 
       # method to test things out on console / testing
-      # simulates timeout that Concurrent::TimerTask does
+      # simulates timeout that Concurrent::TimerTask does and exception reporting
       def run_once(name)
         config = registered.fetch(name)
         Timeout.timeout(config.fetch(:timeout_interval)) do
@@ -67,7 +77,6 @@ module Samson
         end
       rescue
         ExceptionReporter.new(name).update(nil, nil, $!)
-        raise
       end
 
       def interval(name)
@@ -109,7 +118,7 @@ module Samson
       end
 
       def configs_from_string(string)
-        string.to_s.split(',').each_with_object({}) do |item, h|
+        string.to_s.split(/ ?, ?/).each_with_object({}) do |item, h|
           name, execution_interval = item.split(':', 2)
           config = {active: true}
           config[:execution_interval] = Integer(execution_interval) if execution_interval

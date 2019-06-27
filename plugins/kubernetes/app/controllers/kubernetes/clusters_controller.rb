@@ -1,79 +1,53 @@
 # frozen_string_literal: true
-class Kubernetes::ClustersController < ApplicationController
+class Kubernetes::ClustersController < ResourceController
   PUBLIC = [:index, :show].freeze
+  HIDDEN = "-- hidden --"
   before_action :authorize_admin!, except: PUBLIC
   before_action :authorize_super_admin!, except: PUBLIC + [:seed_ecr]
-
-  before_action :find_cluster, only: [:show, :edit, :update, :destroy, :seed_ecr]
+  before_action :set_resource, only: [:show, :edit, :update, :destroy, :seed_ecr, :new, :create]
 
   def new
-    config_filepath = params.dig(:kubernetes_cluster, :config_filepath) || new_config_file_path
-    @cluster = ::Kubernetes::Cluster.new(config_filepath: config_filepath)
-    render :edit
-  end
-
-  def create
-    @cluster = ::Kubernetes::Cluster.new(new_cluster_params)
-    if @cluster.save
-      redirect_to @cluster, notice: "Saved!"
-    else
-      render :edit
-    end
+    super
+    @kubernetes_cluster.config_filepath ||= new_config_filepath
   end
 
   def index
-    @clusters = ::Kubernetes::Cluster.all.sort_by { |c| Samson::NaturalOrder.convert(c.name) }
+    @kubernetes_clusters = ::Kubernetes::Cluster.all.sort_by { |c| Samson::NaturalOrder.convert(c.name) }
     if params[:capacity]
-      @cluster_nodes = Samson::Parallelizer.map(@clusters) do |cluster|
+      @cluster_nodes = Samson::Parallelizer.map(@kubernetes_clusters) do |cluster|
         [cluster.id, cluster.schedulable_nodes]
       end.to_h
     end
   end
 
-  def show
-  end
-
-  def edit
-  end
-
-  def update
-    @cluster.assign_attributes(new_cluster_params)
-    if @cluster.save
-      redirect_to({action: :index}, notice: "Saved!")
-    else
-      render :edit
-    end
-  end
-
-  def destroy
-    if @cluster.destroy
-      redirect_to({action: :index}, notice: "Deleted!")
-    else
-      render :edit
-    end
-  end
-
   def seed_ecr
     SamsonAwsEcr::Engine.refresh_credentials
-    @cluster.namespaces.each do |namespace|
+    @kubernetes_cluster.namespaces.each do |namespace|
       update_secret namespace
     end
     redirect_to({action: :index}, notice: "Seeded!")
   end
 
+  def edit
+    @kubernetes_cluster.client_cert = HIDDEN if @kubernetes_cluster.client_cert?
+    @kubernetes_cluster.client_key = HIDDEN if @kubernetes_cluster.client_key?
+    super
+  end
+
   private
 
-  def find_cluster
-    @cluster = ::Kubernetes::Cluster.find(params[:id])
-  end
-
-  def new_cluster_params
-    params.require(:kubernetes_cluster).permit(
-      :name, :config_filepath, :config_context, :description, :ip_prefix, deploy_group_ids: []
+  def resource_params
+    params = super.permit(
+      :name, :config_filepath, :config_context, :description, :ip_prefix,
+      :auth_method, :api_endpoint, :verify_ssl, :client_cert, :client_key,
+      :kritis_breakglass,
+      deploy_group_ids: []
     )
+    params.delete_if { |_, v| v == HIDDEN }
+    params
   end
 
-  def new_config_file_path
+  def new_config_filepath
     if file = ENV['KUBE_CONFIG_FILE']
       File.expand_path(file)
     else
@@ -86,7 +60,7 @@ class Kubernetes::ClustersController < ApplicationController
   # kubectl create secret docker-registry kube-ecr-auth --docker-server=X --docker-username=X --docker-password=X
   def update_secret(namespace)
     docker_config = DockerRegistry.all.each_with_object({}) do |r, h|
-      h[r.host] = { username: r.username, password: r.password }
+      h[r.host] = {username: r.username, password: r.password}
     end
 
     secret = {
@@ -107,16 +81,20 @@ class Kubernetes::ClustersController < ApplicationController
     }
 
     if secret_exist?(secret)
-      @cluster.client.update_secret(secret)
+      secrets_client.update_secret(secret)
     else
-      @cluster.client.create_secret(secret)
+      secrets_client.create_secret(secret)
     end
   end
 
   def secret_exist?(secret)
-    @cluster.client.get_secret(secret.fetch(:metadata).fetch(:name), secret.fetch(:metadata).fetch(:namespace))
+    secrets_client.get_secret(secret.fetch(:metadata).fetch(:name), secret.fetch(:metadata).fetch(:namespace))
     true
   rescue *SamsonKubernetes.connection_errors
     false
+  end
+
+  def secrets_client
+    @kubernetes_cluster.client('v1')
   end
 end

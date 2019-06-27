@@ -8,7 +8,7 @@ describe CsvExportsController do
   let(:export) { csv_exports(:pending) }
 
   describe "permissions test" do
-    as_an_admin do
+    as_a :admin do
       describe "#new" do
         it "renders the full admin menu and new page" do
           get :new
@@ -20,7 +20,7 @@ describe CsvExportsController do
       end
     end
 
-    as_a_viewer do
+    as_a :viewer do
       describe "#new" do
         it "renders the limited admin menu and limited new page" do
           get :new
@@ -33,7 +33,7 @@ describe CsvExportsController do
     end
   end
 
-  as_a_viewer do
+  as_a :viewer do
     describe "#index" do
       describe "as html with exports" do
         it "renders the table of each status type" do
@@ -106,6 +106,14 @@ describe CsvExportsController do
             @response.body.must_include ">Super Admin</option>"
           end
         end
+
+        describe "deploy_group_usage type" do
+          it "renders form options" do
+            get :new, params: {type: :deploy_group_usage}
+            assert_select "h1", "Deploy Group Usage Report"
+            @response.body.must_include "Download Deploy Group Usage Report"
+          end
+        end
       end
 
       describe "as csv" do
@@ -116,10 +124,17 @@ describe CsvExportsController do
           end
         end
 
+        describe "deploy_group_usage type" do
+          it "returns csv" do
+            get :new, params: {format: :csv, type: "deploy_group_usage"}
+            assert_response :success
+          end
+        end
+
         describe "users type" do
           before { users(:super_admin).soft_delete! }
           let(:expected) do
-            { inherited: false, deleted: false, project_id: nil, user_id: nil }
+            {inherited: false, deleted: false, project_id: nil, user_id: nil}
           end
 
           it "returns csv with default options" do
@@ -157,7 +172,7 @@ describe CsvExportsController do
           def csv_test(options, expected)
             options = options.merge(format: :csv, type: "users")
             get :new, params: options
-            response.success?.must_equal true
+            assert_response :success
             CSV.parse(response.body).pop.pop.must_equal expected.to_json
           end
         end
@@ -311,7 +326,7 @@ describe CsvExportsController do
       it "with production blank filter does not have stages.production filter" do
         post :create, params: {production: ""}
         csv_filter = CsvExport.last.filters
-        refute csv_filter.keys.include? "stages.production"
+        refute csv_filter.key?("stages.production")
       end
 
       it "raises for invalid params" do

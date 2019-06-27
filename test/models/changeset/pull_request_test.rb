@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../../test_helper'
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 1
 
 describe Changeset::PullRequest do
   def add_risks
@@ -53,13 +53,15 @@ describe Changeset::PullRequest do
           "head" => {
             "ref" => 'a/ref',
             "sha" => 'abcd123'
-          }
+          },
+          "created_at" => '2019-03-13T00:00:00Z'
         }
       }
       pr = Changeset::PullRequest.changeset_from_webhook(project, params)
       pr.state.must_equal 'open'
       pr.branch.must_equal 'a/ref'
       pr.sha.must_equal 'abcd123'
+      pr.created_at.must_equal '2019-03-13T00:00:00Z'
     end
   end
 
@@ -401,6 +403,28 @@ describe Changeset::PullRequest do
       pr.risks.must_be_nil
     end
 
+    it "finds risks ignoring case" do
+      body.replace(+<<~BODY)
+        # risks
+          - Planes
+      BODY
+      pr.risks.must_equal "- Planes"
+    end
+
+    it "finds risks with new lines" do
+      body.replace(+<<~BODY)
+        # Risks
+
+        None
+
+        But wait!
+
+        Just kidding, none.
+      BODY
+
+      pr.risks.must_equal "None\n\nBut wait!\n\nJust kidding, none."
+    end
+
     it "finds risks with underline style markdown headers" do
       body.replace(+<<~BODY)
         Risks
@@ -413,6 +437,15 @@ describe Changeset::PullRequest do
     it "finds risks with closing hashes in atx style markdown headers" do
       body.replace(+<<~BODY)
         ## Risks ##
+          - Planes
+      BODY
+      pr.risks.must_equal "- Planes"
+    end
+
+    it "finds risks and skips html tags" do
+      body.replace(+<<~BODY)
+        ## Risks ##
+          <!-- This is a temporary risk -->
           - Planes
       BODY
       pr.risks.must_equal "- Planes"
@@ -454,6 +487,18 @@ describe Changeset::PullRequest do
         add_risks
         pr.risks.must_be_nil
       end
+    end
+  end
+
+  describe '#missing_risks?' do
+    it 'returns true if pr has no risks' do
+      pr.risks.must_be_nil
+      pr.missing_risks?.must_equal true
+    end
+
+    it 'returns false if pr has risks' do
+      add_risks
+      pr.missing_risks?.must_equal false
     end
   end
 end

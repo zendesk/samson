@@ -53,3 +53,13 @@ The recipients and subject prefix of the email are configurable, use REQUEST_ACC
 The receiving end can be a Samson admin distribution list, a JIRA email trigger which will automatically set up an access ticket, or whatever you fancy.
 
 The feature is enabled by setting REQUEST_ACCESS_FEATURE=1
+
+## Stagger Job Execution
+
+Samson can experience a spike in load if multiple deploys are kicked off at once, for example on restart
+if multiple deploys were queued during the restart process, or in in the 'mass rollout' operation (available if the
+deploy groups feature is enabled). This can be alleviated by setting the environment variable JOB_STAGGER_INTERVAL
+to a non-zero value, which will enable Samson's job staggering feature: queueing jobs to be executed and dequeueing 
+them at a rate of the set value in seconds. 
+
+ex. `JOB_STAGGER_INTERVAL=10` -> one job will start every 10 seconds

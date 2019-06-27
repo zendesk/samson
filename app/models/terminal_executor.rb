@@ -7,51 +7,61 @@ require 'pty'
 # Example:
 #
 #   output = StringIO.new
-#   terminal = TerminalExecutor.new(output)
+#   project = Project.first
+#   terminal = TerminalExecutor.new(output, project: project)
 #   terminal.execute!("echo hello", "echo world")
 #
 #   output.string #=> "hello\r\nworld\r\n"
 #
 class TerminalExecutor
   SECRET_PREFIX = "secret://"
+  HIDDEN_PREFIX = "hidden://"
+  HIDDEN_TXT = "HIDDEN"
+  KILL_TIMEOUT = 1
+
+  CURSOR = /\e\[\d*[ABCDK]/.freeze
 
   attr_reader :pid, :pgid, :output, :timeout
 
-  def initialize(output, verbose: false, deploy: nil, project: nil)
+  def initialize(output, project:, verbose: false, deploy: nil, cancel_timeout: 1, timeout: 5)
     @output = output
     @verbose = verbose
     @deploy = deploy
     @project = project
-    @cancelled = false
-    @timeout = Rails.application.config.samson.deploy_timeout
+    @timeout = timeout
+    @cancel_timeout = cancel_timeout
   end
 
   def execute(*commands, timeout: @timeout)
-    return false if @cancelled
-    options = {in: '/dev/null', unsetenv_others: true}
-    script_as_executable(script(commands)) do |command|
-      output, input, pid = PTY.spawn(whitelisted_env, command, options)
-      record_pid(pid) do
-        timeout_execution(timeout) do
-          stream from: output, to: @output
+    # do not log everything or log secrets
+    log = commands.first
+    log += "..." if commands.size > 1
 
+    ActiveSupport::Notifications.instrument("execute.terminal_executor.samson", script: log) do
+      script_as_executable(script(commands)) do |command|
+        output, _, pid = PTY.spawn(whitelisted_env, command, in: '/dev/null', unsetenv_others: true)
+        record_pid(pid) do
           begin
-            _pid, status = Process.wait2(pid)
-            status.success?
+            Timeout.timeout(timeout) do
+              stream from: output, to: @output
+              _pid, status = Process.wait2(pid)
+              status.success?
+            end
+          rescue Timeout::Error
+            @output.puts "Timeout: execution took longer then #{timeout}s and was terminated"
+            cancel timeout: KILL_TIMEOUT
+            false
           rescue Errno::ECHILD
             @output.puts "#{$!.class}: #{$!.message}"
+            cancel timeout: KILL_TIMEOUT
             false
-          ensure
-            input.close
+          rescue JobQueue::Cancel
+            cancel timeout: @cancel_timeout
+            raise
           end
         end
       end
     end
-  end
-
-  def cancel(signal)
-    @cancelled = true
-    system('kill', "-#{signal}", "-#{pgid}") if pgid
   end
 
   # used when only selected commands should be shown to the user
@@ -70,42 +80,55 @@ class TerminalExecutor
 
   private
 
+  def cancel(timeout:)
+    kill "INT"
+    timeout.ceil.times do
+      return unless kill(0) # stop when not running (kill 0 = check if it is running)
+      sleep [timeout, 1].min
+    end
+    kill "KILL"
+  end
+
+  def kill(signal)
+    return unless pgid = pgid() # avoid race to make sure we never call kill with nil
+    pgid && system('kill', "-#{signal}", "-#{pgid}", err: '/dev/null')
+  end
+
   # write script to a file so it cannot be seen via `ps`
   def script_as_executable(script)
     suffix = +""
-    suffix << "-#{@project.permalink}" if @project
+    suffix << "-#{@project.permalink}"
     suffix << "-#{@deploy.id}" if @deploy
-    f = Tempfile.new "samson-terminal-executor#{suffix}-"
-    File.chmod(0o700, f.path) # making sure nobody can read it before we add content
-    f.write script
-    f.close
-    command = f.path
+    Tempfile.create("samson-terminal-executor#{suffix}-") do |f|
+      File.chmod(0o700, f.path) # making sure nobody can read it before we add content
+      f.write script
+      f.close
+      command = f.path
 
-    # osx has a 4s startup delay for each new executable, so we keep the executable stable
-    if RbConfig::CONFIG['host_os'].include?('darwin')
-      command = "export FILE=#{f.path.shellescape} && #{File.expand_path("bin/script-executor").shellescape}"
+      # osx has a 4s startup delay for each new executable, so we keep the executable stable
+      if RbConfig::CONFIG['host_os'].include?('darwin')
+        executor = File.expand_path("../../bin/script-executor", __dir__)
+        command = "export FILE=#{f.path.shellescape} && #{executor.shellescape}"
+      end
+
+      yield command
     end
-
-    yield command
-  ensure
-    f.unlink
-  end
-
-  def timeout_execution(time, &block)
-    Timeout.timeout(time, &block)
-  rescue Timeout::Error
-    cancel 'INT'
-    @output.puts "Timeout: execution took longer then #{time}s and was terminated"
-    false
   end
 
   def stream(from:, to:)
     from.each(256) do |chunk|
-      chunk = chunk.gsub(/\r\e\[\d+[ABCD]\r\n/, "\r") # ignore cursor movement http://ascii-table.com/ansi-escape-sequences.php
+      chunk.scrub!
+      ignore_cursor_movement!(chunk)
       to.write chunk
     end
   rescue Errno::EIO
     nil # output was closed ... only happens on linux
+  end
+
+  # http://ascii-table.com/ansi-escape-sequences.php
+  def ignore_cursor_movement!(chunk)
+    chunk.gsub!(/\r#{CURSOR}\r\n/, "\r")
+    chunk.gsub!(CURSOR, "")
   end
 
   def script(commands)
@@ -121,7 +144,19 @@ class TerminalExecutor
   end
 
   def print_and_execute(c, resolve: true)
-    "echo » #{c.shellescape}\n#{resolve ? resolve_secrets(c) : c}"
+    print_and_execute_hidden_command(c) ||
+      print_and_execute_raw(c, resolve ? resolve_secrets(c) : c)
+  end
+
+  def print_and_execute_hidden_command(c)
+    # hides secrets by replacing lines like export FOO="hidden://secret" into export FOO="HIDDEN"
+    return unless print_command = c.dup.sub!(/#{HIDDEN_PREFIX}[^"]+/, HIDDEN_TXT)
+    resolved_command = c.sub(/#{HIDDEN_PREFIX}/, '')
+    print_and_execute_raw(print_command, resolved_command)
+  end
+
+  def print_and_execute_raw(print_command, real_command)
+    "echo » #{print_command.shellescape}\n#{real_command}"
   end
 
   def resolve_secrets(command)
@@ -133,7 +168,7 @@ class TerminalExecutor
       key = $1
       if expanded = resolver.expand('unused', key).first&.last
         key.replace(expanded)
-        Samson::Secrets::Manager.read(key, include_value: true).fetch(:value)
+        Samson::Secrets::Manager.read(key, include_value: true).fetch(:value).shellescape
       end
     end
 
@@ -163,10 +198,11 @@ class TerminalExecutor
   def whitelisted_env
     whitelist = [
       'PATH', 'HOME', 'TMPDIR', 'CACHE_DIR', 'TERM', 'SHELL', # general
-      'RBENV_ROOT', 'RBENV_HOOK_PATH', 'RBENV_DIR', # ruby
+      'RBENV_ROOT', 'RBENV_HOOK_PATH', # ruby
       'DOCKER_HOST', 'DOCKER_URL', 'DOCKER_REGISTRY' # docker
     ] + ENV['ENV_WHITELIST'].to_s.split(/, ?/)
     env = ENV.to_h.slice(*whitelist)
+    env["PATH"] = env["PATH"].split(":").grep_v(/\/rbenv\/versions\//).join(":")
     env['DOCKER_REGISTRY'] ||= DockerRegistry.first&.host
     env
   end

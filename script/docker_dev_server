@@ -1,0 +1,18 @@
+#!/bin/bash -ex
+
+bundle install --local --quiet --jobs 4 || bundle check
+
+if [ ! -f .env ]; then
+    cp .env.bootstrap .env
+    # to use .env.virtualbox with 192.168.42.45 host prefix ./bin/decode_dot_env .env.virtualbox && source <(sed -E -n 's/[^#]+/export &/ p' .env.virtualbox) &&
+    ./bin/decode_dot_env .env
+fi
+
+if [ -f db/development.sqlite3 ]; then
+    RAILS_DUMP_SCHEMA=false bundle exec rake db:migrate
+else
+    # NOTE: db:setup fails when schema is not up to date, so we need to do the create+load instead
+    RAILS_DUMP_SCHEMA=false bundle exec rake db:create db:schema:load db:migrate
+fi
+
+exec bundle exec puma -C config/puma.rb

@@ -4,36 +4,48 @@
 
   <div id="commands">
     <% usage_ids = Command.usage_ids %>
+    <% administrated = current_user.administrated_projects.pluck(:id) %>
     <%= form.collection_check_boxes(:command_ids, Command.for_stage(form.object), :id, :command) do |b| %>
       <% command = b.object %>
       <% others = usage_ids.count(command.id) - (b.check_box.include?('checked') && form.object.persisted? ? 1 : 0) %>
       <% others_warning = "#{others} others" if others > 0 %>
 
-      <div class="row stage-bar bar">
-        <div data-id="<%= b.value %>" class="col-lg-offset-2 col-lg-2 command-checkbox">
-          <%= b.check_box %>
+      <% if command.persisted? %>
+        <div class="row stage-bar bar">
+          <div data-id="<%= b.value %>" class="col-lg-offset-2 col-lg-2 command-checkbox">
+            <%= b.check_box %>
+          </div>
+          <div class="col-lg-8">
+            <% klass = "pre-command pre-inline #{command.global? ? 'global' : 'local'} #{'others' if others_warning} #{'no_access' unless administrated.include?(command.project_id)}" %>
+            <pre data-type="textarea" data-others-warning="<%= others_warning %>" data-url="<%= command_path(b.value, stage_id: @stage.id, format: :json) %>" class="<%= klass %>"><%= b.text %></pre>
+          </div>
+          <%= edit_command_link command %>
+          <%= content_tag :span, others, title: others_warning + " use this. Click edit for details.", class: 'glyphicon glyphicon-lock' if others_warning %>
         </div>
-        <div class="col-lg-8">
-          <% klass = "pre-command pre-inline #{command.global? ? 'global' : 'local'} #{'others' if others_warning}" %>
-          <pre data-type="textarea" data-others-warning="<%= others_warning %>" data-url="<%= command_path(b.value) %>" class="<%= klass %>"><%= b.text %></pre>
-        </div>
-        <%= edit_command_link command %>
-        <%= content_tag :span, others, title: others_warning + " use this. Click edit for details.", class: 'glyphicon glyphicon-lock' if others_warning %>
-      </div>
+      <% else %>
+        <%= render partial: 'new_command', locals: { command: b.text } %>
+      <% end %>
     <% end %>
+    <%= render 'new_command' %>
   </div>
 
-  <hr />
-
-  <p>Add a command which is specific to your project</p>
-  <%= form.text_area :command, class: "form-control", rows: 4, value: nil, placeholder: 'cap production deploy' %>
+  <%= button_tag 'Add Stage Command', class: 'btn btn-primary stage-command-button', type: 'button' %>
 </fieldset>
 
 <script>
   $(function() {
-    var $localCommands = $('#commands pre.local');
+    var $commandsContainer = $('#commands');
+    var $localCommands = $('#commands pre.local:not(.no_access)');
+    var newCommandHTML = <%= render('new_command').inspect.html_safe %>;
 
-    $('#commands').sortable();
+    function notify_warning(target, message){
+      var $warning = $('<div class="cannot-edit">' + message + '</div>');
+      $(target).after($warning);
+      $warning.fadeOut(3000);
+      return false;
+    }
+
+    $commandsContainer.sortable();
     $.fn.editableform.buttons = <%= render('commands/buttons').inspect.html_safe %>;
 
     $localCommands.editable({
@@ -61,16 +73,17 @@
     });
 
     $('#commands pre.global').dblclick(function(){
-      var $warning = $('<div class="cannot-edit">Global commands cannot be edited inline, use the Admin UI.</div>')
-      $(this).after($warning);
-      $warning.fadeOut(3000);
-      return false;
+      notify_warning(this, 'Global commands cannot be edited inline, use the Admin UI.');
     });
 
-    $('#commands').on('click', '.editable-destroy', function(event) {
+    $('#commands pre.no_access:not(.global)').dblclick(function(){
+      notify_warning(this, 'Need admin access for the project, that owns this command.');
+    });
+
+    $commandsContainer.on('click', '.editable-destroy', function(event) {
       var editable = $(this).closest('div.col-lg-8').children('.pre-command');
 
-      if(confirm('Are you sure you would like to remove this command from all stages?')) {
+      if(confirm('Are you sure you would like to remove this command?')) {
         $.ajax({
           method: 'DELETE',
           dataType: 'json',
@@ -82,6 +95,10 @@
       }
 
       event.preventDefault();
+    });
+
+    $('.stage-command-button').click(function() {
+      $commandsContainer.append(newCommandHTML);
     });
   });
 </script>

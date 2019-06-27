@@ -4,14 +4,14 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe UsersController do
-  as_a_deployer do
+  as_a :deployer do
     unauthorized :get, :index
     unauthorized :get, :show, id: 1
     unauthorized :delete, :destroy, id: 1
     unauthorized :put, :update, id: 1
   end
 
-  as_an_admin do
+  as_a :admin do
     unauthorized :get, :new
     unauthorized :post, :create
     unauthorized :delete, :destroy, id: 1
@@ -56,7 +56,7 @@ describe UsersController do
       it 'succeeds' do
         get :index, params: {format: :json}
 
-        response.success?.must_equal true
+        assert_response :success
         json_response = JSON.parse response.body
         user_list = json_response['users']
         assert_not_nil user_list
@@ -70,18 +70,23 @@ describe UsersController do
       it 'succeeds and fetches a single user' do
         get :index, params: {search: 'Super Admin', format: :json}
 
-        response.success?.must_equal true
+        assert_response :success
         assigns(:users).must_equal [users(:super_admin)]
+      end
+
+      it 'succeeds and search with github username' do
+        get :index, params: {github_username: 'githubuser', format: :json}
+        assert_response :success
+        assigns(:users).must_equal [users(:github_viewer)]
       end
 
       it 'succeeds and with search as empty fetches all users' do
         get :index, params: {search: ''}
 
-        response.success?.must_equal true
+        assert_response :success
         user_list = assigns(:users)
         user_list.wont_be_nil
-        per_page = User.max_per_page || Kaminari.config.default_per_page
-        assigns(:users).size.must_equal [User.count, per_page].min
+        assigns(:users).size.must_equal [User.count, 25].min
       end
     end
 
@@ -97,7 +102,7 @@ describe UsersController do
 
       it 'succeeds' do
         get :show, params: {id: modified_user.id}
-        assert_template :show, partial: '_project', locals: { user: modified_user }
+        assert_template :show, partial: '_project', locals: {user: modified_user}
         assigns[:projects].must_equal []
       end
 
@@ -125,7 +130,7 @@ describe UsersController do
     end
   end
 
-  as_a_super_admin do
+  as_a :super_admin do
     describe '#new' do
       it "renders" do
         get :new

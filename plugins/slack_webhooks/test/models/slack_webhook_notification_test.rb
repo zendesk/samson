@@ -79,7 +79,7 @@ describe SlackWebhookNotification do
       notification = stub_notification
       stub_request(:post, endpoint).to_timeout
       Rails.logger.expects(:error)
-      Airbrake.expects(:notify)
+      Samson::ErrorNotifier.expects(:notify)
       notification.deliver :after_deploy
     end
   end
@@ -107,7 +107,7 @@ describe SlackWebhookNotification do
     let(:changeset) do
       stub "changeset",
         commits: stub("commits", count: 3),
-        github_url: "https://github.com/url",
+        commit_range_url: "https://github.com/url",
         pull_requests: pull_requests,
         author_names: ['author1', 'author2']
     end
@@ -159,7 +159,7 @@ describe SlackWebhookNotification do
       render.must_include ':x:'
     end
 
-    it 'uses a checkmark emoji for a successful deploy' do
+    it 'uses a checkmark emoji for a succeeded deploy' do
       render.must_include ':white_check_mark:'
     end
 

@@ -25,12 +25,12 @@
     </tr>
     </thead>
     <% @groups.each do |group| %>
-      <% sorted_vars = group.environment_variables.sort_by(&:id).map(&:name).uniq %>
+      <% sorted_vars = group.variable_names %>
       <tr>
         <td>
           <%= link_to group.name, group %>
-          <%= list_with_show_more(sorted_vars, max_display_variables, link_to("+ #{sorted_vars.count - max_display_variables} More", group)) do |name| %>
-            <li><%= name %></li>
+          <%= unordered_list(sorted_vars, display_limit: max_display_variables, show_more_tag: link_to("+ #{sorted_vars.count - max_display_variables} More", group)) do |name| %>
+            <%= name %>
           <% end %>
         </td>
         <td><%= render 'projects', group: group, display_limit: max_display_projects %></td>

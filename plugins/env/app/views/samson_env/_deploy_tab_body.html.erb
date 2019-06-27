@@ -1,0 +1,8 @@
+<div class="tab-pane" id="environment-variables">
+  <% if diff = deploy_environment_variable_diff %>
+    <%= Samson::Diff.text_diff(*diff) %>
+    <%= Samson::Diff.style_tag %>
+  <% else %>
+    No changes.
+  <% end %>
+</div>

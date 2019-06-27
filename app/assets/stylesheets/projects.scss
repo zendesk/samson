@@ -137,13 +137,15 @@ pre.pre-inline {
   }
 }
 
-.star a {
+.star {
   color: #333;
-  text-decoration: none;
-  font-size: 18px;
   &.starred {
     color: gold;
     text-shadow: 0 0 1px gray;
+  }
+  &.project-star {
+    text-decoration: none !important;
+    font-size: 18px;
   }
 }
 
@@ -174,6 +176,11 @@ pre.pre-inline {
   label {
     margin-right: 10px;
   }
+}
+
+.project-lock-buttons {
+  margin: .5em 0 0 0;
+  float: right;
 }
 
 // Labels with tooltips.

@@ -5,14 +5,16 @@ class GcloudController < ApplicationController
     "QUEUED" => "pending",
     "WORKING" => "running",
     "FAILURE" => "failed",
-    "ERRORED" => "failed"
+    "ERRORED" => "failed",
+    "TIMEOUT" => "failed",
+    "CANCELLED" => "cancelled"
   }.freeze
 
   def sync_build
     build = Build.find(params[:id])
     path = [build.project, build]
 
-    if error = update_build(build)
+    if (error = update_build(build))
       redirect_to path, alert: "Failed to sync: #{error}"
     else
       redirect_to path, notice: "Synced!"
@@ -42,7 +44,7 @@ class GcloudController < ApplicationController
       end
     end
 
-    build.save!
+    return "Failed to save build #{build.errors.full_messages}" unless build.save
     nil
   end
 end

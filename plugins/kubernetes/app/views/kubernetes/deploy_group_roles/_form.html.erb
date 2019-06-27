@@ -1,26 +1,33 @@
-<%= form_for @deploy_group_role, html: { class: "form-horizontal" } do |form| %>
+<%= form_for @kubernetes_deploy_group_role, html: { class: "form-horizontal" } do |form| %>
   <%= redirect_to_field %>
-  <%= render 'shared/errors', object: @deploy_group_role %>
-  <% defaults = @deploy_group_role.kubernetes_role&.defaults || {} %>
+  <%= render 'shared/errors', object: form.object %>
+  <%
+    defaults = form.object.kubernetes_role&.defaults || {}
+    updating = form.object.persisted?
+  %>
 
   <fieldset>
     <%= form.input :deploy_group_id do %>
-      <%= form.select :deploy_group_id, DeployGroup.pluck(:name, :id), {}, class: "form-control", disabled: @deploy_group_role.persisted? %>
+      <%= form.select :deploy_group_id, DeployGroup.pluck(:name, :id), {}, class: "form-control", disabled: updating %>
     <% end %>
 
     <%= form.input :project_id do %>
       <% projects = current_user.administrated_projects.with_kubernetes_roles.pluck(:name, :id) %>
-      <%= form.select :project_id, projects, {}, class: "form-control", disabled: @deploy_group_role.persisted? %>
+      <%= form.select :project_id, projects, {}, class: "form-control", disabled: updating %>
     <% end %>
 
     <%= form.input :kubernetes_role_id, label: 'Role' do %>
-      <%= form.select :kubernetes_role_id, [['Loading ...', @deploy_group_role.kubernetes_role_id]], {}, class: "form-control", disabled: @deploy_group_role.persisted? %>
+      <%= form.select :kubernetes_role_id, [['Loading ...', form.object.kubernetes_role_id]], {}, class: "form-control", disabled: updating %>
     <% end %>
 
     <%= form.input :delete_resource, as: :check_box, help: "Delete all resources on next deploy. Always set replicas to 0 too." %>
 
+    <% if Kubernetes::DeployGroupRole::NO_CPU_LIMIT_ALLOWED %>
+      <%= form.input :no_cpu_limit, as: :check_box, help: "Cpu limit will not be set when deploying, but still be used for cluster math, so pick a good estimate." %>
+    <% end %>
+
     <% [
-         [:replicas, "Replicas"],
+         [:replicas, @kubernetes_deploy_group_role.kubernetes_role&.autoscaled? ? "Min Replicas" : "Replicas"],
          [:requests_cpu, 'Requests CPU Cores'],
          [:requests_memory, 'Requests Memory in MB'],
          [:limits_cpu, 'Limits CPU Cores'],
@@ -34,12 +41,14 @@
       <% end %>
     <% end %>
 
+    <%# use form.actions with delete: true, history: true and block %>
     <div class="form-group">
       <div class="col-lg-offset-2 col-lg-10">
-        <%= form.submit @deploy_group_role.persisted? ? 'Save' : 'Create', class: "btn btn-primary" %>
-        <%= link_to_delete @deploy_group_role, class: 'btn btn-default' if @deploy_group_role.persisted? %>
+        <%= form.submit 'Save', class: "btn btn-primary" %>
+        <%= submit_tag ResourceController::ADD_MORE, class: 'btn btn-default' %>
+        <%= link_to_delete form.object, class: 'btn btn-default' if form.object.persisted? %>
         <%= link_to "Cancel", :back, class: 'btn btn-default' %>
-        <%= link_to_history @deploy_group_role %>
+        <%= link_to_history form.object %>
       </div>
     </div>
   </fieldset>

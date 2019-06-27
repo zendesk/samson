@@ -7,7 +7,56 @@ describe ReleasesController do
   let(:project) { projects(:test) }
   let(:release) { releases(:test) }
 
-  as_a_viewer do
+  before do
+    status_response = {
+      state: "success",
+      statuses: [
+        {
+          state: "success",
+          context: "oompa/loompa",
+          target_url: "https://chocolate-factory.com/test/wonka",
+          description: "Ooompa Loompa!",
+          updated_at: Time.now.iso8601,
+          created_at: Time.now.iso8601
+        }
+      ]
+    }
+    check_suite_response = {check_suites: [{conclusion: 'success', id: 1}]}
+    check_run_response = {
+      check_runs: [
+        {
+          conclusion: 'success',
+          output: {summary: '<p>Huzzah!</p>'},
+          name: 'Travis CI',
+          html_url: 'https://coolbeans.com',
+          started_at: Time.now.iso8601,
+          check_suite: {id: 1}
+        }
+      ]
+    }
+
+    headers = {
+      "Content-Type" => "application/json",
+    }
+    preview_headers = {
+      'Accept' => 'application/vnd.github.antiope-preview+json'
+    }
+
+    stub_request(:get, "https://api.github.com/repos/bar/foo/commits/abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd/status").
+      to_return(status: 200, body: status_response.to_json, headers: headers)
+
+    stub_request(
+      :get,
+      "https://api.github.com/repos/bar/foo/commits/abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd/check-suites"
+    ).to_return(status: 200, body: check_suite_response.to_json, headers: headers.merge(preview_headers))
+
+    stub_request(
+      :get,
+      "https://api.github.com/repos/bar/foo/commits/abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd/check-runs"
+    ).to_return(status: 200, body: check_run_response.to_json, headers: headers.merge(preview_headers))
+  end
+
+  as_a :viewer do
     unauthorized :get, :new, project_id: :foo
     unauthorized :post, :create, project_id: :foo
 
@@ -43,9 +92,9 @@ describe ReleasesController do
     end
   end
 
-  as_a_project_deployer do
+  as_a :project_deployer do
     describe "#create" do
-      let(:release_params) { { commit: "abcd" } }
+      let(:release_params) { {commit: "abcd"} }
       before do
         GitRepository.any_instance.expects(:commit_from_ref).with('abcd').returns('a' * 40)
         GITHUB.stubs(:create_release)
@@ -53,6 +102,7 @@ describe ReleasesController do
 
       it "creates a new release" do
         GitRepository.any_instance.expects(:fuzzy_tag_from_ref).with('abcd').returns("v2")
+        GitRepository.any_instance.expects(:commit_from_ref).with('v124').returns('a' * 40)
 
         assert_difference "Release.count", +1 do
           post :create, params: {project_id: project.to_param, release: release_params}

@@ -21,6 +21,8 @@ class CsvExportsController < ApplicationController
       format.html do
         if params[:type] == "users"
           render :new_users
+        elsif params[:type] == "deploy_group_usage"
+          render :new_deploy_group_usage
         else
           @csv_export = CsvExport.new
         end
@@ -29,6 +31,9 @@ class CsvExportsController < ApplicationController
         if params[:type] == "users"
           options = user_filter
           send_data UserCsvPresenter.to_csv(options), type: :csv, filename: "Users_#{options[:datetime]}.csv"
+        elsif params[:type] == "deploy_group_usage"
+          date_time_now = Time.now.strftime "%Y%m%d_%H%M"
+          send_data DeployGroupUsageCsvPresenter.to_csv, type: :csv, filename: "DeployGroupUsage_#{date_time_now}.csv"
         else
           render body: "not found", status: :not_found
         end
@@ -73,8 +78,8 @@ class CsvExportsController < ApplicationController
     options = {}
     options[:inherited] = params[:inherited] == "true"
     options[:deleted] = params[:deleted] == "true"
-    options[:project_id] = params[:project_id].to_i unless params[:project_id].to_i.zero?
-    options[:user_id] = params[:user_id].to_i unless params[:user_id].to_i.zero?
+    options[:project_id] = params[:project_id].to_i unless params[:project_id].to_i == 0
+    options[:user_id] = params[:user_id].to_i unless params[:user_id].to_i == 0
     options[:datetime] = Time.now.strftime "%Y%m%d_%H%M"
     options
   end
@@ -117,8 +122,8 @@ class CsvExportsController < ApplicationController
       end
     end
 
-    if project = params[:project].try(:to_i)
-      if project.positive?
+    if project = params[:project]&.to_i
+      if project > 0
         filter['stages.project_id'] = project
       elsif project.to_s != params[:project]
         raise "Invalid project id #{params[:project]}"

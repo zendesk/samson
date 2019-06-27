@@ -3,11 +3,15 @@ module Kubernetes
   class Release < ActiveRecord::Base
     self.table_name = 'kubernetes_releases'
 
-    belongs_to :user
-    belongs_to :project
-    belongs_to :deploy
-    has_many :release_docs, class_name: 'Kubernetes::ReleaseDoc', foreign_key: 'kubernetes_release_id'
-    has_many :deploy_groups, through: :release_docs
+    belongs_to :user, inverse_of: nil
+    belongs_to :project, inverse_of: :kubernetes_releases
+    belongs_to :deploy, inverse_of: :kubernetes_release
+    has_many :release_docs,
+      class_name: 'Kubernetes::ReleaseDoc',
+      foreign_key: 'kubernetes_release_id',
+      dependent: :destroy,
+      inverse_of: :kubernetes_release
+    has_many :deploy_groups, through: :release_docs, inverse_of: nil
 
     attr_accessor :builds
 
@@ -24,7 +28,7 @@ module Kubernetes
         release = create(params) do |release|
           if roles.flatten(1).any? { |dgr| dgr.kubernetes_role.blue_green? }
             release.blue_green_color = begin
-              release.previous_successful_release&.blue_green_color == "blue" ? "green" : "blue"
+              release.previous_succeeded_release&.blue_green_color == "blue" ? "green" : "blue"
             end
           end
         end
@@ -49,24 +53,25 @@ module Kubernetes
     def clients
       scopes = release_docs.map do |release_doc|
         release_id = resource_release_id(release_doc)
+        deploy_group = DeployGroup.with_deleted { release_doc.deploy_group }
         [
-          release_doc.deploy_group,
+          deploy_group,
           {
             namespace: release_doc.resources.first.namespace,
-            label_selector: self.class.pod_selector(release_id, release_doc.deploy_group.id, query: true)
+            label_selector: self.class.pod_selector(release_id, deploy_group.id, query: true)
           }
         ]
       end
       # avoiding doing a .uniq on clients which might do weird stuff
-      scopes.uniq.map { |group, query| [group.kubernetes_cluster.client, query] }
+      scopes.uniq.map { |group, query| [group.kubernetes_cluster.client('v1'), query] }
     end
 
     def url
       Rails.application.routes.url_helpers.project_kubernetes_release_url(project, self)
     end
 
-    def previous_successful_release
-      deploy.previous_successful_deploy&.kubernetes_release
+    def previous_succeeded_release
+      deploy.previous_succeeded_deploy&.kubernetes_release
     end
 
     private
@@ -95,6 +100,7 @@ module Kubernetes
             requests_memory: dgr.requests_memory,
             limits_cpu: dgr.limits_cpu,
             limits_memory: dgr.limits_memory,
+            no_cpu_limit: dgr.no_cpu_limit,
             delete_resource: dgr.delete_resource
           )
         end

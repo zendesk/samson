@@ -4,6 +4,8 @@ require_relative '../test_helper'
 SingleCov.not_covered!
 
 describe "db" do
+  let(:maxitest_timeout) { 10 }
+
   let_all(:tasks) do
     Rails.application.load_tasks # cannot be in before since it would load multiple times
     Rake::Task
@@ -24,8 +26,8 @@ describe "db" do
 
   it "can dump the schema without diff" do
     tasks["db:schema:dump"]
-    if ActiveRecord::Base.connection.adapter_name =~ /mysql/i
-      File.read("db/schema.rb").wont_include "4294967295"
+    if ActiveRecord::Base.connection.adapter_name.match?(/mysql/i)
+      File.read("db/schema.rb").wont_include "4294967295", "replace 4294967295 with 1073741823"
       `git diff -- db/schema.rb`.must_equal ""
     end
   end

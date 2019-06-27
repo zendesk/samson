@@ -53,7 +53,7 @@ module SamsonFlowdock
       @inbox_flow ||= Flowdock::Flow.new(
         api_token: tokens,
         source: "samson",
-        from: { name: user.name, address: user.email }
+        from: {name: user.name, address: user.email}
       )
     end
 

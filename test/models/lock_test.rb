@@ -5,6 +5,7 @@ SingleCov.covered!
 
 describe Lock do
   let(:user) { users(:deployer) }
+  let(:project) { projects(:test) }
   let(:stage) { stages(:test_staging) }
   let(:environment) { environments(:production) }
   let(:lock) { Lock.create!(user: user, resource: stage) }
@@ -32,6 +33,11 @@ describe Lock do
         lock.description = "X"
         assert_valid lock
       end
+
+      it "is invalid with a delete_at in the past" do
+        lock.delete_at = 1.day.ago
+        refute_valid_on lock, :delete_at, "Delete at Date must be in the future"
+      end
     end
 
     describe "#unique_global_lock" do
@@ -53,23 +59,6 @@ describe Lock do
         assert_valid lock
         lock.resource_type.must_be_nil
       end
-    end
-  end
-
-  describe "#affected" do
-    it "is everything for global" do
-      lock.resource = nil
-      lock.affected.must_equal "ALL STAGES"
-    end
-
-    it "is environment for environment" do
-      lock.resource = environment
-      lock.affected.must_equal "Production"
-    end
-
-    it "is stage for stage" do
-      lock.resource = stage
-      lock.affected.must_equal "stage"
     end
   end
 
@@ -112,19 +101,27 @@ describe Lock do
     end
   end
 
-  describe "#unlock_summary" do
-    it "is emppty when not deleting" do
+  describe "#expire_summary" do
+    it "is empty when not deleting" do
       lock.expire_summary.must_be_nil
-    end
-
-    it "says when unlock is in the future" do
-      lock.delete_at = 5.minutes.from_now + 2
-      lock.expire_summary.must_equal " and will expire in 5 minutes"
     end
 
     it "says when unlock failed" do
       lock.delete_at = 5.minutes.ago
       lock.expire_summary.must_equal " and expiration is not working"
+    end
+
+    describe "locked in the future" do
+      before { lock.delete_at = 5.minutes.from_now + 2 }
+
+      it "says when it unlocks" do
+        lock.expire_summary.must_equal " and will expire in 5 minutes"
+      end
+
+      it "can produce html from given block" do
+        text = lock.expire_summary { "<a>X</a>".html_safe }
+        ERB::Util.html_escape(text).must_equal " and will expire <a>X</a>"
+      end
     end
   end
 
@@ -148,28 +145,37 @@ describe Lock do
     end
   end
 
-  describe ".remove_expired_locks" do
-    before do
-      expired = 2.hour.ago
-      Lock.create!(user: users(:deployer), resource: stages(:test_staging), created_at: expired, delete_in: 3600)
-      Lock.create!(user: users(:deployer), resource: stages(:test_production), created_at: expired, delete_in: 3600)
-      Lock.create!(user: users(:deployer), resource: stages(:test_staging), delete_in: 3600)
-      Lock.create!(user: users(:deployer), resource: stages(:test_production), delete_in: 3600)
-      Lock.create!(user: users(:deployer), resource: stages(:test_production_pod))
+  describe "#reason" do
+    it "is default when not given" do
+      lock.reason.must_equal "Description not given"
+    end
 
+    it "is description when given" do
+      lock.description = "ABC"
+      lock.reason.must_equal "ABC"
+    end
+  end
+
+  describe ".remove_expired_locks" do
+    def expire(attributes = {})
+      lock = Lock.create!(user: users(:deployer), resource: stages(:test_staging))
+      lock.update_columns({delete_at: 1.day.ago}.merge(attributes))
       Lock.remove_expired_locks
     end
 
     it "removes expired locks" do
-      Lock.where("delete_at < ?", Time.now).must_be_empty
+      expire
+      Lock.count.must_equal 0
     end
 
     it "leaves unexpired locks alone" do
-      Lock.where("delete_at > ?", Time.now).wont_be_empty
+      expire delete_at: 1.minute.from_now
+      Lock.count.must_equal 1
     end
 
     it "leaves indefinite locks alone" do
-      Lock.where("delete_at is null").wont_be_empty
+      expire delete_at: nil
+      Lock.count.must_equal 1
     end
   end
 
@@ -182,48 +188,6 @@ describe Lock do
       end
     end
 
-    it "finds stage lock" do
-      lock # trigger creation
-      Lock.send :all_cached
-      assert_sql_queries 0 do
-        Lock.for_resource(stage).must_equal [lock]
-      end
-    end
-
-    describe "with environments active" do
-      let!(:lock) { Lock.create!(resource: environments(:staging), user: user) }
-
-      before do
-        DeployGroup.stubs(enabled?: true)
-        stage # load stage
-        DeployGroupsStage.first # load column information
-      end
-
-      it "finds environment lock on stage" do
-        Lock.send :all_cached
-        assert_sql_queries 3 do # deploy-groups -> deploy-groups-stages -> environments
-          Lock.for_resource(stage).must_equal [lock]
-        end
-      end
-
-      it "does not check environments on non-environment locks" do
-        lock.update_attributes!(resource: stages(:test_production))
-        Lock.send :all_cached
-        assert_sql_queries 0 do
-          Lock.for_resource(stage).must_equal []
-        end
-      end
-    end
-
-    it "finds environment lock" do
-      env = environments(:production)
-      lock = Lock.create!(resource: env, user: user).reload
-      Lock.send :all_cached
-      assert_sql_queries 0 do
-        Lock.for_resource(env).must_equal [lock]
-      end
-    end
-
     it "finds global lock" do
       stage # trigger find
       lock = Lock.create!(user: user)
@@ -233,7 +197,7 @@ describe Lock do
       end
     end
 
-    describe "with multiple logs" do
+    describe "with multiple locks" do
       let!(:global) { Lock.create!(user: user) }
       before { lock } # trigger create
 

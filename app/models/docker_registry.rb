@@ -36,10 +36,14 @@ class DockerRegistry
   end
 
   def host
-    @uri.host
+    if @uri.port == @uri.default_port
+      @uri.host
+    else
+      "#{@uri.host}:#{@uri.port}"
+    end
   end
 
   def base
-    @uri.host + @uri.path
+    host + @uri.path
   end
 end

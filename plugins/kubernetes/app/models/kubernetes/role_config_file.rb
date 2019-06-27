@@ -6,13 +6,62 @@ module Kubernetes
   class RoleConfigFile
     attr_reader :path, :elements
 
+    # from https://github.com/helm/helm/blob/release-2.13/pkg/tiller/kind_sorter.go#L29
+    DEPLOY_SORT_ORDER = [
+      "Namespace",
+      "ResourceQuota",
+      "LimitRange",
+      "PodSecurityPolicy",
+      "PodDisruptionBudget",
+      "Secret",
+      "ConfigMap",
+      "StorageClass",
+      "PersistentVolume",
+      "PersistentVolumeClaim",
+      "ServiceAccount",
+      "CustomResourceDefinition",
+      "ClusterRole",
+      "ClusterRoleBinding",
+      "Role",
+      "RoleBinding",
+      "Service",
+      "DaemonSet",
+      "Pod",
+      "ReplicationController",
+      "ReplicaSet",
+      "Deployment",
+      "StatefulSet",
+      "Job",
+      "CronJob",
+      "Ingress",
+      "APIService",
+    ].freeze
+
     DEPLOY_KINDS = ['Deployment', 'DaemonSet', 'StatefulSet'].freeze
-    JOB_KINDS = ['Job'].freeze
-    PRIMARY_KINDS = (DEPLOY_KINDS + JOB_KINDS + ['Pod']).freeze
     SERVICE_KINDS = ['Service'].freeze
     PREREQUISITE = [:metadata, :annotations, :'samson/prerequisite'].freeze
 
-    def initialize(content, path)
+    # TODO: rename to has_pods? or so
+    def self.primary?(resource)
+      templates(resource).any?
+    end
+
+    def self.templates(resource)
+      spec = resource[:spec]
+      if !spec
+        []
+      elsif spec[:containers]
+        [resource]
+      else
+        spec.values_at(*template_keys(resource)).flat_map { |r| templates(r) }
+      end
+    end
+
+    def self.template_keys(resource)
+      (resource[:spec] || {}).keys.grep(/template$/i)
+    end
+
+    def initialize(content, path, **args)
       @path = path
 
       if content.blank?
@@ -25,23 +74,17 @@ module Kubernetes
         raise Samson::Hooks::UserError, "Error found when parsing #{path}\n#{$!.message}"
       end
 
-      if errors = Kubernetes::RoleVerifier.new(@elements).verify
-        raise Samson::Hooks::UserError, "Error found when parsing #{path}\n#{errors.join("\n")}"
+      if errors = Kubernetes::RoleValidator.new(@elements, **args).validate
+        raise Samson::Hooks::UserError, "Error found when validating #{path}\n#{errors.join("\n")}"
       end
     end
 
     def primary
-      find_by_kind(PRIMARY_KINDS).first
+      @elements.detect { |e| self.class.primary?(e) }
     end
 
     def services
-      find_by_kind(SERVICE_KINDS)
-    end
-
-    private
-
-    def find_by_kind(kinds)
-      @elements.select { |doc| kinds.include?(doc[:kind]) }
+      @elements.select { |doc| SERVICE_KINDS.include?(doc[:kind]) }
     end
   end
 end

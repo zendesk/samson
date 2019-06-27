@@ -4,12 +4,12 @@
 # To test: go to /oauth_test and follow the instructions.
 
 # do not auto initialize all the models
-# will make rails runner fail because the models were preloaded
+# will make `rails runner 1` fail because the models were preloaded
 module Doorkeeper
   autoload :AccessGrant, 'doorkeeper/orm/active_record/access_grant'
   autoload :AccessToken, 'doorkeeper/orm/active_record/access_token'
   autoload :Application, 'doorkeeper/orm/active_record/application'
-
+  autoload :BaseRecord, 'doorkeeper/orm/active_record/base_record'
   module Orm
     module ActiveRecord
       class << self

@@ -1,10 +1,6 @@
 <p>The detailed log can be viewed <%= link_to 'here', project_deploy_url(@project, @deploy) %></p>
 
-<h3>Risk</h3>
-<%= render 'changeset/risks', pull_requests: @changeset.risky_pull_requests, type: "deploy" %>
-
-<h3>Commits</h3>
-<%= render 'changeset/commits', changeset: @changeset %>
-
-<h3>Pull Requests</h3>
-<%= render 'changeset/pulls', changeset: @changeset %>
+<% %w(risks commits pull_requests).each do |attribute| %>
+  <h3><%= attribute.humanize %></h3>
+  <%= render "changeset/#{attribute}", changeset: @changeset, type: 'deploy' %>
+<% end %>

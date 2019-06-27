@@ -4,4 +4,10 @@
   <%= repository_web_link(project) %>
 </h1>
 
+<%= Samson::Hooks.render_views(:project_view, self, project: @project) %>
+
+<div class="project-lock-buttons">
+  <%= render "locks/button", lock: project.lock, resource: @project %>
+</div>
+
 <%= render "shared/project_tabs", project: project, active: tab %>

@@ -18,12 +18,10 @@ class AccessControl
         case action
         when :read then true
         when :write
-          return user.admin? if scope.nil? # global locks
-          return false unless scope.is_a?(Stage) # stage locks
-          if ENV['PRODUCTION_STAGE_LOCK_REQUIRES_ADMIN'] && scope.production
-            user.admin_for?(scope.project)
-          else
-            user.deployer_for?(scope.project)
+          case scope.class.to_s
+          when "Project" then user.admin_for?(scope) # project locks
+          when "Stage" then can_lock_stage?(user, scope) # stage locks
+          else user.admin? # global / env / deploy-group
           end
         else raise ArgumentError, "Unsupported action #{action}"
         end
@@ -64,6 +62,14 @@ class AccessControl
 
     def can_deploy_anything?(user)
       user.deployer? || user.user_project_roles.where('role_id >= ?', Role::DEPLOYER.id).exists?
+    end
+
+    def can_lock_stage?(user, stage)
+      if ENV['PRODUCTION_STAGE_LOCK_REQUIRES_ADMIN'] && stage.production?
+        user.admin_for?(stage.project)
+      else
+        user.deployer_for?(stage.project)
+      end
     end
   end
 end

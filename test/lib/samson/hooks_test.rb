@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../../test_helper'
 
-SingleCov.covered! uncovered: 7 # untestable minitest if/else and render_stylesheets / render_javascripts
+SingleCov.covered! uncovered: 9 # untestable minitest if/else and render_stylesheets / render_javascripts
 
 describe Samson::Hooks do
   let(:number_of_plugins) { Dir['plugins/*'].size }
@@ -78,10 +78,11 @@ describe Samson::Hooks do
       Samson::Hooks.send(:hooks, :stage_clone)
     end
 
-    it "adds a hook" do
+    it 'adds a hook' do
       before = hooks.size
+      before.must_be :>, 1
       Samson::Hooks.with_callback(:stage_clone, -> {}) do
-        hooks.size.must_equal before + 1
+        hooks.size.must_equal 1
       end
       hooks.size.must_equal before
     end
@@ -95,12 +96,45 @@ describe Samson::Hooks do
     end
   end
 
+  describe '.with_callbacks_for_plugin' do
+    def hooks
+      Samson::Hooks.send(:hooks, :error)
+    end
+
+    it 'removes all callbacks for hook except for the one for the specified plugin' do
+      mock_exception = mock
+      Airbrake.expects(:notify).with(mock_exception, foo: 'bar').once
+      Rollbar.expects(:error).never
+
+      hooks.size.must_equal 2
+
+      Samson::Hooks.only_callbacks_for_plugin('samson_airbrake', :error) do
+        hooks.size.must_equal 1
+        Samson::Hooks.fire(:error, mock_exception, foo: 'bar').size.must_equal 1
+      end
+
+      hooks.size.must_equal 2
+    end
+  end
+
   describe ".render_views" do
     it "joins partials" do
       view = stub("View", render: "OUT".html_safe)
       html = Samson::Hooks.render_views(:stage_show, view)
       html.must_include "OUTOUT"
       assert html.html_safe?
+    end
+  end
+
+  describe ".traced" do
+    it "traces when using a traced hook" do
+      Samson::PerformanceTracer.expects(:trace_execution_scoped).yields
+      Samson::Hooks.send(:traced, :after_deploy) { 1 }
+    end
+
+    it "traces when using a traced hook" do
+      Samson::PerformanceTracer.expects(:trace_execution_scoped).never
+      Samson::Hooks.send(:traced, :deploy_group_permitted_params) { 1 }.must_equal 1
     end
   end
 end

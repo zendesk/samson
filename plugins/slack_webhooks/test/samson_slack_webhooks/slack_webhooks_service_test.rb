@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 1
 
 describe SamsonSlackWebhooks::SlackWebhooksService do
   let(:deploy) { deploys(:succeeded_test) }
@@ -61,7 +61,8 @@ describe SamsonSlackWebhooks::SlackWebhooksService do
   describe "#deliver_message_via_webhook" do
     let(:webhook) { SlackWebhook.new(webhook_url: 'http://foo.com') }
     let(:icon) do
-      "\"icon_url\":\"https://github.com/zendesk/samson/blob/master/app/assets/images/32x32_light.png?raw=true\""
+      "\"icon_url\":" \
+      "\"https://github.com/zendesk/samson/blob/master/app/assets/images/favicons/32x32_light.png?raw=true\""
     end
 
     it "sends a message" do
@@ -81,7 +82,7 @@ describe SamsonSlackWebhooks::SlackWebhooksService do
 
     it "reports errors silently so multiple channels can be sent to in a row" do
       request = stub_request(:post, "http://foo.com").to_timeout
-      Airbrake.expects(:notify)
+      Samson::ErrorNotifier.expects(:notify)
       Rails.logger.expects(:error)
       service.deliver_message_via_webhook(webhook: webhook, message: "Hey", attachments: [])
       assert_requested request
@@ -89,7 +90,7 @@ describe SamsonSlackWebhooks::SlackWebhooksService do
 
     it "reports 404s from misconfigurations or missing channels" do
       request = stub_request(:post, "http://foo.com").to_return(status: 404, body: "Oops")
-      Airbrake.expects(:notify)
+      Samson::ErrorNotifier.expects(:notify)
       Rails.logger.expects(:error)
       service.deliver_message_via_webhook(webhook: webhook, message: "Hey", attachments: [])
       assert_requested request

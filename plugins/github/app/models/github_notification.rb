@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 class GithubNotification
+  SUPPORTED_KEYS = [:stage_name, :reference].freeze
+  DEFAULT_MESSAGE = "This PR was deployed to %{stage_name}. Reference: %{reference}"
+
   def initialize(deploy)
     @deploy = deploy
     @stage = @deploy.stage
@@ -22,7 +25,10 @@ class GithubNotification
   def body
     url = Rails.application.routes.url_helpers.project_deploy_url(@project, @deploy)
     short_reference_link = "<a href='#{url}' target='_blank'>#{@deploy.short_reference}</a>"
-    "This PR was deployed to #{@stage.name}. Reference: #{short_reference_link}"
+
+    message = @stage.github_pull_request_comment.presence || DEFAULT_MESSAGE
+
+    message % {stage_name: @stage.name, reference: short_reference_link}
   end
 
   def in_multiple_threads(data)

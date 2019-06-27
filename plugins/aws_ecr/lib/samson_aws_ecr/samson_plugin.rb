@@ -1,9 +1,9 @@
 # frozen_string_literal: true
-require 'aws-sdk-core'
+require 'aws-sdk-ecr'
 
 module SamsonAwsEcr
   class Engine < Rails::Engine
-    AMAZON_REGISTRY = /\A.*\.dkr.ecr.([\w\-]+).amazonaws.com\z/
+    AMAZON_REGISTRY = /\A.*\.dkr.ecr.([\w\-]+).amazonaws.com\z/.freeze
 
     class << self
       # we make sure the repo exists so pushes do not fail

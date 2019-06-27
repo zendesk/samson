@@ -57,9 +57,11 @@ module Samson
     end
 
     def jenkins_job_config
-      conf = Rails.cache.fetch(jenkins_job_cache_key,
+      conf = Rails.cache.fetch(
+        jenkins_job_cache_key,
         expires_in: JENKINS_JOB_CACHE_TIME,
-        race_condition_ttl: 5.minute) do
+        race_condition_ttl: 5.minute
+      ) do
         client.job.get_config(job_name)
       end
       Nokogiri::XML(conf)
@@ -226,11 +228,12 @@ module Samson
     private
 
     def response(jenkins_job_id)
-      @response ||= begin
-        client.job.get_build_details(job_name, jenkins_job_id)
-      rescue JenkinsApi::Exceptions::NotFound => error
-        { 'result' => error.message, 'url' => '#' }
-      end
+      @response ||=
+        begin
+          client.job.get_build_details(job_name, jenkins_job_id)
+        rescue JenkinsApi::Exceptions::NotFound => error
+          {'result' => error.message, 'url' => '#'}
+        end
     end
 
     def client
@@ -248,10 +251,11 @@ module Samson
         emails.concat(deploy.changeset.commits.map(&:author_email))
       end
 
+      emails.compact!
       emails.select! { |e| e.include?('@') }
       emails.map! { |x| Mail::Address.new(x) }
       if restricted_domain = ENV["EMAIL_DOMAIN"]
-        emails.select! { |x| x.domain.casecmp(restricted_domain).zero? }
+        emails.select! { |x| x.domain.casecmp(restricted_domain) == 0 }
       end
       emails.map(&:address).uniq.join(",")
     end

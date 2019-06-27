@@ -3,7 +3,7 @@
 # for example lib/tasks/capistrano.rake, and they will automatically be available to Rake.
 
 # asset gems need to be loaded before app is done loading
-ENV['PRECOMPILE'] = '1' if ARGV.include?("test:js") || ARGV.include?("assets:precompile")
+ENV['PRECOMPILE'] = '1' if ARGV.include?("assets:precompile")
 
 require_relative 'config/application'
 require "rake/testtask"
@@ -56,34 +56,10 @@ namespace :test do
     end
   end
 
-  task :prepare_js do
+  task :jshint do
     sh "npm install"
     sh "npm run-script jshint"
     sh "npm run-script jshint:plugins"
-  end
-
-  task js: [:asset_compilation_environment, :environment] do
-    with_tmp_karma_config do |config|
-      sh "./node_modules/karma/bin/karma start #{config} --single-run"
-    end
-  end
-
-  private
-
-  def with_tmp_karma_config
-    Tempfile.open('karma.js') do |f|
-      f.write ERB.new(File.read('test/karma.conf.js')).result(binding)
-      f.flush
-      yield f.path
-    end
-  end
-
-  # TODO: make a standalone binding
-  # clunky asset finder ... see https://github.com/rails/sprockets-rails/issues/237 for more
-  # jquery.js -> <GEM_HOME>/ruby/2.3.0/gems/rails-assets-jquery-2.2.1/app/assets/javascripts/jquery.js
-  def resolve_javascript(file)
-    paths = Gem::Specification.stubs.map(&:full_gem_path)
-    Dir.glob("{#{paths.join(",")}}/app/assets/javascripts/#{file}").first || raise("Could not find #{file}")
   end
 end
 
@@ -121,6 +97,8 @@ task :flay do
     'plugins/pipelines/app/views/samson_pipelines/_stage_show.html.erb', # super simple html
     'app/views/secrets/index.html.erb', # simple html
     'plugins/kubernetes/app/models/kubernetes/deploy_group_role.rb', # similar but slightly different validations
+    'plugins/flowdock/app/views/samson_flowdock/_fields.html.erb', # simple html
+    'plugins/datadog/app/views/samson_datadog/_stage_form.html.erb', # simple html
   ]
   flay = Flay.run([*files, '--mass', '25']) # mass threshold is shown mass / occurrences
   abort "Code duplication found" if flay.report.any?
@@ -135,5 +113,7 @@ if Rails.env.development?
     exec "parallel_test test plugins/*/test"
   end
 end
+
+ActiveRecord::Migration.define_method(:verbose) { false } if ENV["SILENCE_MIGRATIONS"]
 
 Audited.store[:audited_user] = "rake"

@@ -8,8 +8,17 @@ describe WebhooksController do
   let(:stage) { stages(:test_staging) }
   let(:webhook) { project.webhooks.create!(stage: stage, branch: 'master', source: 'code') }
 
-  as_a_viewer do
+  # NOTE: here because messing with prepend-before-filters caused this even with authenticated users
+  describe "when logged out" do
+    it "redirects to login" do
+      post :create, params: {project_id: project.to_param}
+      assert_response :unauthorized
+    end
+  end
+
+  as_a :viewer do
     unauthorized :post, :create, project_id: :foo
+    unauthorized :put, :update, project_id: :foo, id: 1
     unauthorized :delete, :destroy, project_id: :foo, id: 1
 
     describe '#index' do
@@ -20,6 +29,11 @@ describe WebhooksController do
         assert_template :index
       end
 
+      it 'renders json' do
+        get :index, params: {project_id: project.to_param}, format: :json
+        assert_response :success
+      end
+
       it "does not blow up with deleted stages" do
         stage.soft_delete!(validate: false)
         get :index, params: {project_id: project}
@@ -28,9 +42,9 @@ describe WebhooksController do
     end
   end
 
-  as_a_project_deployer do
+  as_a :project_deployer do
     describe '#create' do
-      let(:params) { { branch: "master", stage_id: stage.id, source: 'any' } }
+      let(:params) { {branch: "master", stage_id: stage.id, source: 'any'} }
 
       it "redirects to index" do
         post :create, params: {project_id: project.to_param, webhook: params}
@@ -41,9 +55,20 @@ describe WebhooksController do
       it "shows validation errors" do
         webhook # already exists
         post :create, params: {project_id: project.to_param, webhook: params}
-        flash[:alert].must_include 'branch'
+        assert flash[:alert]
         assert_template :index
-        response.body.scan("<strong>#{params[:branch]}</strong>").count.must_equal 1 # do not show the built hook
+      end
+    end
+
+    describe '#update' do
+      it "updates" do
+        put :update, params: {project_id: project.to_param, id: webhook.id, webhook: {branch: "foo"}}, format: :json
+        assert_response :success
+      end
+
+      it "shows validation errors" do
+        put :update, params: {project_id: project.to_param, id: webhook.id, webhook: {stage_id: nil}}, format: :json
+        assert_response 422
       end
     end
 

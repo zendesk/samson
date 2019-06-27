@@ -27,16 +27,16 @@ describe Samson::BuildFinder do
   let(:finder) { Samson::BuildFinder.new(output, job, 'master', build_selectors: build_selectors) }
   let(:project) { build.project }
 
-  before do
-    expect_sleep.with { raise "Unexpected sleep" }.never
-    build.update_column(:docker_repo_digest, nil) # building needs to happen
-    job.update_column(:commit, build.git_sha) # this is normally done by JobExecution
-    GitRepository.any_instance.stubs(:file_content).with('Dockerfile', job.commit).returns "FROM all"
-  end
-
-  describe "#ensure_successful_builds" do
+  describe "#ensure_succeeded_builds" do
     def execute
-      finder.ensure_successful_builds
+      finder.ensure_succeeded_builds
+    end
+
+    before do
+      expect_sleep.with { raise "Unexpected sleep" }.never
+      build.update_column(:docker_repo_digest, nil) # building needs to happen
+      job.update_column(:commit, build.git_sha) # this is normally done by JobExecution
+      GitRepository.any_instance.stubs(:file_content).with('Dockerfile', job.commit).returns "FROM all"
     end
 
     it "fails when the build is not built" do
@@ -69,6 +69,19 @@ describe Samson::BuildFinder do
       out.must_include "Waiting for Build #{build.url} to finish."
     end
 
+    it "continue wait until build became active" do
+      expect_sleep.times(2)
+      done = false
+      build.class.any_instance.expects(:active?).times(3).with do
+        build.class.any_instance.stubs(:docker_repo_digest).returns('some-digest') unless done
+        done = true
+      end.returns(true, true, false)
+
+      assert execute.any?
+
+      out.must_include "Waiting for Build #{build.url} to finish."
+    end
+
     it "fails when build job failed" do
       build.create_docker_job.update_column(:status, 'cancelled')
       build.save!
@@ -81,7 +94,7 @@ describe Samson::BuildFinder do
 
     it "fails when plugin checks fail" do
       build.update_column :docker_repo_digest, 'foo'
-      Samson::Hooks.with_callback(:ensure_build_is_successful, ->(*) { false }) do
+      Samson::Hooks.with_callback(:ensure_build_is_succeeded, ->(*) { false }) do
         e = assert_raises Samson::Hooks::UserError do
           execute
         end
@@ -91,6 +104,8 @@ describe Samson::BuildFinder do
     end
 
     describe "when build needs to be created" do
+      let(:build_selectors) { [["Dockerfile", nil]] }
+
       before do
         build.update_column(:git_sha, 'something-else')
         Build.any_instance.stubs(:validate_git_reference)
@@ -120,6 +135,17 @@ describe Samson::BuildFinder do
         out.must_include "Build #{Build.last.url} is looking good"
       end
 
+      it "raise when image building disabled" do
+        # detect_build_by_selector itself will raise with image building disabled
+        # should never return nil
+        Samson::BuildFinder.stubs(:detect_build_by_selector!).returns(nil)
+        job.project.update_column(:dockerfiles, nil)
+        job.project.update_column(:docker_image_building_disabled, true)
+        with_env(EXTERNAL_BUILD_WAIT: "0") do
+          assert_raises { execute }
+        end
+      end
+
       it "reuses build when told to do so" do
         setup_using_previous_builds
 
@@ -141,14 +167,6 @@ describe Samson::BuildFinder do
         e.message.must_equal "Build #{Build.last.url} is cancelled, rerun it."
         out.must_include "Creating build for Dockerfile."
       end
-
-      it "stops when deploy is cancelled by user" do
-        job.project.update_column :dockerfiles, 'Dockerfile'
-        finder.cancelled!
-        DockerBuilderService.any_instance.expects(:run).returns(true)
-        execute
-        out.scan(/.*build for.*/).must_equal(["Creating build for Dockerfile."])
-      end
     end
 
     describe "when finding builds via image_name" do
@@ -161,6 +179,15 @@ describe Samson::BuildFinder do
 
       it "finds the matching build" do
         execute.must_equal [build]
+      end
+
+      it "raise with missing dockerfile" do
+        # detect_build_by_selector itself will raise without dockerfile
+        # should never return nil
+        Samson::BuildFinder.stubs(:detect_build_by_selector!).returns(nil)
+        with_env(EXTERNAL_BUILD_WAIT: "0") do
+          assert_raises { execute }
+        end
       end
 
       it "does not find for different sha" do
@@ -189,6 +216,23 @@ describe Samson::BuildFinder do
         setup_using_previous_builds
         execute.must_equal [build]
       end
+
+      it "can reuse build and skips if there is no previous build" do
+        job.deploy.update_column(:kubernetes_reuse_build, true)
+        refute job.deploy.previous_deploy
+        execute.must_equal [build]
+      end
+
+      it "prefers previous builds since that is what the user selected" do
+        setup_using_previous_builds
+        current = builds(:staging)
+        current.update_columns(
+          docker_repo_digest: 'ababababab',
+          git_sha: job.commit,
+          image_name: build.image_name
+        )
+        execute.must_equal [build]
+      end
     end
 
     describe "when using external builds" do
@@ -215,7 +259,8 @@ describe Samson::BuildFinder do
 
         e = assert_raises(Samson::Hooks::UserError) { execute }
         e.message.must_equal(
-          "Did not find build for dockerfile \"foobar\" or image_name \"foo-foobar\".\nFound builds: []."
+          "Did not find build for dockerfile \"foobar\" or image_name \"foobar\".\n"\
+          "Found builds: [].\nProject builds URL: http://www.test-url.com/projects/foo/builds"
         )
       end
 
@@ -226,14 +271,9 @@ describe Samson::BuildFinder do
 
         e = assert_raises(Samson::Hooks::UserError) { execute }
         e.message.must_equal(
-          "Did not find build for dockerfile \"Dockerfile\" or image_name \"foo\".\nFound builds: [[\"Mooo\", nil]]."
+          "Did not find build for dockerfile \"Dockerfile\" or image_name \"foo\".\n"\
+          "Found builds: [[\"Mooo\"]].\nProject builds URL: http://www.test-url.com/projects/foo/builds"
         )
-      end
-
-      it "stops when cancelled" do
-        expect_sleep.with { finder.cancelled! }
-
-        execute.must_equal []
       end
 
       it "does not wait multiple times because builds start simultaneously" do
@@ -255,6 +295,62 @@ describe Samson::BuildFinder do
 
         execute.must_equal [build]
       end
+
+      describe "removes empty image_name from expection" do
+        let(:build_selectors) { [["foobar", nil]] }
+
+        it "fails if a build does not arrive" do
+          job.project.update_column :dockerfiles, 'foobar'
+          expect_sleep.times(3)
+
+          e = assert_raises(Samson::Hooks::UserError) { execute }
+          e.message.must_equal(
+            "Did not find build for dockerfile \"foobar\".\n"\
+            "Found builds: [].\nProject builds URL: http://www.test-url.com/projects/foo/builds"
+          )
+        end
+      end
+    end
+  end
+
+  describe "#possible_builds" do
+    let(:build) { builds(:staging) }
+    let(:previous_deploy) { deploys(:failed_staging_test) }
+
+    before do
+      previous_deploy.update_column(:id, job.deploy.id - 1) # make previous_deploy work
+    end
+
+    it "does not find builds when missing" do
+      finder.send(:possible_builds).must_equal []
+    end
+
+    it "find builds for current sha" do
+      build.update_column(:git_sha, job.commit)
+      finder.send(:possible_builds).must_equal [build]
+    end
+
+    it "find builds from previous deploy when requested" do
+      job.deploy.update_column(:kubernetes_reuse_build, true)
+      build.update_column(:git_sha, previous_deploy.job.commit)
+      finder.send(:possible_builds).must_equal [build]
+    end
+
+    it "find builds from previous real deploy when previous on was also reusing" do
+      job.deploy.update_column(:kubernetes_reuse_build, true)
+      previous_deploy.update_column(:kubernetes_reuse_build, true)
+
+      pre_previous = deploys(:succeeded_production_test)
+      pre_previous.update_columns(stage_id: job.deploy.stage_id, id: previous_deploy.id - 1)
+
+      build.update_column(:git_sha, pre_previous.job.commit)
+      finder.send(:possible_builds).must_equal [build]
+    end
+  end
+
+  describe "#wait_for_build_creation" do
+    it "raises when outside code does not stop after last try" do
+      assert_raises(RuntimeError) { finder.send(:wait_for_build_creation) {} }
     end
   end
 end

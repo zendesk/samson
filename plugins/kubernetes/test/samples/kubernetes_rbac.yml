@@ -1,0 +1,42 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: some-project-service-account
+  namespace: default
+  labels:
+    project: some-project
+    role: some-role
+
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: some-project-role
+  labels:
+    project: some-project
+    role: some-role
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - get
+
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: some-project-role-binding
+  labels:
+    project: some-project
+    role: some-role
+subjects:
+  - kind: ServiceAccount
+    name: some-project-service-account
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: some-project-role
+  apiGroup: rbac.authorization.k8s.io

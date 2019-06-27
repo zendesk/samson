@@ -1,6 +1,6 @@
 <%= page_title "#{@environment.new_record? ? 'New' : 'Edit'} Environment" %>
 
-<%= render_lock @environment %>
+<%= render_locks @environment %>
 
 <section>
   <%= form_for @environment, html: { class: "form-horizontal" } do |form| %>
@@ -10,9 +10,7 @@
     <%= form.input :permalink, required: true if @environment.persisted? %>
     <%= form.input :production, as: :check_box, label: 'Affects Production' %>
 
-    <%= form.actions do %>
-      | <%= link_to_history @environment %>
-    <% end %>
+    <%= form.actions history: true %>
   <% end %>
 
   <%= render "locks/button", lock: @environment.lock, resource: @environment %>

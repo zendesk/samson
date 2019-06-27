@@ -1,12 +1,11 @@
 # frozen_string_literal: true
-require 'docker'
 require 'shellwords'
 
 class ImageBuilder
   class << self
-    DIGEST_SHA_REGEX = /Digest:.*(sha256:[0-9a-f]{64})/i
+    extend ::Samson::PerformanceTracer::Tracers
 
-    include ::NewRelic::Agent::MethodTracer
+    DIGEST_SHA_REGEX = /Digest:.*(sha256:[0-9a-f]{64})/i.freeze
 
     def build_image(dir, build, executor, tag_as_latest:, **args)
       if DockerRegistry.all.empty?
@@ -19,32 +18,7 @@ class ImageBuilder
       push_image(image_id, build, executor, tag_as_latest: tag_as_latest)
     ensure
       if image_id && !['1', 'true'].include?(ENV["DOCKER_KEEP_BUILT_IMGS"])
-        executor.output.puts("### Deleting local docker image")
-        Docker::Image.get(image_id).remove(force: true)
-      end
-    end
-
-    def build_image_locally(dir, executor, dockerfile:, tag:, cache_from:)
-      local_docker_login do |login_commands|
-        tag = " -t #{tag.shellescape}" if tag
-        file = " -f #{dockerfile.shellescape}"
-
-        executor.quiet do
-          if cache_from
-            pull_cache = executor.verbose_command("docker pull #{cache_from.shellescape} || true")
-            cache_option = " --cache-from #{cache_from.shellescape}"
-          end
-
-          build_command = "docker build#{file}#{tag} .#{cache_option}"
-
-          return unless executor.execute(
-            "cd #{dir.shellescape}",
-            *login_commands,
-            *pull_cache,
-            executor.verbose_command(build_command)
-          )
-        end
-        executor.output.to_s.scan(/Successfully built ([a-f\d]{12,})/).last&.first
+        executor.execute(["docker", "rmi", "-f", image_id].shelljoin)
       end
     end
 
@@ -70,29 +44,52 @@ class ImageBuilder
 
     private
 
+    def build_image_locally(dir, executor, dockerfile:, tag:, cache_from:)
+      local_docker_login do |login_commands|
+        tag = " -t #{tag.shellescape}" if tag
+        file = " -f #{dockerfile.shellescape}"
+
+        executor.quiet do
+          if cache_from
+            pull_cache = executor.verbose_command("docker pull #{cache_from.shellescape} || true")
+            cache_option = " --cache-from #{cache_from.shellescape}"
+          end
+
+          build_command = "docker build#{file}#{tag} .#{cache_option}"
+
+          return unless executor.execute(
+            "cd #{dir.shellescape}",
+            *login_commands,
+            *pull_cache,
+            executor.verbose_command(build_command)
+          )
+        end
+        executor.output.messages.scan(/Successfully built ([a-f\d]{12,})/).last&.first
+      end
+    end
+
     def push_image(image_id, build, executor, tag_as_latest:)
       tag = build.docker_tag
       tag_is_latest = (tag == 'latest')
 
       unless repo_digest = push_image_to_registries(image_id, build, executor, tag: tag, override_tag: tag_is_latest)
-        raise Docker::Error::DockerError, "Unable to get repo digest"
+        executor.output.puts("Docker push failed: Unable to get repo digest")
+        return
       end
 
       if tag_as_latest && !tag_is_latest
         push_image_to_registries image_id, build, executor, tag: 'latest', override_tag: true
       end
+
       repo_digest
-    rescue Docker::Error::DockerError => e
-      executor.output.puts("Docker push failed: #{e.message}\n")
-      nil
     end
-    add_method_tracer :push_image
+    add_tracer :push_image
 
     def push_image_to_registries(image_id, build, executor, tag:, override_tag:)
       digest = nil
 
       DockerRegistry.all.each_with_index do |registry, i|
-        primary = i.zero?
+        primary = i == 0
         repo = build.project.docker_repo(registry, build.dockerfile)
 
         if override_tag
@@ -114,7 +111,7 @@ class ImageBuilder
 
           if primary
             # cache-from also produced digest lines, so we need to be careful
-            last = executor.output.to_s.split("\n").last.to_s
+            last = executor.output.messages.split("\n").last.to_s
             return nil unless sha = last[DIGEST_SHA_REGEX, 1]
             digest = "#{repo}@#{sha}"
           end
@@ -126,11 +123,12 @@ class ImageBuilder
 
     # TODO: same as in config/initializers/docker.rb ... dry it up
     def docker_major_version
-      @@docker_major_version ||= begin
-        Timeout.timeout(0.2) { read_docker_version[/(\d+)\.\d+\.\d+/, 1].to_i }
-      rescue Timeout::Error
-        0
-      end
+      @@docker_major_version ||=
+        begin
+          Timeout.timeout(0.2) { read_docker_version[/(\d+)\.\d+\.\d+/, 1].to_i }
+        rescue Timeout::Error
+          0
+        end
     end
 
     # just here to get stubbed

@@ -6,6 +6,10 @@ class PingController < ApplicationController
     head :ok
   end
 
+  def error
+    raise('ping#error')
+  end
+
   private
 
   def force_ssl?

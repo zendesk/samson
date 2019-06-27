@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 3
+SingleCov.covered! uncovered: 2
 
 describe EventStreamer do
   class FakeStream
@@ -39,7 +39,7 @@ describe EventStreamer do
   let(:stream) { FakeStream.new }
   let(:streamer) { EventStreamer.new(stream) }
 
-  after { kill_extra_threads } # heartbeat never finishes
+  after { maxitest_kill_extra_threads } # heartbeat never finishes
 
   it "writes each message in the output into the stream" do
     streamer.start(output)

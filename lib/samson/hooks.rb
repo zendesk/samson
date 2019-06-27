@@ -13,50 +13,78 @@ module Samson
       :build_button,
       :build_new,
       :build_show,
+      :deploy_confirmation_tab_nav,
+      :deploy_confirmation_tab_body,
       :deploy_group_show,
       :deploy_group_form,
       :deploy_group_table_header,
       :deploy_group_table_cell,
       :deploys_header,
+      :deploy_show_view,
       :deploy_tab_nav,
       :deploy_tab_body,
       :deploy_view,
       :deploy_form, # for external plugin, so they can add extra form fields
       :admin_menu,
       :manage_menu,
-      :project_tabs_view
+      :project_tabs_view,
+      :project_view
     ].freeze
 
     EVENT_HOOKS = [
+      :after_deploy,
+      :after_deploy_setup,
+      :after_docker_build,
+      :before_deploy,
+      :before_docker_build,
+      :before_docker_repository_usage,
+      :buddy_request,
+      :build_permitted_params,
+      :buildkite_release_params,
+      :can,
+      :deploy_group_includes,
+      :deploy_group_permitted_params,
+      :deploy_permitted_params,
+      :ensure_build_is_succeeded,
+      :error,
+      :ensure_docker_image_has_no_vulnerabilities,
+      :ignore_error,
+      :deploy_env,
+      :deploy_execution_env,
+      :link_parts_for_resource,
+      :project_docker_build_method_options,
+      :project_permitted_params,
+      :ref_status,
+      :release_deploy_conditions,
+      :resolve_docker_image_tag,
       :stage_clone,
       :stage_permitted_params,
-      :deploy_permitted_params,
-      :project_permitted_params,
-      :deploy_group_permitted_params,
-      :build_permitted_params,
-      :deploy_group_includes,
-      :buddy_request,
-      :before_deploy,
-      :after_deploy_setup,
-      :after_deploy,
-      :before_docker_repository_usage,
-      :before_docker_build,
-      :after_docker_build,
-      :ensure_build_is_successful,
-      :after_job_execution,
-      :job_additional_vars,
-      :buildkite_release_params,
-      :release_deploy_conditions,
-      :deploy_group_env,
-      :link_parts_for_resource,
-      :can,
+      :trace_method,
+      :trace_scope,
+      :asynchronous_performance_tracer,
+      :repo_provider_status,
+      :changeset_api_request,
+      :validate_deploy
     ].freeze
 
-    INTERNAL_HOOKS = [:class_defined].freeze
+    # Hooks that are slow and we want performance info on
+    TRACED = [
+      :after_deploy,
+      :after_deploy_setup,
+      :after_docker_build,
+      :before_deploy,
+      :before_docker_build,
+      :before_docker_repository_usage,
+      :ensure_build_is_succeeded,
+      :ref_status,
+      :stage_clone
+    ].freeze
+    (TRACED & EVENT_HOOKS).sort == TRACED.sort || raise("Unknown hook in traced")
 
-    KNOWN = VIEW_HOOKS + EVENT_HOOKS + INTERNAL_HOOKS
+    KNOWN = VIEW_HOOKS + EVENT_HOOKS
 
-    @hooks = {}
+    @hooks = Hash.new { |h, k| h[k] = [] }
+    @class_decorators = Hash.new { |h, k| h[k] = [] }
 
     class Plugin
       attr_reader :name, :folder
@@ -127,27 +155,37 @@ module Samson
         hooks(name) << block
       end
 
-      def view(name, partial)
-        hooks(name) << partial
+      def view(name, plugin)
+        hooks(name) << (plugin.include?("/") ? plugin : "#{plugin}/#{name}")
       end
 
       def decorator(class_name, file)
-        hooks(:class_defined, class_name) << file
+        @class_decorators[class_name] << file
       end
 
       # temporarily add a hook for testing
-      def with_callback(name, hook_block)
-        hooks(name) << hook_block
+      def with_callback(name, *hook_blocks)
+        original_hooks = @hooks[name].dup
+        @hooks[name] = hook_blocks
         yield
       ensure
-        hooks(name).pop
+        @hooks[name] = original_hooks
+      end
+
+      # temporarily removes all callbacks for specified hook except for those of the passed in plugin for testing
+      def only_callbacks_for_plugin(plugin_name, hook_name)
+        original_hooks = @hooks[hook_name]
+        @hooks[hook_name] = @hooks[hook_name].select do |proc|
+          proc.source_location.first.include?("/#{plugin_name}/")
+        end
+        yield
+      ensure
+        @hooks[hook_name] = original_hooks
       end
 
       # use
       def fire(name, *args)
-        NewRelic::Agent::MethodTracerHelpers.trace_execution_scoped("Custom/Hooks/#{name}") do
-          hooks(name).map { |hook| hook.call(*args) }
-        end
+        traced(name) { hooks(name).map { |hook| hook.call(*args) } }
       end
 
       def render_views(name, view, *args)
@@ -157,7 +195,7 @@ module Samson
       end
 
       def load_decorators(class_name)
-        hooks(:class_defined, class_name).each { |path| require_dependency(path) }
+        @class_decorators[class_name].each { |path| require_dependency(path) }
       end
 
       def plugin_setup
@@ -202,6 +240,14 @@ module Samson
 
       private
 
+      def traced(name, &block)
+        if TRACED.include?(name)
+          Samson::PerformanceTracer.trace_execution_scoped("Custom/Hooks/#{name}", &block)
+        else
+          yield
+        end
+      end
+
       def render_assets(view, folder, file, method)
         Samson::Hooks.plugins.each do |plugin|
           full_file = plugin.engine.config.root.join("app/assets/#{folder}/#{plugin.name}/#{file}")
@@ -211,9 +257,9 @@ module Samson
         nil
       end
 
-      def hooks(*args)
-        raise "Using unsupported hook #{args.inspect}" unless KNOWN.include?(args.first)
-        (@hooks[args] ||= [])
+      def hooks(name)
+        raise "Using unsupported hook #{name.inspect}" unless KNOWN.include?(name)
+        @hooks[name]
       end
     end
   end

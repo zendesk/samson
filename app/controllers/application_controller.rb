@@ -12,12 +12,19 @@ class ApplicationController < ActionController::Base
   include CurrentUser # must be after protect_from_forgery, so that authenticate! is called
   include JsonExceptions
   include JsonRenderer
+  include JsonPagination
+  include Pagy::Backend
+
+  # show error details to users and do not bother ExceptionNotifier
+  rescue_from Samson::Hooks::UserError do |exception|
+    if request.format.json?
+      render_json_error 400, exception.message
+    else
+      render status: 400, plain: exception.message
+    end
+  end
 
   protected
-
-  def page
-    params.fetch(:page, 1)
-  end
 
   def force_ssl?
     ENV['FORCE_SSL'] == '1'
@@ -34,15 +41,19 @@ class ApplicationController < ActionController::Base
   end
 
   def redirect_back(**options)
-    if param_location = params[:redirect_to].presence
-      if param_location.is_a?(String) && param_location.start_with?('/')
-        redirect_to URI("http://ignor.ed#{param_location}").request_uri, options # using URI to silence Brakeman
-        return
-      else
-        Rails.logger.error("Invalid redirect_to parameter #{param_location}")
-      end
+    if back = redirect_to_from_params
+      redirect_to back, options
+    else
+      super
     end
-    super
+  end
+
+  def redirect_to_from_params
+    return unless param_location = params[:redirect_to].presence
+    if !param_location.is_a?(String) || !param_location.start_with?('/')
+      raise "Invalid redirect_to parameter #{param_location}"
+    end
+    URI("http://ignor.ed#{param_location}").request_uri # using URI to silence Brakeman
   end
 
   def store_requested_oauth_scope
@@ -54,7 +65,6 @@ class ApplicationController < ActionController::Base
     warden.authenticate # trigger auth so we see which strategy won
 
     [
-      Warden::Strategies::BasicStrategy,
       Warden::Strategies::Doorkeeper
     ].include? warden.winning_strategy.class
   end

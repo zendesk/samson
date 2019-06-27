@@ -6,22 +6,26 @@ JobQueue.clear
 SingleCov.covered!
 
 describe JobQueue do
+  fake_job = Class.new do
+    attr_reader :deploy
+    def initialize(deploy)
+      @deploy = deploy
+    end
+  end
+
   # JobExecution is slow/complicated ... so we stub it out
   fake_execution = Class.new do
-    attr_reader :id
+    attr_reader :id, :job
     attr_writer :thread
-    def initialize(id)
+    def initialize(id, job)
       @id = id
+      @job = job
     end
 
     # when expectations fail we need to know what failed
     def inspect
       "job-#{id}"
     end
-  end
-
-  def wait_for_jobs_to_finish
-    sleep 0.01 until subject.debug == [{}, {}]
   end
 
   def with_executing_job
@@ -75,9 +79,11 @@ describe JobQueue do
   end
 
   let(:subject) { JobQueue }
-  let(:job_execution) { fake_execution.new(:active) }
-  let(:queued_job_execution) { fake_execution.new(:queued) }
-  let(:another_job_execution) { fake_execution.new(:another) }
+  let(:instance) { JobQueue.instance }
+  let(:job) { fake_job.new(nil) }
+  let(:job_execution) { fake_execution.new(:active, job) }
+  let(:queued_job_execution) { fake_execution.new(:queued, job) }
+  let(:another_job_execution) { fake_execution.new(:another, job) }
   let(:active_lock) { Mutex.new }
   let(:queued_lock) { Mutex.new }
   let(:another_lock) { Mutex.new }
@@ -161,17 +167,43 @@ describe JobQueue do
       end
     end
 
-    it 'reports queue length' do
-      states = [
-        [1, 0], # add active
-        [1, 1], # add queued
-        [1, 0], # done active ... enqueue queued
-        [0, 0], # done queued
-      ]
-      states.each do |t, q|
-        ActiveSupport::Notifications.expects(:instrument).with("job_queue.samson", threads: t, queued: q)
+    describe 'queue length' do
+      def assert_queue_length_notifications
+        states = [
+          [1, 0], # add active
+          [1, 1], # add queued
+          [1, 0], # done active ... enqueue queued
+          [0, 0], # done queued
+        ]
+        states.each do |t, q|
+          yield(t, q)
+        end
+        with_a_queued_job {} # noop
       end
-      with_a_queued_job {} # noop
+
+      it 'reports queue length' do
+        assert_queue_length_notifications do |t, q|
+          ActiveSupport::Notifications.expects(:instrument).with(
+            "job_queue.samson",
+            jobs: {executing: t, queued: q,},
+            deploys: {executing: 0, queued: 0}
+          )
+        end
+      end
+
+      describe 'with deploys' do
+        let(:job) { fake_job.new(mock) }
+
+        it 'reports deploy queue lengths' do
+          assert_queue_length_notifications do |t, q|
+            ActiveSupport::Notifications.expects(:instrument).with(
+              "job_queue.samson",
+              jobs: {executing: t, queued: q},
+              deploys: {executing: t, queued: q}
+            )
+          end
+        end
+      end
     end
 
     describe 'with queued job' do
@@ -236,6 +268,107 @@ describe JobQueue do
     end
   end
 
+  describe 'staggered jobs' do
+    def with_staggering_enabled(stagger_interval: 1.second, &block)
+      JobQueue.any_instance.expects(:stagger_interval).returns(stagger_interval)
+      with_env SERVER_MODE: 'true', &block
+    end
+
+    describe '#initialize' do
+      it 'starts staggered job deque task if staggering is enabled' do
+        JobQueue.any_instance.expects(:start_staggered_job_dequeuer)
+        with_staggering_enabled do
+          JobQueue.unstub(:new)
+          JobQueue.send(:new)
+        end
+      end
+    end
+
+    describe '#debug' do
+      it 'includes staggered jobs if enabled' do
+        with_staggering_enabled do
+          subject.debug.must_equal [{}, {}, {}]
+        end
+      end
+    end
+
+    describe '#stagger_job_or_execute' do
+      it 'pushes job to staggered queue if queue is enabled' do
+        with_staggering_enabled do
+          instance.instance_variable_get(:@stagger_queue).must_equal []
+
+          instance.send(:stagger_job_or_execute, job_execution, '')
+
+          instance.instance_variable_get(:@stagger_queue).must_equal [{job_execution: job_execution, queue: ''}]
+          subject.clear
+        end
+      end
+
+      it 'performs job if staggering is not enabled' do
+        instance.expects(:perform_job).with(job_execution, '')
+        instance.instance_variable_get(:@stagger_queue).must_equal []
+
+        instance.send(:stagger_job_or_execute, job_execution, '')
+
+        instance.instance_variable_get(:@stagger_queue).must_equal []
+      end
+    end
+
+    describe '#dequeue_staggered_job' do
+      it 'performs dequeued job' do
+        instance.expects(:perform_job).with(job_execution, queue_name)
+        instance.instance_variable_set(:@stagger_queue, [{job_execution: job_execution, queue: queue_name}])
+
+        instance.send(:dequeue_staggered_job)
+        subject.clear
+      end
+
+      it 'does not call perform_job if queue is empty' do
+        instance.expects(:perform_job).never
+
+        instance.send(:dequeue_staggered_job)
+      end
+    end
+
+    describe '#start_staggered_job_dequeuer' do
+      it 'creates new timer task and starts it' do
+        mock_timer_task = mock(execute: true)
+        expected_task_params = {now: true, timeout_interval: 10, execution_interval: 1.second}
+        instance.expects(:dequeue_staggered_job)
+        Concurrent::TimerTask.expects(:new).with(expected_task_params).yields.returns(mock_timer_task)
+
+        with_staggering_enabled do
+          instance.send(:start_staggered_job_dequeuer)
+        end
+        subject.clear
+      end
+    end
+
+    describe '#staggering_enabled?' do
+      it 'returns true if in server mode and stagger interval is set' do
+        with_staggering_enabled do
+          assert instance.send(:staggering_enabled?)
+        end
+      end
+
+      it 'returns false if not in server mode' do
+        refute instance.send(:staggering_enabled?)
+      end
+
+      it 'returns false if stagger interval is not set' do
+        with_env SERVER_MODE: 'true' do
+          refute instance.send(:staggering_enabled?)
+        end
+      end
+    end
+
+    describe "#stagger_interval" do
+      it 'gets the stagger interval constant' do
+        instance.send(:stagger_interval).must_equal 0.seconds
+      end
+    end
+  end
+
   describe "#dequeue" do
     it "removes a job from the queue" do
       with_a_queued_job do
@@ -259,11 +392,45 @@ describe JobQueue do
     end
   end
 
+  describe '#debug_hash_from_queue' do
+    it 'returns the expected debug hash from a queue' do
+      queue = [{queue: queue_name, job_execution: job_execution}]
+      instance.send(:debug_hash_from_queue, queue).must_equal "#{queue_name}": [job_execution]
+    end
+  end
+
   describe "#clear" do
     it "clears" do
       subject.debug.each { |q| q[:x] = 1 }
       subject.clear
       subject.debug.must_equal [{}, {}]
+    end
+
+    it "kills hanging threads directly so user sees what was hanging" do
+      e = nil
+      t =
+        Thread.new do
+          sleep 1
+        rescue RuntimeError
+          sleep 0.1 # make sure it waits
+          e = $!
+        end
+      subject.instance.instance_variable_get(:@threads)[1] = t
+      subject.clear
+      maxitest_wait_for_extra_threads
+      e.class.must_equal RuntimeError
+    end
+
+    it "does not raise on dead threads" do
+      t = Thread.new {}
+      subject.instance.instance_variable_get(:@threads)[1] = t
+      sleep 0.1
+      subject.clear
+    end
+
+    it "raises when used outside of test" do
+      Rails.env.expects(:test?).returns(false)
+      assert_raises(RuntimeError) { subject.clear }
     end
   end
 
@@ -287,6 +454,7 @@ describe JobQueue do
           refute subject.wait(job_execution.id, 0.05) # blocks until thread unlocks
         end
         wait_for_jobs_to_finish
+        maxitest_wait_for_extra_threads
         (0.05..0.1).must_include time
       end
     end
@@ -299,26 +467,80 @@ describe JobQueue do
     end
   end
 
-  describe "#kill" do
-    it "kills the job" do
+  describe "#cancel" do
+    it "stops a running thread" do
       with_job_execution do
         called = false
+        job_sleep = 0.2
         time = Benchmark.realtime do
           job_execution.stubs(:perform).with do # cannot use expect since it is killed
             called = true
-            sleep 0.1
+            sleep job_sleep
           end
           subject.perform_later(job_execution)
-          sleep 0.05
-          subject.kill(job_execution.id)
+          sleep job_sleep / 4
+          subject.cancel(job_execution.id)
+          sleep job_sleep / 4
         end
-        time.must_be :<, 0.1
+        time.must_be :<, job_sleep
         assert called
       end
     end
 
-    it "does nothing when job is dead" do
-      subject.kill(123)
+    it "waits for thread to stop so redirected user sees cancellation outcome" do
+      with_job_execution do
+        job_execution.stubs(:perform).with do # cannot use expect since it is killed
+          sleep 0.1
+        rescue JobQueue::Cancel
+          sleep 0.01 # pretend to do slow cleanup
+          raise
+        end
+        subject.perform_later(job_execution)
+        sleep 0.01 # let thread start
+
+        thread = subject.instance.instance_variable_get(:@threads)[job_execution.id]
+        assert thread.alive?
+        subject.cancel(job_execution.id)
+        refute thread.alive?
+      end
+    end
+
+    it "closes AR connection to make sure a bad connection is not returned to the pool" do
+      with_job_execution do
+        job_execution.stubs(:perform).with { sleep 0.1 }
+        subject.perform_later(job_execution)
+
+        Rails.env.expects(:test?).times(2).returns(false, true)
+        ActiveRecord::Base.connection.expects(:close)
+
+        sleep 0.01 # random errors happen without this
+        subject.cancel(job_execution.id)
+        maxitest_wait_for_extra_threads
+      end
+    end
+
+    it "does nothing when thread is dead" do
+      subject.cancel(job_execution.id)
+    end
+  end
+
+  describe '#is_deploy?' do
+    before { JobQueue.unstub(:new) }
+
+    def deploy?(job_execution)
+      JobQueue.send(:new).send(:deploy?, job_execution)
+    end
+
+    it 'returns true if job execution is a deploy' do
+      assert deploy?(mock(job: mock(deploy: mock)))
+    end
+
+    it 'returns false if job execution does not respond to job' do
+      refute deploy?(mock)
+    end
+
+    it 'returns false if job execution job does not have a deploy' do
+      refute deploy?(mock(job: mock(deploy: nil)))
     end
   end
 end

@@ -4,8 +4,8 @@
   <%= page_title "Kubernetes Limits" %>
 
   <%= search_form do %>
-    <%= search_select :project_id, [['All', '']] + @projects.map { |p| [p.name, p.id] }, live: true, size: 3 %>
-    <%= search_select :scope_type_and_id, @env_deploy_group_array, live: true, size: 3, label: "Scope" %>
+    <%= search_select :project_id, [['All', Kubernetes::UsageLimitsController::ALL]] + @projects.map { |p| [p.name, p.id] }, live: true, size: 3 %>
+    <%= search_select :scope_type_and_id, [['All', Kubernetes::UsageLimitsController::ALL]] + @env_deploy_group_array, live: true, size: 3, label: "Scope" %>
   <% end %>
 
   <br/>
@@ -26,7 +26,7 @@
         <th></th>
       </tr>
 
-      <% @usage_limits.each do |usage_limit| %>
+      <% @kubernetes_usage_limits.each do |usage_limit| %>
         <tr>
           <% unless @project %>
             <td><%= usage_limit.project ? link_to(usage_limit.project.name, usage_limit.project) : 'All' %></td>

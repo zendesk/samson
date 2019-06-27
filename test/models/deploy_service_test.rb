@@ -13,15 +13,13 @@ describe DeployService do
   let(:deploy) { deploys(:succeeded_test) }
   let(:reference) { deploy.reference }
   let(:job_execution) { JobExecution.new(reference, job) }
-
   let(:stage_production_1) { stages(:test_production) }
   let(:stage_production_2) { stages(:test_production_pod) }
-
   let(:ref1) { "v1" }
 
   describe "#deploy!" do
     it "starts a deploy" do
-      SseRailsEngine.expects(:send_event).twice
+      DeployNotificationsChannel.expects(:broadcast).with(1).times(2)
       assert_difference "Job.count", +1 do
         assert_difference "Deploy.count", +1 do
           service.deploy(stage, reference: reference)
@@ -29,12 +27,22 @@ describe DeployService do
       end
     end
 
+    it "does nothing when deploy had errors" do
+      refute_difference "Job.count" do
+        refute_difference "Deploy.count" do
+          Deploy.any_instance.expects(:valid?).returns(false)
+          service.deploy(stage, reference: reference)
+        end
+      end
+    end
+
     describe "when buddy check is needed" do
-      before { BuddyCheck.stubs(:enabled?).returns(true) }
+      before { Samson::BuddyCheck.stubs(:enabled?).returns(true) }
       let(:deploy) { deploys(:succeeded_production_test) }
 
-      def create_previous_deploy(ref, stage, successful: true, bypassed: false)
-        job = project.jobs.create!(user: user, command: "foo", status: successful ? "succeeded" : 'failed')
+      def create_previous_deploy(ref, stage, succeeded: true, bypassed: false, commit: nil)
+        status = succeeded ? "succeeded" : 'failed'
+        job = project.jobs.create!(user: user, command: "foo", status: status, commit: commit)
         buddy = bypassed ? user : other_user
         Deploy.create!(job: job, reference: ref, stage: stage, buddy: buddy, started_at: Time.now, project: project)
       end
@@ -55,7 +63,7 @@ describe DeployService do
 
         it "does not start the deploy, if past grace period" do
           service.expects(:confirm_deploy).never
-          travel BuddyCheck.grace_period + 1.minute do
+          travel Samson::BuddyCheck.grace_period + 1.minute do
             service.deploy(stage_production_2, reference: ref1)
           end
         end
@@ -82,6 +90,15 @@ describe DeployService do
           create_previous_deploy(ref1, stage_production_1, bypassed: true)
           service.expects(:confirm_deploy).never
           service.deploy(stage_production_2, reference: ref1)
+        end
+      end
+
+      describe "similar deploy reference with different commit sha" do
+        it "does not start the deploy" do
+          create_previous_deploy(ref1, stage_production_1, commit: 'xyz')
+          Changeset.any_instance.expects(:commits).returns(['xyz'])
+          service.expects(:confirm_deploy).never
+          service.deploy(stage_production_1, reference: ref1)
         end
       end
 
@@ -126,6 +143,17 @@ describe DeployService do
 
         deploy_one.job.reload.status.must_equal 'running'
         deploy_two.job.reload.status.must_equal 'cancelled'
+      end
+
+      it "does not cancel pending deploys when they just got de-queued" do
+        deploy = create_deployment(user, 'v1', stage, 'pending')
+
+        JobQueue.expects(:queued?).returns(false)
+        JobQueue.expects(:dequeue).never
+
+        service.deploy(stage, reference: reference)
+
+        deploy.job.reload.status.must_equal 'pending'
       end
 
       it "does not cancel queued deploys for other users" do
@@ -193,12 +221,12 @@ describe DeployService do
         DeployMailer.expects(bypass_email: stub(deliver_now: true))
         deploy.buddy = user
         service.confirm_deploy(deploy)
-        job_execution.send(:run)
+        job_execution.perform
       end
     end
   end
 
-  describe "before notifications" do
+  describe "start callbacks" do
     before do
       stage.stubs(:create_deploy).returns(deploy)
       deploy.stubs(:persisted?).returns(true)
@@ -212,19 +240,18 @@ describe DeployService do
     it "sends before_deploy hook" do
       record_hooks(:before_deploy) do
         service.deploy(stage, reference: reference)
-        job_execution.send(:run)
-      end.must_equal [[deploy, nil]]
+        job_execution.perform
+      end.map(&:first).must_equal [deploy]
     end
   end
 
-  describe "after notifications" do
+  describe "finish callbacks" do
     def run_deploy
       service.deploy(stage, reference: reference)
-      job_execution.send(:run)
+      job_execution.perform
     end
 
     before do
-      SseRailsEngine.expects(:send_event).with('deploys', type: 'finish').never
       stage.stubs(:create_deploy).returns(deploy)
       deploy.stubs(:persisted?).returns(true)
       job_execution.stubs(:execute)
@@ -244,16 +271,16 @@ describe DeployService do
       end
 
       it "does not fail all callbacks when 1 callback fails" do
-        service.stubs(:send_sse_deploy_update)
-        service.expects(:send_sse_deploy_update).with('finish', anything).raises # first callback
-        Airbrake.expects(:notify)
+        service.stubs(:send_deploy_update) # other callbacks
+        service.expects(:send_deploy_update).with(finished: true).raises # last callback
+        Samson::ErrorNotifier.expects(:notify)
         DeployMailer.expects(:deploy_email).returns(stub(deliver_now: true))
         run_deploy
       end
     end
 
     it "sends after_deploy hook" do
-      record_hooks(:after_deploy) { run_deploy }.must_equal [[deploy, nil]]
+      record_hooks(:after_deploy) { run_deploy }.map(&:first).must_equal [deploy]
     end
 
     it "email notification for failed deploys" do
@@ -262,6 +289,92 @@ describe DeployService do
       DeployMailer.expects(:deploy_failed_email).returns(stub("DeployMailer", deliver_now: true))
 
       run_deploy
+    end
+
+    it "fails a deploy when verification fails" do
+      Samson::Hooks.with_callback(:validate_deploy, ->(*) { false }) do
+        run_deploy
+      end
+      deploy.reload.status.must_equal "failed"
+    end
+
+    describe "with redeploy_previous_when_failed" do
+      def run_deploy(redeploy)
+        service.deploy(stage, reference: reference)
+        service.expects(:deploy).capture(deploy_args).times(redeploy ? 1 : 0).returns(deploy) # stub to avoid loops
+        job_execution.perform
+      end
+
+      let(:deploy_args) { [] }
+      let(:previous) { deploys(:succeeded_production_test) }
+
+      before do
+        service # cache instance
+        deploy.redeploy_previous_when_failed = true
+        deploy.stubs(:previous_succeeded_deploy).returns(previous)
+        Job.any_instance.stubs(:status).returns("failed")
+      end
+
+      it "redeploys previous if deploy failed" do
+        run_deploy true
+        deploy_args.dig(0, 1, :reference).must_equal "v1.0"
+      end
+
+      it "does nothing when previous deploy was the same" do
+        previous.update_column :reference, "abcabca"
+        run_deploy false
+        deploy_args.must_equal []
+      end
+
+      it "does nothing when new deploy had errors" do
+        deploy.stubs(:new_record?).returns(true)
+        run_deploy true
+        job_execution.output.messages.must_include "Redeploy of abcabca failed"
+      end
+
+      it "does nothing when it cannot find a previous deploy" do
+        deploy.unstub(:previous_succeeded_deploy)
+        deploy.expects(:previous_succeeded_deploy).returns(nil)
+        run_deploy false
+      end
+
+      it "does not deploy previous if deploy succeeds" do
+        Job.any_instance.unstub(:status)
+        run_deploy false
+      end
+
+      it "uses short sha if not a versioned release" do
+        previous.job.update_column(:commit, 'bbbbccccdddd')
+        previous.update_column(:reference, 'master')
+        run_deploy true
+        deploy_args.dig(0, 1, :reference).must_equal "bbbbccc"
+      end
+    end
+  end
+
+  describe "#update_average_deploy_time" do
+    it 'updates stage average_deploy_time with new duration' do
+      stage.update_column(:average_deploy_time, 3.00)
+
+      new_deploy = Deploy.create!(deploy.attributes.except('id', 'created_at', 'updated_at'))
+      new_deploy.expects(:duration).returns(4.0)
+
+      service.send(:update_average_deploy_time, new_deploy)
+
+      stage.reload
+      assert_in_delta 3.33, stage.average_deploy_time, 0.004
+    end
+
+    it 'handles no previous average' do
+      stage.deploys.where.not(id: deploy.id).delete_all
+      stage.average_deploy_time.must_be_nil
+
+      deploy.expects(:duration).returns(4.0)
+
+      service.send(:update_average_deploy_time, deploy)
+
+      stage.reload
+      assert_in_delta 4.0, stage.average_deploy_time
     end
   end
 end

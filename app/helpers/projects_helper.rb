@@ -5,10 +5,10 @@ module ProjectsHelper
   def star_for_project(project)
     starred = current_user.starred_project?(project)
 
-    content_tag :span, class: 'star' do
+    content_tag :span do
       link_to(
         '', project_stars_path(project),
-        class: "glyphicon glyphicon-star #{"starred" if starred}",
+        class: "glyphicon glyphicon-star star project-star #{"starred" if starred}",
         data: {method: :post, remote: true},
         title: "#{starred ? "Unstar" : "Star"} this project"
       )
@@ -36,11 +36,20 @@ module ProjectsHelper
 
   def repository_web_link(project)
     if project.github?
-      render partial: 'shared/github_link', locals: { project: project }
+      render partial: 'shared/github_link', locals: {project: project}
     elsif project.gitlab?
-      render partial: 'shared/gitlab_link', locals: { project: project }
+      render partial: 'shared/gitlab_link', locals: {project: project}
     else
       ""
     end
+  end
+
+  def docker_build_methods_help_text
+    help_texts = Project::DOCKER_BUILD_METHODS.map do |method|
+      if method[:help_text].present?
+        content_tag(:b, "#{method[:label]}: ") << method[:help_text]
+      end
+    end.compact
+    safe_join(help_texts, "<br/><br/>".html_safe)
   end
 end

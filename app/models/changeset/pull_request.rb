@@ -4,22 +4,16 @@ class Changeset::PullRequest
   CODE_ONLY = "[A-Z][A-Z\\d]+-\\d+" # e.g., S4MS0N-123, SAM-456
   PUNCT = "\\s|\\p{Punct}|~|="
 
-  WEBHOOK_FILTER = /(^|\s)\[samson review\]($|\s)/i
-
-  # Matches a markdown section heading named "Risks".
-  RISKS_SECTION = /^\s*#*\s*Risks?\s*#*\s*\n(?:\s*[-=]*\s*\n)?/i
-
-  # Matches a markdown section heading
-  SECTION_HEADING = /^\s*#*\s*\w+.*\n(?:\s*[-=]*\s*\n)?/i
+  WEBHOOK_FILTER = /(^|\s)\[samson review\]($|\s)/i.freeze
 
   # Matches URLs to JIRA issues.
-  JIRA_ISSUE_URL = %r[https?:\/\/[\da-z\.\-]+\.[a-z\.]{2,6}\/browse\/#{CODE_ONLY}(?=#{PUNCT}|$)]
+  JIRA_ISSUE_URL = %r[https?:\/\/[\da-z\.\-]+\.[a-z\.]{2,6}\/browse\/#{CODE_ONLY}(?=#{PUNCT}|$)].freeze
 
   # Matches "VOICE-1234" or "[VOICE-1234]"
-  JIRA_CODE_TITLE = /(\[)*(#{CODE_ONLY})(\])*/
+  JIRA_CODE_TITLE = /(\[)*(#{CODE_ONLY})(\])*/.freeze
 
   # Matches "VOICE-1234" only
-  JIRA_CODE = /(?<=#{PUNCT}|^)(#{CODE_ONLY})(?=#{PUNCT}|$)/
+  JIRA_CODE = /(?<=#{PUNCT}|^)(#{CODE_ONLY})(?=#{PUNCT}|$)/.freeze
 
   # Github pull request events can be triggered by a number of actions such as 'labeled', 'assigned'
   # Actions which aren't related to a code push should not trigger a samson deploy.
@@ -104,6 +98,10 @@ class Changeset::PullRequest
     users.compact.map { |user| Changeset::GithubUser.new(user) }.uniq
   end
 
+  def created_at
+    @data['created_at']
+  end
+
   def risky?
     risks.present?
   end
@@ -111,8 +109,14 @@ class Changeset::PullRequest
   def risks
     return @risks if defined?(@risks)
     @risks = parse_risks(@data.body.to_s)
-    @risks = nil if @risks =~ /\A\s*\-?\s*None\Z/i
+    @missing_risks = @risks.nil?
+    @risks = nil if @risks&.match?(/\A\s*\-?\s*None\Z/i)
     @risks
+  end
+
+  def missing_risks?
+    risks
+    @missing_risks
   end
 
   def jira_issues
@@ -129,8 +133,17 @@ class Changeset::PullRequest
 
   private
 
+  def section_content(section_title, text)
+    desired_header_regexp = "^(?:\\s*#+\\s*#{section_title}.*|\\s*#{section_title}.*\\n\\s*(?:-{2,}|={2,}))\\n"
+    content_regexp = '([\W\w]*?)' # capture all section content, including new lines
+    next_header_regexp = '(?=^(?:\s*#+|.*\n\s*(?:-{2,}|={2,}\s*\n))|\z)'
+
+    text[/#{desired_header_regexp}#{content_regexp}#{next_header_regexp}/i, 1]
+  end
+
   def parse_risks(body)
-    body.to_s.split(RISKS_SECTION, 2)[1].to_s.strip.split(SECTION_HEADING).first.to_s.strip.presence
+    body_stripped = ActionController::Base.helpers.strip_tags(body)
+    section_content('Risks', body_stripped).to_s.strip.presence
   end
 
   def parse_jira_issues

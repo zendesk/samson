@@ -12,7 +12,7 @@ class ReleasesController < ApplicationController
 
   def index
     @stages = @project.stages
-    @releases = @project.releases.order(id: :desc).page(page)
+    @pagy, @releases = pagy(@project.releases.order(id: :desc), page: params[:page], items: 15)
   end
 
   def new
@@ -25,7 +25,7 @@ class ReleasesController < ApplicationController
     if @release.persisted?
       redirect_to [@project, @release]
     else
-      flash[:error] = @release.errors.full_messages.to_sentence
+      flash[:alert] = @release.errors.full_messages.to_sentence
       render action: :new
     end
   end

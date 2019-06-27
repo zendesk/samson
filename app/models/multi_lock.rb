@@ -4,7 +4,7 @@ class MultiLock
   cattr_accessor(:locks) { {} }
 
   class << self
-    include ::NewRelic::Agent::MethodTracer
+    extend ::Samson::PerformanceTracer::Tracers
 
     def lock(id, holder, options)
       locked = wait_for_lock(id, holder, options)
@@ -25,7 +25,7 @@ class MultiLock
       end
       false
     end
-    add_method_tracer :wait_for_lock
+    add_tracer :wait_for_lock
 
     def try_lock(id, holder)
       mutex.synchronize do

@@ -6,7 +6,7 @@ SingleCov.covered!
 describe GcloudController do
   with_env GCLOUD_ACCOUNT: "foo", GCLOUD_PROJECT: "bar"
 
-  as_a_viewer do
+  as_a :viewer do
     describe "#sync_build" do
       def do_sync
         post :sync_build, params: {id: build.id}
@@ -49,6 +49,19 @@ describe GcloudController do
         Samson::CommandExecutor.expects(:execute).returns([false, result.to_json])
         do_sync
         assert flash[:alert]
+      end
+
+      describe "with invalid image name" do
+        let(:image_name) { "gcr.io/foo*baz+bing/#{build.image_name}" }
+
+        it "fails when digest does not pass validations" do
+          Samson::CommandExecutor.expects(:execute).returns([true, result.to_json])
+
+          do_sync
+
+          assert flash[:alert]
+          build.reload.docker_repo_digest.wont_equal repo_digest
+        end
       end
 
       it "fails when image is not found" do

@@ -17,7 +17,7 @@ Samson::Application.configure do
   # We don't need assets in test, so no need to compile/serve them
   config.public_file_server.enabled = false
   config.assets.compile = !!ENV['PRECOMPILE']
-  config.public_file_server.headers = { 'Cache-Control' => 'public, max-age=3600' }
+  config.public_file_server.headers = {'Cache-Control' => 'public, max-age=3600'}
 
   # Show full error reports and disable caching.
   config.consider_all_requests_local       = true

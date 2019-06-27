@@ -15,7 +15,7 @@ module Kubernetes
     end
 
     def self.log(message, extra_info = {})
-      msg_log = { message: message }.merge(extra_info).to_json
+      msg_log = {message: message}.merge(extra_info).to_json
       Rails.logger.info(msg_log)
     end
   end

@@ -38,6 +38,15 @@ describe ApplicationHelper do
     end
   end
 
+  describe "#github_user_avatar" do
+    it "renders an avatar for a Github user" do
+      user = stub(login: "willy_wonka", avatar_url: "http://wonka.com/me.gif")
+      html = github_user_avatar(user)
+
+      html.must_include %(title="willy_wonka")
+    end
+  end
+
   describe "#autolink" do
     it "converts urls with hash to links" do
       result = autolink("foo http://bar.com#123 baz")
@@ -103,10 +112,21 @@ describe ApplicationHelper do
       assert_includes link, %(href="/projects/#{project.to_param}/deploys/#{deploy.id}")
     end
 
-    it "shows direct link when stage is direct" do
-      stage.stubs(direct?: true)
-      link.must_include ">Deploy!<"
-      link.must_include "btn-warning"
+    describe "direct stage" do
+      before { stage.stubs(direct?: true) }
+
+      it "shows direct link when stage is direct" do
+        link.must_include ">Deploy<"
+        link.must_include "master"
+        link.must_include "btn-warning"
+      end
+
+      it "shows direct link with default ref if set" do
+        stage.update_column(:default_reference, 'foobar')
+        link.must_include ">Deploy<"
+        link.must_include "foobar"
+        link.must_include "btn-warning"
+      end
     end
 
     describe "when stage can run in parallel" do
@@ -126,7 +146,7 @@ describe ApplicationHelper do
   end
 
   describe "#sortable" do
-    let(:url_options) { { controller: 'ping', action: 'show' } }
+    let(:url_options) { {controller: 'ping', action: 'show'} }
 
     it "builds a link" do
       sortable("foo").must_equal "<a href=\"/ping?direction=asc&amp;sort=foo\">Foo</a>"
@@ -146,48 +166,6 @@ describe ApplicationHelper do
       params[:direction] = "asc"
       params[:sort] = "bar"
       sortable("foo").must_equal "<a href=\"/ping?direction=asc&amp;sort=foo\">Foo</a>"
-    end
-  end
-
-  describe "#github_ok?" do
-    let(:status_url) { "#{Rails.application.config.samson.github.status_url}/api/status.json" }
-
-    it "returns cached true" do
-      Rails.cache.write(github_status_cache_key, true)
-      assert github_ok?
-    end
-
-    it "returns cached false" do
-      Rails.cache.write(github_status_cache_key, false)
-      refute github_ok?
-    end
-
-    it "caches good response" do
-      assert_request(:get, status_url, to_return: {body: {status: 'good'}.to_json}) do
-        assert github_ok?
-        Rails.cache.read(github_status_cache_key).must_equal true
-      end
-    end
-
-    it "caches bad response" do
-      assert_request(:get, status_url, to_return: {body: {status: 'bad'}.to_json}) do
-        refute github_ok?
-        Rails.cache.read(github_status_cache_key).must_equal false
-      end
-    end
-
-    it "caches invalid response" do
-      assert_request(:get, status_url, to_return: {status: 400}) do
-        refute github_ok?
-        Rails.cache.read(github_status_cache_key).must_equal false
-      end
-    end
-
-    it "caches timeout" do
-      assert_request(:get, status_url, to_timeout: []) do
-        refute github_ok?
-        Rails.cache.read(github_status_cache_key).must_equal false
-      end
     end
   end
 
@@ -232,6 +210,10 @@ describe ApplicationHelper do
       breadcrumb(deploy_group).must_equal "<ul class=\"breadcrumb\"><li class=\"\"><a href=\"/\">Home</a></li><li class=\"active\">Pod1</li></ul>"
     end
 
+    it "renders activerecord classes" do
+      breadcrumb(DeployGroup).must_equal "<ul class=\"breadcrumb\"><li class=\"\"><a href=\"/\">Home</a></li><li class=\"active\">DeployGroups</li></ul>"
+    end
+
     it "renders multiple breadcrumbs" do
       breadcrumb(project, stage, "stuff").must_equal "<ul class=\"breadcrumb\"><li class=\"\"><a href=\"/\">Home</a></li><li class=\"\"><a href=\"/projects/foo\">Foo</a></li><li class=\"\"><a href=\"/projects/foo/stages/staging\">Staging</a></li><li class=\"active\">stuff</li></ul>"
     end
@@ -257,9 +239,9 @@ describe ApplicationHelper do
       flash_messages.must_equal []
     end
 
-    it "returns unknown" do
+    it "fails on unknown" do
       flash[:foo] = "bar"
-      flash_messages.must_equal [[:foo, :info, "bar"]]
+      assert_raises(KeyError) { flash_messages }
     end
 
     it "translates bootstrap classes" do
@@ -279,14 +261,22 @@ describe ApplicationHelper do
     end
 
     it "shows common message for paths" do
-      link_to_delete("/foo").must_include "Are you sure ?"
+      link_to_delete("/foo").must_include "Really delete ?"
     end
 
-    it "shows detailed message for resource" do
-      link_to_delete([projects(:test), stages(:test_staging)]).must_include "Delete this Stage ?"
+    it "shows detailed message for resource given as array" do
+      link = link_to_delete([projects(:test), stages(:test_staging)])
+      link.must_include "Delete this Stage ?"
+      link.must_include "/projects/foo/stages/staging"
     end
 
-    it "builds a hint for when disabled" do
+    it "can link directly to a resource" do
+      link = link_to_delete(stages(:test_staging))
+      link.must_include "Delete Stage Staging ?"
+      link.must_include "/projects/foo/stages/staging"
+    end
+
+    it "builds a hint when disabled" do
       link_to_delete("/foo", disabled: "Foo").must_equal(
         "<span title=\"Foo\" class=\"mouseover\">Delete</span>"
       )
@@ -301,16 +291,14 @@ describe ApplicationHelper do
 
     it "can ask a question" do
       link_to_delete("/foo", question: "Foo?").must_equal(
-        "<a data-confirm=\"Foo?\" data-method=\"delete\" href=\"/foo\">Delete</a>"
+        "<a data-method=\"delete\" data-confirm=\"Foo?\" href=\"/foo\">Delete</a>"
       )
     end
-  end
 
-  describe "#link_to_delete_button" do
-    it "builds a button" do
-      result = link_to_delete_button("/foo")
-      result.must_include "Delete"
-      result.must_include "Delete"
+    it "can ask to type" do
+      link_to_delete("/foo", type_to_delete: true).must_equal(
+        "<a data-method=\"delete\" data-type-to-delete=\"Really delete ?\" href=\"/foo\">Delete</a>"
+      )
     end
   end
 
@@ -333,8 +321,13 @@ describe ApplicationHelper do
       link_to_resource(stages(:test_staging)).must_equal "<a href=\"/projects/foo/stages/staging\">Staging</a>"
     end
 
+    it "links to deploys" do
+      deploy = deploys(:succeeded_test)
+      link_to_resource(deploy).must_equal "<a href=\"/projects/foo/deploys/#{deploy.id}\">Deploy ##{deploy.id}</a>"
+    end
+
     it "links to environments" do
-      link_to_resource(environments(:production)).must_equal "<a href=\"/dashboards/production\">Production</a>"
+      link_to_resource(environments(:production)).must_equal "<a href=\"/environments/production\">Production</a>"
     end
 
     it "links to deploy_groups" do
@@ -369,6 +362,21 @@ describe ApplicationHelper do
       projects(:test).soft_delete!(validate: false)
       stage = stages(:test_staging)
       link_to_resource(stage).must_equal "Staging"
+    end
+  end
+
+  describe "#audited_classes" do
+    before_and_after { ApplicationHelper.class_variable_set(:@@audited_classes, nil) }
+
+    # we know this reaches inside because of coverage is 100%
+    it "works when in test" do
+      audited_classes
+    end
+
+    it "works when not in test" do
+      Rails.env.stubs(:test?).returns(false)
+      Rails.application.config.stubs(:eager_load).returns(true)
+      audited_classes
     end
   end
 
@@ -438,6 +446,11 @@ describe ApplicationHelper do
       additional_info(string).must_equal(
         %(<i class="glyphicon glyphicon-info-sign" data-content="&amp;lt;em&amp;gt;foo&amp;lt;/em&amp;gt;" data-html="true" #{always_attributes}></i>)
       )
+    end
+
+    it 'allows option overrides' do
+      expected_html = %(<i class="glyphicon glyphicon-alert barfoo" data-content="foo" #{always_attributes}></i>)
+      additional_info('foo', class: 'glyphicon glyphicon-alert barfoo').must_equal expected_html
     end
   end
 
@@ -594,20 +607,27 @@ describe ApplicationHelper do
   end
 
   describe "#paginate" do
-    include Kaminari::ActionViewExtension
+    include Pagy::Frontend
+    include Pagy::Backend
+
+    let(:request) { stub(script_name: "script", path: "path", GET: {}) }
 
     before { stubs(url_for: "foo") }
 
+    it "does not show nav for 1-page" do
+      paginate(pagy(User.where("1=2"), page: 1, items: 1).first).must_equal ""
+    end
+
     it "shows records for paginate" do
-      paginate(User.page(1).per(1)).must_include " #{User.count} records"
+      paginate(pagy(User, page: 1, items: 1).first).must_include " #{User.count} records"
     end
 
     it "does not show records for single-page" do
-      paginate(User.page(1).per(100)).wont_include " records"
+      paginate(pagy(User, page: 1, items: 100).first).wont_include " records"
     end
 
     it "does not show records for 0-page" do
-      paginate(User.where("1=2").page(1).per(1)).wont_include " records"
+      paginate(pagy(User.where("1=2"), page: 1, items: 1).first).wont_include " records"
     end
   end
 
@@ -615,19 +635,35 @@ describe ApplicationHelper do
     let(:items) { %w[foo bar baz] }
 
     it 'only shows `display_limit` records' do
-      tag = list_with_show_more(items, 2, content_tag(:li, 'More')) do |item|
-        content_tag(:li, item)
+      tag = unordered_list(items, display_limit: 2, show_more_tag: content_tag(:li, 'More')) do |item|
+        item
       end
 
       tag.must_equal '<ul><li>foo</li><li>bar</li><li>More</li></ul>'
     end
 
-    it 'passes through any HTML options' do
-      tag = list_with_show_more(items, 2, content_tag(:li, 'More'), class: 'show-more') do |item|
-        content_tag(:li, item)
+    it 'shows all records if there is no display limit' do
+      tag = unordered_list(items) do |item|
+        item
       end
 
-      tag.must_equal '<ul class="show-more"><li>foo</li><li>bar</li><li>More</li></ul>'
+      tag.must_equal '<ul><li>foo</li><li>bar</li><li>baz</li></ul>'
+    end
+
+    it 'passes through any HTML options' do
+      tag = unordered_list(
+        items,
+        display_limit: 2,
+        show_more_tag: content_tag(:li, 'More'),
+        ul_options: {class: 'show-more'},
+        li_options: {class: 'sparkles'}
+      ) do |item|
+        item
+      end
+
+      expected_html = '<ul class="show-more"><li class="sparkles">foo</li><li class="sparkles">bar</li>' \
+        '<li>More</li></ul>'
+      tag.must_equal expected_html
     end
   end
 
@@ -661,6 +697,11 @@ describe ApplicationHelper do
       html.must_equal "<i title=\"bar\" class=\"glyphicon glyphicon-foo\"></i>"
       assert html.html_safe?
     end
+
+    it "allows passing in custom CSS classes" do
+      html = icon_tag("foo", class: "yolo")
+      html.must_equal "<i class=\"glyphicon glyphicon-foo yolo\"></i>"
+    end
   end
 
   describe "#deployed_or_running_list" do
@@ -693,6 +734,32 @@ describe ApplicationHelper do
       deploys(:succeeded_test).job.update_column(:status, 'running')
       html = deployed_or_running_list(stage_list, "staging")
       html.must_equal "<span class=\"label label-warning release-stage\">Staging</span> "
+    end
+  end
+
+  describe "#check_box_section" do
+    let(:project) { projects(:test) }
+    it 'creates a section of checkboxes from a collection' do
+      project.stages.each_with_index { |s, i| s.stubs(:id).returns(i) }
+
+      expected_result = <<~HTML.gsub /^\s+|\n/, ""
+        <fieldset>
+          <legend>Project Stages</legend>
+          <p class="col-lg-offset-2">Pick some of them stages!</p>
+          <div class="col-lg-4 col-lg-offset-2">
+            <input type="hidden" name="project[stages][]" value="" />
+            <input type="checkbox" value="0" name="project[stages][]" id="project_stages_0" /> <label for="project_stages_0">Staging</label>
+            <br />
+            <input type="checkbox" value="1" name="project[stages][]" id="project_stages_1" /> <label for="project_stages_1">Production</label>
+            <br />
+            <input type="checkbox" value="2" name="project[stages][]" id="project_stages_2" /> <label for="project_stages_2">Production Pod</label>
+            <br />
+          </div>
+        </fieldset>
+      HTML
+
+      result = check_box_section 'Project Stages', 'Pick some of them stages!', :project, :stages, project.stages
+      result.must_equal expected_result
     end
   end
 end

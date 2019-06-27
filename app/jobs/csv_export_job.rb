@@ -35,22 +35,12 @@ class CsvExportJob
     csv_export.delete_file
     csv_export.status! :failed
     Rails.logger.error("Export #{csv_export.id} failed with error #{e}")
-    Airbrake.notify(e, error_message: "Export #{csv_export.id} failed.")
+    Samson::ErrorNotifier.notify(e, error_message: "Export #{csv_export.id} failed.")
   end
 
   # Helper method to removes the default soft_deletion scope for these models for the report
   def remove_deleted_scope_and_create_report(csv_export)
-    Deploy.with_deleted do
-      Stage.with_deleted do
-        Project.with_deleted do
-          DeployGroup.with_deleted do
-            Environment.with_deleted do
-              deploy_csv_export(csv_export)
-            end
-          end
-        end
-      end
-    end
+    with_deleted { deploy_csv_export(csv_export) }
   end
 
   def deploy_csv_export(csv_export)
@@ -72,7 +62,7 @@ class CsvExportJob
   end
 
   def filter_deploys(filter)
-    if filter.keys.include?('environments.production')
+    if filter.key?('environments.production')
       production_value = filter.delete('environments.production')
       # To match logic of stages.production? True when any deploy_group environment is true or
       # deploy_groups environment is empty and stages is true
@@ -100,5 +90,17 @@ class CsvExportJob
 
   def create_export_folder(csv_export)
     FileUtils.mkdir_p(File.dirname(csv_export.path_file))
+  end
+
+  def with_deleted(&block)
+    Deploy.with_deleted do
+      Stage.with_deleted do
+        Project.with_deleted do
+          DeployGroup.with_deleted do
+            Environment.with_deleted &block
+          end
+        end
+      end
+    end
   end
 end

@@ -1,0 +1,10 @@
+<fieldset>
+  <legend>Kubernetes</legend>
+  <%= form.input :kubernetes_rollout_timeout, input_html: {placeholder: Kubernetes::DeployExecutor::DEFAULT_ROLLOUT_TIMEOUT}, label: "Rollout timeout (seconds)" %>
+  <% if form.object.kubernetes_namespace %>
+    <%= form.input :kubernetes_namespace do %>
+      <%= link_to_resource form.object.kubernetes_namespace %>
+      <%= additional_info "Configured via 'Kubernetes Namespaces' under 'Manage'" %>
+    <% end %>
+  <% end %>
+</fieldset>

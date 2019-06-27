@@ -9,22 +9,21 @@
   <% if previous_stages.presence %>
     <div>
       The following stages will trigger this stage on completion:
-      <ul>
-        <% previous_stages.each do |stage| %>
-          <li><%= link_to stage.name, [@project, stage] %></li>
-        <% end %>
-      </ul>
+      <%= unordered_list previous_stages do |stage| %>
+        <%= link_to stage.name, [@project, stage] %>
+      <% end %>
     </div>
   <% end %>
 
   <% if next_stages.presence %>
     <div>
       After this stage finishes deploying it will deploy to:
-      <ul>
-        <% next_stages.each do |stage| %>
-          <li><%= link_to stage.name, [@project, stage] %></li>
+      <%= unordered_list next_stages do |stage| %>
+        <%= link_to stage.name, [@project, stage] %>  
+        <% if last_deploy = stage.last_deploy %> 
+          Last Deploy: <%= render_time last_deploy.start_time %> <%= status_badge last_deploy.status %>
         <% end %>
-      </ul>
+      <% end %>
     </div>
   <% end %>
 <% end %>

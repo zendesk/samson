@@ -1,11 +1,10 @@
 # frozen_string_literal: true
 class SecretsController < ApplicationController
-  ADD_MORE = 'Save and add another'
   UPDATEDABLE_ATTRIBUTES = [:value, :visible, :deprecated_at, :comment].freeze
 
   include CurrentProject
 
-  before_action :find_project_permalinks
+  before_action :find_writable_project_permalinks, only: [:new, :create, :show, :update]
   before_action :find_secret, only: [:update, :show]
 
   before_action :normalize_params_for_backend, only: [:update, :create, :new]
@@ -17,6 +16,7 @@ class SecretsController < ApplicationController
     end
 
     @keys = @secrets.map { |_, parts, _| parts.fetch(:key) }.uniq.sort
+    @project_permalinks = @secrets.map { |_, parts, _| parts.fetch(:project_permalink) }.uniq.sort
 
     Samson::Secrets::Manager::ID_PARTS.each do |part|
       if value = params.dig(:search, part).presence
@@ -34,8 +34,9 @@ class SecretsController < ApplicationController
       matching.delete(value_from) # do not show what we already know
       @secrets.select! { |id, _, _| matching.include?(id) }
     end
+    @pagy, @secrets = pagy_array(@secrets, page: params[:page], items: 50)
   rescue Samson::Secrets::BackendError => e
-    flash[:error] = e.message
+    flash[:alert] = e.message
     render html: "", layout: true
   end
 
@@ -44,6 +45,16 @@ class SecretsController < ApplicationController
       group_by { |_, v| v.fetch(:value_hashed) }.
       select { |_, v| v.size >= 2 }.
       sort_by { |_, v| -v.size }
+  end
+
+  def history
+    @history = Samson::Secrets::Manager.history(id, resolve: true)
+  end
+
+  def revert
+    version = params.require(:version)
+    Samson::Secrets::Manager.revert(id, to: version, user: current_user)
+    redirect_to secret_path(id), notice: "Reverted to #{version}!"
   end
 
   def new
@@ -106,11 +117,15 @@ class SecretsController < ApplicationController
   private
 
   def secret_params
-    @secret_params ||= params.require(:secret).permit(
-      *Samson::Secrets::Manager::ID_PARTS,
-      *UPDATEDABLE_ATTRIBUTES,
-      :allow_duplicates
-    )
+    @secret_params ||= begin
+      sent = params.require(:secret).permit(
+        *Samson::Secrets::Manager::ID_PARTS,
+        *UPDATEDABLE_ATTRIBUTES,
+        :allow_duplicates
+      )
+      sent[:value] = sent[:value].gsub("\r\n", "\n") if sent[:value]
+      sent
+    end
   end
 
   def id
@@ -128,7 +143,7 @@ class SecretsController < ApplicationController
 
   def successful_response(notice)
     flash[:notice] = notice
-    if params[:commit] == ADD_MORE
+    if params[:commit] == ResourceController::ADD_MORE
       redirect_to new_secret_path(secret: params[:secret].except(:value).to_unsafe_h)
     else
       redirect_to action: :index
@@ -136,7 +151,7 @@ class SecretsController < ApplicationController
   end
 
   def failure_response(message)
-    flash[:error] = message
+    flash[:alert] = message
     render :show
   end
 
@@ -145,8 +160,8 @@ class SecretsController < ApplicationController
     @secret[:value] = nil unless @secret.fetch(:visible)
   end
 
-  def find_project_permalinks
-    @project_permalinks = Samson::Secrets::Manager.allowed_project_prefixes(current_user)
+  def find_writable_project_permalinks
+    @writable_project_permalinks = Samson::Secrets::Manager.allowed_project_prefixes(current_user)
   end
 
   def require_project
@@ -172,6 +187,6 @@ class SecretsController < ApplicationController
   # @override CurrentUser since we need to allow any user to see new since we do not yet
   # know what project they want to create for
   def resource_action
-    ["new", "duplicates"].include?(action_name) ? :read : super
+    ["new", "duplicates", "history"].include?(action_name) ? :read : super
   end
 end

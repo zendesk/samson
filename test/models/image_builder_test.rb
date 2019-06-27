@@ -4,8 +4,8 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe ImageBuilder do
-  let(:output) { executor.output.to_s }
-  let(:executor) { TerminalExecutor.new(OutputBuffer.new, verbose: true) } # the job executor is verbose
+  let(:output) { executor.output.messages }
+  let(:executor) { TerminalExecutor.new(OutputBuffer.new, verbose: true, project: project) } # verbose
   let(:project) { projects(:test) }
   let(:build) { project.builds.create!(git_ref: 'v123', git_sha: 'a' * 40, creator: users(:admin)) }
   let(:image_id) { '2d2b0b3204b0166435c3d96d0b27d0ad2083e5e040192632c58eeb9491d6bfaa' }
@@ -68,17 +68,28 @@ describe ImageBuilder do
       end
     end
 
+    it "can build without tag" do
+      executor.expects(:execute).with do |*commands|
+        commands.to_s.must_include "docker build -f Dockerfile . --cache-from cache"
+      end.returns(true)
+      refute call(tag: nil)
+    end
+
+    it "fails when build fails" do
+      executor.expects(:execute).returns(false)
+      refute call
+    end
+
     describe "when building the image worked" do
-      def expect_removal(result)
-        Docker::Image.expects(:get).with(image_id).returns(docker_image)
-        docker_image.expects(:remove).with(force: true).returns(result)
+      def expect_removal
+        TerminalExecutor.any_instance.expects(:execute).with("docker rmi -f #{image_id}")
       end
 
       before { ImageBuilder.expects(:build_image_locally).returns(image_id) }
 
-      it "does not fail when build removal fails" do
+      it "removes when succeeded" do
         ImageBuilder.expects(:push_image).returns(digest)
-        expect_removal false
+        expect_removal
         call.must_equal digest
       end
 
@@ -91,7 +102,7 @@ describe ImageBuilder do
 
       it "removes build even when pushing failed" do
         ImageBuilder.expects(:push_image).raises
-        expect_removal true
+        expect_removal
         assert_raises { call }
       end
     end
@@ -157,6 +168,15 @@ describe ImageBuilder do
       end
     end
 
+    it "does not copy when config file does not exist" do
+      with_env DOCKER_CONFIG: '.' do
+        ImageBuilder.send(:local_docker_login) do |commands|
+          dir = commands.first[/DOCKER_CONFIG=(.*)/, 1]
+          refute File.exist?("#{dir}/config.json")
+        end
+      end
+    end
+
     it "copies previous config files from HOME location" do
       Dir.mkdir(".docker")
       File.write(".docker/config.json", "hello")
@@ -216,18 +236,12 @@ describe ImageBuilder do
       output.must_include 'Frobinating...'
     end
 
-    it 'rescues docker error' do
-      ImageBuilder.expects(:push_image_to_registries).raises(Docker::Error::DockerError)
-      refute call, output
-      output.to_s.must_include "Docker push failed: Docker::Error::DockerError"
-    end
-
     it 'fails when digest cannot be found' do
       assert push_output.reject! { |e| e =~ /Digest/ }
       stub_push primary_repo, tag, true
 
       refute call, output
-      output.to_s.must_include "Docker push failed: Unable to get repo digest"
+      output.must_include "Docker push failed: Unable to get repo digest"
     end
 
     describe "with secondary registry" do

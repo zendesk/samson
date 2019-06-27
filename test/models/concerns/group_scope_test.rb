@@ -37,54 +37,54 @@ describe GroupScope do
   describe "#priority" do
     it "fails on bad references" do
       e = assert_raises RuntimeError do
-        EnvironmentVariable.new(scope_type: 'Foo', scope_id: 123).send(:priority)
+        EnvironmentVariable.new(scope_type: 'Foo', scope_id: 123).priority
       end
       e.message.must_equal "Unsupported scope Foo"
     end
 
     it "is higher with project" do
-      EnvironmentVariable.new(parent_type: 'Project').send(:priority).must_equal [0, 2]
+      EnvironmentVariable.new(parent_type: 'Project').priority.must_equal [2, 2]
     end
 
     it "is lower without project" do
-      EnvironmentVariable.new.send(:priority).must_equal [1, 2]
+      EnvironmentVariable.new.priority.must_equal [999, 2]
     end
 
     it "is higher with deploy group" do
-      EnvironmentVariable.new(scope_type: 'DeployGroup').send(:priority).must_equal [1, 0]
+      EnvironmentVariable.new(scope_type: 'DeployGroup').priority.must_equal [999, 0]
     end
 
     it "is lower with environment" do
-      EnvironmentVariable.new(scope_type: 'Environment').send(:priority).must_equal [1, 1]
+      EnvironmentVariable.new(scope_type: 'Environment').priority.must_equal [999, 1]
     end
   end
 
   describe ".matches_scope?" do
     it "fails on bad references" do
       e = assert_raises RuntimeError do
-        EnvironmentVariable.new(scope_type: 'Foo', scope_id: 123).send(:matches_scope?, deploy_groups(:pod1))
+        EnvironmentVariable.new(scope_type: 'Foo', scope_id: 123).matches_scope?(deploy_groups(:pod1))
       end
       e.message.must_equal "Unsupported scope Foo"
     end
 
     it "does not match nothing" do
-      refute EnvironmentVariable.new(scope_type: 'Foo', scope_id: 123).send(:matches_scope?, nil)
+      refute EnvironmentVariable.new(scope_type: 'Foo', scope_id: 123).matches_scope?(nil)
     end
 
     it "matches without scope" do
-      assert EnvironmentVariable.new.send(:matches_scope?, deploy_group)
+      assert EnvironmentVariable.new.matches_scope?(deploy_group)
     end
 
     it "matches exact" do
-      assert EnvironmentVariable.new(scope: deploy_group).send(:matches_scope?, deploy_group)
+      assert EnvironmentVariable.new(scope: deploy_group).matches_scope?(deploy_group)
     end
 
     it "matches environment" do
-      assert EnvironmentVariable.new(scope: deploy_group.environment).send(:matches_scope?, deploy_group)
+      assert EnvironmentVariable.new(scope: deploy_group.environment).matches_scope?(deploy_group)
     end
 
     it "does not matche other" do
-      refute EnvironmentVariable.new(scope: deploy_groups(:pod1)).send(:matches_scope?, deploy_group)
+      refute EnvironmentVariable.new(scope: deploy_groups(:pod1)).matches_scope?(deploy_group)
     end
   end
 end

@@ -13,15 +13,28 @@ module Samson
       IMPORTANT_COLUMNS = [:visible, :deprecated_at, :comment, :creator_id, :updater_id].freeze
 
       class << self
-        def read(id)
+        def read(id, *args)
           return unless id
-          result = vault_action(:read, vault_path(id, :encode))
+          result = vault_action(:read, vault_path(id, :encode), *args)
           return if !result || result.data[:vault].nil?
 
           result = result.to_h
           result = result.merge(result.delete(:data))
           result[:value] = result.delete(:vault)
           result
+        end
+
+        # history with full versions
+        # see https://www.vaultproject.io/api/secret/kv/kv-v2.html#read-secret-metadata
+        def history(id, resolve: false)
+          return unless history = vault_action(:read_metadata, vault_path(id, :encode))
+          return history unless resolve
+          history.fetch(:versions).each do |version, metadata|
+            metadata.replace(metadata: metadata.dup)
+            next if metadata.dig(:metadata, :destroyed)
+            metadata.merge!(read(id, version))
+          end
+          history
         end
 
         def read_multi(ids)
@@ -61,9 +74,18 @@ module Samson
         end
 
         def ids
-          ids = vault_action(:list_recursive, "")
+          ids = vault_action(:list_recursive)
           ids.uniq! # we read from multiple backends that might have the same ids
-          ids.map! { |secret_path| vault_path(secret_path, :decode) }
+          ids.map! do |secret_path|
+            begin
+              vault_path(secret_path, :decode)
+            rescue ActiveRecord::RecordNotFound => e
+              Samson::ErrorNotifier.notify(e, notice: true)
+              nil
+            end
+          end
+          ids.compact!
+          ids
         end
 
         def deploy_groups
@@ -88,21 +110,21 @@ module Samson
           vault_action(:write, vault_path(id, :encode), important)
         end
 
-        def vault_action(method, path, *args)
-          vault_client.public_send(method, path, *args)
+        def vault_action(method, *args)
+          vault_client_manager.public_send(method, *args)
         rescue Vault::HTTPConnectionError => e
           raise Samson::Secrets::BackendError, "Error talking to vault backend: #{e.message}"
         end
 
-        def vault_client
-          Samson::Secrets::VaultClient.client
+        def vault_client_manager
+          Samson::Secrets::VaultClientManager.instance
         end
 
         # id is the last element and should not include directories
         def vault_path(id, direction)
           parts = id.split(DIRECTORY_SEPARATOR, ID_SEGMENTS)
-          raise ActiveRecord::RecordNotFound, "Invalid id #{id.inspect}" unless last = parts[ID_SEGMENTS - 1]
-          convert_path!(last, direction)
+          raise ActiveRecord::RecordNotFound, "Invalid id #{id.inspect}" unless parts.size == ID_SEGMENTS
+          convert_path!(parts.last, direction)
           parts.join(DIRECTORY_SEPARATOR)
         end
 

@@ -7,7 +7,8 @@ class ReleaseService
   def release(attrs = {})
     release = @project.releases.create(attrs)
     if release.persisted?
-      push_tag_to_git_repository(release)
+      push_tag_to_git_repository(release.version, release.commit)
+      ensure_tag_in_git_repository(release.version)
       start_deploys(release)
     end
     release
@@ -21,8 +22,16 @@ class ReleaseService
 
   private
 
-  def push_tag_to_git_repository(release)
-    GITHUB.create_release(@project.repository_path, release.version, target_commitish: release.commit)
+  def push_tag_to_git_repository(version, commit)
+    GITHUB.create_release(@project.repository_path, version, target_commitish: commit)
+  end
+
+  def ensure_tag_in_git_repository(tag)
+    tries = Integer(ENV["RELEASE_TAG_IN_REPO_RETRIES"] || 4)
+    Samson::Retry.until_result tries: tries, wait_time: 1, error: "Unable to find ref" do
+      @project.repository.update_mirror
+      @project.repository.commit_from_ref(tag)
+    end
   end
 
   def start_deploys(release)

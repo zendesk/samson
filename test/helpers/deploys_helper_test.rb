@@ -5,6 +5,7 @@ SingleCov.covered!
 
 describe DeploysHelper do
   include StatusHelper
+  include ApplicationHelper
 
   let(:deploy) { deploys(:succeeded_test) }
 
@@ -53,7 +54,10 @@ describe DeploysHelper do
       end
 
       it "renders buddy check when waiting for buddy" do
-        stub_github_api "repos/bar/foo/commits/staging/status", state: "success", statuses: {}
+        stub_github_api "repos/bar/foo/commits/staging/status", state: "success", statuses: []
+        stub_github_api "repos/bar/foo/commits/staging/check-suites", check_suites: []
+        stub_github_api "repos/bar/foo/commits/staging/check-runs", check_runs: []
+
         deploy.expects(:waiting_for_buddy?).returns(true)
         result.wont_include output
         result.must_include 'This deploy requires a buddy.'
@@ -65,7 +69,7 @@ describe DeploysHelper do
     it "renders" do
       @deploy = deploy
       @project = projects(:test)
-      deploy_page_title.must_equal "Staging deploy (succeeded) - Foo"
+      deploy_page_title.must_equal "Staging deploy - Foo"
     end
   end
 
@@ -127,14 +131,8 @@ describe DeploysHelper do
           stub(url: 'barurl', login: 'bar"<script>login', avatar_url: 'baravatar'),
         ]
       )
-      result.must_equal(
-        "<a title=\"foologin\" href=\"foourl\">" \
-          "<img width=\"20\" height=\"20\" src=\"/images/fooavatar\" alt=\"Fooavatar\" />" \
-        "</a> " \
-        "<a title=\"bar&quot;&lt;script&gt;login\" href=\"barurl\">" \
-          "<img width=\"20\" height=\"20\" src=\"/images/baravatar\" alt=\"Baravatar\" />" \
-        "</a>"
-      )
+      result.must_include %(title="foologin")
+      result.must_include %(title="bar&quot;&lt;script&gt;login")
       result.html_safe?.must_equal true
     end
 
@@ -144,7 +142,7 @@ describe DeploysHelper do
   end
 
   describe "#redeploy_button" do
-    let(:redeploy_warning) { "Why? This deploy succeeded." }
+    let(:redeploy_warning) { "Previous deploy succeeded." }
 
     before do
       @deploy = deploy
@@ -154,9 +152,12 @@ describe DeploysHelper do
     it "generates a link" do
       link = redeploy_button
       link.must_include redeploy_warning # warns about redeploying
-      link.must_include "?deploy%5Bkubernetes_reuse_build%5D=false" \
-        "&amp;deploy%5Bkubernetes_rollback%5D=true&amp;deploy%5Breference%5D=staging\"" # copies params
-      link.must_include "Redeploy"
+      link.must_include(
+        "deploy%5Bkubernetes_reuse_build%5D=false" \
+        "&amp;deploy%5Bkubernetes_rollback%5D=true" \
+        "&amp;deploy%5Bredeploy_previous_when_failed" \
+        "%5D=false&amp;deploy" # copies params
+      )
     end
 
     it 'does not generate a link when deploy is active' do
@@ -183,6 +184,32 @@ describe DeploysHelper do
     it "builds with a job" do
       button = cancel_button(deploy: deploy.job, project: deploy.project)
       button.must_include ">Cancel<"
+    end
+
+    it "raises an exception if the deploy is nil" do
+      -> { cancel_button(deploy: nil, project: deploy.project) }.must_raise RuntimeError
+    end
+
+    it "raises an exception if the project is nil" do
+      -> { cancel_button(deploy: deploy.job, project: nil) }.must_raise RuntimeError
+    end
+  end
+
+  describe "#favicon" do
+    it 'returns pending favicon if deploy is active' do
+      deploy.job = jobs(:running_test)
+
+      deploy_favicon_path(deploy).must_equal "/images/favicons/32x32_yellow.png"
+    end
+
+    it 'returns succeeded favicon if deploy was succeeded' do
+      deploy_favicon_path(deploy).must_equal "/images/favicons/32x32_green.png"
+    end
+
+    it 'returns failed favicon if deploy failed' do
+      deploy.job = jobs(:failed_test)
+
+      deploy_favicon_path(deploy).must_equal "/images/favicons/32x32_red.png"
     end
   end
 end

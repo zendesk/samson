@@ -13,10 +13,10 @@
 <div class="admin-actions">
   <% if current_user.admin? %>
     <div class="pull-right">
-      <%= render "locks/button", lock: global_lock, resource: nil, prefix: "Global " %>
+      <%= render "locks/button", lock: global_locks.first, resource: nil, prefix: "Global " %>
       <%= link_to "New", new_project_path, class: "btn btn-default" %>
     </div>
   <% end %>
 
-  <%= paginate @projects %>
+  <%= paginate @pagy %>
 </div>

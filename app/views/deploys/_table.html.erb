@@ -21,5 +21,5 @@
     <%= render partial: "deploys/deploy", collection: @deploys %>
     </tbody>
   </table>
-  <%= paginate @deploys if @deploys.respond_to?(:total_pages) %>
+  <%= paginate @pagy if @pagy %>
 </div>

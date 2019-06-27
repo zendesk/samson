@@ -2,16 +2,17 @@
 require 'uri'
 
 smtp_url = URI.parse(ENV["SMTP_URL"] || "smtp://localhost")
-smtp_url.port ||= 25
-smtp_url.user ||= ENV["SMTP_USER"]
-smtp_url.password ||= ENV["SMTP_PASSWORD"]
+port = smtp_url.port || 25
+user = smtp_url.user || ENV["SMTP_USER"]
+password = smtp_url.password || ENV["SMTP_PASSWORD"]
+enable_starttls_auto = ENV["SMTP_ENABLE_STARTTLS_AUTO"] || false
 
 ActionMailer::Base.smtp_settings = {
-  port:                 smtp_url.port,
   address:              smtp_url.host,
-  user_name:            smtp_url.user,
-  password:             smtp_url.password,
+  port:                 port,
+  user_name:            user,
+  password:             password,
   authentication:       'plain',
-  enable_starttls_auto: false,
+  enable_starttls_auto: enable_starttls_auto,
   openssl_verify_mode:  'none'
 }

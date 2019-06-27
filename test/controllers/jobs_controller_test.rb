@@ -10,7 +10,9 @@ describe JobsController do
   let(:job) { Job.create!(command: command, project: project, user: user) }
   let(:job_service) { stub(execute: nil) }
 
-  as_a_viewer do
+  as_a :viewer do
+    unauthorized :delete, :destroy, project_id: :foo, id: 1
+
     describe "#enabled" do
       it "is no_content when enabled" do
         JobQueue.expects(:enabled).returns true
@@ -26,7 +28,7 @@ describe JobsController do
     end
 
     describe "#index" do
-      before { get :index, params: {project_id: project.to_param } }
+      before { get :index, params: {project_id: project.to_param} }
 
       it "renders the template" do
         assert_template :index
@@ -34,20 +36,14 @@ describe JobsController do
     end
 
     describe "#show" do
-      describe 'with a job' do
-        before { get :show, params: {project_id: project.to_param, id: job } }
-
-        it "renders the template" do
-          assert_template :show
-        end
+      it "renders pending" do
+        get :show, params: {project_id: project.to_param, id: job}
+        assert_template :show
       end
 
-      describe 'with a running job' do
-        before { get :show, params: {project_id: project.to_param, id: jobs(:running_test) } }
-
-        it "renders the template" do
-          assert_template :show
-        end
+      it "renders running job" do
+        get :show, params: {project_id: project.to_param, id: jobs(:running_test)}
+        assert_template :show
       end
 
       it "fails with unknown job" do
@@ -56,35 +52,34 @@ describe JobsController do
         end
       end
 
-      describe "with format .text" do
-        before { get :show, params: {format: :text, project_id: project.to_param, id: job } }
+      it "renders logs when requesting text" do
+        get :show, params: {project_id: project.to_param, id: job}, format: :text
+        response.content_type.must_equal "text/plain"
+        response.header["Content-Disposition"].must_match /\.log"$/
+      end
 
-        it "responds with a plain text file" do
-          assert_equal response.content_type, "text/plain"
+      describe "header" do
+        it "renders headers for jobs" do
+          get :show, params: {project_id: project.to_param, id: job, header: true}
+          response.body.must_include "Viewer is about to execute"
+          response.body.wont_include "<html"
         end
 
-        it "responds with a .log file" do
-          assert response.header["Content-Disposition"] =~ /\.log"$/
+        it "renders headers for jobs with deploys" do
+          get :show, params: {project_id: project.to_param, id: jobs(:succeeded_test), header: true}
+          response.body.must_include "Foo - Deploy"
+          response.body.wont_include "<html"
         end
       end
     end
-
-    unauthorized :delete, :destroy, project_id: :foo, id: 1
   end
 
-  as_a_project_deployer do
+  as_a :project_deployer do
     describe "#destroy" do
       it "deletes the job" do
         delete :destroy, params: {project_id: project.to_param, id: job}
         assert_redirected_to [project, job]
         flash[:notice].must_equal 'Cancelled!'
-      end
-
-      it "is unauthorized when not allowed" do
-        job.update_column(:user_id, users(:admin).id)
-        delete :destroy, params: {project_id: project.to_param, id: job}
-        assert_redirected_to [project, job]
-        flash[:error].must_equal "You are not allowed to cancel this job."
       end
 
       it "redirects to passed path" do

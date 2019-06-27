@@ -13,7 +13,15 @@ class EnvironmentVariableGroup < ActiveRecord::Base
   default_scope -> { order(:name) }
 
   has_many :project_environment_variable_groups, dependent: :destroy
-  has_many :projects, through: :project_environment_variable_groups
+  has_many :projects, through: :project_environment_variable_groups, inverse_of: :environment_variable_groups
 
   validates :name, presence: true
+
+  def variable_names
+    environment_variables.sort_by(&:id).map(&:name).uniq
+  end
+
+  def as_json(methods: [], **options)
+    super({methods: [:variable_names] + methods}.merge(options))
+  end
 end

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../../test_helper'
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 4
 
 describe "JsonExceptions Integration" do
   describe "errors" do
@@ -33,6 +33,11 @@ describe "JsonExceptions Integration" do
     before { stub_session_auth }
 
     it "presents validation errors" do
+      # HACK: to deal with new controller implementation.
+      # Ideally refactor this test to decouple from production code and use dummy controller/model
+      lock_with_errors = Lock.new(warning: true, user: user)
+      refute lock_with_errors.valid?
+      Lock.any_instance.expects(:save!).raises(ActiveRecord::RecordInvalid.new(lock_with_errors))
       post '/locks.json', params: {lock: {warning: true}}, headers: headers
       assert_json 422, description: ["can't be blank"]
     end

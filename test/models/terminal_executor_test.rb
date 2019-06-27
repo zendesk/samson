@@ -5,7 +5,7 @@ SingleCov.covered!
 
 describe TerminalExecutor do
   let(:output) { StringIO.new }
-  subject { TerminalExecutor.new(output) }
+  subject { TerminalExecutor.new(output, project: projects(:test), cancel_timeout: 0.1) }
 
   before { freeze_time }
 
@@ -59,6 +59,14 @@ describe TerminalExecutor do
       end
     end
 
+    it "removes rbenv from PATH" do
+      with_env RBENV_DIR: 'XYZ', PATH: ENV["PATH"] + ":/foo/rbenv/versions/1.2.3/bin" do
+        subject.execute('env')
+        output.string.wont_include("RBENV_DIR")
+        output.string.wont_include("/rbenv/versions")
+      end
+    end
+
     it "keeps custom env vars from ENV_WHITELIST" do
       with_env ENV_WHITELIST: 'ABC, XYZ,ZZZ', XYZ: 'FOO', ZZZ: 'FOO' do
         subject.execute('env')
@@ -70,6 +78,11 @@ describe TerminalExecutor do
     it "preserves multibyte characters" do
       subject.execute(%(echo "#{"ß" * 400}"))
       output.string.must_equal("#{"ß" * 400}\r\n")
+    end
+
+    it "scrubs non-UTF8 characters" do
+      subject.execute("echo 'K\xB7}L\xE7#\xEC'")
+      output.string.must_equal "K�}L�#�\r\n"
     end
 
     it "ignores getpgid failures since they mean the program finished early" do
@@ -102,33 +115,56 @@ describe TerminalExecutor do
     end
 
     it "can timeout" do
-      with_config :deploy_timeout, 1 do
-        refute subject.execute('echo hello; sleep 10')
-      end
-      `ps -ef | grep "[s]leep 10"`.wont_include "sleep 10" # process got killed
-      output.string.must_equal("hello\r\nTimeout: execution took longer then 1s and was terminated\n")
-    end
-
-    it "can timeout via argument" do
       refute subject.execute('echo hello; sleep 10', timeout: 1)
       `ps -ef | grep "[s]leep 10"`.wont_include "sleep 10" # process got killed
       output.string.must_equal("hello\r\nTimeout: execution took longer then 1s and was terminated\n")
     end
 
     it "does not log cursor movement ... special output coming from docker builds" do
-      assert subject.execute("ruby -e 'puts \"Hello\\r\e[1B\\nWorld\\n\"'")
-      output.string.must_equal "Hello\rWorld\r\n"
+      assert subject.execute("ruby -e 'puts \"Hello\\r\e[1B\\nWorld\\n\e[1K\"'")
+      output.string.must_equal "Hello\rWorld\r\n\r\n"
     end
 
-    it "uses script-executor to avoid slowness on osx" do
-      RbConfig::CONFIG.expects(:[]).with("host_os").returns("darwin-foo")
-      PTY.expects(:spawn).with { |_, command, _| command.must_include("script-executor") }
-      TerminalExecutor.any_instance.expects(:record_pid)
-      subject.execute('echo "hi"')
+    it "fails quickly when trying to read from stdin" do
+      subject.execute("read line").must_equal false
+      output.string.must_equal ""
+    end
+
+    describe "script executor for mac" do
+      def stub_host(host)
+        RbConfig::CONFIG.expects(:[]).with("host_os").returns(host)
+      end
+
+      def assert_executor(host, script)
+        stub_host(host)
+        PTY.expects(:spawn).with do |_, command, _|
+          script ? command.must_include("script-executor") : command.wont_include("script-executor")
+          true
+        end.returns([StringIO.new, StringIO.new, 123])
+        TerminalExecutor.any_instance.expects(:record_pid)
+        subject.execute('echo "hi"')
+      end
+
+      it "uses regular executor on linux" do
+        assert_executor "ubuntu", false
+      end
+
+      it "uses script-executor to avoid slowness on osx" do
+        assert_executor "darwin-foo", true
+      end
+
+      it "works while switching directories" do
+        ["ubuntu", "darwin-foo"].each do |host|
+          stub_host host
+          Dir.chdir "/tmp" do
+            assert subject.execute('echo "hi"')
+          end
+        end
+      end
     end
 
     describe 'in verbose mode' do
-      subject { TerminalExecutor.new(output, verbose: true) }
+      subject { TerminalExecutor.new(output, verbose: true, project: projects(:test)) }
 
       before { freeze_time }
 
@@ -141,6 +177,13 @@ describe TerminalExecutor do
       it 'does not print subcommands' do
         subject.execute('sh -c "echo 111"')
         output.string.must_equal("» sh -c \"echo 111\"\r\n111\r\n")
+      end
+
+      describe 'hidden env vars' do
+        it 'replaces hidden value with "HIDDEN", removes hidden prefix' do
+          subject.execute('echo "export MY_VAR=hidden://some_value"')
+          output.string.must_equal %(» echo "export MY_VAR=HIDDEN"\r\nexport MY_VAR=some_value\r\n)
+        end
       end
     end
 
@@ -207,7 +250,7 @@ describe TerminalExecutor do
       end
 
       it "cannot use specific secrets without a deploy" do
-        refute_resolves "global/#{deploy.project.permalink}/global/bar"
+        refute_resolves "global/global/#{deploy.stage.deploy_groups.first.permalink}/bar"
       end
 
       it "does not show secrets in verbose mode" do
@@ -221,33 +264,55 @@ describe TerminalExecutor do
         output.string.must_equal \
           "» export SECRET='secret://baz'; echo $SECRET\r\n#{secret.value}\r\n"
       end
+
+      it "escapes secret value with special characters" do
+        freeze_time
+
+        id = 'global/global/global/baz'
+        secret = create_secret(id, value: 'before; echo "after!"')
+        # author forgot to quote the export declaration to expose the raw content of the variable
+        subject.execute("export SECRET=secret://baz; echo $SECRET")
+        output.string.must_equal "#{secret.value}\r\n"
+      end
+    end
+
+    describe 'cancel' do
+      let(:sleep_command) { "sleep 100" }
+
+      def execute_and_cancel(command)
+        thread = Thread.new(subject) do |shell|
+          sleep(0.1) until shell.pgid
+          Thread.main.raise JobQueue::Cancel
+        end
+
+        assert_raises(JobQueue::Cancel) do
+          subject.execute(command)
+          thread.join
+        end
+
+        `ps -ef | grep #{sleep_command.shellescape} | grep -v grep`
+      end
+
+      it 'kills the execution' do
+        execute_and_cancel(sleep_command).must_equal ""
+      end
+
+      it 'terminates hanging processes with -9' do
+        execute_and_cancel("trap #{sleep_command.shellescape} 2; #{sleep_command}").must_equal ""
+      end
     end
   end
 
-  describe '#cancel' do
-    def execute_and_cancel(command, signal)
-      thread = Thread.new(subject) do |shell|
-        sleep(0.1) until shell.pgid
-        shell.cancel(signal)
-      end
-
-      result = subject.execute(command)
-      thread.join
-      result
+  describe "#kill" do
+    it "does not kill when dead" do
+      subject.expects(:system).never
+      subject.send(:kill, "INT")
     end
 
-    it 'properly kills the execution' do
-      execute_and_cancel('sleep 100', 'INT').must_be_nil
-    end
-
-    it 'terminates hanging processes with -9' do
-      execute_and_cancel('trap "sleep 100" 2; sleep 100', 'KILL').must_be_nil
-    end
-
-    it 'stops any further execution so current thread can finish' do
-      subject.execute('echo 1').must_equal true
-      subject.cancel 'INT'
-      subject.execute('echo 1').must_equal false
+    it "checks if it is still running" do # test-coverage for travis where the running check always succeeds
+      subject.instance_variable_set(:@pgid, 123)
+      subject.expects(:system).times(2).returns(true, false)
+      subject.send(:cancel, timeout: 1)
     end
   end
 

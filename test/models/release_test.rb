@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 2
 
 describe Release do
   let(:author) { users(:deployer) }
@@ -168,15 +168,15 @@ describe Release do
       assert release.contains_commit?(release.commit)
     end
 
-    it "is false on error and reports to airbrake" do
+    it "is false on error and reports to error notifier" do
       stub_github_api(url, {}, 400)
-      Airbrake.expects(:notify)
+      Samson::ErrorNotifier.expects(:notify)
       refute release.contains_commit?("NEW")
     end
 
-    it "returns false on 404 and does not report to airbrake since it is common" do
+    it "returns false on 404 and does not report to error notifier since it is common" do
       stub_github_api(url, {}, 404)
-      Airbrake.expects(:notify).never
+      Samson::ErrorNotifier.expects(:notify).never
       refute release.contains_commit?("NEW")
     end
   end

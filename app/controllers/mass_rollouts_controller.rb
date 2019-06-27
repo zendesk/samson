@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 class MassRolloutsController < ApplicationController
-  before_action :authorize_super_admin!
+  before_action :authorize_deployer!, except: [:new, :create, :merge, :destroy]
+  before_action :authorize_super_admin!, except: [:review_deploy, :deploy]
   before_action :deploy_group
 
   def new
@@ -9,34 +10,78 @@ class MassRolloutsController < ApplicationController
 
   # No more than one stage, per project, per deploy_group
   # Note: you can call this multiple times, and it will create missing stages, but no redundant stages.
+  # TODO: only create selected list like #deploy does
   def create
     stages_created = create_all_stages.compact
 
     redirect_to deploy_group, notice: "Created #{stages_created.length} Stages"
   end
 
+  def review_deploy
+    if stage_ids = params[:stage_ids]
+      @stages = Stage.find(stage_ids)
+    else
+      @stages = deploy_group.stages.to_a
+
+      case params[:status].presence
+      when nil # rubocop:disable Lint/EmptyWhen
+        # all
+      when 'succeeded'
+        @stages.select!(&:last_succeeded_deploy)
+      when 'missing'
+        @stages.reject!(&:last_succeeded_deploy)
+      else
+        return unsupported_option(:status)
+      end
+
+      case params[:kubernetes].to_s.presence
+      when nil # rubocop:disable Lint/EmptyWhen
+        # all
+      when 'true'
+        @stages.select!(&:kubernetes?)
+      when 'false'
+        @stages.reject!(&:kubernetes?)
+      else
+        return unsupported_option(:kubernetes)
+      end
+    end
+  end
+
   def deploy
-    environment = deploy_group.environment
-    template_stages = environment.template_stages.all
-    missing_only = params[:missing_only] == "true"
-    stages_to_deploy = missing_only ? deploy_group.stages.reject(&:last_successful_deploy) : deploy_group.stages
-    deploys = stages_to_deploy.map do |stage|
-      template_stage = template_stages.detect { |ts| ts.project_id == stage.project.id }
-      next unless template_stage
+    warnings = []
 
-      last_success_deploy = template_stage.last_successful_deploy
-      next unless last_success_deploy
+    stages = Stage.find(params[:stage_ids] || [])
+    deploys = stages.map do |stage|
+      reference =
+        case params[:reference_source]
+        when 'template' then last_successded_template_reference(stage)
+        when 'redeploy' then stage.last_succeeded_deploy&.reference
+        else return unsupported_option(:reference_source)
+        end
 
-      deploy_service = DeployService.new(current_user)
-      deploy_service.deploy(stage, reference: last_success_deploy.reference)
+      unless reference
+        warnings << [stage, "No reference found"]
+        next
+      end
+
+      deploy = DeployService.new(current_user).deploy(stage, reference: reference)
+      if deploy.new_record?
+        warnings << [stage, "Validation error"]
+        next
+      end
+
+      deploy
     end.compact
 
-    if deploys.empty?
-      flash[:error] = "There were no stages ready for deploy."
-      redirect_to deploys_path
-    else
-      redirect_to deploys_path(ids: deploys.map(&:id))
-    end
+    # prevent cookie overflow / keep the message short
+    ignored = warnings.slice!(10..-1)
+    warnings.map! { |stage, message| "#{message} #{stage.url}" }
+    warnings << "... #{ignored.size} more" if ignored
+
+    redirect_to(
+      deploys_path(ids: deploys.map(&:id).presence),
+      alert: helpers.safe_join(warnings, "<br/>".html_safe).presence
+    )
   end
 
   def merge
@@ -48,6 +93,10 @@ class MassRolloutsController < ApplicationController
   end
 
   private
+
+  def unsupported_option(option)
+    render status: :bad_request, plain: "Unsupported #{option}"
+  end
 
   def create_all_stages
     _, missing_stages = stages_for_creation
@@ -84,7 +133,7 @@ class MassRolloutsController < ApplicationController
 
     return "has no template stage to merge into" unless template_stage
     return "is a template stage" if stage.is_template
-    return "has no deploy groups" if stage.deploy_groups.count.zero?
+    return "has no deploy groups" if stage.deploy_groups.count == 0
     return "has more than one deploy group" if stage.deploy_groups.count > 1
     return "commands in template stage differ" if stage.script != template_stage.script
 
@@ -135,9 +184,7 @@ class MassRolloutsController < ApplicationController
     stage = Stage.build_clone(
       template_stage,
       deploy_groups: [deploy_group],
-      name: deploy_group.name,
-      is_template: false,
-      next_stage_ids: []
+      name: deploy_group.name
     )
 
     stage.save!
@@ -148,6 +195,11 @@ class MassRolloutsController < ApplicationController
     end
 
     stage
+  end
+
+  def last_successded_template_reference(stage)
+    template_stage = deploy_group.environment.template_stages.where(project_id: stage.project_id).first
+    template_stage&.last_succeeded_deploy&.reference
   end
 
   def deploy_group

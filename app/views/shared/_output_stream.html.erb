@@ -1,6 +1,6 @@
 <% if job.active? %>
   <script>
     toggleOutputToolbar();
-    startStream();
+    startStream(<%= current_user.id %>, "<%= @project.to_param %>", <%= job.id %>);
   </script>
 <% end %>

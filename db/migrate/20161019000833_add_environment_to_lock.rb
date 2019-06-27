@@ -9,7 +9,7 @@ class AddEnvironmentToLock < ActiveRecord::Migration[5.0]
     remove_index :locks, [:stage_id, :deleted_at, :user_id]
 
     rename_column :locks, :stage_id, :resource_id
-    add_index :locks, [:resource_id, :resource_type, :deleted_at], unique: true, length: { resource_type: 40 }
+    add_index :locks, [:resource_id, :resource_type, :deleted_at], unique: true, length: {resource_type: 40}
   end
 
   def down

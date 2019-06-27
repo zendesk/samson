@@ -4,9 +4,10 @@ require 'faraday'
 
 class OutboundWebhook < ActiveRecord::Base
   has_soft_deletion default_scope: true
+  include SoftDeleteWithDestroy
 
-  belongs_to :project
-  belongs_to :stage
+  belongs_to :project, inverse_of: :outbound_webhooks
+  belongs_to :stage, inverse_of: :outbound_webhooks
 
   validates :url, uniqueness: {
     scope: :stage_id,
@@ -20,7 +21,7 @@ class OutboundWebhook < ActiveRecord::Base
   def deliver(deploy)
     Rails.logger.info "Sending webhook notification to #{url}. Deploy: #{deploy.id}"
 
-    response = connection.post do |req|
+    response = connection.post url do |req|
       req.headers['Content-Type'] = 'application/json'
       req.body = self.class.deploy_as_json(deploy).to_json
     end
@@ -42,10 +43,14 @@ class OutboundWebhook < ActiveRecord::Base
     )
   end
 
+  def as_json(*)
+    super(except: [:password])
+  end
+
   private
 
   def connection
-    Faraday.new(url: url) do |faraday|
+    Faraday.new do |faraday|
       faraday.request  :url_encoded
       faraday.adapter  Faraday.default_adapter
       faraday.basic_auth(username, password) if username.present?

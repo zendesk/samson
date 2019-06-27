@@ -1,10 +1,12 @@
 # frozen_string_literal: true
 class Job < ActiveRecord::Base
-  belongs_to :project
-  belongs_to :user, -> { unscope(where: :deleted_at) }
-  belongs_to :canceller, -> { unscope(where: "deleted_at") }, class_name: 'User', optional: true
+  belongs_to :project, inverse_of: :jobs
+  belongs_to :user, -> { unscope(where: :deleted_at) }, inverse_of: :jobs
+  belongs_to :canceller, -> { unscope(where: "deleted_at") },
+    class_name: 'User', optional: true, inverse_of: nil
 
-  has_one :deploy
+  has_one :deploy, dependent: nil
+  has_one :build, dependent: nil, inverse_of: :docker_build_job
 
   # Used by status_panel
   alias_attribute :start_time, :created_at
@@ -28,7 +30,7 @@ class Job < ActiveRecord::Base
   end
 
   def self.non_deploy
-    joins('left join deploys on deploys.job_id = jobs.id').where(deploys: { id: nil })
+    joins('left join deploys on deploys.job_id = jobs.id').where(deploys: {id: nil})
   end
 
   def self.pending
@@ -60,15 +62,11 @@ class Job < ActiveRecord::Base
     updated_at - created_at
   end
 
-  def can_be_cancelled_by?(user)
-    started_by?(user) || user.admin? || user.admin_for?(project)
-  end
-
   def commands
     commands = []
     raw = command.split(/\r?\n|\r/)
     while c = raw.shift
-      c << "\n" << raw.shift if c =~ /\\ *\z/ # join multiline commands
+      c << "\n" << raw.shift if c.match?(/\\ *\z/) # join multiline commands
       commands << c
     end
     commands
@@ -81,13 +79,13 @@ class Job < ActiveRecord::Base
     update_attribute(:canceller, canceller) unless self.canceller
 
     if ex
-      ex.cancel # switches job status in the runner thread for consistent status in after_deploy hooks
+      JobQueue.cancel(id) # switches job status in the runner thread for consistent status in after_deploy hooks
     else
       cancelled!
     end
   end
 
-  %w[pending running succeeded cancelling cancelled failed errored].each do |status|
+  VALID_STATUSES.each do |status|
     define_method "#{status}?" do
       self.status == status
     end
@@ -121,12 +119,9 @@ class Job < ActiveRecord::Base
     super || ""
   end
 
-  def update_output!(output)
-    update_attribute(:output, output)
-  end
-
   def update_git_references!(commit:, tag:)
     update_columns(commit: commit, tag: tag)
+    deploy&.bump_touch
   end
 
   def url
@@ -134,12 +129,7 @@ class Job < ActiveRecord::Base
   end
 
   def pid
-    execution.try :pid
-  end
-
-  def append_output!(more)
-    reload
-    update_columns(output: "#{output}#{more}", updated_at: Time.now)
+    execution&.pid
   end
 
   private
@@ -155,14 +145,27 @@ class Job < ActiveRecord::Base
   end
 
   def status!(status)
-    update_column(:status, status)
+    success = update_attribute(:status, status)
+    report_state if finished?
+    success
   end
 
   def short_reference
-    if commit =~ Build::SHA1_REGEX
+    if commit&.match?(Build::SHA1_REGEX)
       commit.slice(0, 7)
     else
       commit
     end
+  end
+
+  def report_state
+    payload = {
+      stage: deploy&.stage&.permalink,
+      project: project.permalink,
+      type: deploy ? 'deploy' : 'build',
+      status: status,
+      cycle_time: DeployMetrics.new(deploy).cycle_time
+    }
+    ActiveSupport::Notifications.instrument('job_status.samson', payload)
   end
 end

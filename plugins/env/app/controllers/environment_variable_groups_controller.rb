@@ -4,7 +4,15 @@ class EnvironmentVariableGroupsController < ApplicationController
   before_action :group, only: [:show]
 
   def index
-    @groups = EnvironmentVariableGroup.all
+    @groups = EnvironmentVariableGroup.all.includes(:environment_variables)
+    respond_to do |format|
+      format.html
+      format.json do
+        render_as_json :environment_variable_groups, @groups, nil, allowed_includes: [
+          :environment_variables,
+        ]
+      end
+    end
   end
 
   def new
@@ -46,11 +54,11 @@ class EnvironmentVariableGroupsController < ApplicationController
       @project = Project.find(params[:project_id])
     end
 
-    @groups = SamsonEnv.env_groups(@project, deploy_groups, preview: true)
+    @groups = SamsonEnv.env_groups(Deploy.new(project: @project), deploy_groups, preview: true)
 
     respond_to do |format|
       format.html
-      format.json { render json: { groups: @groups || [] } }
+      format.json { render json: {groups: @groups || []} }
     end
   end
 

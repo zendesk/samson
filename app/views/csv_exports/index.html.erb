@@ -4,6 +4,9 @@
   <div>
     <p><%= link_to "New Deploys Report", new_csv_export_path %></p>
     <p><%= link_to "New Users Report", new_csv_export_path(type: :users) %></p>
+    <% if DeployGroup.enabled? %>
+      <p><%= link_to "New Deploy Group Usage Report", new_csv_export_path(type: :deploy_group_usage) %></p>
+    <% end %>
   </div>
   <% if @csv_exports.empty? %>
     <p>No current CSV Reports was found!</p>

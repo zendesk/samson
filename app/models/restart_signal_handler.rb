@@ -2,10 +2,8 @@
 # Ensures that we wait for all jobs to finish before shutting down the process during restart.
 # JobQueue locks a mutex, hence the need for a separate SignalHandler thread
 # Self-pipe is also best practice, since signal handlers can themselves be interrupted
-class RestartSignalHandler
-  LISTEN_SIGNAL = 'SIGUSR1'
-  PASSED_SIGNAL = 'SIGUSR2'
 
+class RestartSignalHandler
   class << self
     alias_method :listen, :new
 
@@ -34,8 +32,9 @@ class RestartSignalHandler
 
   def initialize
     @read, @write = IO.pipe
+    @puma_restart_handler = Signal.trap('SIGUSR1') { signal_restart }
+    raise 'Wrong boot order, puma needs to be loaded first' unless @puma_restart_handler.is_a?(Proc)
     Thread.new { run }
-    Signal.trap(LISTEN_SIGNAL) { signal_restart }
   end
 
   private
@@ -47,18 +46,32 @@ class RestartSignalHandler
   def run
     wait_for_restart_signal
 
-    output 'preparing restart'
+    output 'Waiting for all Samson activity to stop'
 
     JobQueue.enabled = false # Disable new job execution
     Samson::Periodical.enabled = false
     wait_for_active_jobs_to_stop
 
-    output "Passing #{PASSED_SIGNAL} on."
-    Process.kill(PASSED_SIGNAL, Process.pid) # shut down underlying server
+    output "Calling puma restart handler"
+    @puma_restart_handler.call
+    sleep 5
+    hard_restart
   rescue
     output "Failed #{$!.message} ... restart manually when all deploys have finished"
-    Airbrake.notify_sync($!)
+    Samson::ErrorNotifier.notify($!, sync: true)
     raise
+  end
+
+  # failsafe in case of puma restart failure, so process monitoring will hard restart Samson
+  # this means that we lose all requests until Samson is booted up again. This is bad, but better
+  # than hanging forever.
+  def hard_restart
+    Samson::ErrorNotifier.notify('Hard restarting, requests will be lost', sync: true)
+    output 'Error: Sending SIGTERM to hard restart'
+    Process.kill(:SIGTERM, Process.pid)
+    sleep 5
+    output 'Error: Sending SIGKILL to hard restart'
+    Process.kill(:SIGKILL, Process.pid)
   end
 
   def wait_for_restart_signal

@@ -2,7 +2,7 @@
 
 <%= breadcrumb @project, @stage %>
 
-<%= render_lock @stage %>
+<%= render_locks @stage %>
 
 <h1>
   <%= @stage.name %>
@@ -18,7 +18,6 @@
 
     <% if admin_for_project? %>
       <%= link_to "Edit", edit_project_stage_path(@project, @stage), class: "btn btn-default" %>
-      <%= link_to_delete_button([@project, @stage]) %>
     <% end %>
 
     <div class="pull-right">
@@ -35,7 +34,7 @@
     <pre class="pre-command"><%= "set -ex\n" + @stage.script %></pre>
   </div>
 
-  <% if groups = @stage.deploy_groups.sort_by(&:natural_order).to_a.presence %>
+  <% if groups = @stage.deploy_groups.to_a.presence %>
     <h2>Deploy groups</h2>
     <% groups.each do |group| %>
       <%= link_to group.name, group %>

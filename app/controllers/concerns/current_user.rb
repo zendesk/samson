@@ -65,12 +65,8 @@ module CurrentUser
     (['index', 'show'].include?(action_name) ? :read : :write)
   end
 
-  def can?(action, resource_namespace, scope = nil)
-    scope ||= if resource_namespace == :locks && respond_to?(:current_stage)
-      current_stage
-    elsif respond_to?(:current_project)
-      current_project
-    end
+  def can?(action, resource_namespace, scope = :guess)
+    scope = (respond_to?(:current_project, true) ? current_project : nil) if scope == :guess
     AccessControl.can?(current_user, action, resource_namespace, scope)
   end
 end

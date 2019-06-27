@@ -14,26 +14,45 @@ module SamsonGcloud
   class << self
     def scan!(build, job, output)
       return true unless ENV['GCLOUD_IMAGE_SCANNER'] && job.project.show_gcr_vulnerabilities
-
-      status = build.gcr_vulnerabilities_status_id
       scan_optional = !job.deploy.stage.block_on_gcr_vulnerabilities
 
-      unless SamsonGcloud::ImageScanner::FINISHED.include?(status)
-        output.puts 'Waiting for GCR scan to finish ...'
-        (SCAN_WAIT_PERIOD / SCAN_SLEEP_PERIOD).times do
-          status = SamsonGcloud::ImageScanner.scan(build)
-          break if SamsonGcloud::ImageScanner::FINISHED.include?(status) || scan_optional
-          sleep(SCAN_SLEEP_PERIOD)
-        end
-        build.update_attributes!(gcr_vulnerabilities_status_id: status)
+      output.puts 'Waiting for GCR scan to finish ...'
+      status = nil
+      (SCAN_WAIT_PERIOD / SCAN_SLEEP_PERIOD).times do
+        status = SamsonGcloud::ImageScanner.scan(build.docker_repo_digest)
+        break if SamsonGcloud::ImageScanner::FINISHED.include?(status) || scan_optional
+        sleep(SCAN_SLEEP_PERIOD)
       end
 
       success = (status == SamsonGcloud::ImageScanner::SUCCESS)
       message = SamsonGcloud::ImageScanner.status(status)
-      message += ", see #{SamsonGcloud::ImageScanner.result_url(build)}" unless success
+      if !success && url = SamsonGcloud::ImageScanner.result_url(build.docker_repo_digest)
+        message += ", see #{url}"
+      end
       output.puts message
 
       success || scan_optional
+    end
+
+    def ensure_docker_image_has_no_vulnerabilities(stage, image)
+      return unless stage.block_on_gcr_vulnerabilities
+
+      status = SamsonGcloud::ImageScanner.scan(image)
+      return if status == SamsonGcloud::ImageScanner::SUCCESS
+      result = SamsonGcloud::ImageScanner.status(status)
+
+      message =
+        if url = SamsonGcloud::ImageScanner.result_url(image)
+          "GCR scan result: #{result} for #{url}"
+        else
+          "#{result}: #{image}"
+        end
+
+      raise Samson::Hooks::UserError, message
+    end
+
+    def gcr?(image)
+      image.match?(/(^|\/|\.)gcr.io\//) # gcr.io or https://gcr.io or region like asia.gcr.io
     end
 
     def cli_options(project: nil)
@@ -51,23 +70,44 @@ module SamsonGcloud
   end
 end
 
-Samson::Hooks.view :project_form_checkbox, "samson_gcloud/project_form_checkbox"
-Samson::Hooks.view :build_button, "samson_gcloud/build_button"
-Samson::Hooks.view :stage_form_checkbox, "samson_gcloud/stage_form_checkbox"
-Samson::Hooks.view :build_show, "samson_gcloud/build_show"
+Samson::Hooks.view :project_form_checkbox, "samson_gcloud"
+Samson::Hooks.view :build_button, "samson_gcloud"
+Samson::Hooks.view :stage_form_checkbox, "samson_gcloud"
+Samson::Hooks.view :build_show, "samson_gcloud"
 
-Samson::Hooks.callback :after_deploy do |deploy, _|
-  SamsonGcloud::ImageTagger.tag(deploy) if ENV['GCLOUD_IMAGE_TAGGER'] == 'true'
+Samson::Hooks.callback :after_deploy do |deploy, job_execution|
+  SamsonGcloud::ImageTagger.tag(deploy, job_execution.output) if ENV['GCLOUD_IMAGE_TAGGER'] == 'true'
 end
 
 Samson::Hooks.callback :project_permitted_params do
-  [:build_with_gcb, :show_gcr_vulnerabilities]
+  [:show_gcr_vulnerabilities]
+end
+
+Samson::Hooks.callback :project_docker_build_method_options do
+  help_text = 'Build docker images locally using Google cloud builder, disables pushing to any other registry,' \
+    ' disables pulling from other registries.'
+
+  [
+    {
+      label: 'Build docker with GCB CLI',
+      method: 'build_with_gcb',
+      help_text: help_text
+    }
+  ]
 end
 
 Samson::Hooks.callback :stage_permitted_params do
   :block_on_gcr_vulnerabilities
 end
 
-Samson::Hooks.callback :ensure_build_is_successful do |*args|
+Samson::Hooks.callback :ensure_build_is_succeeded do |*args|
   SamsonGcloud.scan!(*args)
+end
+
+Samson::Hooks.callback :ensure_docker_image_has_no_vulnerabilities do |stage, image|
+  SamsonGcloud.ensure_docker_image_has_no_vulnerabilities stage, image
+end
+
+Samson::Hooks.callback :resolve_docker_image_tag do |image|
+  SamsonGcloud::TagResolver.resolve_docker_image_tag image if ENV["GCLOUD_PROJECT"]
 end

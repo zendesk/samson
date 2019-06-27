@@ -1,10 +1,20 @@
-<% if pull_requests.nil? || pull_requests.empty? %>
-  <p>There are no risks described in any pull request in this <%= type %>. If you want Samson to pick up and display
-  any risks associated with your pull request, add a heading called "Risks" in your pull request description. Anything
-  following that heading will be considered part of the risks section.</p>
-<% else %>
-  <% pull_requests.each do |pr| %>
+<div class="alert alert-info">
+  If you want Samson to pick up and display any risks associated with your pull request, add a heading called "Risks"
+  in your pull request description. Anything in that section will be listed here as a risk.
+</div>
+
+<% changeset.pull_requests.each do |pr| %>
+  <% if pr.risky? %>
     <h5><strong>#<%= pr.number %></strong> <%= link_to pr.title, pr.url %> <%= github_users(pr.users) %></h5>
     <%= markdown pr.risks %>
+  <% elsif pr.missing_risks? %>
+    <div>
+      <% help_icon = additional_info(
+            "Missing 'Risks' section or failed to parse risks",
+            class: 'glyphicon glyphicon-alert deployment-alert'
+          )
+      %>
+      <h5><strong>#<%= pr.number %></strong> <%= link_to pr.title, pr.url %> <%= github_users(pr.users) %><%= help_icon %></h5>
+    </div>
   <% end %>
 <% end %>

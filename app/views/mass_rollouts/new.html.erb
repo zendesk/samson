@@ -73,8 +73,8 @@ Stages appear here if the project has selected "Include in New Deploy Groups" an
             <tr>
               <td><%= stage.project.name %></td>
               <td><%= stage.name %></td>
-              <td><%= stage.template_stage.try(:name) %></td>
-              <td><%= stage.deploy_groups.sort_by(&:natural_order).map(&:name).join(', ') %></td>
+              <td><%= stage.template_stage&.name %></td>
+              <td><%= stage.deploy_groups.pluck(:name).join(', ') %></td>
             </tr>
           <% end %>
         </tbody>

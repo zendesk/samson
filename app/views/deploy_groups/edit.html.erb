@@ -12,8 +12,6 @@
 
     <hr>
 
-    <%= form.actions(delete: true) do %>
-      | <%= link_to_history @deploy_group %>
-    <% end %>
+    <%= form.actions(delete: :type, history: true) %>
   <% end %>
 </section>

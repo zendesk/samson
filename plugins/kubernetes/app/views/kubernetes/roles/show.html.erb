@@ -4,7 +4,8 @@
   <%= render 'samson_kubernetes/role_navigation' %>
 
   <section>
-    <%= page_title "Kubernetes Role #{@role.name}", in_tab: true %>
+    <% title = (@kubernetes_role.new_record? ? "New Kubernetes Role" : "Kubernetes Role #{@kubernetes_role.name}") %>
+    <%= page_title title, in_tab: true %>
     <%= render 'form' %>
   </section>
 </section>

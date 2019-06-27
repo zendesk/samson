@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 4
 
 describe Stage do
   subject { stages(:test_staging) }
@@ -118,23 +118,23 @@ describe Stage do
     end
   end
 
-  describe '#last_successful_deploy' do
+  describe '#last_succeeded_deploy' do
     let(:project) { projects(:test) }
 
     it 'caches nil' do
       subject
       ActiveRecord::Relation.any_instance.expects(:first).returns nil
-      stage.last_successful_deploy.must_be_nil
+      stage.last_succeeded_deploy.must_be_nil
       ActiveRecord::Relation.any_instance.expects(:first).never
-      stage.last_successful_deploy.must_be_nil
+      stage.last_succeeded_deploy.must_be_nil
     end
 
-    it 'returns the last successful deploy for the stage' do
-      successful_job = project.jobs.create!(command: 'cat foo', user: users(:deployer), status: 'succeeded')
-      stage.deploys.create!(reference: 'master', job: successful_job, project: project)
+    it 'returns the last succeeded deploy for the stage' do
+      succeeded_job = project.jobs.create!(command: 'cat foo', user: users(:deployer), status: 'succeeded')
+      stage.deploys.create!(reference: 'master', job: succeeded_job, project: project)
       project.jobs.create!(command: 'cat foo', user: users(:deployer), status: 'failed')
-      deploy = stage.deploys.create!(reference: 'master', job: successful_job, project: project)
-      assert_equal deploy, stage.last_successful_deploy
+      deploy = stage.deploys.create!(reference: 'master', job: succeeded_job, project: project)
+      assert_equal deploy, stage.last_succeeded_deploy
     end
   end
 
@@ -232,6 +232,7 @@ describe Stage do
     let(:simple_response) { Hashie::Mash.new(commits: [{commit: {author: {email: "pete@example.com"}}}]) }
 
     before do
+      Project.any_instance.stubs(:github?).returns(true)
       user.update_attribute(:integration, true)
       subject.update_column(:static_emails_on_automated_deploy_failure, "static@example.com")
       subject.update_column(:email_committers_on_automated_deploy_failure, true)
@@ -281,23 +282,33 @@ describe Stage do
   end
 
   describe ".build_clone" do
-    before do
-      subject.notify_email_address = "test@test.ttt"
-      subject.flowdock_flows = [FlowdockFlow.new(name: "test", token: "abcxyz", stage_id: subject.id)]
-      subject.next_stage_ids = [1, 2]
-      subject.save
-
-      @clone = Stage.build_clone(subject)
+    def clone_diff
+      stage_attributes = stage.attributes
+      cloned.attributes.map { |k, v| [k, stage_attributes[k], v] unless stage_attributes[k] == v }.compact
     end
 
-    it "returns an unsaved copy of the given stage with exactly the same everything except id" do
-      @clone.attributes.except("id", "next_stage_ids", "template_stage_id").
-          must_equal subject.attributes.except("id", "next_stage_ids", "template_stage_id")
-      @clone.id.wont_equal subject.id
+    let(:stage) { stages(:test_staging) }
+    let(:cloned) { Stage.build_clone(stage) }
+
+    it "returns an unsaved copy of the given stage" do
+      clone_diff.must_equal(
+        [
+          ["id", stage.id, nil],
+          ["permalink", "staging", nil],
+          ["is_template", true, false],
+          ["template_stage_id", nil, stage.id]
+        ]
+      )
     end
 
-    it "doesn't clone the deploy pipeline" do
-      @clone.next_stage_ids.wont_equal subject.next_stage_ids
+    it "copies associations" do
+      stage.flowdock_flows = [FlowdockFlow.new(name: "test", token: "abcxyz", stage_id: subject.id)]
+      cloned.flowdock_flows.size.must_equal 1
+    end
+
+    it "does not copy deploy pipeline since that would result in duplicate deploys" do
+      stage.next_stage_ids = [stages(:test_production).id]
+      cloned.next_stage_ids.must_equal []
     end
   end
 
@@ -340,7 +351,7 @@ describe Stage do
 
   describe "#deploy_requires_approval?" do
     before do
-      BuddyCheck.stubs(enabled?: true)
+      Samson::BuddyCheck.stubs(enabled?: true)
       stage.production = true
     end
 
@@ -349,7 +360,7 @@ describe Stage do
     end
 
     it "does not require approval when buddy check is disabled" do
-      BuddyCheck.unstub(:enabled?)
+      Samson::BuddyCheck.unstub(:enabled?)
       refute stage.deploy_requires_approval?
     end
 
@@ -410,13 +421,6 @@ describe Stage do
         end
       end
     end
-
-    it "removes the stage from the pipeline of other stages" do
-      other_stage = Stage.create!(project: stage.project, name: 'stage1', next_stage_ids: [stage.id])
-      assert other_stage.next_stage_ids.include?(stage.id)
-      stage.soft_delete!(validate: false)
-      refute other_stage.reload.next_stage_ids.include?(stage.id)
-    end
   end
 
   describe '#script' do
@@ -431,23 +435,6 @@ describe Stage do
     it 'is empty without commands' do
       stage.command_ids = []
       stage.script.must_equal ""
-    end
-  end
-
-  describe "#command=" do
-    it 'add new command to the end' do
-      stage.update_attributes!(
-        command: 'test',
-        command_ids: [commands(:echo).id]
-      )
-      stage.reload
-      stage.script.must_equal "#{commands(:echo).command}\ntest"
-    end
-
-    it "can add a single command" do
-      stage.send(:stage_commands).delete_all
-      stage.update_attributes!(command: 'test')
-      stage.script.must_equal "test"
     end
   end
 
@@ -480,13 +467,20 @@ describe Stage do
       stage.send(:stage_commands).sort_by(&:id).map(&:position).must_equal [2, 1, 0]
     end
 
-    it "can add new commands" do
+    it "can add new stage commands" do
       stage.command_ids = ([commands(:echo)] + sample_commands).map(&:id)
       stage.save!
       stage.script.must_equal "echo hello\nfoo\nbar\nbaz"
       stage.reload
       stage.script.must_equal "echo hello\nfoo\nbar\nbaz"
       stage.send(:stage_commands).sort_by(&:id).map(&:position).must_equal [1, 2, 3, 0] # kept the old and added one new
+    end
+
+    it 'can add new commands' do
+      StageCommand.delete_all
+      stage.command_ids = ['echo newcommand']
+      stage.save!
+      stage.script.must_equal 'echo newcommand'
     end
   end
 
@@ -502,12 +496,6 @@ describe Stage do
       stage.audits.size.must_equal 0
     end
 
-    it "tracks command addition" do
-      stage.update_attributes!(command: "Foo")
-      stage.audits.size.must_equal 1
-      stage.audits.first.audited_changes.must_equal "script" => ["echo hello", "echo hello\nFoo"]
-    end
-
     it "tracks selecting an existing command" do
       old = stage.command_ids
       new = old + [commands(:global).id]
@@ -516,24 +504,15 @@ describe Stage do
       stage.audits.first.audited_changes.must_equal "script" => ["echo hello", "echo hello\necho global"]
     end
 
+    it "does not track when commands do not change" do
+      stage.update_attributes!(command_ids: stage.command_ids.map(&:to_s))
+      stage.audits.size.must_equal 0
+    end
+
     it "tracks command removal" do
       stage.update_attributes!(command_ids: [])
       stage.audits.size.must_equal 1
       stage.audits.first.audited_changes.must_equal "script" => ["echo hello", ""]
-    end
-
-    it "does not track when command does not change" do
-      stage.update_attributes!(command_ids: stage.command_ids.map(&:to_s), command: "")
-      stage.audits.size.must_equal 0
-    end
-
-    it "tracks simulatanous command and command_ids change" do
-      stage.update_attributes!(name: 'Foobar', command_ids: Command.pluck(:id), command: "foo")
-      stage.audits.size.must_equal 1
-      stage.audits.first.audited_changes.must_equal(
-        "name" => ["Staging", "Foobar"],
-        "script" => ["echo hello", "echo hello\necho global\nfoo"]
-      )
     end
 
     it "tracks command_ids reorder" do
@@ -545,18 +524,13 @@ describe Stage do
       )
     end
 
-    it "tracks external command change" do
-      stage.send(:stage_commands).first.command.update_attributes!(command: "NEW")
-      stage.audits.first.audited_changes.must_equal "script" => ["echo hello", "NEW"]
-    end
-
     it "does not trigger multiple times when destroying" do
       stage.destroy!
       stage.audits.size.must_equal 1
     end
 
     it "does not trigger multiple times when creating" do
-      stage = Stage.create!(name: 'Foobar', project: projects(:test), command_ids: Command.pluck(:id), command: "foo")
+      stage = Stage.create!(name: 'Foobar', project: projects(:test), command_ids: Command.pluck(:id))
       stage.audits.size.must_equal 1
     end
   end
@@ -592,21 +566,6 @@ describe Stage do
         other.update_column(:no_code_deployed, true)
         stage.influencing_stage_ids.sort.must_equal [stage.id]
       end
-    end
-  end
-
-  describe '#build_new_project_command' do
-    it "adds new command to the end of commands" do
-      stage.command = "yep"
-      stage.save!
-      stage.script.must_equal "echo hello\nyep"
-      Command.last.project_id.must_equal stage.project_id
-    end
-
-    it "does not add an empty command" do
-      stage.command = ""
-      stage.save!
-      stage.script.must_equal "echo hello"
     end
   end
 
@@ -745,6 +704,75 @@ describe Stage do
     it "ignores failed" do
       deploy.job.update_column(:status, 'failed')
       stage.deployed_or_running_deploy.must_be_nil
+    end
+  end
+
+  describe "#url" do
+    it "builds" do
+      stage.url.must_equal "http://www.test-url.com/projects/foo/stages/staging"
+    end
+  end
+
+  describe "#locked_by?" do
+    before { stage } # cache
+
+    it "returns true for self lock" do
+      assert_sql_queries 0 do
+        assert stage.locked_by?(Lock.new(resource: stage))
+      end
+    end
+
+    it "returns false for different stage's lock" do
+      lock = Lock.new(resource: stages(:test_production))
+      assert_sql_queries 0 do
+        refute stage.locked_by?(lock)
+      end
+    end
+
+    describe "with environments" do
+      before do
+        DeployGroup.stubs(enabled?: true)
+        stage # load stage
+        DeployGroupsStage.first # load column information
+      end
+
+      it "returns true if finds environment lock on stage" do
+        lock = Lock.new(resource: environments(:staging))
+        assert_sql_queries 3 do # deploy-groups -> deploy-groups-stages -> environments
+          assert stage.locked_by?(lock)
+        end
+      end
+
+      it "does not check environments on non-environment locks" do
+        assert_sql_queries 0 do
+          assert stage.locked_by?(Lock.new(resource: stage))
+        end
+      end
+    end
+
+    describe "with projects" do
+      it "finds project lock on stage" do
+        lock = Lock.new(resource: projects(:test))
+        assert_sql_queries 1 do
+          assert stage.locked_by?(lock)
+        end
+      end
+    end
+
+    describe "with deploy groups" do
+      it "is locked by own groups" do
+        lock = Lock.new(resource: deploy_groups(:pod100))
+        assert_sql_queries 2 do # deploy-groups -> deploy-groups-stages
+          assert stage.locked_by?(lock)
+        end
+      end
+
+      it "is not locked by other groups" do
+        lock = Lock.new(resource: deploy_groups(:pod1))
+        assert_sql_queries 2 do # deploy-groups -> deploy-groups-stages
+          refute stage.locked_by?(lock)
+        end
+      end
     end
   end
 end

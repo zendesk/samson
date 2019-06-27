@@ -47,8 +47,8 @@ Samson::Application.routes.draw do
 
     resource :changelog, only: [:show]
     resource :stars, only: [:create]
-    resources :webhooks, only: [:index, :create, :destroy]
-    resources :outbound_webhooks, only: [:create, :destroy]
+    resources :webhooks, only: [:index, :create, :update, :destroy]
+    resources :outbound_webhooks, only: [:index, :create, :update, :destroy]
     resources :references, only: [:index]
     resources :user_project_roles, only: [:index]
 
@@ -58,7 +58,6 @@ Samson::Application.routes.draw do
   end
 
   resources :user_project_roles, only: [:index, :create]
-  resources :streams, only: [:show]
   resources :locks, only: [:index, :create, :destroy]
 
   resources :deploys, only: [:index] do
@@ -90,6 +89,7 @@ Samson::Application.routes.draw do
     resource :mass_rollouts, only: [:new, :create, :destroy] do
       collection do
         post :merge
+        get :review_deploy
         post :deploy
       end
     end
@@ -98,6 +98,10 @@ Samson::Application.routes.draw do
   resources :secrets, except: [:edit] do
     collection do
       get :duplicates
+    end
+    member do
+      get :history
+      post :revert
     end
   end
   resources :secret_sharing_grants, except: [:edit, :update]
@@ -120,7 +124,8 @@ Samson::Application.routes.draw do
   get '/api/locks', to: 'locks#index'
   post '/api/locks', to: 'locks#create'
   delete '/api/locks/:id', to: 'locks#destroy'
-  delete '/locks', to: 'locks#destroy_via_resource'
+  delete '/locks', to: 'locks#destroy'
+  delete '/api/locks', to: 'locks#destroy'
   get '/api/projects', to: 'projects#index'
   post '/api/projects/:project_id/automated_deploys', to: 'automated_deploys#create'
   get '/api/deploys/active_count', to: 'deploys#active_count'
@@ -154,13 +159,13 @@ Samson::Application.routes.draw do
     post "/jenkins/:token" => "jenkins#create", as: :jenkins_deploy
     post "/buildkite/:token" => "buildkite#create", as: :buildkite_deploy
     post "/github/:token" => "github#create", as: :github_deploy
+    post "/generic/:token" => "generic#create", as: :generic_deploy
   end
 
   get '/ping', to: 'ping#show'
+  get '/error', to: 'ping#error'
 
   resources :access_requests, only: [:new, :create]
-
-  mount SseRailsEngine::Engine, at: '/streaming'
 
   use_doorkeeper # adds oauth/* routes
   resources :oauth_test, only: [:index, :show] if %w[development test].include?(Rails.env)

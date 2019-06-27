@@ -15,19 +15,19 @@
     <%= form.input :release_source, help: 'Selects which type of webhook will create a release' do %>
       <%= form.collection_select :release_source, webhook_sources_for_select(Samson::Integration::SOURCES, none: true), :second, :first, {}, class: "form-control" %>
     <% end %>
-    <% if ENV['DOCKER_FEATURE'] %>
-      <%= form.input :docker_release_branch, help: 'New commits on this branch will cause a docker image to be built when a webhook arrives.' %>
-      <%= form.input :dockerfiles, help: 'Space separated list of dockerfiles to build, default: Dockerfile' %>
-      <%= form.input :docker_image_building_disabled, label: "Docker images built externally", as: :check_box, help: 'Disable local building of docker images, they must be added via api.' %>
-    <% end %>
     <% if DeployGroup.enabled? %>
       <%= form.input :include_new_deploy_groups, as: :check_box, label: 'Include in New Deploy Groups', help: 'The "Create all stages" button for a deploy group will create a stage for this project.' %>
     <% end %>
     <%= Samson::Hooks.render_views(:project_form_checkbox, self, form: form) %>
+
+    <% if ENV['DOCKER_FEATURE'] %>
+      <%= render 'docker_fields', form: form %>
+    <% end %>
+
     <%= render 'shared/dashboard_field', form: form %>
 
     <%= Samson::Hooks.render_views(:project_form, self, form: form) %>
 
-    <%= form.actions delete: current_user.admin_for?(@project) %>
+    <%= form.actions delete: (:type if can?(:write, :projects, @project)) %>
   </fieldset>
 <% end %>

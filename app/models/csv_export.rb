@@ -1,19 +1,21 @@
 # frozen_string_literal: true
 class CsvExport < ActiveRecord::Base
-  belongs_to :user
+  belongs_to :user, inverse_of: :csv_exports
   serialize :filters, JSON
   STATUS_VALUES = ['pending', 'started', 'finished', 'downloaded', 'failed', 'deleted'].freeze
 
   before_destroy :delete_file
 
-  validates :status, inclusion: { in: STATUS_VALUES }
+  validates :status, inclusion: {in: STATUS_VALUES}
   delegate :email, to: :user, allow_nil: true
 
-  scope :old, lambda {
+  scope :old, -> {
     end_date = Rails.application.config.samson.export_job.downloaded_age.seconds.ago
     timeout_date = Rails.application.config.samson.export_job.max_age.seconds.ago
-    where("(status = 'downloaded' AND updated_at <= :end_date) OR created_at <= :timeout_date",
-      end_date: end_date, timeout_date: timeout_date)
+    where(
+      "(status = 'downloaded' AND updated_at <= :end_date) OR created_at <= :timeout_date",
+      end_date: end_date, timeout_date: timeout_date
+    )
   }
 
   def status?(state)
@@ -39,7 +41,7 @@ class CsvExport < ActiveRecord::Base
 
   def filters_project
     if id = filters['stages.project_id']
-      proj = Project.with_deleted { Project.where(id: id).first.try(:permalink) }
+      proj = Project.with_deleted { Project.where(id: id).first&.permalink }
       proj + '_' if proj
     end
   end

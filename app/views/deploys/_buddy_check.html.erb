@@ -1,14 +1,11 @@
 <div class="row deploy-check">
-  <% if status = CommitStatus.new(@deploy.stage, @deploy.reference) rescue nil %>
-    <p>
-      Commit status for <%= short_sha @deploy.reference %>: <%= status.status %><br/>
-      <% status.status_list.each do |info| %>
-        <%= info.fetch(:state) %>: <%= info.fetch(:description) %><br/>
-      <% end %>
-    </p>
-  <% else %>
-    <p>Error fetching commit status.</p>
-  <% end %>
+  <% commit_status = CommitStatus.new(@deploy.stage.project, @deploy.reference, stage: @deploy.stage) %>
+  <p>
+    Commit status for <%= short_sha @deploy.reference %>: <%= commit_status.state %><br/>
+    <% commit_status.statuses.each do |info| %>
+      <%= info.fetch(:state) %>: <%= info.fetch(:description) %><br/>
+    <% end %>
+  </p>
   <br/><br/>
 
   <% if @deploy.started_by?(current_user) %>
@@ -27,10 +24,8 @@
     <p>This deploy requires a buddy.</p>
     <div class="buddy-approval">
       <%= link_to "Approve", buddy_check_project_deploy_path(@project, @deploy), method: :post, class: "btn btn-primary btn-xl" %>
-      <% if @deploy.can_be_cancelled_by?(current_user) %>
-        or
-        <%= cancel_button deploy: @deploy, project: @project %>
-      <% end %>
+      or
+      <%= cancel_button deploy: @deploy, project: @project %>
     </div>
   <% else %>
     <p>This deploy requires a buddy since it is going to production. (Someone with deploy rights or greater.)</p>

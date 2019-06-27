@@ -7,6 +7,6 @@ class AddSecrets < ActiveRecord::Migration[4.2]
       t.integer :updater_id, :creator_id, null: false
       t.timestamps null: false
     end
-    add_index :secrets, :id, unique: true, length: { id: 191 }
+    add_index :secrets, :id, unique: true, length: {id: 191}
   end
 end

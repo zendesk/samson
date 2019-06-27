@@ -17,6 +17,7 @@ describe Samson::Secrets::HashicorpVaultBackend do
       assert_vault_request :get, "production/foo/pod2/bar", body: {data: {vault: "SECRET"}}.to_json do
         backend.read('production/foo/pod2/bar').must_equal(
           auth: nil,
+          metadata: nil,
           lease_duration: nil,
           lease_id: nil,
           renewable: nil,
@@ -44,12 +45,62 @@ describe Samson::Secrets::HashicorpVaultBackend do
     end
   end
 
+  describe ".history" do
+    before { Samson::Secrets::VaultServer.update_all(versioned_kv: true) }
+
+    it "reads simple" do
+      versions_body = {data: {foo: "bar", versions: {}}}
+      assert_vault_request :get, "production/foo/pod2/bar", versioned_kv: "metadata", body: versions_body.to_json do
+        backend.history('production/foo/pod2/bar').must_equal(foo: "bar", versions: {})
+      end
+    end
+
+    it "ignores missing" do
+      assert_vault_request :get, "production/foo/pod2/bar", versioned_kv: "metadata", status: 404 do
+        backend.history('production/foo/pod2/bar').must_be_nil
+      end
+    end
+
+    it "does not resolve versions by default" do
+      id = "production/foo/pod2/bar"
+      versions_body = {data: {versions: {"v1" => {foo: "bar"}}}}
+      assert_vault_request :get, id, versioned_kv: "metadata", body: versions_body.to_json do
+        result = backend.history('production/foo/pod2/bar')
+        result[:versions].each_value { |item| item.delete_if { |_, v| v.nil? } }
+        result.must_equal versions: {v1: {foo: "bar"}}
+      end
+    end
+
+    it "resolves versions" do
+      id = "production/foo/pod2/bar"
+      versions_body = {data: {versions: {"v1" => {foo: "bar"}}}}
+      version_body = {data: {data: {vault: 1}, metadata: {v1: 1}}}
+      assert_vault_request :get, id, versioned_kv: "metadata", body: versions_body.to_json do
+        assert_vault_request :get, "#{id}?version=v1", versioned_kv: "data", body: version_body.to_json do
+          result = backend.history('production/foo/pod2/bar', resolve: true)
+          result[:versions].each_value { |item| item.delete_if { |_, v| v.nil? } }
+          result.must_equal versions: {v1: {metadata: {v1: 1}, value: 1}}
+        end
+      end
+    end
+
+    it "does not resolve unrecoverable versions" do
+      id = "production/foo/pod2/bar"
+      versions_body = {data: {versions: {"v1" => {foo: "bar", destroyed: true}}}}
+      assert_vault_request :get, id, versioned_kv: "metadata", body: versions_body.to_json do
+        result = backend.history('production/foo/pod2/bar', resolve: true)
+        result.must_equal versions: {v1: {metadata: {foo: "bar", destroyed: true}}}
+      end
+    end
+  end
+
   describe ".read_multi" do
     it "returns values as hash" do
-      assert_vault_request :get, "production/foo/pod2/bar", body: {data: { vault: "SECRET"}}.to_json do
+      assert_vault_request :get, "production/foo/pod2/bar", body: {data: {vault: "SECRET"}}.to_json do
         backend.read_multi(['production/foo/pod2/bar']).must_equal(
           'production/foo/pod2/bar' => {
             auth: nil,
+            metadata: nil,
             lease_duration: nil,
             lease_id: nil,
             renewable: nil,
@@ -157,13 +208,20 @@ describe Samson::Secrets::HashicorpVaultBackend do
         end
       end
     end
+
+    it "ignores invalid ids so a single bad key does not blow up secrets UI" do
+      Samson::ErrorNotifier.expects(:notify)
+      assert_vault_request :get, "?list=true", body: {data: {keys: ["oh-noes", "a/b/c/d"]}}.to_json do
+        backend.ids.must_equal ["a/b/c/d"]
+      end
+    end
   end
 
   describe "raises BackendError when a vault instance is down/unreachable" do
-    let(:client) { Samson::Secrets::VaultClient.client }
+    let(:manager) { Samson::Secrets::VaultClientManager.instance }
 
     it ".ids" do
-      client.expects(:list_recursive).
+      manager.expects(:list_recursive).
         raises(Vault::HTTPConnectionError.new("address", RuntimeError.new('no ids for you')))
       e = assert_raises Samson::Secrets::BackendError do
         backend.ids
@@ -172,7 +230,7 @@ describe Samson::Secrets::HashicorpVaultBackend do
     end
 
     it ".read" do
-      client.expects(:read).raises(Vault::HTTPConnectionError.new("address", RuntimeError.new('no read for you')))
+      manager.expects(:read).raises(Vault::HTTPConnectionError.new("address", RuntimeError.new('no read for you')))
       e = assert_raises Samson::Secrets::BackendError do
         backend.read('production/foo/group/isbar/foo')
       end
@@ -180,8 +238,8 @@ describe Samson::Secrets::HashicorpVaultBackend do
     end
 
     it ".write" do
-      client.expects(:read).returns(nil)
-      client.expects(:write).raises(Vault::HTTPConnectionError.new("address", RuntimeError.new('no write for you')))
+      manager.expects(:read).returns(nil)
+      manager.expects(:write).raises(Vault::HTTPConnectionError.new("address", RuntimeError.new('no write for you')))
       e = assert_raises Samson::Secrets::BackendError do
         backend.write(
           'production/foo/group/isbar/foo', value: 'whatever', visible: false, user_id: 1, comment: 'secret!'

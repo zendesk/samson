@@ -35,7 +35,7 @@ module SamsonSlackWebhooks
       payload = {
         text: message,
         username: 'Samson',
-        icon_url: "https://github.com/zendesk/samson/blob/master/app/assets/images/32x32_light.png?raw=true"
+        icon_url: "https://github.com/zendesk/samson/blob/master/app/assets/images/favicons/32x32_light.png?raw=true"
       }
       payload[:channel] = webhook.channel unless webhook.channel.blank?
       payload[:attachments] = attachments if attachments.present?
@@ -44,7 +44,12 @@ module SamsonSlackWebhooks
         response = Faraday.post(webhook.webhook_url, payload: payload.to_json)
         raise "Error #{response.status} #{response.body.to_s[0..100]}" if response.status >= 300
       rescue Faraday::ClientError, RuntimeError => e
-        Airbrake.notify(e, webhook_id: webhook.id, channel: webhook.channel)
+        Samson::ErrorNotifier.notify(
+          e,
+          webhook_id: webhook.id,
+          channel: webhook.channel,
+          url: webhook.stage&.url
+        )
         Rails.logger.error("Could not deliver slack message to webhook #{webhook.id}: #{e.message}")
       end
     end

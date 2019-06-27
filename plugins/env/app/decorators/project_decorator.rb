@@ -2,8 +2,8 @@
 Project.class_eval do
   include AcceptsEnvironmentVariables
 
-  has_many :project_environment_variable_groups
-  has_many :environment_variable_groups, through: :project_environment_variable_groups, dependent: :destroy
+  has_many :project_environment_variable_groups, dependent: :destroy
+  has_many :environment_variable_groups, through: :project_environment_variable_groups, inverse_of: :projects
 
   def environment_variables_attributes=(*)
     @environment_variables_was ||= serialized_environment_variables
@@ -21,11 +21,11 @@ Project.class_eval do
 
   def serialized_environment_variables
     @env_scopes ||= Environment.env_deploy_group_array # cache since each save needs them twice
-    variables = EnvironmentVariable.nested_variables(self)
-    sorted = EnvironmentVariable.sort_by_scopes(variables, @env_scopes)
-    sorted.map do |var|
-      "#{var.name}=#{var.value.inspect} # #{var.scope&.name || "All"}"
-    end.join("\n")
+    EnvironmentVariable.serialize(nested_environment_variables, @env_scopes)
+  end
+
+  def nested_environment_variables
+    [self, *environment_variable_groups].flat_map(&:environment_variables)
   end
 
   private

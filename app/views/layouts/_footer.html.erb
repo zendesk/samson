@@ -1,0 +1,21 @@
+<div class="footer navbar">
+  <div class="container">
+    <ul class="nav navbar-nav">
+      <li>
+        <p class="navbar-text">Built by Zendesk</p>
+      </li>
+    </ul>
+
+    <ul class="nav navbar-nav pull-right">
+      <% if link = ENV['HELP_LINK'] %>
+        <li><%= link.html_safe %></li>
+      <% end %>
+      <% if SAMSON_VERSION %>
+        <li>
+          <%= link_to SAMSON_VERSION.first(7), "https://github.com/zendesk/samson/commit/#{SAMSON_VERSION}",
+              title: "Currently deployed samson version since #{Rails.application.config.samson.start_time.to_s(:db)}", class: "sha" %>
+        </li>
+      <% end %>
+    </div>
+  </div>
+</div>

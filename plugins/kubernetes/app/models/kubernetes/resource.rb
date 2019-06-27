@@ -1,4 +1,6 @@
 # frozen_string_literal: true
+require 'samson/retry' # avoid race condition when using multiple threads to do kubeclient requests which use retry
+
 module Kubernetes
   # abstraction for interacting with kubernetes resources
   #
@@ -7,6 +9,10 @@ module Kubernetes
   # and see what it does internally ... simple create/update/delete requests or special magic ?
   module Resource
     class Base
+      TICK = 2 # seconds
+      UNSETTABLE_METADATA = [:selfLink, :uid, :resourceVersion, :generation, :creationTimestamp].freeze
+      attr_reader :template
+
       def initialize(template, deploy_group, autoscaled:, delete_resource:)
         @template = template
         @deploy_group = deploy_group
@@ -19,7 +25,7 @@ module Kubernetes
       end
 
       def namespace
-        @template.dig_fetch(:metadata, :namespace)
+        @template.dig(:metadata, :namespace)
       end
 
       # should it be deployed before all other things get deployed ?
@@ -27,24 +33,24 @@ module Kubernetes
         @template.dig(*RoleConfigFile::PREREQUISITE)
       end
 
-      def primary?
-        Kubernetes::RoleConfigFile::PRIMARY_KINDS.include?(@template.fetch(:kind))
-      end
-
       def deploy
-        if running?
+        if exist?
           if @delete_resource
             delete
           else
             update
           end
         else
-          create unless @delete_resource
+          create
         end
       end
 
       def revert(previous)
         if previous
+          # Avoid "the object has been modified" / "Precondition failed: UID in precondition" error
+          # by removing internal attributes kubernetes adds
+          previous = previous.deep_dup
+          previous[:metadata].except! *UNSETTABLE_METADATA
           self.class.new(previous, @deploy_group, autoscaled: @autoscaled, delete_resource: false).deploy
         else
           delete
@@ -55,15 +61,15 @@ module Kubernetes
       # - first wait is 0 since the request itself already took a few ms
       # - sum of waits should be ~30s which is the default delete timeout
       def delete
-        return true unless running?
+        return true unless exist?
         request_delete
         backoff_wait([0.0, 0.1, 0.2, 0.5, 1, 2, 4, 8, 16], "delete resource") do
-          expire_cache
-          return true unless running?
+          expire_resource_cache
+          return true unless exist?
         end
       end
 
-      def running?
+      def exist?
         !!resource
       end
 
@@ -76,15 +82,22 @@ module Kubernetes
         resource&.dig_fetch(:metadata, :uid)
       end
 
+      def kind
+        @template.fetch(:kind)
+      end
+
       def desired_pod_count
-        replica_source.dig_fetch(:spec, :replicas)
+        if @delete_resource
+          0
+        else
+          @template.dig(:spec, :replicas) || (RoleConfigFile.primary?(@template) ? 1 : 0)
+        end
       end
 
       private
 
-      # when autoscaling we expect as many pods as we currently have
-      def replica_source
-        (@autoscaled && resource) || @template
+      def error_location
+        "#{name} #{namespace} #{@deploy_group.name}"
       end
 
       def backoff_wait(backoff, reason)
@@ -92,27 +105,56 @@ module Kubernetes
           yield
           sleep wait
         end
-        raise "Unable to #{reason} (#{name} #{namespace})"
+        raise "Unable to #{reason} (#{error_location})"
       end
 
       def request_delete
         request(:delete, name, namespace)
-        expire_cache
+        expire_resource_cache
       end
 
-      def expire_cache
+      def expire_resource_cache
         remove_instance_variable(:@resource) if defined?(@resource)
       end
 
+      # TODO: remove the expire_cache and assign @resource but that breaks a bunch of deploy_executor tests
       def create
-        request(:create, @template)
-        expire_cache
+        return if @delete_resource
+        restore_template do
+          @template[:metadata].delete(:resourceVersion)
+          request(:create, @template)
+        end
+        expire_resource_cache
+      rescue Kubeclient::ResourceNotFoundError => e
+        raise_kubernetes_error(e.message)
       end
 
-      # FYI: do not use result of update call, see https://github.com/abonas/kubeclient/issues/196
+      # TODO: remove the expire_cache and assign @resource but that breaks a bunch of deploy_executor tests
       def update
+        ensure_not_updating_match_labels
         request(:update, template_for_update)
-        expire_cache
+        expire_resource_cache
+      end
+
+      def ensure_not_updating_match_labels
+        # blue-green deploy is allowed to do this, see template_filler.rb + deploy_executor.rb
+        return if @template.dig(:spec, :selector, :matchLabels, :blue_green)
+
+        # allow manual migration when user is aware of the issue and wants to do manual cleanup
+        return if @template.dig(:metadata, :annotations, :"samson/allow_updating_match_labels") == "true"
+
+        static = [:spec, :selector, :matchLabels]
+        # fallback is only for tests that use simple replies
+        old_labels = @resource.dig(*static) || {}
+        new_labels = @template.dig(*static) || {}
+
+        if new_labels.any? { |k, v| old_labels[k] != v }
+          raise(
+            Samson::Hooks::UserError,
+            "Updating #{static.join(".")} from #{old_labels.inspect} to #{new_labels.inspect} " \
+            "can only be done by deleting and redeploying or old pods would not be deleted."
+          )
+        end
       end
 
       def template_for_update
@@ -121,22 +163,33 @@ module Kubernetes
         # when autoscaling on a resource with replicas we should keep replicas constant
         # (not setting replicas will make it use the default of 1)
         path = [:spec, :replicas]
+        replica_source = (@autoscaled && resource) || @template
         copy.dig_set(path, replica_source.dig(*path)) if @template.dig(*path)
+
+        # copy fields
+        persistent_fields.each do |keep|
+          path = keep.split(".").map!(&:to_sym)
+          old_value = resource.dig(*path)
+          copy.dig_set path, old_value unless old_value.nil? # boolean fields are kept, but nothing is nil in kubernetes
+        end
 
         copy
       end
 
+      def persistent_fields
+        []
+      end
+
       def fetch_resource
         ignore_404 do
-          reply = request(:get, name, namespace, as: :raw)
-          JSON.parse(reply, symbolize_names: true)
+          request(:get, name, namespace)
         end
       end
 
       def pods
         ids = resource.dig_fetch(:spec, :template, :metadata, :labels).values_at(:release_id, :deploy_group_id)
         selector = Kubernetes::Release.pod_selector(*ids, query: true)
-        pod_client.get_pods(label_selector: selector, namespace: namespace).map(&:to_hash)
+        pod_client.get_pods(label_selector: selector, namespace: namespace).fetch(:items)
       end
 
       def delete_pods
@@ -149,27 +202,40 @@ module Kubernetes
         end
       end
 
-      def request(method, *args)
-        client.send("#{method}_#{@template.fetch(:kind).underscore}", *args)
-      rescue
-        message = $!.message.to_s
-        if message.include?(" is invalid:") || message.include?(" no kind ")
-          raise Samson::Hooks::UserError, "Kubernetes error: #{message}"
-        else
-          raise
+      def request(verb, *args)
+        SamsonKubernetes.retry_on_connection_errors do
+          begin
+            method = "#{verb}_#{Kubeclient::ClientMixin.underscore_entity(kind)}"
+            if client.respond_to? method
+              client.send(method, *args)
+            else
+              raise(
+                Samson::Hooks::UserError,
+                "apiVersion #{@template.fetch(:apiVersion)} does not support #{kind}. " \
+                "Check kubernetes docs for correct apiVersion"
+              )
+            end
+          rescue Kubeclient::HttpError => e
+            message = e.message.to_s
+            if message.include?(" is invalid:") || message.include?(" no kind ")
+              raise_kubernetes_error(message)
+            else
+              raise
+            end
+          end
         end
       end
 
+      def raise_kubernetes_error(message)
+        raise Samson::Hooks::UserError, "Kubernetes error #{error_location}: #{message}"
+      end
+
       def client
-        pod_client
+        @deploy_group.kubernetes_cluster.client(@template.fetch(:apiVersion))
       end
 
       def pod_client
-        @deploy_group.kubernetes_cluster.client
-      end
-
-      def loop_sleep
-        sleep 2 unless Rails.env == 'test'
+        @deploy_group.kubernetes_cluster.client('v1')
       end
 
       def restore_template
@@ -182,20 +248,25 @@ module Kubernetes
 
       def ignore_404
         yield
-      rescue KubeException => e
-        raise e unless e.respond_to?(:error_code) && e.error_code == 404
+      rescue Kubeclient::ResourceNotFoundError
         nil
       end
     end
 
-    class ConfigMap < Base
+    class Immutable < Base
+      def deploy
+        delete
+        create
+      end
     end
 
-    class HorizontalPodAutoscaler < Base
-      private
-
-      def client
-        @deploy_group.kubernetes_cluster.autoscaling_client
+    # normally we don't want to set the resourceVersion since that causes conflicts when our version is out of date
+    # but some resources require it to be set or fail with "metadata.resourceVersion: must be specified for an update"
+    class VersionedUpdate < Base
+      def template_for_update
+        t = super
+        t[:metadata][:resourceVersion] = resource.dig(:metadata, :resourceVersion)
+        t
       end
     end
 
@@ -205,33 +276,17 @@ module Kubernetes
       # updating a service requires re-submitting resourceVersion and clusterIP
       # we also keep whitelisted fields that are manually changed for load-balancing
       # (meant for labels, but other fields could work too)
-      def template_for_update
-        copy = super
+      def persistent_fields
         [
           "metadata.resourceVersion",
           "spec.clusterIP",
-          *ENV["KUBERNETES_SERVICE_PERSISTENT_FIELDS"].to_s.split(",")
-        ].each do |keep|
-          path = keep.split(".").map!(&:to_sym)
-          old_value = resource.dig(*path)
-          copy.dig_set path, old_value unless old_value.nil? # boolean fields are kept, but nothing is nil in kubernetes
-        end
-        copy
+          *ENV["KUBERNETES_SERVICE_PERSISTENT_FIELDS"].to_s.split(/\s,/),
+          *@template.dig(:metadata, :annotations, :"samson/persistent_fields").to_s.split(/[,\s]+/)
+        ]
       end
     end
 
     class Deployment < Base
-      # Avoid "the object has been modified" error by removing internal attributes kubernetes adds
-      def revert(previous)
-        if previous
-          previous = previous.deep_dup
-          previous[:metadata].except! :selfLink, :uid, :resourceVersion, :generation, :creationTimestamp
-        end
-        super
-      end
-
-      private
-
       def request_delete
         # Make kubernetes kill all the pods by scaling down
         restore_template do
@@ -241,21 +296,17 @@ module Kubernetes
 
         # Wait for there to be zero pods
         loop do
-          loop_sleep
+          sleep TICK
           # prevent cases when status.replicas are missing
           # e.g. running locally on Minikube, after scale replicas to zero
           # $ kubectl scale deployment {DEPLOYMENT_NAME} --replicas 0
           # "replicas" key is actually removed from "status" map
           # $ {"status":{"conditions":[...],"observedGeneration":2}}
-          break if fetch_resource.dig(:status, :replicas).to_i.zero?
+          break if fetch_resource.dig(:status, :replicas).to_i == 0
         end
 
         # delete the actual deployment
         super
-      end
-
-      def client
-        @deploy_group.kubernetes_cluster.extension_client
       end
     end
 
@@ -270,21 +321,31 @@ module Kubernetes
       # only makes sense to call this after deploying / while waiting for pods
       def desired_pod_count
         @desired_pod_count ||= begin
-          desired = resource.dig_fetch :status, :desiredNumberScheduled
-          return desired unless desired.zero?
+          return 0 if @delete_resource
 
-          # in bad state or does not yet know how many it needs
-          loop_sleep
-          expire_cache
+          desired = 0
 
-          desired = resource.dig_fetch :status, :desiredNumberScheduled
-          return desired unless desired.zero?
+          3.times do |i|
+            if i != 0
+              # last iteration had bad state or does not yet know how many it needs, expire cache
+              sleep TICK
+              expire_resource_cache
+            end
 
-          raise(
-            Samson::Hooks::UserError,
-            "Unable to find desired number of pods for daemonset #{name}\n" \
-            "delete it manually and make sure there is at least 1 node scheduleable."
-          )
+            desired = resource.dig_fetch :status, :desiredNumberScheduled
+            break if desired != 0
+          end
+
+          # check if we still failed on the last try
+          if desired == 0
+            raise(
+              Samson::Hooks::UserError,
+              "Unable to find desired number of pods for DaemonSet #{error_location}\n" \
+              "delete it manually and make sure there is at least 1 node schedulable."
+            )
+          end
+
+          desired
         end
       end
 
@@ -297,7 +358,7 @@ module Kubernetes
       # - waits for current to reach 0
       # - deletes the daemonset
       def request_delete
-        return super if no_pods_running? # delete when already dead from previous deletion try, update would fail
+        return super if pods_count == 0 # delete when already dead from previous deletion try, update would fail
 
         # make it match no node
         restore_template do
@@ -305,32 +366,30 @@ module Kubernetes
           update
         end
 
-        wait_for_termination_of_all_pods
+        delete_pods { wait_for_termination_of_all_pods }
+
         super # delete it
       end
 
-      def no_pods_running?
-        resource.dig_fetch(:status, :currentNumberScheduled).zero? &&
-          resource.dig_fetch(:status, :numberMisscheduled).zero?
-      end
-
-      def client
-        @deploy_group.kubernetes_cluster.extension_client
+      def pods_count
+        resource.dig_fetch(:status, :currentNumberScheduled) + resource.dig_fetch(:status, :numberMisscheduled)
       end
 
       def wait_for_termination_of_all_pods
         30.times do
-          loop_sleep
-          expire_cache
-          return if no_pods_running?
+          sleep TICK
+          expire_resource_cache
+          return if pods_count == 0
         end
-        raise Samson::Hooks::UserError, "Unable to terminate previous DaemonSet because it still has pods"
       end
     end
 
     class StatefulSet < Base
       def patch_replace?
-        [nil, "OnDelete"].include?(@template.dig(:spec, :updateStrategy)) && running?
+        return false if @delete_resource || !exist?
+        deprecated = @template.dig(:spec, :updateStrategy) # supporting pre 1.9 clusters
+        strategy = (deprecated.is_a?(String) ? deprecated : @template.dig(:spec, :updateStrategy, :type))
+        [nil, "OnDelete"].include?(strategy)
       end
 
       # StatefulSet cannot be updated normally when OnDelete is used or kubernetes <1.7
@@ -376,18 +435,9 @@ module Kubernetes
       ensure
         client.headers['Content-Type'] = old
       end
-
-      def client
-        @deploy_group.kubernetes_cluster.apps_client
-      end
     end
 
-    class Job < Base
-      def deploy
-        delete
-        create
-      end
-
+    class Job < Immutable
       def revert(_previous)
         delete
       end
@@ -399,26 +449,36 @@ module Kubernetes
       def request_delete
         delete_pods { super }
       end
+    end
 
-      # FYI per docs it is supposed to use batch api, but extension api works
-      def client
-        @deploy_group.kubernetes_cluster.batch_client
+    class CronJob < VersionedUpdate
+      def desired_pod_count
+        0 # we don't know when it will run
       end
     end
 
-    class Pod < Base
-      def deploy
-        delete
-        create
-      end
+    class Pod < Immutable
+    end
 
-      def desired_pod_count
-        1
+    class PodDisruptionBudget < Immutable
+      def initialize(*)
+        super
+        @delete_resource ||= @template[:delete] # allow deletion through release_doc logic
+      end
+    end
+
+    class APIService < Immutable
+    end
+
+    class Namespace < Base
+      # Noop because we are scared ... should later only allow deletion if samson created it
+      def delete
       end
     end
 
     def self.build(*args)
-      "Kubernetes::Resource::#{args.first.fetch(:kind)}".constantize.new(*args)
+      klass = "Kubernetes::Resource::#{args.first.fetch(:kind)}".safe_constantize || VersionedUpdate
+      klass.new(*args)
     end
   end
 end

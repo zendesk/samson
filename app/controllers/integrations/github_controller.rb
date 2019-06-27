@@ -11,7 +11,17 @@ class Integrations::GithubController < Integrations::BaseController
     ENV['GITHUB_HOOK_SECRET']
   end
 
+  def create
+    expire_commit_status if github_event_type == "status"
+    super
+  end
+
   protected
+
+  def expire_commit_status
+    commit = params[:sha].to_s
+    CommitStatus.new(project, commit).expire_cache(commit)
+  end
 
   def payload
     if payload = params[:payload]
@@ -69,7 +79,11 @@ class Integrations::GithubController < Integrations::BaseController
   end
 
   def webhook_handler
-    WEBHOOK_HANDLERS[request.headers['X-Github-Event']]
+    WEBHOOK_HANDLERS[github_event_type]
+  end
+
+  def github_event_type
+    request.headers['X-Github-Event']
   end
 
   def signature

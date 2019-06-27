@@ -99,6 +99,18 @@ describe Kubernetes::DeployGroupRole do
         ]]
       )
     end
+
+    it "ignores stage-roles that are ignored" do
+      stage.kubernetes_stage_roles.create!(kubernetes_role: kubernetes_roles(:resque_worker), ignored: true)
+      Kubernetes::DeployGroupRole.matrix(stage).must_equal(
+        [[
+          stage.deploy_groups.first,
+          [
+            [kubernetes_roles(:app_server), kubernetes_deploy_group_roles(:test_pod100_app_server)]
+          ]
+        ]]
+      )
+    end
   end
 
   describe ".usage" do
@@ -151,7 +163,7 @@ describe Kubernetes::DeployGroupRole do
       end
 
       describe "when role would be above limits" do
-        before { Kubernetes::UsageLimit.create!(cpu: 0.1, memory: 20) }
+        before { Kubernetes::UsageLimit.create!(cpu: 0.1, memory: 20, scope: environments(:staging)) }
 
         it "uses limits when role would be invalid" do
           seed!.must_equal []
@@ -232,6 +244,22 @@ describe Kubernetes::DeployGroupRole do
 
     it "is valid when requests are equal to usage_limit" do
       assert_valid deploy_group_role
+    end
+
+    it "does not blow up when requests_* is not set" do
+      deploy_group_role.requests_cpu = nil
+      deploy_group_role.requests_memory = nil
+      deploy_group_role.replicas = nil
+      refute_valid deploy_group_role
+      deploy_group_role.errors.full_messages.must_equal(
+        [
+          "Requests cpu can't be blank",
+          "Requests cpu is not a number",
+          "Requests memory can't be blank",
+          "Requests memory is not a number",
+          "Replicas can't be blank"
+        ]
+      )
     end
 
     describe "when requests are above usage_limit" do

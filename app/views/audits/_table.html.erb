@@ -28,16 +28,14 @@
           <%= column %>:
           <% if audit.action == "update" # others are just attribute hashes %>
             <% if before.is_a?(String) && after.is_a?(String) && (before + after).count("\n").nonzero? %>
-              <%= text_diff before, after %>
-              <summary>
-                <details>
-                  Before:<br/>
-                  <%= simple_format readable_ruby_value before %>
-                  <br/>
-                  After:<br/>
-                  <%= simple_format readable_ruby_value after %>
-                </details>
-              </summary>
+              <%= Samson::Diff.text_diff before, after %>
+              <details>
+                Before:<br/>
+                <%= simple_format readable_ruby_value before %>
+                <br/>
+                After:<br/>
+                <%= simple_format readable_ruby_value after %>
+              </details>
             <% else %>
               <%= readable_ruby_value before %> → <%= readable_ruby_value after %>
             <% end %>
@@ -52,6 +50,6 @@
   </tbody>
 </table>
 
-<%= paginate audits if audits.respond_to?(:total_pages) %>
+<%= paginate @pagy if @pagy %>
 
-<style><%= Diffy::CSS %></style>
+<%= Samson::Diff.style_tag %>

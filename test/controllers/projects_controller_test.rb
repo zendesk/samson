@@ -18,7 +18,7 @@ describe ProjectsController do
     projects(:other).delete
   end
 
-  as_a_viewer do
+  as_a :viewer do
     describe "#index" do
       it "renders" do
         get :index
@@ -34,10 +34,54 @@ describe ProjectsController do
         assigns(:projects).map(&:name).must_equal [starred_project.name, "Foo"]
       end
 
-      it "can search" do
-        Project.create!(name: "a", repository_url: "a")
-        get :index, params: {search: {query: "o"}}
-        assigns(:projects).map(&:name).must_equal ["Foo"]
+      it "renders nav" do
+        get :index, params: {partial: "nav"}
+        assert_template "projects/_nav"
+        response.body.wont_include "<html"
+      end
+
+      describe "search" do
+        it "can search via query" do
+          get :index, params: {search: {query: "foo"}}
+          assigns(:projects).map(&:name).must_equal ["Foo"]
+        end
+
+        it "can combine query and url" do
+          get :index, params: {search: {query: "foo", url: "git@example.com:bar/foo.git"}}
+          assigns(:projects).map(&:name).must_equal ["Foo"]
+        end
+
+        describe "via url" do
+          def validate_search_url(url, result)
+            get :index, params: {search: {url: url}}
+            assigns(:projects).map(&:name).must_equal result
+          end
+
+          before do
+            Project.create!(name: "https_url", repository_url: "https://github.com/foo/bar.git")
+          end
+
+          it "renders with https and .git in url" do
+            validate_search_url("https://github.com/foo/bar.git", ["https_url"])
+          end
+
+          it "renders with ssh in url" do
+            validate_search_url("ssh://git@example.com:bar/foo.git", ["Foo"])
+          end
+
+          it "renders without .git in url" do
+            validate_search_url("https://github.com/foo/bar", ["https_url"])
+          end
+
+          it "renders without .git and with @git in url" do
+            validate_search_url("git@example.com/bar/foo", ["Foo"])
+          end
+
+          it "does not find when url does not match" do
+            get :index, params: {search: {url: "https://github.com/test.git"}}
+            assigns(:projects).map(&:name).must_be_empty
+          end
+        end
       end
 
       it "renders json" do
@@ -108,11 +152,27 @@ describe ProjectsController do
         it "is json and does not include :token" do
           get :show, params: {id: project.permalink, format: :json}
           assert_response :success
-          project = JSON.parse(response.body)
+          result = JSON.parse(response.body)
+          result.keys.must_include "project"
+          project = result["project"]
           project['name'].must_equal 'Foo'
           project['repository_path'].must_equal 'bar/foo'
           refute project.key?('deleted_at')
           refute project.key?('token')
+        end
+
+        it "renders with envionment_variable_groups if present" do
+          get :show, params: {id: project.to_param, includes: "environment_variable_groups", format: :json}
+          assert_response :success
+          project = JSON.parse(response.body)
+          project.keys.must_include "environment_variable_groups"
+        end
+
+        it "renders with environment_variables_with_scope if present" do
+          get :show, params: {id: project.to_param, includes: "environment_variables_with_scope", format: :json}
+          assert_response :success
+          project = JSON.parse(response.body)
+          project.keys.must_include "environment_variables_with_scope"
         end
       end
     end
@@ -152,20 +212,39 @@ describe ProjectsController do
     end
   end
 
-  as_a_deployer do
+  as_a :deployer do
     unauthorized :put, :update, id: :foo
     unauthorized :delete, :destroy, id: :foo
   end
 
-  as_a_project_admin do
+  as_a :project_admin do
     unauthorized :get, :new
-    unauthorized :post, :create
+    unauthorized :post, :create, project: {name: "foo"}
 
     describe "#edit" do
+      with_env DOCKER_FEATURE: "1"
       it "renders" do
         get :edit, params: {id: project.to_param}
         assert_template :edit
         refute fields_disabled?
+      end
+
+      it "renders with docker fields" do
+        with_env DOCKER_FORCE_EXTERNAL_BUILD: nil do
+          get :edit, params: {id: project.to_param}
+          assert_select 'select[id=project_docker_build_method]'
+          assert_select 'input[id=project_docker_release_branch]'
+          assert_select 'input[id=project_dockerfiles]'
+        end
+      end
+
+      it "renders without docker fields" do
+        with_env DOCKER_FORCE_EXTERNAL_BUILD: "1" do
+          get :edit, params: {id: project.to_param}
+          assert_select 'input[id=project_docker_release_branch]', count: 0
+          assert_select 'select[id=project_docker_build_method]', count: 0
+          assert_select 'input[id=project_dockerfiles]'
+        end
       end
 
       it "does not find soft deleted" do
@@ -207,14 +286,18 @@ describe ProjectsController do
 
           assert_redirected_to projects_path
           request.flash[:notice].wont_be_nil
+
+          refute ActionMailer::Base.deliveries.last
         end
       end
 
       it "sends deletion notification" do
-        delete :destroy, params: {id: project.to_param}
-        mail = ActionMailer::Base.deliveries.last
-        mail.subject.include?("Samson Project Deleted")
-        mail.subject.include?(project.name)
+        with_env PROJECT_DELETED_NOTIFY_ADDRESS: 'foo@bar.com' do
+          delete :destroy, params: {id: project.to_param}
+          mail = ActionMailer::Base.deliveries.last
+          mail.subject.include?("Samson Project Deleted")
+          mail.subject.include?(project.name)
+        end
       end
 
       it "does not fail when validations fail" do
@@ -226,7 +309,7 @@ describe ProjectsController do
     end
   end
 
-  as_an_admin do
+  as_a :admin do
     describe "#new" do
       it "renders" do
         get :new
@@ -242,31 +325,25 @@ describe ProjectsController do
     end
 
     describe "#create" do
-      before do
-        post :create, params: params
+      let(:params) do
+        {
+          project: {
+            name: "Hello",
+            repository_url: "git://foo.com/bar"
+          }
+        }
       end
 
-      describe "with valid parameters" do
-        let(:params) do
-          {
-            project: {
-              name: "Hello",
-              repository_url: "git://foo.com/bar"
-            }
-          }
-        end
-        let(:project) { Project.where(name: "Hello").first }
+      it "redirects to the new project's page" do
+        post :create, params: params
+        project = Project.last
+        assert_redirected_to project_path(project)
+        refute ActionMailer::Base.deliveries.last
+      end
 
-        it "redirects to the new project's page" do
-          assert_redirected_to project_path(project)
-        end
-
-        it "creates a new project" do
-          project.wont_be_nil
-          project.stages.must_be_empty
-        end
-
-        it "notifies about creation" do
+      it "notifies about creation" do
+        with_env PROJECT_CREATED_NOTIFY_ADDRESS: 'foo@bar.com' do
+          post :create, params: params
           mail = ActionMailer::Base.deliveries.last
           mail.subject.include?("Samson Project Created")
           mail.subject.include?(project.name)
@@ -274,9 +351,10 @@ describe ProjectsController do
       end
 
       describe "with invalid parameters" do
-        let(:params) { {project: {name: ""}} }
+        before { params[:project][:name] = '' }
 
         it "renders new template" do
+          post :create, params: params
           assert_template :new
         end
       end

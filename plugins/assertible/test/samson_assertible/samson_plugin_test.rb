@@ -70,7 +70,7 @@ describe SamsonAssertible::Notification do
 end
 
 describe :after_deploy do
-  subject { Samson::Hooks.fire :after_deploy, deploy, users(:admin) }
+  subject { Samson::Hooks.fire :after_deploy, deploy, stub(output: nil) }
 
   let(:deploy) { deploys(:succeeded_test) }
 

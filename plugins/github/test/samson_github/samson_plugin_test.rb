@@ -10,12 +10,14 @@ describe SamsonDatadog do
   describe :stage_permitted_params do
     it "lists extra keys" do
       Samson::Hooks.fire(:stage_permitted_params).must_include(
-        [:update_github_pull_requests, :use_github_deployment_api]
+        [:update_github_pull_requests, :use_github_deployment_api, :github_pull_request_comment]
       )
     end
   end
 
   describe :after_deploy do
+    only_callbacks_for_plugin :after_deploy
+
     describe "with github notifications enabled" do
       before { stage.update_github_pull_requests = true }
 
@@ -52,10 +54,86 @@ describe SamsonDatadog do
   end
 
   describe :before_deploy do
+    only_callbacks_for_plugin :before_deploy
+
     it "creates a github deployment" do
       stage.use_github_deployment_api = true
       GithubDeployment.any_instance.expects(:create)
       Samson::Hooks.fire(:before_deploy, deploy, nil)
+    end
+
+    it "does not create a github deployment when not enabled" do
+      stage.use_github_deployment_api = false
+      Samson::Hooks.fire(:before_deploy, deploy, nil)
+    end
+  end
+
+  describe :repo_provider_status do
+    def fire
+      Samson::Hooks.fire(:repo_provider_status)
+    end
+
+    let(:status_url) { "#{SamsonGithub::STATUS_URL}/api/v2/status.json" }
+
+    only_callbacks_for_plugin :repo_provider_status
+
+    it "reports good response" do
+      assert_request(:get, status_url, to_return: {body: {status: {indicator: 'none'}}.to_json}) do
+        fire.must_equal [nil]
+      end
+    end
+
+    it "reports bad response" do
+      assert_request(:get, status_url, to_return: {body: {status: {indicator: 'critical'}}.to_json}) do
+        fire.to_s.must_include "GitHub may be having problems"
+      end
+    end
+
+    it "reports invalid response" do
+      assert_request(:get, status_url, to_return: {status: 400}) do
+        fire.to_s.must_include "GitHub may be having problems"
+      end
+    end
+
+    it "reports errors" do
+      assert_request(:get, status_url, to_timeout: []) do
+        fire.to_s.must_include "GitHub may be having problems"
+      end
+    end
+  end
+
+  describe :changeset_api_request do
+    let(:project) { Project.new(repository_url: 'ssh://git@github.com:foo/bar.git') }
+    let(:changeset) { Changeset.new(project, "a", "b") }
+
+    def fire(method)
+      Samson::Hooks.fire(:changeset_api_request, changeset, method)
+    end
+
+    only_callbacks_for_plugin :changeset_api_request
+
+    it "skips non-gitlab" do
+      project.stubs(:github?).returns(false)
+      fire(:branch).must_equal [nil]
+    end
+
+    it "calls branch api endpoint" do
+      stub_github_api("repos/foo/bar/branches/b", commit: {sha: "foo"})
+      fire(:branch).must_equal ["foo"]
+    end
+
+    it "calls compare api endpoint" do
+      stub_github_api("repos/foo/bar/compare/a...b", "x" => "y")
+      fire(:compare).first.to_h.must_equal x: "y"
+    end
+
+    it "requires a valid method" do
+      assert_raises(NoMethodError) { fire(:bad) }
+    end
+
+    it "catches exception and returns NullComparison" do
+      stub_github_api("repos/foo/bar/compare/a...b", {}, 301)
+      assert_raises(RuntimeError) { fire(:compare).first }.message.must_include "GitHub: Get https://"
     end
   end
 end

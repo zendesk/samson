@@ -1,71 +1,62 @@
 # frozen_string_literal: true
-class LocksController < ApplicationController
-  include CurrentProject
-  include CurrentStage
-
-  before_action :require_stage, if: :for_stage_lock?
+# Web-UI users interacts with locks via buttons on other pages, so always redirect back to where they clicked the button
+class LocksController < ResourceController
+  before_action :set_resource, only: [:create, :destroy]
   before_action :authorize_resource!
 
-  def index
-    render json: {locks: Lock.page(page).per(1000)}
-  end
-
   def create
-    lock = Lock.create!(
-      params.require(:lock).
-        permit(:description, :resource_id, :resource_type, :warning, :delete_in).
-        merge(user: current_user)
-    )
     respond_to do |format|
-      format.html { redirect_back notice: 'Locked', fallback_location: root_path }
-      format.json { render json: {lock: lock} }
+      format.html do
+        options =
+          if @resource.save
+            {notice: (@lock.warning? ? 'Warned' : 'Locked')}
+          else
+            {alert: @lock.errors.full_messages.join("\n")}
+          end
+        redirect_back(fallback_location: locks_path, **options)
+      end
+      format.json { super }
     end
   end
 
   def destroy
-    lock.try(:soft_delete)
     respond_to do |format|
-      format.html { redirect_back notice: 'Unlocked', fallback_location: root_path }
-      format.json { head :ok }
+      format.html do
+        @lock.soft_delete!(validate: false)
+        redirect_back(fallback_location: locks_path, notice: "Removed!")
+      end
+      format.json { super }
     end
   end
 
-  def destroy_via_resource
-    Lock.where(
-      resource_id: params.fetch(:resource_id).presence,
-      resource_type: params.fetch(:resource_type).presence
-    ).first!.soft_delete!(validate: false)
-    head :ok
+  private
+
+  def resource_params
+    super.permit(
+      :description,
+      :resource_id,
+      :resource_type,
+      :warning,
+      :delete_in,
+      :delete_at
+    ).merge(user: current_user)
   end
 
-  protected
-
-  def for_stage_lock?
-    case action_name
-    when 'create'
-      (params[:lock] || {})[:resource_type] == "Stage"
-    when 'destroy'
-      lock.resource_type == "Stage"
-    when 'index', 'destroy_via_resource'
-      false
+  def set_resource
+    if action_name == 'destroy' && !params[:id]
+      # allow destroying via a query, ideally remove this and support querying in index and then do a normal delete
+      # NOTE: using .fetch instead of .require since we support "" as meaning "global"
+      id = params.fetch(:resource_id).presence
+      type = params.fetch(:resource_type).presence
+      raise "global or exact are ok, but not just id or just type" if !type ^ !id
+      assign_resource Lock.where(resource_id: id, resource_type: type).first!
     else
-      raise 'Unsupported action'
+      super
     end
   end
 
-  def lock
-    @lock ||= Lock.find(params[:id])
-  end
-
-  # Overrides CurrentStage#require_stage
-  def require_stage
-    case action_name
-    when 'create' then
-      @stage = Stage.find(params[:lock][:resource_id])
-    when 'destroy' then
-      @stage = lock.resource
-    else
-      raise 'Unsupported action'
-    end
+  # TODO: make CurrentUser handle dynamic scopes and remove this
+  def authorize_resource!
+    unauthorized! unless can?(resource_action, controller_name.to_sym, @lock&.resource)
   end
 end

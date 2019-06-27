@@ -1,34 +1,6 @@
 <% scopes = Environment.env_deploy_group_array %>
-<% sorted = EnvironmentVariable.sort_by_scopes(form.object.environment_variables, scopes) %>
-<%= form.fields_for :environment_variables, sorted << EnvironmentVariable.new do |fields| %>
-  <div class="form-group">
-    <div class="col-lg-3">
-      <%= fields.text_field :name, class: "form-control", placeholder: "Name" %>
-    </div>
+<% sorted_env_vars = EnvironmentVariable.sort_by_scopes(form.object.environment_variables, scopes) %>
+<%= render "samson_env/environment_variables_fields",
+      form: form, environment_variables: sorted_env_vars, scopes: scopes %>
 
-    <div class="col-lg-5">
-      <%# using a text area so users can resize them with browser controls %>
-      <%= fields.text_area :value, class: "form-control", placeholder: "Value", rows: 1 %>
-    </div>
-
-    <% if DeployGroup.enabled? %>
-      <div class="col-lg-2">
-        <%= fields.select :scope_type_and_id, scopes, {}, Samson::FormBuilder::LIVE_SELECT_OPTIONS %>
-      </div>
-    <% end %>
-
-    <% if fields.object.persisted? %>
-      <div class="col-lg-1 checkbox">
-        <%= link_to_history fields.object, counter: false %>
-      </div>
-      <div class="col-lg-1 checkbox">
-        <%= fields.label :_destroy do %>
-          <%= fields.check_box :_destroy if fields.object.persisted? %>
-          Delete
-        <% end %>
-      </div>
-    <% end %>
-  </div>
-<% end %>
-<%= link_to "Add row", "#", class: "duplicate_previous_row" %> |
-<%= link_to "Paste", "#", class: "paste_env_variables" %>
+<div id="env_paste_dialog"></div>

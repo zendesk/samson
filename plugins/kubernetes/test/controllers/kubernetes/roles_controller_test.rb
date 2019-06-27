@@ -19,7 +19,7 @@ describe Kubernetes::RolesController do
   unauthorized :get, :show, project_id: :foo, id: 1
   unauthorized :get, :example, project_id: :foo
 
-  as_a_viewer do
+  as_a :viewer do
     unauthorized :post, :seed, project_id: :foo
     unauthorized :get, :new, project_id: :foo
     unauthorized :post, :create, project_id: :foo
@@ -34,7 +34,7 @@ describe Kubernetes::RolesController do
 
       it "can render as json" do
         get :index, params: {project_id: project, format: 'json'}
-        JSON.parse(response.body).size.must_equal project.kubernetes_roles.size
+        JSON.parse(response.body)["kubernetes_roles"].size.must_equal project.kubernetes_roles.size
       end
     end
 
@@ -46,7 +46,7 @@ describe Kubernetes::RolesController do
 
       it "renders JSON" do
         get :show, params: {project_id: project, id: role.id, format: 'json'}
-        JSON.parse(response.body).keys.must_equal ["role"]
+        JSON.parse(response.body).keys.must_equal ["kubernetes_role"]
       end
     end
 
@@ -57,12 +57,12 @@ describe Kubernetes::RolesController do
 
         # verify that the template is valid
         template = response.body[/<pre>(.*)<\/pre>/m, 1]
-        Kubernetes::RoleConfigFile.new(template, 'app-server.yml')
+        Kubernetes::RoleConfigFile.new(template, 'app-server.yml', project: nil)
       end
     end
   end
 
-  as_a_deployer do
+  as_a :deployer do
     unauthorized :post, :seed, project_id: :foo
     unauthorized :get, :new, project_id: :foo
     unauthorized :post, :create, project_id: :foo
@@ -70,27 +70,27 @@ describe Kubernetes::RolesController do
     unauthorized :delete, :destroy, project_id: :foo, id: 1
   end
 
-  as_a_project_admin do
+  as_a :project_admin do
     describe "#seed" do
       it "creates roles" do
         Kubernetes::Role.expects(:seed!)
         post :seed, params: {project_id: project, ref: 'HEAD'}
         assert_redirected_to action: :index
-        refute flash[:error]
+        refute flash[:alert]
       end
 
       it "creates roles from default branch when none is given" do
         Kubernetes::Role.expects(:seed!)
         post :seed, params: {project_id: project, ref: ''}
         assert_redirected_to action: :index
-        refute flash[:error]
+        refute flash[:alert]
       end
 
       it "shows errors when role creation fails due to an invalid template" do
         Kubernetes::Role.expects(:seed!).raises(Samson::Hooks::UserError.new("Heyho"))
         post :seed, params: {project_id: project, ref: 'HEAD'}
         assert_redirected_to action: :index
-        flash[:error].must_include "Heyho"
+        flash[:alert].must_include "Heyho"
       end
     end
 
@@ -105,7 +105,7 @@ describe Kubernetes::RolesController do
       it "creates" do
         post :create, params: {project_id: project, kubernetes_role: role_params}
         role = Kubernetes::Role.last
-        assert_redirected_to "/projects/foo/kubernetes/roles"
+        assert_redirected_to "/projects/foo/kubernetes/roles/#{role.id}"
         role.name.must_equal 'name'
       end
 
@@ -117,9 +117,11 @@ describe Kubernetes::RolesController do
     end
 
     describe "#update" do
+      before { role_params[:manual_deletion_acknowledged] = true }
+
       it "updates" do
         put :update, params: {project_id: project, id: role.id, kubernetes_role: role_params}
-        assert_redirected_to "/projects/foo/kubernetes/roles"
+        assert_redirected_to "/projects/foo/kubernetes/roles/#{role.id}"
         role.reload.name.must_equal 'name'
       end
 

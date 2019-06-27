@@ -10,7 +10,7 @@ Samson::Periodical.register :stop_expired_deploys, "Cancel deploys when buddy ap
 end
 
 Samson::Periodical.register :renew_vault_token, "Renew vault token" do
-  Samson::Secrets::VaultClient.client.renew_token
+  Samson::Secrets::VaultClientManager.instance.renew_token
 end
 
 Samson::Periodical.register :remove_expired_locks, "Remove expired locks" do
@@ -19,10 +19,10 @@ end
 
 Samson::Periodical.register :report_system_stats, "Report system stats" do
   memcached_available =
-    if Rails.env.test?
+    if Rails.cache.class == ActiveSupport::Cache::MemoryStore
       1
     else
-      Rails.cache.instance_variable_get(:@data).send(:ring).servers.count(&:alive?)
+      Rails.cache.instance_variable_get(:@data).with { |c| c.send(:ring).servers.count(&:alive?) }
     end
 
   ActiveSupport::Notifications.instrument(
@@ -35,6 +35,14 @@ end
 
 Samson::Periodical.register :periodical_deploy, "Deploy periodical stages", consistent_start_time: true do
   Samson::PeriodicalDeploy.run
+end
+
+Samson::Periodical.register :report_process_stats, "Report process stats" do
+  Samson::ProcessUtils.report_to_statsd
+end
+
+Samson::Periodical.register :repo_provider_status, "Refresh repo provider status" do
+  Samson::RepoProviderStatus.refresh
 end
 
 if ENV['SERVER_MODE']

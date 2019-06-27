@@ -2,6 +2,7 @@
 require 'csv'
 
 class DeploysController < ApplicationController
+  include WrapInWithDeleted
   include CurrentProject
 
   skip_before_action :require_project, only: [:active, :active_count, :changeset]
@@ -27,16 +28,16 @@ class DeploysController < ApplicationController
   #   * production (boolean, is this in proudction or not)
   #   * status (what is the status of this job failed|running| etc)
   def index
-    @deploys =
+    @pagy, @deploys =
       if ids = params[:ids]
-        Kaminari.paginate_array(deploys_scope.find(ids)).page(1).per(1000)
+        pagy_array(deploys_scope.find(ids), page: 1, items: 1000)
       else
         search || return
       end
 
     respond_to do |format|
       format.json do
-        render_as_json :deploys, @deploys, allowed_includes: [:job, :project, :user, :stage]
+        render_as_json :deploys, @deploys, @pagy, allowed_includes: [:job, :project, :user, :stage]
       end
       format.csv do
         datetime = Time.now.strftime "%Y%m%d_%H%M"
@@ -46,8 +47,9 @@ class DeploysController < ApplicationController
     end
   end
 
+  # TODO: remove the `reference` params and use `deploy[reference]`
   def new
-    @deploy = current_project.deploys.build(params.except(:project_id).permit(:stage_id, :reference))
+    @deploy = stage.deploys.new({reference: params[:reference] || @stage.default_reference}.merge(deploy_params))
   end
 
   def create
@@ -74,7 +76,7 @@ class DeploysController < ApplicationController
   end
 
   def confirm
-    @changeset = Deploy.new(stage: stage, reference: reference, project: current_project).changeset
+    @changeset = stage.deploys.new(deploy_params).changeset
     render 'changeset', layout: false
   end
 
@@ -94,7 +96,7 @@ class DeploysController < ApplicationController
           type: 'text/plain'
       end
       format.json do
-        render_as_json :deploy, @deploy, allowed_includes: [:job, :user, :project, :stage]
+        render_as_json :deploy, @deploy, nil, allowed_includes: [:job, :user, :project, :stage]
       end
     end
   end
@@ -107,13 +109,12 @@ class DeploysController < ApplicationController
   end
 
   def destroy
-    if @deploy.can_be_cancelled_by?(current_user)
-      @deploy.cancel(current_user)
-    else
-      flash[:error] = "You do not have privileges to cancel this deploy."
-    end
-
+    @deploy.cancel(current_user)
     redirect_to [current_project, @deploy]
+  end
+
+  def self.deploy_permitted_params
+    [:reference, :stage_id, :redeploy_previous_when_failed] + Samson::Hooks.fire(:deploy_permitted_params).flatten(1)
   end
 
   protected
@@ -138,6 +139,12 @@ class DeploysController < ApplicationController
       projects = Project.where(
         Project.arel_table[:name].matches("%#{ActiveRecord::Base.send(:sanitize_sql_like, project_name)}%")
       ).pluck(:id)
+    end
+
+    # For external searches
+    if project_permalinks = search[:project_permalinks].to_s.split(",").presence
+      projects_from_permalinks = Project.where(permalink: project_permalinks).pluck(:id)
+      projects = projects ? projects_from_permalinks & projects : projects_from_permalinks
     end
 
     if users || status || git_sha
@@ -173,15 +180,8 @@ class DeploysController < ApplicationController
     if updated_at = search[:updated_at].presence
       deploys = deploys.where("updated_at between ? AND ?", *updated_at)
     end
-    deploys.page(page).per(30)
-  end
-
-  def deploy_permitted_params
-    [:reference, :stage_id] + Samson::Hooks.fire(:deploy_permitted_params)
-  end
-
-  def reference
-    deploy_params[:reference].strip
+    deploys = deploys.where.not(deleted_at: nil) if search_deleted
+    pagy(deploys, page: params[:page], items: 30)
   end
 
   def stage
@@ -189,7 +189,7 @@ class DeploysController < ApplicationController
   end
 
   def deploy_params
-    params.require(:deploy).permit(deploy_permitted_params)
+    params.fetch(:deploy, {}).permit(self.class.deploy_permitted_params).merge(project: current_project)
   end
 
   def find_deploy

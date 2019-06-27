@@ -22,7 +22,7 @@ describe NewRelicHelper do
     end
 
     it "is false when api is not configured" do
-      silence_warnings { SamsonNewRelic::KEY = nil }
+      silence_warnings { SamsonNewRelic::API_KEY = nil }
       refute newrelic_enabled_for_deploy?
     end
   end

@@ -7,7 +7,7 @@
 
       <% if DeployGroup.enabled? %>
         <br/>
-        <%= stage.deploy_groups.sort_by(&:natural_order).map(&:name).join(', ') %>
+        <%= stage.deploy_groups.pluck(:name).join(', ') %>
       <% end %>
     </td>
 

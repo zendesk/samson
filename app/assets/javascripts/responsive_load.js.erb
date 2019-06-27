@@ -1,14 +1,26 @@
 // show loading animation and errors inside the container that is being replaced
+$(document).ready(function () {
+  $('.lazy-load').each(function () {
+    $(this).responsiveLoad();
+  });
+});
+
 $.fn.responsiveLoad = function(url, callback){
   var loading = '<center><%= image_tag "ajax-loader.gif" %></center>';
   var $container = $(this);
+  var data = $container.data();
+  var requestUrl = url || data.url;
+  var delay = data.delay || 0;
   var height = $container.height();
-  $container.html(loading).css("height", height + "px").load(url, function(response, status, xhr){
-    $container.css("height", "");
-    if (status == "error") {
-      $container.html("Error:" + xhr.status + " " + xhr.statusText);
-    } else {
-      if(callback) callback(response, status, xhr);
-    }
-  });
+
+  setTimeout((function () {
+    $container.html(loading).css("height", height + "px").load(requestUrl, function (response, status, xhr) {
+      $container.css("height", "");
+      if (status == "error") {
+        $container.html("Error:" + xhr.status + " " + xhr.statusText);
+      } else {
+        if (callback) callback(response, status, xhr);
+      }
+    });
+  }), delay);
 };

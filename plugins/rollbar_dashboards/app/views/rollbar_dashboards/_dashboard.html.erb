@@ -1,0 +1,21 @@
+<div class="panel panel-default" style="min-height: <%= RollbarDashboards::DashboardsHelper::DASHBOARD_HEIGHT %>em">
+  <div class="panel-heading">
+    <%= image_tag 'rollbar_dashboards/icon.png', height: '30px' %>
+    <%= "#{title} (#{dashboard_data.first.base_url})" %>
+  </div>
+  <% items = dashboard_data.second %>
+  <% if items.present? %>
+    <table class="table rollbar-table">
+      <tr>
+        <th class="rollbar-table__count">Count</th>
+        <th class="rollbar-table__title">Title</th>
+        <th class="rollbar-table__env">Environment</th>
+      </tr>
+      <%= render partial: 'rollbar_dashboards/item', collection: items, locals: {dashboard_setting: dashboard_data.first} %>
+    </table>
+  <% else %>
+    <div class="panel-body">
+      <p>There are no items to display at this time...</p>
+    </div>
+  <% end %>
+</div>

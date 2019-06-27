@@ -12,7 +12,7 @@ Risks:
 <% end %>
 
 Commit Range: <%= @changeset.commit_range %>
-<%= @changeset.github_url %>
+<%= @changeset.commit_range_url %>
 
 <% @changeset.commits.each do |commit| %>
   <%= commit.author_name %>    <%= commit.summary %>

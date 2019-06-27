@@ -7,7 +7,7 @@ describe SamsonGcloud::ImageBuilder do
   let(:build) { builds(:docker_build) }
 
   describe ".build_image" do
-    def expect_successful_build
+    def expect_succeeded_build
       executor.expects(:execute).with { output.write "foo digest: sha-123:abc" }.returns(true)
     end
 
@@ -17,14 +17,17 @@ describe SamsonGcloud::ImageBuilder do
 
     let(:dir) { "some-dir" }
     let(:output) { OutputBuffer.new }
-    let(:executor) { TerminalExecutor.new(output, verbose: true) }
+    let(:executor) { TerminalExecutor.new(output, verbose: true, project: build.project) }
     let(:repo) { 'gcr.io/p-123/samson/foo' }
 
     with_env GCLOUD_PROJECT: 'p-123', GCLOUD_ACCOUNT: 'acc'
 
     around { |test| Dir.mktmpdir { |dir| Dir.chdir(dir) { test.call } } }
 
-    before { Dir.mkdir 'some-dir' }
+    before do
+      SamsonGcloud::ImageBuilder.stubs(:gcloud_version).returns(Gem::Version.new("300.0.0"))
+      Dir.mkdir 'some-dir'
+    end
 
     it "builds using a custom cloudbuild.yml" do
       build_image
@@ -68,7 +71,7 @@ describe SamsonGcloud::ImageBuilder do
         tags:
         - '#{build.git_sha}'
       YML
-      output.to_s.must_include "not found in gcr"
+      output.messages.must_include "not found in gcr"
     end
 
     it "tags latest when requested" do
@@ -86,7 +89,7 @@ describe SamsonGcloud::ImageBuilder do
     end
 
     it "returns the docker repo digest" do
-      expect_successful_build
+      expect_succeeded_build
       build_image.must_equal "#{repo}@sha-123:abc"
       build.external_url.must_be_nil
     end
@@ -119,14 +122,14 @@ describe SamsonGcloud::ImageBuilder do
 
     it "uses executor timeout" do
       executor.expects(:execute).with do |*commands|
-        commands.join.must_include("--timeout 7200")
+        commands.join.must_include("--timeout 5")
       end.returns(true)
       build_image
     end
 
     it "builds different Dockerfiles" do
       build.dockerfile = 'Dockerfile.changed'
-      expect_successful_build
+      expect_succeeded_build
       build_image.must_equal "#{repo}-changed@sha-123:abc"
       build.external_url.must_be_nil
     end
@@ -138,6 +141,12 @@ describe SamsonGcloud::ImageBuilder do
       File.read("some-dir/.gcloudignore").must_equal "#!include:.gitignore\n#!include:.dockerignore"
     end
 
+    it "ignores Dockerfile if Dockerfile is in dockerignore" do
+      File.write("some-dir/.dockerignore", "foo\nDockerfile\nbar")
+      build_image
+      File.read("some-dir/.dockerignore").must_equal "foo\n\nbar"
+    end
+
     it "does not include missing files and ignores .git by default" do
       build_image
       File.read("some-dir/.gcloudignore").must_equal ".git"
@@ -147,6 +156,37 @@ describe SamsonGcloud::ImageBuilder do
       File.write("some-dir/.gcloudignore", "X")
       build_image
       File.read("some-dir/.gcloudignore").must_equal "X"
+    end
+
+    it "works when gcloud is old" do
+      SamsonGcloud::ImageBuilder.unstub(:gcloud_version)
+      SamsonGcloud::ImageBuilder.expects(:gcloud_version).returns(Gem::Version.new("0.0.0"))
+      build_image # no test, just for coverage
+    end
+  end
+
+  describe ".gcloud_version" do
+    before do
+      SamsonGcloud::ImageBuilder.instance_variable_set(:@gcloud_version, nil)
+    end
+
+    after do
+      SamsonGcloud::ImageBuilder.remove_instance_variable(:@gcloud_version)
+    end
+
+    it "knows versions" do
+      SamsonGcloud::ImageBuilder.expects(:`).returns("Google Cloud SDK 300.0.0")
+      SamsonGcloud::ImageBuilder.send(:gcloud_version).to_s.must_equal "300.0.0"
+    end
+
+    it "uses new when something went wrong" do
+      SamsonGcloud::ImageBuilder.expects(:`).returns("whoops")
+      SamsonGcloud::ImageBuilder.send(:gcloud_version).to_s.must_equal "9999"
+    end
+
+    it "caches" do
+      SamsonGcloud::ImageBuilder.expects(:`).returns("Google Cloud SDK 300.0.0")
+      2.times { SamsonGcloud::ImageBuilder.send(:gcloud_version) }
     end
   end
 end

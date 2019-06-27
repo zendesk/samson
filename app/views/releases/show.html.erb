@@ -16,12 +16,20 @@
   <label>Created</label>
   <%= relative_time(@release.created_at) %>
 
+  <legend>Commit Status</legend>
+  <p>
+    <% CommitStatus.new(@release.project, @release.commit).statuses.each do |status| %>
+      <%= commit_status_icon(status.fetch(:state)) %>
+      <b><%= status[:context] %>:</b> <%= link_to status[:description], status[:target_url] %><br/>
+    <% end %>
+  </p>
+
   <% if @changeset.empty? %>
     <p>This release contains no changes.</p>
   <% else %>
     <% if @changeset.pull_requests.any? %>
       <legend>Pull requests</legend>
-      <%= render 'changeset/pulls', changeset: @changeset %>
+      <%= render 'changeset/pull_requests', changeset: @changeset %>
     <% end %>
 
     <legend>Commits</legend>
@@ -32,12 +40,12 @@
 
     <% if @changeset.risks? %>
       <legend>Risks</legend>
-      <%= render 'changeset/risks', pull_requests: @changeset.risky_pull_requests, type: "release" %>
+      <%= render 'changeset/risks', changeset: @changeset, type: "release" %>
     <% end %>
 
     <% if @changeset.jira_issues.any? %>
       <legend>Jira issues</legend>
-      <%= render 'changeset/jira_issues', jira_issues: @changeset.jira_issues, type: "release" %>
+      <%= render 'changeset/jira_issues', changeset: @changeset, type: "release" %>
     <% end %>
   <% end %>
 </section>

@@ -37,7 +37,8 @@
     <% @kubernetes_release.release_docs.each do |doc| %>
       <tr>
         <td><%= doc.id %></td>
-        <td><%= link_to doc.deploy_group.name, doc.deploy_group %></td>
+        <% deploy_group = DeployGroup.with_deleted{ doc.deploy_group } %>
+        <td><%= link_to deploy_group.name, deploy_group %></td>
         <td><%= link_to doc.kubernetes_role.name, project_kubernetes_role_path(@project, doc.kubernetes_role) %></td>
         <td><%= doc.replica_target %></td>
         <td><%= doc.requests_cpu %> to <%= doc.limits_cpu %></td>

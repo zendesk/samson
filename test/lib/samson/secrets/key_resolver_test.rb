@@ -16,6 +16,15 @@ describe Samson::Secrets::KeyResolver do
       resolver.expand('ABC', 'bar').must_equal [["ABC", "global/global/global/bar"]]
     end
 
+    it "reuses project grants" do
+      # pretend everything is preloaded
+      resolver
+      project.secret_sharing_grants
+      deploy_group.environment
+
+      assert_sql_queries(0) { resolver.expand('ABC', 'bar') }
+    end
+
     it "expands symbols" do
       resolver.expand(:ABC, 'bar').must_equal [["ABC", "global/global/global/bar"]]
     end
@@ -157,6 +166,23 @@ describe Samson::Secrets::KeyResolver do
       end
       e.message.must_include 'xxx'
       e.message.must_include 'yyy'
+    end
+  end
+
+  describe "#resolved_attribute" do
+    let(:deploy) { deploys(:succeeded_test) }
+    let(:resolver) { Samson::Secrets::KeyResolver.new(deploy.project, []) }
+
+    it 'resolves the secret' do
+      create_secret "global/global/global/rollbar_read_token", value: 'super secret value'
+
+      deploy.reference = "secret://rollbar_read_token"
+      resolver.resolved_attribute(deploy.reference).must_equal 'super secret value'
+    end
+
+    it 'defaults to attribute value if value doesnt match secret prefix' do
+      deploy.reference = '1234Foo'
+      resolver.resolved_attribute(deploy.reference).must_equal '1234Foo'
     end
   end
 end

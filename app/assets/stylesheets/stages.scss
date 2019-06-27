@@ -45,7 +45,11 @@
     width: 100%;
   }
 
-  .cannot-edit{
+  .new-command {
+    padding: 5px 176px 5px 215px;
+  }
+
+  .cannot-edit {
     position: absolute;
     top: 10px;
     color: white;
@@ -87,33 +91,6 @@
       margin: 0 0 0 0;
     }
   }
-}
-
-.before-lock {
-  display: none;
-  vertical-align: bottom;
-
-  &.active {
-    display: inline-block;
-  }
-}
-
-.lock-description {
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  height: 34px;
-  padding: 6px;
-  vertical-align: bottom;
-  width: 200px;
-}
-
-.lock-delete-in {
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  height: 34px;
-  padding: 6px;
-  vertical-align: bottom;
-  width: 200px;
 }
 
 .deploy-groups {

@@ -6,7 +6,7 @@ module Env
 
     def show
       deploy_group = DeployGroup.find_by_permalink!(params.require(:deploy_group))
-      env = EnvironmentVariable.env(current_project, deploy_group, preview: true)
+      env = EnvironmentVariable.env(Deploy.new(project: current_project), deploy_group, preview: true)
       if unexpanded = unexpanded_secrets(env).presence
         render plain: "Unexpanded secrets found: #{unexpanded.join(', ')}", status: :unprocessable_entity
       else

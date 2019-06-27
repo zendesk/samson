@@ -10,28 +10,26 @@
     <% stages = project.stages.to_a %>
     <% show_more_link = content_tag(:li, link_to("+ #{stages.count - max_display_projects} More", project), class: 'clearfix', style: 'text-align:center') %>
 
-    <%= list_with_show_more(stages, max_display_projects, show_more_link) do |stage| %>
+    <%= unordered_list(stages, display_limit: max_display_projects, show_more_tag: show_more_link, li_options: {class: 'clearfix'}) do |stage| %>
       <% cache [stage, Lock.cache_key] do %>
-        <li class="clearfix">
-          <%= link_to stage.name, [project, stage], class: 'stage-link' %>
-          <% if deploy = stage.active_deploy %>
-            <%= link_to 'Deploying', [project, deploy], class: 'label label-primary' %>
+        <%= link_to stage.name, [project, stage], class: 'stage-link' %>
+        <% if deploy = stage.active_deploy %>
+          <%= link_to 'Deploying', [project, deploy], class: 'label label-primary' %>
+        <% end %>
+        <%= resource_lock_icon stage %>
+        <%= stage_template_icon if stage.is_template %>
+
+        <div class="pull-right">
+          <% if (deploy = stage.last_deploy) && deploy.failed? %>
+            <%= link_to [project, deploy], class: 'no-hover' do %>
+              <%= content_tag :i, '', class: 'glyphicon glyphicon-alert deployment-alert', title: deployment_alert_title(deploy) %>
+            <% end %>
           <% end %>
-          <%= resource_lock_icon stage %>
-          <%= stage_template_icon if stage.is_template %>
 
-          <div class="pull-right">
-            <% if (deploy = stage.last_deploy) && deploy.failed? %>
-              <%= link_to [project, deploy], class: 'no-hover' do %>
-                <%= content_tag :i, '', class: 'glyphicon glyphicon-alert deployment-alert', title: deployment_alert_title(deploy) %>
-              <% end %>
-            <% end %>
-
-            <% if deploy = stage.last_successful_deploy %>
-              <%= link_to deploy.short_reference, [project, deploy], class: "status label #{status_label(deploy.status)}" %>
-            <% end %>
-          </div>
-        </li>
+          <% if deploy = stage.last_succeeded_deploy %>
+            <%= link_to deploy.short_reference, [project, deploy], class: "status label #{status_label(deploy.status)}" %>
+          <% end %>
+        </div>
       <% end %>
     <% end %>
   </div>

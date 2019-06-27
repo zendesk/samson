@@ -4,20 +4,6 @@
 
 @import "jquery-mentions-input/jquery.mentionsInput";
 
-.panel {
-  .failed {
-    border-color: red;
-  }
-
-  .running, .started {
-    border-color: blue;
-  }
-
-  .successful {
-    border-color: green;
-  }
-}
-
 .log {
   display: block;
 }
@@ -59,6 +45,12 @@
 
 .deploy-details {
   padding: 0 50px;
+}
+
+.deploy-search{
+  input[type="checkbox"] {
+    margin: 10px 0 0 15px;
+  }
 }
 
 #deploy-confirmation {
@@ -149,3 +141,12 @@ td.status {
     }
   }
 }
+
+#deploy_reference.loading {
+  border: 2px dashed gray;
+}
+
+.has-success #deploy_reference {
+  border: 2px dashed limegreen;
+}
+

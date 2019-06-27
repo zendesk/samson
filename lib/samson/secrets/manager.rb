@@ -8,7 +8,7 @@ module Samson
     module Manager
       ID_PARTS = [:environment_permalink, :project_permalink, :deploy_group_permalink, :key].freeze
       ID_PART_SEPARATOR = "/"
-      SECRET_ID_REGEX = %r{[\w\/-]+}
+      SECRET_ID_REGEX = %r{[\w\/-]+}.freeze
       SECRET_LOOKUP_CACHE = 'secret_lookup_cache_v3'
       SECRET_LOOKUP_CACHE_MUTEX = Mutex.new
       VALUE_HASHED_BASE = Digest::SHA2.hexdigest("#{Samson::Application.config.secret_key_base}usedforhashing")
@@ -23,7 +23,7 @@ module Samson
 
       class << self
         def write(id, data)
-          return false unless id =~ /\A#{SECRET_ID_REGEX}\z/
+          return false unless id.match?(/\A#{SECRET_ID_REGEX}\z/)
           return false if data.blank? || data[:value].blank?
           result = backend.write(id, data)
           modify_lookup_cache { |c| c[id] = lookup_cache_value(data) }
@@ -31,10 +31,60 @@ module Samson
         end
 
         # reads a single id and raises ActiveRecord::RecordNotFound if it is not found
-        def read(id, include_value: false)
-          data = backend.read(id) || raise(ActiveRecord::RecordNotFound)
+        def read(id, *args, include_value: false)
+          data = backend.read(id, *args) || raise(ActiveRecord::RecordNotFound)
           data.delete(:value) unless include_value
           data
+        end
+
+        def history(id, include_value: false, **options)
+          history = backend.history(id, options) || raise(ActiveRecord::RecordNotFound)
+          unless include_value
+            last_value = nil
+            history.fetch(:versions).each_value do |data|
+              current_value = data[:value]
+              data[:value] = (last_value == current_value ? "(unchanged)" : "(changed)")
+              last_value = current_value
+            end
+          end
+          history
+        end
+
+        def revert(id, to:, user:)
+          old = read(id, to, include_value: true)
+          old[:user_id] = user.id
+          write(id, old)
+        end
+
+        # useful for console sessions
+        def move(from, to)
+          copy(from, to)
+          delete(from)
+        end
+
+        # useful for console sessions
+        def copy(from, to)
+          raise "#{to} already exists" if exist?(to)
+
+          old = read(from, include_value: true)
+
+          old[:user_id] = old.delete(:creator_id)
+          write(to, old)
+
+          old[:user_id] = old.delete(:updater_id)
+          write(to, old)
+        end
+
+        # useful for console sessions
+        # copies secrets over to new project, needs cleanup of old secrets once project is deployed everywhere
+        # since otherwise in the meantime existing deploys would be unable to restart due to missing secrets
+        def rename_project(from_project, to_project)
+          id_parts = ids.map { |id| parse_id(id) }
+          id_parts.select! { |parts| parts.fetch(:project_permalink) == from_project }
+          id_parts.each do |parts|
+            copy(generate_id(parts), generate_id(parts.merge(project_permalink: to_project)))
+          end
+          id_parts.size
         end
 
         def exist?(id)
@@ -89,6 +139,10 @@ module Samson
 
         def lookup_cache
           SECRET_LOOKUP_CACHE_MUTEX.synchronize { fetch_lookup_cache }
+        end
+
+        def expire_lookup_cache
+          cache.delete(SECRET_LOOKUP_CACHE)
         end
 
         private

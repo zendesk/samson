@@ -1,13 +1,10 @@
-![](https://github.com/zendesk/samson/raw/master/app/assets/images/logo_light.png)
+<img src="https://github.com/zendesk/samson/raw/master/app/assets/images/logo_light.png" width=400/>
 
 [![Build Status](https://travis-ci.org/zendesk/samson.svg?branch=master)](https://travis-ci.org/zendesk/samson)
+[![FOSSA Status](https://app.fossa.io/api/projects/custom%2B4071%2Fgit%40github.com%3Azendesk%2Fsamson.git.svg?type=shield)](https://app.fossa.io/projects/custom%2B4071%2Fgit%40github.com%3Azendesk%2Fsamson.git?ref=badge_shield)
 [![DockerHub Status](https://img.shields.io/docker/stars/zendesk/samson.svg)](https://hub.docker.com/r/zendesk/samson)
 
-[Demo](https://samson-demo.herokuapp.com)
-
-### What?
-
-A web interface for deployments.
+Samson is a web interface for deployments. [Live Demo](https://samson-demo.herokuapp.com)
 
 **View the current status of all your projects:**
 
@@ -21,7 +18,7 @@ A web interface for deployments.
 
 ![](http://cl.ly/image/270l1e3s2e1p/Samson.png)
 
-### Workflow
+### Deployment Workflow
 
 Create a project and 1 or more stages (staging/production etc),
 then selects a version and start the deploy.
@@ -35,30 +32,23 @@ Samson will:
 #### Requirements
 
 * MySQL, Postgresql, or SQLite
-* Memcache
-* Ruby (>= 2.3.1)
+* Ruby (see .ruby-version)
 * Git (>= 1.7.2)
 
 ### Documentation
 
-* [Getting started](https://github.com/zendesk/samson/blob/master/docs/setup.md)
-* [Permissions](https://github.com/zendesk/samson/blob/master/docs/permissions.md)
-* [Continuous Integration](https://github.com/zendesk/samson/blob/master/docs/ci.md)
-* [Extra features](https://github.com/zendesk/samson/blob/master/docs/extra_features.md)
-* [Plugins](https://github.com/zendesk/samson/blob/master/docs/plugins.md)
-* [Statistics](https://github.com/zendesk/samson/blob/master/docs/stats.md)
+* [Getting started](/docs/setup.md)
+* [Basic Components](/docs/components.md)
+* [Permissions](/docs/permissions.md)
+* [Continuous Integration](/docs/ci.md)
+* [Extra features](/docs/extra_features.md)
+* [Plugins](/docs/plugins.md)
+* [Statistics](/docs/stats.md)
+* [API](/docs/api.md)
 
 ### Contributing
 
-Improvements are always welcome. Please follow these steps to contribute
-
-1. Submit a Pull Request with a detailed explanation of changes and screenshots (if UI is changing)
-1. Receive a :+1: from a core team member
-1. Core team will merge your changes
-
-### Team
-
-Core team is [@henders](https://github.com/henders), [@grosser](https://github.com/grosser), [@jonmoter](https://github.com/jonmoter), [@irwaters](https://github.com/irwaters).
+Issues and Pull Requests are always welcome, submit your idea!
 
 ### License
 

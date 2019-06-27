@@ -1,0 +1,34 @@
+<%= page_title "Kubernetes Namespaces" %>
+
+<%= breadcrumb Kubernetes::Namespace %>
+
+<section class="tabs kubernetes-section clearfix">
+  <div class="table table-hover table-condensed">
+    <table class="table">
+      <tr>
+        <th>Name</th>
+        <th></th>
+      </tr>
+
+      <% @kubernetes_namespaces.each do |namespace| %>
+        <tr>
+          <td>
+            <%= namespace.name %>
+            <%= additional_info simple_format(namespace.comment) if namespace.comment? %>
+          </td>
+          <td><%= link_to "Edit", namespace %></td>
+        </tr>
+      <% end %>
+    </table>
+  </div>
+
+  <div class="admin-actions">
+    <%= paginate @pagy %>
+
+    <div class="pull-right">
+      <%= link_to "New", new_kubernetes_namespace_path, class: "btn btn-default" %>
+      <%= link_to "Sync All", sync_all_kubernetes_namespaces_path, class: "btn btn-default", data: {method: :post} %>
+    </div>
+  </div>
+</section>
+

@@ -1,122 +1,96 @@
 # Kubernetes Plugin
 
-This plugin allows integration between Samson and [Kubernetes](kubernetes.io),
-an orchestration framework for Docker images.
-
-### Warning: Plugin Incomplete
-
-**The Kubernetes plugin is still under active development, and not feature
-complete. Be aware that the code may change, and there is still functionality
-pending.**
+Allows Samson to be able to deploy to [Kubernetes](kubernetes.io), and includes various validations and dashboards.
 
 ## Overview
 
-The plugin works by communicating with one or more Kubernetes clusters via
-their APIs. It uses a ruby gem called [kubeclient](https://github.com/abonas/kubeclient).
-It is possible for Samson to communicate with multiple clusters, e.g. one
-cluster running locally on your laptop, a second cluster running in an AWS
-environment, and a third in a remote datacenter.  See the section below on
-configuring clusters.
+Samson will talk to N Kubernetes clusters via their API.
+Clusters can be running locally (Docker For Mac / Minikube), in a datacenter,
+on EKS, or GKE.
 
-Once you have connected to one or more clusters, you can configure a project
-to deploy it to Kubernetes. That involves:
-
-1. Set up your project so you can create Builds with Docker images
-2. Configuring one or more "Roles" for the project
-3. Creating one or more Kubernetes configuration files in the project
-
-Once all those are in place, you can use the Samson UI to deploy a project
-Build to one or more Kubernetes clusters.
+Workflow:
+1. Enable the Docker feature by adding `DOCKER_FEATURE=1` to your `.env` file
+1. Enable the [Deploy Group](/docs/extra_features.md) feature by adding `DEPLOY_GROUP_FEATURE=1` to your `.env` file
+1. Configure Kubernetes cluster(s) on `/kubernetes/clusters`
+1. Create a project containing a `Dockerfile`
+1. Add [Kubernetes role files](#kubernetes-roles) to your project repository
+1. Configure "Roles" for the project `/projects/<PROJECT>/kubernetes/roles`
+1. Create a stage that's connected to N deploy groups
+1. Configure how many replicas, CPU, and memory each deploy group should use
+1. Click 'Deploy' 🎉
 
 ## Configuring the Cluster
 
-Kubernetes has a concept called the [kubeconfig file](http://kubernetes.io/v1.0/docs/user-guide/kubeconfig-file.html).
-That contains information about the clusters available, and the user
-credentials used to authenticate with them. Samson has the ability to read
-those files and use them to connect to the Kubernetes clusters.
-
-In Samson, if you are logged in as a super-admin, you can access the
-Admin -> Kubernetes page. This page allows you to define or edit clusters
-by entering the path of a kubeconfig file, and specifying which "context"
-(which means a cluster/user pair) you wish to use in that file.
-
-At the moment, there is no way to modify that file or enter data through
-the Samson UI.
+Use Samson cluster UI (`/kubernetes/clusters`) to configure where the [kubeconfig file](http://kubernetes.io/v1.0/docs/user-guide/kubeconfig-file.html)
+for your cluster is and what context (custer/user pair) to use. You need to be a Super Admin to create a cluster.
 
 ### Mapping DeployGroups to Clusters
 
+In the "Edit Deploy Group" UI `/deploy_groups`, select a Kubernetes cluster and a namespace.
+
+Background:
 Kubernetes has the concept of a [Namespace](http://kubernetes.io/v1.0/docs/user-guide/namespaces.html),
 which means a virtual cluster inside of a single physical cluster. This can be
 useful if you want to have a single Kubernetes cluster running in AWS or a
 datacenter, but logically divide them between a "staging" and "production"
 namespace.
 
-To represent this, there is the ability to map a DeployGroup to a Kubernetes
-cluster, and specify a Namespace. In the "Edit Deploy Group" UI, you can
-choose from a drop-down of available Kubernetes Clusters, and type in the
-namespace.
-
 ## Project Configuration
 
-In order to deploy a project with Kubernetes, you'll need to do a little work
-to configure it.
-
-If you have the Kubernetes plugin enabled, on the Project page you will see
-a tab with the Kubernetes icon, that looks like a white wheel on a blue
-background.
+Project pages will have a Kubernetes link (white wheel on a blue background).
 
 ### Kubernetes Roles
 
 A "role" is not a concept in Kubernetes itself. It is specific to Samson.
 
 It refers to the different ways that a project can be run, that may want to
-be scaled separately. This works best as an example.
+be scaled separately. For each role, Samson allows configuring CPU (requests and limits),
+memory (requests and limits), and replicas per deploy group.
 
-Let's say we have a Ruby on Rails project that uses Resque for background
-job processing. This project will likely have 3 roles:
+Each time this project is deployed, it deploys all roles.
 
-1. The "App Server" role, which would run the Rails server
-2. The "Resque Worker" role, which would be an instance of the workers
-3. The "Resque Scheduler" role, a singleton process that manages recurring jobs
+For example, a Ruby on Rails project that uses Resque for background
+job processing. This project will likely have 4 roles:
 
-When you deploy this project, you will likely want to be able to scale those
-3 aspects separately. You might have 5 instances of the app server running,
-but only 3 instances of the workers, and 1 of the scheduler. Each time this project
-is deployed, it actually deploys all 3 roles of this project. So they need to
-be represented separately.
-
-If you click the Kubernetes icon on the Project page, you will see a UI that
-lists the Roles defined, and allows you to add or edit them. Each role
-requires:
-
-* its own config file (see below)
-* the amount of RAM required
-* the fractional number of CPUs it will use
-* the default number of replicas to deploy
+1. The "Migration" role that runs database migrations, 1 replica, low cpu
+1. The "App Server" role, that runs the Rails server, 3 replicas, high cpu
+1. The "Resque Worker" role, that runs instances of the workers, 5 replicas, high cpu
+1. The "Resque Scheduler" role, a singleton process that manages recurring jobs, 1 replica, low cpu
 
 ### Configuration Files
 
-To deploy to Kubernetes, Samson reads in configuration file from the project
-repository. That file is expected to contain the definition of a Deployment/Daemonset/Service/Job/etc.
-Samson will read in that file from the project repository, make some
-changes (like updating the Docker image and adding labels), and send that
-to the Kubernetes API.
+Each [Kubernetes role](#kubernetes-roles) is read from a file in the project's repository
+. It has to contain the definitions of N Deployment/Daemonset/Service/Job/ConfigMap/etc. Samson's `TemplateFiller`
+then augments the definitions by adding docker repo digest, labels, annotations, resource limits,
+environment variables, secrets, etc and then sends them to the Kubernetes API.
 
-Each role is expected to have its own configuration file. The contents of
-the files will likely be similar for each role, though it will likely
-have a different command or liveness probe
+Multiple roles will likely be similar, but have different commands or liveness probes.
 ([kucodiff](https://github.com/grosser/kucodiff) can be used to make sure they stay in sync).
 
-Environment variables with `value: filled-by-samson` are verified to be filled out, use `env` plugin to configure them.
+Validate required environment variables are set by adding `metadata.annotations.samson/required_env`
+to the pod definition with a space separated list of variable names.
+
+```
+samson/required_env: >
+  RAILS_ENV
+  OTHER_STUFF
+
+```
+
+### Limits
+
+Samson allows limiting how many resources each project can use per Deploy Group, see `/kubernetes/usage_limits`.
+
+To forbid deployment of anything without a limit, add a `All/All` limit with 0 cpu and memory.
+
+To allow creating limits without scoped or project, set `KUBERNETES_ALLOW_WILDCARD_LIMITS=true`.
 
 ## Deploying to Kubernetes
 
-When it comes time to deploy to Kubernetes, you can use the UI to specify
-which `Build` of the project you want to deploy, and to which `DeployGroups`.
-You can also specify the number of replicas you want to deploy for each role,
-which will default to the values set in the role configuration.
+Each deploy selects a Git SHA and N deploy groups to deploy to. For this Git SHA Samson finds or creates all builds that
+were requested in the [Kubernetes role config files](#configuration-files).
 
-### Objects Created
+### Record Keeping
 
 For each deploy, a `Kubernetes::Release` is created, which tracks which `Build` was deployed and
 who executed it.
@@ -132,20 +106,48 @@ Kubernetes::Release
       -> Kubernetes Pods (how ever many replicas specified)
 ```
 
+### Docker Images
+
+(To opt out of this feature set `containers[].samson/dockerfile: none` or `metadata.annotations.container-nameofcontainer-samson/dockerfile: none`)
+
+For each container (including init containers) Samson finds or creates a matching Docker image for the Git SHA that is being deployed.
+Samson always sets the Docker digest, and not a tag, to make deployments immutable.
+
+If `KUBERNETES_ADDITIONAL_CONTAINERS_WITHOUT_DOCKERFILE=true` is set, it will only enforce builds for the first container.
+
+Samson matches builds to containers by looking at the `containers[].samson/dockerfile` attribute or the
+base image name (part after the last `/`), if the project has enabled `Docker images built externally`.
+
+Images can be built locally via `docker build`, or via `gcloud` CLI (see Gcloud plugin), or externally and then sent to Samson via the
+API (`POST /builds.json`).
+
 ### Injected config
 
 Via [Template filler](/plugins/kubernetes/app/models/kubernetes/template_filler.rb)
 
- - docker image if samson built it
- - limits + replicas
- - environment variables: POD_NAME, POD_NAMESPACE, POD_IP, REVISION, TAG, DEPLOY_ID, DEPLOY_GROUP, PROJECT, ROLE,
+ - Docker image
+ - Limits + replicas
+ - Environment variables: POD_NAME, POD_NAMESPACE, POD_IP, REVISION, TAG, DEPLOY_ID, DEPLOY_GROUP, PROJECT, ROLE,
    KUBERNETES_CLUSTER_NAME, and environment variables defined via [env](/plugins/env) plugin.
- - secret puller and secret annotations (if secret puller + vault is used)
+ - Secret puller and secret annotations (if secret puller + vault is used)
 
-### Migrations
+### Migrations / Prerequisite
 
-Add a role with only a `Pod`, the annotation `samson/prerequisite: true`, and command to run a migrations.
-It will be executed before the rest is deployed.
+Should be added as a separate role with the annotation  `samson/prerequisite: 'true'` set on the `Job`/`Deployment`/`Pod`
+(annotation should be added to the 'root' object, not the template).
+This role will be deployed/executed before any other role is deployed.
+By default it waits for 10 minutes before timeout, change the timeout using
+`KUBERNETES_WAIT_FOR_PREREQUISITES` env variable (specified in seconds).
+
+### Deployment timeouts
+
+A deploy will wait for 10 minutes for pods to come alive. You can adjust this
+timeout using KUBERNETES_WAIT_FOR_LIVE (specified in seconds).
+
+### Deployment stability check
+
+A deploy will get checked for stability every 2 seconds for a minute, before being marked as stable.
+These can be configured (in seconds) using `KUBERNETES_STABILITY_CHECK_DURATION` and `KUBERNETES_STABILITY_CHECK_TICK` environment variables.
 
 ### StatefulSet
 
@@ -156,25 +158,103 @@ Prefer `RollingUpdate` if possible instead.
 ### Duplicate deployments
 
 To deploy the same repository multiple times, create separate projects and then set `metadata.annotations.samson/override_project_label: "true"`,
-samson will then override the `project` labels and keep deployments/services unique.  
-
-### Building multiple Dockerfiles
-
- - Set the projects `dockerfiles` attribute to all the files that need to be built.
- - Add `samson/dockerfile: Dockerfile.foobar` to the container configuration (same level as `image`) to use a different Dockerfile
- 
-### Using multiple external images
-
- - Set the projects `docker image building disabled` 
- - Create images via the `POST /builds.json` with a `image_name` that matches the `image` attribute of the containers
- - All containers (including init containers) must have a matching build
+samson will then override the `project` labels and keep deployments/services unique.
 
 ### Service updates
 
 Too keep fields/labels that are manually managed persistent during updates, use `KUBERNETES_SERVICE_PERSISTENT_FIELDS`, see .env.example
+or set `metadata.annotations.samson/persistent_fields`
+
+### PodDisruptionBudget
+
+Samson can add a dynamic PodDisruptionBudget by setting `metadata.annotations.samson/minAvailable: 30%`, it calculates the ceil of this with the configured replicas.
+(also supports absolute values like `"1"`)
+
+To remove it, set to '0', deploy, delete it from the template.
+
+Samson can auto-add a `PodDisruptionBudget` for every `Deployment`/`StatefulSet` by setting for example `KUBERNETES_AUTO_MIN_AVAILABLE=80%`.
+Users can opt-out by setting `metadata.annotations.samson/minAvailable: disabled`.
 
 ### Blue/Green Deployment
 
-Can be enabled per role, it then starts a new isolated deployment shifting between blue and green sufixes, 
+Can be enabled per role, it then starts a new isolated deployment shifting between blue and green sufixes,
 switching service selectors if successfully deployed and deleting previous resources.
-All active resources must be deleted manually when switching this.
+All active resources must be deleted manually when switching to blue/green from regular deployment.
+
+### Resources without cpu limits
+
+Set `KUBERNETES_NO_CPU_LIMIT_ALLOWED=1`, see [#2820](https://github.com/zendesk/samson/issues/2820) for why this can be useful.
+
+### Enforcing team ownership
+
+Knowing which team owns each component is useful, set `KUBERNETES_ENFORCE_TEAMS=true`
+to make all kubernetes deploys that do not use a `metadata.labels.team` / `spec.template.metadata.labels.team` fail.
+
+### Resources without namespace
+
+Samson sets namespaces to the deploygroups `kubernetes_namespace` if no `metadata.namespace` is set in the resource.
+
+For namespace-less resources, set `metadata.namespace:` (which will result in `nil`)
+
+### Using custom resource names
+
+When not using project namespaces samson overrides each resource name in a particular role with the resource and service name set in the UI to prevent
+collision between resources in the same namespace from different projects unintentionally.
+
+To make Samson leave your resource name alone, set `metadata.annotations.samson/keep_name: 'true'`
+
+### Preventing request loss with preStop
+
+To enable the following functionality you need to set `KUBERNETES_ADD_PRESTOP=true`.
+
+Samson automatically adds `container[].lifecycle.preStop` `sleep 3` if a preStop hook is not set and
+`container[].samson/preStop` is not set to `disabled`, to prevent in-flight requests from getting lost when taking a pod
+out of rotation (alternatively set `metadata.annoations.container-nameofcontainer-samson/preStop: disabled`).
+
+### Showing logs on succeeded deploys
+
+Set `metadata.annoations.samson/show_logs_on_deploy: 'true'` on pods, to see logs when the deploy succeeds.
+This can be useful for Migrations (see above).
+(On failure, samson always shows all pod logs)
+
+### Changing templates via ENV
+
+For things that need to be different between environments/deploy-groups.
+
+Use an annotation to configure what will to be replaced:
+```
+metadata.annotations.samson/set_via_env_json: |
+  metadata.labels.custom: FOO_ENV_VAR
+  metadata.labels.other: BAR_ENV_VAR
+```
+
+Then configure an ENV var with that same name and a value that is valid JSON.
+
+ - To set string values as env vars, use quotes, i.e. `"foo"`
+ - To set values inside of arrays use numbers as index `spec.containers.0.name`
+
+### Allow randomly not-ready pods during readiness check
+
+Set `KUBERNETES_ALLOW_NOT_READY_PERCENT=10` to allow up to 10% of pods per role being not-ready,
+this is useful when dealing with large deployments that have some random failures.
+
+### Disabling service selector validation
+
+To debug services or to create resources that needs to reference a selector that doesn't include team/role (like a Gateway), you can disable selector validation with:
+
+`metadata.annotations.samson/service_selector_across_roles: "true"`
+
+### Blocking LoadBalancer usage
+
+Set `KUBERNETES_ALLOWED_LOAD_BALANCER_NAMESPACES=foo,bar` to block all other namespaces from using them.
+
+### Updating matchLabels
+
+Samson will by default block updating `matchLabels` since it leads to abandoned pods.
+
+If you still want to change a matchLabel, for example project/role:
+
+ - set `metadata.annotations.samson/allow_updating_match_labels: "true"`
+ - deploy with renamed project/role
+ - manually delete pods from old Deployment (`kubectl delete pods -l project=old-name,role=old-role`)
+ - unset annotations from step 1

@@ -1,0 +1,61 @@
+<label class="col-lg-2 control-label">Mass Rollout</label>
+<div class="col-lg-10">
+  <%= form_tag review_deploy_deploy_group_mass_rollouts_path(@deploy_group), method: :get do %>
+
+    <% if defined?(SamsonKubernetes) %>
+      <div class="form-group">
+        <div class="col-lg-10">
+          <label>Kubernetes</label>
+          <div class="form-group">
+            <div class="col-lg-4 radio">
+              <%= label_tag do %>
+                <%= radio_button_tag :kubernetes, '', :checked %>
+                All
+              <% end %>
+            </div>
+            <div class="col-lg-4 radio">
+              <%= label_tag do %>
+                <%= radio_button_tag :kubernetes, 'true' %>
+                Only Kubernetes
+              <% end %>
+            </div>
+
+            <div class="col-lg-4 radio">
+              <%= label_tag do %>
+                <%= radio_button_tag :kubernetes, 'false' %>
+                Only Non-Kubernetes
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <div class="form-group">
+      <div class="col-lg-10">
+        <label>Stage Status Filter</label>
+        <div class="form-group">
+          <div class="col-lg-4 radio">
+            <%= label_tag do %>
+              <%= radio_button_tag :status, '', :checked %>
+              All
+            <% end %>
+          </div>
+          <div class="col-lg-4 radio">
+            <%= label_tag do %>
+              <%= radio_button_tag :status, 'succeeded' %>
+              Previously succeeded
+            <% end %>
+          </div>
+          <div class="col-lg-4 radio">
+            <%= label_tag do %>
+              <%= radio_button_tag :status, 'missing' %>
+              <abbr title="Any stages that haven't yet been deployed or have failed all their deploys">Missing</abbr>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+    <%= submit_tag "Review", class: "btn btn-default" %>
+  <% end %>
+</div>

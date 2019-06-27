@@ -1,0 +1,10 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+# tiny tool to de-obfuscate our checked in .env.(bootstrap/compose) file to avoid triggering automated security tools
+# - called from bin/setup and docker-compose up
+# - to encode new things use require 'base64'; 'bin/decode_dot_env-' + Base64.encode64('FOO=bar').delete("\n")
+require 'base64'
+raise("Need files to decode") if ARGV.empty?
+ARGV.each do |file|
+  File.write(file, File.read(file).gsub(/bin\/decode_dot_env-(.*)/) { Base64.decode64($1) })
+end

@@ -6,7 +6,6 @@
 # - when no Dockerfile is in the repo and it is the only requested dockerfile (column default value), return no builds
 # - if a build is not found, but the project has as `docker_release_branch` we wait a few seconds and retry
 # - builds can be reused from the previous release if the deployer requested it
-# - if the deploy is cancelled we finish up asap
 # - we find builds across all projects so multiple projects can share them
 module Samson
   class BuildFinder
@@ -16,20 +15,17 @@ module Samson
       @output = output
       @job = job
       @reference = reference
-      @cancelled = false
       @build_selectors = build_selectors
     end
 
-    # deploy was cancelled, so finish up as fast as possible
-    def cancelled!
-      @cancelled = true
-    end
-
-    def ensure_successful_builds
+    def ensure_succeeded_builds
       builds = find_or_create_builds
       builds.compact.each do |build|
-        wait_for_build_completion(build)
-        ensure_build_is_successful(build) unless @cancelled
+        payload = {project: build.project.name, external: build.external?}
+        ActiveSupport::Notifications.instrument("wait_for_build.samson", payload) do
+          wait_for_build_completion(build)
+        end
+        ensure_build_is_succeeded(build)
       end
     end
 
@@ -45,9 +41,10 @@ module Samson
       all = []
 
       wait_for_build_creation do |last_try|
+        possible = possible_builds
         needed.delete_if do |dockerfile, image|
           found = self.class.detect_build_by_selector!(
-            possible_builds, dockerfile, image, fail: (last_try && build_disabled)
+            possible, dockerfile, image, fail: (last_try && build_disabled), project: @job.project
           )
           if found
             all << found
@@ -60,31 +57,37 @@ module Samson
         needed.empty? # stop the waiting when we got everything
       end
 
-      all
+      # avoid N+1
+      all.each { |build| cache_project(build) }
     end
 
-    def self.detect_build_by_selector!(builds, dockerfile, image, fail:)
+    def self.detect_build_by_selector!(builds, dockerfile, image, fail:, project:)
       image_name = image.split('/').last.split(/[:@]/, 2).first if image
       found = builds.detect do |b|
         (image_name && b.image_name == image_name) || (dockerfile && b.dockerfile == dockerfile)
       end
       return found if found || !fail
-
+      builds_for = []
+      builds_for << "dockerfile #{dockerfile.inspect}" if dockerfile
+      builds_for << "image_name #{image_name.inspect}" if image_name
       raise(
         Samson::Hooks::UserError,
-        "Did not find build for dockerfile #{dockerfile.inspect} or image_name #{image_name.inspect}.\n" \
-        "Found builds: #{builds.map { |b| [b.dockerfile, b.image_name] }.uniq.inspect}."
+        "Did not find build for #{builds_for.join(' or ')}.\n" \
+        "Found builds: #{builds.map { |b| [b.dockerfile, b.image_name].compact }.uniq.inspect}.\n"\
+        "Project builds URL: #{Rails.application.routes.url_helpers.project_builds_url(project)}"
       )
     end
 
     private
 
+    # all the builds we could use, starting with the finished ones
     def possible_builds
       commits = [@job.commit]
 
       if defined?(SamsonKubernetes) && @job.deploy.kubernetes_reuse_build
-        previous = @job.deploy.previous_deploy&.job&.commit
-        commits << previous if previous
+        previous_scope = @job.deploy.stage.deploys.prior_to(@job.deploy).where(kubernetes_reuse_build: false)
+        previous = previous_scope.first&.job&.commit
+        commits.unshift previous if previous
       end
 
       Build.where(git_sha: commits).sort_by { |build| commits.index(build.git_sha) }
@@ -102,7 +105,7 @@ module Samson
         build = yield last_try
         return build if build
 
-        break if last_try || @cancelled
+        raise if last_try # should never get here
         sleep interval
       end
     end
@@ -141,23 +144,26 @@ module Samson
     end
 
     def wait_for_build_completion(build)
-      if build.reload.active?
-        @output.puts("Waiting for Build #{build.url} to finish.")
-      else
-        @output.puts("Build #{build.url} is finish.")
+      unless cache_project(build.reload).active?
+        @output.puts("Build #{build.url} is finished.")
         return
       end
 
+      @output.puts("Waiting for Build #{build.url} to finish.")
       loop do
-        break if @cancelled
         sleep TICK
-        break unless build.reload.active?
+        break unless cache_project(build.reload).active?
       end
     end
 
-    def ensure_build_is_successful(build)
+    def cache_project(build)
+      build.project = @job.project if build.project_id == @job.project_id
+      build
+    end
+
+    def ensure_build_is_succeeded(build)
       if build.docker_repo_digest
-        unless Samson::Hooks.fire(:ensure_build_is_successful, build, @job, @output).all?
+        unless Samson::Hooks.fire(:ensure_build_is_succeeded, build, @job, @output).all?
           raise Samson::Hooks::UserError, "Plugin build checks for #{build.url} failed."
         end
         @output.puts "Build #{build.url} is looking good!"

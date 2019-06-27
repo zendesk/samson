@@ -1,1 +1,2 @@
-Display newrelic graphs during/after deploy.
+ - Display newrelic graphs during/after deploy, with `NEW_RELIC_API_KEY`
+ - Add Newrelic instrumentation, with `NEW_RELIC_LICENSE_KEY`

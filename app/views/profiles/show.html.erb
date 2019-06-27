@@ -1,9 +1,10 @@
 <%= page_title "Profile" %>
 
 <section>
-  <%= form_for @user, url: profile_path, html: { :class => "form-horizontal", "ng-controller" => "ProfileCtrl" } do |form| %>
+  <%= form_for @user, url: profile_path, html: { class: "form-horizontal" } do |form| %>
     <%= form.input :name, required: true %>
     <%= form.input :email %>
+    <%= form.input :github_username %>
     <%= form.input :time_format do %>
       <% User::TIME_FORMATS.each do |time_format| %>
         <%= form.radio_button :time_format, time_format %>
@@ -11,8 +12,7 @@
       <% end %>
     <% end %>
     <%= form.input :desktop_notify,
-          as: :check_box, label: "Desktop notifications",
-        input_html: { 'ng-click': 'toggleNotify($event)' },
+        as: :check_box, label: "Desktop notifications",
         help: 'Show popups on your desktop when deploys are finishing.'
     %>
 

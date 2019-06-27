@@ -4,22 +4,24 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe AccessTokensController do
-  def create(attributes = {})
+  def create(format: :html, **attributes)
     post :create, params: {
       doorkeeper_access_token: {
         description: 'D',
         scopes: 'locks, projects',
         application_id: application.id,
         resource_owner_id: user.id
-      }.merge(attributes)
+      }.merge(attributes),
+      format: format
     }
   end
 
   let(:application) { Doorkeeper::Application.create!(name: 'Foobar', redirect_uri: 'http://example.com') }
+  let(:json) { JSON.parse(response.body) }
 
   unauthorized :post, :create
 
-  as_a_viewer do
+  as_a :viewer do
     describe "#index" do
       let!(:token) { Doorkeeper::AccessToken.create!(application: application, resource_owner_id: user.id) }
       let!(:other_token) { Doorkeeper::AccessToken.create!(application: application, resource_owner_id: 123) }
@@ -28,6 +30,14 @@ describe AccessTokensController do
         get :index
         assert_response :success
         assigns[:access_tokens].must_equal [token]
+      end
+
+      it "renders json" do
+        get :index, format: :json
+        assert_response :success
+        access_token_keys = json.fetch("access_tokens").fetch(0).keys
+        access_token_keys.wont_include "token"
+        access_token_keys.wont_include "refresh_token"
       end
     end
 
@@ -89,13 +99,21 @@ describe AccessTokensController do
     end
   end
 
-  as_a_super_admin do
+  as_a :super_admin do
     describe "#create" do
       it "can create for another user and returns where they came from" do
         assert_difference 'Doorkeeper::AccessToken.count', +1 do
           create resource_owner_id: users(:admin).id
           assert_redirected_to "/users/#{users(:admin).id}"
         end
+      end
+
+      it "can create for another user via json" do
+        create resource_owner_id: users(:admin).id, format: :json
+        assert_response :success
+        access_token_keys = json.fetch("access_token").keys
+        access_token_keys.must_include "token"
+        access_token_keys.must_include "refresh_token"
       end
     end
 

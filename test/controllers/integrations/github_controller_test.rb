@@ -26,7 +26,7 @@ describe Integrations::GithubController do
     project.webhooks.create!(stage: stages(:test_staging), branch: "dev", source: 'any')
   end
 
-  test_regular_commit "Github", no_mapping: { ref: 'refs/heads/foobar' }, failed: false
+  test_regular_commit "Github", no_mapping: {ref: 'refs/heads/foobar'}, failed: false
 
   it_ignores_skipped_commits
 
@@ -85,6 +85,16 @@ describe Integrations::GithubController do
 
     it_does_not_deploy 'without "[samson review]" in the body' do
       payload.deep_merge!(pull_request: {body: 'imafixwolves'})
+    end
+  end
+
+  describe 'with a commit status event' do
+    before { request.headers['X-Github-Event'] = 'status' }
+
+    it 'expires github status' do
+      Rails.cache.expects(:delete).with(['commit-status', project.id, 'dc395381e650f3bac18457909880829fc20e34ba'])
+      post :create, params: {token: project.token, sha: "dc395381e650f3bac18457909880829fc20e34ba"}
+      assert_response :success
     end
   end
 

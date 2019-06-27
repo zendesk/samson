@@ -13,7 +13,8 @@ describe Samson::FormBuilder do
     template.extend ApplicationHelper
     template
   end
-  let(:builder) { Samson::FormBuilder.new(:user, User.new, template, {}) }
+  let(:object) { User.new }
+  let(:builder) { Samson::FormBuilder.new(:user, object, template, {}) }
 
   describe '#input' do
     it "adds a clickable label" do
@@ -28,6 +29,10 @@ describe Samson::FormBuilder do
 
     it "can override label" do
       builder.input(:name, label: "Ho Ho").must_include 'for="user_name">Ho Ho</label>'
+    end
+
+    it "can handle a blank label" do
+      builder.input(:name, label: '').must_include '<div class="col-lg-2 control-label"></div>'
     end
 
     it "can change field type" do
@@ -112,7 +117,7 @@ describe Samson::FormBuilder do
   end
 
   describe '#actions' do
-    before { builder.object.stubs(persisted?: true) }
+    let(:object) { users(:viewer) }
 
     it "renders" do
       result = builder.actions
@@ -121,7 +126,7 @@ describe Samson::FormBuilder do
     end
 
     it "does not include delete link for new object" do
-      builder.object.unstub(:persisted?)
+      builder.object.stubs(persisted?: false)
       builder.actions(delete: true).wont_include "Delete"
     end
 
@@ -135,12 +140,69 @@ describe Samson::FormBuilder do
       builder.actions(delete: [:admin, commands(:echo)]).must_include "Delete"
     end
 
+    it "can add help text to delete" do
+      template.expects(:url_for).with(builder.object).returns('/xxx')
+      builder.actions(delete: true, delete_help: "Bar").must_include 'data-content="Bar"'
+    end
+
+    it "can include type_to_delete link" do
+      template.expects(:url_for).with(builder.object).returns('/xxx')
+      builder.actions(delete: :type).must_include "type-to-delete"
+    end
+
+    it "does not include history link for new object" do
+      builder.object.stubs(persisted?: false)
+      builder.actions(history: true).wont_include "History"
+    end
+
+    it "can include history link" do
+      template.expects(:audits_path).returns('/xxx')
+      builder.actions(history: true).must_include "> <a href=\"/xxx\">History"
+    end
+
+    it "can include visibly separated history and delete link" do
+      template.expects(:url_for).times(2).returns('/xxx') # audits_url is passed into url_for
+      template.expects(:audits_path).returns('/xxx')
+      builder.actions(history: true, delete: true).must_include "> | <a href=\"/xxx\">History"
+    end
+
     it "can add additional links with block" do
       builder.actions { fake_erb_rendering }.must_include "XYZ"
     end
 
     it "can override button text" do
       builder.actions(label: 'Execute!').must_include "value=\"Execute!\""
+    end
+  end
+
+  # NOTE: ideally don't use a plugin model, but we need something with accepts_nested_attributes_for
+  describe '#fields_for_many' do
+    def render(*args)
+      project.rollbar_dashboards_settings.build # TODO: this does not get rendered
+      builder.fields_for_many(*args) do |p|
+        p.text_field :base_url, placeholder: 'thing!'
+      end
+    end
+
+    let(:setting) do
+      RollbarDashboards::Setting.create!(
+        project: projects(:test),
+        base_url: 'https://bingbong.gov/api/1',
+        read_token: '12345'
+      )
+    end
+    let(:project) { Project.new(rollbar_dashboards_settings: [setting]) }
+    let(:builder) { Samson::FormBuilder.new(:project, project, template, {}) }
+
+    it 'renders' do
+      result = render(:rollbar_dashboards_settings)
+      result.must_include 'form-group'
+      result.must_include 'checkbox'
+    end
+
+    it 'can include add new row link' do
+      result = render(:rollbar_dashboards_settings, add_rows_allowed: true)
+      result.must_include 'Add row'
     end
   end
 end

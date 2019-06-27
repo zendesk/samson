@@ -29,7 +29,7 @@
       <th>Created</th>
       <th>
         Duration
-        <%= link_to_chart "Build duration", @builds.map { |b| b.docker_build_job&.duration }.compact %>
+        <%= link_to_chart "Build duration", @builds.map(&:duration).compact %>
       </th>
       <th>Git Ref</th>
       <th></th>
@@ -42,5 +42,5 @@
     </tbody>
   </table>
 
-  <%= paginate @builds %>
+  <%= paginate @pagy %>
 </section>

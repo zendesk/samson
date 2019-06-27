@@ -4,13 +4,13 @@ module SamsonZendesk
   end
 end
 
-Samson::Hooks.view :stage_form, "samson_zendesk/fields"
+Samson::Hooks.view :stage_form, "samson_zendesk"
 
 Samson::Hooks.callback :stage_permitted_params do
   :comment_on_zendesk_tickets
 end
 
-Samson::Hooks.callback :after_deploy do |deploy, _buddy|
+Samson::Hooks.callback :after_deploy do |deploy, _|
   if deploy.stage.comment_on_zendesk_tickets?
     ZendeskNotification.new(deploy).deliver
   end

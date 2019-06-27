@@ -1,5 +1,5 @@
 <h1>
-  <%= @project.name %>
+  <%= "#{@project.name} - Deploy ##{@deploy.id}" %>
 
   <div class="pull-right">
     <% if deployer_for_project? %>
@@ -14,8 +14,6 @@
         <% end %>
       <% end %>
     <% end %>
-
-    <%= link_to "Back", @project, class: "btn btn-default" %>
   </div>
 </h1>
 
@@ -23,5 +21,5 @@
   <%= render 'jobs/restarting' %>
 <% else %>
   <%= status_panel @deploy %>
-  <%= Samson::Hooks.render_views(:deploys_header, self) %>
+  <%= Samson::Hooks.render_views(:deploys_header, self, deploy: @deploy) %>
 <% end %>

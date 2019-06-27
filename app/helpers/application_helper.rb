@@ -3,13 +3,12 @@ require 'ansible'
 require 'github/markdown'
 
 module ApplicationHelper
-  BOOTSTRAP_FLASH_MAPPINGS = { notice: :info, error: :danger, authorization_error: :danger, success: :success }.freeze
-  BOOTSTRAP_TOOLTIP_PROPS = { toggle: 'popover', placement: 'right', trigger: 'hover' }.freeze
+  BOOTSTRAP_FLASH_MAPPINGS = {notice: :info, alert: :danger, authorization_error: :danger, success: :success}.freeze
+  BOOTSTRAP_TOOLTIP_PROPS = {toggle: 'popover', placement: 'right', trigger: 'hover'}.freeze
 
   include Ansible
   include DateTimeHelper
-
-  cattr_reader(:github_status_cache_key) { 'github-status-ok' }
+  include Pagy::Frontend
 
   def render_log(str)
     escaped = ERB::Util.html_escape(str)
@@ -34,8 +33,10 @@ module ApplicationHelper
     elsif Lock.locked_for?(stage, current_user)
       content_tag :a, "Locked", class: "btn btn-primary disabled", disabled: true
     elsif stage.direct?
-      path = project_stage_deploys_path(project, stage, deploy: {reference: "master", stage_id: stage.id})
-      link_to "Deploy!", path, role: "button", class: "btn btn-warning", data: {method: :post}
+      path = project_stage_deploys_path(
+        project, stage, deploy: {reference: stage.default_reference.presence || "master", stage_id: stage.id}
+      )
+      link_to "Deploy", path, role: "button", class: "btn btn-warning", data: {method: :post}
     else
       path = new_project_stage_deploy_path(project, stage)
       link_to "Deploy", path, role: "button", class: "btn btn-primary"
@@ -52,38 +53,17 @@ module ApplicationHelper
     link_to title, sort: column, direction: direction
   end
 
-  def github_ok?
-    key = github_status_cache_key
-
-    old = Rails.cache.read(key)
-    return old unless old.nil?
-
-    status =
-      begin
-        status_url = Rails.application.config.samson.github.status_url
-        response = Faraday.get("#{status_url}/api/status.json") do |req|
-          req.options.timeout = req.options.open_timeout = 1
-        end
-
-        response.status == 200 && JSON.parse(response.body)['status'] == 'good'
-      rescue Faraday::ClientError
-        false
-      end
-
-    Rails.cache.write(key, status, expires_in: (status ? 5.minutes : 30.seconds))
-    !!status
-  end
-
   def breadcrumb(*items)
     items = items.map do |item|
       if item.is_a?(ActiveRecord::Base)
         link_parts_for_resource(item)
+      elsif item.is_a?(Class) && item < ActiveRecord::Base
+        [item.name.split("::").last.pluralize, item]
       else
         case item
         when String then [item, nil]
         when Array then item
-        else
-          raise ArgumentError, "Unsupported breadcrumb for #{item}"
+        else raise ArgumentError, "Unsupported breadcrumb for #{item}"
         end
       end
     end
@@ -93,14 +73,14 @@ module ApplicationHelper
   # tested via link_to_resource
   def link_parts_for_resource(resource)
     case resource
-    when Project, DeployGroup, User, Samson::Secrets::VaultServer then [resource.name, resource]
+    when Project, DeployGroup, Environment, User, Samson::Secrets::VaultServer then [resource.name, resource]
     when Command then ["Command ##{resource.id}", resource]
     when UserProjectRole then ["Role for ##{resource.user.name}", resource.user]
-    when Environment then [resource.name, dashboard_path(resource)]
     when Stage then
       name = resource.name
       name = (resource.lock.warning? ? warning_icon : lock_icon) + " " + name if resource.lock
       [name, [resource.project, resource]]
+    when Deploy then ["Deploy ##{resource.id}", [resource.project, resource]]
     when SecretSharingGrant then [resource.key, resource]
     else
       @@link_parts_for_resource ||= Samson::Hooks.fire(:link_parts_for_resource).to_h
@@ -144,28 +124,42 @@ module ApplicationHelper
     end
   end
 
-  def icon_tag(type, options = {})
-    content_tag :i, '', options.merge(class: "glyphicon glyphicon-#{type}")
+  def icon_tag(type, **options)
+    css_classes = "glyphicon glyphicon-#{type}"
+
+    if klass = options[:class]
+      css_classes += " #{klass}"
+    end
+
+    content_tag :i, '', options.merge(class: css_classes)
   end
 
-  def link_to_delete(path, options = {})
-    text = options[:text] || 'Delete'
-    disabled_reason = options[:disabled]
-    if disabled_reason
-      content_tag :span, text, title: disabled_reason, class: 'mouseover'
+  def link_to_delete(
+    path, text: 'Delete', question: nil, type_to_delete: false, remove_container: false, disabled: false, **options
+  )
+    if disabled
+      content_tag :span, text, title: disabled, class: 'mouseover'
     else
-      resource = Array(path).last
       message =
-        if question = options.delete(:question)
+        if question
           question
-        elsif resource.is_a?(ActiveRecord::Base)
+        elsif path.is_a?(ActiveRecord::Base)
+          resource = path
+          name, path = link_parts_for_resource(resource)
+          "Delete #{resource.class.name.split("::").last} #{name} ?"
+        elsif (resource = Array(path).last) && resource.is_a?(ActiveRecord::Base)
           "Delete this #{resource.class.name.split("::").last} ?"
         else
-          "Are you sure ?"
+          "Really delete ?"
         end
-      options[:data] = {confirm: message, method: :delete}
-      if container = options[:remove_container]
-        options[:data][:remove_container] = container
+      options[:data] = {method: :delete}
+      if type_to_delete
+        options[:data][:type_to_delete] = message
+      else
+        options[:data][:confirm] = message
+      end
+      if remove_container
+        options[:data][:remove_container] = remove_container
         options[:data][:remote] = true
         options[:class] = "remove_container"
       end
@@ -173,15 +167,11 @@ module ApplicationHelper
     end
   end
 
-  def link_to_delete_button(path, options = {})
-    link_to_delete(path, options.merge(text: icon_tag('remove') + ' Delete', class: 'btn btn-danger'))
-  end
-
   # Flash type -> Bootstrap alert class
   def flash_messages
     flash.flat_map do |type, messages|
       type = type.to_sym
-      bootstrap_class = BOOTSTRAP_FLASH_MAPPINGS[type] || :info
+      bootstrap_class = BOOTSTRAP_FLASH_MAPPINGS.fetch(type)
       Array.wrap(messages).map do |message|
         [type, bootstrap_class, message]
       end
@@ -221,14 +211,16 @@ module ApplicationHelper
     link_to "History#{count}", audits_path(search: {auditable_id: resource.id, auditable_type: resource.class.name})
   end
 
-  def additional_info(text)
+  def additional_info(text, overrides = {})
     data_attrs = if text.html_safe?
-      { content: h(h(text).to_str), html: true }
+      {content: ERB::Util.h(ERB::Util.h(text).to_str), html: true}
     else
-      { content: text }
+      {content: text}
     end.merge(BOOTSTRAP_TOOLTIP_PROPS)
 
-    content_tag :i, '', class: "glyphicon glyphicon-info-sign", data: data_attrs
+    options = {class: 'glyphicon glyphicon-info-sign'}.merge(overrides)
+
+    content_tag :i, '', **options, data: data_attrs
   end
 
   def page_title(content = nil, in_tab: false, &block)
@@ -277,17 +269,21 @@ module ApplicationHelper
     select_tag name, values, Samson::FormBuilder::LIVE_SELECT_OPTIONS.merge(options)
   end
 
-  def paginate(objects, *)
-    result = super
-    result << " #{objects.total_count} records" if objects.total_pages > 1
+  def paginate(pagy)
+    multi_page = pagy.pages > 1
+    result = (multi_page ? pagy_nav_bootstrap(pagy) : "").html_safe
+    if multi_page
+      result << content_tag(:span, " #{pagy.count} records", style: "padding: 10px")
+    end
     result
   end
 
-  def list_with_show_more(items, display_limit, show_more_tag, ul_options = {}, &block)
-    li_tags = items.first(display_limit).map { |i| capture(i, &block) }
-    li_tags << show_more_tag if items.size > display_limit
+  def unordered_list(items, display_limit: nil, show_more_tag: nil, ul_options: {}, li_options: {}, &block)
+    shown_items = items.first(display_limit || items.size)
+    li_tags = shown_items.map { |item| content_tag(:li, nil, li_options) { capture(item, &block) } }
+    li_tags << show_more_tag if display_limit && items.size > display_limit
 
-    content_tag(:ul, li_tags.join.html_safe, ul_options)
+    content_tag(:ul, safe_join(li_tags), ul_options)
   end
 
   # See https://developers.google.com/chart/image/docs/chart_params
@@ -296,7 +292,7 @@ module ApplicationHelper
 
     max = values.max.round
     y_axis = [0, max / 4, max / 2, (max / 1.333333).to_i, max].map { |t| duration_text(t) }.join("|")
-    y_values = values.reverse.map { |v| max.zero? ? max : (v * 100.0 / max).round }.join(",") # values as % of max
+    y_values = values.reverse.map { |v| max == 0 ? max : (v * 100.0 / max).round }.join(",") # values as % of max
     params = {
       cht: "lc", # chart type
       chtt: name,
@@ -323,5 +319,32 @@ module ApplicationHelper
       html << " "
     end
     html
+  end
+
+  def github_user_avatar(github_user)
+    image_tag github_user.avatar_url,
+      title: github_user.login,
+      class: "gravatar github-user-avatar",
+      width: 20,
+      height: 20,
+      'data-toggle': "tooltip"
+  end
+
+  def check_box_section(section_title, help_text, object, method, collection)
+    content_tag(:fieldset) do
+      result = ''.html_safe
+
+      result << content_tag(:legend, section_title)
+      result << content_tag(:p, help_text, class: 'col-lg-offset-2')
+      result << content_tag(:div, class: 'col-lg-4 col-lg-offset-2') do
+        check_boxes = ''.html_safe
+        check_boxes << collection_check_boxes(object, method, collection, :id, :name) do |b|
+          box = ''.html_safe
+          box << b.check_box + ' '
+          box << b.label
+          box << tag(:br)
+        end
+      end
+    end
   end
 end

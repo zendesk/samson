@@ -32,5 +32,23 @@ describe EnvironmentVariableGroup do
         ]
       )
     end
+
+    describe "#as_json" do
+      it "includes variable names" do
+        group.as_json.fetch("variable_names").must_equal ["A"]
+      end
+    end
+
+    describe "#variable_names" do
+      it "gives unique variable names" do
+        group.update_attributes!(
+          environment_variables_attributes: [
+            {name: "B", value: "B", scope_type_and_id: "Environment-#{environments(:production)}"},
+            {name: "C", value: "C", scope_type_and_id: "Environment-#{environments(:production)}"},
+          ]
+        )
+        group.variable_names.must_equal ["A", "B", "C"]
+      end
+    end
   end
 end

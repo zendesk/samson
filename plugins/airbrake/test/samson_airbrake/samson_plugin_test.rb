@@ -1,101 +1,59 @@
 # frozen_string_literal: true
+
 require_relative '../test_helper'
 
 SingleCov.covered!
 
-describe SamsonAirbrake::Engine do
-  describe :after_deploy do
-    def notify
-      Samson::Hooks.fire :after_deploy, deploy, users(:admin)
+describe SamsonAirbrake do
+  describe '.exception_debug_info' do
+    it 'returns error debug info' do
+      notice = {'id' => '1'}
+      Airbrake.
+        expects(:user_information).
+        returns("<br/><br/>Error number: <a href='https://airbrake.io/locate/{{error_id}}'>{{error_id}}</a>")
+      SamsonAirbrake::Engine.exception_debug_info(notice).must_equal 'Error https://airbrake.io/locate/1'
     end
 
-    let(:project) { projects(:test) }
-    let(:deploy) { deploys(:succeeded_test) }
-    let!(:secret) { create_secret('global/global/global/airbrake_api_key') }
-
-    before do
-      deploy.stage.update_column(:notify_airbrake, true)
-      DeployGroup.stubs(enabled?: true)
+    it 'returns nil if airbrake fails' do
+      SamsonAirbrake::Engine.exception_debug_info(nil).must_be_nil
     end
 
-    it "sends a notification" do
-      assert_request(:post, "https://api.airbrake.io/deploys.txt", with: {
-        body: {
-          "api_key" => "MY-SECRET",
-          "deploy" => {
-            "rails_env" => "staging",
-            "scm_revision" => "abcabcaaabcabcaaabcabcaaabcabcaaabcabca1",
-            "local_username" => "Super Admin",
-            "scm_repository" => "https://example.com/bar/foo",
-          }
-        }
-      }) { notify }
+    it 'returns airbrake id error if there is no id' do
+      SamsonAirbrake::Engine.exception_debug_info({}).must_equal 'Airbrake did not return an error id'
     end
 
-    it "does not send notifications when deploy groups are disabled" do
-      DeployGroup.expects(enabled?: false)
-      notify
+    it 'returns url error if error finding url' do
+      notice = {'id' => '1'}
+      Airbrake.expects(:user_information).returns('')
+      SamsonAirbrake::Engine.exception_debug_info(notice).must_equal 'Unable to find Airbrake url'
     end
 
-    it "does not sends a notification when stage is disabled" do
-      deploy.stage.update_column(:notify_airbrake, false)
-      notify
-    end
-
-    it "does not sends a notification when deploy failed" do
-      deploy.job.update_column(:status, 'pending')
-      notify
-    end
-
-    describe "with multiple environments" do
-      before { deploy.stage.deploy_groups << deploy_groups(:pod1) }
-
-      it "sends multiple notifications" do
-        Faraday.expects(:post).times(2)
-        notify
-      end
-
-      it "uses the deploy group specific key" do
-        secret.destroy!
-        create_secret('global/global/pod1/airbrake_api_key') # other environment did not have a key
-        Faraday.expects(:post)
-        notify
-      end
-    end
-
-    it "does not sends a notification when api key is unknown" do
-      secret.destroy!
-      notify
-    end
-
-    it "does not sends a notification when stage had no deploy groups" do
-      deploy.stage.deploy_groups.clear
-      notify
-    end
-
-    it "does not send notifications when environment name is not a proper env" do
-      deploy.stage.deploy_groups.first.environment.update_column(:name, 'dsf ss sd')
-      notify
+    it 'returns error_id error if there is no error_id placeholder' do
+      notice = {'id' => '1'}
+      Airbrake.expects(:user_information).returns('"httpfoobar"')
+      SamsonAirbrake::Engine.exception_debug_info(notice).must_equal 'Unable to find error_id placeholder'
     end
   end
 
-  describe :stage_permitted_params do
-    it "allows notify_airbrake" do
-      Samson::Hooks.fire(:stage_permitted_params).must_include :notify_airbrake
-    end
-  end
+  describe 'exception callback' do
+    it 'shows debug info and calls notify_sync if sync is true' do
+      mock_notice = mock
+      mock_exception = mock
+      Airbrake.expects(:notify_sync).with(mock_exception, foo: 'bar').once.returns(mock_notice)
+      SamsonAirbrake::Engine.expects(:exception_debug_info).with(mock_notice).once
 
-  describe ".git_to_http" do
-    it "converts git to http" do
-      SamsonAirbrake::Notification.send(:git_to_http, 'git@foo.com:a.git').must_equal 'https://foo.com/a'
-    end
-
-    it "converts ssh git to http" do
-      SamsonAirbrake::Notification.send(:git_to_http, 'ssh://git@foo.com:a.git').must_equal 'https://foo.com/a'
+      Samson::Hooks.only_callbacks_for_plugin('airbrake', :error) do
+        Samson::Hooks.fire(:error, mock_exception, foo: 'bar', sync: true)
+      end
     end
 
-    it "converts http git" do
-      SamsonAirbrake::Notification.send(:git_to_http, 'http://foo.com/a.git').must_equal 'http://foo.com/a'
+    it 'calls notify if sync is false/nil' do
+      mock_exception = mock
+      Airbrake.expects(:notify).with(mock_exception, foo: 'bar').once
+
+      Samson::Hooks.only_callbacks_for_plugin('airbrake', :error) do
+        Samson::Hooks.fire(:error, mock_exception, foo: 'bar')
+      end
     end
   end
 end

@@ -57,6 +57,14 @@ describe "JsonRenderer Integration" do
       json['deploy_groups'].first.keys.must_include "kubernetes_cluster_id"
     end
 
+    it "can add custom things via yield" do
+      project = projects(:test)
+      stage = stages(:test_staging)
+      get "/projects/#{project.to_param}/stages/#{stage.to_param}.json?include=kubernetes_matrix"
+      json.keys.must_equal ['stage']
+      assert json['stage'].key?('kubernetes_matrix')
+    end
+
     it "shows a descriptive error to users that use unsupported includes" do
       get '/deploys.json', params: {includes: "nope"}
       assert_response :bad_request
@@ -64,6 +72,40 @@ describe "JsonRenderer Integration" do
         "status" => 400,
         "error" => "Forbidden includes [nope] found, allowed includes are [job, project, user, stage]"
       )
+    end
+
+    it "render with pagination links" do
+      get '/commands.json', params: {per_page: 1}
+      assert_response :success
+      json.keys.must_equal ['links', 'commands']
+    end
+
+    describe '.allowed_inlines' do
+      before do
+        EnvironmentVariable.create!(name: 'FOO', value: 'bar', parent: projects(:test))
+      end
+
+      it "renders single inlines" do
+        get '/environment_variables.json', params: {inlines: "parent_name"}
+        assert_response :success
+        json.keys.must_equal ['environment_variables']
+        json['environment_variables'].first.keys.must_include "parent_name"
+        json['environment_variables'].first.keys.wont_include "scope_name"
+      end
+
+      it "renders multiple inlines" do
+        get '/environment_variables.json', params: {inlines: "parent_name,scope_name"}
+        assert_response :success
+        json.keys.must_equal ['environment_variables']
+        json['environment_variables'].first.keys.must_include "parent_name"
+        json['environment_variables'].first.keys.must_include "scope_name"
+      end
+
+      it "skips inlines with empty collection" do
+        get '/environment_variables.json', params: {inlines: "parent_name", search: {name: 'xyz'}}
+        assert_response :success
+        json['environment_variables'].must_be_empty
+      end
     end
   end
 end

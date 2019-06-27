@@ -1,7 +1,0 @@
-<% if datadog_monitors = @stage.datadog_monitors.presence %>
-  <h2>Datadog Monitors</h2>
-  <% datadog_monitors.each do |monitor| %>
-    <% label = {pass: "success", fail: "danger"}[monitor.status] || "warning" %>
-    <span class="label label-<%= label %>"><%= monitor.name %></span>
-  <% end %>
-<% end %>

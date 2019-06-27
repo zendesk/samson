@@ -11,6 +11,13 @@ describe StagesController do
   unauthorized :get, :show, project_id: :foo, id: 1, token: Rails.application.config.samson.badge_token
   unauthorized :get, :index, project_id: :foo, token: Rails.application.config.samson.badge_token, format: :svg
 
+  def stage_no_code_deployed_disabled
+    get :new, params: {project_id: subject.project.to_param}
+    assert_select "#stage_no_code_deployed" do |input|
+      return input.attr("disabled").present?
+    end
+  end
+
   describe 'GET to :show with svg' do
     let(:valid_params) do
       {
@@ -57,7 +64,7 @@ describe StagesController do
     end
   end
 
-  as_a_viewer do
+  as_a :viewer do
     unauthorized :get, :new, project_id: :foo
     unauthorized :post, :create, project_id: :foo
     unauthorized :get, :edit, project_id: :foo, id: 1
@@ -107,6 +114,18 @@ describe StagesController do
             '<iframe src="http://localhost/foo.txt"></iframe>alert("hi there");END_OF_TEXT'
           )
         end
+
+        it 'renders deploys mentioned in the include param' do
+          get :show, params: {
+            project_id: subject.project.to_param, id: subject.to_param,
+            includes: "last_deploy,last_succeeded_deploy,active_deploy"
+          }, format: :json
+          assert_response :success
+          json.keys.must_equal ["stage", "last_deploys", "last_succeeded_deploys", "active_deploys"]
+          json["stage"].keys.must_include 'last_deploy_id'
+          json["stage"].keys.must_include 'last_succeeded_deploy_id'
+          json["stage"].keys.must_include 'active_deploy_id'
+        end
       end
 
       it "fails with invalid project" do
@@ -128,16 +147,27 @@ describe StagesController do
         assert_template 'index'
       end
 
+      it "renders html without pagination" do
+        stages = project.stages
+        get :index, params: {project_id: project, per_page: 1}
+        assigns(:stages).count.must_equal stages.count
+      end
+
       it "renders json" do
         get :index, params: {project_id: project}, format: :json
         assert_response :success
         json.keys.must_equal ['stages']
         json['stages'][0].keys.must_include 'name'
       end
+
+      it "render json with pagination" do
+        get :index, params: {project_id: project, per_page: 1}, format: :json
+        assigns(:stages).count.must_equal 1
+      end
     end
   end
 
-  as_a_project_deployer do
+  as_a :project_deployer do
     unauthorized :get, :new, project_id: :foo
     unauthorized :post, :create, project_id: :foo
     unauthorized :get, :edit, project_id: :foo, id: 1
@@ -148,10 +178,10 @@ describe StagesController do
     unauthorized :post, :clone, project_id: :foo, id: 1
   end
 
-  as_a_project_admin do
+  as_a :project_admin do
     describe '#new' do
       describe 'valid' do
-        before { get :new, params: {project_id: subject.project.to_param } }
+        before { get :new, params: {project_id: subject.project.to_param} }
 
         it 'renders' do
           assert_template :new
@@ -159,6 +189,10 @@ describe StagesController do
 
         it 'adds no commands by default' do
           assigns(:stage).command_ids.must_equal []
+        end
+
+        it 'disabled to alter `does not deploy code`' do
+          assert stage_no_code_deployed_disabled
         end
       end
 
@@ -170,6 +204,14 @@ describe StagesController do
     end
 
     describe '#create' do
+      def create_stage(overrides = {})
+        params = {project_id: project.to_param}.merge(overrides)
+
+        post :create, params: params
+
+        subject.reload
+      end
+
       let(:project) { projects(:test) }
 
       describe 'valid' do
@@ -178,22 +220,13 @@ describe StagesController do
         before do
           new_command = Command.create!(command: 'test2 command')
 
-          post :create, params: {
-            project_id: project.to_param,
-            stage: {
-              name: 'test',
-              command: 'test command',
-              command_ids: [commands(:echo).id, new_command.id]
-            }
-          }
-
-          subject.reload
+          create_stage(stage: {name: 'test', command_ids: [commands(:echo).id, new_command.id]})
         end
 
         it 'is created' do
           subject.persisted?.must_equal(true)
           subject.command_ids.must_include(commands(:echo).id)
-          subject.script.must_equal(commands(:echo).command + "\ntest2 command\ntest command")
+          subject.script.must_equal(commands(:echo).command + "\ntest2 command")
         end
 
         it 'redirects' do
@@ -203,11 +236,17 @@ describe StagesController do
 
       describe 'invalid attributes' do
         before do
-          post :create, params: {project_id: project.to_param, stage: {name: nil}}
+          create_stage(stage: {name: nil, command_ids: ['echo foobar']})
         end
 
         it 'renders' do
           assert_template :new
+        end
+      end
+
+      it "fails when trying to set no code deployed" do
+        assert_raises ActionController::UnpermittedParameters do
+          create_stage(stage: {name: "test", no_code_deployed: true})
         end
       end
 
@@ -220,7 +259,7 @@ describe StagesController do
 
     describe '#edit' do
       describe 'valid' do
-        before { get :edit, params: {project_id: subject.project.to_param, id: subject.to_param } }
+        before { get :edit, params: {project_id: subject.project.to_param, id: subject.to_param} }
 
         it 'renders' do
           assert_template :edit
@@ -236,15 +275,29 @@ describe StagesController do
         end
       end
 
+      describe "moving projects" do
+        let(:echo_command) { commands(:echo) }
+        before do
+          other_project = project.dup
+          other_project.update_attributes(name: 'duplicate', permalink: 'duplicate')
+
+          echo_command.project_id = other_project.id
+          echo_command.save!
+        end
+
+        it 'has no_access css class for commands when no admin for both' do
+          get :edit, params: {project_id: subject.project.to_param, id: subject.to_param}
+          assert_select '.no_access', echo_command.command
+        end
+      end
+
       it 'checks the appropriate next_stage_ids checkbox' do
         next_stage = Stage.create!(name: 'food', project: subject.project)
         subject.next_stage_ids = [next_stage.id]
         subject.save!
 
-        get :edit, params: {project_id: subject.project.to_param, id: subject.to_param }
-
-        checkbox = css_select('#stage_next_stage_ids_').
-            detect { |node| node.attribute('value')&.value == next_stage.id.to_s }
+        get :edit, params: {project_id: subject.project.to_param, id: subject.to_param}
+        checkbox = css_select("#stage_next_stage_ids_#{next_stage.id}")
         assert_equal 'checked', checkbox.attribute('checked').value
       end
 
@@ -272,7 +325,6 @@ describe StagesController do
         describe 'valid attributes' do
           let(:attributes) do
             {
-              command: 'test command',
               name: 'Hello',
               dashboard: '<p>Some text</p>',
               email_committers_on_automated_deploy_failure: true,
@@ -290,15 +342,10 @@ describe StagesController do
           it 'redirects' do
             assert_redirected_to project_stage_path(subject.project, subject)
           end
-
-          it 'adds a command' do
-            command = subject.commands.last
-            command.command.must_equal('test command')
-          end
         end
 
         describe 'invalid attributes' do
-          let(:attributes) { { name: nil } }
+          let(:attributes) { {name: nil} }
 
           it 'renders' do
             assert_template :edit
@@ -321,7 +368,7 @@ describe StagesController do
 
     describe '#destroy' do
       describe 'valid' do
-        before { delete :destroy, params: {project_id: subject.project.to_param, id: subject.to_param } }
+        before { delete :destroy, params: {project_id: subject.project.to_param, id: subject.to_param} }
 
         it 'redirects' do
           assert_redirected_to project_path(subject.project)
@@ -370,10 +417,28 @@ describe StagesController do
     end
 
     describe '#reorder' do
-      before { patch :reorder, params: {project_id: subject.project.to_param, stage_id: [subject.id] } }
+      before { patch :reorder, params: {project_id: subject.project.to_param, stage_id: [subject.id]} }
 
       it 'succeeds' do
         assert_response :success
+      end
+    end
+  end
+
+  as_a :admin do
+    describe '#new' do
+      it 'can alter `does not deploy code`' do
+        refute stage_no_code_deployed_disabled
+      end
+    end
+
+    describe '#create' do
+      subject { assigns(:stage) }
+      it 'permits `no_code_deployed` in params' do
+        params = {project_id: projects(:test).to_param, stage: {name: 'test', no_code_deployed: true}}
+        post :create, params: params
+        subject.reload
+        assert subject.no_code_deployed
       end
     end
   end

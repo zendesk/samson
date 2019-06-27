@@ -41,7 +41,7 @@ describe Samson::ExtraDig do
 
       it "does not set missing since we do not know if things are arrays or hashes" do
         e = assert_raises(KeyError) { subject.dig_set([:b, :c], 2) }
-        e.message.must_equal "key not found: [:b, :c]"
+        e.message.must_equal "key not found: [:b]"
       end
 
       it "fail without value" do

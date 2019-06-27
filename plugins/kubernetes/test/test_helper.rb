@@ -3,20 +3,20 @@ require_relative '../../../test/test_helper'
 
 class ActiveSupport::TestCase
   def with_example_kube_config
-    Tempfile.open('config') do |t|
+    Tempfile.create('config') do |t|
       config = {
         'apiVersion' => 'v1',
         'users' => nil,
         'clusters' => [
           {
             'name' => 'somecluster',
-            'cluster' => { 'server' => 'http://k8s.example.com' }
+            'cluster' => {'server' => 'http://k8s.example.com'}
           }
         ],
         'contexts' => [
           {
             'name' => 'default',
-            'context' => { 'cluster' => 'somecluster', 'user' => '' }
+            'context' => {'cluster' => 'somecluster', 'user' => ''}
           }
         ],
         'current-context' => 'default'
@@ -27,20 +27,21 @@ class ActiveSupport::TestCase
     end
   end
 
-  def create_kubernetes_cluster(attr = {})
-    Kubernetes::Cluster.any_instance.stubs(connection_valid?: true)
-    cluster_attr = {
+  def create_kubernetes_cluster(attributes = {})
+    cluster = Kubernetes::Cluster.new({
       name: 'Foo',
       config_filepath: File.join(File.dirname(__FILE__), 'cluster_config.yml'),
       config_context: 'test'
-    }.merge(attr)
-    Kubernetes::Cluster.create!(cluster_attr)
+    }.merge(attributes))
+    cluster.save!(validate: false)
+    cluster
   end
 
   def kubernetes_fake_raw_template
     role = Kubernetes::RoleConfigFile.new(
       read_kubernetes_sample_file('kubernetes_deployment.yml'),
-      'config/app_server.yml'
+      'config/app_server.yml',
+      project: nil
     )
     Kubernetes::ReleaseDoc.any_instance.stubs(raw_template: role.elements)
   end
@@ -125,6 +126,12 @@ class ActiveSupport::TestCase
         {"name" => "jobs", "namespaced" => true, "kind" => "Job"}
       ]
     },
+    "batch/v1beta1" => {
+      "kind" => "APIResourceList",
+      "resources" => [
+        {"name" => "cronjobs", "namespaced" => true, "kind" => "CronJob"}
+      ]
+    },
     "apps/v1beta1" => {
       "kind" => "APIResourceList",
       "resources" => [
@@ -137,14 +144,43 @@ class ActiveSupport::TestCase
         {"name" => "horizontalpodautoscalers", "namespaced" => true, "kind" => "HorizontalPodAutoscaler"},
         {"name" => "horizontalpodautoscalers/status", "namespaced" => true, "kind" => "HorizontalPodAutoscaler"},
       ]
+    },
+    "policy/v1beta1" => {
+      "kind" => "APIResourceList",
+      "resources" => [
+        {"name" => "poddisruptionbudgets", "namespaced" => true, "kind" => "PodDisruptionBudget"}
+      ]
+    },
+    "apiregistration.k8s.io/v1beta1" => {
+      "kind" => "APIResourceList",
+      "resources" => [
+        {"name" => "apiservices", "namespaced" => true, "kind" => "APIService"}
+      ]
+    },
+    "apiextensions.k8s.io/v1beta1" => {
+      "kind" => "APIResourceList",
+      "resources" => [
+        {"name" => "customresourcedefinitions", "namespaced" => true, "kind" => "CustomResourceDefinition"}
+      ]
+    },
+    "rbac.authorization.k8s.io/v1" => {
+      "kind" => "APIResourceList",
+      "resources" => [
+        {"name" => "clusterrolebindings", "namespaced" => false, "kind" => "ClusterRoleBinding"},
+        {"name" => "clusterroles", "namespaced" => false, "kind" => "ClusterRole"},
+        {"name" => "rolebindings", "namespaced" => true, "kind" => "RoleBinding"},
+        {"name" => "roles", "namespaced" => true, "kind" => "Role"}
+      ]
     }
   }.freeze
 
   before do
-    stub_request(:get, %r{http://foobar.server/(api/v1|apis/([a-z]+/[a-z\d]+))$}).to_return do |request|
+    stub_request(:get, %r{http://foobar.server/(api/v1|apis/([a-z.\d]+/[a-z\d]+))$}).to_return do |request|
       version = request.uri.path.split('/', 3).last
       body = KUBERNETES_VERSION_REPLIES[version] || raise("Missing version stub for #{version}")
       {body: body.to_json}
     end
+
+    stub_request(:get, 'http://foobar.server/version').to_return(body: '{"gitVersion": "v1.5.0"}')
   end
 end

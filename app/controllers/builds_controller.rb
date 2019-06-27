@@ -9,7 +9,7 @@ class BuildsController < ApplicationController
   before_action :find_build, only: [:show, :build_docker_image, :edit, :update]
 
   def index
-    @builds = scope.order('id desc').page(page)
+    @builds = scope.order('id desc')
     if search = params[:search]&.except(:time_format)
       if external = search.delete(:external).presence
         @builds =
@@ -22,6 +22,8 @@ class BuildsController < ApplicationController
 
       @builds = @builds.where(search.permit(*Build.column_names)) unless search.empty?
     end
+
+    @pagy, @builds = pagy(@builds, page: params[:page], items: 15)
 
     respond_to do |format|
       format.html
@@ -36,21 +38,27 @@ class BuildsController < ApplicationController
   def create
     new = false
     saved = false
+    external_build_has_digest = false
 
     Samson::Retry.retry_when_not_unique do
       if registering_external_build? && @build = find_external_build
-        return head :unprocessable_entity if @build.docker_repo_digest
+        external_build_has_digest = @build.docker_repo_digest.present?
         @build.attributes = edit_build_params(validate: false)
       else
         @build = scope.new(new_build_params.merge(creator: current_user))
       end
 
       new = @build.new_record?
-      saved = @build.save
+      changed = @build.changed?
+
+      return head :unprocessable_entity if external_build_has_digest && changed
+      saved = !changed || @build.save # nothing has changed or save result
     end
 
     start_docker_build if saved && !registering_external_build?
-    respond_to_save saved, (new ? :created : :ok), :new
+
+    status = new ? :created : :ok
+    respond_to_save saved, status, :new
   end
 
   def show
@@ -95,7 +103,7 @@ class BuildsController < ApplicationController
   end
 
   def rename_deprecated_attributes
-    return unless build = params[:build]
+    build = params.require(:build)
     return unless source_url = build.delete(:source_url)
     build[:external_url] = source_url
   end

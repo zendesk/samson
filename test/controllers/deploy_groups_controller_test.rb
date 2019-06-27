@@ -8,7 +8,7 @@ describe DeployGroupsController do
   let(:stage) { stages(:test_staging) }
   let(:json) { JSON.parse(response.body) }
 
-  as_a_viewer do
+  as_a :viewer do
     describe "#index" do
       let(:json) { JSON.parse(response.body) }
 
@@ -75,15 +75,20 @@ describe DeployGroupsController do
 
       it "compares environment" do
         var = EnvironmentVariable.create!(scope: deploy_groups(:pod2), parent: stage.project, name: "Foo", value: "bar")
+        group = EnvironmentVariableGroup.create!(name: "G1")
+        var2 = EnvironmentVariable.create!(scope: deploy_groups(:pod2), parent: group, name: "Bar", value: "baz")
         get :missing_config, params: {id: deploy_group, compare: deploy_groups(:pod2).permalink}
         assert_template :missing_config
         assert_response :success
-        assigns(:diff).must_equal("foo" => {"Environment" => [var]})
+        assigns(:diff).must_equal(
+          "foo" => {"Environment" => [var]},
+          "global" => {"Environment" => [var2]}
+        )
       end
     end
   end
 
-  as_a_project_admin do
+  as_a :project_admin do
     unauthorized :post, :create
     unauthorized :get, :new
     unauthorized :get, :edit, id: 1
@@ -91,7 +96,7 @@ describe DeployGroupsController do
     unauthorized :delete, :destroy, id: 1
   end
 
-  as_a_super_admin do
+  as_a :super_admin do
     describe "#new" do
       it 'renders' do
         get :new
@@ -102,8 +107,8 @@ describe DeployGroupsController do
     describe '#create' do
       it 'creates a deploy group' do
         assert_difference 'DeployGroup.count', +1 do
-          post :create, params: {deploy_group: {name: 'pod666', environment_id: environments(:staging).id}}
-          assert_redirected_to deploy_groups_path
+          post :create, params: {deploy_group: {name: 'Pod666', environment_id: environments(:staging).id}}
+          assert_redirected_to deploy_group_path('pod666')
         end
       end
 
@@ -132,7 +137,7 @@ describe DeployGroupsController do
           },
           id: deploy_group.id
         }
-        assert_redirected_to deploy_groups_path
+        assert_redirected_to deploy_group_path('fooo')
         deploy_group.reload
         deploy_group.name.must_equal 'Test Update'
         deploy_group.permalink.must_equal 'fooo'
@@ -153,16 +158,10 @@ describe DeployGroupsController do
         DeployGroup.where(id: deploy_group.id).must_equal []
       end
 
-      it 'fails for non-existent deploy_group' do
-        assert_raises ActiveRecord::RecordNotFound do
-          delete :destroy, params: {id: -1}
-        end
-      end
-
-      it 'fails for used deploy_group and sends user to a page that shows which groups are used' do
+      it 'fails for used deploy_group and sends user to a page that shows which groups are used+errors' do
         delete :destroy, params: {id: deploy_group}
         assert_redirected_to deploy_group
-        assert flash[:error]
+        assert flash[:alert]
         deploy_group.reload
       end
     end

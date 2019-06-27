@@ -1,0 +1,12 @@
+<%= page_title "Deploy Group Usage Report" %>
+
+<section>
+
+  <div class="csv-users-filters clearfix">
+    <%= form_tag new_csv_export_path(format: :csv, type: :deploy_group_usage), method: :get, class: "form-horizontal" do %>
+      <%= hidden_field_tag :type, "deploy_group_usage" %>
+      <%= submit_tag "Download Deploy Group Usage Report", class: 'btn btn-default' %>
+    <% end %>
+  </div>
+
+</section>

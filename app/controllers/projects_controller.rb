@@ -1,77 +1,43 @@
 # frozen_string_literal: true
 require 'csv'
 
-class ProjectsController < ApplicationController
-  include CurrentProject
-
-  skip_before_action :require_project, only: [:index, :new, :create]
-
+class ProjectsController < ResourceController
+  before_action :set_resource, only: [:show, :edit, :update, :destroy, :deploy_group_versions, :new, :create]
   before_action :authorize_resource!, except: [:deploy_group_versions, :edit]
 
+  # TODO: make this behave more like resource_controller
   def index
+    projects = projects_for_user
+
     respond_to do |format|
       format.html do
-        @projects = projects_for_user
+        if params[:partial] == "nav"
+          @projects = projects
+          render partial: "projects/nav", layout: false
+        else
+          per_page = 9 # 3 or 1 column layout depending on size
+          # Workaround with pagy internals for https://github.com/rails/rails/issues/33719
+          count = projects.reorder(nil).count(:all) # count on joined query with ordering does not work
+          count = count.count if count.is_a?(Hash) # fix for AR grouping count inconsistency (Hash instead of Integer)
+          @pagy = Pagy.new(count: count, page: params[:page], items: per_page)
+          @projects = pagy_get_items(projects, @pagy)
+        end
       end
 
       format.json do
-        projects = Project.ordered_for_user(current_user).all
-        render json: { projects: projects_as_json(projects) }
+        render json: {projects: projects_as_json(projects)}
       end
 
       format.csv do
         datetime = Time.now.strftime "%Y-%m-%d_%H-%M"
-        send_data projects_as_csv(Project.all), type: :csv, filename: "Projects_#{datetime}.csv"
+        send_data projects_as_csv(projects), type: :csv, filename: "Projects_#{datetime}.csv"
       end
     end
   end
 
   def new
-    @project = Project.new
-    @project.current_user = current_user
+    super
     @project.stages.build(name: "Production")
-  end
-
-  def create
-    @project = Project.new(project_params)
-    @project.current_user = current_user
-
-    if @project.save
-      if Rails.application.config.samson.project_created_email
-        ProjectMailer.created_email(@current_user, @project).deliver_now
-      end
-      redirect_to @project
-      Rails.logger.info("#{@current_user.name_and_email} created a new project #{@project.to_param}")
-    else
-      render :new
-    end
-  end
-
-  def show
-    respond_to do |format|
-      format.html { @stages = @project.stages }
-      format.json { render json: @project.as_json }
-    end
-  end
-
-  def edit
-  end
-
-  def update
-    if @project.update_attributes(project_params)
-      redirect_to @project
-    else
-      render :edit
-    end
-  end
-
-  def destroy
-    @project.soft_delete(validate: false)
-
-    if Rails.application.config.samson.project_deleted_email
-      ProjectMailer.deleted_email(@current_user, @project).deliver_now
-    end
-    redirect_to projects_path, notice: "Project removed."
   end
 
   def deploy_group_versions
@@ -84,8 +50,36 @@ class ProjectsController < ApplicationController
 
   protected
 
-  def project_params
-    params.require(:project).permit(
+  # compatibility with authorize_resource!
+  def current_project
+    @project
+  end
+
+  def create_callback
+    if to = created_email
+      ProjectMailer.created_email(to, current_user, @project).deliver_now
+    end
+  end
+
+  def destroy_callback
+    if to = (ENV["PROJECT_DELETED_NOTIFY_ADDRESS"] || created_email)
+      ProjectMailer.deleted_email(to, current_user, @project).deliver_now
+    end
+  end
+
+  def created_email
+    ENV["PROJECT_CREATED_NOTIFY_ADDRESS"]
+  end
+
+  def allowed_includes
+    [
+      :environment_variable_groups,
+      :environment_variables_with_scope,
+    ]
+  end
+
+  def resource_params
+    super.permit(
       *[
         :name,
         :repository_url,
@@ -96,34 +90,47 @@ class ProjectsController < ApplicationController
         :release_source,
         :docker_release_branch,
         :dockerfiles,
-        :docker_image_building_disabled,
+        :docker_build_method,
         :include_new_deploy_groups,
         :dashboard,
       ] + Samson::Hooks.fire(:project_permitted_params)
-    )
+    ).merge(current_user: current_user)
   end
 
+  # TODO: rename ... not user anymore
   def projects_for_user
-    per_page = 9 # 3 or 1 column layout depending on size
-    scope = Project.alphabetical
-    if query = params.dig(:search, :query).presence
-      scope = scope.search(query)
-    elsif ids = current_user.starred_project_ids.presence
-      # fake association sorting since order by array is hard to support in mysql+postgres+sqlite
-      array = scope.all.sort_by { |p| ids.include?(p.id) ? 0 : 1 }
-      return Kaminari.paginate_array(array).page(page).per(per_page)
-    end
-    scope.order(id: :desc).page(page).per(per_page)
-  end
-
-  # Overriding require_project from CurrentProject
-  def require_project
-    @project = (Project.find_by_param!(params[:id]) if params[:id])
+    scope =
+      if search = params.dig(:search).presence
+        scope = Project
+        if query = search[:query]
+          scope = scope.search(query)
+        end
+        if url = search[:url]
+          # users can pass in git@ or https:// with or without .git
+          # database has git@ or https:// urls with or without .git
+          uri = URI.parse("https://" + url.gsub(/(^https?:\/\/|\.git|git@|ssh:\/\/)/, '').sub(':', '/'))
+          git = "git@#{uri.host}#{uri.path.sub('/', ':')}"
+          git_http = "https://#{uri.host}#{uri.path}"
+          urls = [
+            url, # make sure the exact query always matches
+            git,
+            git_http,
+            "ssh://#{git}.git",
+            "#{git}.git",
+            "#{git_http}.git"
+          ]
+          scope = scope.where(repository_url: urls)
+        end
+        scope
+      else
+        Project.ordered_for_user(current_user) # TODO: wasteful to use join when just doing counts
+      end
+    scope.alphabetical.order(id: :desc)
   end
 
   # Avoiding N+1 queries on project index
   def last_deploy_for(project)
-    @projects_last_deployed_at ||= Deploy.successful.
+    @projects_last_deployed_at ||= Deploy.succeeded.
       last_deploys_for_projects.
       includes(:project, job: :user).
       index_by(&:project_id)

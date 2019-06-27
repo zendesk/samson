@@ -7,20 +7,22 @@ describe ProjectsHelper do
   let(:project) { projects(:test) }
   let(:stage) { stages(:test_staging) }
 
-  describe "#star_link" do
+  describe "#star_for_project" do
     let(:current_user) { users(:admin) }
 
-    it "star a project" do
+    it "shows unstarred star when project is not a favorite" do
       current_user.expects(:starred_project?).returns(false)
       link = star_for_project(project)
       link.must_include %(href="/projects/#{project.to_param}/stars")
+      link.wont_include "starred"
       link.must_include "Star this project"
     end
 
-    it "unstar a project" do
+    it "shows starred star when project is a favorite" do
       current_user.expects(:starred_project?).returns(true)
       link = star_for_project(project)
       link.must_include %(href="/projects/#{project.to_param}/stars")
+      link.must_include "starred"
       link.must_include "Unstar this project"
     end
   end
@@ -105,6 +107,15 @@ describe ProjectsHelper do
         link = repository_web_link(project)
         assert_equal link, ""
       end
+    end
+  end
+
+  describe "#docker_build_methods_help_text" do
+    it 'returns help text html for build methods' do
+      result = docker_build_methods_help_text
+      result.must_include '<b>Docker images built externally: </b>'
+      result.must_include '<b>Build docker with GCB CLI: </b>'
+      result.wont_include '<b>Samson manages docker images: </b>'
     end
   end
 end

@@ -1,21 +1,7 @@
 <%# no page_title since this is rendered via ajax %>
 
-<div class="tab-pane" id="files">
-  <%= render 'changeset/files', changeset: @changeset %>
-</div>
-
-<div class="tab-pane" id="commits">
-  <%= render 'changeset/commits', changeset: @changeset %>
-</div>
-
-<div class="tab-pane" id="pulls">
-  <%= render 'changeset/pulls', changeset: @changeset %>
-</div>
-
-<div class="tab-pane<%= @changeset.risks? ? " active" : "" %>" id="risks">
-  <%= render 'changeset/risks', pull_requests: @changeset.risky_pull_requests, type: "deploy" %>
-</div>
-
-<div class="tab-pane" id="jira-issues">
-  <%= render 'changeset/jira_issues', jira_issues: @changeset.jira_issues, type: "deploy" %>
-</div>
+<% Changeset::ATTRIBUTE_TABS.each do |tab| %>
+  <div class="tab-pane changeset-content" id="<%= tab %>">
+    <%= render "changeset/#{tab}", changeset: @changeset, type: 'deploy' %>
+  </div>
+<% end %>

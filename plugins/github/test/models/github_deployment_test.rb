@@ -38,7 +38,7 @@ describe GithubDeployment do
     let(:deployment) { stub(url: deployment_endpoint) }
 
     it "uses GitHub api" do
-      stub_github_api(deployment_endpoint, rels: { statuses: { href: deployment_status_endpoint } })
+      stub_github_api(deployment_endpoint, rels: {statuses: {href: deployment_status_endpoint}})
 
       assert_request(:post, deployment_status_endpoint) do
         github_deployment.update(deployment)

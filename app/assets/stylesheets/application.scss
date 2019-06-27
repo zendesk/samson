@@ -1,6 +1,7 @@
 @import "bootstrap-sprockets";
 @import "bootstrap";
 @import "bootstrap-select";
+@import "bootstrap-datetimepicker";
 @import "jquery-ui";
 @import "x-editable/dist/bootstrap3-editable/css/bootstrap-editable";
 @import "admin/*";
@@ -51,4 +52,8 @@ a.btn.disabled[title] {
 
 #command_command {
   font-family: monospace;
+}
+
+.github-user-avatar {
+  border-radius: .2em
 }

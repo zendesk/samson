@@ -16,24 +16,24 @@ class MakeProjectFieldsTrulyUnique < ActiveRecord::Migration[5.0]
       end
     end
 
-    add_index :projects, :permalink, unique: true, length: { permalink: 191 }
+    add_index :projects, :permalink, unique: true, length: {permalink: 191}
     remove_index :projects, [:permalink, :deleted_at]
 
-    add_index :stages, [:project_id, :permalink], unique: true, length: { permalink: 191 }
+    add_index :stages, [:project_id, :permalink], unique: true, length: {permalink: 191}
     remove_index :stages, [:project_id, :permalink, :deleted_at]
 
-    add_index :projects, :token, unique: true, length: { token: 191 }
+    add_index :projects, :token, unique: true, length: {token: 191}
     remove_index :projects, [:token, :deleted_at]
   end
 
   def down
-    add_index :projects, [:permalink, :deleted_at], unique: true, length: { permalink: 191 }
+    add_index :projects, [:permalink, :deleted_at], unique: true, length: {permalink: 191}
     remove_index :projects, :permalink
 
-    add_index :stages, [:project_id, :permalink, :deleted_at], unique: true, length: { permalink: 191 }
+    add_index :stages, [:project_id, :permalink, :deleted_at], unique: true, length: {permalink: 191}
     remove_index :stages, [:project_id, :permalink]
 
-    add_index :projects, [:token, :deleted_at], unique: true, length: { token: 191 }
+    add_index :projects, [:token, :deleted_at], unique: true, length: {token: 191}
     remove_index :projects, :token
   end
 end

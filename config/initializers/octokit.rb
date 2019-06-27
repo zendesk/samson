@@ -26,7 +26,7 @@ Octokit.middleware = Faraday::RackBuilder.new do |builder|
   builder.adapter Faraday.default_adapter
 end
 
-Octokit.connection_options[:request] = { open_timeout: 2 }
+Octokit.connection_options[:request] = {open_timeout: 2}
 
 token = ENV['GITHUB_TOKEN']
 
@@ -38,11 +38,3 @@ Octokit.api_endpoint = Rails.application.config.samson.github.api_url
 Octokit.web_endpoint = Rails.application.config.samson.github.web_url
 
 GITHUB = Octokit::Client.new(access_token: token)
-
-# Log github request timing so it is more obvious what we spent our time on
-Sawyer::Response.prepend(Module.new do
-  def initialize(*)
-    super
-    Rails.logger.info("GITHUB #{@env.method.upcase} (#{timing}s) #{@env.url}")
-  end
-end)

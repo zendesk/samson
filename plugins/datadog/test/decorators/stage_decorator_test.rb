@@ -7,19 +7,33 @@ describe Stage do
   let(:stage) { Stage.new }
 
   describe "#datadog_monitors" do
+    let(:base_url) { "https://api.datadoghq.com/api/v1" }
+
     it "is empty" do
       Stage.new.datadog_monitors.must_equal []
     end
 
-    it "splits multiple monitors" do
-      stage = Stage.new(datadog_monitor_ids: "1,2, 3")
-      stage.datadog_monitors.map(&:id).must_equal [1, 2, 3]
+    it "is returns monitors" do
+      stub_request(:get, "#{base_url}/monitor/123?api_key=dapikey&application_key=dappkey&group_states=alert").
+        to_return(body: {name: 'x'}.to_json)
+      Stage.new(datadog_monitor_queries_attributes: {0 => {query: "123"}}).datadog_monitors.map(&:name).must_equal ['x']
+    end
+
+    it "is returns monitors when it fails" do
+      Samson::ErrorNotifier.expects(:notify)
+      stub_request(:get, "#{base_url}/monitor/123?api_key=dapikey&application_key=dappkey&group_states=alert")
+      Stage.new(datadog_monitor_queries_attributes: {0 => {query: "123"}}).datadog_monitors.map(&:id).must_equal [123]
     end
   end
 
   describe "#datadog_tags_as_array" do
     it "is empty" do
       stage.datadog_tags_as_array.must_equal []
+    end
+
+    it "works when not stripping" do
+      stage.datadog_tags = " foo;bar;baz"
+      stage.datadog_tags_as_array.must_equal ["foo", "bar", "baz"]
     end
 
     it "returns an array of the tags" do
@@ -35,16 +49,6 @@ describe Stage do
     it "returns an empty array if no tags have been configured" do
       stage.datadog_tags = nil
       stage.datadog_tags_as_array.must_equal []
-    end
-  end
-
-  describe "#send_datadog_notifications?" do
-    it "is false when there are no tags" do
-      Stage.new.send_datadog_notifications?.must_equal false
-    end
-
-    it "is true when there are tags" do
-      Stage.new(datadog_tags: "a").send_datadog_notifications?.must_equal true
     end
   end
 end

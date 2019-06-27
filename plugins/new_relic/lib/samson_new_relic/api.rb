@@ -21,7 +21,7 @@ module SamsonNewRelic
       def get(path, params = {})
         response = Faraday.get("https://api.newrelic.com#{path}", params) do |request|
           request.options.open_timeout = 2
-          request.headers['X-Api-Key'] = KEY
+          request.headers['X-Api-Key'] = API_KEY
         end
         raise "Newrelic request to #{path} failed #{response.status}" unless response.status == 200
         JSON.parse(response.body)
@@ -50,7 +50,7 @@ module SamsonNewRelic
       end
 
       def response(values)
-        { applications: values, count: values.size }
+        {applications: values, count: values.size}
       end
 
       def application_map(application_names)

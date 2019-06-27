@@ -6,7 +6,6 @@ super_admin:
   name: "Super Admin"
   email: "super-admin@example.com"
   role_id: <%= Role::SUPER_ADMIN.id %>
-  token: abc123
   external_id: 'github-super_admin'
   <<: *DEFAULTS
 
@@ -14,7 +13,6 @@ admin:
   name: "Admin"
   email: "admin@example.com"
   role_id: <%= Role::ADMIN.id %>
-  token: abc123
   external_id: 'google-1'
   <<: *DEFAULTS
 
@@ -42,6 +40,7 @@ viewer:
 github_viewer:
   name: "GitHub Viewer"
   email: "gh+viewer@example.com"
+  github_username: "githubuser"
   role_id: <%= Role::VIEWER.id %>
   external_id: 'github-3'
   <<: *DEFAULTS

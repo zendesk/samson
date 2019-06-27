@@ -31,7 +31,7 @@ describe Environment do
           ["All", nil],
           ["Production", "Environment-X"],
           ["Staging", "Environment-X"],
-          ["----", nil],
+          ["----", "disabled"],
           ["Pod1", "DeployGroup-X"],
           ["Pod2", "DeployGroup-X"],
           ["Pod 100", "DeployGroup-X"]
@@ -56,11 +56,47 @@ describe Environment do
     end
   end
 
+  describe "#soft_delete" do
+    it "refuses when groups are used" do
+      refute environments(:production).soft_delete(validate: false)
+    end
+
+    it "deletes unused deploy groups" do
+      DeployGroupsStage.delete_all
+      assert environments(:production).soft_delete(validate: false)
+      assert DeployGroup.with_deleted { DeployGroup.find(deploy_groups(:pod1).id) }.deleted_at
+    end
+  end
+
   describe '#template_stages' do
     let(:env) { environments(:staging) }
 
     it 'finds the template stages' do
       refute env.template_stages.empty?
+    end
+  end
+
+  describe "#locked_by?" do
+    def lock(overrides = {})
+      @lock ||= Lock.create!({user: users(:deployer), resource: environment}.merge(overrides))
+    end
+
+    let(:environment) { environments(:staging) }
+
+    it 'returns true for environment lock' do
+      lock # trigger lock creation
+      Lock.send :all_cached
+      assert_sql_queries 0 do
+        environment.locked_by?(lock).must_equal true
+      end
+    end
+
+    it 'returns false for different project lock' do
+      lock(resource: projects(:other))
+      Lock.send :all_cached
+      assert_sql_queries 0 do
+        environment.locked_by?(lock).must_equal false
+      end
     end
   end
 end
