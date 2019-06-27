@@ -15,17 +15,34 @@
         <% @stage.datadog_monitors # trigger parallel preload %>
         <%= form.fields_for :datadog_monitor_queries, @stage.datadog_monitor_queries + [DatadogMonitorQuery.new] do |fields| %>
           <div>
+            <% if fields.object.persisted? && example = fields.object.monitors.first %>
+              <% name = truncate(example.name, to: 30) %>
+              <% name += "+#{fields.object.monitors.size - 1}" if fields.object.monitors.size > 1 %>
+              <h3><%= link_to name, fields.object.url %></h3>
+            <% end %>
+
             <div class="form-group">
-              <div class="col-lg-4">
+              <div class="col-lg-5">
                 <%= fields.text_field :query, class: "form-control", placeholder: "ID or comma separated tags" %>
               </div>
 
+              <div class="col-lg-4">
+                On Alert <%= fields.select :failure_behavior, options_for_select(DatadogMonitorQuery::FAILURE_BEHAVIORS, fields.object.failure_behavior), include_blank: true %>
+                <%= additional_info "Action to take when monitors alerts after a deploy, but did not alert before." %>
+              </div>
+
               <div class="col-lg-3">
-                <% if fields.object.persisted? && example = fields.object.monitors.first %>
-                  <% name = truncate(example.name, to: 30) %>
-                  <% name += "+#{fields.object.monitors.size - 1}" if fields.object.monitors.size > 1 %>
-                  <%= link_to name, fields.object.url %>
-                <% end %>
+                Check for <%= fields.select :check_duration, options_for_select([1, 5, 15, 30].map { |m| ["#{m} Min", m.minutes] }), include_blank: true %>
+                <%= additional_info "How long to check the monitor after the deploy is done." %>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="col-lg-9">
+                Match
+                <%= fields.select :match_source, options_for_select(DatadogMonitorQuery::MATCH_SOURCES, fields.object.match_source), include_blank: true %>
+                to
+                <%= fields.text_field :match_target, placeholder: "tag" %>
               </div>
 
               <% if fields.object.persisted? %>
@@ -36,19 +53,6 @@
                   <% end %>
                 </div>
               <% end %>
-            </div>
-
-            <div class="form-group checkbox-disable">
-              <div class="col-lg-3">
-                On Alert <%= fields.select :failure_behavior, options_for_select(DatadogMonitorQuery::FAILURE_BEHAVIORS, fields.object.failure_behavior), include_blank: true %>
-                <%= additional_info "Action to take when monitors alerts after a deploy, but did not alert before." %>
-              </div>
-              <div class="col-lg-9 checkbox-disabled">
-                Match
-                <%= fields.select :match_source, options_for_select(DatadogMonitorQuery::MATCH_SOURCES, fields.object.match_source), include_blank: true %>
-                to
-                <%= fields.text_field :match_target, placeholder: "tag" %>
-              </div>
             </div>
             <hr/>
           </div>

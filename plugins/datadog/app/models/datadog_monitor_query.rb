@@ -22,6 +22,7 @@ class DatadogMonitorQuery < ActiveRecord::Base
   validates :failure_behavior, inclusion: FAILURE_BEHAVIORS.values, allow_blank: true
   validate :validate_query_works, if: :query_changed?
   validate :validate_source_and_target
+  validate :validate_duration_used_with_failure
 
   def monitors
     @monitors ||= begin
@@ -34,6 +35,7 @@ class DatadogMonitorQuery < ActiveRecord::Base
         m.match_target = match_target
         m.match_source = match_source
         m.failure_behavior = failure_behavior
+        m.check_duration = check_duration
       end
     end
   end
@@ -48,6 +50,10 @@ class DatadogMonitorQuery < ActiveRecord::Base
   end
 
   private
+
+  def validate_duration_used_with_failure
+    errors.add :check_duration, "only set when also using 'On Alert'." if check_duration? && !failure_behavior?
+  end
 
   def validate_source_and_target
     errors.add :match_source, "cannot be set when target is not set." if match_source? ^ match_target?
