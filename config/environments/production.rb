@@ -34,7 +34,9 @@ Samson::Application.configure do
   # Mount Action Cable outside main process or domain
   # config.action_cable.mount_path = nil
   # config.action_cable.url = 'wss://example.com/cable'
-  config.action_cable.allowed_request_origins = ENV['RAILS_ALLOWED_REQUEST_ORIGINS'].split(',').map(&:strip)
+  if origins = ENV['RAILS_ALLOWED_REQUEST_ORIGINS'].to_s.split(',').map(&:strip).presence
+    config.action_cable.allowed_request_origins = origins
+  end
 
   # Set to :debug to see everything in the log.
   config.log_level = :info
