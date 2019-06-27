@@ -8,7 +8,7 @@ class DatadogMonitor
   BASE_URL = ENV["DATADOG_URL"] || "https://#{SUBDOMAIN}.datadoghq.com"
 
   attr_reader :id
-  attr_accessor :match_target, :match_source, :failure_behavior
+  attr_accessor :match_target, :match_source, :failure_behavior, :check_duration
 
   class << self
     # returns raw data

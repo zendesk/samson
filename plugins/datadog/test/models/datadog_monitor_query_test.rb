@@ -77,6 +77,23 @@ describe DatadogMonitorQuery do
         refute_valid query
       end
     end
+
+    describe "#validate_duration_used_with_failure" do
+      it "does not allow setting duration without failure" do
+        assert_id_request do
+          query.check_duration = 60
+          refute_valid query
+        end
+      end
+
+      it "allows duration with failure" do
+        assert_id_request do
+          query.check_duration = 60
+          query.failure_behavior = "fail_deploy"
+          assert_valid query
+        end
+      end
+    end
   end
 
   describe "#monitors" do

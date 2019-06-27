@@ -57,7 +57,8 @@ describe SamsonDatadog do
   describe ".validate_deploy" do
     def validate(state: "Alert")
       url = "https://api.datadoghq.com/api/v1/monitor/123?api_key=dapikey&application_key=dappkey&group_states=alert"
-      stub_request(:get, url).to_return(body: {id: 123, overall_state: state, name: "Foo is down"}.to_json)
+      stub_request(:get, url).
+        to_return(Array(state).map { |s| {body: {id: 123, overall_state: s, name: "Foo is down"}.to_json} })
       SamsonDatadog.validate_deploy(deploy, stub("Ex", output: out))
     end
 
@@ -80,6 +81,7 @@ describe SamsonDatadog do
       monitor = DatadogMonitor.new(123, overall_state: "OK")
       monitor.failure_behavior = "fail_deploy"
       deploy.datadog_monitors_for_validation = [monitor]
+      SamsonDatadog.stubs(:sleep).with { raise "Unexpected sleep" }
     end
 
     it "fails when monitor was triggered" do
@@ -122,6 +124,33 @@ describe SamsonDatadog do
     it "passes when all monitors are still ok" do
       validate(state: "OK").must_equal true
       out.string.must_equal "No datadog monitors alerting\n"
+    end
+
+    it "passes when monitors are ok after their duration is elapsed" do
+      SamsonDatadog.unstub(:sleep)
+      SamsonDatadog.expects(:sleep).times(2)
+
+      deploy.datadog_monitors_for_validation.first.check_duration = 120 # 2 min -> 2 loops
+      validate(state: "OK").must_equal true
+      out.string.must_equal <<~LOG
+        No datadog monitors alerting 2 min remaining
+        No datadog monitors alerting 1 min remaining
+        No datadog monitors alerting
+      LOG
+    end
+
+    it "fails when monitors fail after a duration" do
+      SamsonDatadog.unstub(:sleep)
+      SamsonDatadog.expects(:sleep).times(2)
+
+      deploy.datadog_monitors_for_validation.first.check_duration = 180 # 3 min -> 3 loops, but stops early
+      validate(state: ["OK", "OK", "Alert"]).must_equal false
+      out.string.must_equal <<~LOG
+        No datadog monitors alerting 3 min remaining
+        No datadog monitors alerting 2 min remaining
+        Alert on datadog monitors:
+        Foo is down https://app.datadoghq.com/monitors/123
+      LOG
     end
   end
 

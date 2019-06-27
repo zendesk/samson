@@ -21,28 +21,40 @@ module SamsonDatadog
     def validate_deploy(deploy, job_execution)
       # not logging anything for common cases to reduce spam
       return true unless deploy.succeeded?
-      return true unless deploy.datadog_monitors_for_validation&.any?
+      return true unless monitors = deploy.datadog_monitors_for_validation.presence
 
-      alerting =
-        deploy.datadog_monitors_for_validation.
-        each(&:reload_from_api).
-        select { |m| m.state(deploy.stage.deploy_groups) == "Alert" }
+      interval = 1.minute
+      iterations = monitors.map { |m| m.check_duration.to_i }.max / interval + 1
 
-      if alerting.none?
-        job_execution.output.puts "No datadog monitors alerting"
-        return true
-      end
+      iterations.times do |i|
+        Samson::Parallelizer.map(monitors, &:reload_from_api)
+        alerting = monitors.select { |m| m.state(deploy.stage.deploy_groups) == "Alert" }
 
-      job_execution.output.puts "Alert on datadog monitors:\n#{alerting.map { |m| "#{m.name} #{m.url}" }.join("\n")}"
+        # all monitors good
+        if alerting.none?
+          remaining = iterations - i - 1
+          job_execution.output.puts "No datadog monitors alerting#{" #{remaining} min remaining" if remaining > 0}"
 
-      alerting.each do |monitor|
-        case monitor.failure_behavior
-        when "redeploy_previous"
-          deploy.redeploy_previous_when_failed = true
-          job_execution.output.puts "Trying to redeploy previous succeeded deploy"
-        when "fail_deploy" then nil # noop
-        else raise ArgumentError, "unsupported failure behavior #{monitor}"
+          monitors.reject! { |m| m.check_duration.to_i <= (i * interval) } # stop checking the done ones
+          return true if monitors.none?
+
+          sleep interval
+          next
         end
+
+        # some monitors alerting
+        job_execution.output.puts "Alert on datadog monitors:\n#{alerting.map { |m| "#{m.name} #{m.url}" }.join("\n")}"
+
+        alerting.each do |monitor|
+          case monitor.failure_behavior
+          when "redeploy_previous"
+            deploy.redeploy_previous_when_failed = true
+            job_execution.output.puts "Trying to redeploy previous succeeded deploy"
+          when "fail_deploy" then nil # noop
+          else raise ArgumentError, "unsupported failure behavior #{monitor}"
+          end
+        end
+        break
       end
 
       false # mark deploy as failed
@@ -56,7 +68,11 @@ Samson::Hooks.view :stage_show, "samson_datadog"
 Samson::Hooks.callback :stage_permitted_params do
   [
     :datadog_tags,
-    {datadog_monitor_queries_attributes: [:query, :failure_behavior, :match_target, :match_source, :_destroy, :id]}
+    {
+      datadog_monitor_queries_attributes: [
+        :query, :failure_behavior, :match_target, :match_source, :check_duration, :_destroy, :id
+      ]
+    }
   ]
 end
 
