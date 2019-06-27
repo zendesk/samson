@@ -12,9 +12,7 @@ module SamsonDatadog
 
     def store_validation_monitors(deploy)
       deploy.datadog_monitors_for_validation =
-        deploy.stage.datadog_monitor_queries.
-          select(&:failure_behavior?).
-          flat_map(&:monitors).
+        deploy.stage.datadog_monitors(with_failure_behavior: true).
           reject { |m| m.state(deploy.stage.deploy_groups) == "Alert" }
     end
 
@@ -62,19 +60,17 @@ module SamsonDatadog
   end
 end
 
+Samson::Hooks.view :project_form, "samson_datadog"
 Samson::Hooks.view :stage_form, "samson_datadog"
 Samson::Hooks.view :stage_show, "samson_datadog"
 
-Samson::Hooks.callback :stage_permitted_params do
-  [
-    :datadog_tags,
-    {
-      datadog_monitor_queries_attributes: [
-        :query, :failure_behavior, :match_target, :match_source, :check_duration, :_destroy, :id
-      ]
-    }
+monitor_attributes = {
+  datadog_monitor_queries_attributes: [
+    :query, :failure_behavior, :match_target, :match_source, :check_duration, :_destroy, :id
   ]
-end
+}
+Samson::Hooks.callback(:stage_permitted_params) { [:datadog_tags, monitor_attributes] }
+Samson::Hooks.callback(:project_permitted_params) { [monitor_attributes] }
 
 Samson::Hooks.callback :before_deploy do |deploy, _|
   SamsonDatadog.send_notification(deploy, additional_tags: ['started'], now: true)

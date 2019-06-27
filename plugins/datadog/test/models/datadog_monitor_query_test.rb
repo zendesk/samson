@@ -4,7 +4,7 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe DatadogMonitorQuery do
-  let(:query) { DatadogMonitorQuery.new(query: '123', stage: stages(:test_staging)) }
+  let(:query) { DatadogMonitorQuery.new(query: '123', scope: stages(:test_staging)) }
 
   describe "validations" do
     def assert_id_request(to_return: {body: '{"overall_state":"OK"}'}, &block)

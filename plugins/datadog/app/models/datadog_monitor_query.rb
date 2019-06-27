@@ -16,7 +16,7 @@ class DatadogMonitorQuery < ActiveRecord::Base
     "Fail deploy" => "fail_deploy"
   }.freeze
 
-  belongs_to :stage, inverse_of: :datadog_monitor_queries
+  belongs_to :scope, inverse_of: :datadog_monitor_queries, polymorphic: true
   validates :query, format: /\A\d+\z|\A[a-z:,\d_-]+\z/
   validates :match_source, inclusion: MATCH_SOURCES.values, allow_blank: true
   validates :failure_behavior, inclusion: FAILURE_BEHAVIORS.values, allow_blank: true
