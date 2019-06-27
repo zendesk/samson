@@ -17,8 +17,6 @@ module SamsonDatadog
     end
 
     def validate_deploy(deploy, job_execution)
-      # not logging anything for common cases to reduce spam
-      return true unless deploy.succeeded?
       return true unless monitors = deploy.datadog_monitors_for_validation.presence
 
       interval = 1.minute

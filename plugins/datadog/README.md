@@ -1,4 +1,6 @@
-Datadog monitoring and before/after-deploy events.
+ - Datadog monitoring on stage page + fail/redeploy when monitor goes bad during deployment
+ - Configurable per project or stage with customizable deploy-group-to-datadog-tag matching
+ - Before/after-deploy events
 
 Env vars to set:
 ```
