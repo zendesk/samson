@@ -39,16 +39,13 @@
             </div>
 
             <div class="form-group checkbox-disable">
-              <div class="col-lg-3 checkbox">
-                <%= fields.label :fail_deploy_on_alert do %>
-                  <%= fields.check_box :fail_deploy_on_alert %>
-                  Fail Deploy on Alert
-                  <%= additional_info "Fail deploy if monitors alerts after the deploy, but did not alert before." %>
-                <% end %>
+              <div class="col-lg-3">
+                On Alert <%= fields.select :failure_behavior, options_for_select(DatadogMonitorQuery::FAILURE_BEHAVIORS, fields.object.failure_behavior), include_blank: true %>
+                <%= additional_info "Action to take when monitors alerts after a deploy, but did not alert before." %>
               </div>
               <div class="col-lg-9 checkbox-disabled">
                 Match
-                <%= fields.select :match_source, options_for_select(DatadogMonitorQuery::MATCH_SOURCES, fields.object.match_source), include_blank: true, class: "form-control", style: "display: inline; width: auto" %>
+                <%= fields.select :match_source, options_for_select(DatadogMonitorQuery::MATCH_SOURCES, fields.object.match_source), include_blank: true %>
                 to
                 <%= fields.text_field :match_target, placeholder: "tag" %>
               </div>

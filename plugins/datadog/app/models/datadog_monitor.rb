@@ -8,7 +8,7 @@ class DatadogMonitor
   BASE_URL = ENV["DATADOG_URL"] || "https://#{SUBDOMAIN}.datadoghq.com"
 
   attr_reader :id
-  attr_accessor :match_target, :match_source
+  attr_accessor :match_target, :match_source, :failure_behavior
 
   class << self
     # returns raw data
@@ -67,7 +67,7 @@ class DatadogMonitor
     "#{BASE_URL}/monitors/#{@id}"
   end
 
-  def reload
+  def reload_from_api
     @response = nil
   end
 

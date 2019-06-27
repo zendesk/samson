@@ -171,7 +171,7 @@ describe DatadogMonitor do
     it "expires the cache when reloaded" do
       assert_datadog(overall_state: "OK", times: 2) do
         monitor.name
-        monitor.reload
+        monitor.reload_from_api
         monitor.name
       end
     end

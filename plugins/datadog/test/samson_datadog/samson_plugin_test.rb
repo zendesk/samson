@@ -32,7 +32,7 @@ describe SamsonDatadog do
     end
 
     before do
-      deploy.stage.datadog_monitor_queries.build(fail_deploy_on_alert: true, query: "123")
+      deploy.stage.datadog_monitor_queries.build(failure_behavior: "fail_deploy", query: "123")
     end
 
     it "stores good monitors" do
@@ -45,7 +45,7 @@ describe SamsonDatadog do
     end
 
     it "stores nothing when not rolling back" do
-      deploy.stage.datadog_monitor_queries.first.fail_deploy_on_alert = false
+      deploy.stage.datadog_monitor_queries.first.failure_behavior = ""
       store.size.must_equal 0
     end
 
@@ -77,7 +77,9 @@ describe SamsonDatadog do
 
     before do
       deploy.job.commit = "a" * 40
-      deploy.datadog_monitors_for_validation = [DatadogMonitor.new(123, overall_state: "OK")]
+      monitor = DatadogMonitor.new(123, overall_state: "OK")
+      monitor.failure_behavior = "fail_deploy"
+      deploy.datadog_monitors_for_validation = [monitor]
     end
 
     it "fails when monitor was triggered" do
@@ -86,6 +88,23 @@ describe SamsonDatadog do
         Alert on datadog monitors:
         Foo is down https://app.datadoghq.com/monitors/123
       LOG
+      refute deploy.redeploy_previous_when_failed
+    end
+
+    it "triggers redeploy when requested" do
+      deploy.datadog_monitors_for_validation.first.failure_behavior = "redeploy_previous"
+      validate.must_equal false
+      out.string.must_equal <<~LOG
+        Alert on datadog monitors:
+        Foo is down https://app.datadoghq.com/monitors/123
+        Trying to redeploy previous succeeded deploy
+      LOG
+      assert deploy.redeploy_previous_when_failed
+    end
+
+    it "raises on unknown failure_behavior" do
+      deploy.datadog_monitors_for_validation.first.failure_behavior = "wut"
+      assert_raises(ArgumentError) { validate }
     end
 
     it "does not add more noise when deploy is already failed" do

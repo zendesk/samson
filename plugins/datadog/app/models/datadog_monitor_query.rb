@@ -10,9 +10,16 @@ class DatadogMonitorQuery < ActiveRecord::Base
     "Cluster Permalink" => "kubernetes_cluster.permalink"
   }.freeze
 
+  # add new handling code to samson_plugin.rb when adding
+  FAILURE_BEHAVIORS = {
+    "Redeploy previous" => "redeploy_previous",
+    "Fail deploy" => "fail_deploy"
+  }.freeze
+
   belongs_to :stage, inverse_of: :datadog_monitor_queries
   validates :query, format: /\A\d+\z|\A[a-z:,\d_-]+\z/
   validates :match_source, inclusion: MATCH_SOURCES.values, allow_blank: true
+  validates :failure_behavior, inclusion: FAILURE_BEHAVIORS.values, allow_blank: true
   validate :validate_query_works, if: :query_changed?
   validate :validate_source_and_target
 
@@ -23,8 +30,10 @@ class DatadogMonitorQuery < ActiveRecord::Base
       else
         DatadogMonitor.list(query)
       end.each do |m|
+        # TODO: pass the whole query object
         m.match_target = match_target
         m.match_source = match_source
+        m.failure_behavior = failure_behavior
       end
     end
   end
