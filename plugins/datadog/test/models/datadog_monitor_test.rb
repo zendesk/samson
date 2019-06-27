@@ -21,16 +21,24 @@ describe DatadogMonitor do
   let(:monitor_url) do
     "https://api.datadoghq.com/api/v1/monitor/123?api_key=dapikey&application_key=dappkey&group_states=alert"
   end
-  let(:api_response) { JSON.parse('{"name":"Monitor Slow foo","query":"max(last_30m):max:foo.metric.time.max{*} > 20000","overall_state":"Ok","type":"metric alert","message":"This is mostly informative... @foo@bar.com","org_id":1234,"id":123,"options":{"notify_no_data":false,"no_data_timeframe":60,"notify_audit":false,"silenced":{}}}') } # rubocop:disable Metrics/LineLength
+  let(:api_response) do
+    {
+      name: "Monitor Slow foo",
+      query: "max(last_30m):max:foo.metric.time.max{*} > 20000",
+      overall_state: "Ok",
+      type: "metric alert",
+      message: "This is mostly informative... @foo@bar.com",
+      org_id: 1234,
+      id: 123,
+      options: {notify_no_data: false, no_data_timeframe: 60, notify_audit: false, silenced: {}}
+    }
+  end
   let(:alerting_groups) { {state: {groups: {"pod:pod1": {}}}} }
 
   describe "#state" do
     let(:groups) { [deploy_groups(:pod1), deploy_groups(:pod2)] }
 
-    before do
-      monitor.match_target = "pod"
-      monitor.match_source = "deploy_group.permalink"
-    end
+    before { monitor.query = DatadogMonitorQuery.new(match_target: "pod", match_source: "deploy_group.permalink") }
 
     it "returns simple state when asking for global state" do
       assert_datadog(overall_state: "OK") do
@@ -40,7 +48,7 @@ describe DatadogMonitor do
 
     it "returns simple state when match_source was not set" do
       assert_datadog(overall_state: "OK") do
-        monitor.match_source = ""
+        monitor.query.match_source = ""
         monitor.state(groups).must_equal "OK"
       end
     end
@@ -77,7 +85,7 @@ describe DatadogMonitor do
 
     it "raises on unknown source" do
       assert_datadog(state: {groups: {"pod:pod3": {}}}) do
-        monitor.match_source = "wut"
+        monitor.query.match_source = "wut"
         assert_raises(ArgumentError) { monitor.state(groups) }
       end
     end
@@ -101,21 +109,21 @@ describe DatadogMonitor do
     end
 
     it "can match on environment" do
-      monitor.match_source = "environment.permalink"
+      monitor.query.match_source = "environment.permalink"
       assert_datadog(state: {groups: {"pod:production": {}}}) do
         monitor.state(groups).must_equal "Alert"
       end
     end
 
     it "can match on deploy_group.env_value" do
-      monitor.match_source = "deploy_group.env_value"
+      monitor.query.match_source = "deploy_group.env_value"
       assert_datadog(state: {groups: {"pod:pod1": {}}}) do
         monitor.state(groups).must_equal "Alert"
       end
     end
 
     describe "cluster matching" do
-      before { monitor.match_source = "kubernetes_cluster.permalink" }
+      before { monitor.query.match_source = "kubernetes_cluster.permalink" }
 
       it "can query by cluster" do
         assert_datadog(state: {groups: {"pod:foo1": {}}}) do
@@ -163,8 +171,7 @@ describe DatadogMonitor do
   describe "caching" do
     it "caches the api response" do
       assert_datadog(overall_state: "OK") do
-        monitor.name
-        monitor.state([])
+        2.times { monitor.name }
       end
     end
 

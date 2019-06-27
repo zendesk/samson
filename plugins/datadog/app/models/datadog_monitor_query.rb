@@ -30,13 +30,7 @@ class DatadogMonitorQuery < ActiveRecord::Base
         [DatadogMonitor.new(query)]
       else
         DatadogMonitor.list(query)
-      end.each do |m|
-        # TODO: pass the whole query object
-        m.match_target = match_target
-        m.match_source = match_source
-        m.failure_behavior = failure_behavior
-        m.check_duration = check_duration
-      end
+      end.each { |m| m.query = self }
     end
   end
 
