@@ -73,7 +73,6 @@ describe DatadogMonitorQuery do
 
     it "does not allow source without target" do
       assert_id_request do
-        query.fail_deploy_on_alert = true
         query.match_target = "foo"
         refute_valid query
       end
