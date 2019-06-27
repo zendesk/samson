@@ -51,7 +51,7 @@ class DatadogMonitor
     return unless response[:overall_state] # show fallback as warning
 
     if match_source.present?
-      return "OK" unless alerting = alerting_tags.presence # be lazy
+      return "OK" unless alerting = alerting_tags.presence
       deployed = deploy_groups.map { |dg| "#{match_target}:#{match_value(dg)}" }
       (deployed & alerting).any? ? "Alert" : "OK"
     else
@@ -73,19 +73,10 @@ class DatadogMonitor
 
   private
 
-  # alerting scopes, but ignore when it completely matches a silenced scope
   # @return [Array<String>]
   def alerting_tags
-    alerting = tags_from_response(:state, :groups)
-    silenced = tags_from_response(:options, :silenced)
-    alerting.reject! { |scope| silenced.any? { |s| (s & scope) == s } }
-    alerting.flatten(1)
-  end
-
-  # @return [Array<Array<String>>]
-  def tags_from_response(*path)
-    hash = response.dig(*path) || {}
-    hash.keys.map { |k| k.to_s.split(",").sort }
+    groups = response.dig(:state, :groups) || {}
+    groups.keys.flat_map { |k| k.to_s.split(",") }
   end
 
   def match_value(deploy_group)

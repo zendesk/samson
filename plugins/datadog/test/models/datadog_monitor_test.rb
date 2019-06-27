@@ -69,25 +69,6 @@ describe DatadogMonitor do
       end
     end
 
-    it "shows OK when alerting groups are silenced" do
-      assert_datadog alerting_groups.merge(options: {silenced: {"pod:pod1": 123}}) do
-        monitor.state(groups).must_equal "OK"
-      end
-    end
-
-    it "shows Alert when alerting groups did not match silence" do
-      assert_datadog alerting_groups.merge(options: {silenced: {"pod:pod1,foo:bar": 123}}) do
-        monitor.state(groups).must_equal "Alert"
-      end
-    end
-
-    it "shows OK when alerting groups matches complex silence" do
-      response = {state: {groups: {"pod:pod1,foo:bar": {}}}, options: {silenced: {"foo:bar,pod:pod1": 123}}}
-      assert_datadog response do
-        monitor.state(groups).must_equal "OK"
-      end
-    end
-
     it "shows OK when other groups are alerting" do
       assert_datadog(state: {groups: {"pod:pod3": {}}}) do
         monitor.state(groups).must_equal "OK"
