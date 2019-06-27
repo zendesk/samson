@@ -30,7 +30,7 @@ class DatadogMonitor
       response = Faraday.new(request: {open_timeout: 2, timeout: 4}).get(url)
       if response.success?
         JSON.parse(response.body, symbolize_names: true)
-      elsif response.status == 404 # bad stage config, not our problem
+      elsif response.status == 404 # bad config, not our problem
         fallback
       else # datadog down, notify
         raise "Bad response #{response.status}"
