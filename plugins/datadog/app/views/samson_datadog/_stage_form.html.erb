@@ -14,33 +14,46 @@
       <div class="col-lg-12">
         <% @stage.datadog_monitors # trigger parallel preload %>
         <%= form.fields_for :datadog_monitor_queries, @stage.datadog_monitor_queries + [DatadogMonitorQuery.new] do |fields| %>
-          <div class="form-group">
-            <div class="col-lg-4">
-              <%= fields.text_field :query, class: "form-control", placeholder: "ID or comma separated tags" %>
-            </div>
+          <div>
+            <div class="form-group">
+              <div class="col-lg-4">
+                <%= fields.text_field :query, class: "form-control", placeholder: "ID or comma separated tags" %>
+              </div>
 
-            <div class="col-lg-3">
-              <% if fields.object.persisted? %>
-                <%= fields.object.monitors.first&.name %> <%= "+#{fields.object.monitors.size - 1}" if fields.object.monitors.size > 1 %>
-              <% end %>
-            </div>
-
-            <div class="col-lg-3 checkbox">
-              <%= fields.label :fail_deploy_on_alert do %>
-                <%= fields.check_box :fail_deploy_on_alert %>
-                Fail Deploy on Alert
-                <%= additional_info "Fail deploy if monitors alerts after the deploy, but did not alert before." %>
-              <% end %>
-            </div>
-
-            <% if fields.object.persisted? %>
-              <div class="col-lg-1 checkbox">
-                <%= fields.label :_destroy do %>
-                  <%= fields.check_box :_destroy if fields.object.persisted? %>
-                  Delete
+              <div class="col-lg-3">
+                <% if fields.object.persisted? && example = fields.object.monitors.first %>
+                  <% name = truncate(example.name, to: 30) %>
+                  <% name += "+#{fields.object.monitors.size - 1}" if fields.object.monitors.size > 1 %>
+                  <%= link_to name, fields.object.url %>
                 <% end %>
               </div>
-            <% end %>
+
+              <% if fields.object.persisted? %>
+                <div class="col-lg-1 checkbox">
+                  <%= fields.label :_destroy do %>
+                    <%= fields.check_box :_destroy if fields.object.persisted? %>
+                    Delete
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+
+            <div class="form-group checkbox-disable">
+              <div class="col-lg-3 checkbox">
+                <%= fields.label :fail_deploy_on_alert do %>
+                  <%= fields.check_box :fail_deploy_on_alert %>
+                  Fail Deploy on Alert
+                  <%= additional_info "Fail deploy if monitors alerts after the deploy, but did not alert before." %>
+                <% end %>
+              </div>
+              <div class="col-lg-9 checkbox-disabled">
+                Match
+                <%= fields.select :match_source, options_for_select(DatadogMonitorQuery::MATCH_SOURCES, fields.object.match_source), include_blank: true, class: "form-control", style: "display: inline; width: auto" %>
+                to
+                <%= fields.text_field :match_target, placeholder: "tag" %>
+              </div>
+            </div>
+            <hr/>
           </div>
         <% end %>
         <%= link_to "Add row", "#", class: "duplicate_previous_row" %>
