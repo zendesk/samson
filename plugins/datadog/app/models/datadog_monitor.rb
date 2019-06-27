@@ -8,7 +8,7 @@ class DatadogMonitor
   BASE_URL = ENV["DATADOG_URL"] || "https://#{SUBDOMAIN}.datadoghq.com"
 
   attr_reader :id
-  attr_accessor :match_target, :match_source, :failure_behavior, :check_duration
+  attr_accessor :query
 
   class << self
     # returns raw data
@@ -50,9 +50,9 @@ class DatadogMonitor
   def state(deploy_groups)
     return unless response[:overall_state] # show fallback as warning
 
-    if match_source.present?
+    if query.match_source.present?
       return "OK" unless alerting = alerting_tags.presence
-      deployed = deploy_groups.map { |dg| "#{match_target}:#{match_value(dg)}" }
+      deployed = deploy_groups.map { |dg| "#{query.match_target}:#{match_value(dg)}" }
       (deployed & alerting).any? ? "Alert" : "OK"
     else
       response[:overall_state]
@@ -80,13 +80,13 @@ class DatadogMonitor
   end
 
   def match_value(deploy_group)
-    case match_source
+    case query.match_source
     when "deploy_group.permalink" then deploy_group.permalink
     when "deploy_group.env_value" then deploy_group.env_value
     when "environment.permalink" then deploy_group.environment.permalink
     when "kubernetes_cluster.permalink"
       deploy_group.kubernetes_cluster ? deploy_group.kubernetes_cluster.name.tr(" ", "").downcase : "none"
-    else raise ArgumentError, "Unsupported match_source #{match_source}"
+    else raise ArgumentError, "Unsupported match_source #{query.match_source}"
     end
   end
 

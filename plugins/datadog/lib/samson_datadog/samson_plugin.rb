@@ -24,7 +24,7 @@ module SamsonDatadog
       return true unless monitors = deploy.datadog_monitors_for_validation.presence
 
       interval = 1.minute
-      iterations = monitors.map { |m| m.check_duration.to_i }.max / interval + 1
+      iterations = monitors.map { |m| m.query.check_duration.to_i }.max / interval + 1
 
       iterations.times do |i|
         Samson::Parallelizer.map(monitors, &:reload_from_api)
@@ -35,7 +35,7 @@ module SamsonDatadog
           remaining = iterations - i - 1
           job_execution.output.puts "No datadog monitors alerting#{" #{remaining} min remaining" if remaining > 0}"
 
-          monitors.reject! { |m| m.check_duration.to_i <= (i * interval) } # stop checking the done ones
+          monitors.reject! { |m| m.query.check_duration.to_i <= (i * interval) } # stop checking the done ones
           return true if monitors.none?
 
           sleep interval
@@ -46,7 +46,7 @@ module SamsonDatadog
         job_execution.output.puts "Alert on datadog monitors:\n#{alerting.map { |m| "#{m.name} #{m.url}" }.join("\n")}"
 
         alerting.each do |monitor|
-          case monitor.failure_behavior
+          case monitor.query.failure_behavior
           when "redeploy_previous"
             deploy.redeploy_previous_when_failed = true
             job_execution.output.puts "Trying to redeploy previous succeeded deploy"

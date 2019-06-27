@@ -79,7 +79,7 @@ describe SamsonDatadog do
     before do
       deploy.job.commit = "a" * 40
       monitor = DatadogMonitor.new(123, overall_state: "OK")
-      monitor.failure_behavior = "fail_deploy"
+      monitor.query = DatadogMonitorQuery.new(failure_behavior: "fail_deploy")
       deploy.datadog_monitors_for_validation = [monitor]
       SamsonDatadog.stubs(:sleep).with { raise "Unexpected sleep" }
     end
@@ -94,7 +94,7 @@ describe SamsonDatadog do
     end
 
     it "triggers redeploy when requested" do
-      deploy.datadog_monitors_for_validation.first.failure_behavior = "redeploy_previous"
+      deploy.datadog_monitors_for_validation.first.query.failure_behavior = "redeploy_previous"
       validate.must_equal false
       out.string.must_equal <<~LOG
         Alert on datadog monitors:
@@ -105,7 +105,7 @@ describe SamsonDatadog do
     end
 
     it "raises on unknown failure_behavior" do
-      deploy.datadog_monitors_for_validation.first.failure_behavior = "wut"
+      deploy.datadog_monitors_for_validation.first.query.failure_behavior = "wut"
       assert_raises(ArgumentError) { validate }
     end
 
@@ -130,7 +130,7 @@ describe SamsonDatadog do
       SamsonDatadog.unstub(:sleep)
       SamsonDatadog.expects(:sleep).times(2)
 
-      deploy.datadog_monitors_for_validation.first.check_duration = 120 # 2 min -> 2 loops
+      deploy.datadog_monitors_for_validation.first.query.check_duration = 120 # 2 min -> 2 loops
       validate(state: "OK").must_equal true
       out.string.must_equal <<~LOG
         No datadog monitors alerting 2 min remaining
@@ -143,7 +143,7 @@ describe SamsonDatadog do
       SamsonDatadog.unstub(:sleep)
       SamsonDatadog.expects(:sleep).times(2)
 
-      deploy.datadog_monitors_for_validation.first.check_duration = 180 # 3 min -> 3 loops, but stops early
+      deploy.datadog_monitors_for_validation.first.query.check_duration = 180 # 3 min -> 3 loops, but stops early
       validate(state: ["OK", "OK", "Alert"]).must_equal false
       out.string.must_equal <<~LOG
         No datadog monitors alerting 3 min remaining
