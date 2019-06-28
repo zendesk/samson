@@ -88,7 +88,7 @@ module Kubernetes
             return false, statuses
           else
             remaining = time_left(wait_start_time, STABILITY_CHECK_DURATION)
-            @output.puts "Testing for stability: #{remaining}s"
+            @output.puts "Testing for stability: #{remaining}s remaining"
             return success, statuses if remaining == 0
           end
         end
