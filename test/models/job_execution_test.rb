@@ -2,7 +2,7 @@
 require_relative '../test_helper'
 require 'ar_multi_threaded_transactional_tests'
 
-SingleCov.covered! uncovered: 8
+SingleCov.covered! uncovered: 7
 
 describe JobExecution do
   include GitRepoTestHelper
@@ -298,6 +298,13 @@ describe JobExecution do
     Samson.statsd.expects(:timing).
       with('execute_shell.time', anything, tags: ['project:duck', 'stage:stage4', 'production:false'])
     assert execute_job
+  end
+
+  it "fails when validation fails" do
+    Samson::Hooks.with_callback(:validate_deploy, ->(*) { false }) do
+      execute_job
+      job.status.must_equal "failed"
+    end
   end
 
   describe "builds_in_environment" do

@@ -51,6 +51,8 @@ class JobExecution
       end
     end
 
+    success = Samson::Hooks.fire(:validate_deploy, @job.deploy, self).all? if @job.deploy && success
+
     if success
       @job.succeeded!
     else

@@ -67,7 +67,7 @@ describe SamsonDatadog do
     let(:validate_deploy) { deploys(:succeeded_production_test) }
     let(:deploy) do
       project = previous_deploy.project
-      job = Job.create!(status: "succeeded", user: previous_deploy.user, project: project, command: "ls")
+      job = Job.create!(status: "running", user: previous_deploy.user, project: project, command: "ls")
       Deploy.create!(
         stage: previous_deploy.stage,
         project: project,
@@ -107,12 +107,6 @@ describe SamsonDatadog do
     it "raises on unknown failure_behavior" do
       deploy.datadog_monitors_for_validation.first.query.failure_behavior = "wut"
       assert_raises(ArgumentError) { validate }
-    end
-
-    it "does not add more noise when deploy is already failed" do
-      deploy.job.status = "failed"
-      validate.must_equal true
-      out.string.must_equal ""
     end
 
     it "passes when no monitors were captured" do
