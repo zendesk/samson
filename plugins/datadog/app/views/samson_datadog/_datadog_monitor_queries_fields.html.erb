@@ -16,18 +16,18 @@
             <%= fields.text_field :query, class: "form-control", placeholder: "ID or comma separated tags" %>
           </div>
 
-          <div class="col-lg-4">
+          <div class="col-lg-4 inline-errors">
             On Alert <%= fields.select :failure_behavior, options_for_select(DatadogMonitorQuery::FAILURE_BEHAVIORS, fields.object.failure_behavior), include_blank: true %>
             <%= additional_info "Action to take when monitors alerts after a deploy, but did not alert before." %>
           </div>
 
-          <div class="col-lg-3">
+          <div class="col-lg-3 inline-errors">
             Check for <%= fields.select :check_duration, options_for_select([1, 5, 15, 30].map { |m| ["#{m} Min", m.minutes] }), include_blank: true %>
             <%= additional_info "How long to check the monitor after the deploy is done." %>
           </div>
         </div>
 
-        <div class="form-group">
+        <div class="form-group inline-errors">
           <div class="col-lg-9">
             Match
             <%= fields.select :match_source, options_for_select(DatadogMonitorQuery::MATCH_SOURCES, fields.object.match_source), include_blank: true %>

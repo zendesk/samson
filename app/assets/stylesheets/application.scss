@@ -57,3 +57,10 @@ a.btn.disabled[title] {
 .github-user-avatar {
   border-radius: .2em
 }
+
+// form elements not built by the form-builder have has-error divs directly around the form elements
+// color is same as `.has-error .form-control` from bootstrap
+.inline-errors .has-error {
+  border: 1px solid #a94442;
+  display: inline-block;
+}

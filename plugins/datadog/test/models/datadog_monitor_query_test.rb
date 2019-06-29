@@ -7,7 +7,7 @@ describe DatadogMonitorQuery do
   let(:query) { DatadogMonitorQuery.new(query: '123', scope: stages(:test_staging)) }
 
   describe "validations" do
-    def assert_id_request(to_return: {body: '{"overall_state":"OK"}'}, &block)
+    def assert_id_request(to_return: {body: {overall_state: "OK", query: "foo by {foo}"}.to_json}, &block)
       assert_request(
         :get,
         "#{api_url}/monitor/123?api_key=dapikey&application_key=dappkey&group_states=alert",
@@ -31,50 +31,91 @@ describe DatadogMonitorQuery do
       end
     end
 
-    it "is invalid with bad monitor id" do
-      assert_id_request to_return: {status: 404} do
-        refute_valid query
-      end
-    end
-
-    it "is invalid with bad monitor tag" do
-      assert_id_request to_return: {status: 404} do
-        refute_valid query
-      end
-    end
-
-    it "is invalid with bad monitor tags" do
-      query.query = "team/foo"
-      refute_valid query
-    end
-
-    it "is valid with good monitor multi-tags" do
-      assert_tag_request([{id: 123, overall_state: "OK"}]) do
-        assert_valid query
-      end
-    end
-
-    it "is invalid with bad monitor multi-tags" do
-      assert_tag_request([]) do
-        refute_valid query
-      end
-    end
-
-    it "is valid with good monitor multi-tags" do
-      query.query = "team:foo,team:bar"
-    end
-
-    it "does not make q request when query did not change" do
-      assert_id_request do
-        query.save!
-        assert_valid query
-      end
-    end
-
-    it "does not allow source without target" do
-      assert_id_request do
+    describe "#validate_source_and_target" do
+      before do
         query.match_target = "foo"
-        refute_valid query
+        query.match_source = "deploy_group.permalink"
+      end
+
+      it "does not allow source without target" do
+        assert_id_request do
+          query.match_target = nil
+          refute_valid query
+        end
+      end
+
+      it "does not allow target without source" do
+        assert_id_request do
+          query.match_source = nil
+          refute_valid query
+        end
+      end
+    end
+
+    describe "#validate_query_works" do
+      it "ignores non-query/tag changes" do
+        assert_id_request { query.save! }
+        query.failure_behavior = "fail_deploy"
+        query.save!
+      end
+
+      it "is invalid with unfound monitor id" do
+        assert_id_request to_return: {status: 404} do
+          refute_valid query
+        end
+      end
+
+      describe "with tag query" do
+        it "is valid when monitors are found" do
+          assert_tag_request([{id: 123, overall_state: "OK"}]) do
+            assert_valid query
+          end
+        end
+
+        it "is invalid with bad monitor tags" do
+          query.query = "team/foo"
+          refute_valid query
+        end
+
+        it "is invalid with unfound monitors" do
+          assert_tag_request([]) do
+            refute_valid query
+          end
+        end
+      end
+
+      describe "with match target" do
+        before do
+          query.match_target = "foo"
+          query.match_source = "deploy_group.permalink"
+        end
+
+        it "is valid when tag can be in group state" do
+          assert_id_request do
+            assert_valid query
+          end
+        end
+
+        it "can parse double quotes flavors" do
+          value = {body: {overall_state: "OK", query: '(foo).by("pod","foo").last(1).'}.to_json}
+          assert_id_request to_return: value do
+            assert_valid query
+          end
+        end
+
+        it "can parse single quotes flavors" do
+          value = {body: {overall_state: "OK", query: "(foo).by('pod,foo')."}.to_json}
+          assert_id_request to_return: value do
+            assert_valid query
+          end
+        end
+
+        it "is invalid when tag will never be in group state" do
+          query.match_target = "bar"
+          assert_id_request do
+            refute_valid query
+          end
+        end
       end
     end
 

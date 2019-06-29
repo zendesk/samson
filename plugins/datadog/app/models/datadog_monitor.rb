@@ -71,6 +71,10 @@ class DatadogMonitor
     @response = nil
   end
 
+  def response
+    @response ||= self.class.get(@id)
+  end
+
   private
 
   # @return [Array<String>]
@@ -88,9 +92,5 @@ class DatadogMonitor
       deploy_group.kubernetes_cluster ? deploy_group.kubernetes_cluster.name.tr(" ", "").downcase : "none"
     else raise ArgumentError, "Unsupported match_source #{query.match_source}"
     end
-  end
-
-  def response
-    @response ||= self.class.get(@id)
   end
 end
