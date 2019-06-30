@@ -4,11 +4,10 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe Stage do
-  let(:stage) { Stage.new }
+  let(:stage) { Stage.new(project: Project.new) }
 
   describe "#datadog_monitors" do
     let(:base_url) { "https://api.datadoghq.com/api/v1" }
-    let(:stage) { Stage.new(project: Project.new) }
 
     it "is empty" do
       stage.datadog_monitors.must_equal []
@@ -66,6 +65,17 @@ describe Stage do
     it "returns an empty array if no tags have been configured" do
       stage.datadog_tags = nil
       stage.datadog_tags_as_array.must_equal []
+    end
+  end
+
+  describe "#datadog_monitors?" do
+    it "is false when there are no monitors" do
+      refute stage.datadog_monitors?
+    end
+
+    it "is true when there are monitors" do
+      stage.datadog_monitor_queries.build
+      assert stage.datadog_monitors?
     end
   end
 end
