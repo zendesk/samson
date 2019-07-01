@@ -20,7 +20,7 @@ class DatadogMonitorQuery < ActiveRecord::Base
   validates :query, format: /\A\d+\z|\A[a-z:,\d_-]+\z/
   validates :match_source, inclusion: MATCH_SOURCES.values, allow_blank: true
   validates :failure_behavior, inclusion: FAILURE_BEHAVIORS.values, allow_blank: true
-  validate :validate_query_works, if: :query_changed?
+  validate :validate_query_works
   validate :validate_source_and_target
   validate :validate_duration_used_with_failure
 
@@ -58,8 +58,24 @@ class DatadogMonitorQuery < ActiveRecord::Base
   end
 
   def validate_query_works
+    return if !query_changed? && !match_target_changed?
     return if errors[:query].any? # do not add to the pile
-    return if monitors.any? && monitors.all? { |m| m.state([]) } # tag search failed or id search returned a bad monitor
-    errors.add :query, "#{query} did not find monitors"
+
+    # tag search failed or id search returned a bad monitor
+    if monitors.none? || monitors.any? { |m| !m.state([]) }
+      return errors.add :query, "did not find monitors"
+    end
+
+    # match_tag is not in monitors grouping so it will never alert
+    if match_target?
+      monitors.each do |m|
+        groups = (m.response[:query][/\.by\(([^)]*)\)/, 1] || m.response[:query][/ by {([^}]*)}/, 1])
+        next if groups.to_s.tr('"\'', '').split(",").include?(match_target)
+
+        errors.add(
+          :match_target, "#{match_target} must appear in #{m.url} grouping so it can trigger alerts for this tag"
+        )
+      end
+    end
   end
 end
