@@ -1,7 +1,6 @@
-<% if datadog_monitors = @stage.datadog_monitors.presence %>
+<% if @stage.datadog_monitors? %>
   <h2>Datadog Monitors</h2>
-  <% datadog_monitors.each do |monitor| %>
-    <% label = {"OK" => "success", "Alert" => "danger"}[monitor.state(@stage.deploy_groups)] || "warning" %>
-    <%= link_to monitor.name, monitor.url, class: "label label-#{label}" %>
-  <% end %>
+  <%# show monitors without blocking the page, leaving room for 1 row of monitors to pop in %>
+  <div class="lazy-load" style="min-height: 20px" data-url="<%= datadog_monitors_path(@stage.id) %>" data-delay="1000">
+  </div>
 <% end %>

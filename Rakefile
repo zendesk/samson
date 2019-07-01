@@ -65,7 +65,8 @@ end
 
 desc "'Run brakeman, use `bundle exec brakeman --add-engine-path 'plugins/*' -I` to add or remove obsolete ignores"
 task :brakeman do
-  sh "brakeman --no-pager --add-engine-path 'plugins/*' --ensure-latest"
+  system("brakeman --no-pager --add-engine-path 'plugins/*' --ensure-latest") ||
+    abort("Fix the found issues, or add new ignored with:\nbundle exec brakeman --add-engine-path 'plugins/*' -I")
 end
 
 desc 'Scan for gem vulnerabilities'
