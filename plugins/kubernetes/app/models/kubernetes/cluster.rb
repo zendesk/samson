@@ -51,7 +51,7 @@ module Kubernetes
           type,
           ssl_options: ssl_options,
           auth_options: auth_options,
-          timeouts: {open: 2, read: 10},
+          timeouts: {open: 3, read: 10},
           as: :parsed_symbolized
         )
       end
