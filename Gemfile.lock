@@ -51,6 +51,7 @@ PATH
   remote: plugins/env
   specs:
     samson_env (0.0.0)
+      aws-sdk-s3
       dotenv
 
 PATH
@@ -218,15 +219,25 @@ GEM
     autoprefixer-rails (9.4.8)
       execjs
     awesome_print (1.6.1)
-    aws-partitions (1.82.0)
-    aws-sdk-core (3.20.2)
+    aws-eventstream (1.0.3)
+    aws-partitions (1.184.0)
+    aws-sdk-core (3.59.0)
+      aws-eventstream (~> 1.0, >= 1.0.2)
       aws-partitions (~> 1.0)
-      aws-sigv4 (~> 1.0)
+      aws-sigv4 (~> 1.1)
       jmespath (~> 1.0)
     aws-sdk-ecr (1.3.0)
       aws-sdk-core (~> 3)
       aws-sigv4 (~> 1.0)
-    aws-sigv4 (1.0.2)
+    aws-sdk-kms (1.23.0)
+      aws-sdk-core (~> 3, >= 3.58.0)
+      aws-sigv4 (~> 1.1)
+    aws-sdk-s3 (1.45.0)
+      aws-sdk-core (~> 3, >= 3.58.0)
+      aws-sdk-kms (~> 1)
+      aws-sigv4 (~> 1.1)
+    aws-sigv4 (1.1.0)
+      aws-eventstream (~> 1.0, >= 1.0.2)
     bootsnap (1.3.0)
       msgpack (~> 1.0)
     bootstrap-sass (3.4.1)
@@ -671,4 +682,4 @@ RUBY VERSION
    ruby 2.5.3
 
 BUNDLED WITH
-   1.17.1
+   1.17.3

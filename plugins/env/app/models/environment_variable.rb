@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 require 'validates_lengths_from_database'
+require 'aws-sdk-s3'
 
 class EnvironmentVariable < ActiveRecord::Base
   FAILED_LOOKUP_MARK = ' X' # SpaceX
@@ -29,11 +30,12 @@ class EnvironmentVariable < ActiveRecord::Base
 
       if deploy_group && deploy.project.config_service?
         begin
-          url = config_service_folder(deploy.project, required: true)
-          url += "/#{deploy_group.permalink}.yml" # TODO: version ?
-          response = Samson::Retry.with_retries(Faraday::Error, 3) { Faraday.get(url) }
-          raise "Invalid response #{response.status}" unless response.status == 200
-          env.merge! YAML.safe_load(response.body)
+          path = "samson/#{deploy.project.permalink}"
+          path += "/#{deploy_group.permalink}.yml" # TODO: version ?
+          response = Samson::Retry.with_retries(Aws::S3::Errors::ServiceError, 3) do
+            config_service_read(path)
+          end
+          env.merge! YAML.safe_load(response)
         rescue StandardError => e
           raise Samson::Hooks::UserError, "Error reading env vars from config service: #{e.message}"
         end
@@ -64,10 +66,23 @@ class EnvironmentVariable < ActiveRecord::Base
       end.join("\n")
     end
 
-    def config_service_folder(project, required:)
-      url = ENV["CONFIG_SERVICE_URL"]
-      raise KeyError, "CONFIG_SERVICE_URL not set" if required && !url
-      "#{url}/samson/#{project.permalink}"
+    def config_service_url(project)
+      path = "samson/#{project.permalink}"
+      if bucket = ENV["CONFIG_SERVICE_BUCKET"]
+        path = "s3://#{bucket}/#{path}"
+      end
+      path
+    end
+
+    def s3_client
+      @s3_client ||= Aws::S3::Client.new(region: ENV.fetch('CONFIG_SERVICE_REGION'))
+    end
+
+    def config_service_read(key)
+      bucket = ENV.fetch('CONFIG_SERVICE_BUCKET')
+      s3_client.get_object(bucket: bucket, key: key).body.read
+    rescue Aws::S3::Errors::NoSuchKey
+      raise "key \"#{key}\" does not exist in bucket #{bucket}!"
     end
 
     private

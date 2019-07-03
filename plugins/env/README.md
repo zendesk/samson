@@ -19,8 +19,9 @@ for a project and deploy_group.
 
 ## Service to manage environment variables
 
-Set `CONFIG_SERVICE_URL` and make it return replies to samsons queries, details see `app/models/environment_variable.rb`
-Returned env variables will be merged with database config.
+To enable reading environment variables from an S3 bucket, set the variables `CONFIG_SERVICE_BUCKET` and `CONFIG_SERVICE_REGION`.  Returned env variables will be merged with database config.
+
+For details, see `app/models/environment_variable.rb`
 
 ## GitHub to manage environment variables
 
