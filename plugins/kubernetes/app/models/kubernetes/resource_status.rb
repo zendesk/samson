@@ -54,14 +54,16 @@ module Kubernetes
 
     # do not rely on uid, when creation fails we don't get one
     def events(type: nil)
+      name = @resource.dig_fetch(:metadata, :name)
+      namespace = @resource.dig(:metadata, :namespace)
       selector = [
-        "involvedObject.name=#{@resource.dig_fetch(:metadata, :name)}",
+        "involvedObject.name=#{name}",
         "involvedObject.kind=#{@kind}",
       ]
       selector << "type=#{type}" if type
       SamsonKubernetes.retry_on_connection_errors do
         events = @client.get_events(
-          namespace: @resource.dig(:metadata, :namespace),
+          namespace: namespace,
           field_selector: selector.join(",")
         ).fetch(:items)
 
@@ -73,6 +75,10 @@ module Kubernetes
 
         events
       end
+    rescue *SamsonKubernetes.connection_errors => e
+      # similar to kubernetes/resource.rb error handling
+      error_location = "#{name} #{namespace} #{@deploy_group.name}"
+      raise Samson::Hooks::UserError, "Kubernetes error #{error_location}: #{e.message}"
     end
   end
 end
