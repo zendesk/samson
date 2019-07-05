@@ -100,5 +100,14 @@ describe Kubernetes::ResourceStatus do
       events.push lastTimestamp: new
       result.first.must_equal events[1]
     end
+
+    it "shows which cluster the error came from when something goes wrong" do
+      e = assert_raises Samson::Hooks::UserError do
+        assert_request :get, /events/, to_timeout: [] do
+          status.events
+        end
+      end
+      e.message.must_equal "Kubernetes error foo default Pod1: Timed out connecting to server"
+    end
   end
 end
