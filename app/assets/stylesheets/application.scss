@@ -50,7 +50,8 @@ a.btn.disabled[title] {
   pointer-events: auto;
 }
 
-#command_command {
+#command_command,
+.form-control.monospace {
   font-family: monospace;
 }
 
