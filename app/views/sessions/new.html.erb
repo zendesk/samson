@@ -9,7 +9,7 @@
     <% else %>
       <% ['Github', 'Google', 'LDAP', 'Gitlab', 'Bitbucket'].each do |provider| %>
         <% if Rails.application.config.samson.auth.public_send(provider.downcase) %>
-          <%= link_to omniauth_path(provider.downcase.to_sym), class: "action #{provider.downcase}" do %>
+          <%= link_to omniauth_path(provider.downcase.to_sym), class: "action #{provider.downcase}", method: :post do %>
             <%= image_tag image_url("#{provider.downcase}.png") %> Login with <%= provider %>
           <% end %>
         <% end %>

@@ -71,7 +71,8 @@ end
 
 desc 'Scan for gem vulnerabilities'
 task :bundle_audit do
-  sh "bundle-audit check --update"
+  # TODO: remove CVE-2015-9284 once https://github.com/omniauth/omniauth/pull/809 is resolved
+  sh "bundle-audit check --update --ignore CVE-2015-9284"
 end
 
 desc "Run rubocop"
