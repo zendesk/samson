@@ -88,6 +88,12 @@ module Samson
         @running_tasks_count || 0
       end
 
+      def next_execution_in(name)
+        config = registered.fetch(name)
+        raise unless config[:consistent_start_time] # otherwise we need to fetch the running tasks start time
+        time_to_next_execution(config)
+      end
+
       private
 
       def track_running_count
@@ -100,12 +106,15 @@ module Samson
 
       def with_consistent_start_time(config, &block)
         if config[:consistent_start_time]
-          execution_interval = config.fetch(:execution_interval)
-          time_to_next_execution = execution_interval - (Time.now.to_i % execution_interval)
-          Concurrent::ScheduledTask.execute(time_to_next_execution, &block)
+          Concurrent::ScheduledTask.execute(time_to_next_execution(config), &block)
         else
           yield
         end
+      end
+
+      def time_to_next_execution(config)
+        execution_interval = config.fetch(:execution_interval)
+        execution_interval - (Time.now.to_i % execution_interval)
       end
 
       def execute_block(config)

@@ -196,6 +196,21 @@ describe Samson::Periodical do
     end
   end
 
+  describe ".next_execution_in" do
+    before { freeze_time }
+
+    it "shows next execution time" do
+      with_registered do
+        Samson::Periodical.next_execution_in(:periodical_deploy).must_equal 71694
+      end
+    end
+
+    it "fails when next time would be wrong because it randomly starts" do
+      Samson::Periodical.register(:foo, 'bar') {}
+      assert_raises(RuntimeError) { Samson::Periodical.next_execution_in(:foo) }
+    end
+  end
+
   describe '.running_task_count' do
     it 'counts running tasks, starting at 0' do
       Samson::Periodical.instance_variable_set(:@running_tasks_count, nil)
