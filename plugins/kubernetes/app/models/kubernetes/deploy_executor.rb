@@ -361,11 +361,16 @@ module Kubernetes
         if release_doc.blue_green_color
           non_service_resources(release_doc)
         else
-          release_doc.deploy_group.kubernetes_cluster # cache before threading
           [release_doc]
         end
       end
-      resources.map(&:deploy)
+
+      # deploy each deploy-groups resources in logical order, but the deploy-groups in parallel
+      # this calls #deploy_group + #deploy on ReleaseDoc or Resource objects
+      resources.each { |r| r.deploy_group.kubernetes_cluster } # cache before threading
+      Samson::Parallelizer.map(resources.group_by(&:deploy_group)) do |_, grouped_resources|
+        grouped_resources.each(&:deploy)
+      end
     end
 
     def deploy_and_watch(release_docs, timeout:)
