@@ -3,7 +3,13 @@ module Kubernetes
   module Api
     class Pod
       INIT_CONTAINER_KEY = :'pod.beta.kubernetes.io/init-containers'
-      INGORED_AUTOSCALE_EVENT_REASONS = %w[FailedGetMetrics FailedRescale].freeze
+      INGORED_AUTOSCALE_EVENT_REASONS = [
+        "FailedGetMetrics",
+        "FailedRescale",
+        "FailedGetResourceMetric",
+        "FailedGetExternalMetric",
+        "FailedComputeMetricsReplicas"
+      ].freeze
       WAITING_FOR_RESOURCES = ["FailedScheduling", "FailedCreatePodSandBox", "FailedAttachVolume"].freeze
 
       attr_writer :events

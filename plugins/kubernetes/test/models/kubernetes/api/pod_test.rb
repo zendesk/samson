@@ -306,6 +306,24 @@ describe Kubernetes::Api::Pod do
         refute events_indicate_failure?, 'FailedRescale must not be recognized as failures'
       end
 
+      it "ignores failing to get resource metrics" do
+        event[:reason] = 'FailedGetResourceMetric'
+
+        refute events_indicate_failure?, 'FailedGetResourceMetric must not be recognized as failures'
+      end
+
+      it "ignores failing to get external metrics" do
+        event[:reason] = 'FailedGetExternalMetric'
+
+        refute events_indicate_failure?, 'FailedGetExternalMetric must not be recognized as failures'
+      end
+
+      it "ignores failing to compute metrics replicas" do
+        event[:reason] = 'FailedComputeMetricsReplicas'
+
+        refute events_indicate_failure?, 'FailedComputeMetricsReplicas must not be recognized as failures'
+      end
+
       it "does not ignore an unknown HPA event" do
         event[:reason] = 'SomeOtherFailure'
 
