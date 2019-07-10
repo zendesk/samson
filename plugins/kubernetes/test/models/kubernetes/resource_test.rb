@@ -74,7 +74,7 @@ describe Kubernetes::Resource do
 
     it "falls back to using VersionedUpdate" do
       Kubernetes::Resource.build({kind: 'ConfigMap'}, deploy_group, autoscaled: false, delete_resource: false).
-        class.must_equal Kubernetes::Resource::Base
+        class.must_equal Kubernetes::Resource::VersionedUpdate
     end
 
     describe ".build" do
@@ -939,6 +939,20 @@ describe Kubernetes::Resource do
         with = ->(request) { request.body.wont_include "resourceVersion"; true }
         assert_create_and_delete_requests(with: with) do
           resource.revert(template.deep_merge(metadata: {resourceVersion: '123'}))
+        end
+      end
+    end
+  end
+
+  describe Kubernetes::Resource::VersionedUpdate do
+    let(:kind) { 'CustomResourceDefinition' }
+    let(:api_version) { 'apiextensions.k8s.io/v1beta1' }
+
+    it "updates when resourceVersion so it does not fail" do
+      assert_request(:get, url, to_return: {body: {metadata: {resourceVersion: "123"}}.to_json}) do
+        args = ->(x) { x.body.must_include '"resourceVersion":"123"'; true }
+        assert_request(:put, url, to_return: {body: "{}"}, with: args) do
+          resource.deploy
         end
       end
     end
