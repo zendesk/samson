@@ -121,7 +121,6 @@ module Kubernetes
       def create
         return if @delete_resource
         restore_template do
-          @template[:metadata].delete(:resourceVersion)
           request(:create, @template)
         end
         expire_resource_cache
@@ -271,15 +270,14 @@ module Kubernetes
       end
     end
 
-    class Service < Base
+    class Service < VersionedUpdate
       private
 
-      # updating a service requires re-submitting resourceVersion and clusterIP
+      # updating a service requires re-submitting clusterIP
       # we also keep whitelisted fields that are manually changed for load-balancing
       # (meant for labels, but other fields could work too)
       def persistent_fields
         [
-          "metadata.resourceVersion",
           "spec.clusterIP",
           *ENV["KUBERNETES_SERVICE_PERSISTENT_FIELDS"].to_s.split(/\s,/),
           *@template.dig(:metadata, :annotations, :"samson/persistent_fields").to_s.split(/[,\s]+/)
