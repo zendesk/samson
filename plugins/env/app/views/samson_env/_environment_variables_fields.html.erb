@@ -1,12 +1,12 @@
 <%= form.fields_for :environment_variables, environment_variables + [EnvironmentVariable.new] do |fields| %>
   <div class="form-group">
     <div class="col-lg-3">
-      <%= fields.text_field :name, class: "form-control", placeholder: "Name" %>
+      <%= fields.text_field :name, class: "form-control monospace", placeholder: "Name" %>
     </div>
 
     <div class="col-lg-5">
       <%# using a text area so users can resize them with browser controls %>
-      <%= fields.text_area :value, class: "form-control", placeholder: "Value", rows: 1 %>
+      <%= fields.text_area :value, class: "form-control monospace", rows: 1, placeholder: "Value" %>
     </div>
 
     <% if DeployGroup.enabled? && defined?(scopes) %>
@@ -28,5 +28,6 @@
     <% end %>
   </div>
 <% end %>
+
 <%= link_to "Add row", "#", class: "duplicate_previous_row" %> <span>|</span>
 <%= link_to "Paste", "#", class: "paste_env_variables" %>
