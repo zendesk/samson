@@ -220,6 +220,7 @@ module Kubernetes
             if message.include?(" is invalid:") || message.include?(" no kind ")
               raise_kubernetes_error(message)
             else
+              e.message.insert(0, "Kubernetes error #{error_location}: ") unless e.message.frozen?
               raise
             end
           end

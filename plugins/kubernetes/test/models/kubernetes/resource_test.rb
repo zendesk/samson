@@ -335,6 +335,19 @@ describe Kubernetes::Resource do
           "apiVersion extensions/v1beta1 does not support ConfigMap. Check kubernetes docs for correct apiVersion"
         )
       end
+
+      it "shows location when api fails" do
+        stub_request(:get, "http://foobar.server/api/v1/configmaps/pods").to_return status: 429
+        e = assert_raises(Kubeclient::HttpError) { resource.send(:request, :get, :pods) }
+        e.message.must_equal "Kubernetes error some-project pod1 Pod1: 429 Too Many Requests"
+      end
+
+      it "does not crash on frozen messages" do
+        resource.send(:client).expects(:get_config_map).
+          raises(Kubeclient::ResourceNotFoundError.new(404, 'FROZEN', {}))
+        e = assert_raises(Kubeclient::ResourceNotFoundError) { resource.send(:request, :get, :pods) }
+        e.message.must_equal "FROZEN"
+      end
     end
   end
 
