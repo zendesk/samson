@@ -261,6 +261,16 @@ module Kubernetes
       end
     end
 
+    # normally we don't want to set the resourceVersion since that causes conflicts when our version is out of date
+    # but some resources require it to be set or fail with "metadata.resourceVersion: must be specified for an update"
+    class VersionedUpdate < Base
+      def template_for_update
+        t = super
+        t[:metadata][:resourceVersion] = resource.dig(:metadata, :resourceVersion)
+        t
+      end
+    end
+
     class Service < Base
       private
 
@@ -442,7 +452,7 @@ module Kubernetes
       end
     end
 
-    class CronJob < Base
+    class CronJob < VersionedUpdate
       def desired_pod_count
         0 # we don't know when it will run
       end
@@ -467,8 +477,11 @@ module Kubernetes
       end
     end
 
+    class HorizontalPodAutoscaler < Base
+    end
+
     def self.build(*args)
-      klass = "Kubernetes::Resource::#{args.first.fetch(:kind)}".safe_constantize || Base
+      klass = "Kubernetes::Resource::#{args.first.fetch(:kind)}".safe_constantize || VersionedUpdate
       klass.new(*args)
     end
   end
