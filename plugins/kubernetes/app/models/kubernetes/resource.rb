@@ -216,7 +216,11 @@ module Kubernetes
             end
           rescue Kubeclient::HttpError => e
             message = e.message.to_s
-            if message.include?(" is invalid:") || message.include?(" no kind ")
+            if verb != :get && e.error_code == 409
+              # Update version and retry if we ran into a conflict from VersionedUpdate
+              args[0][:metadata][:resourceVersion] = fetch_resource.dig(:metadata, :resourceVersion)
+              raise # retry
+            elsif message.include?(" is invalid:") || message.include?(" no kind ")
               raise_kubernetes_error(message)
             else
               e.message.insert(0, "Kubernetes error #{error_location}: ") unless e.message.frozen?
