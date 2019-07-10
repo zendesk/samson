@@ -476,6 +476,9 @@ module Kubernetes
       end
     end
 
+    class HorizontalPodAutoscaler < Base
+    end
+
     def self.build(*args)
       klass = "Kubernetes::Resource::#{args.first.fetch(:kind)}".safe_constantize || VersionedUpdate
       klass.new(*args)
