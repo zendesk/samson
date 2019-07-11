@@ -22,7 +22,7 @@
           </div>
 
           <div class="col-lg-3 inline-errors">
-            Check for <%= fields.select :check_duration, options_for_select([1, 5, 15, 30].map { |m| ["#{m} Min", m.minutes] }), include_blank: true %>
+            Check for <%= fields.select :check_duration, options_for_select([1, 5, 15, 30].map { |m| ["#{m} Min", m.minutes] }, fields.object.check_duration), include_blank: true %>
             <%= additional_info "How long to check the monitor after the deploy is done." %>
           </div>
         </div>
