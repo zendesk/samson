@@ -324,29 +324,42 @@ describe Kubernetes::Resource do
 
     describe "#request" do
       it "returns response" do
-        stub_request(:get, "http://foobar.server/api/v1/configmaps/pods").to_return body: '{"foo": "bar"}'
-        resource.send(:request, :get, :pods).must_equal foo: "bar"
+        stub_request(:get, "http://foobar.server/api/v1/configmaps/foo").to_return body: '{"foo": "bar"}'
+        resource.send(:request, :get, :foo).must_equal foo: "bar"
       end
 
       it "shows nice error message when user uses the wrong apiVersion" do
         template[:apiVersion] = 'extensions/v1beta1'
-        e = assert_raises(Samson::Hooks::UserError) { resource.send(:request, :get, :pods) }
+        e = assert_raises(Samson::Hooks::UserError) { resource.send(:request, :get, :foo) }
         e.message.must_equal(
           "apiVersion extensions/v1beta1 does not support ConfigMap. Check kubernetes docs for correct apiVersion"
         )
       end
 
       it "shows location when api fails" do
-        stub_request(:get, "http://foobar.server/api/v1/configmaps/pods").to_return status: 429
-        e = assert_raises(Kubeclient::HttpError) { resource.send(:request, :get, :pods) }
+        stub_request(:get, "http://foobar.server/api/v1/configmaps/foo").to_return status: 429
+        e = assert_raises(Kubeclient::HttpError) { resource.send(:request, :get, :foo) }
         e.message.must_equal "Kubernetes error some-project pod1 Pod1: 429 Too Many Requests"
       end
 
       it "does not crash on frozen messages" do
         resource.send(:client).expects(:get_config_map).
           raises(Kubeclient::ResourceNotFoundError.new(404, 'FROZEN', {}))
-        e = assert_raises(Kubeclient::ResourceNotFoundError) { resource.send(:request, :get, :pods) }
+        e = assert_raises(Kubeclient::ResourceNotFoundError) { resource.send(:request, :get, :foo) }
         e.message.must_equal "FROZEN"
+      end
+
+      it "retries on conflict with updated version" do
+        resource.send(:client).expects(:update_config_map).
+          with(metadata: {resourceVersion: "old"}).
+          raises(Kubeclient::HttpError.new(409, 'Conflict', {}))
+        resource.send(:client).expects(:get_config_map).
+          returns(metadata: {resourceVersion: "new"})
+        resource.send(:client).expects(:update_config_map).
+          with(metadata: {resourceVersion: "new"}).
+          returns({})
+
+        resource.send(:request, :update, metadata: {resourceVersion: "old"})
       end
     end
   end
