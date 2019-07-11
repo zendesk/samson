@@ -117,23 +117,19 @@ module Kubernetes
         remove_instance_variable(:@resource) if defined?(@resource)
       end
 
-      # TODO: remove the expire_cache and assign @resource but that breaks a bunch of deploy_executor tests
       def create
         return if @delete_resource
         restore_template do
           @template[:metadata].delete(:resourceVersion)
-          request(:create, @template)
+          @resource = request(:create, @template)
         end
-        expire_resource_cache
       rescue Kubeclient::ResourceNotFoundError => e
         raise_kubernetes_error(e.message)
       end
 
-      # TODO: remove the expire_cache and assign @resource but that breaks a bunch of deploy_executor tests
       def update
         ensure_not_updating_match_labels
-        request(:update, template_for_update)
-        expire_resource_cache
+        @resource = request(:update, template_for_update)
       end
 
       def ensure_not_updating_match_labels

@@ -107,7 +107,7 @@ describe Kubernetes::Resource do
       let(:url) { "#{origin}/apis/extensions/v1beta1/namespaces/pod1/deployments/some-project" }
 
       it "creates when missing" do
-        assert_request(:get, url, to_return: [{status: 404}, {body: "{}"}]) do
+        assert_request(:get, url, to_return: {status: 404}) do
           assert_request(:post, base_url, to_return: {body: "{}"}) do
             resource.deploy
           end
@@ -119,7 +119,7 @@ describe Kubernetes::Resource do
       end
 
       it "updates existing" do
-        assert_request(:get, url, to_return: {body: "{}"}, times: 2) do
+        assert_request(:get, url, to_return: {body: "{}"}) do
           args = ->(x) { x.body.must_include '"replicas":2'; true }
           assert_request(:put, url, to_return: {body: "{}"}, with: args) do
             resource.deploy
