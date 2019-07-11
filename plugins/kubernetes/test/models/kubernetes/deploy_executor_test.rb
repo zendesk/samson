@@ -82,7 +82,8 @@ describe Kubernetes::DeployExecutor do
 
       stub_request(:get, "#{deployments_url}/test-app-server").to_return(status: 404) # previous deploys ? -> none!
       stub_request(:get, "#{deployments_url}/test-resque-worker").to_return(status: 404) # previous deploys ? -> none!
-      stub_request(:post, deployments_url).to_return(body: "{}") # creates deployment
+      stub_request(:post, deployments_url). # creates deployment
+        to_return(body: {spec: {selector: {matchLabels: {project: "some-project", role: "some-role"}}}}.to_json)
       stub_request(:put, "#{deployments_url}/test-resque-worker").to_return(body: '{}') # during delete for rollback
 
       Kubernetes::DeployExecutor.any_instance.stubs(:sleep) # not using .executor to keep it uninitialized
@@ -608,7 +609,7 @@ describe Kubernetes::DeployExecutor do
         out.must_include rollback_indicator
         out.must_include "DONE" # DONE is shown ... we got past the rollback
         out.wont_include "SUCCESS"
-        out.wont_include "FAILED"
+        out.wont_include "FAILED" # rollback failed
       end
 
       it "deletes when there was no previous deployed resource" do
@@ -620,7 +621,7 @@ describe Kubernetes::DeployExecutor do
         out.wont_include rollback_indicator
         out.must_include "DONE" # DONE is shown ... we got past the rollback
         out.wont_include "SUCCESS"
-        out.wont_include "FAILED"
+        out.wont_include "FAILED" # rollback failed
       end
 
       it "does not crash when rollback fails" do
