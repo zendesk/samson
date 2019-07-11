@@ -69,7 +69,7 @@ describe Kubernetes::Resource do
       content = File.read(File.expand_path("../../../app/models/kubernetes/resource.rb", __dir__))
       restore_usages = content.scan('restore_template do').size
       template_modified = content.scan(/@template.*(=|dig_set|delete)/).size
-      template_modified.must_equal restore_usages + 5
+      template_modified.must_equal restore_usages + 4
     end
 
     it "falls back to using VersionedUpdate" do
@@ -755,8 +755,9 @@ describe Kubernetes::Resource do
     let(:kind) { 'Service' }
 
     describe "#deploy" do
-      let(:old) { {metadata: {resourceVersion: "A", foo: "B"}, spec: {clusterIP: "C"}} }
-      let(:expected_body) { template.deep_merge(metadata: {resourceVersion: "A"}, spec: {clusterIP: "C"}) }
+      let(:old) { {metadata: {foo: "B"}, spec: {clusterIP: "C"}} }
+      let(:expected_body) { template.deep_merge(spec: {clusterIP: "C"}) }
+      let(:expected_body_version) { expected_body.deep_merge(metadata: {resourceVersion: nil}) }
 
       it "creates when missing" do
         assert_request(:get, url, to_return: {status: 404}) do
@@ -768,7 +769,7 @@ describe Kubernetes::Resource do
 
       it "replaces existing while keeping fields that kubernetes demands" do
         assert_request(:get, url, to_return: {body: old.to_json}) do
-          assert_request(:put, url, with: {body: expected_body.to_json}, to_return: {body: "{}"}) do
+          assert_request(:put, url, with: {body: expected_body_version.to_json}, to_return: {body: "{}"}) do
             resource.deploy
           end
         end
@@ -777,7 +778,7 @@ describe Kubernetes::Resource do
       it "keeps whitelisted fields" do
         with_env KUBERNETES_SERVICE_PERSISTENT_FIELDS: "metadata.foo" do
           assert_request(:get, url, to_return: {body: old.to_json}) do
-            with = {body: expected_body.deep_merge(metadata: {foo: "B"}).to_json}
+            with = {body: expected_body.deep_merge(metadata: {foo: "B", resourceVersion: nil}).to_json}
             assert_request(:put, url, with: with, to_return: {body: "{}"}) do
               resource.deploy
             end
@@ -788,7 +789,7 @@ describe Kubernetes::Resource do
       it "ignores unknown whitelisted fields" do
         with_env KUBERNETES_SERVICE_PERSISTENT_FIELDS: "metadata.nope" do
           assert_request(:get, url, to_return: {body: old.to_json}) do
-            assert_request(:put, url, with: {body: expected_body.to_json}, to_return: {body: "{}"}) do
+            assert_request(:put, url, with: {body: expected_body_version.to_json}, to_return: {body: "{}"}) do
               resource.deploy
             end
           end
@@ -799,9 +800,8 @@ describe Kubernetes::Resource do
         with_env KUBERNETES_SERVICE_PERSISTENT_FIELDS: "metadata.nope" do
           template[:metadata][:nope] = "X"
           assert_request(:get, url, to_return: {body: old.to_json}) do
-            expected_body[:metadata][:nope] = "X"
-            expected_body[:metadata][:resourceVersion] = expected_body[:metadata].delete(:resourceVersion) # keep order
-            assert_request(:put, url, with: {body: expected_body.to_json}, to_return: {body: "{}"}) do
+            expected = expected_body.deep_merge(metadata: {nope: "X", resourceVersion: nil})
+            assert_request(:put, url, with: {body: expected.to_json}, to_return: {body: "{}"}) do
               resource.deploy
             end
           end
@@ -811,8 +811,8 @@ describe Kubernetes::Resource do
       it "keeps whitelisted fields via annotation" do
         template[:metadata][:annotations] = {"samson/persistent_fields": "metadata.foo"}
         assert_request(:get, url, to_return: {body: old.to_json}) do
-          with = {body: expected_body.deep_merge(metadata: {foo: "B"}).to_json}
-          assert_request(:put, url, with: with, to_return: {body: "{}"}) do
+          expected = expected_body.deep_merge(metadata: {foo: "B", resourceVersion: nil})
+          assert_request(:put, url, with: {body: expected.to_json}, to_return: {body: "{}"}) do
             resource.deploy
           end
         end
@@ -821,8 +821,8 @@ describe Kubernetes::Resource do
       it "multiple keeps whitelisted fields via annotation" do
         template[:metadata][:annotations] = {"samson/persistent_fields": "barfoo, metadata.foo"}
         assert_request(:get, url, to_return: {body: old.to_json}) do
-          with = {body: expected_body.deep_merge(metadata: {foo: "B"}).to_json}
-          assert_request(:put, url, with: with, to_return: {body: "{}"}) do
+          expected = expected_body.deep_merge(metadata: {foo: "B", resourceVersion: nil})
+          assert_request(:put, url, with: {body: expected.to_json}, to_return: {body: "{}"}) do
             resource.deploy
           end
         end
