@@ -182,7 +182,7 @@ describe Kubernetes::DeployExecutor do
           pod_reply[:items] << copy
         end
 
-        assert_nplus1_queries(1) do
+        assert_nplus1_queries 0 do
           assert execute, out
         end
       end

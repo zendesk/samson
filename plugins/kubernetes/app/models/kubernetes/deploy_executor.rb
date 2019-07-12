@@ -441,6 +441,9 @@ module Kubernetes
           deploy: @job.deploy
         )
         grouped_deploy_group_roles.flatten.map do |deploy_group_role|
+          # fail early here, this was randomly not there, also fixes an n+1
+          deploy_group_role.deploy_group.kubernetes_cluster || raise
+
           Kubernetes::ReleaseDoc.new(
             kubernetes_release: release,
             deploy_group: deploy_group_role.deploy_group,
