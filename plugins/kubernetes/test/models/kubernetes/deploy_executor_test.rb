@@ -188,10 +188,18 @@ describe Kubernetes::DeployExecutor do
       end
     end
 
-    it "show logs after succeeded deploy when requested" do
+    it "show logs after succeeded deploy when requested via annotation" do
       pod_reply[:items][0][:metadata][:annotations] = {'samson/show_logs_on_deploy' => 'true'}
       assert execute, out
       out.scan("logs:").size.must_equal 1 # shows for first but not for second pod
+    end
+
+    it "show logs after succeeded deploy when requested via stage" do
+      assert_request(:get, /pod-app-server\/log/) do
+        stage.kubernetes_sample_logs_on_success = true
+        assert execute, out
+        out.scan("logs:").size.must_equal 2 # shows for 1 per role
+      end
     end
 
     it "can delete resources" do
@@ -878,7 +886,7 @@ describe Kubernetes::DeployExecutor do
   end
 
   describe "#show_logs_on_deploy_if_requested" do
-    it "prints erros but continues to not block the deploy" do
+    it "prints errors but continues to not block the deploy" do
       Kubernetes::DeployExecutor.any_instance.stubs(:build_selectors).returns([])
       Samson::ErrorNotifier.expects(:notify).returns("Details")
       executor.send(:show_logs_on_deploy_if_requested, 123)

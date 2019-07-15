@@ -133,11 +133,15 @@ module Kubernetes
     end
 
     def show_logs_on_deploy_if_requested(statuses)
-      statuses = statuses.select do |s|
-        s.resource&.dig(:metadata, :annotations, :'samson/show_logs_on_deploy') == 'true' && s.kind == "Pod"
+      statuses = statuses.select { |s| s.kind == "Pod" && s.resource }
+
+      logging = statuses.select { |s| s.resource.dig(:metadata, :annotations, :'samson/show_logs_on_deploy') == 'true' }
+      if @job.deploy.stage.kubernetes_sample_logs_on_success
+        logging += statuses.group_by(&:role).map { |_, s| s.first }
       end
+
       log_end = Time.now # here to be consistent for all pods
-      statuses.each { |status| print_logs(status, log_end) }
+      logging.each { |status| print_logs(status, log_end) }
     rescue StandardError
       info = Samson::ErrorNotifier.notify($!, sync: true)
       @output.puts "  Error showing logs: #{info || "See samson logs for details"}"

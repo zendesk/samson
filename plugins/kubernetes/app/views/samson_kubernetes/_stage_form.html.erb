@@ -1,6 +1,7 @@
 <fieldset>
   <legend>Kubernetes</legend>
   <%= form.input :kubernetes, as: :check_box, label: "Deploy via kubernetes / ignore commands" %>
+  <%= form.input :kubernetes_sample_logs_on_success, as: :check_box, label: "Sample logs on success" %>
 
   <h3>Role config (optional)</h3>
   <% @stage.kubernetes_stage_roles.build %>
