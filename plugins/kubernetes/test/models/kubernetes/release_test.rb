@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../../test_helper'
 
-SingleCov.covered! uncovered: 1
+SingleCov.covered!
 
 describe Kubernetes::Release do
   let(:build)  { builds(:docker_build) }
@@ -40,9 +40,7 @@ describe Kubernetes::Release do
 
   describe '#create_release' do
     def assert_create_fails(&block)
-      refute_difference 'Kubernetes::Release.count' do
-        assert_raises Samson::Hooks::UserError, KeyError, &block
-      end
+      refute_difference 'Kubernetes::Release.count', &block
     end
 
     def assert_create_succeeds(params)
@@ -79,17 +77,28 @@ describe Kubernetes::Release do
       release.release_docs.second.limits_memory.must_equal 100
     end
 
+    it "fails to save when invalid" do
+      assert_create_fails do
+        release_params[:git_sha] = ""
+        refute Kubernetes::Release.create_release(release_params).persisted?
+      end
+    end
+
     it "fails to save with missing deploy groups" do
       assert_create_fails do
         release_params.delete :grouped_deploy_group_roles
-        Kubernetes::Release.create_release(release_params)
+        assert_raises Samson::Hooks::UserError do
+          Kubernetes::Release.create_release(release_params)
+        end
       end
     end
 
     it "fails to save with empty deploy groups" do
       assert_create_fails do
         release_params[:grouped_deploy_group_roles].first.clear
-        Kubernetes::Release.create_release(release_params)
+        assert_raises Samson::Hooks::UserError do
+          Kubernetes::Release.create_release(release_params)
+        end
       end
     end
 
@@ -167,13 +176,6 @@ describe Kubernetes::Release do
         release_id: 123,
         deploy_group_id: deploy_group.id
       )
-    end
-  end
-
-  describe "#url" do
-    it "builds" do
-      release.id = 123
-      release.url.must_equal "http://www.test-url.com/projects/foo/kubernetes/releases/123"
     end
   end
 

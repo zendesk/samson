@@ -301,10 +301,9 @@ module Kubernetes
       )
 
       unless release.persisted?
-        raise Samson::Hooks::UserError, "Failed to create release: #{release.errors.full_messages.inspect}"
+        raise Samson::Hooks::UserError, "Failed to store manifests: #{release.errors.full_messages.inspect}"
       end
 
-      @output.puts("Created kubernetes release #{release.url}")
       release
     end
 
