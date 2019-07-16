@@ -14,7 +14,6 @@ Samson::Application.routes.draw do
           get :example
         end
       end
-      resources :releases, only: [:index, :show]
       resources :usage_limits, only: [:index]
     end
   end

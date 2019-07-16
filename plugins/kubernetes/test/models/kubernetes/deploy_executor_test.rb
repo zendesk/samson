@@ -392,7 +392,7 @@ describe Kubernetes::DeployExecutor do
     it "fails when release has errors" do
       Kubernetes::Release.any_instance.expects(:persisted?).at_least_once.returns(false)
       e = assert_raises(Samson::Hooks::UserError) { execute }
-      e.message.must_equal "Failed to create release: []" # inspected errors
+      e.message.must_equal "Failed to store manifests: []" # inspected errors
     end
 
     it "shows status of each individual pod when there is more than 1 per deploy group" do
