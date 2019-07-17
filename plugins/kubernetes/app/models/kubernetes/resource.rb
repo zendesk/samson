@@ -159,11 +159,12 @@ module Kubernetes
       def template_for_update
         copy = @template.deep_dup
 
-        # when autoscaling on a resource with replicas we should keep replicas constant
+        # when updating a autoscaling resource we should keep replicas constant unless we are trying to delete
         # (not setting replicas will make it use the default of 1)
         path = [:spec, :replicas]
-        replica_source = (@autoscaled && resource) || @template
-        copy.dig_set(path, replica_source.dig(*path)) if @template.dig(*path)
+        if @autoscaled && resource && copy.dig(*path).to_i != 0
+          copy.dig_set(path, resource.dig(*path))
+        end
 
         # copy fields
         persistent_fields.each do |keep|
