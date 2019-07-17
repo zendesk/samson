@@ -532,6 +532,18 @@ describe Kubernetes::Resource do
         resource.delete
       end
 
+      it "can delete when using autoscaling" do
+        resource.instance_variable_set(:@autoscaling, true)
+        client = resource.send(:client)
+        client.expects(:update_deployment).with do |template|
+          template[:spec][:replicas].must_equal 0
+        end
+        client.expects(:get_deployment).raises(Kubeclient::ResourceNotFoundError.new(404, 'Not Found', {}))
+        client.expects(:get_deployment).times(3).returns(deployment_stub(0))
+        client.expects(:delete_deployment)
+        resource.delete
+      end
+
       it "does not fail on unset replicas" do
         client = resource.send(:client)
         client.expects(:update_deployment)
