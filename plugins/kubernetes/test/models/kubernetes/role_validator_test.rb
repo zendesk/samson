@@ -26,7 +26,7 @@ describe Kubernetes::RoleValidator do
         deployment_role[1],
         {
           kind: 'StatefulSet',
-          apiVersion: 'extensions/v1beta1',
+          apiVersion: 'apps/v1',
           metadata: {name: 'my-map', labels: labels},
           spec: {
             serviceName: 'foobar',
@@ -94,7 +94,6 @@ describe Kubernetes::RoleValidator do
     describe 'StatefulSet' do
       before do
         stateful_set_role[0][:metadata][:name] = 'foobar'
-        stateful_set_role[1][:spec][:updateStrategy] = 'OnDelete'
         role.replace(stateful_set_role)
       end
 
@@ -108,8 +107,13 @@ describe Kubernetes::RoleValidator do
       end
 
       it "enforces updateStrategy" do
-        stateful_set_role[1][:spec][:updateStrategy] = nil
+        stateful_set_role[1][:spec][:updateStrategy] = "OnDelete"
         errors.first.must_include "updateStrategy"
+      end
+
+      it "enforces apps/v1" do
+        stateful_set_role[1][:apiVersion] = "apps/v1beta1"
+        errors.first.must_include "apiVersion"
       end
     end
 
