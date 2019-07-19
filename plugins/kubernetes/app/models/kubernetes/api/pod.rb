@@ -3,13 +3,6 @@ module Kubernetes
   module Api
     class Pod
       INIT_CONTAINER_KEY = :'pod.beta.kubernetes.io/init-containers'
-      INGORED_AUTOSCALE_EVENT_REASONS = [
-        "FailedGetMetrics",
-        "FailedRescale",
-        "FailedGetResourceMetric",
-        "FailedGetExternalMetric",
-        "FailedComputeMetricsReplicas"
-      ].freeze
       WAITING_FOR_RESOURCES = ["FailedScheduling", "FailedCreatePodSandBox", "FailedAttachVolume"].freeze
 
       attr_writer :events
@@ -87,16 +80,11 @@ module Kubernetes
       def events_indicating_failure
         @events_indicating_failure ||= begin
           bad = @events.dup
-          bad.reject! { |e| ignorable_hpa_event?(e) }
           bad.reject! do |e|
             e[:reason] == "Unhealthy" && e[:message] =~ /\A\S+ness probe failed/ && !probe_failed_to_often?(e)
           end
           bad
         end
-      end
-
-      def ignorable_hpa_event?(event)
-        event[:kind] == 'HorizontalPodAutoscaler' && INGORED_AUTOSCALE_EVENT_REASONS.include?(event[:reason])
       end
 
       # if the pod is still running we stream the logs until it times out to get as much info as possible
