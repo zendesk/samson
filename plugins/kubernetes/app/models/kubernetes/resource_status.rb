@@ -40,6 +40,16 @@ module Kubernetes
         else
           @details = "Waiting (#{@pod.phase}, #{@pod.reason})"
         end
+      elsif kind == "HorizontalPodAutoscaler"
+        hpa = Kubernetes::Api::HorizontalPodAutoscaler.new
+        failures = hpa.events_indicating_failure(events(type: "Warning"))
+        if failures.any?
+          @details = "Error event\n #{failures.join("\n")}"
+        else
+          @details = "Live"
+          @live = true
+        end
+        @finished = true
       else
         # NOTE: non-pods are never "Missing" because we create them manually
         @finished = true
