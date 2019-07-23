@@ -4,15 +4,12 @@ require_relative '../../../test_helper'
 SingleCov.covered!
 
 describe Kubernetes::Api::HorizontalPodAutoscaler do
-  let(:start_time) { "2017-03-31T22:56:20Z" }
-  let(:event) { {metadata: {creationTimestamp: start_time}, type: 'Normal'} }
-  let(:events) { [event] }
   let(:hpa) { Kubernetes::Api::HorizontalPodAutoscaler.new }
 
-  describe "HorizontalPodAutoscaler events with failures" do
-    before do
-      event.merge!(kind: 'HorizontalPodAutoscaler', type: 'Warning')
-    end
+  describe "#events_indicating_failure" do
+    let(:start_time) { "2017-03-31T22:56:20Z" }
+    let(:event) { {metadata: {creationTimestamp: start_time}, kind: 'HorizontalPodAutoscaler', type: 'Warning'} }
+    let(:events) { [event] }
 
     it "does not ignore bad events" do
       refute hpa.events_indicating_failure(events).empty?

@@ -43,8 +43,8 @@ module Kubernetes
       elsif kind == "HorizontalPodAutoscaler"
         hpa = Kubernetes::Api::HorizontalPodAutoscaler.new
         failures = hpa.events_indicating_failure(events(type: "Warning"))
-        if failures && !failures.empty?
-          @details = "Error event \n#{failures.join("\n")}"
+        if failures.any?
+          @details = "Error event\n #{failures.join("\n")}"
         else
           @details = "Live"
           @live = true
