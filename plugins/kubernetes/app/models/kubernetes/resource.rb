@@ -194,7 +194,7 @@ module Kubernetes
 
       def delete_pods
         old_pods = pods
-        yield if block_given?
+        yield
         old_pods.each do |pod|
           ignore_404 do
             pod_client.delete_pod pod.dig_fetch(:metadata, :name), pod.dig_fetch(:metadata, :namespace)
@@ -314,131 +314,10 @@ module Kubernetes
       end
     end
 
-    class DaemonSet < Base
-      def deploy
-        delete
-        create
-      end
-
-      # need http request since we do not know how many nodes we will match
-      # and the number of matches nodes could update with a changed template
-      # only makes sense to call this after deploying / while waiting for pods
-      def desired_pod_count
-        @desired_pod_count ||= begin
-          return 0 if @delete_resource
-
-          desired = 0
-
-          3.times do |i|
-            if i != 0
-              # last iteration had bad state or does not yet know how many it needs, expire cache
-              sleep TICK
-              expire_resource_cache
-            end
-
-            desired = resource.dig_fetch :status, :desiredNumberScheduled
-            break if desired != 0
-          end
-
-          # check if we still failed on the last try
-          if desired == 0
-            raise(
-              Samson::Hooks::UserError,
-              "Unable to find desired number of pods for DaemonSet #{error_location}\n" \
-              "delete it manually and make sure there is at least 1 node schedulable."
-            )
-          end
-
-          desired
-        end
-      end
-
-      private
-
-      # we cannot replace or update a daemonset, so we take it down completely
-      #
-      # was do what `kubectl delete daemonset NAME` does:
-      # - make it match no node
-      # - waits for current to reach 0
-      # - deletes the daemonset
-      def request_delete
-        return super if pods_count == 0 # delete when already dead from previous deletion try, update would fail
-
-        # make it match no node
-        restore_template do
-          @template.dig_set [:spec, :template, :spec, :nodeSelector], rand(9999).to_s => rand(9999).to_s
-          update
-        end
-
-        delete_pods { wait_for_termination_of_all_pods }
-
-        super # delete it
-      end
-
-      def pods_count
-        resource.dig_fetch(:status, :currentNumberScheduled) + resource.dig_fetch(:status, :numberMisscheduled)
-      end
-
-      def wait_for_termination_of_all_pods
-        30.times do
-          sleep TICK
-          expire_resource_cache
-          return if pods_count == 0
-        end
-      end
+    class StatefulSet < Base
     end
 
-    class StatefulSet < Base
-      def patch_replace?
-        return false if @delete_resource || !exist?
-        deprecated = @template.dig(:spec, :updateStrategy) # supporting pre 1.9 clusters
-        strategy = (deprecated.is_a?(String) ? deprecated : @template.dig(:spec, :updateStrategy, :type))
-        [nil, "OnDelete"].include?(strategy)
-      end
-
-      # StatefulSet cannot be updated normally when OnDelete is used or kubernetes <1.7
-      # So we patch and then delete all pods to let them re-create
-      def deploy
-        return super unless patch_replace?
-
-        # update the template via special magic
-        # https://kubernetes.io/docs/tutorials/stateful-application/basic-stateful-set/#on-delete
-        # fails when trying to update anything outside of containers or replicas
-        update = resource.deep_dup
-        [[:spec, :replicas], [:spec, :template, :spec, :containers]].each do |keys|
-          update.dig_set keys, @template.dig_fetch(*keys)
-        end
-        with_patch_header do
-          request :patch, name, [{op: "replace", path: "/spec", value: update.fetch(:spec)}], namespace
-        end
-
-        # pods will restart with updated settings
-        # need to wait here or deploy_executor.rb will instantly finish since everything is running
-        wait_for_pods_to_restart
-      end
-
-      def delete
-        delete_pods { super }
-      end
-
-      private
-
-      def wait_for_pods_to_restart
-        old_pods = delete_pods
-        old_created = old_pods.map { |pod| pod.dig_fetch(:metadata, :creationTimestamp) }
-        backoff_wait(Array.new(60) { 2 }, "restart pods") do
-          return if pods.none? { |pod| old_created.include?(pod.dig_fetch(:metadata, :creationTimestamp)) }
-        end
-      end
-
-      # https://github.com/abonas/kubeclient/issues/268
-      def with_patch_header
-        old = client.headers['Content-Type']
-        client.headers['Content-Type'] = 'application/json-patch+json'
-        yield
-      ensure
-        client.headers['Content-Type'] = old
-      end
+    class DaemonSet < Base
     end
 
     class Job < Immutable
