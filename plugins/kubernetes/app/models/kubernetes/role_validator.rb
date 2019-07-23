@@ -64,7 +64,7 @@ module Kubernetes
       validate_team_labels
       validate_not_matching_team
       validate_stateful_set_service_consistent
-      validate_set_update_policy
+      validate_stateful_set_restart_policy
       validate_load_balancer
       unless validate_annotations
         validate_prerequisites_kinds
@@ -237,22 +237,16 @@ module Kubernetes
 
     def validate_stateful_set_service_consistent
       return unless service = @elements.detect { |t| t[:kind] == "Service" }
-      return unless set = @elements.detect { |t| t[:kind] == "StatefulSet" }
+      return unless set = find_stateful_set
       return if set.dig(:spec, :serviceName) == service.dig(:metadata, :name)
       @errors << "Service metadata.name and StatefulSet spec.serviceName must be consistent"
     end
 
-    def validate_set_update_policy
-      return unless set = @elements.detect { |t| t[:kind] == "DaemonSet" || t[:kind] == "StatefulSet" }
-
-      if set[:apiVersion] != "apps/v1"
-        @errors << "#{set[:kind]} only supports apiVersion apps/v1"
-        return
-      end
-
-      selected = selected_update_strategy(set)
-      return if !selected || selected == "RollingUpdate"
-      @errors << "#{set[:kind]} only RollingUpdate updateStrategy is supported"
+    def validate_stateful_set_restart_policy
+      return unless set = find_stateful_set
+      return if set.dig(:spec, :updateStrategy)
+      @errors << "StatefulSet spec.updateStrategy must be set. " \
+        "OnDelete will be supported soon but is brittle/rough, prefer RollingUpdate on kubernetes 1.7+."
     end
 
     def validate_containers_exist
@@ -362,6 +356,10 @@ module Kubernetes
       templates.map { |t| (t.dig(:metadata, :annotations) || {}).is_a?(Hash) ? Api::Pod.init_containers(t) : [] }
     end
 
+    def find_stateful_set
+      @elements.detect { |t| t[:kind] == "StatefulSet" }
+    end
+
     def templates(elements = @elements)
       elements.flat_map { |e| RoleConfigFile.templates(e) }
     end
@@ -389,14 +387,6 @@ module Kubernetes
     def allow_selector_cross_match?(resource)
       resource[:kind] == "Gateway" ||
         resource.dig(:metadata, :annotations, :"samson/service_selector_across_roles") == "true"
-    end
-
-    def selected_update_strategy(resource)
-      if resource.dig(:spec, :updateStrategy).is_a?(String)
-        resource.dig(:spec, :updateStrategy)
-      else
-        resource.dig(:spec, :updateStrategy, :type)
-      end
     end
   end
 end

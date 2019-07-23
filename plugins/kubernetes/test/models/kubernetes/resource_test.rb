@@ -364,6 +364,134 @@ describe Kubernetes::Resource do
     end
   end
 
+  describe Kubernetes::Resource::DaemonSet do
+    def daemonset_stub(scheduled, misscheduled)
+      {
+        status: {
+          currentNumberScheduled: scheduled,
+          numberMisscheduled:     misscheduled
+        },
+        spec: {
+          template: {
+            metadata: {
+              labels: {release_id: 123, deploy_group_id: 234}
+            },
+            spec: {
+              nodeSelector: nil
+            }
+          }
+        }
+      }
+    end
+
+    let(:kind) { 'DaemonSet' }
+    let(:api_version) { 'extensions/v1beta1' }
+
+    describe "#client" do
+      it "uses the extension client because it is in beta" do
+        resource.send(:client).must_equal deploy_group.kubernetes_cluster.client('extensions/v1beta1')
+      end
+    end
+
+    describe "#deploy" do
+      let(:client) { resource.send(:client) }
+      before { template[:spec] = {template: {spec: {}}} }
+
+      it "creates when missing" do
+        assert_request(:get, url, to_return: {status: 404}) do
+          assert_request(:post, base_url, to_return: {body: "{}"}) do
+            resource.deploy
+          end
+        end
+      end
+
+      it "deletes and created when daemonset exists without pods" do
+        client.expects(:get_daemon_set).raises(Kubeclient::ResourceNotFoundError.new(404, 'Not Found', {}))
+        client.expects(:get_daemon_set).returns(daemonset_stub(0, 0))
+        client.expects(:delete_daemon_set)
+        client.expects(:create_daemon_set)
+        resource.deploy
+      end
+
+      it "deletes and created when daemonset exists with pods" do
+        client.expects(:get_daemon_set).raises(Kubeclient::ResourceNotFoundError.new(404, 'Not Found', {}))
+        client.expects(:update_daemon_set).returns(daemonset_stub(1, 1))
+        client.expects(:get_daemon_set).times(4).returns(
+          daemonset_stub(1, 1), # existing check
+          daemonset_stub(1, 1), # after update check #1 ... still existing
+          daemonset_stub(0, 1), # after update check #2 ... still existing
+          daemonset_stub(0, 0)  # after update check #3 ... done
+        )
+        client.expects(:delete_daemon_set)
+        client.expects(:create_daemon_set)
+
+        assert_pods_lookup do
+          assert_pod_deletion do
+            resource.deploy
+          end
+        end
+
+        # reverts changes to template so create is clean
+        refute template[:spec][:template][:spec].key?(:nodeSelector)
+      end
+    end
+
+    describe "#desired_pod_count" do
+      before { template[:spec] = {replicas: 2} }
+
+      it "reads the value from the server since it is comlicated" do
+        assert_request(:get, url, to_return: {body: {status: {desiredNumberScheduled: 5}}.to_json}) do
+          resource.desired_pod_count.must_equal 5
+        end
+      end
+
+      it "retries once when initial state has 0 desired pods" do
+        assert_request(
+          :get,
+          url,
+          to_return: [
+            {body: {status: {desiredNumberScheduled: 0}}.to_json},
+            {body: {status: {desiredNumberScheduled: 5}}.to_json}
+          ]
+        ) { resource.desired_pod_count.must_equal 5 }
+      end
+
+      it "blows up when desired count cannot be found (bad state or no nodes are available)" do
+        assert_request(:get, url, to_return: {body: {status: {desiredNumberScheduled: 0}}.to_json}, times: 3) do
+          resource.expects(:sleep).times(2)
+          assert_raises Samson::Hooks::UserError do
+            resource.desired_pod_count
+          end
+        end
+      end
+
+      it "is 0 when deleted" do
+        delete_resource!
+        resource.desired_pod_count.must_equal 0
+      end
+    end
+
+    describe "#revert" do
+      let(:kind) { 'DaemonSet' }
+      let(:api_version) { 'extensions/v1beta1' }
+      let(:base_url) { "#{origin}/apis/extensions/v1beta1/namespaces/bar/daemonsets" }
+
+      it "reverts to previous version" do
+        # checks if it exists and then creates the old resource
+        assert_request(:get, "#{base_url}/foo", to_return: {status: 404}) do
+          assert_request(:post, base_url, to_return: {body: "{}"}) do
+            resource.revert(metadata: {name: 'foo', namespace: 'bar'}, kind: kind, apiVersion: api_version)
+          end
+        end
+      end
+
+      it "deletes when there was no previous version" do
+        resource.expects(:delete)
+        resource.revert(nil)
+      end
+    end
+  end
+
   describe Kubernetes::Resource::Deployment do
     def deployment_stub(replica_count)
       {
@@ -442,6 +570,148 @@ describe Kubernetes::Resource do
       it "deletes when there was no previous version" do
         resource.expects(:delete)
         resource.revert(nil)
+      end
+    end
+  end
+
+  describe Kubernetes::Resource::StatefulSet do
+    def deployment_stub(replica_count)
+      {
+        spec: {},
+        status: {replicas: replica_count}
+      }.to_json
+    end
+
+    let(:kind) { 'StatefulSet' }
+    let(:api_version) { 'apps/v1beta1' }
+
+    describe "#client" do
+      it "uses the apps client because it is in beta" do
+        resource.send(:client).must_equal deploy_group.kubernetes_cluster.client('apps/v1beta1')
+      end
+    end
+
+    describe "#deploy" do
+      it "creates when missing" do
+        assert_request(:get, url, to_return: {status: 404}) do
+          assert_request(:post, base_url, to_return: {body: "{}"}) do
+            resource.deploy
+          end
+        end
+      end
+
+      it "updates when existing and using RollingUpdate" do
+        template[:spec][:updateStrategy] = "RollingUpdate"
+        assert_request(:get, url, to_return: {body: "{}"}) do
+          assert_request(:put, url, to_return: {body: "{}"}) do
+            resource.deploy
+          end
+        end
+      end
+
+      it "updates when existing and using RollingUpdate" do
+        template[:spec][:updateStrategy] = {type: "RollingUpdate"}
+        assert_request(:get, url, to_return: {body: "{}"}) do
+          assert_request(:put, url, to_return: {body: "{}"}) do
+            resource.deploy
+          end
+        end
+      end
+
+      it "patches and deletes pods when using OnDelete (default)" do
+        set = {
+          spec: {
+            replicas: 2,
+            selector: {matchLabels: {project: "foo", release: "bar"}},
+            template: {spec: {containers: []}}
+          }
+        }
+        assert_request(:get, url, to_return: {body: set.to_json}) do
+          assert_request(
+            :patch,
+            url,
+            with: {headers: {"Content-Type" => "application/json-patch+json"}},
+            to_return: {body: "{}"}
+          ) do
+            assert_pod_deletion do
+              resource.expects(:sleep)
+              resource.expects(:pods).times(3).returns(
+                [{metadata: {creationTimestamp: '1', name: 'pod1', namespace: 'name1'}}], # old
+                [{metadata: {creationTimestamp: '1'}}], # first check
+                [{metadata: {creationTimestamp: '2'}}] # second check
+              )
+              resource.deploy
+            end
+          end
+        end
+      end
+
+      it "does not fail when scaling down and previous generation pods have been removed already" do
+        set = {
+          spec: {
+            replicas: 2,
+            selector: {matchLabels: {project: "foo", release: "bar"}},
+            template: {spec: {containers: []}}
+          }
+        }
+        assert_request(:get, url, to_return: {body: set.to_json}) do
+          assert_request(
+            :patch,
+            url,
+            with: {headers: {"Content-Type" => "application/json-patch+json"}},
+            to_return: {body: "{}"}
+          ) do
+            assert_request(:delete, "#{origin}/api/v1/namespaces/name1/pods/pod1", to_return: {status: 404}) do
+              resource.expects(:pods).times(2).returns(
+                [{metadata: {creationTimestamp: '1', name: 'pod1', namespace: 'name1'}}],
+                [{metadata: {creationTimestamp: '2'}}]
+              )
+              resource.deploy
+            end
+          end
+        end
+      end
+
+      it "deletes when user requested deletion" do
+        delete_resource!
+        resource.expects(:pods).returns([])
+        assert_request(:get, url, to_return: [{body: "{}"}, {status: 404}]) do
+          assert_request(:delete, url, to_return: {body: "{}"}) do
+            resource.deploy
+          end
+        end
+      end
+    end
+
+    describe "#delete" do
+      around { |t| assert_request(:delete, url, to_return: {body: "{}"}, &t) }
+
+      it "deletes set and pods" do
+        assert_request(:get, url, to_return: [{body: template.to_json}, {status: 404}]) do
+          assert_pods_lookup do
+            assert_pod_deletion do
+              resource.delete
+            end
+          end
+        end
+      end
+    end
+
+    describe "#patch_replace?" do
+      before { resource.stubs(:exist?).returns(true) }
+
+      it "is a replace when replacing existing" do
+        assert resource.patch_replace?
+      end
+
+      it "is not a replace when deleting" do
+        delete_resource!
+        refute resource.patch_replace?
+      end
+
+      it "is not a replace when creating" do
+        resource.stubs(:exist?).returns(false)
+        refute resource.patch_replace?
       end
     end
   end
