@@ -131,6 +131,13 @@ describe CsvExportsController do
           end
         end
 
+        describe "environment_variables type" do
+          it "returns csv" do
+            get :new, params: {format: :csv, type: "environment_variables"}
+            assert_response :success
+          end
+        end
+
         describe "users type" do
           before { users(:super_admin).soft_delete! }
           let(:expected) do
