@@ -10,6 +10,10 @@ class EnvironmentVariablesController < ApplicationController
       format.json do
         render_as_json :environment_variables, @environment_variables, @pagy
       end
+      format.csv do
+        filename = "EnvironmentVariables_#{Time.now.strftime '%Y%m%d_%H%M'}.csv"
+        send_data EnvironmentVariableCsvPresenter.to_csv, type: :csv, filename: filename
+      end
     end
   end
 

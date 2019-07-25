@@ -34,9 +34,6 @@ class CsvExportsController < ApplicationController
         elsif params[:type] == "deploy_group_usage"
           date_time_now = Time.now.strftime "%Y%m%d_%H%M"
           send_data DeployGroupUsageCsvPresenter.to_csv, type: :csv, filename: "DeployGroupUsage_#{date_time_now}.csv"
-        elsif params[:type] == "environment_variables"
-          filename = "EnvironmentVariables_#{Time.now.strftime '%Y%m%d_%H%M'}.csv"
-          send_data EnvironmentVariableCsvPresenter.to_csv, type: :csv, filename: filename
         else
           render body: "not found", status: :not_found
         end

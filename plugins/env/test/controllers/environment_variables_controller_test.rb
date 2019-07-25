@@ -26,6 +26,11 @@ describe EnvironmentVariablesController do
         first_env['name'].must_equal "FOO"
       end
 
+      it "renders csv" do
+        get :index, format: :csv
+        assert_response :success
+      end
+
       it "renders json with inlines" do
         get :index, params: {inlines: "parent_name,scope_name"}, format: :json
         assert_response :success
