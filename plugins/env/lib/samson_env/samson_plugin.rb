@@ -89,7 +89,7 @@ Samson::Hooks.callback(:link_parts_for_resource) do
     "EnvironmentVariable",
     ->(env) do
       scope = " for #{env.scope.name}" if env.scope
-      parent = " on #{env.parent&.name || "Deleted"}"
+      parent = " on #{env.parent.is_a?(Deploy) ? "Deploy ##{env.parent_id}" : env.parent&.name || "Deleted"}"
       ["#{env.name}#{scope}#{parent}", EnvironmentVariable]
     end
   ]
