@@ -325,6 +325,9 @@ module Kubernetes
 
         # check that all roles have a matching deploy_group_role and all roles are configured
         @job.deploy.stage.deploy_groups.map do |deploy_group|
+          # fail early here, this was randomly not there, also fixes an n+1
+          deploy_group.kubernetes_cluster || raise
+
           group_roles = deploy_group_roles.select { |dgr| dgr.deploy_group_id == deploy_group.id }
 
           # safe some sql queries during release creation
@@ -444,9 +447,6 @@ module Kubernetes
           deploy: @job.deploy
         )
         grouped_deploy_group_roles.flatten.map do |deploy_group_role|
-          # fail early here, this was randomly not there, also fixes an n+1
-          deploy_group_role.deploy_group.kubernetes_cluster || raise
-
           Kubernetes::ReleaseDoc.new(
             kubernetes_release: release,
             deploy_group: deploy_group_role.deploy_group,
