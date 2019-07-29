@@ -153,6 +153,12 @@ describe SamsonEnv do
       fire(group).must_equal ["FOO", group]
     end
 
+    it "links to deploy" do
+      deploy = deploys(:succeeded_test)
+      var = deploy.environment_variables.create!(name: "WORLD3", value: "hello")
+      fire(var).must_equal ["WORLD3 on Deploy ##{deploy.id}", EnvironmentVariable]
+    end
+
     it "does not crash with deleted parent" do
       var = project.environment_variables.create!(name: "WORLD3", value: "hello")
       var.reload.parent_id = 123
