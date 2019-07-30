@@ -334,7 +334,10 @@ describe JobExecution do
   end
 
   describe "kubernetes" do
-    before { stage.update_column :kubernetes, true }
+    before do
+      stage.update_column :kubernetes, true
+      DeployGroup.any_instance.stubs(kubernetes_cluster: true)
+    end
 
     it "does the execution with the kubernetes executor" do
       Kubernetes::DeployExecutor.any_instance.expects(:execute).returns true
