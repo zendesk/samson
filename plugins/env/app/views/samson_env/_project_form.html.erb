@@ -18,6 +18,7 @@
   <% if defined?(EnvironmentVariable) && folder = EnvironmentVariable.config_service_folder(@project, required: false) %>
     <%= form.input(
         :config_service,
+        as: :check_box,
         label: "Use Config service",
         help: "Use config service to manage deployment environment variables, base url is #{folder}"
       )
