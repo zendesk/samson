@@ -850,6 +850,12 @@ describe Kubernetes::TemplateFiller do
           )
         end
 
+        it "bumps termination grace period if we would sleep longer that termination allows" do
+          with_env(KUBERNETES_PRESTOP_SLEEP_DURATION: "50") do
+            template.to_hash.dig_fetch(:spec, :template, :spec, :terminationGracePeriodSeconds).must_equal(53)
+          end
+        end
+
         it "does not add preStop when it was already defined" do
           raw_template.dig_fetch(:spec, :template, :spec, :containers, 0)[:lifecycle] = {preStop: "OLD"}
           template.to_hash.dig_fetch(:spec, :template, :spec, :containers, 0, :lifecycle).must_equal(
