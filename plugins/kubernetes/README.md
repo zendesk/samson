@@ -207,9 +207,11 @@ To make Samson leave your resource name alone, set `metadata.annotations.samson/
 
 To enable the following functionality you need to set `KUBERNETES_ADD_PRESTOP=true`.
 
-Samson automatically adds `container[].lifecycle.preStop` `sleep 3` if a preStop hook is not set and
+Samson automatically adds `container[].lifecycle.preStop` `sleep 3` if a `preStop` hook is not set and
 `container[].samson/preStop` is not set to `disabled`, to prevent in-flight requests from getting lost when taking a pod
 out of rotation (alternatively set `metadata.annoations.container-nameofcontainer-samson/preStop: disabled`).
+
+Set `KUBERNETES_PRESTOP_SLEEP_DURATION` in seconds if you want to override default sleep duration.
 
 ### Showing logs on succeeded deploys
 

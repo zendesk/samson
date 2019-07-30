@@ -9,6 +9,7 @@ module Kubernetes
     KUBERNETES_ADD_PRESTOP = Samson::EnvCheck.set?('KUBERNETES_ADD_PRESTOP')
     SECRET_PREFIX = "secret/"
     DOCKERFILE_NONE = 'none'
+    DEFAULT_TERMINATION_GRACE_PERIOD = 30
 
     def initialize(release_doc, template, index:)
       @doc = release_doc
@@ -569,11 +570,21 @@ module Kubernetes
       pod_template.fetch(:spec)[:imagePullSecrets] = docker_credentials
     end
 
+    def pre_stop_sleep
+      @pre_stop_sleep ||= Integer(ENV['KUBERNETES_PRESTOP_SLEEP_DURATION'] || '3')
+    end
+
     def set_pre_stop
       return unless KUBERNETES_ADD_PRESTOP
       pod_containers.each do |container|
         next if samson_container_config(container, :"samson/preStop") == "disabled"
-        (container[:lifecycle] ||= {})[:preStop] ||= {exec: {command: ["sleep", "3"]}}
+        # set sleep to 35 seconds to allow for DNS TTL to expire.
+        # Default termination grace period for pods
+        (container[:lifecycle] ||= {})[:preStop] ||= {exec: {command: ["sleep", pre_stop_sleep.to_s]}}
+      end
+      if pre_stop_sleep.to_i > DEFAULT_TERMINATION_GRACE_PERIOD
+        # add few seconds to make sure servers shut down after they are done waiting
+        pod_template[:spec][:terminationGracePeriodSeconds] = pre_stop_sleep + 3
       end
     end
 
