@@ -472,8 +472,8 @@ describe Kubernetes::Resource do
       end
 
       it "blows up when desired count cannot be found (bad state or no nodes are available)" do
-        assert_request(:get, url, to_return: {body: {status: {desiredNumberScheduled: 0}}.to_json}, times: 3) do
-          resource.expects(:sleep).times(2)
+        assert_request(:get, url, to_return: {body: {status: {desiredNumberScheduled: 0}}.to_json}, times: 6) do
+          resource.expects(:sleep).times(5)
           assert_raises Samson::Hooks::UserError do
             resource.desired_pod_count
           end

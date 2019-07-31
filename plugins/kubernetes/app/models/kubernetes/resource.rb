@@ -329,7 +329,7 @@ module Kubernetes
 
           desired = 0
 
-          3.times do |i|
+          6.times do |i|
             if i != 0
               # last iteration had bad state or does not yet know how many it needs, expire cache
               sleep TICK
