@@ -580,7 +580,7 @@ module Kubernetes
         next if samson_container_config(container, :"samson/preStop") == "disabled"
         # set sleep to 35 seconds to allow for DNS TTL to expire.
         # Default termination grace period for pods
-        (container[:lifecycle] ||= {})[:preStop] ||= {exec: {command: ["sleep", pre_stop_sleep.to_s]}}
+        (container[:lifecycle] ||= {})[:preStop] ||= {exec: {command: ["/bin/sleep", pre_stop_sleep.to_s]}}
       end
       if pre_stop_sleep.to_i > DEFAULT_TERMINATION_GRACE_PERIOD
         # add few seconds to make sure servers shut down after they are done waiting

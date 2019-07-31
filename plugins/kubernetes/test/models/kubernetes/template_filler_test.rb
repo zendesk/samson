@@ -846,7 +846,7 @@ describe Kubernetes::TemplateFiller do
 
         it "adds preStop to avoid 502 errors when server addresses are cached for a few seconds" do
           template.to_hash.dig_fetch(:spec, :template, :spec, :containers, 0, :lifecycle).must_equal(
-            preStop: {exec: {command: ["sleep", "3"]}}
+            preStop: {exec: {command: ["/bin/sleep", "3"]}}
           )
         end
 
