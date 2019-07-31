@@ -380,11 +380,16 @@ module Kubernetes
       end
 
       def wait_for_termination_of_all_pods
-        30.times do
+        60.times do
           sleep TICK
           expire_resource_cache
           return if pods_count == 0
         end
+
+        raise(
+          Samson::Hooks::UserError,
+          "#{error_location}: DaemonSet was unable to delete existing pods, delete them manually or try again"
+        )
       end
     end
 

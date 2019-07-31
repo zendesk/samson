@@ -434,6 +434,21 @@ describe Kubernetes::Resource do
         # reverts changes to template so create is clean
         refute template[:spec][:template][:spec].key?(:nodeSelector)
       end
+
+      it "fails when old pods cannot be deleted" do
+        client.expects(:update_daemon_set).returns(daemonset_stub(1, 1))
+        client.expects(:get_daemon_set).times(62).returns(daemonset_stub(1, 1))
+
+        e = assert_raises Samson::Hooks::UserError do
+          assert_pods_lookup do
+            assert_pod_deletion do
+              resource.deploy
+            end
+          end
+        end
+
+        e.message.must_include "unable to delete existing pods"
+      end
     end
 
     describe "#desired_pod_count" do
