@@ -146,6 +146,7 @@ class Changeset::PullRequest
     section_content('Risks', body_stripped).to_s.strip.presence
   end
 
+  # @return [Array<Changeset::JiraIssue>]
   def parse_jira_issues
     custom_jira_url = ENV['JIRA_BASE_URL']
     title_and_body = "#{title} #{body}"
