@@ -15,12 +15,12 @@
     %>
   <% end %>
 
-  <% if defined?(EnvironmentVariable) && folder = EnvironmentVariable.config_service_folder(@project, required: false) %>
+  <% if @project.config_service? || url = EnvironmentVariable.config_service_location(@project, nil, display: true) %>
     <%= form.input(
         :config_service,
         as: :check_box,
         label: "Use Config service",
-        help: "Use config service to manage deployment environment variables, base url is #{folder}"
+        help: "Use config service to manage deployment environment variables, S3 folder is #{url}"
       )
     %>
   <% end %>
