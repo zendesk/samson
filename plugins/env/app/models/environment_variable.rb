@@ -29,16 +29,7 @@ class EnvironmentVariable < ActiveRecord::Base
       env = {}
 
       if deploy_group && deploy.project.config_service?
-        begin
-          path = "samson/#{deploy.project.permalink}"
-          path += "/#{deploy_group.permalink}.yml" # TODO: version ?
-          response = Samson::Retry.with_retries(Aws::S3::Errors::ServiceError, 3) do
-            config_service_read(path)
-          end
-          env.merge! YAML.safe_load(response)
-        rescue StandardError => e
-          raise Samson::Hooks::UserError, "Error reading env vars from config service: #{e.message}"
-        end
+        env.merge! env_vars_from_config_service(deploy, deploy_group)
       end
 
       if deploy_group && (env_repo_name = ENV["DEPLOYMENT_ENV_REPO"]) && deploy.project.use_env_repo
@@ -66,23 +57,18 @@ class EnvironmentVariable < ActiveRecord::Base
       end.join("\n")
     end
 
-    def config_service_url(project)
-      path = "samson/#{project.permalink}"
-      if bucket = ENV["CONFIG_SERVICE_BUCKET"]
-        path = "s3://#{bucket}/#{path}"
+    # bucket and key for reading OR url for display
+    # NOTE: `deploy_group` already signals if it is for `display`, but I want it to be explicit
+    def config_service_location(project, deploy_group, display:)
+      prefix = "samson/#{project.permalink}"
+
+      if display
+        return unless bucket = ENV["CONFIG_SERVICE_BUCKET"]
+        "s3://#{bucket}/#{prefix}"
+      else
+        bucket = ENV.fetch "CONFIG_SERVICE_BUCKET"
+        [bucket, "#{prefix}/#{deploy_group.permalink}.yml"]
       end
-      path
-    end
-
-    def s3_client
-      @s3_client ||= Aws::S3::Client.new(region: ENV.fetch('CONFIG_SERVICE_REGION'))
-    end
-
-    def config_service_read(key)
-      bucket = ENV.fetch('CONFIG_SERVICE_BUCKET')
-      s3_client.get_object(bucket: bucket, key: key).body.read
-    rescue Aws::S3::Errors::NoSuchKey
-      raise "key \"#{key}\" does not exist in bucket #{bucket}!"
     end
 
     private
@@ -104,6 +90,24 @@ class EnvironmentVariable < ActiveRecord::Base
       Dotenv::Parser.call(content)
     rescue StandardError => e
       raise Samson::Hooks::UserError, "Cannot download env file #{path} from #{env_repo_name} (#{e.message})"
+    end
+
+    # TODO: versioned lookup
+    def env_vars_from_config_service(deploy, deploy_group)
+      bucket, key = config_service_location(deploy.project, deploy_group, display: false)
+
+      response = Samson::Retry.with_retries(Aws::S3::Errors::ServiceError, 3) do
+        config_service_s3_client.get_object(bucket: bucket, key: key).body.read
+      rescue Aws::S3::Errors::NoSuchKey
+        raise "key \"#{key}\" does not exist in bucket #{bucket}!"
+      end
+      YAML.safe_load(response)
+    rescue StandardError => e
+      raise Samson::Hooks::UserError, "Error reading env vars from config service: #{e.message}"
+    end
+
+    def config_service_s3_client
+      @config_service_s3_client ||= Aws::S3::Client.new(region: ENV.fetch('CONFIG_SERVICE_REGION'))
     end
 
     def resolve_dollar_variables(env)

@@ -113,11 +113,22 @@ describe EnvironmentVariable do
     end
 
     describe "env vars from config service" do
-      before { project.config_service = true }
+      def fake_response(response)
+        stub(body: stub(read: response))
+      end
+
+      with_env CONFIG_SERVICE_REGION: "us-east-1", CONFIG_SERVICE_BUCKET: "a-bucket"
+      let(:s3) { stub("S3") }
+
+      before do
+        project.config_service = true
+        EnvironmentVariable.instance_variable_set(:@config_service_s3_client, nil) # clear cache
+        Aws::S3::Client.stubs(:new).returns(s3)
+      end
 
       it "add to env hash" do
         response = {"FOO" => "one"}.to_yaml
-        EnvironmentVariable.stubs(:config_service_read).with('samson/foo/pod100.yml').returns(response)
+        s3.expects(:get_object).with(bucket: 'a-bucket', key: 'samson/foo/pod100.yml').returns(fake_response(response))
         EnvironmentVariable.env(deploy, deploy_group).must_equal "FOO" => "one"
       end
 
@@ -125,25 +136,23 @@ describe EnvironmentVariable do
         EnvironmentVariable.env(deploy, nil).must_equal({})
       end
 
-      it "shows error when api failed" do
-        error = Aws::S3::Errors::NoSuchKey.new({}, "The specified key does not exist.")
-        EnvironmentVariable.stubs(:s3_client).raises(error)
-        assert_raises(Samson::Hooks::UserError) do
-          EnvironmentVariable.env(deploy, deploy_group)
-        end
+      it "shows error when deploy group is not configured" do
+        s3.expects(:get_object).raises(Aws::S3::Errors::NoSuchKey.new({}, "The specified key does not exist."))
+        e = assert_raises(Samson::Hooks::UserError) { EnvironmentVariable.env(deploy, deploy_group) }
+        e.message.must_equal(
+          "Error reading env vars from config service: key \"samson/foo/pod100.yml\" does not exist in bucket a-bucket!"
+        )
       end
 
-      it "shows error when api times out" do
-        error = Aws::S3::Errors::ServiceError.new({}, "us-east-1 is at the bottom of the ocean.")
-        EnvironmentVariable.stubs(:s3_client).raises(error)
-        assert_raises(Samson::Hooks::UserError) do
-          EnvironmentVariable.env(deploy, deploy_group)
-        end
+      it "shows error when api times out after multiple retries" do
+        s3.expects(:get_object).times(4).raises(Aws::S3::Errors::ServiceError.new({}, "DOWN"))
+        e = assert_raises(Samson::Hooks::UserError) { EnvironmentVariable.env(deploy, deploy_group) }
+        e.message.must_equal "Error reading env vars from config service: DOWN"
       end
 
       it "refuses to deploy when configured but env var is missing" do
         with_env CONFIG_SERVICE_BUCKET: nil do
-          assert_raises(Samson::Hooks::UserError) do
+          assert_raises Samson::Hooks::UserError do
             EnvironmentVariable.env(deploy, deploy_group)
           end
         end
@@ -152,46 +161,6 @@ describe EnvironmentVariable do
       it "does not read env vars when project is not opted in" do
         project.config_service = false
         EnvironmentVariable.env(deploy, deploy_group)
-      end
-
-      it "returns the full bucket path for the project" do
-        with_env CONFIG_SERVICE_BUCKET: "da-bucket" do
-          expected = 's3://da-bucket/samson/foo'
-          EnvironmentVariable.config_service_url(project).must_equal expected
-        end
-      end
-
-      it "returns the relative path for the project if bucket not defined" do
-        with_env CONFIG_SERVICE_BUCKET: nil do
-          expected = 'samson/foo'
-          EnvironmentVariable.config_service_url(project).must_equal expected
-        end
-      end
-
-      it "creates a client using the CONFIG_SERVICE_REGION environment variable" do
-        Aws::S3::Client.expects(:new).once.with(region: 'us-east-1')
-        with_env CONFIG_SERVICE_REGION: "us-east-1" do
-          EnvironmentVariable.s3_client
-        end
-      end
-
-      it "issues a get_object request to the bucket specified in CONFIG_SERVICE_BUCKET" do
-        mock_client = stub(get_object: stub(body: stub(read: 'thus sayeth s3')))
-        Aws::S3::Client.stubs(:new).returns(mock_client)
-        with_env CONFIG_SERVICE_BUCKET: "da-bucket", CONFIG_SERVICE_REGION: 'us-east-1' do
-          EnvironmentVariable.config_service_read('the/key')
-        end
-      end
-
-      it "puts the key in an error if the key is not found" do
-        error = Aws::S3::Errors::NoSuchKey.new({}, "The specified key does not exist.")
-        EnvironmentVariable.stubs(:s3_client).raises(error)
-        with_env CONFIG_SERVICE_BUCKET: "da-bucket" do
-          e = assert_raises StandardError do
-            EnvironmentVariable.config_service_read('the/key')
-          end
-          e.message.must_include "the/key"
-        end
       end
     end
 
@@ -311,6 +280,32 @@ describe EnvironmentVariable do
             "PROJECT" => "secret://foobar X", "X" => "Y", "Y" => "Z"
           )
         end
+      end
+    end
+  end
+
+  describe ".config_service_location" do
+    it "shows full bucket path in the UI" do
+      with_env CONFIG_SERVICE_BUCKET: "da-bucket" do
+        EnvironmentVariable.config_service_location(project, nil, display: true).
+          must_equal 's3://da-bucket/samson/foo'
+      end
+    end
+
+    it "shows nothing in the UI when bucket is not set" do
+      EnvironmentVariable.config_service_location(project, nil, display: true).must_be_nil
+    end
+
+    it "returns bucket + key for reading" do
+      with_env CONFIG_SERVICE_BUCKET: "da-bucket" do
+        EnvironmentVariable.config_service_location(project, deploy_group, display: false).
+          must_equal ['da-bucket', 'samson/foo/pod100.yml']
+      end
+    end
+
+    it "raises when bucket is not set but project is configured to read env vars" do
+      assert_raises KeyError do
+        EnvironmentVariable.config_service_location(project, deploy_group, display: false)
       end
     end
   end
