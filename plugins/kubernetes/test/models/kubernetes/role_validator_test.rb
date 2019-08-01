@@ -94,7 +94,6 @@ describe Kubernetes::RoleValidator do
     describe 'StatefulSet' do
       before do
         stateful_set_role[0][:metadata][:name] = 'foobar'
-        stateful_set_role[1][:spec][:updateStrategy] = 'OnDelete'
         role.replace(stateful_set_role)
       end
 
@@ -105,11 +104,6 @@ describe Kubernetes::RoleValidator do
       it "enforces service and serviceName consistency" do
         stateful_set_role[0][:metadata][:name] = 'nope'
         errors.must_equal ["Service metadata.name and StatefulSet spec.serviceName must be consistent"]
-      end
-
-      it "enforces updateStrategy" do
-        stateful_set_role[1][:spec][:updateStrategy] = nil
-        errors.first.must_include "updateStrategy"
       end
     end
 

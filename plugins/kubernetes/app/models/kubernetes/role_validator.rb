@@ -64,7 +64,6 @@ module Kubernetes
       validate_team_labels
       validate_not_matching_team
       validate_stateful_set_service_consistent
-      validate_stateful_set_restart_policy
       validate_load_balancer
       unless validate_annotations
         validate_prerequisites_kinds
@@ -240,13 +239,6 @@ module Kubernetes
       return unless set = find_stateful_set
       return if set.dig(:spec, :serviceName) == service.dig(:metadata, :name)
       @errors << "Service metadata.name and StatefulSet spec.serviceName must be consistent"
-    end
-
-    def validate_stateful_set_restart_policy
-      return unless set = find_stateful_set
-      return if set.dig(:spec, :updateStrategy)
-      @errors << "StatefulSet spec.updateStrategy must be set. " \
-        "OnDelete will be supported soon but is brittle/rough, prefer RollingUpdate on kubernetes 1.7+."
     end
 
     def validate_containers_exist
