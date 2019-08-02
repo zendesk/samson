@@ -315,11 +315,6 @@ module Kubernetes
     end
 
     class DaemonSet < Base
-      def deploy
-        delete
-        create
-      end
-
       # need http request since we do not know how many nodes we will match
       # and the number of matches nodes could update with a changed template
       # only makes sense to call this after deploying / while waiting for pods
@@ -352,53 +347,16 @@ module Kubernetes
           desired
         end
       end
-
-      private
-
-      # we cannot replace or update a daemonset, so we take it down completely
-      #
-      # was do what `kubectl delete daemonset NAME` does:
-      # - make it match no node
-      # - waits for current to reach 0
-      # - deletes the daemonset
-      def request_delete
-        return super if pods_count == 0 # delete when already dead from previous deletion try, update would fail
-
-        # make it match no node
-        restore_template do
-          @template.dig_set [:spec, :template, :spec, :nodeSelector], rand(9999).to_s => rand(9999).to_s
-          update
-        end
-
-        delete_pods { wait_for_termination_of_all_pods }
-
-        super # delete it
-      end
-
-      def pods_count
-        resource.dig_fetch(:status, :currentNumberScheduled) + resource.dig_fetch(:status, :numberMisscheduled)
-      end
-
-      def wait_for_termination_of_all_pods
-        60.times do
-          sleep TICK
-          expire_resource_cache
-          return if pods_count == 0
-        end
-
-        raise(
-          Samson::Hooks::UserError,
-          "#{error_location}: DaemonSet was unable to delete existing pods, delete them manually or try again"
-        )
-      end
     end
 
     class StatefulSet < Base
       def patch_replace?
         return false if @delete_resource || !exist?
+
+        # TODO: default is RollingUpdate, so this is wrong
         deprecated = @template.dig(:spec, :updateStrategy) # supporting pre 1.9 clusters
-        strategy = (deprecated.is_a?(String) ? deprecated : @template.dig(:spec, :updateStrategy, :type))
-        [nil, "OnDelete"].include?(strategy)
+        strategy = deprecated.is_a?(String) ? deprecated : @template.dig(:spec, :updateStrategy, :type)
+        [nil, "OnDelete"].include? strategy
       end
 
       # StatefulSet cannot be updated normally when OnDelete is used or kubernetes <1.7

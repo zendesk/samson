@@ -598,6 +598,27 @@ describe Kubernetes::RoleValidator do
         end
       end
     end
+
+    describe "#validate_daemon_set_supported" do
+      before do
+        role[0][:kind] = "DaemonSet"
+        role[0][:apiVersion] = "apps/v1"
+      end
+
+      it "is valid" do
+        errors.must_equal nil
+      end
+
+      it "complains about unsupported apiVersion" do
+        role[0][:apiVersion] = "extensions/v1beta1"
+        errors.must_equal ["set DaemonSet apiVersion to apps/v1"]
+      end
+
+      it "complains about unsupported strategy" do
+        role[0][:spec][:updateStrategy] = {type: "OnDelete"}
+        errors.must_equal ["set DaemonSet spec.updateStrategy.type to RollingUpdate"]
+      end
+    end
   end
 
   describe '.map_attributes' do

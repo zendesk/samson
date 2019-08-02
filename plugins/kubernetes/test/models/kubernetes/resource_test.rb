@@ -365,91 +365,8 @@ describe Kubernetes::Resource do
   end
 
   describe Kubernetes::Resource::DaemonSet do
-    def daemonset_stub(scheduled, misscheduled)
-      {
-        status: {
-          currentNumberScheduled: scheduled,
-          numberMisscheduled:     misscheduled
-        },
-        spec: {
-          template: {
-            metadata: {
-              labels: {release_id: 123, deploy_group_id: 234}
-            },
-            spec: {
-              nodeSelector: nil
-            }
-          }
-        }
-      }
-    end
-
     let(:kind) { 'DaemonSet' }
     let(:api_version) { 'extensions/v1beta1' }
-
-    describe "#client" do
-      it "uses the extension client because it is in beta" do
-        resource.send(:client).must_equal deploy_group.kubernetes_cluster.client('extensions/v1beta1')
-      end
-    end
-
-    describe "#deploy" do
-      let(:client) { resource.send(:client) }
-      before { template[:spec] = {template: {spec: {}}} }
-
-      it "creates when missing" do
-        assert_request(:get, url, to_return: {status: 404}) do
-          assert_request(:post, base_url, to_return: {body: "{}"}) do
-            resource.deploy
-          end
-        end
-      end
-
-      it "deletes and created when daemonset exists without pods" do
-        client.expects(:get_daemon_set).raises(Kubeclient::ResourceNotFoundError.new(404, 'Not Found', {}))
-        client.expects(:get_daemon_set).returns(daemonset_stub(0, 0))
-        client.expects(:delete_daemon_set)
-        client.expects(:create_daemon_set)
-        resource.deploy
-      end
-
-      it "deletes and created when daemonset exists with pods" do
-        client.expects(:get_daemon_set).raises(Kubeclient::ResourceNotFoundError.new(404, 'Not Found', {}))
-        client.expects(:update_daemon_set).returns(daemonset_stub(1, 1))
-        client.expects(:get_daemon_set).times(4).returns(
-          daemonset_stub(1, 1), # existing check
-          daemonset_stub(1, 1), # after update check #1 ... still existing
-          daemonset_stub(0, 1), # after update check #2 ... still existing
-          daemonset_stub(0, 0)  # after update check #3 ... done
-        )
-        client.expects(:delete_daemon_set)
-        client.expects(:create_daemon_set)
-
-        assert_pods_lookup do
-          assert_pod_deletion do
-            resource.deploy
-          end
-        end
-
-        # reverts changes to template so create is clean
-        refute template[:spec][:template][:spec].key?(:nodeSelector)
-      end
-
-      it "fails when old pods cannot be deleted" do
-        client.expects(:update_daemon_set).returns(daemonset_stub(1, 1))
-        client.expects(:get_daemon_set).times(62).returns(daemonset_stub(1, 1))
-
-        e = assert_raises Samson::Hooks::UserError do
-          assert_pods_lookup do
-            assert_pod_deletion do
-              resource.deploy
-            end
-          end
-        end
-
-        e.message.must_include "unable to delete existing pods"
-      end
-    end
 
     describe "#desired_pod_count" do
       before { template[:spec] = {replicas: 2} }
@@ -517,12 +434,6 @@ describe Kubernetes::Resource do
 
     let(:kind) { 'Deployment' }
     let(:api_version) { 'extensions/v1beta1' }
-
-    describe "#client" do
-      it "uses the extension client because it is in beta" do
-        resource.send(:client).must_equal deploy_group.kubernetes_cluster.client('extensions/v1beta1')
-      end
-    end
 
     describe "#delete" do
       it "does nothing when deployment is deleted" do
@@ -599,12 +510,6 @@ describe Kubernetes::Resource do
 
     let(:kind) { 'StatefulSet' }
     let(:api_version) { 'apps/v1beta1' }
-
-    describe "#client" do
-      it "uses the apps client because it is in beta" do
-        resource.send(:client).must_equal deploy_group.kubernetes_cluster.client('apps/v1beta1')
-      end
-    end
 
     describe "#deploy" do
       it "creates when missing" do
@@ -734,12 +639,6 @@ describe Kubernetes::Resource do
   describe Kubernetes::Resource::Job do
     let(:kind) { 'Job' }
     let(:api_version) { 'batch/v1' }
-
-    describe "#client" do
-      it "uses the extension client because it is in beta" do
-        resource.send(:client).must_equal deploy_group.kubernetes_cluster.client('batch/v1')
-      end
-    end
 
     describe "#deploy" do
       it "creates when missing" do

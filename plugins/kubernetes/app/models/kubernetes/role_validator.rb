@@ -64,6 +64,7 @@ module Kubernetes
       validate_team_labels
       validate_not_matching_team
       validate_stateful_set_service_consistent
+      validate_daemon_set_supported
       validate_load_balancer
       unless validate_annotations
         validate_prerequisites_kinds
@@ -239,6 +240,20 @@ module Kubernetes
       return unless set = find_stateful_set
       return if set.dig(:spec, :serviceName) == service.dig(:metadata, :name)
       @errors << "Service metadata.name and StatefulSet spec.serviceName must be consistent"
+    end
+
+    def validate_daemon_set_supported
+      return unless daemon_set = @elements.detect { |t| t[:kind] == "DaemonSet" }
+
+      if daemon_set.dig(:apiVersion) != "apps/v1"
+        @errors << "set DaemonSet apiVersion to apps/v1"
+        return
+      end
+
+      unless [nil, "RollingUpdate"].include? daemon_set.dig(:spec, :updateStrategy, :type)
+        @errors << "set DaemonSet spec.updateStrategy.type to RollingUpdate"
+        return
+      end
     end
 
     def validate_containers_exist
