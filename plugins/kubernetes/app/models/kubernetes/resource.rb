@@ -315,8 +315,9 @@ module Kubernetes
     end
 
     class DaemonSet < Base
+      # we cannot replace or update a daemonset, so we take it down completely
       def deploy
-        delete
+        wait_for_termination_of_all_pods { delete }
         create
       end
 
@@ -355,41 +356,27 @@ module Kubernetes
 
       private
 
-      # we cannot replace or update a daemonset, so we take it down completely
-      #
-      # was do what `kubectl delete daemonset NAME` does:
-      # - make it match no node
-      # - waits for current to reach 0
-      # - deletes the daemonset
-      def request_delete
-        return super if pods_count == 0 # delete when already dead from previous deletion try, update would fail
-
-        # make it match no node
-        restore_template do
-          @template.dig_set [:spec, :template, :spec, :nodeSelector], rand(9999).to_s => rand(9999).to_s
-          update
-        end
-
-        delete_pods { wait_for_termination_of_all_pods }
-
-        super # delete it
-      end
-
-      def pods_count
-        resource.dig_fetch(:status, :currentNumberScheduled) + resource.dig_fetch(:status, :numberMisscheduled)
-      end
-
+      # deleting a DaemonSet instantly finishes, but we need to wait until all pods are
+      # deleted before deploying the new DaemonSet, to avoid having the old and new pods run in parallel
       def wait_for_termination_of_all_pods
-        60.times do
-          sleep TICK
-          expire_resource_cache
-          return if pods_count == 0
-        end
+        old = resource
+        return yield unless old
 
-        raise(
-          Samson::Hooks::UserError,
-          "#{error_location}: DaemonSet was unable to delete existing pods, delete them manually or try again"
-        )
+        begin
+          yield
+          @resource = old
+          60.times do
+            sleep TICK
+            return if pods.empty?
+          end
+
+          raise(
+            Samson::Hooks::UserError,
+            "#{error_location}: DaemonSet was unable to delete existing pods, delete them manually or try again"
+          )
+        ensure
+          @resource = nil
+        end
       end
     end
 

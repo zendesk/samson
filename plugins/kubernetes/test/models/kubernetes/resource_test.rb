@@ -7,7 +7,7 @@ describe Kubernetes::Resource do
   def assert_pods_lookup(&block)
     assert_request(
       :get,
-      "#{origin}/api/v1/namespaces/pod1/pods?labelSelector=release_id=123,deploy_group_id=234",
+      pods_lookup_url,
       to_return: {body: '{"items":[{"metadata":{"name":"pod1","namespace":"name1"}}]}'},
       &block
     )
@@ -58,6 +58,7 @@ describe Kubernetes::Resource do
     endpoint = "#{origin}/#{path}"
     "#{endpoint}/namespaces/pod1/#{kind.downcase.pluralize}/some-project"
   end
+  let(:pods_lookup_url) { "#{origin}/api/v1/namespaces/pod1/pods?labelSelector=release_id=123,deploy_group_id=234" }
 
   before { Kubernetes::Resource::Base.any_instance.stubs(:sleep) }
 
@@ -405,49 +406,31 @@ describe Kubernetes::Resource do
         end
       end
 
-      it "deletes and created when daemonset exists without pods" do
-        client.expects(:get_daemon_set).raises(Kubeclient::ResourceNotFoundError.new(404, 'Not Found', {}))
-        client.expects(:get_daemon_set).returns(daemonset_stub(0, 0))
-        client.expects(:delete_daemon_set)
-        client.expects(:create_daemon_set)
-        resource.deploy
-      end
-
-      it "deletes and created when daemonset exists with pods" do
-        client.expects(:get_daemon_set).raises(Kubeclient::ResourceNotFoundError.new(404, 'Not Found', {}))
-        client.expects(:update_daemon_set).returns(daemonset_stub(1, 1))
-        client.expects(:get_daemon_set).times(4).returns(
-          daemonset_stub(1, 1), # existing check
-          daemonset_stub(1, 1), # after update check #1 ... still existing
-          daemonset_stub(0, 1), # after update check #2 ... still existing
-          daemonset_stub(0, 0)  # after update check #3 ... done
-        )
-        client.expects(:delete_daemon_set)
-        client.expects(:create_daemon_set)
-
-        assert_pods_lookup do
-          assert_pod_deletion do
-            resource.deploy
-          end
+      describe "when existing" do
+        before do
+          client.expects(:get_daemon_set).
+            times(2).
+            returns(daemonset_stub(1, 1)).
+            raises(Kubeclient::ResourceNotFoundError.new(404, 'Not Found', {}))
         end
 
-        # reverts changes to template so create is clean
-        refute template[:spec][:template][:spec].key?(:nodeSelector)
-      end
+        it "when existing it deletes, waits for pods to die, then creates" do
+          client.expects(:delete_daemon_set)
+          client.expects(:create_daemon_set)
 
-      it "fails when old pods cannot be deleted" do
-        client.expects(:update_daemon_set).returns(daemonset_stub(1, 1))
-        client.expects(:get_daemon_set).times(62).returns(daemonset_stub(1, 1))
+          assert_request(:get, pods_lookup_url, to_return: {body: {items: []}.to_json}) { resource.deploy }
+        end
 
-        e = assert_raises Samson::Hooks::UserError do
-          assert_pods_lookup do
-            assert_pod_deletion do
+        it "when existing fails when old pods cannot be deleted" do
+          e = assert_raises Samson::Hooks::UserError do
+            client.expects(:delete_daemon_set)
+            assert_request(:get, pods_lookup_url, times: 60, to_return: {body: {items: [{}]}.to_json}) do
               resource.deploy
             end
           end
-        end
 
-        e.message.must_include "unable to delete existing pods"
+          e.message.must_include "unable to delete existing pods"
+        end
       end
     end
 
