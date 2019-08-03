@@ -603,6 +603,7 @@ describe Kubernetes::RoleValidator do
       before do
         role[0][:kind] = "DaemonSet"
         role[0][:apiVersion] = "apps/v1"
+        role[0][:spec][:updateStrategy] = {type: "RollingUpdate", rollingUpdate: {maxUnavailable: "10%"}}
       end
 
       it "is valid" do
@@ -617,6 +618,11 @@ describe Kubernetes::RoleValidator do
       it "complains about unsupported strategy" do
         role[0][:spec][:updateStrategy] = {type: "OnDelete"}
         errors.must_equal ["set DaemonSet spec.updateStrategy.type to RollingUpdate"]
+      end
+
+      it "complains about unset maxUnavailable which will make the deploy timeout" do
+        role[0][:spec][:updateStrategy].delete(:rollingUpdate)
+        errors.to_s.must_include "default of 1"
       end
     end
   end

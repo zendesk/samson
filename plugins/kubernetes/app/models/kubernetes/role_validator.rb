@@ -254,6 +254,12 @@ module Kubernetes
         @errors << "set DaemonSet spec.updateStrategy.type to RollingUpdate"
         return
       end
+
+      unless daemon_set.dig(:spec, :updateStrategy, :rollingUpdate, :maxUnavailable)
+        @errors << "set DaemonSet spec.updateStrategy.rollingUpdate.maxUnavailable, the default of 1 is too slow" \
+          " (pick something between '25%' and '100%')"
+        return
+      end
     end
 
     def validate_containers_exist

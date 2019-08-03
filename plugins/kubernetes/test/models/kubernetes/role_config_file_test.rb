@@ -30,7 +30,7 @@ describe Kubernetes::RoleConfigFile do
 
     it "finds a Daemonset" do
       assert content.sub!('Deployment', 'DaemonSet')
-      assert content.sub!('extensions/v1beta1', 'apps/v1')
+      Kubernetes::RoleValidator.any_instance.expects(:validate)
       assert content.sub!(/\n---.*/m, '')
       config_file.primary[:kind].must_equal 'DaemonSet'
     end
