@@ -850,9 +850,21 @@ describe Kubernetes::TemplateFiller do
           )
         end
 
-        it "bumps termination grace period if we would sleep longer that termination allows" do
-          with_env(KUBERNETES_PRESTOP_SLEEP_DURATION: "50") do
+        describe "when pod would terminate before finishing to sleep" do
+          with_env(KUBERNETES_PRESTOP_SLEEP_DURATION: "50")
+
+          it "bumps termination grace period" do
             template.to_hash.dig_fetch(:spec, :template, :spec, :terminationGracePeriodSeconds).must_equal(53)
+          end
+
+          it "overrides termination grace period when user configured too low value" do
+            raw_template[:spec][:template][:spec][:terminationGracePeriodSeconds] = 10
+            template.to_hash.dig_fetch(:spec, :template, :spec, :terminationGracePeriodSeconds).must_equal(53)
+          end
+
+          it "does not set termination grace period when disabled" do
+            raw_template.dig_fetch(:spec, :template, :spec, :containers, 0)[:"samson/preStop"] = "disabled"
+            refute template.to_hash.dig(:spec, :template, :spec, :terminationGracePeriodSeconds)
           end
         end
 

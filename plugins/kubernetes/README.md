@@ -205,13 +205,16 @@ To make Samson leave your resource name alone, set `metadata.annotations.samson/
 
 ### Preventing request loss with preStop
 
-To enable the following functionality you need to set `KUBERNETES_ADD_PRESTOP=true`.
+When not using kubernetes servives to route requests, requests can be lost during a deployment,
+since old pods shut down before everyone all clients are refreshed.
 
-Samson automatically adds `container[].lifecycle.preStop` `sleep 3` if a `preStop` hook is not set and
-`container[].samson/preStop` is not set to `disabled`, to prevent in-flight requests from getting lost when taking a pod
-out of rotation (alternatively set `metadata.annoations.container-nameofcontainer-samson/preStop: disabled`).
+To prevent this, samson can automatically add `container[].lifecycle.preStop` `/bin/sleep <INT>`
+and increase the `spec.terminationGracePeriodSeconds` if necessary.
 
-Set `KUBERNETES_PRESTOP_SLEEP_DURATION` in seconds if you want to override default sleep duration.
+(will only add if `preStop` hook is not set and `container[].samson/preStop` is not set to `disabled`)
+
+- Set `KUBERNETES_ADD_PRESTOP=true` to enable
+- Set `KUBERNETES_PRESTOP_SLEEP_DURATION=30` in seconds to override default sleep duration (3 seconds)
 
 ### Showing logs on succeeded deploys
 
