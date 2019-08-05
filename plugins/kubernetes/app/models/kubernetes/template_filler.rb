@@ -582,9 +582,10 @@ module Kubernetes
         # Default termination grace period for pods
         (container[:lifecycle] ||= {})[:preStop] ||= {exec: {command: ["/bin/sleep", pre_stop_sleep.to_s]}}
       end
-      if pre_stop_sleep.to_i > DEFAULT_TERMINATION_GRACE_PERIOD
+      extra = 3 # extra time to finish current requests.
+      if pre_stop_sleep.to_i + extra >= DEFAULT_TERMINATION_GRACE_PERIOD
         # add few seconds to make sure servers shut down after they are done waiting
-        pod_template[:spec][:terminationGracePeriodSeconds] = pre_stop_sleep + 3
+        pod_template[:spec][:terminationGracePeriodSeconds] = pre_stop_sleep + extra
       end
     end
 
