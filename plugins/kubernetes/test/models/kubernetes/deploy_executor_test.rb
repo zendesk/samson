@@ -596,6 +596,7 @@ describe Kubernetes::DeployExecutor do
 
     describe "when rollback is needed" do
       let(:rollback_indicator) { "Rolling back" }
+      let(:rollback_instructions) { "Rollback on failure" }
 
       before { worker_is_unstable }
 
@@ -614,6 +615,7 @@ describe Kubernetes::DeployExecutor do
         out.must_include "resque-worker Pod: Restarted\n"
         out.must_include "UNSTABLE"
         out.must_include rollback_indicator
+        out.must_include rollback_instructions
         out.must_include "DONE" # DONE is shown ... we got past the rollback
         out.wont_include "SUCCESS"
         out.wont_include "FAILED"
@@ -651,6 +653,7 @@ describe Kubernetes::DeployExecutor do
         out.must_include "resque-worker Pod: Restarted\n"
         out.must_include "UNSTABLE"
         out.must_include "DONE" # DONE is shown ... we got past the rollback
+        out.wont_include rollback_instructions
       end
     end
 

@@ -169,9 +169,11 @@ module Kubernetes
       info = Samson::ErrorNotifier.notify($!, sync: true)
       @output.puts "Error showing failure cause: #{info}"
     ensure
-      @output.puts(
-        "\nDebug: disable 'Rollback on failure' when deploying and use 'kubectl describe pod <name>' on failed pods"
-      )
+      if @job.deploy.kubernetes_rollback?
+        @output.puts(
+          "\nDebug: disable 'Rollback on failure' when deploying and use 'kubectl describe pod <name>' on failed pods"
+        )
+      end
     end
 
     def resource_identifier(status, exact: true)
