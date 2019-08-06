@@ -577,7 +577,7 @@ module Kubernetes
 
       # do nothing if all containers of the app opted out
       containers = pod_containers.reject do |container|
-        samson_container_config(container, :"samson/preStop") == "disabled"
+        samson_container_config(container, :"samson/preStop") == "disabled" || !container[:ports]
       end
       return if containers.empty?
 
