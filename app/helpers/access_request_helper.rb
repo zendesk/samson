@@ -4,6 +4,10 @@ module AccessRequestHelper
     AccessRequestsController.feature_enabled? && current_user && !current_user.super_admin?
   end
 
+  def access_request_alternative_instruction
+    ENV['REQUEST_ACCESS_ALT_INSTRUCTION']
+  end
+
   def link_to_request_access
     if current_user.access_request_pending?
       'Access request pending.'
