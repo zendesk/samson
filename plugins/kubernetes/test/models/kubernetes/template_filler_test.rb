@@ -837,6 +837,8 @@ describe Kubernetes::TemplateFiller do
     end
 
     describe "preStop" do
+      before { raw_template[:spec][:template][:spec][:ports] = [{name: "foo"}] }
+
       it "does not add preStop" do
         refute template.to_hash.dig_fetch(:spec, :template, :spec, :containers, 0).key?(:lifecycle)
       end
@@ -873,10 +875,16 @@ describe Kubernetes::TemplateFiller do
           template.to_hash.dig_fetch(:spec, :template, :spec, :containers, 0, :lifecycle).must_equal(
             preStop: "OLD"
           )
+          refute template.to_hash.dig(:spec, :template, :spec, :terminationGracePeriodSeconds)
         end
 
         it "does not add preStop when opted out" do
           raw_template.dig_fetch(:spec, :template, :spec, :containers, 0)[:"samson/preStop"] = "disabled"
+          refute template.to_hash.dig_fetch(:spec, :template, :spec, :containers, 0).key?(:lifecycle)
+        end
+
+        it "does not add preStop when there are no ports that could create problems" do
+          raw_template.dig_fetch(:spec, :template, :spec, :containers, 0).delete(:ports)
           refute template.to_hash.dig_fetch(:spec, :template, :spec, :containers, 0).key?(:lifecycle)
         end
       end

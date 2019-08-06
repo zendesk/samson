@@ -211,7 +211,7 @@ since old pods shut down before everyone all clients are refreshed.
 To prevent this, samson can automatically add `container[].lifecycle.preStop` `/bin/sleep <INT>`
 and increase the `spec.terminationGracePeriodSeconds` if necessary.
 
-(will only add if `preStop` hook is not set and `container[].samson/preStop` is not set to `disabled`)
+(will only add if `preStop` hook is not set and `container[].samson/preStop` is not set to `disabled` and container has ports)
 
 - Set `KUBERNETES_ADD_PRESTOP=true` to enable
 - Set `KUBERNETES_PRESTOP_SLEEP_DURATION=30` in seconds to override default sleep duration (3 seconds)
