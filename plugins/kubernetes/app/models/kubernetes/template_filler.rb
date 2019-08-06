@@ -576,10 +576,11 @@ module Kubernetes
       return unless KUBERNETES_ADD_PRESTOP
 
       # do nothing if all containers of the app opted out
-      containers = pod_containers.reject do |container|
-        samson_container_config(container, :"samson/preStop") == "disabled" ||
-        !container[:ports] ||
-        container.dig(:lifecycle, :preStop)
+      containers = pod_containers.select do |container|
+        samson_container_config(container, :"samson/preStop") != "disabled" &&
+        container[:ports] && # no ports = no bugs
+        !container.dig(:lifecycle, :preStop) && # nothing to do
+        template[:kind] != "DaemonSet" # stable ips
       end
       return if containers.empty?
 
