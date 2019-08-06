@@ -577,14 +577,16 @@ module Kubernetes
 
       # do nothing if all containers of the app opted out
       containers = pod_containers.reject do |container|
-        samson_container_config(container, :"samson/preStop") == "disabled" || !container[:ports]
+        samson_container_config(container, :"samson/preStop") == "disabled" ||
+        !container[:ports] ||
+        container.dig(:lifecycle, :preStop)
       end
       return if containers.empty?
 
       # add prestop sleep
       sleep_time = Integer(ENV['KUBERNETES_PRESTOP_SLEEP_DURATION'] || '3')
       containers.each do |container|
-        (container[:lifecycle] ||= {})[:preStop] ||= {exec: {command: ["/bin/sleep", sleep_time.to_s]}}
+        (container[:lifecycle] ||= {})[:preStop] = {exec: {command: ["/bin/sleep", sleep_time.to_s]}}
       end
 
       # shut down after prestop sleeping is done

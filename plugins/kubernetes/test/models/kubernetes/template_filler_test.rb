@@ -875,6 +875,7 @@ describe Kubernetes::TemplateFiller do
           template.to_hash.dig_fetch(:spec, :template, :spec, :containers, 0, :lifecycle).must_equal(
             preStop: "OLD"
           )
+          refute template.to_hash.dig(:spec, :template, :spec, :terminationGracePeriodSeconds)
         end
 
         it "does not add preStop when opted out" do
