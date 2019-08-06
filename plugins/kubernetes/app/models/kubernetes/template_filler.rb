@@ -570,22 +570,28 @@ module Kubernetes
       pod_template.fetch(:spec)[:imagePullSecrets] = docker_credentials
     end
 
-    def pre_stop_sleep
-      @pre_stop_sleep ||= Integer(ENV['KUBERNETES_PRESTOP_SLEEP_DURATION'] || '3')
-    end
-
+    # add preStop sleep to allow for DNS TTL to expire
+    # we only do this for main containers and not sidecars
     def set_pre_stop
       return unless KUBERNETES_ADD_PRESTOP
-      pod_containers.each do |container|
-        next if samson_container_config(container, :"samson/preStop") == "disabled"
-        # set sleep to 35 seconds to allow for DNS TTL to expire.
-        # Default termination grace period for pods
-        (container[:lifecycle] ||= {})[:preStop] ||= {exec: {command: ["/bin/sleep", pre_stop_sleep.to_s]}}
+
+      # do nothing if all containers of the app opted out
+      containers = pod_containers.reject do |container|
+        samson_container_config(container, :"samson/preStop") == "disabled"
       end
-      extra = 3 # extra time to finish current requests.
-      if pre_stop_sleep.to_i + extra >= DEFAULT_TERMINATION_GRACE_PERIOD
-        # add few seconds to make sure servers shut down after they are done waiting
-        pod_template[:spec][:terminationGracePeriodSeconds] = pre_stop_sleep + extra
+      return if containers.empty?
+
+      # add prestop sleep
+      sleep_time = Integer(ENV['KUBERNETES_PRESTOP_SLEEP_DURATION'] || '3')
+      containers.each do |container|
+        (container[:lifecycle] ||= {})[:preStop] ||= {exec: {command: ["/bin/sleep", sleep_time.to_s]}}
+      end
+
+      # shut down after prestop sleeping is done
+      buffer = 3
+      grace_period = pod_template[:spec][:terminationGracePeriodSeconds] || DEFAULT_TERMINATION_GRACE_PERIOD
+      if sleep_time + buffer > grace_period
+        pod_template[:spec][:terminationGracePeriodSeconds] = sleep_time + buffer
       end
     end
 
