@@ -5,7 +5,7 @@ module AccessRequestHelper
   end
 
   def access_request_alternative_instruction
-    ENV['REQUEST_ACCESS_ALT_INSTRUCTION']
+    ENV['ACCESS_REQUEST_ALTERNATIVE_INSTRUCTION']
   end
 
   def link_to_request_access
