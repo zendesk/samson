@@ -4,9 +4,9 @@
   @roles = Role.all
 %>
 
-<% if access_request_alternative_instruction %>
+<% if text = ENV['ACCESS_REQUEST_ALTERNATIVE_INSTRUCTION'] %>
   <div class="alert alert-info">
-    <%= access_request_alternative_instruction %>
+    <%= text %>
   </div>
 <% else %>
   <section>

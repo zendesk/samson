@@ -45,14 +45,4 @@ describe AccessRequestHelper do
       refute_match(matcher, link_to_request_access)
     end
   end
-
-  describe '#access_request_alternative_instruction' do
-    let(:instructions) { "contact an admin" }
-
-    it 'returns text set in ENV["ACCESS_REQUEST_ALTERNATIVE_INSTRUCTION"]' do
-      with_env ACCESS_REQUEST_ALTERNATIVE_INSTRUCTION: instructions do
-        assert_match(instructions, access_request_alternative_instruction)
-      end
-    end
-  end
 end
