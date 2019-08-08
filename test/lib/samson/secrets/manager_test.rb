@@ -165,8 +165,8 @@ describe Samson::Secrets::Manager do
   end
 
   describe ".move" do
-    def move
-      Samson::Secrets::Manager.move "global/foo/global/bar", "global/baz/global/bar"
+    def move(deprecate)
+      Samson::Secrets::Manager.move "global/foo/global/bar", "global/baz/global/bar", deprecate: deprecate
     end
 
     before do
@@ -177,7 +177,7 @@ describe Samson::Secrets::Manager do
     it "moves and cleanes up the old" do
       old = Samson::Secrets::Manager.read "global/foo/global/bar", include_value: true
 
-      move
+      move false
 
       moved = Samson::Secrets::Manager.read("global/baz/global/bar", include_value: true)
       moved.except(:updated_at, :created_at).must_equal(old.except(:updated_at, :created_at))
@@ -186,8 +186,16 @@ describe Samson::Secrets::Manager do
 
     it "fails when target exists" do
       create_secret "global/baz/global/bar"
-      e = assert_raises { move }
+      e = assert_raises { move false }
       e.message.must_equal "global/baz/global/bar already exists"
+    end
+
+    it "moves with deprecation" do
+      move true
+
+      assert Samson::Secrets::Manager.exist?("global/baz/global/bar")
+      assert Samson::Secrets::Manager.exist?("global/foo/global/bar")
+      assert Samson::Secrets::Manager.read("global/foo/global/bar")[:deprecated_at]
     end
   end
 
