@@ -132,18 +132,19 @@ module Kubernetes
       min_available ||= ENV["KUBERNETES_AUTO_MIN_AVAILABLE"]
       return unless min_available
 
-      target = if percent = min_available.to_s[/\A(\d+)\s*%\z/, 1] # "30%" -> 30 / "30 %" -> 30
+      non_blocking = replica_target - 1
+      return 0 if non_blocking <= 0
+
+      if percent = min_available.to_s[/\A(\d+)\s*%\z/, 1] # "30%" -> 30 / "30 %" -> 30
         percent = Integer(percent)
         if percent >= 100
           raise Samson::Hooks::UserError, "minAvailable of >= 100% would result in eviction deadlock, pick lower"
         else
-          [((replica_target.to_f / 100) * percent).ceil, replica_target - 1].min
+          "#{[percent, non_blocking.to_f / replica_target * 100].min.to_i}%"
         end
       else
-        [replica_target - 1, Integer(min_available)].min
+        [non_blocking, Integer(min_available)].min
       end
-      target = 0 if target < 0
-      target
     end
 
     def validate_config_file

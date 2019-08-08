@@ -85,8 +85,8 @@ describe Kubernetes::ReleaseDoc do
       end
 
       it "adds valid relative PodDisruptionBudget when sometimes invalid is requested" do
-        template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '90%'}
-        create!.resource_template[2][:spec][:minAvailable].must_equal 1
+        template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '99%'}
+        create!.resource_template[2][:spec][:minAvailable].must_equal '50%'
       end
 
       it "fails when completely invalid is requested" do
@@ -105,7 +105,7 @@ describe Kubernetes::ReleaseDoc do
         it "adds relative PodDisruptionBudget" do
           Time.stubs(:now).returns(Time.parse("2018-01-01"))
           budget = create!.resource_template[2]
-          budget[:spec][:minAvailable].must_equal 1
+          budget[:spec][:minAvailable].must_equal '30%'
           budget[:metadata][:annotations][:"samson/updateTimestamp"].must_equal "2018-01-01T00:00:00Z"
           refute budget.key?(:delete)
         end
