@@ -43,7 +43,7 @@
           <td><%= kubernetes_deploy_group_role_replica deploy_group_role.kubernetes_role, deploy_group_role %></td>
           <td>
             <% if current_user.admin_for?(deploy_group_role.project) %>
-              <%= link_to 'Edit', edit_kubernetes_deploy_group_role_path(deploy_group_role) %>
+              <%= link_to 'Edit', edit_kubernetes_deploy_group_role_path(deploy_group_role, redirect_to: request.fullpath) %>
             <% end %>
           </td>
         </tr>

@@ -300,6 +300,30 @@ describe ApplicationHelper do
         "<a data-method=\"delete\" data-type-to-delete=\"Really delete ?\" href=\"/foo\">Delete</a>"
       )
     end
+
+    describe "redirect_back" do
+      before { params[:redirect_to] = "/foo" }
+
+      it "can redirect back with url" do
+        link_to_delete("/foo", redirect_back: true).must_equal(
+          "<a data-method=\"delete\" data-confirm=\"Really delete ?\" href=\"/foo?redirect_to=%2Ffoo\">Delete</a>"
+        )
+      end
+
+      it "can redirect back with AR" do
+        params[:redirect_to] = "/foo"
+        link_to_delete(User.first, redirect_back: true).must_equal(
+          "<a data-method=\"delete\" data-confirm=\"Delete User Viewer ?\" href=\"/users/56405077?redirect_to=%2Ffoo\">Delete</a>"
+        )
+      end
+
+      it "ignores redirect without param" do
+        params.delete :redirect_to
+        link_to_delete("/foo", redirect_back: true).must_equal(
+          "<a data-method=\"delete\" data-confirm=\"Really delete ?\" href=\"/foo\">Delete</a>"
+        )
+      end
+    end
   end
 
   describe "#link_to_url" do
@@ -760,6 +784,16 @@ describe ApplicationHelper do
 
       result = check_box_section 'Project Stages', 'Pick some of them stages!', :project, :stages, project.stages
       result.must_equal expected_result
+    end
+  end
+
+  describe "#add_to_url" do
+    it "adds to ?" do
+      add_to_url("foo?a", "b").must_equal "foo?a&b"
+    end
+
+    it "adds to plain" do
+      add_to_url("foo", "b").must_equal "foo?b"
     end
   end
 end
