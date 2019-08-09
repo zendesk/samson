@@ -690,7 +690,7 @@ describe Kubernetes::RoleValidator do
     it "is invalid with different role labels in a single role" do
       primary = role.first
       primary2 = primary.dup
-      primary2[:metadata] = {labels: {role: "meh", project: primary.dig(:metadata, :labels, :project)}}
+      primary2[:metadata] = {name: "bar", labels: {role: "meh", project: primary.dig(:metadata, :labels, :project)}}
       validate_error([[primary, primary2]]).must_equal(
         "metadata.labels.role must be set and consistent in each config file"
       )
@@ -699,7 +699,7 @@ describe Kubernetes::RoleValidator do
     it "is invalid when a role is not set" do
       primary = role.first
       primary2 = primary.dup
-      primary2[:metadata] = {labels: {project: primary.dig(:metadata, :labels, :project)}}
+      primary2[:metadata] = {name: "bar", labels: {project: primary.dig(:metadata, :labels, :project)}}
       validate_error([[primary, primary2]]).must_equal(
         "metadata.labels.role must be set and consistent in each config file"
       )
@@ -708,9 +708,13 @@ describe Kubernetes::RoleValidator do
     it "is invalid when all role are not set" do
       primary = role.first
       primary[:metadata][:labels].delete :role
-      validate_error([[primary, primary]]).must_equal(
+      validate_error([[primary]]).must_equal(
         "metadata.labels.role must be set and consistent in each config file"
       )
+    end
+
+    it "is invalid when using the same element twice" do
+      validate_error([[role.first, role.first]]).must_equal "Deployment .some-project-rc exists multiple times"
     end
   end
 end
