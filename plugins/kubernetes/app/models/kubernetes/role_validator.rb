@@ -75,25 +75,36 @@ module Kubernetes
       @errors.presence
     end
 
+    # @param [Array<Array<Hash>>] elements for a single deploy group, grouped by role
     def self.validate_groups(element_groups)
-      elements = element_groups.flatten(1)
-      return if elements.empty?
-      return if elements.any? { |r| r.dig(:metadata, :annotations, :"samson/multi_project") }
+      return if element_groups.all?(&:empty?)
 
       errors = []
 
-      element_groups.each do |element_group|
-        roles = element_group.map { |r| r.dig(:metadata, :labels, :role) }.uniq
-        if roles.size != 1 || roles == [nil]
-          errors << "metadata.labels.role must be set and consistent in each config file"
-        end
+      # user tries to deploy the exact same resource multiple times from different roles
+      element_groups.each do |elements|
+        errors.concat elements.
+          map { |e| "#{e[:kind]} #{e.dig(:metadata, :namespace)}.#{e.dig(:metadata, :name)} exists multiple times" }.
+          group_by(&:itself).
+          select { |_, v| v.size >= 2 }.
+          keys
       end
 
-      roles = element_groups.map(&:first).map { |r| r.dig(:metadata, :labels, :role) }
-      errors << "metadata.labels.role must be set and unique" if roles.uniq.size != element_groups.size
+      # role/project labels are used correctly
+      unless element_groups.any? { |e| e.any? { |r| r.dig(:metadata, :annotations, :"samson/multi_project") } }
+        element_groups.each do |es|
+          roles = es.map { |r| r.dig(:metadata, :labels, :role) }.uniq
+          if roles.size != 1 || roles == [nil]
+            errors << "metadata.labels.role must be set and consistent in each config file"
+          end
+        end
 
-      projects = elements.map { |r| r.dig(:metadata, :labels, :project) }.uniq
-      errors << "metadata.labels.project must be consistent" if projects.size != 1
+        roles = element_groups.map(&:first).map { |r| r.dig(:metadata, :labels, :role) }
+        errors << "metadata.labels.role must be set and unique" if roles.uniq.size != element_groups.size
+
+        projects = element_groups.flat_map { |e| e.map { |r| r.dig(:metadata, :labels, :project) } }.uniq
+        errors << "metadata.labels.project must be consistent" if projects.size != 1
+      end
 
       raise Samson::Hooks::UserError, errors.join(", ") if errors.any?
     end
