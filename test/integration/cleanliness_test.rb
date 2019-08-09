@@ -34,6 +34,7 @@ describe "cleanliness" do
     code.size.must_be :>, 50
     code
   end
+  let(:table_definitions) { File.read("db/schema.rb").scan(/  create_table "(\S+)"(.*?)\n  end/m) }
 
   it "does not have boolean limit 1 in schema since this breaks mysql" do
     File.read("db/schema.rb").wont_match /\st\.boolean.*limit: 1/
@@ -48,7 +49,6 @@ describe "cleanliness" do
   end
 
   it "does not have string index without limit since that breaks our mysql migrations" do
-    table_definitions = File.read("db/schema.rb").scan(/  create_table "(\S+)"(.*?)\n  end/m)
     table_definitions.size.must_be :>, 10
 
     bad = table_definitions.flat_map do |table, definition|
@@ -78,6 +78,27 @@ describe "cleanliness" do
     ]
 
     bad.map! { |table, string| "#{table} #{string} has a string index without length" }.join("\n")
+    assert bad.empty?, bad
+  end
+
+  it "has created/updated for all tables" do
+    bad = table_definitions.select do |_, definition|
+      !definition.include?("updated_at") || !definition.include?("created_at")
+    end.map(&:first)
+    bad -= [
+      "audits",
+      "deploy_groups_stages",
+      "environment_variables",
+      "environment_variable_groups",
+      "kubernetes_deploy_group_roles",
+      "kubernetes_stage_roles",
+      "new_relic_applications",
+      "oauth_access_grants",
+      "oauth_access_tokens",
+      "project_environment_variable_groups",
+      "versions"
+    ]
+    bad.map! { |table, _| "#{table} needs updated_at/created_at or be ignored here" }.join("\n")
     assert bad.empty?, bad
   end
 

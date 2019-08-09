@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_07_14_235744) do
+ActiveRecord::Schema.define(version: 2019_08_08_225957) do
 
   create_table "audits" do |t|
     t.integer "auditable_id", null: false
@@ -82,6 +82,8 @@ ActiveRecord::Schema.define(version: 2019_07_14_235744) do
     t.integer "check_duration"
     t.integer "scope_id", null: false
     t.string "scope_type", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.index ["scope_id", "scope_type"], name: "index_datadog_monitor_queries_on_scope_id_and_scope_type", length: { scope_type: 100 }
   end
 
