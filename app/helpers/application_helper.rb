@@ -135,7 +135,8 @@ module ApplicationHelper
   end
 
   def link_to_delete(
-    path, text: 'Delete', question: nil, type_to_delete: false, remove_container: false, disabled: false, **options
+    path, text: 'Delete', question: nil, type_to_delete: false, remove_container: false, disabled: false,
+    redirect_back: false, **options
   )
     if disabled
       content_tag :span, text, title: disabled, class: 'mouseover'
@@ -163,8 +164,17 @@ module ApplicationHelper
         options[:data][:remote] = true
         options[:class] = "remove_container"
       end
+      if redirect_back && location = params[:redirect_to].presence
+        path = add_to_url(url_for(path), {redirect_to: location}.to_query)
+      end
       link_to text, path, options
     end
+  end
+
+  # @param [String] url
+  # @param [String] add
+  def add_to_url(url, add)
+    url.include?("?") ? "#{url}&#{add}" : "#{url}?#{add}"
   end
 
   # Flash type -> Bootstrap alert class
