@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_07_14_235744) do
+ActiveRecord::Schema.define(version: 2019_08_08_235009) do
 
   create_table "audits" do |t|
     t.integer "auditable_id", null: false
@@ -575,6 +575,7 @@ ActiveRecord::Schema.define(version: 2019_07_14_235744) do
     t.string "github_pull_request_comment"
     t.boolean "kubernetes_sample_logs_on_success", default: false, null: false
     t.index ["project_id", "permalink"], name: "index_stages_on_project_id_and_permalink", unique: true, length: { permalink: 191 }
+    t.integer "soak_time"
     t.index ["template_stage_id"], name: "index_stages_on_template_stage_id"
   end
 

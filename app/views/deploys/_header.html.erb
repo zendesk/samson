@@ -5,7 +5,16 @@
     <% if deployer_for_project? %>
       <%= redeploy_button %>
 
-      <% if @deploy.succeeded? && next_stage = @deploy.stage.next_stage %>
+      <% if @deploy.succeeded? && !@deploy.soak_time_complete? %>
+        <%= link_to "#", class: "btn btn-warning" do %>
+          Soak time remaining:
+          <span id="soak_time_remaining" data-soak-time-remaining="<%= @deploy.soak_time_remaining %>">
+            <%= Time.at(@deploy.soak_time_remaining).utc.strftime("%H:%M:%S") %>
+          </span>
+        <% end %>
+      <% end %>
+
+      <% if @deploy.succeeded? && @deploy.soak_time_complete? && next_stage = @deploy.stage.next_stage  %>
         <% unless Lock.locked_for?(next_stage, current_user) %>
           <%= link_to "Deploy #{@deploy.short_reference} to #{next_stage.name}",
               new_project_stage_deploy_path(@project, next_stage, reference: @deploy.short_reference),

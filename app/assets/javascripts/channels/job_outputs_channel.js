@@ -59,6 +59,7 @@ function startStream(userId, projectParam, jobId){
   function updateStatusAndTitle(data) {
     $('#header').load("/projects/" + projectParam + "/jobs/" + jobId + "?header=true", function () {
       timeAgoFormat(); // header includes new dates ... show them nicely instantly
+      $(this).trigger('statusAndTitleUpdated');
     });
     window.document.title = data.title;
   }

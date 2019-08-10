@@ -109,7 +109,44 @@ $(function () {
   });
 
   $('[data-toggle="tooltip"]').tooltip();
+
+  function detectIfSoakTimeRequired(){
+    var $soakTimeRemaining = $('#soak_time_remaining');
+    if($soakTimeRemaining.length){
+      $('#header').off('DOMSubtreeModified', '#soak_time_remaining');
+      startCountdownTimer($soakTimeRemaining);
+    }
+  }
+
+  function startCountdownTimer($soakTimeRemaining){
+    var countDownTimer = setInterval(function() {
+        var timeInSeconds = parseInt($soakTimeRemaining.attr('data-soak-time-remaining'));
+        if (timeInSeconds > 0) {
+          var newTimeRemaining = timeInSeconds - 1;
+          $soakTimeRemaining.attr('data-soak-time-remaining', newTimeRemaining)
+          $soakTimeRemaining.html(secondsToHHMMSS(newTimeRemaining));
+        } else {
+          clearInterval(countDownTimer);
+          location.reload(); // HACK: it should just reload the header
+        }
+      }, 1000);
+  }
+
+  // On page load see if soak time countdown is required
+  detectIfSoakTimeRequired();
+
+  // When the header dynamically changes, see if soak time countdown is required
+  $('#header').on('statusAndTitleUpdated', function(){
+    detectIfSoakTimeRequired();
+  });
+
 });
+
+function secondsToHHMMSS(seconds) {
+  var date = new Date(null);
+  date.setSeconds(seconds); // specify value for SECONDS here
+  return date.toISOString().substr(11, 8);
+}
 
 function toggleOutputToolbar() {
   $('.only-active, .only-finished').toggle();

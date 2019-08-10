@@ -690,6 +690,46 @@ describe Deploy do
     end
   end
 
+  describe "Soak time" do
+    it "will not calculate a soak time if deploy wasn't successful" do
+      deploy_errored = create_deploy!(job: create_job!(status: "errored"))
+      deploy_errored.soak_time_remaining.must_be_nil
+    end
+
+    it "not completed while deploy is running" do
+      deploy_running = create_deploy!(job: create_job!(status: "running"))
+      deploy_running.soak_time_complete?.must_equal false
+    end
+
+    it "completed if not defined for a successful deploy" do
+      deploy.soak_time_complete?.must_equal true
+    end
+
+    it "checks if the soak time for a deploy has completed" do
+      deploy.stage.soak_time = 300
+      deploy.updated_at = Time.now() - 1800.seconds
+      deploy.soak_time_complete?.must_equal true
+    end
+
+    it "checks if the soak time for a deploy has not completed" do
+      deploy.stage.soak_time = 300
+      deploy.updated_at = Time.now()
+      deploy.soak_time_complete?.must_equal false
+    end
+
+    it "calculates the soak time remaining" do
+      deploy.stage.soak_time = 30.minutes / 1.second
+
+      start_time = Time.now
+      future_time = start_time + 5.minutes
+
+      deploy.updated_at = start_time
+
+      Time.stubs(:now).returns(future_time)
+      deploy.soak_time_remaining.must_equal 1500
+    end
+  end
+
   def create_deploy!(attrs = {})
     default_attrs = {
       reference: "baz",

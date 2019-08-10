@@ -122,6 +122,7 @@ class StagesController < ResourceController
       :allow_redeploy_previous_when_failed,
       :static_emails_on_automated_deploy_failure,
       :full_checkout,
+      :soak_time,
       {
         deploy_group_ids: [],
         command_ids: []

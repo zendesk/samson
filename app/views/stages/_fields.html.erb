@@ -6,6 +6,7 @@
         help: "Email addresses to notify of finished deploys, separated by <code>;</code>".html_safe
   %>
   <%= form.input :default_reference, help: "Default reference to deploy e.g. 'master'" %>
+  <%= form.input :soak_time, help: "Time to wait (in seconds) after deploy before moving to next stage" %>
 
   <% if DeployGroup.enabled? %>
     <%= render 'deploy_groups/deploy_group_select', form: form %>

@@ -142,6 +142,18 @@ class Deploy < ActiveRecord::Base
     updated_at - start_time
   end
 
+  def soak_time_remaining # in seconds
+    return unless stage.soak_time && succeeded?
+    soak_completion_time = updated_at + stage.soak_time
+    (soak_completion_time - Time.now()).round()
+  end
+
+  def soak_time_complete?
+    return false unless finished?
+    return true unless stage.soak_time
+    soak_time_remaining <= 0
+  end
+
   def self.start_deploys_waiting_for_restart!
     pending.reorder(nil).reject(&:waiting_for_buddy?).each do |deploy|
       deploy.touch # HACK: refresh is immediate with update
