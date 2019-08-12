@@ -429,6 +429,7 @@ ActiveRecord::Schema.define(version: 2019_08_08_225957) do
     t.integer "kubernetes_rollout_timeout"
     t.integer "kubernetes_namespace_id"
     t.boolean "config_service", default: false, null: false
+    t.string "jira_issue_prefix"
     t.index ["build_command_id"], name: "index_projects_on_build_command_id"
     t.index ["kubernetes_namespace_id"], name: "index_projects_on_kubernetes_namespace_id"
     t.index ["permalink"], name: "index_projects_on_permalink", unique: true, length: 191
@@ -576,6 +577,7 @@ ActiveRecord::Schema.define(version: 2019_08_08_225957) do
     t.boolean "allow_redeploy_previous_when_failed", default: false, null: false
     t.string "github_pull_request_comment"
     t.boolean "kubernetes_sample_logs_on_success", default: false, null: false
+    t.string "jira_transition_id"
     t.index ["project_id", "permalink"], name: "index_stages_on_project_id_and_permalink", unique: true, length: { permalink: 191 }
     t.index ["template_stage_id"], name: "index_stages_on_template_stage_id"
   end

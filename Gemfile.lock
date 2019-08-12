@@ -90,6 +90,12 @@ PATH
       jenkins_api_client (~> 1.3)
 
 PATH
+  remote: plugins/jira
+  specs:
+    samson_jira (0.0.0)
+      faraday
+
+PATH
   remote: plugins/kubernetes
   specs:
     samson_kubernetes (0.0.1)
@@ -655,6 +661,7 @@ DEPENDENCIES
   samson_gitlab!
   samson_jenkins!
   samson_jenkins_status_checker!
+  samson_jira!
   samson_kubernetes!
   samson_ledger!
   samson_new_relic!

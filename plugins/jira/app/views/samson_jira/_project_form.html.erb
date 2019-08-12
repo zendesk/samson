@@ -1,0 +1,9 @@
+<% if ENV["JIRA_USER"] %>
+  <fieldset>
+    <legend>
+      JIRA
+    </legend>
+
+    <%= form.input :jira_issue_prefix, label: "JIRA Issue Prefix", help: "Issue prefix to transition on deploy, (i.e. FOO-123 -> FOO)" %>
+  </fieldset>
+<% end %>
