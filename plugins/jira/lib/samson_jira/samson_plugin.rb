@@ -6,9 +6,13 @@ module SamsonJira
   class Engine < Rails::Engine
   end
 
+  def self.jira_base_url
+    ENV['JIRA_BASE_URL'].to_s[/(.*)\/[a-z]/, 1]
+  end
+
   def self.transition_jira_tickets(deploy, output)
     return unless deploy.succeeded?
-    return unless url = ENV['JIRA_BASE_URL'].to_s[/(.*)\/[a-z]/, 1]
+    return unless url = jira_base_url
     return unless user = ENV['JIRA_USER']
     return unless token = ENV['JIRA_TOKEN']
     return unless prefix = deploy.project.jira_issue_prefix.presence
