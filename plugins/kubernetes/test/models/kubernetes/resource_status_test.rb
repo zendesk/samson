@@ -67,25 +67,6 @@ describe Kubernetes::ResourceStatus do
       expect_event_request { details.must_equal "Error event" }
     end
 
-    describe "horizontal-pod-autoscaler" do
-      before { resource[:kind] = "HorizontalPodAutoscaler" }
-
-      it "does not fail for normal events" do
-        events.clear
-        expect_event_request { details.must_equal "Live" }
-      end
-
-      it "does not fail for ignored events" do
-        events[0].merge!(type: "Warning", reason: "FailedGetMetrics")
-        expect_event_request { details.must_equal "Live" }
-      end
-
-      it "fails for events indicating failure" do
-        events[0].merge!(type: "Warning", reason: "SomeOtherFailure")
-        expect_event_request { details.must_equal "Error event\n #{events[0]}" }
-      end
-    end
-
     describe "non-pods" do
       before { resource[:kind] = "Service" }
 
@@ -97,6 +78,12 @@ describe Kubernetes::ResourceStatus do
       it "knows failed non-pods" do
         events[0].merge!(type: "Warning", reason: "Boom")
         expect_event_request { details.must_equal "Error event" }
+      end
+
+      it "ignores known bad events" do
+        resource[:kind] = "HorizontalPodAutoscaler"
+        events[0].merge!(type: "Warning", reason: "FailedGetMetrics")
+        expect_event_request { details.must_equal "Live" }
       end
     end
   end
