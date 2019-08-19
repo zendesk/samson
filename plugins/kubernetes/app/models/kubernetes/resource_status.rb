@@ -3,6 +3,19 @@
 # TODO: rename live to ready to be more consistent with deploy_executor
 module Kubernetes
   class ResourceStatus
+    IGNORED_EVENT_REASONS = {
+      HorizontalPodAutoscaler: [
+        "FailedGetMetrics",
+        "FailedRescale",
+        "FailedGetResourceMetric",
+        "FailedGetExternalMetric",
+        "FailedComputeMetricsReplicas"
+      ],
+      PodDisruptionBudget: [
+        "CalculateExpectedPodCountFailed"
+      ]
+    }.freeze
+
     attr_reader :resource, :role, :deploy_group, :kind, :details, :live, :finished, :pod
     attr_writer :details
 
@@ -40,20 +53,16 @@ module Kubernetes
         else
           @details = "Waiting (#{@pod.phase}, #{@pod.reason})"
         end
-      elsif kind == "HorizontalPodAutoscaler"
-        hpa = Kubernetes::Api::HorizontalPodAutoscaler.new
-        failures = hpa.events_indicating_failure(events(type: "Warning"))
-        if failures.any?
-          @details = "Error event\n #{failures.join("\n")}"
-        else
-          @details = "Live"
-          @live = true
-        end
-        @finished = true
       else
-        # NOTE: non-pods are never "Missing" because we create them manually
-        @finished = true
-        if events(type: "Warning").any?
+        @finished = true # non-pods are never "Missing" because samson creates them directly
+
+        # ignore known events that randomly happen
+        failures = events(type: "Warning")
+        if ignored = IGNORED_EVENT_REASONS[kind.to_sym]
+          failures.reject! { |e| ignored.include? e[:reason] }
+        end
+
+        if failures.any?
           @details = "Error event"
         else
           @details = "Live"
