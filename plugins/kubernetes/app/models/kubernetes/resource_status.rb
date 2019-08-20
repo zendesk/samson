@@ -12,7 +12,8 @@ module Kubernetes
         "FailedComputeMetricsReplicas"
       ],
       PodDisruptionBudget: [
-        "CalculateExpectedPodCountFailed"
+        "CalculateExpectedPodCountFailed",
+        "NoControllers"
       ]
     }.freeze
 
