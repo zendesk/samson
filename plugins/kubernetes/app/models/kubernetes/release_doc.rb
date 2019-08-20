@@ -114,9 +114,16 @@ module Kubernetes
         },
         spec: {
           minAvailable: target,
-          selector: {matchLabels: deployment.dig_fetch(:spec, :selector, :matchLabels).dup}
+          selector: {
+            matchLabels: deployment.
+              dig_fetch(:spec, :selector, :matchLabels).
+              merge(samsonAutoPDB: 'true')
+          }
         }
       }
+
+      deployment.dig_fetch(:metadata, :labels)[:samsonAutoPDB] = 'true'
+
       if deployment[:metadata].key? :namespace
         budget[:metadata][:namespace] = deployment.dig(:metadata, :namespace)
       end

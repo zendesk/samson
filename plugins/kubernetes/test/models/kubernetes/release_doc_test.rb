@@ -205,6 +205,12 @@ describe Kubernetes::ReleaseDoc do
         create!
         create!.resource_template[2][:spec][:minAvailable].must_equal 1
       end
+
+      it "adds a unique label to metadata.labels do it only targets deployments, not pods" do
+        result = create!
+        result.resource_template[0][:metadata][:labels][:samsonAutoPDB].must_equal 'true'
+        result.resource_template[2][:spec][:selector][:matchLabels][:samsonAutoPDB].must_equal 'true'
+      end
     end
   end
 
