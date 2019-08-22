@@ -216,7 +216,8 @@ ActiveSupport::TestCase.class_eval do
   end
 
   def self.only_callbacks_for_plugin(callback)
-    plugin_name = caller(1..1).first[/\/plugins\/([^\/]+)/, 1] || raise("not called from a plugin")
+    line = caller(1..1).first
+    plugin_name = line[/\/plugins\/([^\/]+)/, 1] || raise("not called from a plugin not #{line}")
     around { |t| Samson::Hooks.only_callbacks_for_plugin(plugin_name, callback, &t) }
   end
 
