@@ -43,6 +43,7 @@ Samson::Hooks.callback(:stage_permitted_params) do
   [
     :kubernetes,
     :kubernetes_sample_logs_on_success,
+    :kubernetes_hide_error_logs,
     {kubernetes_stage_roles_attributes: [:kubernetes_role_id, :ignored, :_destroy, :id]}
   ]
 end
