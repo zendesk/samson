@@ -245,7 +245,7 @@ describe Kubernetes::DeployExecutor do
         e = assert_raises Samson::Hooks::UserError do
           refute execute
         end
-        e.message.must_equal "metadata.labels.role must be set and unique"
+        e.message.must_equal "metadata.labels.role must be set and different in each role"
       end
 
       it "fails before building when secrets are not configured in the backend" do
@@ -704,6 +704,12 @@ describe Kubernetes::DeployExecutor do
         out.must_match /logs:\s+LOG-1/
         out.must_include "events:\n  Warning FailedScheduling"
         out.must_include "Pod 100 resque-worker Service some-project events:\n  Warning FailedScheduling:"
+      end
+
+      it "hides logs when requested" do
+        stage.update_column :kubernetes_hide_error_logs, true
+        refute execute
+        out.wont_include "logs"
       end
 
       it "displays events without message" do

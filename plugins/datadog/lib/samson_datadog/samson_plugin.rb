@@ -4,9 +4,10 @@ module SamsonDatadog
   end
 
   class << self
-    def send_notification(deploy, **kwargs)
-      if deploy.stage.datadog_tags.present?
-        DatadogNotification.new(deploy).deliver(**kwargs)
+    def send_event(deploy, tags:, **kwargs)
+      if user_tags = deploy.stage.datadog_tags_as_array.presence
+        tags = user_tags + tags
+        DatadogDeployEvent.deliver(deploy, tags: tags, **kwargs)
       end
     end
 
@@ -71,7 +72,7 @@ Samson::Hooks.callback(:stage_permitted_params) { [:datadog_tags, monitor_attrib
 Samson::Hooks.callback(:project_permitted_params) { [monitor_attributes] }
 
 Samson::Hooks.callback :before_deploy do |deploy, _|
-  SamsonDatadog.send_notification(deploy, additional_tags: ['started'], now: true)
+  SamsonDatadog.send_event(deploy, tags: ['started'], time: Time.now)
   SamsonDatadog.store_validation_monitors(deploy)
 end
 
@@ -80,5 +81,5 @@ Samson::Hooks.callback :validate_deploy do |deploy, job_execution|
 end
 
 Samson::Hooks.callback :after_deploy do |deploy, _job_execution|
-  SamsonDatadog.send_notification(deploy, additional_tags: ['finished'])
+  SamsonDatadog.send_event(deploy, tags: ['finished'], time: deploy.updated_at)
 end

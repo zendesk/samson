@@ -677,7 +677,8 @@ describe Kubernetes::RoleValidator do
     end
 
     it "is invalid with a duplicate role" do
-      validate_error([[role.first], [role.first]]).must_equal "metadata.labels.role must be set and unique"
+      validate_error([[role.first], [role.first]]).
+        must_equal "metadata.labels.role must be set and different in each role"
     end
 
     it "is invalid with different projects" do
