@@ -117,7 +117,9 @@ describe EnvironmentVariable do
         stub(body: stub(read: response))
       end
 
-      with_env CONFIG_SERVICE_REGION: "us-east-1", CONFIG_SERVICE_BUCKET: "a-bucket"
+      with_env CONFIG_SERVICE_REGION: "us-east-1",
+        CONFIG_SERVICE_BUCKET: "a-bucket",
+        CONFIG_SERVICE_DR_BUCKET: "dr-bucket"
       let(:s3) { stub("S3") }
 
       before do
@@ -144,8 +146,19 @@ describe EnvironmentVariable do
         )
       end
 
+      it "tries reading from a DR bucket if available" do
+        response = {"FOO" => "one"}.to_yaml
+        s3.expects(:get_object).with(
+          bucket: 'a-bucket', key: 'samson/foo/pod100.yml'
+        ).raises(Aws::S3::Errors::ServiceError.new({}, "DOWN"))
+        s3.expects(:get_object).with(
+          bucket: 'dr-bucket', key: 'samson/foo/pod100.yml'
+        ).returns(fake_response(response))
+        EnvironmentVariable.env(deploy, deploy_group).must_equal "FOO" => "one"
+      end
+
       it "shows error when api times out after multiple retries" do
-        s3.expects(:get_object).times(4).raises(Aws::S3::Errors::ServiceError.new({}, "DOWN"))
+        s3.expects(:get_object).times(8).raises(Aws::S3::Errors::ServiceError.new({}, "DOWN"))
         e = assert_raises(Samson::Hooks::UserError) { EnvironmentVariable.env(deploy, deploy_group) }
         e.message.must_equal "Error reading env vars from config service: DOWN"
       end
