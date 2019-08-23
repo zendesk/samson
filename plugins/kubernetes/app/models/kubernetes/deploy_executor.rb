@@ -163,7 +163,7 @@ module Kubernetes
 
       sample_pod_statuses.each do |status|
         print_events(status)
-        print_logs(status, log_end_time)
+        print_logs(status, log_end_time) unless @job.deploy.stage.kubernetes_hide_error_logs
       end
     rescue
       info = Samson::ErrorNotifier.notify($!, sync: true)

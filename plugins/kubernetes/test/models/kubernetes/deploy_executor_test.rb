@@ -706,6 +706,12 @@ describe Kubernetes::DeployExecutor do
         out.must_include "Pod 100 resque-worker Service some-project events:\n  Warning FailedScheduling:"
       end
 
+      it "hides logs when requested" do
+        stage.update_column :kubernetes_hide_error_logs, true
+        refute execute
+        out.wont_include "logs"
+      end
+
       it "displays events without message" do
         stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/events}).
           to_return(
