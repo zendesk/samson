@@ -4,6 +4,11 @@
 module Kubernetes
   class ResourceStatus
     IGNORED_EVENT_REASONS = {
+      Pod: [
+        # These errors may happens when Deployment which uses PVC is updated. Ignore them.
+        "FailedAttachVolume",
+        "FailedMount"
+      ],
       HorizontalPodAutoscaler: [
         "FailedGetMetrics",
         "FailedRescale",
@@ -46,24 +51,17 @@ module Kubernetes
           @details = "Live"
           @live = true
           @finished = @pod.completed?
-        elsif (@pod.events = events(type: "Warning")) && @pod.waiting_for_resources?
+        elsif (@pod.events = failures(kind)) && @pod.waiting_for_resources?
           @details = "Waiting for resources (#{@pod.phase}, #{@pod.reason})"
         elsif @pod.events_indicate_failure?
           @details = "Error event"
-          @finished = true
         else
           @details = "Waiting (#{@pod.phase}, #{@pod.reason})"
         end
       else
         @finished = true # non-pods are never "Missing" because samson creates them directly
 
-        # ignore known events that randomly happen
-        failures = events(type: "Warning")
-        if ignored = IGNORED_EVENT_REASONS[kind.to_sym]
-          failures.reject! { |e| ignored.include? e[:reason] }
-        end
-
-        if failures.any?
+        if failures(kind).any?
           @details = "Error event"
         else
           @details = "Live"
@@ -99,6 +97,17 @@ module Kubernetes
       # similar to kubernetes/resource.rb error handling
       error_location = "#{name} #{namespace} #{@deploy_group.name}"
       raise Samson::Hooks::UserError, "Kubernetes error #{error_location}: #{e.message}"
+    end
+
+    private
+
+    # ignore known events that randomly happen
+    def failures(kind)
+      failures = events(type: "Warning")
+      if ignored = IGNORED_EVENT_REASONS[kind.to_sym]
+        failures.reject! { |e| ignored.include? e[:reason] }
+      end
+      failures
     end
   end
 end
