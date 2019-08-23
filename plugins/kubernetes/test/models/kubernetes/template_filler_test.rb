@@ -1016,9 +1016,8 @@ describe Kubernetes::TemplateFiller do
       it "fails nicely with invalid json" do
         environment.update_column(:value, 'foo')
         e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
-        e.message.must_equal(
-          "Unable to set path spec.foo for Deployment in role app-server: " \
-          "JSON::ParserError 765: unexpected token at 'foo'"
+        e.message.must_include(
+          "Unable to set path spec.foo for Deployment in role app-server: JSON::ParserError"
         )
       end
 
