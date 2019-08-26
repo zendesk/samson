@@ -896,4 +896,54 @@ describe Kubernetes::Resource do
       end
     end
   end
+
+  describe Kubernetes::Resource::PatchReplace do
+    let(:kind) { 'PersistentVolumeClaim' }
+    let(:api_version) { 'v1' }
+
+    describe "#patch_replace?" do
+      before { resource.stubs(:exist?).returns(true) }
+
+      it "is a replace when replacing existing" do
+        assert resource.patch_replace?
+      end
+
+      it "is not a replace when deleting" do
+        delete_resource!
+        refute resource.patch_replace?
+      end
+
+      it "is not a replace when creating" do
+        resource.stubs(:exist?).returns(false)
+        refute resource.patch_replace?
+      end
+    end
+
+    describe "#deploy" do
+      it "doesn't patch when creating" do
+        assert_request(:get, url, to_return: [{status: 404}, {body: "{}"}]) do
+          assert_request(:post, base_url, to_return: {body: "{}"}) do
+            resource.deploy
+          end
+
+          # not auto-cached
+          assert resource.exist?
+          assert resource.exist?
+        end
+      end
+
+      it "patches when updating" do
+        resource.expects(:patch_replace)
+        assert_request(:get, url, to_return: [{body: '{"spec":{"requests":{}}}'}]) do
+          resource.deploy
+        end
+      end
+    end
+
+    describe "#patch_paths" do
+      it "returns list of supported paths" do
+        assert resource.send(:patch_paths).any?
+      end
+    end
+  end
 end
