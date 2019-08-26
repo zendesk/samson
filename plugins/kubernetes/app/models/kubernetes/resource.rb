@@ -8,6 +8,30 @@ module Kubernetes
   # run an example file through `kubectl create/replace/delete -f test.yml -v8`
   # and see what it does internally ... simple create/update/delete requests or special magic ?
   module Resource
+    module PatchReplace
+      def patch_replace?
+        !@delete_resource && exist?
+      end
+
+      # Some kinds can be updated only using PATCH requests.
+      def deploy
+        return super unless patch_replace?
+        patch_replace
+      end
+
+      private
+
+      def patch_replace
+        update = resource.deep_dup
+        patch_paths.each do |keys|
+          update.dig_set keys, @template.dig_fetch(*keys)
+        end
+        with_patch_header do
+          request :patch, name, [{op: "replace", path: "/spec", value: update.fetch(:spec)}], namespace
+        end
+      end
+    end
+
     class Base
       TICK = 2 # seconds
       UNSETTABLE_METADATA = [:selfLink, :uid, :resourceVersion, :generation, :creationTimestamp].freeze
@@ -349,9 +373,21 @@ module Kubernetes
       end
     end
 
+    class PersistentVolumeClaim < Base
+      include PatchReplace
+
+      private
+
+      def patch_paths
+        [[:spec, :requests]]
+      end
+    end
+
     class StatefulSet < Base
+      include PatchReplace
+
       def patch_replace?
-        return false if @delete_resource || !exist?
+        return false unless super
 
         # TODO: default is RollingUpdate, so this is wrong
         deprecated = @template.dig(:spec, :updateStrategy) # supporting pre 1.9 clusters
@@ -361,19 +397,11 @@ module Kubernetes
 
       # StatefulSet cannot be updated normally when OnDelete is used or kubernetes <1.7
       # So we patch and then delete all pods to let them re-create
+      # TODO: copy-paste from PatchReplace module. Ideally we need to wait for pods to restart when we do an update.
       def deploy
         return super unless patch_replace?
 
-        # update the template via special magic
-        # https://kubernetes.io/docs/tutorials/stateful-application/basic-stateful-set/#on-delete
-        # fails when trying to update anything outside of containers or replicas
-        update = resource.deep_dup
-        [[:spec, :replicas], [:spec, :template, :spec, :containers]].each do |keys|
-          update.dig_set keys, @template.dig_fetch(*keys)
-        end
-        with_patch_header do
-          request :patch, name, [{op: "replace", path: "/spec", value: update.fetch(:spec)}], namespace
-        end
+        patch_replace
 
         # pods will restart with updated settings
         # need to wait here or deploy_executor.rb will instantly finish since everything is running
@@ -385,6 +413,13 @@ module Kubernetes
       end
 
       private
+
+      def patch_paths
+        # update the template via special magic
+        # https://kubernetes.io/docs/tutorials/stateful-application/basic-stateful-set/#on-delete
+        # fails when trying to update anything outside of containers or replicas
+        [[:spec, :replicas], [:spec, :template, :spec, :containers]]
+      end
 
       def wait_for_pods_to_restart
         old_pods = delete_pods
