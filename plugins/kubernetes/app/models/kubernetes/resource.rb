@@ -379,7 +379,7 @@ module Kubernetes
       private
 
       def patch_paths
-        [[:spec, :requests]]
+        [[:spec, :resources, :requests]]
       end
     end
 
