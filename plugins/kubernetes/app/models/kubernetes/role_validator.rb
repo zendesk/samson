@@ -60,6 +60,7 @@ module Kubernetes
       validate_job_restart_policy
       validate_pod_disruption_budget
       validate_numeric_cpu_limits
+      validate_security_context
       validate_project_and_role_consistent
       validate_team_labels
       validate_not_matching_team
@@ -184,6 +185,13 @@ module Kubernetes
           next if [NilClass, String].include?(container.dig(*path).class)
           @errors << "Numeric cpu resources are not supported"
         end
+      end
+    end
+
+    def validate_security_context
+      templates.each do |template|
+        next unless template.dig(:spec, :securityContext, :readOnlyRootFilesystem)
+        @errors << "securityContext.readOnlyRootFilesystem can only be set at the container level"
       end
     end
 
