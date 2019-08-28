@@ -147,11 +147,11 @@ module ApplicationHelper
         elsif path.is_a?(ActiveRecord::Base)
           resource = path
           name, path = link_parts_for_resource(resource)
-          "Delete #{resource.class.name.split("::").last} #{name} ?"
+          "Delete #{resource.class.name.split("::").last} #{strip_tags(name).strip}?"
         elsif (resource = Array(path).last) && resource.is_a?(ActiveRecord::Base)
-          "Delete this #{resource.class.name.split("::").last} ?"
+          "Delete this #{resource.class.name.split("::").last}?"
         else
-          "Really delete ?"
+          "Really delete?"
         end
       options[:data] = {method: :delete}
       if type_to_delete

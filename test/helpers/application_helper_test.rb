@@ -261,18 +261,18 @@ describe ApplicationHelper do
     end
 
     it "shows common message for paths" do
-      link_to_delete("/foo").must_include "Really delete ?"
+      link_to_delete("/foo").must_include "Really delete?"
     end
 
     it "shows detailed message for resource given as array" do
       link = link_to_delete([projects(:test), stages(:test_staging)])
-      link.must_include "Delete this Stage ?"
+      link.must_include "Delete this Stage?"
       link.must_include "/projects/foo/stages/staging"
     end
 
     it "can link directly to a resource" do
       link = link_to_delete(stages(:test_staging))
-      link.must_include "Delete Stage Staging ?"
+      link.must_include "Delete Stage Staging?"
       link.must_include "/projects/foo/stages/staging"
     end
 
@@ -297,8 +297,14 @@ describe ApplicationHelper do
 
     it "can ask to type" do
       link_to_delete("/foo", type_to_delete: true).must_equal(
-        "<a data-method=\"delete\" data-type-to-delete=\"Really delete ?\" href=\"/foo\">Delete</a>"
+        "<a data-method=\"delete\" data-type-to-delete=\"Really delete?\" href=\"/foo\">Delete</a>"
       )
+    end
+
+    it "does not show html in confirm windows" do
+      stage = stages(:test_staging)
+      Lock.create!(resource: stage, user: User.first)
+      link_to_delete(stage, type_to_delete: true).must_include "Delete Stage Staging?"
     end
 
     describe "redirect_back" do
@@ -306,21 +312,21 @@ describe ApplicationHelper do
 
       it "can redirect back with url" do
         link_to_delete("/foo", redirect_back: true).must_equal(
-          "<a data-method=\"delete\" data-confirm=\"Really delete ?\" href=\"/foo?redirect_to=%2Ffoo\">Delete</a>"
+          "<a data-method=\"delete\" data-confirm=\"Really delete?\" href=\"/foo?redirect_to=%2Ffoo\">Delete</a>"
         )
       end
 
       it "can redirect back with AR" do
         params[:redirect_to] = "/foo"
         link_to_delete(User.first, redirect_back: true).must_equal(
-          "<a data-method=\"delete\" data-confirm=\"Delete User Viewer ?\" href=\"/users/56405077?redirect_to=%2Ffoo\">Delete</a>"
+          "<a data-method=\"delete\" data-confirm=\"Delete User Viewer?\" href=\"/users/56405077?redirect_to=%2Ffoo\">Delete</a>"
         )
       end
 
       it "ignores redirect without param" do
         params.delete :redirect_to
         link_to_delete("/foo", redirect_back: true).must_equal(
-          "<a data-method=\"delete\" data-confirm=\"Really delete ?\" href=\"/foo\">Delete</a>"
+          "<a data-method=\"delete\" data-confirm=\"Really delete?\" href=\"/foo\">Delete</a>"
         )
       end
     end
