@@ -9,7 +9,7 @@ describe Kubernetes::RoleValidator do
   end
   let(:role) { deployment_role }
 
-  describe "#validate" do
+  describe '.verify' do
     let(:spec) { role[0][:spec][:template][:spec] }
     let(:job_role) do
       [YAML.safe_load(read_kubernetes_sample_file('kubernetes_job.yml')).deep_symbolize_keys]
@@ -88,13 +88,6 @@ describe Kubernetes::RoleValidator do
       role[1][:spec] = {containers: []}
       errors.must_include(
         "Only use a maximum of 1 template with containers, found: 2"
-      )
-    end
-
-    it "does not allow ineffective securityContext" do
-      role[0][:spec][:template][:spec][:securityContext] = {readOnlyRootFilesystem: true}
-      errors.must_include(
-        "securityContext.readOnlyRootFilesystem can only be set at the container level"
       )
     end
 
