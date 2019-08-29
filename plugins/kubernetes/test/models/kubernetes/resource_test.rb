@@ -900,6 +900,20 @@ describe Kubernetes::Resource do
   describe Kubernetes::Resource::PatchReplace do
     let(:kind) { 'PersistentVolumeClaim' }
     let(:api_version) { 'v1' }
+    let(:template) do
+      {
+        kind: kind,
+        apiVersion: api_version,
+        metadata: {name: 'some-project', namespace: 'pod1'},
+        spec: {
+          resources: {
+            requests: {
+
+            }
+          }
+        }
+      }
+    end
 
     describe "#patch_replace?" do
       before { resource.stubs(:exist?).returns(true) }
@@ -934,7 +948,7 @@ describe Kubernetes::Resource do
 
       it "patches when updating" do
         resource.expects(:patch_replace)
-        assert_request(:get, url, to_return: [{body: '{"spec":{"requests":{}}}'}]) do
+        assert_request(:get, url, to_return: [{body: '{"spec":{"resources:": {"requests":{}}}}'}]) do
           resource.deploy
         end
       end
@@ -943,6 +957,18 @@ describe Kubernetes::Resource do
     describe "#patch_paths" do
       it "returns list of supported paths" do
         assert resource.send(:patch_paths).any?
+      end
+    end
+
+    describe "#patch_replace" do
+      before { resource.stubs(:exist?).returns(true) }
+
+      it "sends patch request" do
+        assert_request(:get, url, to_return: {body: '{"spec":{"resources": {"requests":{}}}}'}) do
+          assert_request(:patch, url, to_return: {body: "{}"}) do
+            assert resource.send(:patch_replace)
+          end
+        end
       end
     end
   end
