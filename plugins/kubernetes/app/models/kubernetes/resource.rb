@@ -30,6 +30,15 @@ module Kubernetes
           request :patch, name, [{op: "replace", path: "/spec", value: update.fetch(:spec)}], namespace
         end
       end
+
+      # https://github.com/abonas/kubeclient/issues/268
+      def with_patch_header
+        old = client.headers['Content-Type']
+        client.headers['Content-Type'] = 'application/json-patch+json'
+        yield
+      ensure
+        client.headers['Content-Type'] = old
+      end
     end
 
     class Base
@@ -427,15 +436,6 @@ module Kubernetes
         backoff_wait(Array.new(60) { 2 }, "restart pods") do
           return if pods.none? { |pod| old_created.include?(pod.dig_fetch(:metadata, :creationTimestamp)) }
         end
-      end
-
-      # https://github.com/abonas/kubeclient/issues/268
-      def with_patch_header
-        old = client.headers['Content-Type']
-        client.headers['Content-Type'] = 'application/json-patch+json'
-        yield
-      ensure
-        client.headers['Content-Type'] = old
       end
     end
 
