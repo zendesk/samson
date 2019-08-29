@@ -233,7 +233,7 @@ module Kubernetes
     def validate_project_and_role_consistent
       labels = @elements.flat_map do |resource|
         kind = resource[:kind]
-
+        name = object_name(resource)
         label_paths = metadata_paths(resource).map { |p| p + [:labels] } +
           if resource.dig(:spec, :selector, :matchLabels) || resource[:kind] == "Deployment"
             [[:spec, :selector, :matchLabels]]
@@ -250,7 +250,7 @@ module Kubernetes
           wanted = [:project, :role]
           required = labels.slice(*wanted)
           if required.size != 2
-            @errors << "Missing #{wanted.join(' or ')} for #{kind} #{path.join('.')}"
+            @errors << "Missing #{wanted.join(' or ')} for #{kind} #{name}: #{path.join('.')}"
           end
 
           # make sure we get sane values for labels or deploy will blow up
@@ -272,6 +272,15 @@ module Kubernetes
 
       return if labels.uniq.size <= 1
       @errors << "Project and role labels must be consistent across resources"
+    end
+
+    def object_name(resource)
+      meta = resource[:metadata]
+      return "" unless meta
+      name = meta[:name]
+      namespace = meta[:namespace]
+      return name unless namespace
+      namespace + "/" + name
     end
 
     def validate_not_matching_team
