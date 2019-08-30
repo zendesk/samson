@@ -169,6 +169,8 @@ module Kubernetes
       end
 
       def ensure_not_updating_match_labels
+        return if @delete_resource # deployments do an update when deleting
+
         # blue-green deploy is allowed to do this, see template_filler.rb + deploy_executor.rb
         return if @template.dig(:spec, :selector, :matchLabels, :blue_green)
 
