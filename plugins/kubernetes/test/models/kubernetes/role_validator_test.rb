@@ -256,6 +256,41 @@ describe Kubernetes::RoleValidator do
       errors.must_include "Needs apiVersion specified"
     end
 
+    describe "#validate_ingress_annotations_allowed" do
+      before do
+        role.first[:kind] = "Ingress"
+        role.first[:metadata][:annotations] = {
+          "nginx.ingress.kubernetes.io/whitelist-source-range": "*"
+        }
+      end
+
+      it "allows annotations when setting is not enabled" do
+        assert_nil errors
+      end
+
+      describe "when setting is enable" do
+        with_env KUBERNETES_INGRESS_NGINX_ANNOTATION_ALLOWED: "bar"
+
+        it "blocks annotations" do
+          errors.must_equal [
+            "Annotation nginx.ingress.kubernetes.io/whitelist-source-range is not allowed on Ingress" \
+            " unless foo is in KUBERNETES_INGRESS_NGINX_ANNOTATION_ALLOWED"
+          ]
+        end
+
+        it "allows other annotations" do
+          role.first[:metadata][:annotations] = {"meh/whitelist-source-range": "*"}
+          assert_nil errors
+        end
+
+        it "allows when allowed" do
+          with_env KUBERNETES_INGRESS_NGINX_ANNOTATION_ALLOWED: "bar,foo,baz" do
+            assert_nil errors
+          end
+        end
+      end
+    end
+
     describe "#validate_namespace" do
       before { project.create_kubernetes_namespace! name: "foo" }
 
