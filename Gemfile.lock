@@ -348,7 +348,7 @@ GEM
     marcel (0.3.3)
       mimemagic (~> 0.3.2)
     marco-polo (1.2.1)
-    maxitest (3.0.1)
+    maxitest (3.3.0)
       minitest (>= 5.0.0, < 5.12.0)
     metaclass (0.0.4)
     method_source (0.8.2)
