@@ -28,7 +28,7 @@ class FlowdockNotification
 
   def default_buddy_request_message
     project = @deploy.project
-    ":pray: @team #{@deploy.user.name} is requesting approval" \
+    ":ship: @team #{@deploy.user.name} is requesting approval" \
       " to deploy #{project.name} **#{@deploy.reference}** to production."\
       " [Review this deploy](#{project_deploy_url(project, @deploy)})."
   end
