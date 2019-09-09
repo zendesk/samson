@@ -88,7 +88,7 @@ describe SlackWebhookNotification do
     it "renders" do
       notification = stub_notification
       message = notification.default_buddy_request_message
-      message.must_equal ":pray: <!here> _Super Admin_ is requesting approval to deploy " \
+      message.must_equal ":ship: <!here> _Super Admin_ is requesting approval to deploy " \
         "<http://www.test-url.com/projects/foo/deploys/178003093|*staging* to Foo / Staging>."
     end
   end
