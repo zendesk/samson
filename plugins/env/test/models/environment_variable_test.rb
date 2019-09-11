@@ -119,6 +119,7 @@ describe EnvironmentVariable do
 
       with_env CONFIG_SERVICE_REGION: "us-east-1",
         CONFIG_SERVICE_BUCKET: "a-bucket",
+        CONFIG_SERVICE_DR_REGION: "ap-southeast-2",
         CONFIG_SERVICE_DR_BUCKET: "dr-bucket"
       let(:s3) { stub("S3") }
 
