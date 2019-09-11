@@ -376,7 +376,7 @@ module Kubernetes
     # Adding the Release ID to allow us to track the progress of a new release from the UI.
     def set_spec_template_metadata
       release_doc_metadata.each do |key, value|
-        pod_template.dig_fetch(:metadata, :labels)[key] ||= value.to_s
+        pod_template.dig_fetch(:metadata, :labels)[key] ||= value.to_s.parameterize.tr('_', '-')
       end
     end
 
@@ -390,9 +390,9 @@ module Kubernetes
           deploy_id: release.deploy_id,
           project_id: release.project_id,
           role_id: role.id,
-          deploy_group: deploy_group.env_value.parameterize.tr('_', '-'),
+          deploy_group: deploy_group.env_value,
           revision: release.git_sha,
-          tag: release.git_ref.parameterize.tr('_', '-')
+          tag: release.git_ref
         )
       end
     end
@@ -489,7 +489,7 @@ module Kubernetes
 
         metadata = release_doc_metadata
         [:REVISION, :TAG, :DEPLOY_ID, :DEPLOY_GROUP].each do |k|
-          env[k] = metadata.fetch(k.downcase)
+          env[k] = metadata.fetch(k.downcase).to_s
         end
 
         [:PROJECT, :ROLE].each do |k|
