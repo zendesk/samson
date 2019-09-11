@@ -101,19 +101,19 @@ class EnvironmentVariable < ActiveRecord::Base
       raise Samson::Hooks::UserError, "Error reading env vars from config service: #{e.message}"
     end
 
-    def config_service_s3_client
-      @config_service_s3_client ||= Aws::S3::Client.new(region: ENV.fetch('CONFIG_SERVICE_REGION'))
-    end
-
     def config_service_read_with_failover(key)
-      bucket = ENV.fetch "CONFIG_SERVICE_BUCKET"
-      dr_bucket = ENV.fetch "CONFIG_SERVICE_DR_BUCKET"
+      bucket = ENV.fetch 'CONFIG_SERVICE_BUCKET'
+      region = ENV.fetch 'CONFIG_SERVICE_REGION'
+      dr_bucket = ENV.fetch 'CONFIG_SERVICE_DR_BUCKET'
+      dr_region = ENV.fetch 'CONFIG_SERVICE_DR_REGION'
       Samson::Retry.with_retries(Aws::S3::Errors::ServiceError, 3) do
         begin
+          config_service_s3_client = Aws::S3::Client.new(region: region)
           config_service_s3_client.get_object(bucket: bucket, key: key).body.read
         rescue Aws::S3::Errors::NoSuchKey
           raise "key \"#{key}\" does not exist in bucket #{bucket}!"
         rescue Aws::S3::Errors::ServiceError
+          config_service_s3_client = Aws::S3::Client.new(region: dr_region)
           config_service_s3_client.get_object(bucket: dr_bucket, key: key).body.read
         end
       end

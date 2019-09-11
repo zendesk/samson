@@ -22,8 +22,8 @@ for a project and deploy_group.
 Run a service that writes config to an s3 bucket, 1 folder per project and 1 file per deploy group.
 To enable reading environment variables from an S3 bucket,
 set samson environment variables `CONFIG_SERVICE_BUCKET` and `CONFIG_SERVICE_REGION`.
-To support reading from a replicated S3 bucket on failure, also set the `CONFIG_SERVICE_DR_BUCKET` environment variable.
-
+To support reading from a replicated S3 bucket on failure, also set `CONFIG_SERVICE_DR_BUCKET`
+and `CONFIG_SERVICE_DR_REGION` environment variables.
 Database environment variable config will override returned env variables.
 
 For details, see `app/models/environment_variable.rb`
