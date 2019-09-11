@@ -90,7 +90,7 @@ module Samson
         commits.unshift previous if previous
       end
 
-      Build.where(git_sha: commits).sort_by { |build| commits.index(build.git_sha) }
+      Build.where(git_sha: commits).sort_by { |build| [commits.index(build.git_sha), -build.updated_at.to_i] }
     end
 
     # we only wait once no matter how many builds are missing since build creation is fast

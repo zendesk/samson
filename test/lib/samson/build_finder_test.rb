@@ -330,6 +330,19 @@ describe Samson::BuildFinder do
       finder.send(:possible_builds).must_equal [build]
     end
 
+    it "find builds ordered by most recent first" do
+      attrs = build.attributes
+      attrs.delete("id")
+
+      new_builds = (1..3).map do |i|
+        Build.new(attrs.merge(git_sha: job.commit, updated_at: Time.now + i * 30)).tap do |b|
+          b.save! validate: false
+        end
+      end
+
+      finder.send(:possible_builds).must_equal new_builds.reverse
+    end
+
     it "find builds from previous deploy when requested" do
       job.deploy.update_column(:kubernetes_reuse_build, true)
       build.update_column(:git_sha, previous_deploy.job.commit)

@@ -204,7 +204,6 @@ describe BuildsController do
           new_build.external_url.must_equal 'https://blob.com/1235'
         end
 
-
         it 'updates existing running build when succeeded' do
           create(
             git_sha: build.git_sha,
@@ -221,7 +220,6 @@ describe BuildsController do
           build.docker_repo_digest.must_equal digest
           build.external_url.must_equal external_url
         end
-
 
         it 'allows updating a failed external build' do
           create(
