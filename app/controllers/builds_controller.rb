@@ -38,11 +38,11 @@ class BuildsController < ApplicationController
   def create
     new = false
     saved = false
-    external_build_has_digest = false
+    external_build_already_has_digest = false
 
     Samson::Retry.retry_when_not_unique do
       if registering_external_build? && @build = find_external_build
-        external_build_has_digest = @build.docker_repo_digest.present?
+        external_build_already_has_digest = @build.docker_repo_digest.present?
         @build.attributes = edit_build_params(validate: false)
       else
         @build = scope.new(new_build_params.merge(creator: current_user))
@@ -51,7 +51,7 @@ class BuildsController < ApplicationController
       new = @build.new_record?
       changed = @build.changed?
 
-      return head :unprocessable_entity if external_build_has_digest && changed
+      return head :unprocessable_entity if external_build_already_has_digest && changed
       saved = !changed || @build.save # nothing has changed or save result
     end
 
@@ -91,6 +91,7 @@ class BuildsController < ApplicationController
   def find_external_build
     build_params = params.require(:build)
     scope = Build.where(git_sha: build_params.require(:git_sha))
+    scope = scope.where(external_url: build_params[:external_url]) if build_params[:external_url].present?
     if image_name = build_params[:image_name].presence
       scope.where(image_name: image_name)
     else
