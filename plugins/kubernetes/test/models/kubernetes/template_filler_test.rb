@@ -569,7 +569,12 @@ describe Kubernetes::TemplateFiller do
             KUBERNETES_CLUSTER_NAME
           ].sort
         )
-        env.map { |x| x[:value] }.map(&:class).map(&:name).sort.uniq.must_equal(["NilClass", "String"])
+        env.map { |x| x.key?(:value) && x[:value].class.must_equal(String, "#{x.inspect} needs a String value") }
+      end
+
+      it "does not modify env values" do
+        doc.kubernetes_release.git_ref = "v1.2.3"
+        container.fetch(:env).detect { |e| e[:name] == "TAG" }[:value].must_equal "v1.2.3"
       end
 
       it "merges existing env settings" do
