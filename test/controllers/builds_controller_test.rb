@@ -175,6 +175,16 @@ describe BuildsController do
       describe "updates external builds" do
         let(:digest) { 'foo.com/test@sha256:5f1d7c7381b2e45ca73216d7b06004fdb0908ed7bb8786b62f2cdfa5035fde2c' }
         let(:external_url) { 'https://blob.com/1234' }
+        let(:create_args) do
+          {
+            git_sha: build.git_sha,
+            external_status: 'succeeded',
+            external_url: external_url,
+            docker_repo_digest: digest,
+            dockerfile: build.dockerfile,
+            format: :json
+          }
+        end
 
         before do
           build.update_columns(external_status: 'running', external_url: external_url, docker_repo_digest: nil)
@@ -182,14 +192,7 @@ describe BuildsController do
 
         it 'creates a new build when external url changes for the same git sha' do
           assert_difference 'Build.count' do
-            create(
-              git_sha: build.git_sha,
-              external_status: 'succeeded',
-              external_url: 'https://blob.com/1235',
-              docker_repo_digest: digest,
-              dockerfile: build.dockerfile,
-              format: :json
-            )
+            create create_args.merge(external_url: 'https://blob.com/1235')
             assert_response :success
           end
 
@@ -205,14 +208,7 @@ describe BuildsController do
         end
 
         it 'updates existing running build when succeeded' do
-          create(
-            git_sha: build.git_sha,
-            external_status: 'succeeded',
-            external_url: external_url,
-            docker_repo_digest: digest,
-            dockerfile: build.dockerfile,
-            format: :json
-          )
+          create create_args
           assert_response :success
 
           build.reload
@@ -222,14 +218,7 @@ describe BuildsController do
         end
 
         it 'allows updating a failed external build' do
-          create(
-            git_sha: build.git_sha,
-            external_status: 'failed',
-            external_url: external_url,
-            docker_repo_digest: digest,
-            dockerfile: build.dockerfile,
-            format: :json
-          )
+          create create_args.merge(external_status: 'failed')
           assert_response :success
 
           build.reload
@@ -241,13 +230,7 @@ describe BuildsController do
         it 'does not allow updating a succeeded build to prevent tampering' do
           build.update_columns docker_repo_digest: digest, external_status: 'succeeded'
 
-          create(
-            git_sha: build.git_sha,
-            external_url: external_url,
-            docker_repo_digest: digest.reverse,
-            dockerfile: build.dockerfile,
-            format: :json
-          )
+          create create_args.merge(docker_repo_digest: digest.reverse)
           assert_response 422
 
           build.reload
@@ -260,13 +243,9 @@ describe BuildsController do
           build.update_columns(docker_repo_digest: digest, external_status: 'succeeded', description: 'hello')
 
           # duplicate success
-          create(
+          create create_args.merge(
             name: build.name,
-            description: build.description,
-            git_sha: build.git_sha,
-            dockerfile: build.dockerfile,
-            external_status: 'succeeded',
-            format: :json
+            description: 'hello'
           )
 
           assert_response :ok
@@ -275,14 +254,7 @@ describe BuildsController do
         it 'retries when 2 requests come in at the exact same time and cause uniqueness error' do
           Build.any_instance.expects(:save).returns(true)
           Build.any_instance.expects(:save).raises(ActiveRecord::RecordNotUnique)
-          create(
-            git_sha: build.git_sha,
-            external_status: 'failed',
-            external_url: external_url,
-            docker_repo_digest: digest,
-            dockerfile: build.dockerfile,
-            format: :json
-          )
+          create create_args.merge(external_status: 'failed')
           assert_response :success
         end
       end

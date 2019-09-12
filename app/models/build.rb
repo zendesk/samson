@@ -17,12 +17,15 @@ class Build < ActiveRecord::Base
   validates :project, presence: true
   validates :git_sha, allow_nil: true, format: SHA1_REGEX
   validates :dockerfile, presence: true, unless: :external?
-  [:dockerfile, :image_name].each do |scope|
-    [:git_sha, :external_url].each do |attribute|
+  [:git_sha, :external_url].each do |attribute|
+    [:dockerfile, :image_name].each do |scope|
       validates(
         attribute,
         allow_nil: true,
-        uniqueness: {scope: [scope, :external_url], message: "already exists with this #{scope} and external_url"},
+        uniqueness: {
+          scope: [:git_sha, scope, :external_url].without(attribute),
+          message: "already exists with this #{attribute} and #{scope}"
+        },
         if: ->(build) { build.send(scope).present? && build.external_url.present? }
       )
     end
