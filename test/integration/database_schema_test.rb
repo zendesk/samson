@@ -4,12 +4,10 @@ require_relative '../test_helper'
 SingleCov.not_covered!
 
 describe "database schema" do
-  attr_reader :table_definitions
-
-  before(:all) do
+  let_all(:table_definitions) do
     tables = []
 
-    conn = mock('adapter').responds_like_instance_of(ActiveRecord::ConnectionAdapters::AbstractMysqlAdapter)
+    conn = mock('adapter')
     conn.stub_everything
     conn.define_singleton_method(:create_table) do |name, *_, &blk|
       table = ActiveRecord::ConnectionAdapters::TableDefinition.new(name)
@@ -22,7 +20,16 @@ describe "database schema" do
     end
 
     tables.size.must_be :>, 10
-    @table_definitions = tables.freeze
+    tables.freeze
+  end
+
+  def map_indexes
+    table_definitions.flat_map do |table|
+      table.indexes.map do |index|
+        fields, opts = index
+        yield table, fields, opts
+      end.compact
+    end.compact
   end
 
   it "does not have boolean limit 1 in schema since this breaks mysql" do
@@ -32,7 +39,7 @@ describe "database schema" do
       must_be_empty
   end
 
-  it "does not have limits too big for postgres in schema" do
+  it "does not have limits too big for mysql/postgres in schema" do
     table_definitions.flat_map do |table|
       table.columns.map do |column|
         if column.options[:limit] && column.options[:limit] > 1073741823
@@ -43,19 +50,19 @@ describe "database schema" do
   end
 
   it "does not have string index without limit since that breaks our mysql migrations" do
-    bad = table_definitions.flat_map do |table|
+    bad = map_indexes do |table, fields, opts|
       strings = table.columns.select { |c| c.type == :string }.map(&:name)
-      table.indexes.map do |index|
-        opts = index[1]
-        length = opts[:length]
-        if length.is_a? Hash
-          index_strings = index[0] & strings
-          columns_with_length = length&.keys&.map(&:to_s) || []
-          without_length = index_strings - columns_with_length
+      index_strings = fields & strings
+      length = opts[:length]
 
-          [table.name, *without_length] if without_length.present?
-        end
-      end.compact
+      if index_strings.present? && length.nil?
+        [table.name, *index_strings]
+      elsif length.is_a? Hash
+        columns_with_length = length.keys.map(&:to_s) || []
+        without_length = index_strings - columns_with_length
+
+        [table.name, *without_length] if without_length.present?
+      end
     end
 
     # old tables that somehow worked
@@ -72,7 +79,28 @@ describe "database schema" do
       ["webhooks", "branch"]
     ]
 
-    bad.map! { |table, string| "#{table} #{string} has a string index without length" }.join("\n")
+    bad.map! { |table, *fields| "#{table} #{fields.join(',')} has a string index without length" }.join("\n")
+    assert bad.empty?, bad
+  end
+
+  it "does not have string index with limit > 191 characters" do
+    # default mysql index key prefix length limit is 767 bytes
+    # using utf8mb4, this equates to 191 characters
+
+    bad = map_indexes do |table, fields, opts|
+      strings = table.columns.select { |c| c.type == :string }.map(&:name)
+      index_strings = fields & strings
+      length = opts[:length]
+
+      next if index_strings.empty?
+      next if length.nil?
+      next if length.is_a?(Integer) && length < 192
+      next if length.is_a?(Hash) && length.stringify_keys.slice(*index_strings).all? { |_, l| l < 192 }
+
+      [table.name, *fields]
+    end
+
+    bad.map! { |table, *fields| "#{table} #{fields.join(',')} has a string index with length > 191" }.join("\n")
     assert bad.empty?, bad
   end
 
