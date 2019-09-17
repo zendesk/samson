@@ -10,6 +10,13 @@ class BuildsController < ApplicationController
 
   def index
     @builds = scope.order('id desc')
+
+    if params[:reference].present?
+      git_sha = current_project.repository.commit_from_ref(params[:reference])
+      raise "Commit not found for reference: #{params[:reference]}" unless git_sha.present?
+      (params[:search] ||= ActionController::Parameters.new({}))[:git_sha] = git_sha
+    end
+
     if search = params[:search]&.except(:time_format)
       if external = search.delete(:external).presence
         @builds =
@@ -19,7 +26,6 @@ class BuildsController < ApplicationController
           else raise
           end
       end
-
       @builds = @builds.where(search.permit(*Build.column_names)) unless search.empty?
     end
 

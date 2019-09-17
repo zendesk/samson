@@ -9,6 +9,7 @@ describe BuildsController do
 
   def stub_git_reference_check(returns)
     Build.any_instance.stubs(:commit_from_ref).returns(returns)
+    GitRepository.any_instance.stubs(:commit_from_ref).returns(returns)
   end
 
   it "recognizes deprecated api route" do
@@ -46,9 +47,23 @@ describe BuildsController do
         assigns(:builds).must_equal [build]
       end
 
+      it 'can search for reference' do
+        stub_git_reference_check build.git_sha
+        get :index, params: {project_id: project.to_param, reference: build.git_ref}
+        assigns(:builds).must_equal [build]
+      end
+
       it 'does not blow up when setting time_format' do
         get :index, params: {search: {time_format: 'relative'}}
         assert_response :success
+      end
+
+      it 'blows up with invalid reference' do
+        stub_git_reference_check nil
+        err = assert_raises do
+          get :index, params: {project_id: project.to_param, reference: build.git_ref}
+        end
+        err.message.must_match /Commit not found for reference/
       end
 
       describe "external" do
