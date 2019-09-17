@@ -1,7 +1,7 @@
 // when user types into the field offer completion and show selected commit status
 // TODO: show 500 errors to the user
 function refStatusTypeahead(options){
-  var $reference = $("#deploy_reference");
+  var $reference = $("#deploy_reference,#build_git_ref");
   var $ref_status_container = $("#ref-problem-warning");
   var $ref_problem_list = $("#ref-problem-list");
   var status_check_timeout = null;
@@ -10,7 +10,11 @@ function refStatusTypeahead(options){
   if(!$reference.get(0)) { return; }
 
   function initializeTypeahead() {
-    var prefetchUrl = $reference.data("prefetchUrl") || alert("prefetchUrl missing");
+    var prefetchUrl = $reference.data("prefetchUrl");
+    if (!prefetchUrl) {
+      console.error('prefetchUrl missing');
+      return;
+    }
 
     var engine = new Bloodhound({
       datumTokenizer: function (d) {
@@ -61,7 +65,7 @@ function refStatusTypeahead(options){
     $reference.addClass("loading");
 
     $.ajax({
-      url: $("#new_deploy").data("commit-status-url"),
+      url: $("#new_deploy,#new_build").data("commit-status-url"),
       data: { ref: ref },
       success: function(response) {
         $reference.removeClass("loading");

@@ -3,19 +3,39 @@
 <%= breadcrumb @project, "Build" %>
 
 <section>
-  <%= form_for [@project, @build], html: { class: "form-horizontal" } do |form| %>
+  <% data = {
+      'commit-status-url' => project_commit_statuses_path(@project),
+  }
+  %>
+  <%= form_for [@project, @build], html: { class: "form-horizontal" }, data: data do |form| %>
     <%= render 'shared/errors', object: @build %>
 
-    <%= form.input :git_ref, label: 'Git Reference' do %>
-      <div id="scrollable-dropdown-menu">
-        <%= form.text_field :git_ref, class: "form-control", autofocus: true, placeholder: "e.g. v2.1.43, master, fa0b4671", data: { prefetch_url: project_references_path(@project, format: "json") } %>
+    <div class="form-group">
+      <%= form.label :git_ref, "Git Reference", class: "col-lg-2 control-label" %>
+      <div class="col-lg-4">
+        <div class="scrollable-dropdown-menu">
+          <%= form.text_field :git_ref,
+              class: "form-control",
+              autofocus: true,
+              placeholder: "e.g. v2.1.43, master, fa0b4671",
+              required: true,
+              data: { prefetch_url: project_references_path(@project, format: "json") }
+          %>
+        </div>
       </div>
+      <div class="col-lg-6">
+        <div id="ref-problem-warning" class="col-lg-10 popover show right alert alert-warning hidden" style="max-width: 100%">
+          <div class="arrow" style="top: 20px"></div>
 
-      <div id="ref-problem-warning" class="alert alert-warning hidden">
-        <p>There is currently a problem registered by a CI service for this Tag or SHA. Are you sure you wish to create a build?</p>
-        <ul id="ref-problem-list"></ul>
+          <h3 class="popover-title">Problems detected:
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+          </h3>
+          <div class="popover-content">
+            <ul id="ref-problem-list"></ul>
+          </div>
+        </div>
       </div>
-    <% end %>
+    </div>
 
     <%= form.input :dockerfile, input_html: {placeholder: 'Dockerfile'} %>
     <%= form.input :image_name %>
