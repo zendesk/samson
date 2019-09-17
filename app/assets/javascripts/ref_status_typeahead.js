@@ -119,18 +119,21 @@ function refStatusTypeahead(options){
       success: function(response) {
         $build_list.removeClass("loading");
         $tbody.empty();
+
         response.builds.forEach(function(build) {
           var label_status = "label-" + (STATUS_MAPPING[build.status] || "info");
           var build_url = $form.data("show-build-url").replace('$ID', build.id);
+          var field_name = build.image_name ? `deploy[selected_builds][IMAGE:${build.image_name}][build_id]` : `deploy[selected_builds][DOCKERFILE:${build.dockerfile}][build_id]`;
           $build_list_loading.addClass("hidden");
           $build_list.removeClass("hidden");
 
           $tbody.append(`
             <tr>
-              <td class="col-sm-1"><input type="radio" name="deploy[build_id]" id="build_${build.id}" value="${build.id}" /></td>
+              <td class="col-sm-1"><input type="radio" name="${field_name}" id="build_${build.id}" value="${build.id}" /></td>
               <td><label for="build_${build.id}">${build.name || 'Build ' + build.id}</label></td>
               <td><span data-time="${Date.parse(build.created_at)}">${build.created_at}</span></td>
               <td>${build.git_ref} (${build.git_sha && build.git_sha.slice(0,7)})</td>
+              <td>${build.image_name || build.dockerfile}</td>
               <td><a href="${build_url}"><span class="label ${label_status}">${build.status}</span></a></td>
             </tr>
           `)

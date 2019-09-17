@@ -11,11 +11,12 @@ module Samson
   class BuildFinder
     TICK = 2.seconds
 
-    def initialize(output, job, reference, build_selectors: nil)
+    def initialize(output, job, reference, build_selectors: nil, selected_builds: nil)
       @output = output
       @job = job
       @reference = reference
       @build_selectors = build_selectors
+      @selected_builds = selected_builds
     end
 
     def ensure_succeeded_builds
@@ -43,15 +44,22 @@ module Samson
       wait_for_build_creation do |last_try|
         possible = possible_builds
         needed.delete_if do |dockerfile, image|
-          found = self.class.detect_build_by_selector!(
-            possible, dockerfile, image, fail: (last_try && build_disabled), project: @job.project
-          )
-          if found
+          if @selected_builds &&
+            (selected = (@selected_builds["DOCKERFILE:#{dockerfile}"] || @selected_builds["IMAGE:#{image}"]))
+            found = possible.find { |b| b.id == selected.fetch("build_id") }
             all << found
-          elsif last_try
-            raise unless dockerfile # should never get here
-            raise if build_disabled # should never get here
-            all << create_build(dockerfile)
+          else
+            found = self.class.detect_build_by_selector!(
+              possible, dockerfile, image, fail: (last_try && build_disabled), project: @job.project
+            )
+
+            if found
+              all << found
+            elsif last_try
+              raise unless dockerfile # should never get here
+              raise if build_disabled # should never get here
+              all << create_build(dockerfile)
+            end
           end
         end
         needed.empty? # stop the waiting when we got everything

@@ -47,7 +47,8 @@ module Kubernetes
         @output,
         @job,
         @reference,
-        build_selectors: build_selectors
+        build_selectors: build_selectors,
+        selected_builds: job.deploy.selected_builds
       )
     end
 

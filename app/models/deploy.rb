@@ -16,8 +16,11 @@ class Deploy < ActiveRecord::Base
   default_scope { order(id: :desc) }
 
   validates_presence_of :reference
+  validate :validate_selected_builds
   validate :validate_stage_is_unlocked, on: :create
   validate :validate_stage_uses_deploy_groups_properly, on: :create
+
+  serialize :selected_builds, JSON
 
   allow_inline :previous_commit
 
@@ -240,6 +243,24 @@ class Deploy < ActiveRecord::Base
 
   def summary_action
     SUMMARY_ACTION.fetch(status)
+  end
+
+  def validate_selected_builds
+    return if selected_builds.nil?
+
+    errors.add(:selected_builds, 'is not a Hash') unless selected_builds.is_a? Hash
+    errors.add(:selected_builds, 'is not valid for this stage') unless stage.kubernetes? # TODO: support for stage.builds_in_environment?
+
+    selected_builds.each do |k, v|
+      errors.add(:selected_builds, "#{k} is not valid image/dockerfile") unless k.start_with?("IMAGE:") || k.start_with?("DOCKERFILE:")
+      errors.add(:selected_builds, "#{k} is missing build_id") unless v['build_id'].present?
+
+      # note that we can't validate the build actually matches the requested reference
+      # since the reference isn't resolved to a commit until the job is started,
+      # therefore we rely on that check happening inside JobExecution
+      build = Build.where(v['build_id']).first
+      errors.add(:selected_builds, "#{k} is not a valid build") unless build && build.project_id == project_id
+    end
   end
 
   def validate_stage_is_unlocked

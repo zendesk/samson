@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_09_11_050155) do
+ActiveRecord::Schema.define(version: 2019_09_17_074005) do
 
   create_table "audits" do |t|
     t.integer "auditable_id", null: false
@@ -134,6 +134,7 @@ ActiveRecord::Schema.define(version: 2019_09_11_050155) do
     t.text "env_state", limit: 16777215
     t.integer "triggering_deploy_id"
     t.boolean "redeploy_previous_when_failed", default: false, null: false
+    t.string "selected_builds"
     t.index ["build_id"], name: "index_deploys_on_build_id"
     t.index ["deleted_at"], name: "index_deploys_on_deleted_at"
     t.index ["job_id", "deleted_at"], name: "index_deploys_on_job_id_and_deleted_at"

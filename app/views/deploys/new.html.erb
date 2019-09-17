@@ -50,24 +50,27 @@
         </div>
       </div>
 
-      <div class="form-group clickable-releases">
-        <%= form.label :build, "Build", class: "col-lg-2 control-label" %>
-        <div class="col-lg-8">
-          <span id="build_list_loading" class="help-block">Select a reference to view possible builds</span>
-          <table class="table table-hover table-condensed hidden" id="build_list">
-            <thead>
-              <tr>
-                <th class="col-sm-1">&nbsp;</th>
-                <th>Name</th>
-                <th>Created</th>
-                <th>Reference</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+      <% if @stage.kubernetes? %>
+        <div class="form-group clickable-releases">
+          <%= form.label :build, "Build", class: "col-lg-2 control-label" %>
+          <div class="col-lg-8">
+            <span id="build_list_loading" class="help-block">Select a reference to view possible builds</span>
+            <table class="table table-hover table-condensed hidden" id="build_list">
+              <thead>
+                <tr>
+                  <th class="col-sm-1">&nbsp;</th>
+                  <th>Name</th>
+                  <th>Created</th>
+                  <th>Reference</th>
+                  <th><abbr title="Image Name / Dockerfile">Image</abbr></th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      <% end %>
 
       <% if @stage.allow_redeploy_previous_when_failed? %>
         <% form.object.redeploy_previous_when_failed = true %>
