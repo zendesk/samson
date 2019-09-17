@@ -114,7 +114,7 @@ class DeploysController < ApplicationController
   end
 
   def self.deploy_permitted_params
-    [:reference, :stage_id, :redeploy_previous_when_failed] + Samson::Hooks.fire(:deploy_permitted_params).flatten(1)
+    [:reference, :stage_id, :build_id, :redeploy_previous_when_failed] + Samson::Hooks.fire(:deploy_permitted_params).flatten(1)
   end
 
   protected

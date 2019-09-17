@@ -6,7 +6,9 @@
 
 <section>
   <% data = {
-      'commit-status-url' => project_stage_commit_statuses_path(@project, @stage),
+      'build-status-url' => project_builds_path(@project, format: "json"),
+      'commit-status-url' => project_stage_commit_statuses_path(@project, @stage, format: "json"),
+      'show-build-url' => project_build_path(@project, id: '$ID'),
       'confirm-url' => confirm_project_stage_deploys_path(@project, @stage),
       'confirmation' => @stage.confirm?
     }
@@ -45,6 +47,25 @@
               <ul id="ref-problem-list"></ul>
             </div>
           </div>
+        </div>
+      </div>
+
+      <div class="form-group clickable-releases">
+        <%= form.label :build, "Build", class: "col-lg-2 control-label" %>
+        <div class="col-lg-8">
+          <span id="build_list_loading" class="help-block">Select a reference to view possible builds</span>
+          <table class="table table-hover table-condensed hidden" id="build_list">
+            <thead>
+              <tr>
+                <th class="col-sm-1">&nbsp;</th>
+                <th>Name</th>
+                <th>Created</th>
+                <th>Reference</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
         </div>
       </div>
 

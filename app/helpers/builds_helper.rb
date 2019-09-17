@@ -21,14 +21,6 @@ module BuildsHelper
   end
 
   def build_status_badge(build)
-    if job = build.docker_build_job
-      status_badge(job.status)
-    elsif build.docker_repo_digest
-      status_badge("succeeded")
-    elsif (Job::VALID_STATUSES - ["succeeded"]).include?(build.external_status)
-      status_badge(build.external_status)
-    else
-      "not built"
-    end
+    status_badge build.status
   end
 end

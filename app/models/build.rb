@@ -42,6 +42,12 @@ class Build < ActiveRecord::Base
     builds_to_cancel.find_each { |b| b.update_attributes(external_status: 'cancelled') }
   end
 
+  def attributes
+    super.merge(
+      status: status
+    )
+  end
+
   def nice_name
     name.presence || "Build #{id}"
   end
@@ -82,6 +88,18 @@ class Build < ActiveRecord::Base
 
   def external?
     external_status.present? || external_url.present?
+  end
+
+  def status
+    if job = docker_build_job
+      job.status
+    elsif docker_repo_digest
+      "succeeded"
+    elsif (Job::VALID_STATUSES - ["succeeded"]).include?(external_status)
+      external_status
+    else
+      "not built"
+    end
   end
 
   private
