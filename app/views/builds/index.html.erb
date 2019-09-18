@@ -5,6 +5,7 @@
 <section class="tabs">
   <div class="row">
     <%= search_form do %>
+      <%= search_select :external_status, Job::VALID_STATUSES, size: 1, label: "Status" %>
       <%= search_select :time_format, User::TIME_FORMATS, selected: params.dig(:search, :time_format) || current_user.time_format, label: 'Time', size: 1 %>
       <% projects = Project.order(:permalink).pluck(:permalink, :id) %>
       <%= search_select :project_id, projects, live: true, label: "Project" %>
