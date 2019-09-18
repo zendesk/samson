@@ -7,7 +7,7 @@
     <%= search_form do %>
       <%= search_select :external_status, Job::VALID_STATUSES, size: 1, label: "Status" %>
       <%= search_select :time_format, User::TIME_FORMATS, selected: params.dig(:search, :time_format) || current_user.time_format, label: 'Time', size: 1 %>
-      <% projects = Project.order(:permalink).pluck(:permalink, :id) %>
+      <% projects = Project.order(:name).pluck(:name, :id) %>
       <%= search_select :project_id, projects, live: true, label: "Project" %>
       <div class="col-sm-2">
         <%= label_tag :git_sha, "Git SHA (commit)" %><br/>
