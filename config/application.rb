@@ -179,9 +179,8 @@ end
 # Must be here instead of in an initializer because plugin initializers run before app initializers
 # Used in plugins/airbrake + rollbar which do not support the 'foo.bar' syntax as rails does
 # https://github.com/airbrake/airbrake-ruby/issues/137
-Samson::Application.config.session_key = :"_samson_session_#{Rails.env}"
 Rails.application.config.filter_parameters.concat [
-  :password, :value, :value_hashed, :token, :access_token, Samson::Application.config.session_key, 'HTTP_AUTHORIZATION'
+  :password, :value, :value_hashed, :token, :access_token, 'HTTP_AUTHORIZATION'
 ]
 
 # Avoid starting up another background thread if we don't need it, see lib/samson/boot_check.rb
