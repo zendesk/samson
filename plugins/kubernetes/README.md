@@ -272,3 +272,7 @@ To block them except for allowed projects, use:
 ```
 KUBERNETES_INGRESS_NGINX_ANNOTATION_ALLOWED=project-permalink,[project-permalink,...]
 ```
+
+### Kritis
+
+Allow users to set kritis breakglass per deploy-group or deploy by setting environment variable `KRITIS_BREAKGLASS_SUPPORTED=true`

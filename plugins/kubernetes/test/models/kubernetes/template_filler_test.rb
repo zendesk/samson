@@ -1036,20 +1036,29 @@ describe Kubernetes::TemplateFiller do
     end
 
     describe "set_kritis_breakglass" do
+      with_env KRITIS_BREAKGLASS_SUPPORTED: "true"
+
+      let(:kritis) { template.to_hash[:metadata][:annotations][:"kritis.grafeas.io/breakglass"] }
+
       it "does not add by default" do
-        template.to_hash[:metadata][:labels].keys.must_equal [:project, :role]
+        kritis.must_be_nil
+      end
+
+      it "adds when requested via deploy" do
+        doc.kubernetes_release.deploy.kubernetes_ignore_kritis_vulnerabilities = true
+        kritis.must_equal "true"
       end
 
       describe "when requested" do
         before { doc.deploy_group.kubernetes_cluster.update_column(:kritis_breakglass, true) }
 
         it "adds when requested" do
-          template.to_hash[:metadata][:labels].keys.must_equal [:project, :role, :"kritis.grafeas.io/tutorial"]
+          kritis.must_equal "true"
         end
 
         it "does not add to non-runnables" do
           raw_template[:kind] = "Service"
-          template.to_hash[:metadata][:labels].keys.must_equal [:project, :role]
+          kritis.must_be_nil
         end
       end
     end

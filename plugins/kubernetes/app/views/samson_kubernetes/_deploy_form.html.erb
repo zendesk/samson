@@ -1,2 +1,5 @@
-<%= form.input :kubernetes_rollback, as: :check_box, label: 'Rollback on failure' if @stage.kubernetes? %>
-<%= form.input :kubernetes_reuse_build, as: :check_box, label: 'Reuse previous build', help: 'Speedup debugging when only changing kubernetes config' if @stage.kubernetes? && !@stage.production? %>
+<% if @stage.kubernetes? %>
+  <%= form.input :kubernetes_rollback, as: :check_box, label: 'Rollback on failure' %>
+  <%= form.input :kubernetes_reuse_build, as: :check_box, label: 'Reuse previous build', help: 'Speedup debugging when only changing kubernetes config' unless @stage.production? %>
+  <%= form.input :kubernetes_ignore_kritis_vulnerabilities, as: :check_box, label: 'Ignore Kritis vulnerabilities' if ENV["KRITIS_BREAKGLASS_SUPPORTED"] %>
+<% end %>
