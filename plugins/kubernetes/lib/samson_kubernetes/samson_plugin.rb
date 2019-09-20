@@ -47,7 +47,13 @@ Samson::Hooks.callback(:stage_permitted_params) do
     {kubernetes_stage_roles_attributes: [:kubernetes_role_id, :ignored, :_destroy, :id]}
   ]
 end
-Samson::Hooks.callback(:deploy_permitted_params) { [:kubernetes_rollback, :kubernetes_reuse_build] }
+Samson::Hooks.callback(:deploy_permitted_params) do
+  [
+    :kubernetes_rollback,
+    :kubernetes_reuse_build,
+    :kubernetes_ignore_kritis_vulnerabilities
+  ]
+end
 Samson::Hooks.callback(:project_permitted_params) { [:kubernetes_rollout_timeout] }
 Samson::Hooks.callback(:link_parts_for_resource) do
   [

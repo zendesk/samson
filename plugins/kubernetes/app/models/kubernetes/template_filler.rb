@@ -432,8 +432,9 @@ module Kubernetes
     end
 
     def set_kritis_breakglass
-      return unless @doc.deploy_group.kubernetes_cluster.kritis_breakglass
-      template.dig_fetch(:metadata, :labels)[:"kritis.grafeas.io/tutorial"] = ""
+      return unless ENV["KRITIS_BREAKGLASS_SUPPORTED"]
+      return if !@doc.deploy_group.kubernetes_cluster.kritis_breakglass &&
+        !@doc.kubernetes_release.deploy.kubernetes_ignore_kritis_vulnerabilities
       template.dig_fetch(:metadata, :annotations)[:"kritis.grafeas.io/breakglass"] = "true"
     end
 
