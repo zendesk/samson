@@ -291,6 +291,38 @@ describe Kubernetes::RoleValidator do
       end
     end
 
+    describe "#validate_datadog_annotations" do
+      it "passes when annotation matches container name" do
+        role.first[:spec][:template][:metadata][:annotations] = {
+          "ad.datadoghq.com/some-project.check_names": "['foo']"
+        }
+        assert_nil errors
+      end
+
+      it "fails when annotation does not match container name" do
+        role.first[:spec][:template][:metadata][:annotations] = {
+          "ad.datadoghq.com/some-other-project.check_names": "['foo']"
+        }
+        errors.must_equal ["Datadog annotation specified for non-existent container name: some-other-project"]
+      end
+
+      it "works with cron jobs" do
+        role.replace(cron_job_role)
+        role.first[:spec][:jobTemplate][:spec][:template][:metadata][:annotations] = {
+          "ad.datadoghq.com/some-other-project.check_names": "['foo']"
+        }
+        errors.must_equal ["Datadog annotation specified for non-existent container name: some-other-project"]
+      end
+
+      it "works with pods" do
+        role.replace(pod_role)
+        role.first[:metadata][:annotations] = {
+          "ad.datadoghq.com/some-other-project.check_names": "['foo']"
+        }
+        errors.must_equal ["Datadog annotation specified for non-existent container name: some-other-project"]
+      end
+    end
+
     describe "#validate_namespace" do
       before { project.create_kubernetes_namespace! name: "foo" }
 

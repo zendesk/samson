@@ -40,6 +40,8 @@ module Kubernetes
     # we either generate multiple names or allow custom names
     ALLOWED_DUPLICATE_KINDS = ((['Service'] + IMMUTABLE_NAME_KINDS)).freeze
 
+    DATADOG_AD_REGEXP = %r{(?:service-discovery|ad)\.datadoghq\.com/([^.]+)\.}.freeze
+
     def initialize(elements, project:)
       @project = project
       @elements = elements.compact
@@ -67,10 +69,11 @@ module Kubernetes
       validate_stateful_set_service_consistent
       validate_daemon_set_supported
       validate_load_balancer
-      validate_ingress_annotations_allowed
       unless validate_annotations
         validate_prerequisites_kinds
         validate_prerequisites_consistency
+        validate_datadog_annotations
+        validate_ingress_annotations_allowed
       end
       validate_env_values
       validate_host_volume_paths
@@ -176,6 +179,22 @@ module Kubernetes
 
     def validate_api_version
       @errors << "Needs apiVersion specified" if map_attributes([:apiVersion]).any?(&:nil?)
+    end
+
+    # validate datadog-specific annotations against
+    # https://docs.datadoghq.com/agent/autodiscovery/integrations/?tab=kubernetes#configuration
+    def validate_datadog_annotations
+      templates.each do |template|
+        annotations = template.dig(:metadata, :annotations) || {}
+        containers = template.dig(:spec, :containers) || []
+        dd_container_names = annotations.keys.map { |k| k[DATADOG_AD_REGEXP, 1] }.compact.uniq
+        spec_container_names = containers.map { |c| c[:name] }.compact
+        invalid = dd_container_names - spec_container_names
+
+        unless invalid.empty?
+          @errors << "Datadog annotation specified for non-existent container name: #{invalid.join(',')}"
+        end
+      end
     end
 
     # spec actually allows this, but blows up when used
