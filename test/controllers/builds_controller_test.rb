@@ -42,7 +42,12 @@ describe BuildsController do
       end
 
       it 'can search for sha' do
-        get :index, params: {project_id: project.to_param, search: {git_sha: build.git_sha}}
+        get :index, params: {search: {commit: build.git_sha}}
+        assigns(:builds).must_equal [build]
+      end
+
+      it 'can search for ref' do
+        get :index, params: {search: {commit: build.git_ref}}
         assigns(:builds).must_equal [build]
       end
 

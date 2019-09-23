@@ -16,6 +16,16 @@ class BuildsController < ApplicationController
         left_outer_joins(:docker_build_job).
         where("jobs.status = ? OR external_status = ?", status, status)
     end
+
+    if commit = search.delete(:commit)
+      builds =
+        if commit.match?(Build::SHA1_REGEX)
+          builds.where(git_sha: commit)
+        else
+          builds.where(git_ref: commit)
+        end
+    end
+
     @builds = builds.where(search).order(id: :desc)
     @pagy, @builds = pagy(@builds, page: params[:page], items: 15)
 
