@@ -9,8 +9,14 @@ class BuildsController < ApplicationController
   before_action :find_build, only: [:show, :build_docker_image, :edit, :update]
 
   def index
-    query = params[:search]&.except(:time_format)&.to_unsafe_h&.select { |_, v| v.present? }
-    @builds = scope.where(query).order(id: :desc)
+    search = params[:search]&.to_unsafe_h&.except(:time_format)&.select { |_, v| v.present? } || {}
+    builds = scope
+    if status = search.delete(:status)
+      builds = builds.
+        left_outer_joins(:docker_build_job).
+        where("jobs.status = ? OR external_status = ?", status, status)
+    end
+    @builds = builds.where(search).order(id: :desc)
     @pagy, @builds = pagy(@builds, page: params[:page], items: 15)
 
     respond_to do |format|

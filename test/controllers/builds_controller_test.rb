@@ -51,15 +51,21 @@ describe BuildsController do
         assert_response :success
       end
 
-      describe "external status" do
-        it "ignores search for external status blank" do
-          get :index, params: {search: {external_status: ''}}
+      describe "status" do
+        it "ignores search for status blank" do
+          get :index, params: {search: {status: ''}}
           assigns(:builds).count.must_equal Build.count
         end
 
-        it "can search for external succeeded" do
+        it "can search for external status" do
           build.update_column(:external_status, "succeeded")
-          get :index, params: {search: {external_status: "succeeded"}}
+          get :index, params: {search: {status: "succeeded"}}
+          assigns(:builds).must_equal [build]
+        end
+
+        it "can search for internal status" do
+          build.update_column(:docker_build_job_id, jobs(:succeeded_test).id)
+          get :index, params: {search: {status: "succeeded"}}
           assigns(:builds).must_equal [build]
         end
       end
