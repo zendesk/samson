@@ -51,28 +51,16 @@ describe BuildsController do
         assert_response :success
       end
 
-      describe "external" do
-        it "ignores search for external blank" do
-          get :index, params: {search: {external: ''}}
+      describe "external status" do
+        it "ignores search for external status blank" do
+          get :index, params: {search: {external_status: ''}}
           assigns(:builds).count.must_equal Build.count
         end
 
-        it "can search for external YES" do
+        it "can search for external succeeded" do
           build.update_column(:external_status, "succeeded")
-          get :index, params: {search: {external: true}}
+          get :index, params: {search: {external_status: "succeeded"}}
           assigns(:builds).must_equal [build]
-        end
-
-        it "can search for external NO" do
-          Build.where.not(id: build.id).update(external_status: "succeeded")
-          get :index, params: {search: {external: false}}
-          assigns(:builds).must_equal [build]
-        end
-
-        it "cannot search for unknown external" do
-          assert_raises do
-            get :index, params: {search: {external: 'FOOBAR'}}
-          end
         end
       end
 
