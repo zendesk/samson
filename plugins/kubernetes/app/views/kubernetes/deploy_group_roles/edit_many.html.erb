@@ -22,7 +22,7 @@
         </tr>
       </thead>
 
-      <% @deploy_group_roles.each do |deploy_group_role| %>
+      <% @kubernetes_deploy_group_roles.each do |deploy_group_role| %>
         <% if deploy_group_role.errors.any? %>
           <tr>
             <td colspan="<%= 2 + rows.size %>"><%= render 'shared/errors', object: deploy_group_role %></td>

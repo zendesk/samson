@@ -24,7 +24,8 @@ describe Kubernetes::DeployGroupRolesController do
       it "renders" do
         get :index
         assert_template :index
-        assigns[:deploy_group_roles].must_include deploy_group_role
+        assigns[:kubernetes_deploy_group_roles].must_include deploy_group_role
+        assert assigns[:pagy]
       end
 
       it "renders when deploy group got deleted" do
@@ -36,17 +37,23 @@ describe Kubernetes::DeployGroupRolesController do
       it "renders as project tab" do
         get :index, params: {project_id: project}
         assert_template :index
-        assigns[:deploy_group_roles].map(&:project_id).uniq.must_equal [project.id]
+        assigns[:kubernetes_deploy_group_roles].map(&:project_id).uniq.must_equal [project.id]
+        refute assigns[:pagy]
+      end
+
+      it "paginates json project search" do
+        get :index, params: {project_id: project}, format: :json
+        assert assigns[:pagy]
       end
 
       it "can filter by project_id" do
         get :index, params: {search: {project_id: project.id}}
-        assigns[:deploy_group_roles].map(&:project_id).uniq.must_equal [project.id]
+        assigns[:kubernetes_deploy_group_roles].map(&:project_id).uniq.must_equal [project.id]
       end
 
       it "can filter by deploy_group" do
         get :index, params: {search: {deploy_group_id: deploy_groups(:pod100).id}}
-        assigns[:deploy_group_roles].map(&:deploy_group_id).uniq.must_equal [deploy_groups(:pod100).id]
+        assigns[:kubernetes_deploy_group_roles].map(&:deploy_group_id).uniq.must_equal [deploy_groups(:pod100).id]
       end
     end
 

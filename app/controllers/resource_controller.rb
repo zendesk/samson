@@ -5,16 +5,16 @@ require 'csv'
 class ResourceController < ApplicationController
   ADD_MORE = 'Save and add another'
 
-  def index(paginate: true)
+  def index(paginate: true, resources: search_resources)
     assign_resources(
       if paginate
         pagy(
-          search_resources,
+          resources,
           page: params[:page],
           items: [Integer(params[:per_page] || 25), 100].min
         )
       else
-        [nil, search_resources]
+        [nil, resources]
       end
     )
     respond_to do |format|
