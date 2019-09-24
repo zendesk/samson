@@ -1,17 +1,17 @@
 # frozen_string_literal: true
 class Kubernetes::DeployGroupRolesController < ResourceController
   before_action :set_resource, only: [:show, :edit, :update, :destroy, :new, :create]
-  before_action :find_roles, only: [:index, :edit_many, :update_many]
   before_action :find_stage, only: [:seed]
   before_action :authorize_project_admin!, except: [:index, :show, :new]
 
   DEFAULT_BRANCH = "master"
 
-  # TODO: use super
   def index
-    respond_to do |format|
-      format.html
-      format.json { render json: {kubernetes_deploy_group_roles: @deploy_group_roles} }
+    if params[:project_id] && request.format.html? # nice but slow display on project tab
+      super resources: sorted_resources, paginate: false
+    else
+      super
+      preload_deleted_deploy_groups @kubernetes_deploy_group_roles
     end
   end
 
@@ -33,11 +33,14 @@ class Kubernetes::DeployGroupRolesController < ResourceController
   end
 
   def edit_many
+    @kubernetes_deploy_group_roles = sorted_resources
   end
 
   def update_many
+    @kubernetes_deploy_group_roles = sorted_resources
+
     all_params = params.require(:kubernetes_deploy_group_roles)
-    status = @deploy_group_roles.map do |deploy_group_role|
+    status = @kubernetes_deploy_group_roles.map do |deploy_group_role|
       role_params = all_params.require(deploy_group_role.id.to_s).permit(permitted_params)
       deploy_group_role.update_attributes(role_params)
     end
@@ -69,25 +72,30 @@ class Kubernetes::DeployGroupRolesController < ResourceController
 
   private
 
-  def find_roles
+  def preload_deleted_deploy_groups(deploy_group_roles)
+    DeployGroup.with_deleted { deploy_group_roles.each(&:deploy_group) }
+  end
+
+  def sorted_resources
+    preload_deleted_deploy_groups(search_resources).
+      sort_by { |dgr| [dgr.project.name, dgr.kubernetes_role.name, dgr.deploy_group&.name_sortable.to_s] }
+  end
+
+  def search_resources
     # treat project/foo/roles the same as a search
     if params[:project_id]
       params[:search] ||= {}
       params[:search][:project_id] = current_project.id
     end
 
-    deploy_group_roles = ::Kubernetes::DeployGroupRole.where(nil)
+    deploy_group_roles = ::Kubernetes::DeployGroupRole.all
     [:project_id, :deploy_group_id].each do |scope|
       if id = params.dig(:search, scope).presence
         deploy_group_roles = deploy_group_roles.where(scope => id)
       end
     end
 
-    # TODO: needs to return something paginatable and not rely on with_deleted
-    @deploy_group_roles = DeployGroup.with_deleted do
-      deploy_group_roles.
-        sort_by { |dgr| [dgr.project.name, dgr.kubernetes_role.name, dgr.deploy_group&.name_sortable].compact }
-    end
+    deploy_group_roles
   end
 
   def verification_template

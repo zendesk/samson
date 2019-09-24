@@ -31,7 +31,7 @@
         <th>Actions</th>
       </tr>
 
-      <% @deploy_group_roles.each do |deploy_group_role| %>
+      <% @kubernetes_deploy_group_roles.each do |deploy_group_role| %>
         <tr>
           <% unless @project %>
             <td><%= link_to deploy_group_role.project.name, deploy_group_role.project %></td>
@@ -49,17 +49,20 @@
         </tr>
       <% end %>
 
-      <tr>
-        <td colspan="<%= @project ? 2 : 3 %>">Total</td>
-        <td><%= @deploy_group_roles.sum { |d| d.requests_cpu * d.replicas } %> to <%= @deploy_group_roles.sum { |d| d.limits_cpu * d.replicas } %></td>
-        <td><%= @deploy_group_roles.sum { |d| d.requests_memory * d.replicas } %> to <%= @deploy_group_roles.sum { |d| d.limits_memory * d.replicas } %></td>
-        <td><%= @deploy_group_roles.sum(&:replicas) %></td>
-        <td><%= link_to "Edit all", edit_many_project_kubernetes_deploy_group_roles_path(@project) if @project && current_user.admin_for?(@project) %></td>
-      </tr>
+      <% if @project %>
+        <tr>
+          <td colspan="2">Total</td>
+          <td><%= @kubernetes_deploy_group_roles.sum { |d| d.requests_cpu * d.replicas } %> to <%= @kubernetes_deploy_group_roles.sum { |d| d.limits_cpu * d.replicas } %></td>
+          <td><%= @kubernetes_deploy_group_roles.sum { |d| d.requests_memory * d.replicas } %> to <%= @kubernetes_deploy_group_roles.sum { |d| d.limits_memory * d.replicas } %></td>
+          <td><%= @kubernetes_deploy_group_roles.sum(&:replicas) %></td>
+          <td><%= link_to "Edit all", edit_many_project_kubernetes_deploy_group_roles_path(@project) if current_user.admin_for?(@project) %></td>
+        </tr>
+      <% end %>
     </table>
   </div>
 
   <div class="admin-actions">
+    <%= paginate @pagy unless @project %>
     <div class="pull-right">
       <%= link_to "New", new_kubernetes_deploy_group_role_path, class: "btn btn-default" %>
     </div>
