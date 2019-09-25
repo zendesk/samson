@@ -4,8 +4,11 @@
   <%= page_title "Kubernetes Limits" %>
 
   <%= search_form do %>
-    <%= search_select :project_id, [['All', Kubernetes::UsageLimitsController::ALL]] + @projects.map { |p| [p.name, p.id] }, live: true, size: 3 %>
-    <%= search_select :scope_type_and_id, [['All', Kubernetes::UsageLimitsController::ALL]] + @env_deploy_group_array, live: true, size: 3, label: "Scope" %>
+    <% projects = Project.order(:name).pluck(:name, :id) %>
+    <%= search_select :project_id, [['All', Kubernetes::UsageLimitsController::ALL]] + projects, live: true, size: 3 %>
+
+    <% scopes = Environment.env_deploy_group_array(include_all: false) %>
+    <%= search_select :scope_type_and_id, [['All', Kubernetes::UsageLimitsController::ALL]] + scopes, live: true, size: 3, label: "Scope" %>
   <% end %>
 
   <br/>
@@ -23,7 +26,7 @@
         <th>Scope</th>
         <th>CPU</th>
         <th>Memory</th>
-        <th></th>
+        <th><%= link_to "New", new_kubernetes_usage_limit_path, class: "btn btn-default" %></th>
       </tr>
 
       <% @kubernetes_usage_limits.each do |usage_limit| %>
@@ -41,8 +44,6 @@
   </div>
 
   <div class="admin-actions">
-    <div class="pull-right">
-      <%= link_to "New", new_kubernetes_usage_limit_path, class: "btn btn-default" %>
-    </div>
+    <%= paginate @pagy %>
   </div>
 </section>
