@@ -137,17 +137,21 @@ module Kubernetes
       @errors << "Needs a metadata.name" unless map_attributes([:metadata, :name]).all?
     end
 
-    # not setting a namespace is safe to ignore, because teplate-filler overrides it with the configured namespace
-    # and that either sets the namespace or is ignored for namespace-less resources
     def validate_namespace
-      return unless namespace = @project&.kubernetes_namespace&.name
-
       namespaces = []
-      @elements.each { |e| namespaces << e.dig(:metadata, :namespace) if e[:metadata].key?(:namespace) }
+      @elements.each { |e| namespaces << e.dig(:metadata, :namespace) if e[:metadata]&.key?(:namespace) }
       namespaces.uniq!
-      return if namespaces.empty? || namespaces == [namespace]
 
-      @errors << "Only use configured namespace #{namespace.inspect}, not #{namespaces.inspect}"
+      # not setting a namespace is safe to ignore, because template-filler overrides it with the configured namespace
+      # and that either sets the namespace or is ignored for namespace-less resources
+      return if namespaces.empty?
+
+      project_namespace = @project&.kubernetes_namespace&.name
+      if !project_namespace
+        @errors << "Project is not configured to use namespace #{namespaces.inspect}"
+      elsif namespaces != [project_namespace]
+        @errors << "Only use configured namespace #{project_namespace.inspect}, not #{namespaces.inspect}"
+      end
     end
 
     # multiple pods in a single role will make validations misbehave (recommend they all have the same role etc)

@@ -344,9 +344,9 @@ describe Kubernetes::RoleValidator do
       describe "with invalid namespace" do
         before { role[0][:metadata][:namespace] = "bar" }
 
-        it "passes when namespace is not configured" do
+        it "fails when namespace is not configured" do
           validator.instance_variable_set(:@project, nil)
-          errors.must_equal nil
+          errors.must_equal ["Project is not configured to use namespace [\"bar\"]"]
         end
 
         it "fails with invalid namespace" do
@@ -654,7 +654,10 @@ describe Kubernetes::RoleValidator do
     end
 
     describe "#validate_load_balancer" do
-      before { role[1][:metadata][:namespace] = "foo" }
+      before do
+        project.create_kubernetes_namespace! name: "foo"
+        role[1][:metadata][:namespace] = "foo"
+      end
 
       it "allows when not configured" do
         errors.must_be_nil
