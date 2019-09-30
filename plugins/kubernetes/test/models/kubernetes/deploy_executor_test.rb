@@ -417,7 +417,7 @@ describe Kubernetes::DeployExecutor do
 
       refute execute
 
-      out.must_include "resque-worker Pod pod-resque-worker: Restarted\n"
+      out.must_include "resque-worker Pod pod-resque-worker: Restarted"
       out.must_include "UNSTABLE"
     end
 
@@ -428,7 +428,7 @@ describe Kubernetes::DeployExecutor do
 
       refute execute
 
-      out.must_include "Pod 100 resque-worker Pod: Restarted\n"
+      out.must_include "Pod 100 resque-worker Pod: Restarted"
       out.must_include "UNSTABLE"
     end
 
@@ -612,7 +612,7 @@ describe Kubernetes::DeployExecutor do
 
         refute execute
 
-        out.must_include "resque-worker Pod: Restarted\n"
+        out.must_include "resque-worker Pod: Restarted"
         out.must_include "UNSTABLE"
         out.must_include rollback_indicator
         out.must_include rollback_instructions
@@ -624,7 +624,7 @@ describe Kubernetes::DeployExecutor do
       it "deletes when there was no previous deployed resource" do
         refute execute
 
-        out.must_include "resque-worker Pod: Restarted\n"
+        out.must_include "resque-worker Pod: Restarted"
         out.must_include "UNSTABLE"
         out.must_include "Deleting"
         out.wont_include rollback_indicator
@@ -638,7 +638,7 @@ describe Kubernetes::DeployExecutor do
 
         refute execute
 
-        out.must_include "resque-worker Pod: Restarted\n"
+        out.must_include "resque-worker Pod: Restarted"
         out.must_include "UNSTABLE"
         out.must_include "DONE" # DONE is shown ... we got past the rollback
         out.must_include "FAILED: Weird error" # rollback error cause is shown
@@ -650,7 +650,7 @@ describe Kubernetes::DeployExecutor do
 
         refute execute
 
-        out.must_include "resque-worker Pod: Restarted\n"
+        out.must_include "resque-worker Pod: Restarted"
         out.must_include "UNSTABLE"
         out.must_include "DONE" # DONE is shown ... we got past the rollback
         out.wont_include rollback_instructions
@@ -692,7 +692,7 @@ describe Kubernetes::DeployExecutor do
         refute execute
 
         # failed
-        out.must_include "resque-worker Pod: Restarted\n"
+        out.must_include "resque-worker Pod: Restarted"
         out.must_include "UNSTABLE"
 
         # correct debugging output

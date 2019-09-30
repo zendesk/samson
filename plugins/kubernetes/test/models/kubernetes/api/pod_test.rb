@@ -20,6 +20,7 @@ describe Kubernetes::Api::Pod do
         phase: "Running",
         conditions: [{type: "Ready", status: "True"}],
         containerStatuses: [{
+          name: "foo",
           restartCount: 0,
           state: {}
         }],
@@ -100,24 +101,37 @@ describe Kubernetes::Api::Pod do
     end
   end
 
-  describe "#restarted?" do
+  describe "#restart_details" do
     it "is not restarted" do
-      refute pod.restarted?
+      refute pod.restart_details
     end
 
     it "is not restarted without statuses" do
       pod_attributes[:status][:containerStatuses].clear
-      refute pod.restarted?
+      refute pod.restart_details
     end
 
     it "is not restarted when pending and not having conditions yet" do
       pod_attributes[:status].delete :containerStatuses
-      refute pod.restarted?
+      refute pod.restart_details
     end
 
-    it "is restarted when restarting" do
-      pod_attributes[:status][:containerStatuses][0][:restartCount] = 1
-      assert pod.restarted?
+    describe "when restarted" do
+      before { pod_attributes[:status][:containerStatuses][0][:restartCount] = 1 }
+
+      it "shows restarted" do
+        pod.restart_details.must_equal "Restarted (foo Unknown)"
+      end
+
+      it "shows reason from state" do
+        pod_attributes[:status][:containerStatuses][0][:state] = {terminated: {reason: "OOMKilled"}}
+        pod.restart_details.must_equal "Restarted (foo OOMKilled)"
+      end
+
+      it "shows reason from last state" do
+        pod_attributes[:status][:containerStatuses][0][:lastState] = {terminated: {reason: "OOMKilled"}}
+        pod.restart_details.must_equal "Restarted (foo OOMKilled)"
+      end
     end
   end
 
