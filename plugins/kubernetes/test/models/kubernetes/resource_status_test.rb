@@ -32,8 +32,8 @@ describe Kubernetes::ResourceStatus do
     end
 
     it "is restarted when pod is restarted" do
-      resource[:status][:containerStatuses] = [{restartCount: 1}]
-      details.must_equal "Restarted"
+      resource[:status][:containerStatuses] = [{restartCount: 1, name: "foo", state: {terminated: {reason: "Backoff"}}}]
+      details.must_equal "Restarted (foo Backoff)"
     end
 
     it "is failed when pod is failed" do

@@ -41,8 +41,7 @@ module Kubernetes
 
         if !@resource
           @details = "Missing"
-        elsif @pod.restarted?
-          @details = "Restarted"
+        elsif @details = @pod.restart_details
           @finished = true
         elsif @pod.failed?
           @details = "Failed"
