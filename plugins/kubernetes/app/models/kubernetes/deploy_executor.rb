@@ -60,12 +60,13 @@ module Kubernetes
 
       loop do
         statuses = resource_statuses(release_docs)
-        interesting = statuses.select { |s| s.kind == "Pod" || !s.live } # ignore boring things that rarely fail
-        ready_statuses, not_ready_statuses = interesting.partition(&:live)
-        failure = too_many_not_ready?(interesting)
+        pod_statuses, non_pod_statuses = statuses.partition { |s| s.kind == "Pod" }
+        display_statuses = pod_statuses + non_pod_statuses.reject(&:live) # show what is interesting
+        ready_statuses, not_ready_statuses = statuses.partition(&:live)
+        failure = too_many_not_ready?(pod_statuses) || !non_pod_statuses.all?(&:live)
 
         if waiting_for_ready
-          print_statuses("Deploy status:", interesting, exact: false) if interesting.any?
+          print_statuses("Deploy status:", display_statuses, exact: false) if display_statuses.any?
 
           if failure
             if stopped = not_ready_statuses.select(&:finished).presence
