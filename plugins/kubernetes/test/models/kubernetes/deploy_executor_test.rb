@@ -542,17 +542,29 @@ describe Kubernetes::DeployExecutor do
       out.must_include "resque-worker Pod: Missing\n"
     end
 
-    it "fails when resource has error events" do
-      assert_request(
-        :get,
-        %r{http://foobar.server/api/v1/namespaces/staging/events.*Deployment},
-        to_return: {body: {items: [{type: 'Warning', reason: 'NO', lastTimestamp: 1.minute.from_now.iso8601}]}.to_json},
-        times: 4
-      )
+    describe "with non-pod failures" do
+      before do
+        assert_request(
+          :get,
+          %r{http://foobar.server/api/v1/namespaces/staging/events.*Deployment},
+          to_return: {
+            body: {items: [{type: 'Warning', reason: 'NO', lastTimestamp: 1.minute.from_now.iso8601}]}.to_json
+          },
+          times: 4
+        )
+      end
 
-      refute execute
+      it "fails when non-pods have error events" do
+        refute execute
+        out.must_include "Deployment test-app-server events:\n  Warning NO"
+      end
 
-      out.must_include "Deployment test-app-server events:\n  Warning NO"
+      it "does not count non-pods into allowed-not-ready" do
+        with_env KUBERNETES_ALLOW_NOT_READY_PERCENT: "100" do
+          refute execute
+          out.must_include "Deployment test-app-server events:\n  Warning NO"
+        end
+      end
     end
 
     describe "an autoscaled role" do
