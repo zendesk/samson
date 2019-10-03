@@ -16,14 +16,16 @@ describe SamsonPrerequisiteStages do
   describe SamsonPrerequisiteStages::Engine do
     describe '.validate_deployed_to_all_prerequisite_stages' do
       it 'shows unmet prerequisite stages' do
-        stage1.expects(:undeployed_prerequisite_stages).with(deploy.reference).returns([stage2])
-        error = SamsonPrerequisiteStages.validate_deployed_to_all_prerequisite_stages(stage1, deploy.reference)
+        stage1.expects(:undeployed_prerequisite_stages).with(deploy.commit).returns([stage2])
+        error = SamsonPrerequisiteStages.
+          validate_deployed_to_all_prerequisite_stages(stage1, deploy.reference, deploy.commit)
         error.must_equal "Reference 'staging' has not been deployed to these prerequisite stages: Production."
       end
 
       it 'is silent when there are no unmet prerequisites' do
-        stage1.expects(:undeployed_prerequisite_stages).with(deploy.reference).returns([])
-        SamsonPrerequisiteStages.validate_deployed_to_all_prerequisite_stages(stage1, deploy.reference).must_be_nil
+        stage1.expects(:undeployed_prerequisite_stages).with(deploy.commit).returns([])
+        SamsonPrerequisiteStages.
+          validate_deployed_to_all_prerequisite_stages(stage1, deploy.reference, deploy.commit).must_be_nil
       end
     end
   end
@@ -53,7 +55,7 @@ describe SamsonPrerequisiteStages do
       only_callbacks_for_plugin :ref_status
 
       it 'returns status if stage does not meet prerequisites' do
-        stage1.expects(:undeployed_prerequisite_stages).with(deploy.reference).returns([stage2])
+        stage1.expects(:undeployed_prerequisite_stages).with(deploy.commit).returns([stage2])
 
         error_message = "Reference 'staging' has not been deployed to these prerequisite stages: Production."
         expected = {
@@ -64,12 +66,12 @@ describe SamsonPrerequisiteStages do
           }]
         }
 
-        Samson::Hooks.fire(:ref_status, stage1, deploy.reference).must_include expected
+        Samson::Hooks.fire(:ref_status, stage1, deploy.reference, deploy.commit).must_include expected
       end
 
       it 'returns nil if stage meets prerequisites' do
-        stage1.expects(:undeployed_prerequisite_stages).with(deploy.reference).returns([])
-        Samson::Hooks.fire(:ref_status, stage1, deploy.reference).must_equal [nil]
+        stage1.expects(:undeployed_prerequisite_stages).with(deploy.commit).returns([])
+        Samson::Hooks.fire(:ref_status, stage1, deploy.reference, deploy.commit).must_equal [nil]
       end
     end
 

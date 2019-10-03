@@ -174,6 +174,13 @@ class Project < ActiveRecord::Base
     )
   end
 
+  # quick commit from reference without pulling the repository
+  def fast_commit_from_ref(ref)
+    GITHUB.commit(repository_path, ref).sha
+  rescue StandardError
+    nil
+  end
+
   def last_deploy_by_group(before_time, include_failed_deploys: false)
     releases = deploys_by_group(before_time, include_failed_deploys)
     releases.map { |group_id, deploys| [group_id, deploys.max_by(&:updated_at)] }.to_h
@@ -184,9 +191,7 @@ class Project < ActiveRecord::Base
     Deploy.find(found.map(&:id)).select(&:stage).sort_by { |d| d.stage.order }.presence
   end
 
-  def deployed_reference_to_non_production_stage?(reference)
-    return false unless commit = repository.commit_from_ref(reference)
-
+  def deployed_to_non_production_stage?(commit)
     stages.joins(deploys: :job).where(
       jobs: {status: 'succeeded', commit: commit}
     ).distinct.any? { |stage| !stage.production? }

@@ -95,6 +95,31 @@ describe Project do
     end
   end
 
+  describe "#fast_commit_from_ref" do
+    it "asks github" do
+      stub_request(:get, "https://api.github.com/repos/bar/foo/commits/master").
+        to_return(
+          body: {sha: "abc"}.to_json,
+          headers: {"Content-Type" => "application/json"}
+        )
+      project.fast_commit_from_ref("master").must_equal "abc"
+    end
+
+    it "does not crash when commit was not found" do
+      stub_request(:get, "https://api.github.com/repos/bar/foo/commits/master").
+        to_return(
+          status: 404,
+          headers: {"Content-Type" => "application/json"}
+        )
+      project.fast_commit_from_ref("master").must_be_nil
+    end
+
+    it "does not crash when github is down" do
+      stub_request(:get, "https://api.github.com/repos/bar/foo/commits/master").to_timeout
+      project.fast_commit_from_ref("master").must_be_nil
+    end
+  end
+
   describe "#webhook_stages_for" do
     it "returns the stages with mappings for the branch" do
       master_stage = project.stages.create!(name: "master_stage")
@@ -340,36 +365,22 @@ describe Project do
   end
 
   describe "#deployed_reference_to_non_production_stage?" do
-    def stub_commit(found = true)
-      result = found ? deploy.job.commit : nil
-      project.repository.expects(:commit_from_ref).with(deploy.reference).returns(result)
-    end
-
     let(:deploy) { deploys(:succeeded_test) }
 
-    it 'returns true if non production stage exists that deployed ref' do
-      stub_commit
-      project.deployed_reference_to_non_production_stage?(deploy.reference).must_equal true
+    it 'returns true if non production stage exists that deployed commit' do
+      project.deployed_to_non_production_stage?(deploy.commit).must_equal true
     end
 
     it 'filters by job status' do
-      stub_commit
       deploy.job.update_column(:status, 'failed')
 
-      project.deployed_reference_to_non_production_stage?(deploy.reference).must_equal false
+      project.deployed_to_non_production_stage?(deploy.commit).must_equal false
     end
 
     it 'filters out production stages' do
-      stub_commit
       deploy.update_column(:stage_id, stages(:test_production).id)
 
-      project.deployed_reference_to_non_production_stage?(deploy.reference).must_equal false
-    end
-
-    it 'returns false when reference cant be resolved' do
-      stub_commit(false)
-
-      project.deployed_reference_to_non_production_stage?(deploy.reference).must_equal false
+      project.deployed_to_non_production_stage?(deploy.commit).must_equal false
     end
   end
 

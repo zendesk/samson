@@ -29,11 +29,11 @@ describe Changeset do
     describe "with master" do
       describe "when GitHub project" do
         it "doesn't cache" do
-          stub_github_api("repos/foo/bar/branches/master", commit: {sha: "foo"})
+          stub_github_api("repos/foo/bar/commits/master", sha: "foo")
           stub_github_api("repos/foo/bar/compare/a...foo", "x" => "y")
           Changeset.new(project, "a", "master").comparison.to_h.must_equal x: "y"
 
-          stub_github_api("repos/foo/bar/branches/master", commit: {sha: "bar"})
+          stub_github_api("repos/foo/bar/commits/master", sha: "bar")
           stub_github_api("repos/foo/bar/compare/a...bar", "x" => "z")
           Changeset.new(project, "a", "master").comparison.to_h.must_equal x: "z"
         end
@@ -69,14 +69,14 @@ describe Changeset do
 
     # tests config/initializers/octokit.rb Octokit::RedirectAsError
     it "converts a redirect into a NullComparison" do
-      stub_github_api("repos/foo/bar/branches/master", {}, 301)
+      stub_github_api("repos/foo/bar/commits/master", {}, 301)
       stub_github_api("repos/foo/bar/compare/a...master", {}, 301)
       Changeset.new(project, "a", "master").comparison.class.must_equal Changeset::NullComparison
     end
 
     # tests config/initializers/octokit.rb Octokit::RedirectAsError
     it "uses the cached body of a 304" do
-      stub_github_api("repos/foo/bar/branches/master", {commit: {sha: "bar"}}, 304)
+      stub_github_api("repos/foo/bar/commits/master", {sha: "bar"}, 304)
       stub_github_api("repos/foo/bar/compare/a...bar", "x" => "z")
       Changeset.new(project, "a", "master").comparison.to_h.must_equal x: "z"
     end
@@ -155,7 +155,7 @@ describe Changeset do
 
     it "skips fetching pull request for non PR branches" do
       comparison = Sawyer::Resource.new(sawyer_agent, commits: [commit2])
-      stub_github_api("repos/foo/bar/branches/master", commit: {sha: "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"})
+      stub_github_api("repos/foo/bar/commits/master", sha: "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd")
       GITHUB.stubs(:compare).returns(comparison)
       find_pr_stub = stub_github_api("repos/foo/bar/pulls", []).with(query: hash_including({}))
 

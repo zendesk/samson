@@ -19,8 +19,7 @@ class Integrations::GithubController < Integrations::BaseController
   protected
 
   def expire_commit_status
-    commit = params[:sha].to_s
-    CommitStatus.new(project, commit).expire_cache(commit)
+    CommitStatus.new(project, params[:sha].to_s).expire_cache
   end
 
   def payload

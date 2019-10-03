@@ -89,11 +89,16 @@ describe Integrations::GithubController do
   end
 
   describe 'with a commit status event' do
-    before { request.headers['X-Github-Event'] = 'status' }
+    let(:commit) { 'dc395381e650f3bac18457909880829fc20e34ba' }
+
+    before do
+      request.headers['X-Github-Event'] = 'status'
+      Project.any_instance.stubs(:fast_commit_from_ref).returns(commit)
+    end
 
     it 'expires github status' do
-      Rails.cache.expects(:delete).with(['commit-status', project.id, 'dc395381e650f3bac18457909880829fc20e34ba'])
-      post :create, params: {token: project.token, sha: "dc395381e650f3bac18457909880829fc20e34ba"}
+      Rails.cache.expects(:delete).with(['commit-status', project.id, commit])
+      post :create, params: {token: project.token, sha: commit}
       assert_response :success
     end
   end

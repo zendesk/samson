@@ -13,13 +13,14 @@ end
 
 Samson::Hooks.callback :changeset_api_request do |changeset, method|
   next unless changeset.project.gitlab?
+
   begin
     case method
     when :branch
-      Gitlab.branch(changeset.repo, changeset.commit).commit.id
+      Gitlab.branch(changeset.repo, changeset.reference).commit.id
     when :compare
       Gitlab::ChangesetPresenter.new(
-        Gitlab.compare(changeset.repo, changeset.previous_commit, changeset.commit)
+        Gitlab.compare(changeset.repo, changeset.previous_commit, changeset.reference)
       ).build
     else
       raise NoMethodError
