@@ -278,8 +278,8 @@ module Kubernetes
           {name: "VAULT_PREFIX", value: Samson::Secrets::VaultClientManager::PREFIX}
         ],
         resources: {
-          requests: {cpu: "100m", memory: "100M"},
-          limits: {cpu: "500m", memory: "256M"}
+          requests: {cpu: "100m", memory: "100Mi"},
+          limits: {cpu: "500m", memory: "256Mi"}
         }
       }
       init_containers.unshift container
@@ -401,8 +401,8 @@ module Kubernetes
     def set_resource_usage
       container = pod_containers.first
       container[:resources] = {
-        requests: {cpu: @doc.requests_cpu.to_f, memory: "#{@doc.requests_memory}M"},
-        limits: {cpu: @doc.limits_cpu.to_f, memory: "#{@doc.limits_memory}M"}
+        requests: {cpu: @doc.requests_cpu.to_f, memory: "#{@doc.requests_memory}Mi"},
+        limits: {cpu: @doc.limits_cpu.to_f, memory: "#{@doc.limits_memory}Mi"}
       }
       container[:resources][:limits].delete(:cpu) if @doc.no_cpu_limit
     end

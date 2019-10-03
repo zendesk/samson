@@ -12,7 +12,7 @@
         <th>Deploy Group</th>
         <th>Replicas</th>
         <th>CPU<%= additional_info "Requested to Limit" %></th>
-        <th>Memory<%= additional_info "Requested to Limit in MB" %></th>
+        <th>Memory<%= additional_info "Requested to Limit in MiB" %></th>
         <th>
           <% if missing %>
             <%= link_to 'Seed Missing', seed_kubernetes_deploy_group_roles_path(stage_id: @stage.id), data: {method: :post}, class: 'btn btn-default' %>

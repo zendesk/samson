@@ -29,7 +29,7 @@ describe Kubernetes::Role do
       kind: 'Pod',
       apiVersion: 'v1',
       metadata: {name: 'foo', labels: {role: 'migrate', project: 'bar'}},
-      spec: {containers: [{name: 'foo', resources: {limits: {cpu: '0.5', memory: '300M'}}}]}
+      spec: {containers: [{name: 'foo', resources: {limits: {cpu: '0.5', memory: '300Mi'}}}]}
     }
   end
   let(:config_content) do
@@ -362,14 +362,14 @@ describe Kubernetes::Role do
       '10000000' => 10,
       '10000K' => 10,
       '10000Ki' => 10,
-      '10M' => 10,
+      '10M' => 10, # rounded down
       '10Mi' => 10,
-      '10G' => 10 * 1000,
-      '10.5G' => 10.5 * 1000,
-      '10Gi' => 10737,
+      '10G' => 9537,
+      '10.5G' => 10_014,
+      '10Gi' => 10_240,
     }.each do |ram, expected|
       it "converts memory units #{ram}" do
-        assert config_content_yml.sub!('100M', ram)
+        assert config_content_yml.sub!('100Mi', ram)
         role.defaults.try(:[], :limits_memory).must_equal expected
       end
     end
