@@ -135,14 +135,11 @@ module Kubernetes
 
       return unless limits = spec.dig(:containers, 0, :resources, :limits)
       return unless limits_cpu = parse_resource_value(limits[:cpu], KUBE_CPU_VALUES)
-      return unless limits_memory = parse_resource_value(limits[:memory], KUBE_MEMORY_VALUES)
-      limits_memory /= 1000**2 # we store megabyte
+      return unless limits_memory = parse_memory_value(limits)
 
       if requests = spec.dig(:containers, 0, :resources, :requests)
         requests_cpu = parse_resource_value(requests[:cpu], KUBE_CPU_VALUES)
-        if requests_memory = parse_resource_value(requests[:memory], KUBE_MEMORY_VALUES)
-          requests_memory /= 1000**2 # we store megabyte
-        end
+        requests_memory = parse_memory_value(requests)
       end
 
       {
@@ -165,6 +162,11 @@ module Kubernetes
     end
 
     private
+
+    def parse_memory_value(limits)
+      return unless bytes = parse_resource_value(limits[:memory], KUBE_MEMORY_VALUES)
+      bytes / KUBE_MEMORY_VALUES.fetch("Mi")
+    end
 
     def nilify_service_name
       self.service_name = service_name.presence

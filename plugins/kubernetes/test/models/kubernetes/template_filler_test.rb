@@ -531,11 +531,11 @@ describe Kubernetes::TemplateFiller do
         container.fetch(:resources).must_equal(
           requests: {
             cpu: 0.5,
-            memory: "50M"
+            memory: "50Mi"
           },
           limits: {
             cpu: 1.0,
-            memory: "100M"
+            memory: "100Mi"
           }
         )
       end
@@ -545,10 +545,10 @@ describe Kubernetes::TemplateFiller do
         container.fetch(:resources).must_equal(
           requests: {
             cpu: 0.5,
-            memory: "50M"
+            memory: "50Mi"
           },
           limits: {
-            memory: "100M"
+            memory: "100Mi"
           }
         )
       end
