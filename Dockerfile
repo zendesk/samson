@@ -14,7 +14,7 @@ RUN apt-get update \
     curl \
     gnupg2 \
   && curl -sL https://deb.nodesource.com/setup_6.x | bash - \
-  && apt-get install nodejs -y \
+  && apt-get install nodejs npm -y \
   && rm -rf /var/lib/apt/lists/* \
   && curl -fsSL https://get.docker.com | bash -
 
