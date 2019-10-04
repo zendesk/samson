@@ -16,6 +16,13 @@ Samson::Application.routes.draw do
       end
       resources :usage_limits, only: [:index]
     end
+    resources :stages do
+      member do
+        namespace :kubernetes do
+          get :manifest_preview
+        end
+      end
+    end
   end
 
   namespace :kubernetes do

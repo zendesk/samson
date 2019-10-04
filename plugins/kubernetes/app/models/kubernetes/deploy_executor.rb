@@ -20,9 +20,25 @@ module Kubernetes
       @reference = job.deploy.reference
     end
 
+    def preview(resolve_build: true)
+      verify_kubernetes_templates!
+      @release = build_release(resolve_build: resolve_build)
+      unless @release.valid?
+        raise Samson::Hooks::UserError, "Failed to store manifests: #{release.errors.full_messages.inspect}"
+      end
+
+      @release.release_docs
+    end
+
     def execute(*)
       verify_kubernetes_templates!
-      @release = create_release
+      @release = build_release
+
+      Kubernetes::Release.transaction do
+        unless @release.save
+          raise Samson::Hooks::UserError, "Failed to store manifests: #{release.errors.full_messages.inspect}"
+        end
+      end
 
       prerequisites, deploys = @release.release_docs.partition(&:prerequisite?)
 
@@ -296,9 +312,9 @@ module Kubernetes
     end
 
     # create a release, storing all the configuration
-    def create_release
-      release = Kubernetes::Release.create_release(
-        builds: build_finder.ensure_succeeded_builds,
+    def build_release(resolve_build: true)
+      Kubernetes::Release.build_release_with_docs(
+        builds: resolve_build ? build_finder.ensure_succeeded_builds : [],
         deploy: @job.deploy,
         grouped_deploy_group_roles: grouped_deploy_group_roles,
         git_sha: @job.commit,
@@ -306,12 +322,6 @@ module Kubernetes
         user: @job.user,
         project: @job.project
       )
-
-      unless release.persisted?
-        raise Samson::Hooks::UserError, "Failed to store manifests: #{release.errors.full_messages.inspect}"
-      end
-
-      release
     end
 
     def grouped_deploy_group_roles

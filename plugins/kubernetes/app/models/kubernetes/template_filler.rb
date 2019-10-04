@@ -138,7 +138,7 @@ module Kubernetes
     def set_deploy_url
       [template, pod_template].compact.each do |t|
         annotations = (t[:metadata][:annotations] ||= {})
-        annotations[:"samson/deploy_url"] = @doc.kubernetes_release.deploy&.url
+        annotations[:"samson/deploy_url"] = @doc.kubernetes_release.deploy&.url if @doc.kubernetes_release.deploy&.persisted?
       end
     end
 
