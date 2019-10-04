@@ -118,7 +118,7 @@ describe SamsonDatadog do
     end
 
     it "calls branch api endpoint" do
-      stub_github_api("repos/foo/bar/branches/b", commit: {sha: "foo"})
+      stub_github_api("repos/foo/bar/commits/b", sha: "foo")
       fire(:branch).must_equal ["foo"]
     end
 

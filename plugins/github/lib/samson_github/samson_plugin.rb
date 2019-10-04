@@ -50,13 +50,14 @@ Samson::Hooks.callback :repo_provider_status do
 end
 
 Samson::Hooks.callback :changeset_api_request do |changeset, method|
+  next unless changeset.project.github?
+
   begin
-    next unless changeset.project.github?
     case method
     when :branch
-      GITHUB.branch(changeset.repo, CGI.escape(changeset.commit)).commit[:sha]
+      GITHUB.commit(changeset.repo, changeset.reference).sha
     when :compare
-      GITHUB.compare(changeset.repo, changeset.previous_commit, changeset.commit)
+      GITHUB.compare(changeset.repo, changeset.previous_commit, changeset.reference)
     else
       raise NoMethodError
     end
