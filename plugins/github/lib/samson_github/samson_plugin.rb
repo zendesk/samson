@@ -49,19 +49,12 @@ Samson::Hooks.callback :repo_provider_status do
   end
 end
 
-Samson::Hooks.callback :changeset_api_request do |changeset, method|
-  next unless changeset.project.github?
+Samson::Hooks.callback :repo_commit_from_ref do |project, reference|
+  next unless project.github?
+  GITHUB.commit(project.repository_path, reference).sha
+end
 
-  begin
-    case method
-    when :branch
-      GITHUB.commit(changeset.repo, changeset.reference).sha
-    when :compare
-      GITHUB.compare(changeset.repo, changeset.previous_commit, changeset.reference)
-    else
-      raise NoMethodError
-    end
-  rescue Octokit::Error, Faraday::ConnectionFailed => e
-    raise "GitHub: #{e.message.sub("Octokit::", "").underscore.humanize}"
-  end
+Samson::Hooks.callback :repo_compare do |project, previous_commit, reference|
+  next unless project.github?
+  GITHUB.compare(project.repository_path, previous_commit, reference)
 end

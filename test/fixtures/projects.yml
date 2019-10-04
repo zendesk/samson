@@ -1,12 +1,12 @@
 test:
   name: Foo
-  repository_url: ssh://git@example.com:bar/foo.git
+  repository_url: ssh://git@github.com:bar/foo.git
   token: kanyewest
   permalink: foo
   include_new_deploy_groups: true
 
 other:
   name: Bar
-  repository_url: ssh://git@example.com:bar/bar.git
+  repository_url: ssh://git@github.com:bar/bar.git
   token: othertoken
   permalink: bar

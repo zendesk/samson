@@ -63,7 +63,8 @@ module Samson
       :trace_scope,
       :asynchronous_performance_tracer,
       :repo_provider_status,
-      :changeset_api_request,
+      :repo_commit_from_ref,
+      :repo_compare,
       :validate_deploy
     ].freeze
 

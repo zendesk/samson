@@ -27,7 +27,7 @@ describe SamsonAirbrakeHook::Engine do
               "rails_env" => "staging",
               "scm_revision" => "abcabcaaabcabcaaabcabcaaabcabcaaabcabca1",
               "local_username" => "Super Admin",
-              "scm_repository" => "https://example.com/bar/foo",
+              "scm_repository" => "https://github.com/bar/foo",
             }
           }
         }

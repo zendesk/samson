@@ -81,8 +81,7 @@ describe Project do
 
   describe "#repository_homepage" do
     it "is github when using github" do
-      project.repository_url = "git://github.com/foo/bar"
-      project.repository_homepage.must_equal "https://github.com/foo/bar"
+      project.repository_homepage.must_equal "https://github.com/bar/foo"
     end
 
     it "is gitlab when using gitlab" do
@@ -91,32 +90,31 @@ describe Project do
     end
 
     it "is nothing when unknown" do
+      project.repository_url = "git://example.com/foo/bar"
       project.repository_homepage.must_equal ""
     end
   end
 
-  describe "#fast_commit_from_ref" do
+  describe "#repo_commit_from_ref" do
     it "asks github" do
-      stub_request(:get, "https://api.github.com/repos/bar/foo/commits/master").
-        to_return(
-          body: {sha: "abc"}.to_json,
-          headers: {"Content-Type" => "application/json"}
-        )
-      project.fast_commit_from_ref("master").must_equal "abc"
+      stub_github_api "repos/bar/foo/commits/master", sha: "abc"
+      project.repo_commit_from_ref("master").must_equal "abc"
     end
 
     it "does not crash when commit was not found" do
-      stub_request(:get, "https://api.github.com/repos/bar/foo/commits/master").
-        to_return(
-          status: 404,
-          headers: {"Content-Type" => "application/json"}
-        )
-      project.fast_commit_from_ref("master").must_be_nil
+      stub_github_api "repos/bar/foo/commits/master", {}, 404
+      project.repo_commit_from_ref("master").must_be_nil
     end
 
     it "does not crash when github is down" do
       stub_request(:get, "https://api.github.com/repos/bar/foo/commits/master").to_timeout
-      project.fast_commit_from_ref("master").must_be_nil
+      project.repo_commit_from_ref("master").must_be_nil
+    end
+
+    it "resolves locally when repo is not remote" do
+      project.repository_url = "git://example.com/foo/bar"
+      project.repository.expects(:commit_from_ref).returns "X"
+      project.repo_commit_from_ref("master").must_equal "X"
     end
   end
 

@@ -8,7 +8,7 @@ describe BuildsController do
   let(:build) { builds(:docker_build) }
 
   def stub_git_reference_check(returns)
-    Project.any_instance.stubs(:fast_commit_from_ref).returns(returns)
+    Project.any_instance.stubs(:repo_commit_from_ref).returns(returns)
   end
 
   it "recognizes deprecated api route" do
