@@ -2,8 +2,6 @@
 class Kubernetes::RolesController < ResourceController
   include CurrentProject
 
-  DEFAULT_BRANCH = 'master'
-
   PUBLIC = [:index, :show, :example].freeze
   before_action :authorize_project_deployer!, except: PUBLIC
   before_action :authorize_project_admin!, except: PUBLIC

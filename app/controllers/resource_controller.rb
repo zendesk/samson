@@ -4,6 +4,7 @@ require 'csv'
 # Abstract controller that handles all resources, subclasses handle custom logic by overwriting
 class ResourceController < ApplicationController
   ADD_MORE = 'Save and add another'
+  DEFAULT_BRANCH = "master"
 
   def index(paginate: true, resources: search_resources)
     assign_resources(

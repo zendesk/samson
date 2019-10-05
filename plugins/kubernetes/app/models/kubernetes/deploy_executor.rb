@@ -20,11 +20,11 @@ module Kubernetes
       @reference = job.deploy.reference
     end
 
-    def preview(resolve_build: true)
+    def preview_release_docs(resolve_build: true)
       verify_kubernetes_templates!
       @release = build_release(resolve_build: resolve_build)
       unless @release.valid?
-        raise Samson::Hooks::UserError, "Failed to store manifests: #{release.errors.full_messages.inspect}"
+        raise Samson::Hooks::UserError, "Failed to store manifests: #{@release.errors.full_messages.inspect}"
       end
 
       @release.release_docs
@@ -36,7 +36,7 @@ module Kubernetes
 
       Kubernetes::Release.transaction do
         unless @release.save
-          raise Samson::Hooks::UserError, "Failed to store manifests: #{release.errors.full_messages.inspect}"
+          raise Samson::Hooks::UserError, "Failed to store manifests: #{@release.errors.full_messages.inspect}"
         end
       end
 

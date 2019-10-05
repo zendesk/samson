@@ -4,8 +4,6 @@ class Kubernetes::DeployGroupRolesController < ResourceController
   before_action :find_stage, only: [:seed]
   before_action :authorize_project_admin!, except: [:index, :show, :new]
 
-  DEFAULT_BRANCH = "master"
-
   def index
     if params[:project_id] && request.format.html? # nice but slow display on project tab
       super resources: sorted_resources, paginate: false
