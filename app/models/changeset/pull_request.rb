@@ -134,8 +134,9 @@ class Changeset::PullRequest
   private
 
   def section_content(section_title, text)
+    # ### Risks or Risks followed by === / ---
     desired_header_regexp = "^(?:\\s*#+\\s*#{section_title}.*|\\s*#{section_title}.*\\n\\s*(?:-{2,}|={2,}))\\n"
-    content_regexp = '([\W\w]*?)' # capture all section content, including new lines
+    content_regexp = '([\W\w]*?)' # capture all section content, including new lines, but not next header
     next_header_regexp = '(?=^(?:\s*#+|.*\n\s*(?:-{2,}|={2,}\s*\n))|\z)'
 
     text[/#{desired_header_regexp}#{content_regexp}#{next_header_regexp}/i, 1]
@@ -143,7 +144,7 @@ class Changeset::PullRequest
 
   def parse_risks(body)
     body_stripped = ActionController::Base.helpers.strip_tags(body)
-    section_content('Risks', body_stripped).to_s.strip.presence
+    section_content('Risks', body_stripped).to_s.rstrip.sub(/\A\s*\n/, "").presence
   end
 
   # @return [Array<Changeset::JiraIssue>]
