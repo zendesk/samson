@@ -378,13 +378,13 @@ describe Changeset::PullRequest do
     before { add_risks }
 
     it "finds risks" do
-      pr.risks.must_equal "- Explosions"
+      pr.risks.must_equal " - Explosions"
     end
 
     it "caches risks" do
       pr.risks
       no_risks
-      pr.risks.must_equal "- Explosions"
+      pr.risks.must_equal " - Explosions"
     end
 
     it "does not find - None" do
@@ -408,7 +408,7 @@ describe Changeset::PullRequest do
         # risks
           - Planes
       BODY
-      pr.risks.must_equal "- Planes"
+      pr.risks.must_equal "  - Planes"
     end
 
     it "finds risks with new lines" do
@@ -431,7 +431,7 @@ describe Changeset::PullRequest do
         =====
           - Snakes
       BODY
-      pr.risks.must_equal "- Snakes"
+      pr.risks.must_equal "  - Snakes"
     end
 
     it "finds risks with closing hashes in atx style markdown headers" do
@@ -439,7 +439,7 @@ describe Changeset::PullRequest do
         ## Risks ##
           - Planes
       BODY
-      pr.risks.must_equal "- Planes"
+      pr.risks.must_equal "  - Planes"
     end
 
     it "finds risks and skips html tags" do
@@ -448,18 +448,28 @@ describe Changeset::PullRequest do
           <!-- This is a temporary risk -->
           - Planes
       BODY
-      pr.risks.must_equal "- Planes"
+      pr.risks.must_equal "  - Planes"
     end
 
     it "ends the risks section if there are subsequent sections" do
       body.replace(+<<~BODY)
         # Risks
           - Planes
-
         # Notes
         This is a great PR!
       BODY
-      pr.risks.must_equal "- Planes"
+      pr.risks.must_equal "  - Planes"
+    end
+
+    it "preserves list indentation by not stripping the content" do
+      body.replace(+<<~BODY)
+        # Risks
+          - Planes
+          - Snek
+        # Notes
+        This is a great PR!
+      BODY
+      pr.risks.must_equal "  - Planes\n  - Snek"
     end
 
     it "ends the risks section if there are subsequent underline style sections" do
@@ -472,7 +482,7 @@ describe Changeset::PullRequest do
         =====
         This is a great PR!
       BODY
-      pr.risks.must_equal "- Planes"
+      pr.risks.must_equal "  - Planes"
     end
 
     context "with nothing risky" do
