@@ -1,14 +1,9 @@
-* Add description here
-* Add any screenshots if you are touching the UI
-* Remember to add unit tests
-
-/cc @zendesk/samson
-
-### Tasks
- - [ ] :+1: from team
+* Add description
+* Add screenshots when changing the UI
+* Add unit tests
 
 ### References
- - Jira link:
+- Jira link: 
 
 ### Risks
-- Level: Low/Med/High
+- Low/Med/High: thing that could happen

@@ -5,7 +5,7 @@ ruby File.read('.ruby-version').strip
 
 # gems that have rails engines are are always needed
 group :preload do
-  gem 'rails', '5.2.2.1'
+  gem 'rails', '5.2.3'
   gem 'dotenv'
   gem 'connection_pool'
   gem 'marco-polo'
@@ -31,6 +31,7 @@ gem 'omniauth-google-oauth2'
 gem 'omniauth-ldap'
 gem 'omniauth-gitlab'
 gem 'omniauth-bitbucket'
+gem 'omniauth-rails_csrf_protection' # remove once https://github.com/omniauth/omniauth/pull/809 is resolved
 gem 'octokit'
 gem 'faraday'
 gem 'faraday-http-cache'
@@ -94,9 +95,11 @@ end
 group :development, :test do
   gem 'byebug'
   gem 'bootsnap'
-  gem 'pry-rails'
-  gem 'pry-byebug'
   gem 'pry'
+  gem 'pry-byebug'
+  gem 'pry-rails'
+  gem 'pry-rescue'
+  gem 'pry-stack_explorer'
   gem 'awesome_print'
   gem 'brakeman'
   gem 'rubocop'

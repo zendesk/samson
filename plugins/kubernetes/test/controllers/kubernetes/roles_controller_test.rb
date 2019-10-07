@@ -57,7 +57,7 @@ describe Kubernetes::RolesController do
 
         # verify that the template is valid
         template = response.body[/<pre>(.*)<\/pre>/m, 1]
-        Kubernetes::RoleConfigFile.new(template, 'app-server.yml')
+        Kubernetes::RoleConfigFile.new(template, 'app-server.yml', project: nil)
       end
     end
   end
@@ -76,21 +76,21 @@ describe Kubernetes::RolesController do
         Kubernetes::Role.expects(:seed!)
         post :seed, params: {project_id: project, ref: 'HEAD'}
         assert_redirected_to action: :index
-        refute flash[:error]
+        refute flash[:alert]
       end
 
       it "creates roles from default branch when none is given" do
         Kubernetes::Role.expects(:seed!)
         post :seed, params: {project_id: project, ref: ''}
         assert_redirected_to action: :index
-        refute flash[:error]
+        refute flash[:alert]
       end
 
       it "shows errors when role creation fails due to an invalid template" do
         Kubernetes::Role.expects(:seed!).raises(Samson::Hooks::UserError.new("Heyho"))
         post :seed, params: {project_id: project, ref: 'HEAD'}
         assert_redirected_to action: :index
-        flash[:error].must_include "Heyho"
+        flash[:alert].must_include "Heyho"
       end
     end
 

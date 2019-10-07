@@ -5,21 +5,23 @@ require 'csv'
 class ResourceController < ApplicationController
   ADD_MORE = 'Save and add another'
 
-  def index(paginate: true)
+  def index(paginate: true, resources: search_resources)
     assign_resources(
       if paginate
         pagy(
-          search_resources,
+          resources,
           page: params[:page],
           items: [Integer(params[:per_page] || 25), 100].min
         )
       else
-        [nil, search_resources]
+        [nil, resources]
       end
     )
     respond_to do |format|
       format.html
-      format.json { render_as_json resource_name.pluralize, @resources, allowed_includes: allowed_includes }
+      format.json do
+        render_as_json resource_name.pluralize, @resources, @pagy, allowed_includes: allowed_includes
+      end
       format.csv { render_as_csv @resources }
     end
   end
@@ -91,7 +93,7 @@ class ResourceController < ApplicationController
           redirect_to(redirect_to_from_params || resources_path, notice: "Destroyed!")
         else
           error_message = <<~TEXT
-            #{resource_class.name} could not be destroyed because:
+            #{resource_class.name.split("::").last} could not be destroyed because:
             #{@resource.errors.full_messages.join(', ')}
           TEXT
 
@@ -140,7 +142,7 @@ class ResourceController < ApplicationController
   end
 
   def render_resource_as_json(**args)
-    render_as_json resource_name, @resource, **args, allowed_includes: allowed_includes
+    render_as_json resource_name, @resource, nil, **args, allowed_includes: allowed_includes
   end
 
   def set_resource

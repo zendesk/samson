@@ -5,19 +5,19 @@ SingleCov.covered!
 
 describe Kubernetes::RoleConfigFile do
   let(:content) { read_kubernetes_sample_file('kubernetes_deployment.yml') }
-  let(:config_file) { Kubernetes::RoleConfigFile.new(content, 'some-file.yml') }
+  let(:config_file) { Kubernetes::RoleConfigFile.new(content, 'some-file.yml', project: projects(:test)) }
 
   describe "#initialize" do
     it "fails with a message that points to the broken file" do
       e = assert_raises Samson::Hooks::UserError do
-        Kubernetes::RoleConfigFile.new(content, 'some-file.json')
+        Kubernetes::RoleConfigFile.new(content, 'some-file.json', project: nil)
       end
       e.message.must_include 'some-file.json'
     end
 
     it "fails when empty" do
       e = assert_raises Samson::Hooks::UserError do
-        Kubernetes::RoleConfigFile.new("", 'some-file.json')
+        Kubernetes::RoleConfigFile.new("", 'some-file.json', project: nil)
       end
       e.message.must_include 'some-file.json'
     end
@@ -30,6 +30,7 @@ describe Kubernetes::RoleConfigFile do
 
     it "finds a Daemonset" do
       assert content.sub!('Deployment', 'DaemonSet')
+      Kubernetes::RoleValidator.any_instance.expects(:validate)
       assert content.sub!(/\n---.*/m, '')
       config_file.primary[:kind].must_equal 'DaemonSet'
     end

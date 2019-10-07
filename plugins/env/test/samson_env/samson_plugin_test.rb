@@ -10,14 +10,9 @@ describe SamsonEnv do
 
   describe :project_permitted_params do
     it "adds params" do
-      Samson::Hooks.fire(:project_permitted_params).must_include(
-        [
-          {
-            environment_variables_attributes: [:name, :value, :scope_type_and_id, :_destroy, :id],
-            environment_variable_group_ids: []
-          },
-          :use_env_repo
-        ]
+      Samson::Hooks.fire(:project_permitted_params).flatten.must_include(
+        environment_variables_attributes: [:name, :value, :scope_type_and_id, :_destroy, :id],
+        environment_variable_group_ids: []
       )
     end
   end
@@ -156,6 +151,12 @@ describe SamsonEnv do
     it "links to env var group" do
       group = EnvironmentVariableGroup.create!(name: "FOO")
       fire(group).must_equal ["FOO", group]
+    end
+
+    it "links to deploy" do
+      deploy = deploys(:succeeded_test)
+      var = deploy.environment_variables.create!(name: "WORLD3", value: "hello")
+      fire(var).must_equal ["WORLD3 on Deploy ##{deploy.id}", EnvironmentVariable]
     end
 
     it "does not crash with deleted parent" do

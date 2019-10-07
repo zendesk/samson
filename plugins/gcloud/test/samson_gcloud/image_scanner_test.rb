@@ -6,7 +6,7 @@ SingleCov.covered!
 describe SamsonGcloud::ImageScanner do
   with_env GCLOUD_ACCOUNT: 'acc', GCLOUD_PROJECT: 'proj'
 
-  let(:image) { 'foo.com/proj/image' }
+  let(:image) { 'foo.com/proj/image@sha256:abcdef' }
 
   describe ".scan" do
     def assert_done(status = "FINISHED_SUCCESS")
@@ -75,9 +75,14 @@ describe SamsonGcloud::ImageScanner do
       SamsonGcloud::ImageScanner.scan("https://#{image}").must_equal SamsonGcloud::ImageScanner::WAITING
     end
 
-    it "shows error when image is not scannable" do
+    it "shows unsupported when image is not scannable because it is from another project" do
       Samson::CommandExecutor.unstub(:execute)
-      SamsonGcloud::ImageScanner.scan('foo_image').must_equal SamsonGcloud::ImageScanner::ERROR
+      SamsonGcloud::ImageScanner.scan('foo_image').must_equal SamsonGcloud::ImageScanner::UNSUPPORTED
+    end
+
+    it "shows unsupported when image is not scannable because it is not a sha" do
+      Samson::CommandExecutor.unstub(:execute)
+      SamsonGcloud::ImageScanner.scan(image.split('@').first).must_equal SamsonGcloud::ImageScanner::UNSUPPORTED
     end
 
     it "caches final results" do
@@ -107,7 +112,7 @@ describe SamsonGcloud::ImageScanner do
     end
 
     it "can scan images that include gcloud projects twice" do
-      SamsonGcloud::ImageScanner.result_url("#{image}/proj/bar").must_include "GLOBAL/image/proj/bar/details"
+      SamsonGcloud::ImageScanner.result_url("#{image}/proj/bar").must_include ":abcdef/proj/bar/details/"
     end
   end
 
@@ -117,6 +122,8 @@ describe SamsonGcloud::ImageScanner do
       SamsonGcloud::ImageScanner.status(1).must_equal "No vulnerabilities found"
       SamsonGcloud::ImageScanner.status(2).must_equal "Vulnerabilities found"
       SamsonGcloud::ImageScanner.status(3).must_equal "Error retrieving vulnerabilities"
+      SamsonGcloud::ImageScanner.status(4).
+        must_equal "Only full gcr repos in proj with shas are supported for scanning"
     end
 
     it "raises on invalid status" do

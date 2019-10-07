@@ -9,20 +9,24 @@ class BuildsController < ApplicationController
   before_action :find_build, only: [:show, :build_docker_image, :edit, :update]
 
   def index
-    @builds = scope.order('id desc')
-    if search = params[:search]&.except(:time_format)
-      if external = search.delete(:external).presence
-        @builds =
-          case external.to_s
-          when "true" then @builds.where.not(external_status: nil)
-          when "false" then @builds.where(external_status: nil)
-          else raise
-          end
-      end
-
-      @builds = @builds.where(search.permit(*Build.column_names)) unless search.empty?
+    search = params[:search]&.to_unsafe_h&.except(:time_format)&.select { |_, v| v.present? } || {}
+    builds = scope
+    if status = search.delete(:status)
+      builds = builds.
+        left_outer_joins(:docker_build_job).
+        where("jobs.status = ? OR external_status = ?", status, status)
     end
 
+    if commit = search.delete(:commit)
+      builds =
+        if commit.match?(Build::SHA1_REGEX)
+          builds.where(git_sha: commit)
+        else
+          builds.where(git_ref: commit)
+        end
+    end
+
+    @builds = builds.where(search).order(id: :desc)
     @pagy, @builds = pagy(@builds, page: params[:page], items: 15)
 
     respond_to do |format|

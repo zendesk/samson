@@ -24,7 +24,7 @@ class GkeClustersController < ApplicationController
     path = File.join(folder, "#{project}-#{cluster}.yml")
 
     if File.exist?(path)
-      flash.now[:error] = "File #{path} already exists and cannot be overwritten automatically."
+      flash.now[:alert] = "File #{path} already exists and cannot be overwritten automatically."
       return render :new
     end
 
@@ -42,7 +42,7 @@ class GkeClustersController < ApplicationController
     )
 
     unless success
-      flash.now[:error] = "Failed to execute (make sure container.cluster.getCredentials permissions are granted): " \
+      flash.now[:alert] = "Failed to execute (make sure container.cluster.getCredentials permissions are granted): " \
         "#{command.join(" ")} #{content}"
       return render :new
     end

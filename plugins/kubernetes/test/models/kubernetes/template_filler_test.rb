@@ -120,18 +120,6 @@ describe Kubernetes::TemplateFiller do
       template.to_hash[:spec][:revisionHistoryLimit].must_equal 1
     end
 
-    it "keeps namespaces when cluster-service is set" do
-      raw_template[:metadata][:namespace] = "default"
-      raw_template[:metadata][:labels][:"kubernetes.io/cluster-service"] = 'true'
-      template.to_hash[:metadata][:namespace].must_equal 'default'
-    end
-
-    it "keeps namespaces when keep_namespace is set" do
-      raw_template[:metadata][:namespace] = "default"
-      raw_template[:metadata][:annotations] = {"samson/keep_namespace": 'true'}
-      template.to_hash[:metadata][:namespace].must_equal 'default'
-    end
-
     it "can verify without builds" do
       doc.kubernetes_release.builds = []
       template.to_hash(verification: true)
@@ -153,24 +141,52 @@ describe Kubernetes::TemplateFiller do
       result[:spec][:template][:spec][:replicas].must_equal 2
     end
 
-    it "sets name for unknown non-primary kinds" do
-      raw_template[:kind] = "foobar"
-      raw_template[:spec][:template][:spec].delete(:containers)
-      template.to_hash[:metadata][:name].must_equal "test-app-server"
-    end
-
-    it "keeps resource name when keep_name is set" do
-      raw_template[:metadata][:name] = "foobar"
-      raw_template[:metadata][:annotations] = {"samson/keep_name": 'true'}
-      template.to_hash[:metadata][:name].must_equal 'foobar'
-    end
-
     ['CustomResourceDefinition', 'APIService'].each do |kind|
       it "does not set override name for #{kind} since it follows a fixed naming pattern" do
         raw_template[:kind] = kind
         raw_template[:metadata].delete(:namespace)
         template.to_hash[:metadata][:name].must_equal "some-project-rc"
         template.to_hash[:metadata][:namespace].must_equal nil
+      end
+    end
+
+    describe "name" do
+      it "sets name for unknown non-primary kinds" do
+        raw_template[:kind] = "foobar"
+        raw_template[:spec][:template][:spec].delete(:containers)
+        template.to_hash[:metadata][:name].must_equal "test-app-server"
+      end
+
+      it "keeps resource name when keep_name is set" do
+        raw_template[:metadata][:name] = "foobar"
+        raw_template[:metadata][:annotations] = {"samson/keep_name": 'true'}
+        template.to_hash[:metadata][:name].must_equal 'foobar'
+      end
+
+      it "keeps resource name when project namespace is set" do
+        raw_template[:metadata][:name] = "foobar"
+        project.create_kubernetes_namespace!(name: "bar")
+        template.to_hash[:metadata][:name].must_equal 'foobar'
+      end
+    end
+
+    describe "namespace" do
+      it "keeps namespaces when set" do
+        raw_template[:metadata][:namespace] = "default"
+        template.to_hash[:metadata][:namespace].must_equal 'default'
+      end
+
+      it "keeps namespaces when nil is set for 1-off namespace-less kinds" do
+        raw_template[:metadata][:namespace] = nil
+        # secret pulling does not work without namespace, but deployments never have none
+        template.stubs(:set_image_pull_secrets)
+        template.to_hash[:metadata][:namespace].must_equal nil
+      end
+
+      it "sets namespace from kubernetes_namespace" do
+        raw_template[:metadata].delete(:namespace)
+        project.create_kubernetes_namespace!(name: "bar")
+        template.to_hash[:metadata][:namespace].must_equal "bar"
       end
     end
 
@@ -207,13 +223,12 @@ describe Kubernetes::TemplateFiller do
     end
 
     describe "configmap" do
-      it "only modifies namespace since there is no template" do
+      it "modifies nothing" do
         raw_template[:kind] = "ConfigMap"
         raw_template.delete(:spec)
-        raw_template[:metadata][:namespace] = 'old'
         result = template.to_hash
-        result[:metadata][:namespace].must_equal 'pod1'
-        refute result[:spec]
+        result[:metadata].delete(:annotations)
+        result.must_equal raw_template
       end
     end
 
@@ -225,23 +240,31 @@ describe Kubernetes::TemplateFiller do
         template.to_hash[:metadata][:name].must_equal 'some-project-rc'
       end
 
-      it "fills name" do
-        doc.kubernetes_role.update_column(:service_name, 'custom')
-        template.to_hash[:metadata][:name].must_equal 'custom'
-      end
-
-      it "keeps service name when keep_name is set" do
-        raw_template[:metadata][:name] = "foobar"
-        raw_template[:metadata][:annotations] = {"samson/keep_name": 'true'}
-        template.to_hash[:metadata][:name].must_equal 'foobar'
-      end
-
       it "fails when trying to fill for a generated service" do
         doc.kubernetes_role.update_column(:service_name, "app-server#{Kubernetes::Role::GENERATED}1211212")
         e = assert_raises Samson::Hooks::UserError do
           template.to_hash
         end
         e.message.must_include "Service name for role app-server was generated"
+      end
+
+      describe "name" do
+        it "fills name" do
+          doc.kubernetes_role.update_column(:service_name, 'custom')
+          template.to_hash[:metadata][:name].must_equal 'custom'
+        end
+
+        it "keeps service name when keep_name is set" do
+          raw_template[:metadata][:name] = "foobar"
+          raw_template[:metadata][:annotations] = {"samson/keep_name": 'true'}
+          template.to_hash[:metadata][:name].must_equal 'foobar'
+        end
+
+        it "keeps service name when project namespace is set" do
+          raw_template[:metadata][:name] = "foobar"
+          project.create_kubernetes_namespace!(name: "bar")
+          template.to_hash[:metadata][:name].must_equal 'foobar'
+        end
       end
 
       describe "when using multiple services" do
@@ -323,6 +346,11 @@ describe Kubernetes::TemplateFiller do
           raw_template[:spec].delete :serviceName
           service_name.must_be_nil
         end
+
+        it "does nothing when names are manual" do
+          project.create_kubernetes_namespace!(name: "bar")
+          service_name.must_equal "unchanged"
+        end
       end
     end
 
@@ -392,11 +420,6 @@ describe Kubernetes::TemplateFiller do
           )
         end
 
-        it "overrides Always imagePullPolicy since it does not make sense and slows us down" do
-          add_init_container imagePullPolicy: 'Always', name: 'foo'
-          init_containers[0]["imagePullPolicy"].must_equal "IfNotPresent"
-        end
-
         describe "when project does not build images" do
           before do
             project.docker_image_building_disabled = true
@@ -411,6 +434,37 @@ describe Kubernetes::TemplateFiller do
             build.update_column(:image_name, 'nope')
             e = assert_raises(Samson::Hooks::UserError) { container.fetch(:image).must_equal image }
             e.message.must_include "Did not find build for image_name \"truth_service\""
+          end
+        end
+
+        describe "when using hardcoded image" do
+          before do
+            raw_template[:spec][:template][:spec][:containers][0][:'samson/dockerfile'] = 'none'
+            raw_template[:spec][:template][:spec][:containers][0][:image] = 'foo'
+          end
+
+          it "calls vulnerability scanner for digests" do
+            image = "foo.com/example/bar@sha256:#{"a" * 64}"
+            raw_template[:spec][:template][:spec][:containers][0][:image] = image
+            SamsonGcloud.expects(:ensure_docker_image_has_no_vulnerabilities).
+              with(anything, image)
+            result
+          end
+
+          it "calls vulnerability scanner for resolved tags" do
+            Samson::Hooks.with_callback(:resolve_docker_image_tag, ->(*) { "resolved-digest" }) do
+              SamsonGcloud.expects(:ensure_docker_image_has_no_vulnerabilities).
+                with(anything, "resolved-digest")
+              result
+            end
+          end
+
+          it "does not modify image when resolve fails" do
+            Samson::Hooks.with_callback(:resolve_docker_image_tag, ->(*) { nil }) do
+              SamsonGcloud.expects(:ensure_docker_image_has_no_vulnerabilities).
+                with(anything, "foo")
+              result
+            end
           end
         end
       end
@@ -477,11 +531,11 @@ describe Kubernetes::TemplateFiller do
         container.fetch(:resources).must_equal(
           requests: {
             cpu: 0.5,
-            memory: "50M"
+            memory: "50Mi"
           },
           limits: {
             cpu: 1.0,
-            memory: "100M"
+            memory: "100Mi"
           }
         )
       end
@@ -491,10 +545,10 @@ describe Kubernetes::TemplateFiller do
         container.fetch(:resources).must_equal(
           requests: {
             cpu: 0.5,
-            memory: "50M"
+            memory: "50Mi"
           },
           limits: {
-            memory: "100M"
+            memory: "100Mi"
           }
         )
       end
@@ -515,7 +569,12 @@ describe Kubernetes::TemplateFiller do
             KUBERNETES_CLUSTER_NAME
           ].sort
         )
-        env.map { |x| x[:value] }.map(&:class).map(&:name).sort.uniq.must_equal(["NilClass", "String"])
+        env.map { |x| x.key?(:value) && x[:value].class.must_equal(String, "#{x.inspect} needs a String value") }
+      end
+
+      it "does not modify env values" do
+        doc.kubernetes_release.git_ref = "v1.2.3"
+        container.fetch(:env).detect { |e| e[:name] == "TAG" }[:value].must_equal "v1.2.3"
       end
 
       it "merges existing env settings" do
@@ -783,6 +842,8 @@ describe Kubernetes::TemplateFiller do
     end
 
     describe "preStop" do
+      before { raw_template[:spec][:template][:spec][:ports] = [{name: "foo"}] }
+
       it "does not add preStop" do
         refute template.to_hash.dig_fetch(:spec, :template, :spec, :containers, 0).key?(:lifecycle)
       end
@@ -792,8 +853,26 @@ describe Kubernetes::TemplateFiller do
 
         it "adds preStop to avoid 502 errors when server addresses are cached for a few seconds" do
           template.to_hash.dig_fetch(:spec, :template, :spec, :containers, 0, :lifecycle).must_equal(
-            preStop: {exec: {command: ["sleep", "3"]}}
+            preStop: {exec: {command: ["/bin/sleep", "3"]}}
           )
+        end
+
+        describe "when pod would terminate before finishing to sleep" do
+          with_env(KUBERNETES_PRESTOP_SLEEP_DURATION: "50")
+
+          it "bumps termination grace period" do
+            template.to_hash.dig_fetch(:spec, :template, :spec, :terminationGracePeriodSeconds).must_equal(53)
+          end
+
+          it "overrides termination grace period when user configured too low value" do
+            raw_template[:spec][:template][:spec][:terminationGracePeriodSeconds] = 10
+            template.to_hash.dig_fetch(:spec, :template, :spec, :terminationGracePeriodSeconds).must_equal(53)
+          end
+
+          it "does not set termination grace period when disabled" do
+            raw_template.dig_fetch(:spec, :template, :spec, :containers, 0)[:"samson/preStop"] = "disabled"
+            refute template.to_hash.dig(:spec, :template, :spec, :terminationGracePeriodSeconds)
+          end
         end
 
         it "does not add preStop when it was already defined" do
@@ -801,10 +880,16 @@ describe Kubernetes::TemplateFiller do
           template.to_hash.dig_fetch(:spec, :template, :spec, :containers, 0, :lifecycle).must_equal(
             preStop: "OLD"
           )
+          refute template.to_hash.dig(:spec, :template, :spec, :terminationGracePeriodSeconds)
         end
 
         it "does not add preStop when opted out" do
           raw_template.dig_fetch(:spec, :template, :spec, :containers, 0)[:"samson/preStop"] = "disabled"
+          refute template.to_hash.dig_fetch(:spec, :template, :spec, :containers, 0).key?(:lifecycle)
+        end
+
+        it "does not add preStop when there are no ports that could create problems" do
+          raw_template.dig_fetch(:spec, :template, :spec, :containers, 0).delete(:ports)
           refute template.to_hash.dig_fetch(:spec, :template, :spec, :containers, 0).key?(:lifecycle)
         end
       end
@@ -817,11 +902,14 @@ describe Kubernetes::TemplateFiller do
       end
 
       it "matches the resource name" do
+        template.to_hash.dig_fetch(:metadata, :name).must_equal("test-app-server")
         template.to_hash.dig_fetch(:spec, :scaleTargetRef, :name).must_equal("test-app-server")
       end
 
-      it "sets the name" do
-        template.to_hash.dig_fetch(:metadata, :name).must_equal("test-app-server")
+      it "does not change names when using namespaces" do
+        project.create_kubernetes_namespace!(name: "bar")
+        template.to_hash.dig_fetch(:metadata, :name).must_equal("some-project-rc")
+        template.to_hash.dig_fetch(:spec, :scaleTargetRef).must_equal({})
       end
     end
 
@@ -887,6 +975,13 @@ describe Kubernetes::TemplateFiller do
         template.to_hash[:spec][:foo].must_equal "bar"
       end
 
+      it "supports yaml for long names above 64 chars limit" do
+        raw_template[:metadata][:annotations] = {
+          "samson/set_via_env_json": "spec.foo: FOO"
+        }
+        template.to_hash[:spec][:foo].must_equal "bar"
+      end
+
       it "sets podless roles" do
         raw_template[:spec] = {}
         template.to_hash[:spec][:foo].must_equal "bar"
@@ -919,22 +1014,52 @@ describe Kubernetes::TemplateFiller do
         }
         e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
         e.message.must_equal(
-          "Unable to set key samson/set_via_env_json-foo.bar.foo: KeyError key not found: [:foo, :bar]"
+          "Unable to set path foo.bar.foo for Deployment in role app-server: KeyError key not found: [:foo, :bar]"
         )
       end
 
       it "fails nicely with invalid json" do
         environment.update_column(:value, 'foo')
         e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
-        e.message.must_equal(
-          "Unable to set key samson/set_via_env_json-spec.foo: JSON::ParserError 765: unexpected token at 'foo'"
+        e.message.must_include(
+          "Unable to set path spec.foo for Deployment in role app-server: JSON::ParserError"
         )
       end
 
       it "fails nicely with env is missing" do
         environment.update_column(:name, 'BAR')
         e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
-        e.message.must_equal "Unable to set key samson/set_via_env_json-spec.foo: KeyError key not found: \"FOO\""
+        e.message.must_equal(
+          "Unable to set path spec.foo for Deployment in role app-server: KeyError key not found: \"FOO\""
+        )
+      end
+    end
+
+    describe "set_kritis_breakglass" do
+      with_env KRITIS_BREAKGLASS_SUPPORTED: "true"
+
+      let(:kritis) { template.to_hash[:metadata][:annotations][:"kritis.grafeas.io/breakglass"] }
+
+      it "does not add by default" do
+        kritis.must_be_nil
+      end
+
+      it "adds when requested via deploy" do
+        doc.kubernetes_release.deploy.kubernetes_ignore_kritis_vulnerabilities = true
+        kritis.must_equal "true"
+      end
+
+      describe "when requested" do
+        before { doc.deploy_group.kubernetes_cluster.update_column(:kritis_breakglass, true) }
+
+        it "adds when requested" do
+          kritis.must_equal "true"
+        end
+
+        it "does not add to non-runnables" do
+          raw_template[:kind] = "Service"
+          kritis.must_be_nil
+        end
       end
     end
   end
@@ -1020,13 +1145,6 @@ describe Kubernetes::TemplateFiller do
     it "returns empty when resource has no containers" do
       raw_template.delete :spec
       template.build_selectors.must_equal []
-    end
-
-    it "calls vulnerability scanner for hardcoded images" do
-      raw_template[:spec][:template][:spec][:containers][0][:'samson/dockerfile'] = 'none'
-      raw_template[:spec][:template][:spec][:containers][0][:image] = 'foo.com/example/bar'
-      SamsonGcloud.expects(:ensure_docker_image_has_no_vulnerabilities)
-      template.build_selectors
     end
 
     describe "when user selected to not enforce docker images" do

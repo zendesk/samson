@@ -23,89 +23,136 @@ class CommitStatus
       }
     ]
   }.freeze
+  IGNORE_PENDING_CHECKS = ENV["IGNORE_PENDING_COMMIT_CHECKS"].to_s.split(",").freeze
 
   def initialize(project, reference, stage: nil)
     @project = project
-    @reference = reference
+    @reference = reference # for display
+    @commit = project.fast_commit_from_ref(reference) # ref->commit but also double-check a commit exists
     @stage = stage
   end
 
+  # @return [String]
   def state
     combined_status.fetch(:state)
   end
 
+  # @return [Array<Hash>]
   def statuses
     combined_status.fetch(:statuses).map(&:to_h)
   end
 
-  def expire_cache(commit)
-    Rails.cache.delete(cache_key(commit))
+  # @return [NilClass]
+  def expire_cache
+    Rails.cache.delete(cache_key(@commit))
   end
 
   private
 
+  # @return [Hash]
   def combined_status
     @combined_status ||= begin
-      statuses = [github_state]
-      statuses += [release_status, *ref_statuses].compact if @stage
-      merge_statuses(statuses)
+      if @commit
+        statuses = [github_combined_status]
+        statuses += [release_status, *only_production_status, *plugin_statuses].compact if @stage
+        merge_statuses(statuses)
+      else
+        {
+          state: 'fatal',
+          statuses: [{state: 'missing', description: "Reference #{@reference} not found"}]
+        }
+      end
     end
   end
 
   # Gets a reference's state, combining results from both the Status and Checks API
   # NOTE: reply is an api object that does not support .fetch
-  def github_state
-    static = @reference.match?(Build::SHA1_REGEX) || @reference.match?(Release::VERSION_REGEX)
+  # @return [Hash]
+  def github_combined_status
     expires_in = ->(reply) { cache_duration(reply) }
-    Samson::DynamicTtlCache.cache_fetch_if static, cache_key(@reference), expires_in: expires_in do
-      checks_result = with_octokit_client_error_rescue { github_check }
-      status_result = with_octokit_client_error_rescue { github_status }
+    Samson::DynamicTtlCache.cache_fetch_if true, cache_key(@commit), expires_in: expires_in do
+      checks_result = octokit_error_as_status('checks') { github_check_status }
+      status_result = octokit_error_as_status('status') { github_commit_status }
 
       results_with_statuses = [checks_result, status_result].select { |result| result[:statuses].any? }
 
-      results_with_statuses.empty? ? NO_STATUSES_REPORTED_RESULT.dup : merge_statuses(results_with_statuses)
+      results_with_statuses.empty? ? NO_STATUSES_REPORTED_RESULT : merge_statuses(results_with_statuses)
     end
   end
 
   # Gets commit statuses using GitHub's check API. Currently parsing it to match status structure to better facilitate
   # transition to new API. See https://developer.github.com/v3/checks/runs/ and
   # https://developer.github.com/v3/checks/suites/ for details
-  def github_check
-    base_url = "repos/#{@project.repository_path}/commits/#{@reference}"
+  # @return [Hash]
+  def github_check_status
+    base_url = "repos/#{@project.repository_path}/commits/#{@commit}"
     preview_header = {Accept: 'application/vnd.github.antiope-preview+json'}
 
-    check_suites = GITHUB.get("#{base_url}/check-suites", headers: preview_header)[:check_suites]
-    checks = GITHUB.get("#{base_url}/check-runs", headers: preview_header)
+    check_suites = GITHUB.get("#{base_url}/check-suites", headers: preview_header).to_attrs.fetch(:check_suites)
+    check_runs = GITHUB.get("#{base_url}/check-runs", headers: preview_header).to_attrs.fetch(:check_runs)
+
+    # ignore pending unimportant
+    check_suites.reject! do |s|
+      check_state(s[:conclusion]) == "pending" && IGNORE_PENDING_CHECKS.include?(s.dig(:app, :name))
+    end
 
     overall_state = check_suites.
-      map { |suite| check_state_equivalent(suite[:conclusion]) }.
+      map { |suite| check_state(suite[:conclusion]) }.
       max_by { |state| STATE_PRIORITY.index(state.to_sym) }
 
-    statuses = checks[:check_runs].map do |check_run|
+    statuses = check_runs.map do |check_run|
       {
-        state: check_state_equivalent(check_run[:conclusion]),
+        state: check_state(check_run[:conclusion]),
         description: ApplicationController.helpers.markdown(check_run[:output][:summary]),
         context: check_run[:name],
         target_url: check_run[:html_url],
         updated_at: check_run[:started_at]
       }
     end
+    statuses += missing_check_runs_statuses(check_suites, check_runs)
 
     {state: overall_state || 'pending', statuses: statuses}
   end
 
-  def github_status
-    GITHUB.combined_status(@project.repository_path, @reference).to_h
+  # @return [Array<Hash>]
+  def missing_check_runs_statuses(check_suites, check_runs)
+    reported = check_runs.map { |c| c.dig_fetch(:check_suite, :id) }
+    pending_suites = check_suites.reject { |s| reported.include?(s.fetch(:id)) }
+    pending_suites.map do |suite|
+      name = suite.dig_fetch(:app, :name)
+      {
+        state: "pending",
+        description: "Check #{name.inspect} has not reported yet",
+        context: name,
+        target_url: github_pr_checks_url(suite),
+        updated_at: Time.now
+      }
+    end
   end
 
+  # convert github api url to html url without doing another request for the PR
+  # @return [String]
+  def github_pr_checks_url(suite)
+    return unless pr = suite.fetch(:pull_requests).first
+    pr.dig(:url).sub('://api.', '://').sub('/repos/', '/').sub('/pulls/', '/pull/') + "/checks"
+  end
+
+  # @return [Hash]
+  def github_commit_status
+    GITHUB.combined_status(@project.repository_path, @commit).to_h
+  end
+
+  # merges multiple statuses into a single status
+  # @return [Hash]
   def merge_statuses(statuses)
-    statuses[1..-1].each_with_object(statuses[0]) do |status, merged|
+    statuses[1..-1].each_with_object(statuses[0].dup) do |status, merged|
       merged[:state] = [merged.fetch(:state), status.fetch(:state)].max_by { |s| STATE_PRIORITY.index(s.to_sym) }
       merged.fetch(:statuses).concat(status.fetch(:statuses))
     end
   end
 
-  def check_state_equivalent(check_conclusion)
+  # @return [String]
+  def check_state(check_conclusion)
     case check_conclusion
     when *CHECK_STATE[:success] then 'success'
     when *CHECK_STATE[:error] then 'error'
@@ -115,6 +162,7 @@ class CommitStatus
     end
   end
 
+  # @return [Integer] seconds
   def cache_duration(github_result)
     statuses = github_result[:statuses]
     if github_result == NO_STATUSES_REPORTED_RESULT # does not have any statuses, chances are commit is new
@@ -133,7 +181,7 @@ class CommitStatus
   end
 
   # checks if other stages that deploy to the same hosts as this stage have deployed a newer release
-  # @return [nil, error-state]
+  # @return [nil, Hash]
   def release_status
     return unless DeployGroup.enabled?
     return unless current_version = version(@reference)
@@ -154,51 +202,52 @@ class CommitStatus
     }
   end
 
-  def ref_statuses
-    statuses = []
-    # Check if ref has been deployed to any non-production stages first if deploying to production
-    if @stage.production? && !@stage.project.deployed_reference_to_non_production_stage?(@reference)
-      statuses << {
-        state: "pending",
-        statuses: [{
-          state: "Production Only Reference",
-          description: "#{@reference} has not been deployed to a non-production stage."
-        }]
-      }
-    end
-    statuses + Samson::Hooks.fire(:ref_status, @stage, @reference).compact
+  # Check if ref has been deployed to any non-production stages first if deploying to production
+  def only_production_status
+    return if !@stage.production? || @stage.project.deployed_to_non_production_stage?(@commit)
+
+    {
+      state: "pending",
+      statuses: [{
+        state: "Production Only Reference",
+        description: "#{@reference} has not been deployed to a non-production stage."
+      }]
+    }
   end
 
+  # @return [Array<Hash>]
+  def plugin_statuses
+    Samson::Hooks.fire(:ref_status, @stage, @reference, @commit).compact
+  end
+
+  # @return [Gem::Version, NilClass]
   def version(reference)
     return unless plain = reference[Release::VERSION_REGEX, 1]
     Gem::Version.new(plain)
   end
 
   # optimized to sql instead of AR fanciness to make it go from 1s -> 0.01s on our worst case stage
+  # @return [Array<String>]
   def last_deployed_references
     last_deployed = deploy_scope.pluck(Arel.sql('max(deploys.id)'))
-    Deploy.reorder(nil).where(id: last_deployed).pluck(Arel.sql('distinct reference'))
+    Deploy.reorder(id: :asc).where(id: last_deployed).pluck(Arel.sql('distinct reference, id')).map(&:first)
   end
 
   def deploy_scope
     @deploy_scope ||= Deploy.reorder(nil).succeeded.where(stage_id: @stage.influencing_stage_ids).group(:stage_id)
   end
 
-  def with_octokit_client_error_rescue
+  # don't blow up when github is down, but show a nice error
+  def octokit_error_as_status(type)
     yield
-  rescue Octokit::ClientError
-    generate_error_status_and_report($!)
-  end
-
-  def generate_error_status_and_report(exception)
-    error_url = Samson::ErrorNotifier.notify(exception, sync: true)
+  rescue Octokit::ClientError => e
+    Rails.logger.error(e) # log error for further debugging if it's not 404.
     {
       state: "missing",
       statuses: [{
         context: "Reference", # for releases/show.html.erb
         state: "missing",
-        description: "There was a problem getting the status for reference '#{@reference}'." \
-                       " See #{error_url} for details",
+        description: "Unable to get commit #{type}.",
         updated_at: Time.now # needed for #cache_duration
       }]
     }

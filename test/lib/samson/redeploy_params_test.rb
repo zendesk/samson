@@ -7,12 +7,18 @@ describe Samson::RedeployParams do
   let(:deploy) { deploys(:succeeded_test) }
 
   describe "#to_hash" do
-    let(:redeploy_params_array) { Samson::RedeployParams.new(deploy).to_hash.to_a }
+    def redeploy_params_array(exact: false)
+      Samson::RedeployParams.new(deploy, exact: exact).to_hash.to_a
+    end
 
     it "returns default deploy params" do
       redeploy_params_array.must_include(
         [:reference, "staging"]
       )
+    end
+
+    it "can return exact reference" do
+      redeploy_params_array(exact: true).must_include [:reference, "abcabca"]
     end
 
     context "when a plugin includes extra permitted params" do

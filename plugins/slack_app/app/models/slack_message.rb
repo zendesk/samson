@@ -8,11 +8,13 @@ class SlackMessage
     # Only deploys triggered by the slash-command will have a DeployResponseUrl,
     # but we'll get to this point after every deploy completes.
     url = DeployResponseUrl.find_by(deploy_id: @deploy.id)&.response_url
-    return unless url.present?
+    return if url.blank?
 
-    Faraday.new(url).post do |request|
+    Faraday.post url do |request|
       request.headers['Content-Type'] = 'application/json'
       request.body = JSON.unparse message_body
+      request.options.open_timeout = 2
+      request.options.timeout = 5
     end
   end
 

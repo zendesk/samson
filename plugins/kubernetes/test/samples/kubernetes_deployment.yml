@@ -25,10 +25,10 @@ spec:
         resources:
           requests:
             cpu: 250m
-            memory: 50M
+            memory: 50Mi
           limits:
             cpu: 500m
-            memory: 100M
+            memory: 100Mi
         ports:
         - name: some-role-port
           containerPort: 4242

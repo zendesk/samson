@@ -7,6 +7,7 @@ class User < ActiveRecord::Base
   include HasRole
 
   TIME_FORMATS = ['local', 'utc', 'relative'].freeze
+  GITHUB_USERNAME_REGEX = /\A[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}\Z/i.freeze
 
   has_soft_deletion default_scope: true
   include SoftDeleteWithDestroy
@@ -28,6 +29,7 @@ class User < ActiveRecord::Base
   validates :time_format, inclusion: {in: TIME_FORMATS}
   validates :external_id,
     uniqueness: {scope: :deleted_at}, presence: true, unless: :integration?, if: :external_id_changed?
+  validates :github_username, uniqueness: {case_sensitive: false}, format: GITHUB_USERNAME_REGEX, allow_blank: true
 
   before_soft_delete :destroy_user_project_roles
 
@@ -58,6 +60,9 @@ class User < ActiveRecord::Base
     end
     if email = criteria[:email].presence
       scope = scope.where(email: email)
+    end
+    if username = criteria[:github_username].presence
+      scope = scope.where(github_username: username)
     end
     if criteria.key?(:integration)
       value = criteria[:integration]

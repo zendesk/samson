@@ -21,7 +21,7 @@ describe ReleasesController do
         }
       ]
     }
-    check_suite_response = {check_suites: [{conclusion: 'success'}]}
+    check_suite_response = {check_suites: [{conclusion: 'success', id: 1}]}
     check_run_response = {
       check_runs: [
         {
@@ -30,29 +30,16 @@ describe ReleasesController do
           name: 'Travis CI',
           html_url: 'https://coolbeans.com',
           started_at: Time.now.iso8601,
+          check_suite: {id: 1}
         }
       ]
     }
 
-    headers = {
-      "Content-Type" => "application/json",
-    }
-    preview_headers = {
-      'Accept' => 'application/vnd.github.antiope-preview+json'
-    }
-
-    stub_request(:get, "https://api.github.com/repos/bar/foo/commits/abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd/status").
-      to_return(status: 200, body: status_response.to_json, headers: headers)
-
-    stub_request(
-      :get,
-      "https://api.github.com/repos/bar/foo/commits/abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd/check-suites"
-    ).to_return(status: 200, body: check_suite_response.to_json, headers: headers.merge(preview_headers))
-
-    stub_request(
-      :get,
-      "https://api.github.com/repos/bar/foo/commits/abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd/check-runs"
-    ).to_return(status: 200, body: check_run_response.to_json, headers: headers.merge(preview_headers))
+    stub_github_api "repos/bar/foo/commits/abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd",
+      sha: "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"
+    stub_github_api "repos/bar/foo/commits/abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd/status", status_response
+    stub_github_api "repos/bar/foo/commits/abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd/check-suites", check_suite_response
+    stub_github_api "repos/bar/foo/commits/abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd/check-runs", check_run_response
   end
 
   as_a :viewer do

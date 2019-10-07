@@ -39,10 +39,12 @@
   <%= form.input :full_checkout, as: :check_box, label: "Use a full checkout", help: "Samson usually uses a worktree which is a lot faster, pick this option if you want to switch branches during deploy." %>
 
   <% if interval = Samson::Periodical.interval(:periodical_deploy) %>
-    <%= form.input :periodical_deploy, as: :check_box, help: "Deploy every #{distance_of_time_in_words(interval)} if last deploy succeeded, enable automated deploy failure email to be alerted. " %>
+    <% next_execution_in = Samson::Periodical.next_execution_in(:periodical_deploy) %>
+    <%= form.input :periodical_deploy, as: :check_box,
+          help: "Deploy every #{distance_of_time_in_words(interval)} if last deploy succeeded.<br/>Next execution in #{distance_of_time_in_words(next_execution_in)}.<br/>Enable automated deploy failure email to be alerted.".html_safe %>
   <% end %>
 
-  <% if @project.releases.any? %>
+  <% if @project.release_branch? %>
     <%= form.input :deploy_on_release, as: :check_box, label: "Automatically deploy new releases" %>
   <% end %>
 

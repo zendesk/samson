@@ -2,15 +2,14 @@
 require_relative '../test_helper'
 require 'ar_multi_threaded_transactional_tests'
 
-SingleCov.covered! uncovered: 8
+SingleCov.covered! uncovered: 7
 
 describe JobExecution do
   include GitRepoTestHelper
 
-  def execute_job(branch = 'master', on_finish: nil, on_start: nil, **options)
-    execution = JobExecution.new(branch, job, options)
-    execution.on_finish(&on_finish) if on_finish.present?
-    execution.on_start(&on_start) if on_start.present?
+  def execute_job(branch = 'master')
+    execution = JobExecution.new(branch, job)
+    yield execution if block_given?
     execution.perform
   end
 
@@ -68,7 +67,7 @@ describe JobExecution do
 
   it 'can do a full checkout when requested' do
     stage.update_column(:full_checkout, true)
-    execute_job 'master'
+    execute_job
     job.output.wont_include 'worktree'
   end
 
@@ -160,7 +159,7 @@ describe JobExecution do
 
   it "exports deploy information as environment variables" do
     job.update(command: 'env | sort')
-    execute_job 'master', env: {FOO: 'bar'}
+    execute_job
     lines = job.output.split "\n"
     lines.must_include "[04:05:06] DEPLOY_ID=#{deploy.id}"
     lines.must_include "[04:05:06] DEPLOY_URL=#{deploy.url}"
@@ -170,7 +169,6 @@ describe JobExecution do
     lines.must_include "[04:05:06] REFERENCE=master"
     lines.must_include "[04:05:06] REVISION=#{job.commit}"
     lines.must_include "[04:05:06] TAG=v1"
-    lines.must_include "[04:05:06] FOO=bar"
   end
 
   it 'works without a deploy' do
@@ -211,18 +209,18 @@ describe JobExecution do
 
   it 'calls on complete subscribers after finishing' do
     called_subscriber = false
-    execute_job('master', on_finish: -> { called_subscriber = true })
+    execute_job { |e| e.on_finish { called_subscriber = true } }
     assert_equal true, called_subscriber
   end
 
   it 'calls on start subscribers before finishing' do
     called_subscriber = false
-    execute_job('master', on_start: -> { called_subscriber = true })
+    execute_job { |e| e.on_start { called_subscriber = true } }
     assert_equal true, called_subscriber
   end
 
   it 'fails when on start callback fails' do
-    execute_job('master', on_start: -> { raise(Samson::Hooks::UserError, 'failure') })
+    execute_job { |e| e.on_start { raise(Samson::Hooks::UserError, 'failure') } }
 
     job.output.must_include 'failed'
     assert_equal 'errored', job.status
@@ -238,9 +236,10 @@ describe JobExecution do
   end
 
   it 'lets subscribers communicate with viewers' do
-    output = OutputBuffer.new
-    execute_job('master', on_finish: -> { output.puts "Hello" }, output: output)
-    output.messages.must_include "Hello"
+    execution = JobExecution.new("master", job)
+    execution.on_finish { execution.output.puts "Hello" }
+    execution.perform
+    execution.output.messages.must_include "Hello"
     job.output.must_include "Hello"
     job.reload.output.must_include "Hello"
   end
@@ -253,7 +252,7 @@ describe JobExecution do
 
   it 'errors if job commit resultion fails, but checkout works' do
     GitRepository.any_instance.expects(:commit_from_ref).returns nil
-    execute_job('master')
+    execute_job
     assert_equal 'errored', job.status
     job.output.must_include "Could not find commit for master"
   end
@@ -272,7 +271,7 @@ describe JobExecution do
     id = "global/#{project.permalink}/global/bar"
     create_secret id
     job.update(command: "echo 'secret://bar'")
-    execute_job("master")
+    execute_job
     assert_equal '[04:05:06] MY-SECRET', last_line_of_output
   end
 
@@ -298,7 +297,14 @@ describe JobExecution do
     Samson.statsd.stubs(:timing)
     Samson.statsd.expects(:timing).
       with('execute_shell.time', anything, tags: ['project:duck', 'stage:stage4', 'production:false'])
-    assert execute_job("master")
+    assert execute_job
+  end
+
+  it "fails when validation fails" do
+    Samson::Hooks.with_callback(:validate_deploy, ->(*) { false }) do
+      execute_job
+      job.status.must_equal "failed"
+    end
   end
 
   describe "builds_in_environment" do
@@ -328,16 +334,19 @@ describe JobExecution do
   end
 
   describe "kubernetes" do
-    before { stage.update_column :kubernetes, true }
+    before do
+      stage.update_column :kubernetes, true
+      DeployGroup.any_instance.stubs(kubernetes_cluster: true)
+    end
 
     it "does the execution with the kubernetes executor" do
       Kubernetes::DeployExecutor.any_instance.expects(:execute).returns true
-      execute_job("master")
+      execute_job
     end
 
     it "does not clone the repo" do
       GitRepository.any_instance.expects(:checkout_workspace).never
-      execute_job("master")
+      execute_job
     end
   end
 

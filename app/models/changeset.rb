@@ -1,22 +1,23 @@
 # frozen_string_literal: true
 class Changeset
-  attr_reader :project, :repo, :previous_commit, :commit
+  attr_reader :project, :repo, :previous_commit, :reference # used by plugins
+
   BRANCH_TAGS = ["master", "develop"].freeze
   ATTRIBUTE_TABS = %w[files commits pull_requests risks jira_issues].freeze
 
-  def initialize(project, previous_commit, commit)
+  def initialize(project, previous_commit, reference)
     @project = project
     @repo = project.repository_path
-    @commit = commit
-    @previous_commit = previous_commit || @commit
+    @reference = reference
+    @previous_commit = previous_commit || @reference
   end
 
   def commit_range_url
-    "#{project.repository_homepage}/compare/#{commit_range}"
+    "#{@project.repository_homepage}/compare/#{commit_range}"
   end
 
   def commit_range
-    "#{previous_commit}...#{commit}"
+    "#{@previous_commit}...#{@reference}"
   end
 
   def comparison
@@ -24,7 +25,7 @@ class Changeset
   end
 
   def commits
-    @commits ||= comparison.commits.map { |data| Commit.new(project, data) }
+    @commits ||= comparison.commits.map { |data| Commit.new(@project, data) }
   end
 
   def files
@@ -56,7 +57,7 @@ class Changeset
   end
 
   def empty?
-    @previous_commit == @commit
+    @previous_commit == @reference
   end
 
   def error
@@ -70,8 +71,8 @@ class Changeset
 
     # for branches that frequently change we make sure to always get the correct cache,
     # others might get an outdated changeset if they are reviewed with different shas
-    if BRANCH_TAGS.include?(commit)
-      @commit = Samson::Hooks.fire(:changeset_api_request, self, :branch).compact.first
+    if BRANCH_TAGS.include?(@reference)
+      @reference = Samson::Hooks.fire(:changeset_api_request, self, :branch).compact.first
     end
 
     Rails.cache.fetch(cache_key) do
@@ -83,26 +84,30 @@ class Changeset
 
   def find_pull_requests
     numbers = commits.map(&:pull_request_number).compact
-    numbers.map { |num| PullRequest.find(repo, num) }.
+    numbers.map { |num| PullRequest.find(@repo, num) }.
       compact.
       concat(find_pull_requests_for_branch)
   end
 
   def cache_key
-    [self.class, repo, previous_commit, commit].join('-')
+    [self.class, @repo, @previous_commit, @reference].join('-')
   end
 
+  # github only supports finding open PRs for branches (not commits or tags)
+  # https://help.github.com/en/articles/searching-issues-and-pull-requests
   def find_pull_requests_for_branch
     return [] if not_pr_branch?
-    org = repo.split("/", 2).first
-    GITHUB.pull_requests(repo, head: "#{org}:#{commit}").map { |github_pr| PullRequest.find(repo, github_pr.number) }
+    org = @repo.split("/", 2).first
+    GITHUB.pull_requests(@repo, head: "#{org}:#{@reference}").map do |github_pr|
+      PullRequest.find(@repo, github_pr.number)
+    end
   rescue Octokit::Error, Faraday::ConnectionFailed => e
-    Rails.logger.warn "Failed fetching pull requests for branch #{commit}:\n#{e}"
+    Rails.logger.warn "Failed fetching pull requests for branch #{@reference}:\n#{e}"
     []
   end
 
   def not_pr_branch?
-    commit =~ Build::SHA1_REGEX || commit =~ Release::VERSION_REGEX
+    @reference =~ Build::SHA1_REGEX || @reference =~ Release::VERSION_REGEX
   end
 
   class NullComparison

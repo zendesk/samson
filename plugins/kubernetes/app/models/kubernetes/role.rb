@@ -28,6 +28,7 @@ module Kubernetes
     audited
 
     include SoftDeleteWithDestroy
+    delegate :override_resource_names?, to: :project
 
     belongs_to :project, inverse_of: :kubernetes_roles
     has_many :kubernetes_deploy_group_roles,
@@ -47,64 +48,78 @@ module Kubernetes
     validates :project, presence: true
     validates :name, presence: true, format: Kubernetes::RoleValidator::VALID_LABEL_VALUE
     validates :service_name,
-      uniqueness: {scope: :deleted_at, allow_nil: true},
+      uniqueness: {scope: :deleted_at},
       format: Kubernetes::RoleValidator::VALID_LABEL_VALUE,
       allow_nil: true
     validates :resource_name,
-      uniqueness: {scope: :deleted_at, allow_nil: true},
-      format: Kubernetes::RoleValidator::VALID_LABEL_VALUE
+      uniqueness: {scope: :deleted_at},
+      format: Kubernetes::RoleValidator::VALID_LABEL_VALUE,
+      allow_nil: true
     validates :manual_deletion_acknowledged, presence: {message: "must be set"}, if: :manual_deletion_required?
 
     scope :not_deleted, -> { where(deleted_at: nil) }
 
     attr_accessor :manual_deletion_acknowledged
 
-    # create initial roles for a project by reading kubernetes/*{.yml,.yaml,json} files into roles
-    def self.seed!(project, git_ref)
-      configs = kubernetes_config_files_in_repo(project, git_ref)
-      if configs.empty?
-        raise Samson::Hooks::UserError, "No configs found in kubernetes folder or invalid git ref #{git_ref}"
+    class << self
+      # create initial roles for a project by reading kubernetes/*{.yml,.yaml,json} files into roles
+      def seed!(project, git_ref)
+        configs = kubernetes_config_files_in_repo(project, git_ref)
+        if configs.empty?
+          raise Samson::Hooks::UserError, "No configs found in kubernetes folder or invalid git ref #{git_ref}"
+        end
+        existing = where(project: project, deleted_at: nil).to_a
+
+        configs.each do |config_file|
+          # ignore existing role
+          next if existing.any? { |r| r.config_file == config_file.path }
+
+          resource = config_file.primary || config_file.elements.first
+          name = resource.dig_fetch(:metadata, :labels, :role)
+
+          if project.override_resource_names?
+            resource_name = seed_resource_name project, resource
+            service_name = seed_service_name config_file
+          end
+
+          project.kubernetes_roles.create!(
+            config_file: config_file.path,
+            name: name,
+            resource_name: resource_name,
+            service_name: service_name
+          )
+        end
       end
-      existing = where(project: project, deleted_at: nil).to_a
 
-      configs.each do |config_file|
-        # ignore existing role
-        next if existing.any? { |r| r.config_file == config_file.path }
+      # roles for which a config file exists in the repo
+      # ... we ignore those without to allow users to deploy a branch that changes roles
+      def configured_for_project(project, git_sha)
+        project.kubernetes_roles.not_deleted.select do |role|
+          path = role.config_file
+          next unless file_contents = project.repository.file_content(path, git_sha)
+          Kubernetes::RoleConfigFile.new(file_contents, path, project: project) # run validations
+        end
+      end
 
-        resource = config_file.primary || config_file.elements.first
-        name = resource.dig_fetch(:metadata, :labels, :role)
+      private
 
-        # ensure we have a globally unique resource name
+      # ensure we have a globally unique resource name
+      def seed_resource_name(project, resource)
         resource_name = resource.dig_fetch(:metadata, :name)
         if where(deleted_at: nil, resource_name: resource_name).exists?
           resource_name = "#{project.permalink}-#{resource_name}".tr('_', '-')
         end
-
-        # service
-        if service = config_file.services.first
-          service_name = service.dig_fetch(:metadata, :name)
-          # ensure we have a globally unique service name
-          if service_name && where(deleted_at: nil, service_name: service_name).exists?
-            service_name << "#{GENERATED}#{rand(9999999)}"
-          end
-        end
-
-        project.kubernetes_roles.create!(
-          config_file: config_file.path,
-          name: name,
-          resource_name: resource_name,
-          service_name: service_name
-        )
+        resource_name
       end
-    end
 
-    # roles for which a config file exists in the repo
-    # ... we ignore those without to allow users to deploy a branch that changes roles
-    def self.configured_for_project(project, git_sha)
-      project.kubernetes_roles.not_deleted.select do |role|
-        path = role.config_file
-        next unless file_contents = project.repository.file_content(path, git_sha)
-        Kubernetes::RoleConfigFile.new(file_contents, path) # run validations
+      def seed_service_name(config_file)
+        return unless service = config_file.services.first
+        service_name = service.dig_fetch(:metadata, :name)
+        # ensure we have a globally unique service name
+        if service_name && where(deleted_at: nil, service_name: service_name).exists?
+          service_name << "#{GENERATED}#{rand(9999999)}"
+        end
+        service_name
       end
     end
 
@@ -120,14 +135,11 @@ module Kubernetes
 
       return unless limits = spec.dig(:containers, 0, :resources, :limits)
       return unless limits_cpu = parse_resource_value(limits[:cpu], KUBE_CPU_VALUES)
-      return unless limits_memory = parse_resource_value(limits[:memory], KUBE_MEMORY_VALUES)
-      limits_memory /= 1000**2 # we store megabyte
+      return unless limits_memory = parse_memory_value(limits)
 
       if requests = spec.dig(:containers, 0, :resources, :requests)
         requests_cpu = parse_resource_value(requests[:cpu], KUBE_CPU_VALUES)
-        if requests_memory = parse_resource_value(requests[:memory], KUBE_MEMORY_VALUES)
-          requests_memory /= 1000**2 # we store megabyte
-        end
+        requests_memory = parse_memory_value(requests)
       end
 
       {
@@ -140,12 +152,9 @@ module Kubernetes
     end
 
     def role_config_file(reference)
-      return unless raw_template = project.repository.file_content(config_file, reference, pull: false)
-      begin
-        RoleConfigFile.new(raw_template, config_file)
-      rescue Samson::Hooks::UserError
-        nil
-      end
+      self.class.role_config_file(project, config_file, reference)
+    rescue Samson::Hooks::UserError
+      nil
     end
 
     def manual_deletion_required?
@@ -153,6 +162,11 @@ module Kubernetes
     end
 
     private
+
+    def parse_memory_value(limits)
+      return unless bytes = parse_resource_value(limits[:memory], KUBE_MEMORY_VALUES)
+      bytes / KUBE_MEMORY_VALUES.fetch("Mi")
+    end
 
     def nilify_service_name
       self.service_name = service_name.presence
@@ -173,11 +187,15 @@ module Kubernetes
         folder = 'kubernetes'
         files = project.repository.file_content(folder, git_ref).
           to_s.split("\n").
-          map { |f| "#{folder}/#{f}" }
+          map! { |f| "#{folder}/#{f}" }.
+          grep(/\.(yml|yaml|json)$/)
 
-        files.grep(/\.(yml|yaml|json)$/).map do |path|
-          Kubernetes::RoleConfigFile.new(project.repository.file_content(path, git_ref), path)
-        end.compact
+        files.map! { |path| role_config_file(project, path, git_ref) }
+      end
+
+      def role_config_file(project, path, git_ref)
+        return unless raw_template = project.repository.file_content(path, git_ref, pull: false)
+        Kubernetes::RoleConfigFile.new(raw_template, path, project: project)
       end
     end
   end

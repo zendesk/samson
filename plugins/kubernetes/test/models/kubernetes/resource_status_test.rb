@@ -32,8 +32,8 @@ describe Kubernetes::ResourceStatus do
     end
 
     it "is restarted when pod is restarted" do
-      resource[:status][:containerStatuses] = [{restartCount: 1}]
-      details.must_equal "Restarted"
+      resource[:status][:containerStatuses] = [{restartCount: 1, name: "foo", state: {terminated: {reason: "Backoff"}}}]
+      details.must_equal "Restarted (foo Backoff)"
     end
 
     it "is failed when pod is failed" do
@@ -79,6 +79,12 @@ describe Kubernetes::ResourceStatus do
         events[0].merge!(type: "Warning", reason: "Boom")
         expect_event_request { details.must_equal "Error event" }
       end
+
+      it "ignores known bad events" do
+        resource[:kind] = "HorizontalPodAutoscaler"
+        events[0].merge!(type: "Warning", reason: "FailedGetMetrics")
+        expect_event_request { details.must_equal "Live" }
+      end
     end
   end
 
@@ -99,6 +105,15 @@ describe Kubernetes::ResourceStatus do
       events.unshift lastTimestamp: new
       events.push lastTimestamp: new
       result.first.must_equal events[1]
+    end
+
+    it "shows which cluster the error came from when something goes wrong" do
+      e = assert_raises Samson::Hooks::UserError do
+        assert_request :get, /events/, to_timeout: [] do
+          status.events
+        end
+      end
+      e.message.must_equal "Kubernetes error foo default Pod1: Timed out connecting to server"
     end
   end
 end

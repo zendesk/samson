@@ -111,7 +111,7 @@ describe SecretsController do
       it 'raises when vault server is broken' do
         Samson::Secrets::Manager.expects(:lookup_cache).raises(Samson::Secrets::BackendError.new('this is my error'))
         get :index
-        assert flash[:error]
+        assert flash[:alert]
       end
     end
 
@@ -240,7 +240,7 @@ describe SecretsController do
         attributes[:key] = secret.id.split('/').last
         post :create, params: {secret: attributes}
         refute flash[:notice]
-        assert flash[:error]
+        assert flash[:alert]
         assert_template :show
         secret.reload.value.must_equal 'MY-SECRET'
       end
@@ -255,7 +255,7 @@ describe SecretsController do
       it 'renders and sets the flash when invalid' do
         attributes[:key] = ''
         post :create, params: {secret: attributes}
-        assert flash[:error]
+        assert flash[:alert]
         assert_template :show
       end
 
@@ -312,7 +312,7 @@ describe SecretsController do
         attributes[:visible] = "1"
         do_update
         assert_template :show
-        assert flash[:error]
+        assert flash[:alert]
       end
 
       it "does not allow backfills when secret was visible since value should have been visible" do
@@ -322,14 +322,14 @@ describe SecretsController do
         )
         do_update
         assert_template :show
-        assert flash[:error]
+        assert flash[:alert]
       end
 
       it 'fails to update when write fails' do
         Samson::Secrets::Manager.expects(:write).returns(false)
         do_update
         assert_template :show
-        assert flash[:error]
+        assert flash[:alert]
       end
 
       it "is does not allow updating key" do
@@ -367,7 +367,7 @@ describe SecretsController do
           do_update
 
           assert_response :success
-          assert flash[:error]
+          assert flash[:alert]
         end
 
         it 'changes value placeholder and makes it required on duplicate secret' do
@@ -388,7 +388,7 @@ describe SecretsController do
           do_update(allow_duplicates: '0')
 
           assert_response :success
-          assert flash[:error]
+          assert flash[:alert]
         end
 
         it 'allows editing of an already existing duplicate value' do

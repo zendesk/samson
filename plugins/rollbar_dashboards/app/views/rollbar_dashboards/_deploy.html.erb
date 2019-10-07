@@ -1,8 +1,0 @@
-<% if (settings = deploy.project.rollbar_dashboards_settings.presence) && deploy.succeeded? %>
-  <%# replaced by responsive_load.js.erb %>
-  <%= rollbar_dashboard_container(
-        deploy_dashboard_deploy_rollbar_dashboards_dashboards_path(deploy),
-        settings
-      )
-  %>
-<% end %>

@@ -6,6 +6,37 @@ module Kubernetes
   class RoleConfigFile
     attr_reader :path, :elements
 
+    # from https://github.com/helm/helm/blob/release-2.13/pkg/tiller/kind_sorter.go#L29
+    DEPLOY_SORT_ORDER = [
+      "Namespace",
+      "ResourceQuota",
+      "LimitRange",
+      "PodSecurityPolicy",
+      "PodDisruptionBudget",
+      "Secret",
+      "ConfigMap",
+      "StorageClass",
+      "PersistentVolume",
+      "PersistentVolumeClaim",
+      "ServiceAccount",
+      "CustomResourceDefinition",
+      "ClusterRole",
+      "ClusterRoleBinding",
+      "Role",
+      "RoleBinding",
+      "Service",
+      "DaemonSet",
+      "Pod",
+      "ReplicationController",
+      "ReplicaSet",
+      "Deployment",
+      "StatefulSet",
+      "Job",
+      "CronJob",
+      "Ingress",
+      "APIService",
+    ].freeze
+
     DEPLOY_KINDS = ['Deployment', 'DaemonSet', 'StatefulSet'].freeze
     SERVICE_KINDS = ['Service'].freeze
     PREREQUISITE = [:metadata, :annotations, :'samson/prerequisite'].freeze
@@ -30,7 +61,7 @@ module Kubernetes
       (resource[:spec] || {}).keys.grep(/template$/i)
     end
 
-    def initialize(content, path)
+    def initialize(content, path, **args)
       @path = path
 
       if content.blank?
@@ -43,8 +74,8 @@ module Kubernetes
         raise Samson::Hooks::UserError, "Error found when parsing #{path}\n#{$!.message}"
       end
 
-      if errors = Kubernetes::RoleValidator.new(@elements).validate
-        raise Samson::Hooks::UserError, "Error found when parsing #{path}\n#{errors.join("\n")}"
+      if errors = Kubernetes::RoleValidator.new(@elements, **args).validate
+        raise Samson::Hooks::UserError, "Error found when validating #{path}\n#{errors.join("\n")}"
       end
     end
 

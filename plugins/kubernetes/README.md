@@ -113,7 +113,7 @@ Kubernetes::Release
 For each container (including init containers) Samson finds or creates a matching Docker image for the Git SHA that is being deployed.
 Samson always sets the Docker digest, and not a tag, to make deployments immutable.
 
-If `KUBERNETES_ADDITIONAL_CONTAINERS_WITHOUT_DOCKERFILE=true` is set, it will only enforce this for the first container.
+If `KUBERNETES_ADDITIONAL_CONTAINERS_WITHOUT_DOCKERFILE=true` is set, it will only enforce builds for the first container.
 
 Samson matches builds to containers by looking at the `containers[].samson/dockerfile` attribute or the
 base image name (part after the last `/`), if the project has enabled `Docker images built externally`.
@@ -172,7 +172,7 @@ Samson can add a dynamic PodDisruptionBudget by setting `metadata.annotations.sa
 
 To remove it, set to '0', deploy, delete it from the template.
 
-Samson can auto-add a `PodDisruptionBudget` for every `Deployment` by setting for example `KUBERNETES_AUTO_MIN_AVAILABLE=80%`.
+Samson can auto-add a `PodDisruptionBudget` for every `Deployment`/`StatefulSet` by setting for example `KUBERNETES_AUTO_MIN_AVAILABLE=80%`.
 Users can opt-out by setting `metadata.annotations.samson/minAvailable: disabled`.
 
 ### Blue/Green Deployment
@@ -190,27 +190,31 @@ Set `KUBERNETES_NO_CPU_LIMIT_ALLOWED=1`, see [#2820](https://github.com/zendesk/
 Knowing which team owns each component is useful, set `KUBERNETES_ENFORCE_TEAMS=true`
 to make all kubernetes deploys that do not use a `metadata.labels.team` / `spec.template.metadata.labels.team` fail.
 
-### Using custom namespace
+### Resources without namespace
 
-Samson overrides each resources namespace with to the deploygroups `kubernetes_namespace`.
+Samson sets namespaces to the deploygroups `kubernetes_namespace` if no `metadata.namespace` is set in the resource.
 
-To make Samson not override the namespace, set `metadata.annotations.samson/keep_namespace: 'true'`
-(or `metadata.labels.kubernetes.io/cluster-service: 'true'`)
+For namespace-less resources, set `metadata.namespace:` (which will result in `nil`)
 
 ### Using custom resource names
 
-Samson overrides each resource name in a particular role with the resource and service name set in the UI to prevent
+When not using project namespaces samson overrides each resource name in a particular role with the resource and service name set in the UI to prevent
 collision between resources in the same namespace from different projects unintentionally.
 
 To make Samson leave your resource name alone, set `metadata.annotations.samson/keep_name: 'true'`
 
 ### Preventing request loss with preStop
 
-To enable the following functionality you need to set `KUBERNETES_ADD_PRESTOP=true`.
+When not using kubernetes servives to route requests, requests can be lost during a deployment,
+since old pods shut down before everyone all clients are refreshed.
 
-Samson automatically adds `container[].lifecycle.preStop` `sleep 3` if a preStop hook is not set and
-`container[].samson/preStop` is not set to `disabled`, to prevent in-flight requests from getting lost when taking a pod
-out of rotation (alternatively set `metadata.annoations.container-nameofcontainer-samson/preStop: disabled`).
+To prevent this, samson can automatically add `container[].lifecycle.preStop` `/bin/sleep <INT>`
+and increase the `spec.terminationGracePeriodSeconds` if necessary.
+
+(will only add if `preStop` hook is not set and `container[].samson/preStop` is not set to `disabled` and container has ports)
+
+- Set `KUBERNETES_ADD_PRESTOP=true` to enable
+- Set `KUBERNETES_PRESTOP_SLEEP_DURATION=30` in seconds to override default sleep duration (3 seconds)
 
 ### Showing logs on succeeded deploys
 
@@ -220,15 +224,19 @@ This can be useful for Migrations (see above).
 
 ### Changing templates via ENV
 
-For custom things that need to be different between environments/deploy-groups.
+For things that need to be different between environments/deploy-groups.
 
 Use an annotation to configure what will to be replaced:
 ```
-metadata.annotations.samson/set_via_env_json-metadata.labels.custom: SOME_ENV_VAR
-or for paths failing dns name validations:
-metadata.annotations.samson-set-via-env-json-metadata.labels.custom: SOME_ENV_VAR
+metadata.annotations.samson/set_via_env_json: |
+  metadata.labels.custom: FOO_ENV_VAR
+  metadata.labels.other: BAR_ENV_VAR
 ```
+
 Then configure an ENV var with that same name and a value that is valid JSON.
+
+ - To set string values as env vars, use quotes, i.e. `"foo"`
+ - To set values inside of arrays use numbers as index `spec.containers.0.name`
 
 ### Allow randomly not-ready pods during readiness check
 
@@ -240,3 +248,31 @@ this is useful when dealing with large deployments that have some random failure
 To debug services or to create resources that needs to reference a selector that doesn't include team/role (like a Gateway), you can disable selector validation with:
 
 `metadata.annotations.samson/service_selector_across_roles: "true"`
+
+### Blocking LoadBalancer usage
+
+Set `KUBERNETES_ALLOWED_LOAD_BALANCER_NAMESPACES=foo,bar` to block all other namespaces from using them.
+
+### Updating matchLabels
+
+Samson will by default block updating `matchLabels` since it leads to abandoned pods.
+
+If you still want to change a matchLabel, for example project/role:
+
+ - set `metadata.annotations.samson/allow_updating_match_labels: "true"`
+ - deploy with renamed project/role
+ - manually delete pods from old Deployment (`kubectl delete pods -l project=old-name,role=old-role`)
+ - unset annotations from step 1
+
+### Blocking Ingress Nginx annotations
+
+Annotations like `nginx.ingress.kubernetes.io/whitelist-source-range` can make apps publicly accessible.
+To block them except for allowed projects, use:
+
+```
+KUBERNETES_INGRESS_NGINX_ANNOTATION_ALLOWED=project-permalink,[project-permalink,...]
+```
+
+### Kritis
+
+Allow users to set kritis breakglass per deploy-group or deploy by setting environment variable `KRITIS_BREAKGLASS_SUPPORTED=true`

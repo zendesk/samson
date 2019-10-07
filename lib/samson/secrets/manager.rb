@@ -57,9 +57,16 @@ module Samson
         end
 
         # useful for console sessions
-        def move(from, to)
+        def move(from, to, deprecate:)
           copy(from, to)
-          delete(from)
+          if deprecate
+            old = read(from, include_value: true)
+            old[:user_id] = old.delete(:updater_id)
+            old[:deprecated_at] ||= Time.now
+            write(from, old)
+          else
+            delete(from)
+          end
         end
 
         # useful for console sessions

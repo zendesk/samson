@@ -9,7 +9,7 @@ describe Kubernetes::RoleValidator do
   end
   let(:role) { deployment_role }
 
-  describe '.verify' do
+  describe "#validate" do
     let(:spec) { role[0][:spec][:template][:spec] }
     let(:job_role) do
       [YAML.safe_load(read_kubernetes_sample_file('kubernetes_job.yml')).deep_symbolize_keys]
@@ -40,10 +40,13 @@ describe Kubernetes::RoleValidator do
       ]
     end
     let(:role_json) { role.to_json }
-    let(:errors) do
+    let(:namespace) { "foo" }
+    let(:project) { projects(:test) }
+    let(:validator) do
       elements = Kubernetes::Util.parse_file(role_json, 'fake.json').map(&:deep_symbolize_keys)
-      Kubernetes::RoleValidator.new(elements).validate
+      Kubernetes::RoleValidator.new(elements, project: project)
     end
+    let(:errors) { validator.validate }
 
     it "works" do
       errors.must_be_nil
@@ -67,12 +70,13 @@ describe Kubernetes::RoleValidator do
 
     it "fails nicely with false" do
       elements = Kubernetes::Util.parse_file('---', 'fake.yml')
-      errors = Kubernetes::RoleValidator.new(elements).validate
+      errors = Kubernetes::RoleValidator.new(elements, project: project).validate
       errors.must_equal ["No content found"]
     end
 
     it "fails nicely with bad template" do
-      Kubernetes::RoleValidator.new(["bad", {kind: "Good"}]).validate.must_equal ["Only hashes supported"]
+      Kubernetes::RoleValidator.new(["bad", {kind: "Good"}], project: project).
+        validate.must_equal ["Only hashes supported"]
     end
 
     it "allows invalid types" do
@@ -87,10 +91,16 @@ describe Kubernetes::RoleValidator do
       )
     end
 
+    it "does not allow ineffective securityContext" do
+      role[0][:spec][:template][:spec][:securityContext] = {readOnlyRootFilesystem: true}
+      errors.must_include(
+        "securityContext.readOnlyRootFilesystem can only be set at the container level"
+      )
+    end
+
     describe 'StatefulSet' do
       before do
         stateful_set_role[0][:metadata][:name] = 'foobar'
-        stateful_set_role[1][:spec][:updateStrategy] = 'OnDelete'
         role.replace(stateful_set_role)
       end
 
@@ -101,11 +111,6 @@ describe Kubernetes::RoleValidator do
       it "enforces service and serviceName consistency" do
         stateful_set_role[0][:metadata][:name] = 'nope'
         errors.must_equal ["Service metadata.name and StatefulSet spec.serviceName must be consistent"]
-      end
-
-      it "enforces updateStrategy" do
-        stateful_set_role[1][:spec][:updateStrategy] = nil
-        errors.first.must_include "updateStrategy"
       end
     end
 
@@ -162,16 +167,10 @@ describe Kubernetes::RoleValidator do
       errors.must_equal ["Needs a metadata.name"]
     end
 
-    it "reports non-unique namespaces since that would break pod fetching" do
-      role.first[:metadata][:namespace] = "default"
-      errors.to_s.must_include "Namespaces need to be unique"
-    end
-
     ['CustomResourceDefinition', 'APIService'].each do |kind|
       it "allows #{kind} to not have a namespace" do
         role[0][:metadata].delete(:namespace)
         role[0][:kind] = kind
-        role[1][:metadata][:namespace] = 'other'
         refute errors
       end
     end
@@ -257,11 +256,115 @@ describe Kubernetes::RoleValidator do
       errors.must_include "Needs apiVersion specified"
     end
 
+    describe "#validate_ingress_annotations_allowed" do
+      before do
+        role.first[:kind] = "Ingress"
+        role.first[:metadata][:annotations] = {
+          "nginx.ingress.kubernetes.io/whitelist-source-range": "*"
+        }
+      end
+
+      it "allows annotations when setting is not enabled" do
+        assert_nil errors
+      end
+
+      describe "when setting is enable" do
+        with_env KUBERNETES_INGRESS_NGINX_ANNOTATION_ALLOWED: "bar"
+
+        it "blocks annotations" do
+          errors.must_equal [
+            "Annotation nginx.ingress.kubernetes.io/whitelist-source-range is not allowed on Ingress" \
+            " unless foo is in KUBERNETES_INGRESS_NGINX_ANNOTATION_ALLOWED"
+          ]
+        end
+
+        it "allows other annotations" do
+          role.first[:metadata][:annotations] = {"meh/whitelist-source-range": "*"}
+          assert_nil errors
+        end
+
+        it "allows when allowed" do
+          with_env KUBERNETES_INGRESS_NGINX_ANNOTATION_ALLOWED: "bar,foo,baz" do
+            assert_nil errors
+          end
+        end
+      end
+    end
+
+    describe "#validate_datadog_annotations" do
+      it "passes when annotation matches container name" do
+        role.first[:spec][:template][:metadata][:annotations] = {
+          "ad.datadoghq.com/some-project.check_names": "['foo']"
+        }
+        assert_nil errors
+      end
+
+      it "fails when annotation does not match container name" do
+        role.first[:spec][:template][:metadata][:annotations] = {
+          "ad.datadoghq.com/some-other-project.check_names": "['foo']"
+        }
+        errors.must_equal ["Datadog annotation specified for non-existent container name: some-other-project"]
+      end
+
+      it "works with cron jobs" do
+        role.replace(cron_job_role)
+        role.first[:spec][:jobTemplate][:spec][:template][:metadata][:annotations] = {
+          "ad.datadoghq.com/some-other-project.check_names": "['foo']"
+        }
+        errors.must_equal ["Datadog annotation specified for non-existent container name: some-other-project"]
+      end
+
+      it "works with pods" do
+        role.replace(pod_role)
+        role.first[:metadata][:annotations] = {
+          "ad.datadoghq.com/some-other-project.check_names": "['foo']"
+        }
+        errors.must_equal ["Datadog annotation specified for non-existent container name: some-other-project"]
+      end
+    end
+
+    describe "#validate_namespace" do
+      before { project.create_kubernetes_namespace! name: "foo" }
+
+      it "passes with correct namespaces" do
+        role.each { |e| e[:metadata][:namespace] = "foo" }
+        errors.must_equal nil
+      end
+
+      it "passes without namespaces" do
+        role.each { |e| e[:metadata].delete(:namespace) }
+        errors.must_equal nil
+      end
+
+      it "fails with forced default namespace" do
+        role[0][:metadata][:namespace] = nil
+        errors.must_equal ["Only use configured namespace \"foo\", not [nil]"]
+      end
+
+      describe "with invalid namespace" do
+        before { role[0][:metadata][:namespace] = "bar" }
+
+        it "passes when namespace is not configured" do
+          validator.instance_variable_set(:@project, nil)
+          errors.must_equal nil
+        end
+
+        it "fails with invalid namespace" do
+          errors.must_equal ["Only use configured namespace \"foo\", not [\"bar\"]"]
+        end
+      end
+    end
+
     describe "#validate_name_kinds_are_unique" do
       before { role.each { |r| r[:kind] = "foo" } }
 
       it "fails when there are duplicate kinds" do
         errors.to_s.must_include "Only use a maximum of 1 of each kind in a role"
+      end
+
+      it "ignores when using project namespace" do
+        project.create_kubernetes_namespace! name: "foo"
+        errors.must_be_nil
       end
 
       it "fails when services use hardcoded but duplicate names" do
@@ -393,6 +496,14 @@ describe Kubernetes::RoleValidator do
         errors.must_equal nil
       end
 
+      it "allows good containers" do
+        role[0][:spec][:containers] << {
+          name: "foo",
+          resources: {requests: {cpu: "1m", memory: "1M"}, limits: {cpu: "1m", memory: "1M"}}
+        }
+        errors.must_equal nil
+      end
+
       it "fails without containers" do
         role[0][:spec][:containers].clear
         errors.must_equal ["All templates need spec.containers"]
@@ -405,7 +516,31 @@ describe Kubernetes::RoleValidator do
 
       it "fails without init container name" do
         role[0][:spec][:initContainers] = [{}]
-        errors.must_equal ["Containers need a name"]
+        errors.first.must_equal "Containers need a name"
+      end
+
+      it "fails with missing requests" do
+        role[0][:spec][:initContainers] = [{name: "foo"}]
+        errors.must_equal [
+          "Container foo is missing resources.requests.cpu",
+          "Container foo is missing resources.requests.memory",
+          "Container foo is missing resources.limits.cpu",
+          "Container foo is missing resources.limits.memory"
+        ]
+      end
+
+      it "allows missing resources on first container because it will be filled by samson" do
+        role[0][:spec][:containers].delete :resources
+      end
+
+      it "fails with missing resources on second container" do
+        role[0][:spec][:containers] << {name: "foo"}
+        errors.must_equal [
+          "Container foo is missing resources.requests.cpu",
+          "Container foo is missing resources.requests.memory",
+          "Container foo is missing resources.limits.cpu",
+          "Container foo is missing resources.limits.memory"
+        ]
       end
     end
 
@@ -438,7 +573,7 @@ describe Kubernetes::RoleValidator do
         role.replace(job_role)
         role[0][:metadata][:labels].delete(:role)
         errors.must_equal [
-          "Missing project or role for Job metadata.labels",
+          "Missing project or role for Job pi: metadata.labels",
           error_message
         ]
       end
@@ -446,7 +581,7 @@ describe Kubernetes::RoleValidator do
       it "reports missing labels" do
         role.first[:spec][:template][:metadata][:labels].delete(:project)
         errors.must_equal [
-          "Missing project or role for Deployment spec.template.metadata.labels",
+          "Missing project or role for Deployment some-project-rc: spec.template.metadata.labels",
           error_message
         ]
       end
@@ -460,7 +595,7 @@ describe Kubernetes::RoleValidator do
       it "reports missing label section" do
         role.first[:spec][:template][:metadata].delete(:labels)
         errors.must_equal [
-          "Missing project or role for Deployment spec.template.metadata.labels",
+          "Missing project or role for Deployment some-project-rc: spec.template.metadata.labels",
           error_message
         ]
       end
@@ -473,6 +608,14 @@ describe Kubernetes::RoleValidator do
       it "reports inconsistent service label" do
         role.last[:spec][:selector][:project] = 'other'
         errors.must_include error_message
+      end
+
+      it "reports deployments without selector, which would default to all labels (like team)" do
+        role.first[:spec].delete :selector
+        errors.must_equal [
+          "Missing project or role for Deployment some-project-rc: spec.selector.matchLabels",
+          error_message
+        ]
       end
     end
 
@@ -509,11 +652,58 @@ describe Kubernetes::RoleValidator do
         errors.must_equal ["Team names change, do not select or match on them"]
       end
     end
+
+    describe "#validate_load_balancer" do
+      before { role[1][:metadata][:namespace] = "foo" }
+
+      it "allows when not configured" do
+        errors.must_be_nil
+      end
+
+      it "allows when namespace is allowed" do
+        with_env KUBERNETES_ALLOWED_LOAD_BALANCER_NAMESPACES: "foo" do
+          errors.must_be_nil
+        end
+      end
+
+      it "does not allow when namespace is not allowed" do
+        with_env KUBERNETES_ALLOWED_LOAD_BALANCER_NAMESPACES: "bar" do
+          errors.must_equal ["LoadBalancer is not allowed in foo namespace"]
+        end
+      end
+    end
+
+    describe "#validate_daemon_set_supported" do
+      before do
+        role[0][:kind] = "DaemonSet"
+        role[0][:apiVersion] = "apps/v1"
+        role[0][:spec][:updateStrategy] = {type: "RollingUpdate", rollingUpdate: {maxUnavailable: "10%"}}
+      end
+
+      it "is valid" do
+        errors.must_equal nil
+      end
+
+      it "complains about unsupported apiVersion" do
+        role[0][:apiVersion] = "extensions/v1beta1"
+        errors.must_equal ["set DaemonSet apiVersion to apps/v1"]
+      end
+
+      it "complains about unsupported strategy" do
+        role[0][:spec][:updateStrategy] = {type: "OnDelete"}
+        errors.must_equal ["set DaemonSet spec.updateStrategy.type to RollingUpdate"]
+      end
+
+      it "complains about unset maxUnavailable which will make the deploy timeout" do
+        role[0][:spec][:updateStrategy].delete(:rollingUpdate)
+        errors.to_s.must_include "default of 1"
+      end
+    end
   end
 
   describe '.map_attributes' do
     def call(path, elements)
-      Kubernetes::RoleValidator.new(elements).send(:map_attributes, path)
+      Kubernetes::RoleValidator.new(elements, project: nil).send(:map_attributes, path)
     end
 
     it "finds simple" do
@@ -561,7 +751,8 @@ describe Kubernetes::RoleValidator do
     end
 
     it "is invalid with a duplicate role" do
-      validate_error([[role.first], [role.first]]).must_equal "metadata.labels.role must be set and unique"
+      validate_error([[role.first], [role.first]]).
+        must_equal "metadata.labels.role must be set and different in each role"
     end
 
     it "is invalid with different projects" do
@@ -574,7 +765,7 @@ describe Kubernetes::RoleValidator do
     it "is invalid with different role labels in a single role" do
       primary = role.first
       primary2 = primary.dup
-      primary2[:metadata] = {labels: {role: "meh", project: primary.dig(:metadata, :labels, :project)}}
+      primary2[:metadata] = {name: "bar", labels: {role: "meh", project: primary.dig(:metadata, :labels, :project)}}
       validate_error([[primary, primary2]]).must_equal(
         "metadata.labels.role must be set and consistent in each config file"
       )
@@ -583,7 +774,7 @@ describe Kubernetes::RoleValidator do
     it "is invalid when a role is not set" do
       primary = role.first
       primary2 = primary.dup
-      primary2[:metadata] = {labels: {project: primary.dig(:metadata, :labels, :project)}}
+      primary2[:metadata] = {name: "bar", labels: {project: primary.dig(:metadata, :labels, :project)}}
       validate_error([[primary, primary2]]).must_equal(
         "metadata.labels.role must be set and consistent in each config file"
       )
@@ -592,9 +783,20 @@ describe Kubernetes::RoleValidator do
     it "is invalid when all role are not set" do
       primary = role.first
       primary[:metadata][:labels].delete :role
-      validate_error([[primary, primary]]).must_equal(
+      validate_error([[primary]]).must_equal(
         "metadata.labels.role must be set and consistent in each config file"
       )
+    end
+
+    it "is invalid when using the same element twice" do
+      validate_error([[role.first, role.first]]).must_equal "Deployment .some-project-rc exists multiple times"
+    end
+  end
+
+  describe "#object_name" do
+    empty = {}
+    it "returns empty string if metadata is missing" do
+      assert Kubernetes::RoleValidator.new([], project: nil).send(:object_name, empty) == ""
     end
   end
 end

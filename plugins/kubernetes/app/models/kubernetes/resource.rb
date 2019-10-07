@@ -8,10 +8,43 @@ module Kubernetes
   # run an example file through `kubectl create/replace/delete -f test.yml -v8`
   # and see what it does internally ... simple create/update/delete requests or special magic ?
   module Resource
+    module PatchReplace
+      def patch_replace?
+        !@delete_resource && exist?
+      end
+
+      # Some kinds can be updated only using PATCH requests.
+      def deploy
+        return super unless patch_replace?
+        patch_replace
+      end
+
+      private
+
+      def patch_replace
+        update = resource.deep_dup
+        patch_paths.each do |keys|
+          update.dig_set keys, @template.dig_fetch(*keys)
+        end
+        with_patch_header do
+          request :patch, name, [{op: "replace", path: "/spec", value: update.fetch(:spec)}], namespace
+        end
+      end
+
+      # https://github.com/abonas/kubeclient/issues/268
+      def with_patch_header
+        old = client.headers['Content-Type']
+        client.headers['Content-Type'] = 'application/json-patch+json'
+        yield
+      ensure
+        client.headers['Content-Type'] = old
+      end
+    end
+
     class Base
       TICK = 2 # seconds
       UNSETTABLE_METADATA = [:selfLink, :uid, :resourceVersion, :generation, :creationTimestamp].freeze
-      attr_reader :template
+      attr_reader :template, :deploy_group
 
       def initialize(template, deploy_group, autoscaled:, delete_resource:)
         @template = template
@@ -90,7 +123,7 @@ module Kubernetes
         if @delete_resource
           0
         else
-          replica_source.dig(:spec, :replicas) || (RoleConfigFile.primary?(@template) ? 1 : 0)
+          @template.dig(:spec, :replicas) || (RoleConfigFile.primary?(@template) ? 1 : 0)
         end
       end
 
@@ -98,11 +131,6 @@ module Kubernetes
 
       def error_location
         "#{name} #{namespace} #{@deploy_group.name}"
-      end
-
-      # when autoscaling we expect as many pods as we currently have
-      def replica_source
-        (@autoscaled && resource) || @template
       end
 
       def backoff_wait(backoff, reason)
@@ -126,7 +154,6 @@ module Kubernetes
       def create
         return if @delete_resource
         restore_template do
-          @template[:metadata].delete(:resourceVersion)
           request(:create, @template)
         end
         expire_resource_cache
@@ -142,8 +169,13 @@ module Kubernetes
       end
 
       def ensure_not_updating_match_labels
-        # blue-green deply is allowed to do this, see template_filler.rb + deploy_executor.rb
+        return if @delete_resource # deployments do an update when deleting
+
+        # blue-green deploy is allowed to do this, see template_filler.rb + deploy_executor.rb
         return if @template.dig(:spec, :selector, :matchLabels, :blue_green)
+
+        # allow manual migration when user is aware of the issue and wants to do manual cleanup
+        return if @template.dig(:metadata, :annotations, :"samson/allow_updating_match_labels") == "true"
 
         static = [:spec, :selector, :matchLabels]
         # fallback is only for tests that use simple replies
@@ -162,10 +194,12 @@ module Kubernetes
       def template_for_update
         copy = @template.deep_dup
 
-        # when autoscaling on a resource with replicas we should keep replicas constant
+        # when updating a autoscaling resource we should keep replicas constant unless we are trying to delete
         # (not setting replicas will make it use the default of 1)
         path = [:spec, :replicas]
-        copy.dig_set(path, replica_source.dig(*path)) if @template.dig(*path)
+        if @autoscaled && resource && copy.dig(*path).to_i != 0
+          copy.dig_set(path, resource.dig(*path))
+        end
 
         # copy fields
         persistent_fields.each do |keep|
@@ -218,9 +252,14 @@ module Kubernetes
             end
           rescue Kubeclient::HttpError => e
             message = e.message.to_s
-            if message.include?(" is invalid:") || message.include?(" no kind ")
+            if verb != :get && e.error_code == 409
+              # Update version and retry if we ran into a conflict from VersionedUpdate
+              args[0][:metadata][:resourceVersion] = fetch_resource.dig(:metadata, :resourceVersion)
+              raise # retry
+            elsif message.include?(" is invalid:") || message.include?(" no kind ")
               raise_kubernetes_error(message)
             else
+              e.message.insert(0, "Kubernetes error #{error_location}: ") unless e.message.frozen?
               raise
             end
           end
@@ -271,15 +310,14 @@ module Kubernetes
       end
     end
 
-    class Service < Base
+    class Service < VersionedUpdate
       private
 
-      # updating a service requires re-submitting resourceVersion and clusterIP
+      # updating a service requires re-submitting clusterIP
       # we also keep whitelisted fields that are manually changed for load-balancing
       # (meant for labels, but other fields could work too)
       def persistent_fields
         [
-          "metadata.resourceVersion",
           "spec.clusterIP",
           *ENV["KUBERNETES_SERVICE_PERSISTENT_FIELDS"].to_s.split(/\s,/),
           *@template.dig(:metadata, :annotations, :"samson/persistent_fields").to_s.split(/[,\s]+/)
@@ -312,11 +350,6 @@ module Kubernetes
     end
 
     class DaemonSet < Base
-      def deploy
-        delete
-        create
-      end
-
       # need http request since we do not know how many nodes we will match
       # and the number of matches nodes could update with a changed template
       # only makes sense to call this after deploying / while waiting for pods
@@ -326,7 +359,7 @@ module Kubernetes
 
           desired = 0
 
-          3.times do |i|
+          6.times do |i|
             if i != 0
               # last iteration had bad state or does not yet know how many it needs, expire cache
               sleep TICK
@@ -349,65 +382,37 @@ module Kubernetes
           desired
         end
       end
+    end
+
+    class PersistentVolumeClaim < Base
+      include PatchReplace
 
       private
 
-      # we cannot replace or update a daemonset, so we take it down completely
-      #
-      # was do what `kubectl delete daemonset NAME` does:
-      # - make it match no node
-      # - waits for current to reach 0
-      # - deletes the daemonset
-      def request_delete
-        return super if pods_count == 0 # delete when already dead from previous deletion try, update would fail
-
-        # make it match no node
-        restore_template do
-          @template.dig_set [:spec, :template, :spec, :nodeSelector], rand(9999).to_s => rand(9999).to_s
-          update
-        end
-
-        delete_pods { wait_for_termination_of_all_pods }
-
-        super # delete it
-      end
-
-      def pods_count
-        resource.dig_fetch(:status, :currentNumberScheduled) + resource.dig_fetch(:status, :numberMisscheduled)
-      end
-
-      def wait_for_termination_of_all_pods
-        30.times do
-          sleep TICK
-          expire_resource_cache
-          return if pods_count == 0
-        end
+      def patch_paths
+        [[:spec, :resources, :requests]]
       end
     end
 
     class StatefulSet < Base
+      include PatchReplace
+
       def patch_replace?
-        return false if @delete_resource || !exist?
+        return false unless super
+
+        # TODO: default is RollingUpdate, so this is wrong
         deprecated = @template.dig(:spec, :updateStrategy) # supporting pre 1.9 clusters
-        strategy = (deprecated.is_a?(String) ? deprecated : @template.dig(:spec, :updateStrategy, :type))
-        [nil, "OnDelete"].include?(strategy)
+        strategy = deprecated.is_a?(String) ? deprecated : @template.dig(:spec, :updateStrategy, :type)
+        [nil, "OnDelete"].include? strategy
       end
 
       # StatefulSet cannot be updated normally when OnDelete is used or kubernetes <1.7
       # So we patch and then delete all pods to let them re-create
+      # TODO: copy-paste from PatchReplace module. Ideally we need to wait for pods to restart when we do an update.
       def deploy
         return super unless patch_replace?
 
-        # update the template via special magic
-        # https://kubernetes.io/docs/tutorials/stateful-application/basic-stateful-set/#on-delete
-        # fails when trying to update anything outside of containers or replicas
-        update = resource.deep_dup
-        [[:spec, :replicas], [:spec, :template, :spec, :containers]].each do |keys|
-          update.dig_set keys, @template.dig_fetch(*keys)
-        end
-        with_patch_header do
-          request :patch, name, [{op: "replace", path: "/spec", value: update.fetch(:spec)}], namespace
-        end
+        patch_replace
 
         # pods will restart with updated settings
         # need to wait here or deploy_executor.rb will instantly finish since everything is running
@@ -420,21 +425,19 @@ module Kubernetes
 
       private
 
+      def patch_paths
+        # update the template via special magic
+        # https://kubernetes.io/docs/tutorials/stateful-application/basic-stateful-set/#on-delete
+        # fails when trying to update anything outside of containers or replicas
+        [[:spec, :replicas], [:spec, :template, :spec, :containers]]
+      end
+
       def wait_for_pods_to_restart
         old_pods = delete_pods
         old_created = old_pods.map { |pod| pod.dig_fetch(:metadata, :creationTimestamp) }
         backoff_wait(Array.new(60) { 2 }, "restart pods") do
           return if pods.none? { |pod| old_created.include?(pod.dig_fetch(:metadata, :creationTimestamp)) }
         end
-      end
-
-      # https://github.com/abonas/kubeclient/issues/268
-      def with_patch_header
-        old = client.headers['Content-Type']
-        client.headers['Content-Type'] = 'application/json-patch+json'
-        yield
-      ensure
-        client.headers['Content-Type'] = old
       end
     end
 
@@ -475,6 +478,9 @@ module Kubernetes
       # Noop because we are scared ... should later only allow deletion if samson created it
       def delete
       end
+    end
+
+    class HorizontalPodAutoscaler < Base
     end
 
     def self.build(*args)

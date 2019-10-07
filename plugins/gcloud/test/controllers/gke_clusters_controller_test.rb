@@ -51,7 +51,7 @@ describe GkeClustersController do
         Samson::CommandExecutor.expects(:execute).returns([false, "foo"])
         do_create
         assert_response :success
-        flash[:error].must_include(
+        flash[:alert].must_include(
           "gcloud container clusters get-credentials --zone zz cc --account foo --project pp foo"
         )
       end
@@ -61,7 +61,7 @@ describe GkeClustersController do
         File.write expected_file, "hellp"
         do_create
         assert_response :success
-        flash[:error].must_equal "File #{expected_file} already exists and cannot be overwritten automatically."
+        flash[:alert].must_equal "File #{expected_file} already exists and cannot be overwritten automatically."
       end
 
       it 're-renders new if invalid gke cluster is submitted' do

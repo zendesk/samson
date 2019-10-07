@@ -1,5 +1,0 @@
-<% if triggering_deploy = deploy.triggering_deploy %>
-  <div class="alert alert-info">
-    Triggered via <%= link_to "Deploy ##{triggering_deploy.id}", project_deploy_path(deploy.project, triggering_deploy) %>
-  </div>
-<% end %>

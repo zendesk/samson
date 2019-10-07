@@ -1,0 +1,55 @@
+<fieldset>
+  <legend>
+    Environment Variables
+    <%= additional_info SamsonEnv::HELP_TEXT %>
+  </legend>
+
+  <% if repo = ENV['DEPLOYMENT_ENV_REPO'] %>
+    <% url = "https://github.com/#{repo}" %>
+    <% path = "/projects/#{@project.permalink}.env.erb" %>
+    <%= form.input(
+          :use_env_repo,
+          label: "Use #{link_to(repo, url)} to manage deployment environment variables in #{link_to(path, "#{url}#{path}")}".html_safe,
+          as: :check_box
+        )
+    %>
+  <% end %>
+
+  <% if @project.config_service? || url = EnvironmentVariable.config_service_location(@project, nil, display: true) %>
+    <%= form.input(
+        :config_service,
+        as: :check_box,
+        label: "Use Config service",
+        help: "Use config service to manage deployment environment variables, S3 folder is #{url}"
+      )
+    %>
+  <% end %>
+
+  <% scopes = Environment.env_deploy_group_array %>
+  <% sorted_env_vars = EnvironmentVariable.sort_by_scopes(form.object.environment_variables, scopes) %>
+  <% sorted_env_vars << EnvironmentVariable.new %>
+  <%= render "samson_env/environment_variables", form: form, environment_variables: sorted_env_vars %>
+
+  <h4>Groups</h4>
+  <% project = form.object %>
+  <% ids = project.environment_variable_group_ids + [nil] %>
+  <% environment_variable_groups = EnvironmentVariableGroup.order(:name).map { |g| [g.name, g.id] } %>
+  <% if environment_variable_groups.any? %>
+    <% ids.each do |id| %>
+      <div class="form-group env_group_inputs">
+        <div class="col-lg-3">
+          <%= live_select_tag "project[environment_variable_group_ids][]",
+            options_for_select([[nil, nil]] + environment_variable_groups, id), placeholder: "Name"
+          %>
+        </div>
+        <div class="col-lg-2 checkbox">
+          <%# updated dynammically in the client-side JS %>
+          <%= link_to "Preview", preview_environment_variable_groups_path %>
+        </div>
+      </div>
+    <% end %>
+    <%= link_to "Add row", "#", class: "duplicate_previous_row" %> |
+  <% end %>
+  <%= link_to "Groups overview", EnvironmentVariableGroup %> |
+  <%= link_to "Groups preview", preview_environment_variable_groups_path(project_id: form.object.id) %>
+</fieldset>

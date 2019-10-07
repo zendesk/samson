@@ -5,8 +5,9 @@ module SamsonGcloud
     SUCCESS = 1
     FOUND = 2
     ERROR = 3
+    UNSUPPORTED = 4
 
-    FINISHED = [SUCCESS, FOUND].freeze
+    FINISHED = [SUCCESS, FOUND, UNSUPPORTED].freeze
 
     class << self
       # found by inspecting
@@ -22,25 +23,28 @@ module SamsonGcloud
       end
 
       def result_url(image)
-        return unless image && digest_base = image.split(SamsonGcloud.project, 2)[1]
+        return unless digest_base = digest_base(image)
         "https://console.cloud.google.com/gcr/images/#{SamsonGcloud.project}/GLOBAL#{digest_base}/details/vulnz"
       end
 
       def status(id)
         case id
-        when WAITING
-          "Waiting for Vulnerability scan"
-        when SUCCESS
-          "No vulnerabilities found"
-        when FOUND
-          "Vulnerabilities found"
-        when ERROR
-          "Error retrieving vulnerabilities"
-        else raise
+        when WAITING then "Waiting for Vulnerability scan"
+        when SUCCESS then "No vulnerabilities found"
+        when FOUND then "Vulnerabilities found"
+        when ERROR then "Error retrieving vulnerabilities"
+        when UNSUPPORTED then "Only full gcr repos in #{SamsonGcloud.project} with shas are supported for scanning"
+        else raise "Unknown id #{id}"
         end
       end
 
       private
+
+      def digest_base(image)
+        return unless image
+        return unless image.include? "@" # only scanning shas is supported, not tags
+        image.split(SamsonGcloud.project, 2)[1]
+      end
 
       # gcr only offers one endpoint that returns both "scan is finished" events (discovery) and
       # "vulnerability found" events (package vulnerability).
@@ -49,7 +53,7 @@ module SamsonGcloud
       # NOTE: If we could guarantee ordering we could make a single request for
       # "(kind=\"DISCOVERY\" OR kind=\"PACKAGE_VULNERABILITY\")"
       def uncached_scan(image)
-        return ERROR unless image.include? SamsonGcloud.project
+        return UNSUPPORTED unless digest_base(image)
         return ERROR unless result = request(image, "occurrences", "kind=\"DISCOVERY\"")
 
         status = result.dig("occurrences", 0, "discovered", "discovered", "analysisStatus")
@@ -96,7 +100,7 @@ module SamsonGcloud
             timeout: 5,
             whitelist_env: ["PATH"]
           )
-          raise "GCLOUD ERROR: #{success}" unless success
+          raise "GCLOUD ERROR: #{result}" unless success
           result
         end
       end

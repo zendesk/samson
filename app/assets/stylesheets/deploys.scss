@@ -141,3 +141,12 @@ td.status {
     }
   }
 }
+
+#deploy_reference.loading {
+  border: 2px dashed gray;
+}
+
+.has-success #deploy_reference {
+  border: 2px dashed limegreen;
+}
+

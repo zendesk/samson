@@ -1,0 +1,25 @@
+<fieldset>
+  <legend>
+    Rollbar Dashboards
+  </legend>
+  <% @project.rollbar_dashboards_settings.build %>
+
+  <p>
+    Show a dashboard of most frequent errors on the project page and successful deploys.<br/>
+    <b>Base URL:</b> https://api.rollbar.com/api/1 unless you are using a self-hosted instance of Rollbar, then url + /api/1<br/>
+    <b>Access token:</b> From 'Project > Settings > Project Access Tokens'. Supports secret lookup (e.g. secret://rollbar_read_token)<br/>
+    <b>Account/Project:</b> Account and project '/' separated, copy from url. (to link Rollbar items in dashboards)<br/>
+  </p>
+
+  <%= form.fields_for_many(:rollbar_dashboards_settings, add_rows_allowed: true) do |setting| %>
+    <div class="col-lg-4">
+      <%= setting.url_field :base_url, class: "form-control", placeholder: "Base URL"  %>
+    </div>
+    <div class="col-lg-3">
+      <%= setting.text_field :read_token, class: "form-control", placeholder: "Project Read Token" %>
+    </div>
+    <div class="col-lg-3">
+      <%= setting.text_field :account_and_project_name, class: "form-control", placeholder: "{Account}/{Project}" %>
+    </div>
+  <% end %>
+</fieldset>

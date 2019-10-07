@@ -20,6 +20,7 @@
       edit it.
     </div>
   <% end %>
+
   <%= form_for @group, html: { class: "form-horizontal" } do |form| %>
     <fieldset <%= disabled %>>
       <%= form.input :name %>
@@ -38,6 +39,7 @@
         Environment variables
         <%= additional_info SamsonEnv::HELP_TEXT %>
       </legend>
+
       <%= render "samson_env/environment_variables", form: form %> |
       <%= link_to "Preview", preview_environment_variable_groups_path(group_id: @group.id) %>
       <hr>

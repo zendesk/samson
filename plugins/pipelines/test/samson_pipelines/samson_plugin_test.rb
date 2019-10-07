@@ -92,6 +92,8 @@ describe SamsonPipelines do
         include Rails.application.routes.url_helpers
       end
 
+      view_context.instance_variable_set(:@project, Project.first)
+
       view_context
     end
 
@@ -107,8 +109,8 @@ describe SamsonPipelines do
         deploy.update_column(:triggering_deploy_id, other_deploy.id)
 
         html = render_view
-        html.must_match 'alert-info'
-        html.must_match "<a href=\"/projects/foo/deploys/#{other_deploy.id}"
+        html.must_include 'alert-info'
+        html.must_include "<a href=\"/projects/foo/deploys/#{other_deploy.id}"
       end
 
       it 'renders nothing if there is no triggering deploy' do

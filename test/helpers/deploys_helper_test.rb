@@ -54,9 +54,10 @@ describe DeploysHelper do
       end
 
       it "renders buddy check when waiting for buddy" do
-        stub_github_api "repos/bar/foo/commits/staging/status", state: "success", statuses: []
-        stub_github_api "repos/bar/foo/commits/staging/check-suites", check_suites: []
-        stub_github_api "repos/bar/foo/commits/staging/check-runs", check_runs: []
+        stub_github_api "repos/bar/foo/commits/staging", sha: "abc"
+        stub_github_api "repos/bar/foo/commits/abc/status", state: "success", statuses: []
+        stub_github_api "repos/bar/foo/commits/abc/check-suites", check_suites: []
+        stub_github_api "repos/bar/foo/commits/abc/check-runs", check_runs: []
 
         deploy.expects(:waiting_for_buddy?).returns(true)
         result.wont_include output

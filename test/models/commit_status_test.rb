@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 1
+SingleCov.covered!
 
 describe CommitStatus do
   def self.deploying_a_previous_release
@@ -17,8 +17,12 @@ describe CommitStatus do
     end
   end
 
-  def failure!
+  def stub_github_api_failure
     stub_github_api(url, nil, 404)
+  end
+
+  def stub_github_api_success
+    stub_github_api(url, statuses: [{foo: "bar", updated_at: 1.day.ago}], state: "success")
   end
 
   def build_status(stage_param: stage, reference_param: reference)
@@ -27,77 +31,71 @@ describe CommitStatus do
 
   let(:stage) { stages(:test_staging) }
   let(:reference) { 'master' }
+  let(:commit) { "a" * 40 }
   let(:status) { build_status }
 
-  describe "using state api" do
-    def success!
-      stub_github_api(url, statuses: [{foo: "bar", updated_at: 1.day.ago}], state: "success")
-    end
+  before do
+    Project.any_instance.stubs(:fast_commit_from_ref).returns(commit)
+    GitRepository.expects(:new).with { raise "Do not use git" }.never
+  end
 
+  it "is fatal when commit is unknown" do
+    Project.any_instance.stubs(:fast_commit_from_ref).returns(nil)
+    status.state.must_equal "fatal"
+    status.statuses.map { |s| s[:state] }.must_equal ["missing"]
+  end
+
+  describe "using state api" do
     def stub_checks_api(commit_status: status)
-      commit_status.stubs(:github_check).returns(state: 'pending', statuses: [])
+      commit_status.stubs(:github_check_status).returns(state: 'pending', statuses: [])
     end
 
     before { stub_checks_api } # user only using Status API
 
-    let(:url) { "repos/#{stage.project.repository_path}/commits/#{reference}/status" }
+    let(:url) { "repos/#{stage.project.repository_path}/commits/#{commit}/status" }
 
     describe "#state" do
       it "returns state" do
-        success!
+        stub_github_api_success
         status.state.must_equal 'success'
       end
 
       it "is missing when not found" do
-        Samson::ErrorNotifier.expects(:notify)
-        failure!
+        stub_github_api_failure
         status.state.must_equal 'missing'
       end
 
       it "works without stage" do
-        success!
+        stub_github_api_success
         s = status
         s.instance_variable_set(:@stage, nil)
         s.state.must_equal "success"
       end
 
-      it "does not cache changing references" do
-        request = success!
+      it "caches github state accross instances" do
+        request = stub_github_api_success
         status.state.must_equal 'success'
+        new_status = build_status
+        stub_checks_api(commit_status: new_status)
+        new_status.state.must_equal 'success'
+        assert_requested request, times: 1
+      end
+
+      it "can expire cache" do
+        request = stub_github_api_success
+        status.state.must_equal 'success'
+        status.expire_cache
         new_status = build_status
         stub_checks_api(commit_status: new_status)
         new_status.state.must_equal 'success'
         assert_requested request, times: 2
       end
 
-      describe "caching static references" do
-        let(:reference) { 'v4.2' }
-
-        it "caches github state accross instances" do
-          request = success!
-          status.state.must_equal 'success'
-          new_status = build_status
-          stub_checks_api(commit_status: new_status)
-          new_status.state.must_equal 'success'
-          assert_requested request, times: 1
-        end
-
-        it "can expire cache" do
-          request = success!
-          status.state.must_equal 'success'
-          status.expire_cache reference
-          new_status = build_status
-          stub_checks_api(commit_status: new_status)
-          new_status.state.must_equal 'success'
-          assert_requested request, times: 2
-        end
-      end
-
       describe "when deploying a previous release" do
         deploying_a_previous_release
 
         it "warns" do
-          success!
+          stub_github_api_success
           assert_sql_queries 10 do
             status.state.must_equal 'error'
           end
@@ -107,13 +105,13 @@ describe CommitStatus do
           deploys(:succeeded_test).update_column(:stage_id, deploy.stage_id) # need 2 succeeded deploys on same stage
           deploys(:succeeded_test).update_column(:reference, 'v4.1') # old is lower
           deploy.update_column(:reference, 'v4.3') # new is higher
-          success!
+          stub_github_api_success
           status.state.must_equal 'error'
         end
 
         it "ignores when previous deploy was the same or lower" do
           deploy.update_column(:reference, reference)
-          success!
+          stub_github_api_success
           status.state.must_equal 'success'
         end
 
@@ -121,7 +119,7 @@ describe CommitStatus do
           before { deploy.update_column(:reference, 'v4.10') }
 
           it "warns" do
-            success!
+            stub_github_api_success
             status.state.must_equal 'error'
             status.statuses[1][:description].must_equal(
               "v4.10 was deployed to deploy groups in this stage by Production"
@@ -132,7 +130,7 @@ describe CommitStatus do
             other = deploys(:succeeded_test)
             other.update_column(:reference, 'v4.9')
 
-            success!
+            stub_github_api_success
             status.state.must_equal 'error'
             status.statuses[1][:description].must_equal(
               "v4.9, v4.10 was deployed to deploy groups in this stage by Staging, Production"
@@ -142,13 +140,13 @@ describe CommitStatus do
 
         it "ignores when previous deploy was not a version" do
           deploy.update_column(:reference, 'master')
-          success!
+          stub_github_api_success
           status.state.must_equal 'success'
         end
 
         it "ignores when previous deploy was failed" do
           deploy.job.update_column(:status, 'faild')
-          success!
+          stub_github_api_success
           status.state.must_equal 'success'
         end
       end
@@ -156,7 +154,7 @@ describe CommitStatus do
 
     describe "#statuses" do
       it "returns list" do
-        success!
+        stub_github_api_success
         status.statuses.map { |s| s[:foo] }.must_equal ["bar"]
       end
 
@@ -168,16 +166,22 @@ describe CommitStatus do
       end
 
       it "returns Reference context for release/show display" do
-        Samson::ErrorNotifier.expects(:notify)
-        failure!
+        stub_github_api_failure
         status.statuses.map { |s| s[:context] }.must_equal ["Reference"]
+      end
+
+      it "does not add release status when not deploying a release" do
+        with_env DEPLOY_GROUP_FEATURE: "true" do
+          stub_github_api_success
+          status.statuses.map { |s| s[:foo] }.must_equal ["bar"]
+        end
       end
 
       describe "when deploying a previous release" do
         deploying_a_previous_release
 
         it "merges" do
-          success!
+          stub_github_api_success
           status.statuses.each { |s| s.delete(:updated_at) }.must_equal [
             {foo: "bar"},
             {state: "Old Release", description: "v4.3 was deployed to deploy groups in this stage by Production"}
@@ -188,8 +192,6 @@ describe CommitStatus do
       describe "with client error" do
         before do
           GITHUB.expects(:get).raises(Octokit::ClientError)
-          Samson::ErrorNotifier.expects(:notify).returns('http://errorurl.com')
-
           freeze_time
         end
 
@@ -197,8 +199,7 @@ describe CommitStatus do
           expected_status = [{
             context: "Reference", # for releases/show.html.erb
             state: "missing",
-            description: "There was a problem getting the status for reference 'master'." \
-                         " See http://errorurl.com for details",
+            description: "Unable to get commit status.",
             updated_at: Time.now
           }]
 
@@ -209,8 +210,7 @@ describe CommitStatus do
           expected_status = [{
             context: "Reference", # for releases/show.html.erb
             state: "missing",
-            description: "There was a problem getting the status for reference 'v123'." \
-                         " See http://errorurl.com for details",
+            description: "Unable to get commit status.",
             updated_at: Time.now
           }]
 
@@ -223,10 +223,33 @@ describe CommitStatus do
   end
 
   describe "using checks api" do
-    let(:check_suite_url) { "repos/#{stage.project.repository_path}/commits/#{reference}/check-suites" }
-    let(:check_run_url) { "repos/#{stage.project.repository_path}/commits/#{reference}/check-runs" }
+    let(:check_suite_url) { "repos/#{stage.project.repository_path}/commits/#{commit}/check-suites" }
+    let(:check_run_url) { "repos/#{stage.project.repository_path}/commits/#{commit}/check-runs" }
+    let(:check_suites) do
+      [
+        {
+          id: 1,
+          pull_requests: [{url: "https://api.github.com/foo/bar/pulls/123"}],
+          app: {name: "My App"}
+        }
+      ]
+    end
+    let(:check_runs) do
+      [
+        {
+          conclusion: 'success',
+          output: {summary: '<script>alert("Attack!")</script>'},
+          name: 'Travis CI',
+          html_url: 'https://coolbeans.com',
+          started_at: started_at,
+          check_suite: {id: 1}
+        }
+      ]
+    end
 
-    before { status.expects(:github_status).returns(state: 'pending', statuses: []) } # user only using Checks API
+    before do
+      status.expects(:github_commit_status).returns(state: 'pending', statuses: []) # user only using Checks API
+    end
 
     describe '#state' do
       before do
@@ -239,13 +262,14 @@ describe CommitStatus do
               name: 'Travis CI',
               html_url: 'https://coolbeans.com',
               started_at: Time.now,
+              check_suite: {id: 1}
             }
           ]
         )
       end
 
       it 'returns state' do
-        stub_github_api(check_suite_url, check_suites: [{conclusion: 'success'}])
+        stub_github_api(check_suite_url, check_suites: [{conclusion: 'success', id: 1}])
 
         status.state.must_equal 'success'
       end
@@ -257,13 +281,13 @@ describe CommitStatus do
       end
 
       it 'returns pending if check suite does not have conclusion yet' do
-        stub_github_api(check_suite_url, check_suites: [{conclusion: nil}])
+        stub_github_api(check_suite_url, check_suites: [{conclusion: nil, id: 1}])
 
         status.state.must_equal 'pending'
       end
 
       it 'maps check status to state equivalent' do
-        stub_github_api(check_suite_url, check_suites: [{conclusion: 'action_required'}])
+        stub_github_api(check_suite_url, check_suites: [{conclusion: 'action_required', id: 1}])
 
         status.state.must_equal 'error'
       end
@@ -272,12 +296,12 @@ describe CommitStatus do
         stub_github_api(
           check_suite_url,
           check_suites: [
-            {conclusion: 'action_required'},
-            {conclusion: 'cancelled'},
-            {conclusion: 'timed_out'},
-            {conclusion: 'failure'},
-            {conclusion: 'success'},
-            {conclusion: 'neutral'}
+            {conclusion: 'action_required', id: 1},
+            {conclusion: 'cancelled', id: 1},
+            {conclusion: 'timed_out', id: 1},
+            {conclusion: 'failure', id: 1},
+            {conclusion: 'success', id: 1},
+            {conclusion: 'neutral', id: 1}
           ]
         )
 
@@ -285,11 +309,11 @@ describe CommitStatus do
       end
 
       it 'raises with unknown conclusion' do
-        status.unstub(:github_status)
+        status.unstub(:github_commit_status)
 
         stub_github_api(
           check_suite_url,
-          check_suites: [{conclusion: 'bingbong'}]
+          check_suites: [{conclusion: 'bingbong', id: 1}]
         )
 
         e = assert_raises RuntimeError do
@@ -301,7 +325,10 @@ describe CommitStatus do
     end
 
     describe '#statuses' do
-      before { stub_github_api(check_suite_url, check_suites: []) }
+      before do
+        freeze_time
+        stub_github_api(check_suite_url, check_suites: check_suites)
+      end
 
       let(:started_at) { '2018-10-12 20:55:58 UTC'.to_time(:utc) }
 
@@ -313,6 +340,7 @@ describe CommitStatus do
             name: 'Travis CI',
             html_url: 'https://coolbeans.com',
             started_at: started_at,
+            check_suite: {id: 1}
           }]
         )
 
@@ -328,15 +356,7 @@ describe CommitStatus do
       end
 
       it 'sanitizes output' do
-        stub_github_api(
-          check_run_url, check_runs: [{
-            conclusion: 'success',
-            output: {summary: '<script>alert("Attack!")</script>'},
-            name: 'Travis CI',
-            html_url: 'https://coolbeans.com',
-            started_at: started_at,
-          }]
-        )
+        stub_github_api(check_run_url, check_runs: check_runs)
 
         status.statuses.must_equal(
           [{
@@ -350,6 +370,7 @@ describe CommitStatus do
       end
 
       it 'gives help message when no statuses are present' do
+        stub_github_api(check_suite_url, check_suites: [])
         stub_github_api(check_run_url, check_runs: [])
 
         status.statuses.must_equal([{
@@ -358,22 +379,81 @@ describe CommitStatus do
           "See https://developer.github.com/v3/checks/ and https://github.com/blog/1227-commit-status-api for details."
         }])
       end
+
+      it 'shows pending suites' do
+        stub_github_api(check_run_url, check_runs: [])
+
+        status.statuses.must_equal(
+          [{
+            state: "pending",
+            description: "Check \"My App\" has not reported yet",
+            context: "My App",
+            target_url: "https://github.com/foo/bar/pull/123/checks",
+            updated_at: Time.now
+          }]
+        )
+      end
+
+      it "does not show pending suites that are unreliable/unimportant" do
+        stub_github_api(check_run_url, check_runs: [])
+        stub_const CommitStatus, :IGNORE_PENDING_CHECKS, ["My App"] do
+          status.statuses.map { |s| s[:description].first(22) }.must_equal ["No status was reported"]
+        end
+      end
+
+      it "passes when other statuses passed except the ignored unreliable" do
+        check_suites << {
+          id: 2,
+          conclusion: "success",
+          pull_requests: [{url: "https://api.github.com/foo/bar/pulls/123"}],
+          app: {name: "Other App"}
+        }
+        stub_github_api(check_suite_url, check_suites: check_suites)
+
+        check_runs.first[:check_suite][:id] = 2
+        stub_github_api(check_run_url, check_runs: check_runs)
+
+        stub_const CommitStatus, :IGNORE_PENDING_CHECKS, ["My App"] do
+          status.state.must_equal "success"
+          status.statuses.size.must_equal 1, status.statuses
+        end
+      end
+
+      it 'shows pending suites without PRs' do
+        stub_github_api(
+          check_suite_url, check_suites: [{
+            id: 1,
+            pull_requests: [],
+            app: {name: "My App"}
+          }]
+        )
+        stub_github_api(check_run_url, check_runs: [])
+
+        status.statuses.must_equal(
+          [{
+            state: "pending",
+            description: "Check \"My App\" has not reported yet",
+            context: "My App",
+            target_url: nil,
+            updated_at: Time.now
+          }]
+        )
+      end
     end
   end
 
   describe 'using both status and checks api' do
     describe '#state' do
       it 'prioritizes success of one api result over missing statuses of another' do
-        status.expects(:github_check).returns(state: 'pending', statuses: [])
-        status.expects(:github_status).returns(state: 'success', statuses: [{foo: "bar", updated_at: 1.day.ago}])
-
+        status.expects(:github_check_status).returns(state: 'pending', statuses: [])
+        status.expects(:github_commit_status).returns(state: 'success', statuses: [{foo: "bar", updated_at: 1.day.ago}])
         status.state.must_equal('success')
       end
 
       describe 'both APIs missing statuses' do
         before do
-          status.expects(:github_check).returns(state: 'pending', statuses: [])
-          status.expects(:github_status).returns(state: 'pending', statuses: [])
+          status.expects(:github_check_status).returns(state: 'pending', statuses: [])
+          status.expects(:github_commit_status).returns(state: 'pending', statuses: [])
         end
 
         it 'correctly handles missing statuses from both APIs' do
@@ -383,41 +463,48 @@ describe CommitStatus do
     end
   end
 
-  describe '#ref_statuses' do
+  describe '#expire_cache' do
+    it "does not blow up when commit is not found" do
+      GitRepository.any_instance.stubs(:commit_from_ref).returns(nil)
+      status.expire_cache
+    end
+  end
+
+  describe '#only_production_status' do
     let(:production_stage) { stages(:test_production) }
 
     it 'returns nothing if stage is not production' do
-      status.send(:ref_statuses).must_equal []
+      status.send(:only_production_status).must_be_nil
     end
 
     it 'returns nothing if ref has been deployed to non-production stage' do
-      production_stage.project.expects(:deployed_reference_to_non_production_stage?).returns(true)
+      production_stage.project.expects(:deployed_to_non_production_stage?).returns(true)
 
-      build_status(stage_param: production_stage).send(:ref_statuses).must_equal []
+      build_status(stage_param: production_stage).send(:only_production_status).must_be_nil
     end
 
     it 'returns status if ref has not been deployed to non-production stage' do
-      production_stage.project.expects(:deployed_reference_to_non_production_stage?).returns(false)
+      production_stage.project.expects(:deployed_to_non_production_stage?).returns(false)
 
-      expected_hash = [
-        {
-          state: "pending",
-          statuses: [
-            {
-              state: "Production Only Reference",
-              description: "master has not been deployed to a non-production stage."
-            }
-          ]
-        }
-      ]
+      expected_hash = {
+        state: "pending",
+        statuses: [
+          {
+            state: "Production Only Reference",
+            description: "master has not been deployed to a non-production stage."
+          }
+        ]
+      }
 
-      build_status(stage_param: production_stage).send(:ref_statuses).must_equal expected_hash
+      build_status(stage_param: production_stage).send(:only_production_status).must_equal expected_hash
     end
+  end
 
-    it 'includes plugin statuses' do
-      Samson::Hooks.expects(:fire).with(:ref_status, stage, reference).returns([{foo: :bar}])
+  describe "#plugin_statuses" do
+    it 'shows plugin statuses' do
+      Samson::Hooks.expects(:fire).with(:ref_status, stage, reference, commit).returns([{foo: :bar}])
 
-      status.send(:ref_statuses).must_equal [{foo: :bar}]
+      status.send(:plugin_statuses).must_equal [{foo: :bar}]
     end
   end
 

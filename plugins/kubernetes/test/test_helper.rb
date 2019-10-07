@@ -40,7 +40,8 @@ class ActiveSupport::TestCase
   def kubernetes_fake_raw_template
     role = Kubernetes::RoleConfigFile.new(
       read_kubernetes_sample_file('kubernetes_deployment.yml'),
-      'config/app_server.yml'
+      'config/app_server.yml',
+      project: nil
     )
     Kubernetes::ReleaseDoc.any_instance.stubs(raw_template: role.elements)
   end
@@ -160,6 +161,15 @@ class ActiveSupport::TestCase
       "kind" => "APIResourceList",
       "resources" => [
         {"name" => "customresourcedefinitions", "namespaced" => true, "kind" => "CustomResourceDefinition"}
+      ]
+    },
+    "rbac.authorization.k8s.io/v1" => {
+      "kind" => "APIResourceList",
+      "resources" => [
+        {"name" => "clusterrolebindings", "namespaced" => false, "kind" => "ClusterRoleBinding"},
+        {"name" => "clusterroles", "namespaced" => false, "kind" => "ClusterRole"},
+        {"name" => "rolebindings", "namespaced" => true, "kind" => "RoleBinding"},
+        {"name" => "roles", "namespaced" => true, "kind" => "Role"}
       ]
     }
   }.freeze

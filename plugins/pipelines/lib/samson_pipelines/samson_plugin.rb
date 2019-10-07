@@ -31,9 +31,9 @@ module SamsonPipelines
   end
 end
 
-Samson::Hooks.view :stage_form, "samson_pipelines/stage_form"
-Samson::Hooks.view :stage_show, "samson_pipelines/stage_show"
-Samson::Hooks.view :deploys_header, "samson_pipelines/deploy_header"
+Samson::Hooks.view :stage_form, "samson_pipelines"
+Samson::Hooks.view :stage_show, "samson_pipelines"
+Samson::Hooks.view :deploys_header, "samson_pipelines"
 
 Samson::Hooks.callback :stage_permitted_params do
   {next_stage_ids: []}

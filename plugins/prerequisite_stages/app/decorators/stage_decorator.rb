@@ -5,9 +5,8 @@ Stage.class_eval do
       prerequisite_stage_ids.any? ? Stage.where(id: prerequisite_stage_ids) : []
     end
 
-    def undeployed_prerequisite_stages(reference)
-      commit = project.repository.commit_from_ref(reference)
-      return [] unless commit && stages = prerequisite_stages.presence
+    def undeployed_prerequisite_stages(commit)
+      return [] unless stages = prerequisite_stages.presence
 
       deployed_stages = stages.joins(deploys: :job).where(
         jobs: {status: 'succeeded', commit: commit}

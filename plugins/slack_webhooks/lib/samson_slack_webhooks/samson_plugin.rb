@@ -6,8 +6,8 @@ module SamsonSlackWebhooks
   end
 end
 
-Samson::Hooks.view :stage_form, "samson_slack_webhooks/fields"
-Samson::Hooks.view :deploy_view, "samson_slack_webhooks/notify_buddy_box"
+Samson::Hooks.view :stage_form, "samson_slack_webhooks"
+Samson::Hooks.view :deploy_view, "samson_slack_webhooks"
 
 Samson::Hooks.callback :stage_clone do |old_stage, new_stage|
   new_stage.slack_webhooks.build(

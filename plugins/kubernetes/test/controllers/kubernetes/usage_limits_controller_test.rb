@@ -31,11 +31,6 @@ describe Kubernetes::UsageLimitsController do
         assigns(:kubernetes_usage_limits).map(&:id).must_equal [usage_limit.id]
       end
 
-      it "sorts" do
-        get :index
-        assigns(:kubernetes_usage_limits).map(&:id).must_equal [other.id, usage_limit.id]
-      end
-
       it "can find by project" do
         get :index, params: {search: {project_id: usage_limit.project_id}}
         assigns(:kubernetes_usage_limits).map(&:id).must_equal [usage_limit.id]
@@ -73,11 +68,6 @@ describe Kubernetes::UsageLimitsController do
       it "renders" do
         get :index
         assert_template :index
-      end
-
-      it "sorts" do
-        get :index
-        assigns(:kubernetes_usage_limits).map(&:id).must_equal [other.id, usage_limit.id]
       end
 
       it "can find by project" do

@@ -66,10 +66,6 @@ module Kubernetes
       scopes.uniq.map { |group, query| [group.kubernetes_cluster.client('v1'), query] }
     end
 
-    def url
-      Rails.application.routes.url_helpers.project_kubernetes_release_url(project, self)
-    end
-
     def previous_succeeded_release
       deploy.previous_succeeded_deploy&.kubernetes_release
     end

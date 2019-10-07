@@ -1,8 +1,8 @@
-![](https://github.com/zendesk/samson/raw/master/app/assets/images/logo_light.png)
+<img src="https://github.com/zendesk/samson/raw/master/app/assets/images/logo_light.png" width=400/>
 
 [![Build Status](https://travis-ci.org/zendesk/samson.svg?branch=master)](https://travis-ci.org/zendesk/samson)
-[![DockerHub Status](https://img.shields.io/docker/stars/zendesk/samson.svg)](https://hub.docker.com/r/zendesk/samson)
 [![FOSSA Status](https://app.fossa.io/api/projects/custom%2B4071%2Fgit%40github.com%3Azendesk%2Fsamson.git.svg?type=shield)](https://app.fossa.io/projects/custom%2B4071%2Fgit%40github.com%3Azendesk%2Fsamson.git?ref=badge_shield)
+[![DockerHub Status](https://img.shields.io/docker/stars/zendesk/samson.svg)](https://hub.docker.com/r/zendesk/samson)
 
 Samson is a web interface for deployments. [Live Demo](https://samson-demo.herokuapp.com)
 
@@ -48,15 +48,7 @@ Samson will:
 
 ### Contributing
 
-Improvements are always welcome. Please follow these steps to contribute
-
-1. Submit a Pull Request with a detailed explanation of changes and screenshots (if UI is changing)
-1. Receive a :+1: from a core team member
-1. Core team will merge your changes
-
-### Team
-
-Core team is [@henders](https://github.com/henders), [@grosser](https://github.com/grosser), [@jonmoter](https://github.com/jonmoter), [@irwaters](https://github.com/irwaters).
+Issues and Pull Requests are always welcome, submit your idea!
 
 ### License
 

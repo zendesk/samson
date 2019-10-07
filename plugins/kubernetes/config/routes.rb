@@ -14,7 +14,6 @@ Samson::Application.routes.draw do
           get :example
         end
       end
-      resources :releases, only: [:index, :show]
       resources :usage_limits, only: [:index]
     end
   end
@@ -32,5 +31,13 @@ Samson::Application.routes.draw do
       end
     end
     resources :usage_limits, except: [:edit]
+    resources :namespaces, except: [:edit] do
+      member do
+        post :sync
+      end
+      collection do
+        post :sync_all
+      end
+    end
   end
 end

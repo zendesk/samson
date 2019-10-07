@@ -165,6 +165,16 @@ describe Kubernetes::Resource do
           end
         end
 
+        it "allows updating when opting out" do
+          old = {spec: {selector: {matchLabels: {foo: "baz"}}}}
+          resource.template[:metadata][:annotations] = {"samson/allow_updating_match_labels": "true"}
+          assert_request(:get, url, to_return: {body: old.to_json}) do
+            assert_request(:put, url, to_return: {body: "{}"}) do
+              resource.deploy
+            end
+          end
+        end
+
         it "allows removing a label" do
           old = {spec: {selector: {matchLabels: {foo: "bar", bar: "baz"}}}}
           assert_request(:get, url, to_return: {body: old.to_json}) do
@@ -174,11 +184,24 @@ describe Kubernetes::Resource do
           end
         end
 
-        it "allows it for blue-green deploys" do
+        it "allows for blue-green deploys" do
           template[:spec][:selector][:matchLabels][:blue_green] = "blue"
           assert_request(:get, url, to_return: {body: "{}"}) do
             assert_request(:put, url, to_return: {body: "{}"}) do
               resource.deploy
+            end
+          end
+        end
+
+        it "allows when deleting (which causes update for deployment)" do
+          old = {spec: {selector: {matchLabels: {foo: "baz"}}}}
+          replies = [{body: old.to_json}, {body: {spec: {replicas: 0}}.to_json}, {status: 404}]
+          assert_request(:get, url, to_return: replies) do
+            assert_request(:put, url, to_return: {body: "{}"}) do
+              assert_request(:delete, url, to_return: {body: "{}"}) do
+                resource.instance_variable_set(:@delete_resource, true)
+                resource.deploy
+              end
             end
           end
         end
@@ -211,6 +234,8 @@ describe Kubernetes::Resource do
     end
 
     describe "#exist?" do
+      let(:retries) { SamsonKubernetes::API_RETRIES }
+
       it "is true when existing" do
         assert_request(:get, url, to_return: {body: "{}"}) do
           assert resource.exist?
@@ -224,13 +249,13 @@ describe Kubernetes::Resource do
       end
 
       it "raises when a non 404 exception is raised" do
-        assert_request(:get, url, to_return: {status: 500}, times: 4) do
+        assert_request(:get, url, to_return: {status: 500}, times: retries + 1) do
           assert_raises(Kubeclient::HttpError) { resource.exist? }
         end
       end
 
       it "raises SSL exception is raised" do
-        assert_request(:get, url, to_raise: OpenSSL::SSL::SSLError, times: 4) do
+        assert_request(:get, url, to_raise: OpenSSL::SSL::SSLError, times: retries + 1) do
           assert_raises(OpenSSL::SSL::SSLError) { resource.exist? }
         end
       end
@@ -294,20 +319,6 @@ describe Kubernetes::Resource do
         resource.desired_pod_count.must_equal 3
       end
 
-      it "expects a constant number of pods when using autoscaling" do
-        assert_request(:get, url, to_return: {body: {spec: {replicas: 4}}.to_json}) do
-          autoscaled!
-          resource.desired_pod_count.must_equal 4
-        end
-      end
-
-      it "uses template amount when creating with autoscaling" do
-        assert_request(:get, url, to_return: {status: 404}) do
-          autoscaled!
-          resource.desired_pod_count.must_equal 2
-        end
-      end
-
       it "is 1 when not set for primary" do
         template[:spec].delete :replicas
         resource.desired_pod_count.must_equal 1
@@ -326,91 +337,49 @@ describe Kubernetes::Resource do
 
     describe "#request" do
       it "returns response" do
-        stub_request(:get, "http://foobar.server/api/v1/configmaps/pods").to_return body: '{"foo": "bar"}'
-        resource.send(:request, :get, :pods).must_equal foo: "bar"
+        stub_request(:get, "http://foobar.server/api/v1/configmaps/foo").to_return body: '{"foo": "bar"}'
+        resource.send(:request, :get, :foo).must_equal foo: "bar"
       end
 
       it "shows nice error message when user uses the wrong apiVersion" do
         template[:apiVersion] = 'extensions/v1beta1'
-        e = assert_raises(Samson::Hooks::UserError) { resource.send(:request, :get, :pods) }
+        e = assert_raises(Samson::Hooks::UserError) { resource.send(:request, :get, :foo) }
         e.message.must_equal(
           "apiVersion extensions/v1beta1 does not support ConfigMap. Check kubernetes docs for correct apiVersion"
         )
+      end
+
+      it "shows location when api fails" do
+        stub_request(:get, "http://foobar.server/api/v1/configmaps/foo").to_return status: 429
+        e = assert_raises(Kubeclient::HttpError) { resource.send(:request, :get, :foo) }
+        e.message.must_equal "Kubernetes error some-project pod1 Pod1: 429 Too Many Requests"
+      end
+
+      it "does not crash on frozen messages" do
+        resource.send(:client).expects(:get_config_map).
+          raises(Kubeclient::ResourceNotFoundError.new(404, 'FROZEN', {}))
+        e = assert_raises(Kubeclient::ResourceNotFoundError) { resource.send(:request, :get, :foo) }
+        e.message.must_equal "FROZEN"
+      end
+
+      it "retries on conflict with updated version" do
+        resource.send(:client).expects(:update_config_map).
+          with(metadata: {resourceVersion: "old"}).
+          raises(Kubeclient::HttpError.new(409, 'Conflict', {}))
+        resource.send(:client).expects(:get_config_map).
+          returns(metadata: {resourceVersion: "new"})
+        resource.send(:client).expects(:update_config_map).
+          with(metadata: {resourceVersion: "new"}).
+          returns({})
+
+        resource.send(:request, :update, metadata: {resourceVersion: "old"})
       end
     end
   end
 
   describe Kubernetes::Resource::DaemonSet do
-    def daemonset_stub(scheduled, misscheduled)
-      {
-        status: {
-          currentNumberScheduled: scheduled,
-          numberMisscheduled:     misscheduled
-        },
-        spec: {
-          template: {
-            metadata: {
-              labels: {release_id: 123, deploy_group_id: 234}
-            },
-            spec: {
-              nodeSelector: nil
-            }
-          }
-        }
-      }
-    end
-
     let(:kind) { 'DaemonSet' }
     let(:api_version) { 'extensions/v1beta1' }
-
-    describe "#client" do
-      it "uses the extension client because it is in beta" do
-        resource.send(:client).must_equal deploy_group.kubernetes_cluster.client('extensions/v1beta1')
-      end
-    end
-
-    describe "#deploy" do
-      let(:client) { resource.send(:client) }
-      before { template[:spec] = {template: {spec: {}}} }
-
-      it "creates when missing" do
-        assert_request(:get, url, to_return: {status: 404}) do
-          assert_request(:post, base_url, to_return: {body: "{}"}) do
-            resource.deploy
-          end
-        end
-      end
-
-      it "deletes and created when daemonset exists without pods" do
-        client.expects(:get_daemon_set).raises(Kubeclient::ResourceNotFoundError.new(404, 'Not Found', {}))
-        client.expects(:get_daemon_set).returns(daemonset_stub(0, 0))
-        client.expects(:delete_daemon_set)
-        client.expects(:create_daemon_set)
-        resource.deploy
-      end
-
-      it "deletes and created when daemonset exists with pods" do
-        client.expects(:get_daemon_set).raises(Kubeclient::ResourceNotFoundError.new(404, 'Not Found', {}))
-        client.expects(:update_daemon_set).returns(daemonset_stub(1, 1))
-        client.expects(:get_daemon_set).times(4).returns(
-          daemonset_stub(1, 1), # existing check
-          daemonset_stub(1, 1), # after update check #1 ... still existing
-          daemonset_stub(0, 1), # after update check #2 ... still existing
-          daemonset_stub(0, 0)  # after update check #3 ... done
-        )
-        client.expects(:delete_daemon_set)
-        client.expects(:create_daemon_set)
-
-        assert_pods_lookup do
-          assert_pod_deletion do
-            resource.deploy
-          end
-        end
-
-        # reverts changes to template so create is clean
-        refute template[:spec][:template][:spec].key?(:nodeSelector)
-      end
-    end
 
     describe "#desired_pod_count" do
       before { template[:spec] = {replicas: 2} }
@@ -433,8 +402,8 @@ describe Kubernetes::Resource do
       end
 
       it "blows up when desired count cannot be found (bad state or no nodes are available)" do
-        assert_request(:get, url, to_return: {body: {status: {desiredNumberScheduled: 0}}.to_json}, times: 3) do
-          resource.expects(:sleep).times(2)
+        assert_request(:get, url, to_return: {body: {status: {desiredNumberScheduled: 0}}.to_json}, times: 6) do
+          resource.expects(:sleep).times(5)
           assert_raises Samson::Hooks::UserError do
             resource.desired_pod_count
           end
@@ -479,12 +448,6 @@ describe Kubernetes::Resource do
     let(:kind) { 'Deployment' }
     let(:api_version) { 'extensions/v1beta1' }
 
-    describe "#client" do
-      it "uses the extension client because it is in beta" do
-        resource.send(:client).must_equal deploy_group.kubernetes_cluster.client('extensions/v1beta1')
-      end
-    end
-
     describe "#delete" do
       it "does nothing when deployment is deleted" do
         assert_request(:get, url, to_return: {status: 404}) do
@@ -504,6 +467,18 @@ describe Kubernetes::Resource do
           deployment_stub(0)
         )
 
+        client.expects(:delete_deployment)
+        resource.delete
+      end
+
+      it "can delete when using autoscaling" do
+        resource.instance_variable_set(:@autoscaling, true)
+        client = resource.send(:client)
+        client.expects(:update_deployment).with do |template|
+          template[:spec][:replicas].must_equal 0
+        end
+        client.expects(:get_deployment).raises(Kubeclient::ResourceNotFoundError.new(404, 'Not Found', {}))
+        client.expects(:get_deployment).times(3).returns(deployment_stub(0))
         client.expects(:delete_deployment)
         resource.delete
       end
@@ -548,12 +523,6 @@ describe Kubernetes::Resource do
 
     let(:kind) { 'StatefulSet' }
     let(:api_version) { 'apps/v1beta1' }
-
-    describe "#client" do
-      it "uses the apps client because it is in beta" do
-        resource.send(:client).must_equal deploy_group.kubernetes_cluster.client('apps/v1beta1')
-      end
-    end
 
     describe "#deploy" do
       it "creates when missing" do
@@ -684,12 +653,6 @@ describe Kubernetes::Resource do
     let(:kind) { 'Job' }
     let(:api_version) { 'batch/v1' }
 
-    describe "#client" do
-      it "uses the extension client because it is in beta" do
-        resource.send(:client).must_equal deploy_group.kubernetes_cluster.client('batch/v1')
-      end
-    end
-
     describe "#deploy" do
       it "creates when missing" do
         assert_request(:get, url, to_return: {status: 404}) do
@@ -744,8 +707,9 @@ describe Kubernetes::Resource do
     let(:kind) { 'Service' }
 
     describe "#deploy" do
-      let(:old) { {metadata: {resourceVersion: "A", foo: "B"}, spec: {clusterIP: "C"}} }
-      let(:expected_body) { template.deep_merge(metadata: {resourceVersion: "A"}, spec: {clusterIP: "C"}) }
+      let(:old) { {metadata: {foo: "B"}, spec: {clusterIP: "C"}} }
+      let(:expected_body) { template.deep_merge(spec: {clusterIP: "C"}) }
+      let(:expected_body_version) { expected_body.deep_merge(metadata: {resourceVersion: nil}) }
 
       it "creates when missing" do
         assert_request(:get, url, to_return: {status: 404}) do
@@ -757,7 +721,7 @@ describe Kubernetes::Resource do
 
       it "replaces existing while keeping fields that kubernetes demands" do
         assert_request(:get, url, to_return: {body: old.to_json}) do
-          assert_request(:put, url, with: {body: expected_body.to_json}, to_return: {body: "{}"}) do
+          assert_request(:put, url, with: {body: expected_body_version.to_json}, to_return: {body: "{}"}) do
             resource.deploy
           end
         end
@@ -766,7 +730,7 @@ describe Kubernetes::Resource do
       it "keeps whitelisted fields" do
         with_env KUBERNETES_SERVICE_PERSISTENT_FIELDS: "metadata.foo" do
           assert_request(:get, url, to_return: {body: old.to_json}) do
-            with = {body: expected_body.deep_merge(metadata: {foo: "B"}).to_json}
+            with = {body: expected_body.deep_merge(metadata: {foo: "B", resourceVersion: nil}).to_json}
             assert_request(:put, url, with: with, to_return: {body: "{}"}) do
               resource.deploy
             end
@@ -777,7 +741,7 @@ describe Kubernetes::Resource do
       it "ignores unknown whitelisted fields" do
         with_env KUBERNETES_SERVICE_PERSISTENT_FIELDS: "metadata.nope" do
           assert_request(:get, url, to_return: {body: old.to_json}) do
-            assert_request(:put, url, with: {body: expected_body.to_json}, to_return: {body: "{}"}) do
+            assert_request(:put, url, with: {body: expected_body_version.to_json}, to_return: {body: "{}"}) do
               resource.deploy
             end
           end
@@ -788,9 +752,8 @@ describe Kubernetes::Resource do
         with_env KUBERNETES_SERVICE_PERSISTENT_FIELDS: "metadata.nope" do
           template[:metadata][:nope] = "X"
           assert_request(:get, url, to_return: {body: old.to_json}) do
-            expected_body[:metadata][:nope] = "X"
-            expected_body[:metadata][:resourceVersion] = expected_body[:metadata].delete(:resourceVersion) # keep order
-            assert_request(:put, url, with: {body: expected_body.to_json}, to_return: {body: "{}"}) do
+            expected = expected_body.deep_merge(metadata: {nope: "X", resourceVersion: nil})
+            assert_request(:put, url, with: {body: expected.to_json}, to_return: {body: "{}"}) do
               resource.deploy
             end
           end
@@ -800,8 +763,8 @@ describe Kubernetes::Resource do
       it "keeps whitelisted fields via annotation" do
         template[:metadata][:annotations] = {"samson/persistent_fields": "metadata.foo"}
         assert_request(:get, url, to_return: {body: old.to_json}) do
-          with = {body: expected_body.deep_merge(metadata: {foo: "B"}).to_json}
-          assert_request(:put, url, with: with, to_return: {body: "{}"}) do
+          expected = expected_body.deep_merge(metadata: {foo: "B", resourceVersion: nil})
+          assert_request(:put, url, with: {body: expected.to_json}, to_return: {body: "{}"}) do
             resource.deploy
           end
         end
@@ -810,8 +773,8 @@ describe Kubernetes::Resource do
       it "multiple keeps whitelisted fields via annotation" do
         template[:metadata][:annotations] = {"samson/persistent_fields": "barfoo, metadata.foo"}
         assert_request(:get, url, to_return: {body: old.to_json}) do
-          with = {body: expected_body.deep_merge(metadata: {foo: "B"}).to_json}
-          assert_request(:put, url, with: with, to_return: {body: "{}"}) do
+          expected = expected_body.deep_merge(metadata: {foo: "B", resourceVersion: nil})
+          assert_request(:put, url, with: {body: expected.to_json}, to_return: {body: "{}"}) do
             resource.deploy
           end
         end
@@ -942,6 +905,82 @@ describe Kubernetes::Resource do
         args = ->(x) { x.body.must_include '"resourceVersion":"123"'; true }
         assert_request(:put, url, to_return: {body: "{}"}, with: args) do
           resource.deploy
+        end
+      end
+    end
+  end
+
+  describe Kubernetes::Resource::PatchReplace do
+    let(:kind) { 'PersistentVolumeClaim' }
+    let(:api_version) { 'v1' }
+    let(:template) do
+      {
+        kind: kind,
+        apiVersion: api_version,
+        metadata: {name: 'some-project', namespace: 'pod1'},
+        spec: {
+          resources: {
+            requests: {
+
+            }
+          }
+        }
+      }
+    end
+
+    describe "#patch_replace?" do
+      before { resource.stubs(:exist?).returns(true) }
+
+      it "is a replace when replacing existing" do
+        assert resource.patch_replace?
+      end
+
+      it "is not a replace when deleting" do
+        delete_resource!
+        refute resource.patch_replace?
+      end
+
+      it "is not a replace when creating" do
+        resource.stubs(:exist?).returns(false)
+        refute resource.patch_replace?
+      end
+    end
+
+    describe "#deploy" do
+      it "doesn't patch when creating" do
+        assert_request(:get, url, to_return: [{status: 404}, {body: "{}"}]) do
+          assert_request(:post, base_url, to_return: {body: "{}"}) do
+            resource.deploy
+          end
+
+          # not auto-cached
+          assert resource.exist?
+          assert resource.exist?
+        end
+      end
+
+      it "patches when updating" do
+        resource.expects(:patch_replace)
+        assert_request(:get, url, to_return: [{body: '{"spec":{"resources:": {"requests":{}}}}'}]) do
+          resource.deploy
+        end
+      end
+    end
+
+    describe "#patch_paths" do
+      it "returns list of supported paths" do
+        assert resource.send(:patch_paths).any?
+      end
+    end
+
+    describe "#patch_replace" do
+      before { resource.stubs(:exist?).returns(true) }
+
+      it "sends patch request" do
+        assert_request(:get, url, to_return: {body: '{"spec":{"resources": {"requests":{}}}}'}) do
+          assert_request(:patch, url, to_return: {body: "{}"}) do
+            assert resource.send(:patch_replace)
+          end
         end
       end
     end

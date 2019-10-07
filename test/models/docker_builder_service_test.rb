@@ -102,7 +102,7 @@ describe DockerBuilderService do
 
     before do
       ImageBuilder.expects(:build_image).returns(digest)
-      service.instance_variable_set(:@execution, stub(executor: executor))
+      service.instance_variable_set(:@execution, stub("JobExecution", executor: executor, output: OutputBuffer.new))
     end
 
     it 'return the repo digest' do
@@ -155,8 +155,8 @@ describe DockerBuilderService do
 
   describe '#before_docker_build' do
     let(:before_docker_build_path) { File.join(tmp_dir, 'samson/before_docker_build') }
-    let(:output) { StringIO.new }
-    let(:execution) { JobExecution.new('master', Job.new(project: project), output: output) { raise } }
+    let(:output) { execution.output.messages.gsub("[04:05:06] ", "") }
+    let(:execution) { JobExecution.new('master', Job.new(project: project)) { raise } }
 
     before { service.instance_variable_set(:@execution, execution) }
 
@@ -176,16 +176,16 @@ describe DockerBuilderService do
 
       it "executes it" do
         service.send(:before_docker_build, tmp_dir)
-        output.string.must_include \
+        output.must_include \
           "» echo foo\r\nfoo\r\n» echo bar\r\nbar\r\n"
-        output.string.must_include "export CACHE_DIR="
+        output.must_include "export CACHE_DIR="
       end
 
       it "can resolve secrets" do
         create_secret "global/#{project.permalink}/global/foo"
         command.update_column(:command, "echo secret://foo")
         service.send(:before_docker_build, tmp_dir)
-        output.string.must_include "» echo secret://foo\r\nMY-SECRET\r\n"
+        output.must_include "» echo secret://foo\r\nMY-SECRET\r\n"
       end
 
       it "fails when command fails" do
@@ -194,7 +194,7 @@ describe DockerBuilderService do
           service.send(:before_docker_build, tmp_dir)
         end
         e.message.must_equal "Error running build command"
-        output.string.must_include "» exit 1\r\n"
+        output.must_include "» exit 1\r\n"
       end
     end
   end

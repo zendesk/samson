@@ -8,7 +8,7 @@ class UsersController < ApplicationController
     @pagy, @users = pagy(User.search_by_criteria(params), page: params[:page], items: 25)
     respond_to do |format|
       format.html
-      format.json { render_as_json :users, @users, allowed_includes: [:user_project_roles] }
+      format.json { render_as_json :users, @users, @pagy, allowed_includes: [:user_project_roles] }
       format.csv do
         redirect_to(new_csv_export_path(format: :csv, type: :users))
       end

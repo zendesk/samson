@@ -56,13 +56,15 @@ module Samson
       :project_permitted_params,
       :ref_status,
       :release_deploy_conditions,
+      :resolve_docker_image_tag,
       :stage_clone,
       :stage_permitted_params,
       :trace_method,
       :trace_scope,
       :asynchronous_performance_tracer,
       :repo_provider_status,
-      :changeset_api_request
+      :changeset_api_request,
+      :validate_deploy
     ].freeze
 
     # Hooks that are slow and we want performance info on
@@ -153,8 +155,8 @@ module Samson
         hooks(name) << block
       end
 
-      def view(name, partial)
-        hooks(name) << partial
+      def view(name, plugin)
+        hooks(name) << (plugin.include?("/") ? plugin : "#{plugin}/#{name}")
       end
 
       def decorator(class_name, file)

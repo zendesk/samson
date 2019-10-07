@@ -18,6 +18,9 @@ Bundler.require(:assets) if Rails.env.development? || ENV["PRECOMPILE"]
 
 ###
 # Railties need to be loaded before the application is initialized
+require 'omniauth'
+require 'omniauth/rails_csrf_protection'
+
 if ['development', 'staging'].include?(Rails.env) && ENV["SERVER_MODE"]
   require 'rack-mini-profiler' # side effect: removes expires headers
   Rack::MiniProfiler.config.authorization_mode = :allow_all

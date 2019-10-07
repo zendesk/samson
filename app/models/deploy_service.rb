@@ -35,10 +35,10 @@ class DeployService
   end
 
   def confirm_deploy(deploy)
-    stage = deploy.stage
+    job_execution = JobExecution.new(deploy.reference, deploy.job)
 
-    job_execution = JobExecution.new(deploy.reference, deploy.job, env: construct_env(stage))
-    job_execution.on_start { send_before_notifications(deploy, job_execution) }
+    job_execution.on_start { Samson::Hooks.fire(:before_deploy, deploy, job_execution) }
+    job_execution.on_start { send_before_notifications(deploy) }
 
     # independent so each one can fail and report errors
     job_execution.on_finish { update_average_deploy_time(deploy) }
@@ -48,9 +48,10 @@ class DeployService
     job_execution.on_finish { notify_outbound_webhooks(deploy) }
     job_execution.on_finish do
       if deploy.redeploy_previous_when_failed? && deploy.status == "failed"
-        redeploy_previous_succeeded(deploy, job_execution.output)
+        redeploy_previous(deploy, job_execution.output)
       end
     end
+    # TODO: isolate failure by running each callback in a single on_finish
     job_execution.on_finish { Samson::Hooks.fire(:after_deploy, deploy, job_execution) }
 
     JobQueue.perform_later(job_execution, queue: deploy.job_execution_queue_name)
@@ -58,21 +59,33 @@ class DeployService
     send_deploy_update
   end
 
-  private
-
-  def redeploy_previous_succeeded(failed_deploy, output)
-    unless previous = failed_deploy.previous_succeeded_deploy
-      output.puts("Deploy failed, cannot find any previous succeeded deploy")
-      return
-    end
-    reference = previous.exact_reference
-    attributes = Samson::RedeployParams.new(previous).to_hash.merge(
-      reference: reference,
-      buddy: failed_deploy.buddy, # deploy was approved to be reverted if it fails
+  def redeploy(deploy)
+    attributes = Samson::RedeployParams.new(deploy, exact: true).to_hash.merge(
+      buddy: deploy.buddy, # deploy was approved to be reverted if it fails
       redeploy_previous_when_failed: false # prevent cascading redeploys
     )
-    redeploy = deploy(previous.stage, attributes)
-    output.puts("Deploy failed, redeploying previously succeeded (#{previous.url} #{reference}) with #{redeploy.url}")
+    deploy(deploy.stage, attributes)
+  end
+
+  private
+
+  def redeploy_previous(deploy, output)
+    output.puts "Deploy failed, attempting redeploy of previous succeeded deploy ..."
+
+    unless previous = deploy.previous_succeeded_deploy
+      return output.puts "Cannot find any previous succeeded deploy"
+    end
+
+    if previous.exact_reference == deploy.exact_reference
+      return output.puts "Previous succeeded deploy is the same reference #{deploy.exact_reference}"
+    end
+
+    if (redeployed = redeploy(previous)).new_record?
+      errors = redeployed.errors.full_messages.join(", ")
+      return output.puts "Redeploy of #{deploy.exact_reference} failed: #{errors}"
+    end
+
+    output.puts "Redeploying previously succeeded (#{previous.url} #{redeployed.reference}) with #{redeployed.url}"
   end
 
   def update_average_deploy_time(deploy)
@@ -84,15 +97,6 @@ class DeployService
     new_average = (old_average + ((deploy.duration - old_average) / number_of_deploys))
 
     stage.update_column(:average_deploy_time, new_average)
-  end
-
-  def construct_env(stage)
-    env = {STAGE: stage.permalink}
-
-    group_names = stage.deploy_groups.pluck(:env_value).join(" ")
-    env[:DEPLOY_GROUPS] = group_names if group_names.present?
-
-    env
   end
 
   def latest_approved_deploy(reference, project)
@@ -109,7 +113,7 @@ class DeployService
     return false if deploy.changeset_to(last_deploy).commits.any?
     return false if stage_script_changed_after?(last_deploy)
 
-    deploy.buddy = (last_deploy.buddy == @user ? last_deploy.job.user : last_deploy.buddy)
+    deploy.buddy = (last_deploy.buddy == @user ? last_deploy.job.user : last_deploy.buddy) # uncovered
     deploy.started_at = Time.now
     deploy.save!
 
@@ -121,14 +125,11 @@ class DeployService
       any? { |a| a.audited_changes&.key?("script") }
   end
 
-  def send_before_notifications(deploy, job_execution)
-    Samson::Hooks.fire(:before_deploy, deploy, job_execution)
-
+  def send_before_notifications(deploy)
     if deploy.bypassed_approval?
       DeployMailer.bypass_email(deploy, user).deliver_now
     end
   end
-  add_tracer :send_before_notifications
 
   def send_deploy_email(deploy)
     if emails = deploy.stage.notify_email_addresses.presence

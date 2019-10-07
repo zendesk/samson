@@ -1,0 +1,28 @@
+<%= breadcrumb Kubernetes::Namespace, (@kubernetes_namespace.new_record? ? "New" : @kubernetes_namespace) %>
+
+<section>
+  <%= form_for @kubernetes_namespace, html: { class: "form-horizontal" } do |form| %>
+    <%= render 'shared/errors', object: form.object %>
+
+    <fieldset>
+      <%= form.input :name, required: true, pattern: Kubernetes::Namespace::NAME_PATTERN, input_html: {disabled: form.object.persisted?} %>
+      <%= form.input :comment, as: :text_area %>
+
+      <%= form.input :projects, help: "Adding a projects will remove it's kubernetes roles resource and service names AND move it from it's current namespace" do %>
+        <% projects = Project.pluck(:name, :id) %>
+        <% (@kubernetes_namespace.projects + [Project.new]).each do |project| %>
+          <div>
+            <%= live_select_tag "kubernetes_namespace[project_ids][]", options_for_select(projects, project.id), include_blank: true %>
+          </div>
+        <% end %>
+        <%= link_to "Add row", "#", class: "duplicate_previous_row" %>
+      <% end %>
+    </fieldset>
+
+    <%= form.actions delete: true, history: true, delete_help: "Does not delete the namespace from the clusters." do %>
+      <% if @kubernetes_namespace.persisted? %>
+        <%= link_to "Sync", sync_kubernetes_namespace_path(@kubernetes_namespace), class: "btn btn-default", data: {method: :post} %>
+      <% end %>
+    <% end %>
+  <% end %>
+</section>

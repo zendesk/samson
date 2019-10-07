@@ -1,14 +1,15 @@
 # frozen_string_literal: true
 module Samson
   class RedeployParams
-    def initialize(deploy)
+    def initialize(deploy, exact:)
       @deploy = deploy
+      @exact = exact
     end
 
     # Applies different logic depending on the class of each of the deploy
     # parameters, so it supports nested parameters based on object relations
     def to_hash
-      DeploysController.deploy_permitted_params.each_with_object({}) do |param, collection|
+      hash = DeploysController.deploy_permitted_params.each_with_object({}) do |param, collection|
         case param
         when String, Symbol
           collection[param] = @deploy.public_send(param)
@@ -18,6 +19,8 @@ module Samson
           raise "Unsupported deploy param class: `#{param.class}` for `#{param}`."
         end
       end
+      hash[:reference] = @deploy.exact_reference if @exact
+      hash
     end
 
     private

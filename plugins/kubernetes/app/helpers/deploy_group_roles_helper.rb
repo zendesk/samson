@@ -8,7 +8,11 @@ module DeployGroupRolesHelper
       html = "".html_safe
       html << dgr.replicas.to_s
       if role.autoscaled?
-        html << icon_tag(:scale, title: "Replicas managed externally, actual count might not match this")
+        html << " "
+        html << icon_tag(
+          :scale,
+          title: "Replicas managed externally, minimum replicas needed for deployment, actual count might be higher."
+        )
       end
       html
     end

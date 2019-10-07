@@ -44,10 +44,14 @@ Stage.new(
 ).save!(validate: false)
 
 ["migrate", "server"].each do |name|
-  role = Kubernetes::Role.find_by_name!(name)
+  role = Kubernetes::Role.new(
+    name: name,
+    project: project
+  )
   if name == "server"
-    role.update_column(:service_name, "example-server")
+    role.service_name = "example-server"
   end
+  role.save!
   Kubernetes::DeployGroupRole.create!(
     project: project,
     deploy_group: groupk,

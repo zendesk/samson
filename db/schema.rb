@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_04_03_202316) do
+ActiveRecord::Schema.define(version: 2019_09_19_212707) do
 
   create_table "audits" do |t|
     t.integer "auditable_id", null: false
@@ -74,6 +74,19 @@ ActiveRecord::Schema.define(version: 2019_04_03_202316) do
     t.string "status", default: "pending", null: false
   end
 
+  create_table "datadog_monitor_queries" do |t|
+    t.string "query", null: false
+    t.string "match_target"
+    t.string "match_source"
+    t.string "failure_behavior"
+    t.integer "check_duration"
+    t.integer "scope_id", null: false
+    t.string "scope_type", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["scope_id", "scope_type"], name: "index_datadog_monitor_queries_on_scope_id_and_scope_type", length: { scope_type: 100 }
+  end
+
   create_table "deploy_groups", id: :integer do |t|
     t.string "name", null: false
     t.integer "environment_id", null: false
@@ -121,6 +134,7 @@ ActiveRecord::Schema.define(version: 2019_04_03_202316) do
     t.text "env_state", limit: 16777215
     t.integer "triggering_deploy_id"
     t.boolean "redeploy_previous_when_failed", default: false, null: false
+    t.boolean "kubernetes_ignore_kritis_vulnerabilities", default: false, null: false
     t.index ["build_id"], name: "index_deploys_on_build_id"
     t.index ["deleted_at"], name: "index_deploys_on_deleted_at"
     t.index ["job_id", "deleted_at"], name: "index_deploys_on_job_id_and_deleted_at"
@@ -218,6 +232,7 @@ ActiveRecord::Schema.define(version: 2019_04_03_202316) do
     t.string "encrypted_client_key_iv"
     t.string "encryption_key_sha"
     t.boolean "verify_ssl", default: false, null: false
+    t.boolean "kritis_breakglass", default: false, null: false
   end
 
   create_table "kubernetes_deploy_group_roles", id: :integer do |t|
@@ -233,6 +248,14 @@ ActiveRecord::Schema.define(version: 2019_04_03_202316) do
     t.boolean "no_cpu_limit", default: false, null: false
     t.index ["deploy_group_id"], name: "index_kubernetes_deploy_group_roles_on_deploy_group_id"
     t.index ["project_id", "deploy_group_id", "kubernetes_role_id"], name: "index_kubernetes_deploy_group_roles_on_project_dg_kr", unique: true
+  end
+
+  create_table "kubernetes_namespaces" do |t|
+    t.string "name", null: false
+    t.string "comment", limit: 512
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_kubernetes_namespaces_on_name", unique: true, length: 191
   end
 
   create_table "kubernetes_release_docs", id: :integer do |t|
@@ -272,7 +295,7 @@ ActiveRecord::Schema.define(version: 2019_04_03_202316) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
-    t.string "resource_name", null: false
+    t.string "resource_name"
     t.boolean "autoscaled", default: false, null: false
     t.boolean "blue_green", default: false, null: false
     t.index ["project_id"], name: "index_kubernetes_roles_on_project_id"
@@ -404,7 +427,12 @@ ActiveRecord::Schema.define(version: 2019_04_03_202316) do
     t.boolean "kubernetes_allow_writing_to_root_filesystem", default: false, null: false
     t.boolean "jenkins_status_checker", default: false, null: false
     t.boolean "use_env_repo", default: false, null: false
+    t.integer "kubernetes_rollout_timeout"
+    t.integer "kubernetes_namespace_id"
+    t.boolean "config_service", default: false, null: false
+    t.string "jira_issue_prefix"
     t.index ["build_command_id"], name: "index_projects_on_build_command_id"
+    t.index ["kubernetes_namespace_id"], name: "index_projects_on_kubernetes_namespace_id"
     t.index ["permalink"], name: "index_projects_on_permalink", unique: true, length: 191
     t.index ["token"], name: "index_projects_on_token", unique: true, length: 191
   end
@@ -444,8 +472,8 @@ ActiveRecord::Schema.define(version: 2019_04_03_202316) do
     t.integer "project_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["key"], name: "index_secret_sharing_grants_on_key", length: 50
-    t.index ["project_id", "key"], name: "index_secret_sharing_grants_on_project_id_and_key", unique: true, length: { key: 50 }
+    t.index ["key"], name: "index_secret_sharing_grants_on_key", length: 191
+    t.index ["project_id", "key"], name: "index_secret_sharing_grants_on_project_id_and_key", unique: true, length: { key: 160 }
   end
 
   create_table "secrets", id: false do |t|
@@ -524,7 +552,6 @@ ActiveRecord::Schema.define(version: 2019_04_03_202316) do
     t.text "dashboard"
     t.boolean "email_committers_on_automated_deploy_failure", default: false, null: false
     t.string "static_emails_on_automated_deploy_failure"
-    t.string "datadog_monitor_ids"
     t.string "jenkins_job_names"
     t.string "next_stage_ids"
     t.boolean "no_code_deployed", default: false, null: false
@@ -550,6 +577,9 @@ ActiveRecord::Schema.define(version: 2019_04_03_202316) do
     t.integer "aws_sts_iam_role_session_duration"
     t.boolean "allow_redeploy_previous_when_failed", default: false, null: false
     t.string "github_pull_request_comment"
+    t.boolean "kubernetes_sample_logs_on_success", default: false, null: false
+    t.string "jira_transition_id"
+    t.boolean "kubernetes_hide_error_logs", default: false, null: false
     t.index ["project_id", "permalink"], name: "index_stages_on_project_id_and_permalink", unique: true, length: { permalink: 191 }
     t.index ["template_stage_id"], name: "index_stages_on_template_stage_id"
   end
@@ -586,6 +616,7 @@ ActiveRecord::Schema.define(version: 2019_04_03_202316) do
     t.string "time_format", default: "relative", null: false
     t.datetime "last_login_at"
     t.datetime "last_seen_at"
+    t.string "github_username"
     t.index ["external_id", "deleted_at"], name: "index_users_on_external_id_and_deleted_at", unique: true
   end
 

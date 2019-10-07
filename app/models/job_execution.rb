@@ -11,8 +11,12 @@ class JobExecution
   delegate :id, :deploy, to: :job
   delegate :pid, :pgid, to: :executor
 
-  def initialize(reference, job, env: {}, output: OutputBuffer.new, &block)
-    @output = output
+  def initialize(reference, job, &block)
+    @job = job
+    @reference = reference
+    @execution_block = block
+
+    @output = OutputBuffer.new
     @executor = TerminalExecutor.new(
       @output,
       verbose: true,
@@ -21,19 +25,15 @@ class JobExecution
       timeout: Rails.application.config.samson.deploy_timeout,
       cancel_timeout: cancel_timeout
     )
+    @stage = @job.deploy&.stage
     @viewers = JobViewers.new(@output)
-
     @start_callbacks = []
     @finish_callbacks = []
-    @env = env
-    @job = job
-    @reference = reference
-    @execution_block = block
     @finished = false
 
     @repository = @job.project.repository
     @repository.executor = @executor
-    @repository.full_checkout = true if stage&.full_checkout
+    @repository.full_checkout = true if @stage&.full_checkout
   end
 
   def perform
@@ -50,6 +50,8 @@ class JobExecution
         execute(dir)
       end
     end
+
+    success = Samson::Hooks.fire(:validate_deploy, @job.deploy, self).all? if @job.deploy && success
 
     if success
       @job.succeeded!
@@ -111,10 +113,6 @@ class JobExecution
 
   private
 
-  def stage
-    @job.deploy&.stage
-  end
-
   def error!(exception)
     puts_if_present "JobExecution failed: #{exception.message}"
     error_url = report_error(exception)
@@ -141,16 +139,15 @@ class JobExecution
 
     cmds = commands(dir)
     payload = {
-      stage: (stage&.name || "none"),
+      stage: (@stage&.name || "none"),
       project: @job.project.name,
-      production: stage&.production?
+      production: @stage&.production?
     }
 
     Samson::TimeSum.instrument "execute_job.samson", payload do
       payload[:success] =
         if kubernetes?
-          @executor = Kubernetes::DeployExecutor.new(@job, @output)
-          @executor.execute
+          Kubernetes::DeployExecutor.new(@job, @output).execute
         else
           @executor.execute(*cmds)
         end
@@ -159,7 +156,7 @@ class JobExecution
 
   # ideally the plugin should handle this, but that was even hackier
   def kubernetes?
-    defined?(SamsonKubernetes::Engine) && stage&.kubernetes
+    defined?(SamsonKubernetes::Engine) && @stage&.kubernetes
   end
 
   def setup(dir)
@@ -192,17 +189,22 @@ class JobExecution
       DEPLOYER_NAME: @job.user.name,
       REFERENCE: @reference,
       REVISION: @job.commit,
-      TAG: (@job.tag || @job.commit)
-    }.merge!(@env)
+      TAG: (@job.tag || @job.commit),
 
-    env.merge!(make_builds_available) if stage&.builds_in_environment
-
-    # for shared notification scripts
-    env.merge!(
+      # for shared notification scripts
       PROJECT_NAME: @job.project.name,
       PROJECT_PERMALINK: @job.project.permalink,
       PROJECT_REPOSITORY: @job.project.repository_url
-    )
+    }
+
+    if @stage
+      env[:STAGE] = @stage.permalink
+
+      group_names = @stage.deploy_groups.pluck(:env_value).join(" ")
+      env[:DEPLOY_GROUPS] = group_names if group_names.present?
+    end
+
+    env.merge!(make_builds_available) if @stage&.builds_in_environment
 
     Samson::Hooks.fire(:deploy_execution_env, @job.deploy).compact.inject(env, :merge!) if @job.deploy
     base_commands(dir, env) + @job.commands

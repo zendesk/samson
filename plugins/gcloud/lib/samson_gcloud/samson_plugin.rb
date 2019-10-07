@@ -26,7 +26,9 @@ module SamsonGcloud
 
       success = (status == SamsonGcloud::ImageScanner::SUCCESS)
       message = SamsonGcloud::ImageScanner.status(status)
-      message += ", see #{SamsonGcloud::ImageScanner.result_url(build.docker_repo_digest)}" unless success
+      if !success && url = SamsonGcloud::ImageScanner.result_url(build.docker_repo_digest)
+        message += ", see #{url}"
+      end
       output.puts message
 
       success || scan_optional
@@ -37,16 +39,20 @@ module SamsonGcloud
 
       status = SamsonGcloud::ImageScanner.scan(image)
       return if status == SamsonGcloud::ImageScanner::SUCCESS
+      result = SamsonGcloud::ImageScanner.status(status)
 
       message =
         if url = SamsonGcloud::ImageScanner.result_url(image)
-          result = SamsonGcloud::ImageScanner.status(status)
           "GCR scan result: #{result} for #{url}"
         else
-          "Image needs to be hosted on GCR to be scanned for vulnerabilities: #{image}."
+          "#{result}: #{image}"
         end
 
       raise Samson::Hooks::UserError, message
+    end
+
+    def gcr?(image)
+      image.match?(/(^|\/|\.)gcr.io\//) # gcr.io or https://gcr.io or region like asia.gcr.io
     end
 
     def cli_options(project: nil)
@@ -64,10 +70,10 @@ module SamsonGcloud
   end
 end
 
-Samson::Hooks.view :project_form_checkbox, "samson_gcloud/project_form_checkbox"
-Samson::Hooks.view :build_button, "samson_gcloud/build_button"
-Samson::Hooks.view :stage_form_checkbox, "samson_gcloud/stage_form_checkbox"
-Samson::Hooks.view :build_show, "samson_gcloud/build_show"
+Samson::Hooks.view :project_form_checkbox, "samson_gcloud"
+Samson::Hooks.view :build_button, "samson_gcloud"
+Samson::Hooks.view :stage_form_checkbox, "samson_gcloud"
+Samson::Hooks.view :build_show, "samson_gcloud"
 
 Samson::Hooks.callback :after_deploy do |deploy, job_execution|
   SamsonGcloud::ImageTagger.tag(deploy, job_execution.output) if ENV['GCLOUD_IMAGE_TAGGER'] == 'true'
@@ -100,4 +106,8 @@ end
 
 Samson::Hooks.callback :ensure_docker_image_has_no_vulnerabilities do |stage, image|
   SamsonGcloud.ensure_docker_image_has_no_vulnerabilities stage, image
+end
+
+Samson::Hooks.callback :resolve_docker_image_tag do |image|
+  SamsonGcloud::TagResolver.resolve_docker_image_tag image if ENV["GCLOUD_PROJECT"]
 end

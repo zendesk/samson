@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 # we don't want rails overhead when booting the server and behave like the real app server
+
 if ["s", "server"].include?(ARGV[0])
   require 'json'
   raise "No options supported, use puma directly" unless ARGV.size == 1

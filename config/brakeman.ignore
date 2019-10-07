@@ -1,7 +1,37 @@
 {
   "ignored_warnings": [
-
+    {
+      "warning_type": "Cross-Site Scripting",
+      "warning_code": 4,
+      "fingerprint": "fe634091bb6f66cef4c61121ee25a00cafcf81d9e3e92458ed2086b9ad824c0a",
+      "check_name": "LinkToHref",
+      "message": "Potentially unsafe model attribute in `link_to` href",
+      "file": "plugins/datadog/app/views/samson_datadog/_monitor_list.html.erb",
+      "line": 3,
+      "link": "https://brakemanscanner.org/docs/warning_types/link_to_href",
+      "code": "link_to((Unresolved Model).new.name, (Unresolved Model).new.url, :class => (\"label label-#{({ \"OK\" => \"success\", \"Alert\" => \"danger\" }[(Unresolved Model).new.state(Stage.find(params.fetch(:id)).deploy_groups)] or \"warning\")}\"))",
+      "render_path": [
+        {
+          "type": "controller",
+          "class": "Datadog::MonitorsController",
+          "method": "index",
+          "line": 6,
+          "file": "plugins/datadog/app/controllers/datadog/monitors_controller.rb",
+          "rendered": {
+            "name": "samson_datadog/_monitor_list",
+            "file": "plugins/datadog/app/views/samson_datadog/_monitor_list.html.erb"
+          }
+        }
+      ],
+      "location": {
+        "type": "template",
+        "template": "samson_datadog/_monitor_list"
+      },
+      "user_input": "(Unresolved Model).new.url",
+      "confidence": "Weak",
+      "note": "DatadogMonitor points links to the external monitor url"
+    }
   ],
-  "updated": "2018-01-12 08:38:04 -0800",
-  "brakeman_version": "4.1.1"
+  "updated": "2019-06-30 15:32:56 -0700",
+  "brakeman_version": "4.5.1"
 }

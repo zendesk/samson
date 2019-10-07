@@ -1,4 +1,3 @@
----
 app_server:
   project: test
   name: app-server

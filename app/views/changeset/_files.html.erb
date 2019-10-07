@@ -8,9 +8,11 @@
     <tbody>
     <% changeset.files.each do |file| %>
       <tr class="file-summary">
+        <td><%= file_status_label file.status %></td>
         <td>
-          <%= file_status_label file.status %> &nbsp;
-          <%= "#{file.previous_filename} → " if file.status == "renamed" %>
+          <% if file.status == "renamed" %>
+            <%= file.previous_filename %> → <br/>
+          <% end %>
           <%= file.filename %>
         </td>
         <td align="right">
@@ -19,7 +21,7 @@
         </td>
       </tr>
       <tr class="file-diff" style="display:none">
-        <td colspan="2"><pre><%= syntax_highlight file.patch, :diff %></pre></td>
+        <td colspan="3"><pre><%= syntax_highlight file.patch, :diff %></pre></td>
       </tr>
     <% end %>
     </tbody>

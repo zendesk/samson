@@ -88,7 +88,7 @@ class OutputBuffer
       yield chunk
     end
   ensure
-    @listeners.delete(queue)
+    @mutex.synchronize { @listeners.delete(queue) }
   end
 
   private

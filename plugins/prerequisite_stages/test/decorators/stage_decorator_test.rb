@@ -36,21 +36,19 @@ describe Stage do
     end
 
     it 'returns empty array if ref has been deployed to all prereq stages' do
-      stage1.project.repository.expects(:commit_from_ref).with('123').returns(job.commit)
       stage3.deploys << deploys(:failed_staging_test)
       stage1.prerequisite_stages.each { |s| s.deploys.first.update_column(:job_id, job.id) }
 
       assert_sql_queries(2) do
-        stage1.undeployed_prerequisite_stages('123').must_equal []
+        stage1.undeployed_prerequisite_stages(job.commit).must_equal []
       end
     end
 
     it 'returns prereq stages where ref has not been deployed yet' do
-      stage1.project.repository.expects(:commit_from_ref).with('123').returns(job.commit)
       stage2.deploys.first.update_column(:job_id, job.id)
 
       assert_sql_queries(2) do
-        stage1.undeployed_prerequisite_stages('123').must_equal [stage3]
+        stage1.undeployed_prerequisite_stages(job.commit).must_equal [stage3]
       end
     end
   end

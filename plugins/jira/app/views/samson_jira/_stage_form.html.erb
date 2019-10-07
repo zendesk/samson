@@ -1,0 +1,9 @@
+<% if @project.jira_issue_prefix? %>
+  <fieldset>
+    <legend>
+      JIRA
+    </legend>
+
+    <%= form.input :jira_transition_id, label: "JIRA Transition ID", help: "Transition to perform on deployed jira issues (list of transitions #{SamsonJira.jira_base_url}/rest/api/3/issue/<ISSUE-ID>/transitions)" %>
+  </fieldset>
+<% end %>

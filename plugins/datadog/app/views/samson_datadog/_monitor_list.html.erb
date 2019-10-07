@@ -1,0 +1,4 @@
+<% @stage.datadog_monitors.each do |monitor| %>
+  <% label = {"OK" => "success", "Alert" => "danger"}[monitor.state(@stage.deploy_groups)] || "warning" %>
+  <%= link_to monitor.name, monitor.url, class: "label label-#{label}" %>
+<% end %>

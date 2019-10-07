@@ -3,7 +3,7 @@ require 'ansible'
 require 'github/markdown'
 
 module ApplicationHelper
-  BOOTSTRAP_FLASH_MAPPINGS = {notice: :info, error: :danger, authorization_error: :danger, success: :success}.freeze
+  BOOTSTRAP_FLASH_MAPPINGS = {notice: :info, alert: :danger, authorization_error: :danger, success: :success}.freeze
   BOOTSTRAP_TOOLTIP_PROPS = {toggle: 'popover', placement: 'right', trigger: 'hover'}.freeze
 
   include Ansible
@@ -57,12 +57,13 @@ module ApplicationHelper
     items = items.map do |item|
       if item.is_a?(ActiveRecord::Base)
         link_parts_for_resource(item)
+      elsif item.is_a?(Class) && item < ActiveRecord::Base
+        [item.name.split("::").last.pluralize, item]
       else
         case item
         when String then [item, nil]
         when Array then item
-        else
-          raise ArgumentError, "Unsupported breadcrumb for #{item}"
+        else raise ArgumentError, "Unsupported breadcrumb for #{item}"
         end
       end
     end
@@ -134,7 +135,8 @@ module ApplicationHelper
   end
 
   def link_to_delete(
-    path, text: 'Delete', question: nil, type_to_delete: false, remove_container: false, disabled: false, **options
+    path, text: 'Delete', question: nil, type_to_delete: false, remove_container: false, disabled: false,
+    redirect_back: false, **options
   )
     if disabled
       content_tag :span, text, title: disabled, class: 'mouseover'
@@ -145,11 +147,11 @@ module ApplicationHelper
         elsif path.is_a?(ActiveRecord::Base)
           resource = path
           name, path = link_parts_for_resource(resource)
-          "Delete #{resource.class.name.split("::").last} #{name} ?"
+          "Delete #{resource.class.name.split("::").last} #{strip_tags(name).strip}?"
         elsif (resource = Array(path).last) && resource.is_a?(ActiveRecord::Base)
-          "Delete this #{resource.class.name.split("::").last} ?"
+          "Delete this #{resource.class.name.split("::").last}?"
         else
-          "Really delete ?"
+          "Really delete?"
         end
       options[:data] = {method: :delete}
       if type_to_delete
@@ -162,15 +164,24 @@ module ApplicationHelper
         options[:data][:remote] = true
         options[:class] = "remove_container"
       end
+      if redirect_back && location = params[:redirect_to].presence
+        path = add_to_url(url_for(path), {redirect_to: location}.to_query)
+      end
       link_to text, path, options
     end
+  end
+
+  # @param [String] url
+  # @param [String] add
+  def add_to_url(url, add)
+    url.include?("?") ? "#{url}&#{add}" : "#{url}?#{add}"
   end
 
   # Flash type -> Bootstrap alert class
   def flash_messages
     flash.flat_map do |type, messages|
       type = type.to_sym
-      bootstrap_class = BOOTSTRAP_FLASH_MAPPINGS[type] || :info
+      bootstrap_class = BOOTSTRAP_FLASH_MAPPINGS.fetch(type)
       Array.wrap(messages).map do |message|
         [type, bootstrap_class, message]
       end

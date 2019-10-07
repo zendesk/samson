@@ -27,11 +27,11 @@
     <% end %>
 
     <% [
-         [:replicas, "Replicas"],
+         [:replicas, @kubernetes_deploy_group_role.kubernetes_role&.autoscaled? ? "Min Replicas" : "Replicas"],
          [:requests_cpu, 'Requests CPU Cores'],
-         [:requests_memory, 'Requests Memory in MB'],
+         [:requests_memory, 'Requests Memory in MiB'],
          [:limits_cpu, 'Limits CPU Cores'],
-         [:limits_memory, 'Limits Memory in MB']
+         [:limits_memory, 'Limits Memory in MiB']
        ].each do |column, label| %>
       <%= form.input column, label: label do %>
         <%= form.text_field column, class: "form-control", required: true %>
@@ -46,7 +46,7 @@
       <div class="col-lg-offset-2 col-lg-10">
         <%= form.submit 'Save', class: "btn btn-primary" %>
         <%= submit_tag ResourceController::ADD_MORE, class: 'btn btn-default' %>
-        <%= link_to_delete form.object, class: 'btn btn-default' if form.object.persisted? %>
+        <%= link_to_delete form.object, class: 'btn btn-default', redirect_back: true if form.object.persisted? %>
         <%= link_to "Cancel", :back, class: 'btn btn-default' %>
         <%= link_to_history form.object %>
       </div>

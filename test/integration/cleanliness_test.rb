@@ -35,56 +35,6 @@ describe "cleanliness" do
     code
   end
 
-  it "does not have boolean limit 1 in schema since this breaks mysql" do
-    File.read("db/schema.rb").wont_match /\st\.boolean.*limit: 1/
-  end
-
-  it "does not have limits too big for postgres in schema" do
-    File.readlines("db/schema.rb").each do |line|
-      if line[/limit: (\d+)/, 1].to_i > 1073741823
-        raise "Line >#{line}< has a too big limit ... use 1073741823 or lower"
-      end
-    end
-  end
-
-  it "does not have string index without limit since that breaks our mysql migrations" do
-    table_definitions = File.read("db/schema.rb").scan(/  create_table "(\S+)"(.*?)\n  end/m)
-    table_definitions.size.must_be :>, 10
-
-    bad = table_definitions.flat_map do |table, definition|
-      strings = definition.scan(/\.string "(\S+)"/).map!(&:first)
-      indexes = definition.scan(/t.index (\[(.*?)\].*$)/)
-      strings.map do |string|
-        # it is bad when a string is used in the index but no length is declared
-        if indexes.any? { |i| i[1].include?(%("#{string}")) && i[0] !~ /length: .*#{string}|length: \d+/ }
-          [table, string]
-        end
-      end.compact
-    end
-
-    # old tables that somehow worked
-    bad -= [
-      ["builds", "git_sha"],
-      ["builds", "dockerfile"],
-      ["environment_variable_groups", "name"],
-      ["environments", "permalink"],
-      ["jobs", "status"],
-      ["kubernetes_roles", "name"],
-      ["kubernetes_roles", "service_name"],
-      ["new_relic_applications", "name"],
-      ["releases", "number"],
-      ["users", "external_id"],
-      ["webhooks", "branch"]
-    ]
-
-    assert bad.empty?, bad.map! { |table, string| "#{table} #{string} has an index without length" }.join("\n")
-  end
-
-  it "does not have 3-state booleans (nil/false/true)" do
-    bad = File.read("db/schema.rb").scan(/\st\.boolean.*/).reject { |l| l .include?(" null: false") }
-    assert bad.empty?, "Boolean columns missing a default or null: false\n#{bad.join("\n")}"
-  end
-
   it "does not include rails-assets-bootstrap" do
     # make sure rails-assets-bootstrap did not get included by accident (dependency of some other bootstrap thing)
     # if it is not avoidable see http://stackoverflow.com/questions/7163264
@@ -247,7 +197,7 @@ describe "cleanliness" do
       controller = f.sub('test/', 'app/').sub('_test.rb', '.rb')
       public_section = File.read(controller).split(/  (protected|private)$/).first
       controller_actions = public_section.scan(/def ([\w_]+)/).flatten - ['self']
-      raise "No actions in #{f} !?" if controller_actions.empty?
+      raise "No actions in #{f} !?" if controller_actions.empty? && !public_section.include?("< ResourceController")
 
       # find all actions tested to be unauthorized, viewer accessible, or public accessible
       test = File.read(f)

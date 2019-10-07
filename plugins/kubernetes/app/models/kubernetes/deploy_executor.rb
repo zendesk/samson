@@ -8,8 +8,8 @@ module Kubernetes
     if ENV['KUBE_WAIT_FOR_LIVE'] && !ENV["KUBERNETES_WAIT_FOR_LIVE"]
       raise "Use KUBERNETES_WAIT_FOR_LIVE with seconds instead of KUBE_WAIT_FOR_LIVE" # uncovered
     end
-    WAIT_FOR_LIVE = Integer(ENV.fetch('KUBERNETES_WAIT_FOR_LIVE', '600'))
-    WAIT_FOR_PREREQUISITES = Integer(ENV.fetch('KUBERNETES_WAIT_FOR_PREREQUISITES', WAIT_FOR_LIVE))
+    DEFAULT_ROLLOUT_TIMEOUT = Integer(ENV.fetch('KUBERNETES_WAIT_FOR_LIVE', '600'))
+    WAIT_FOR_PREREQUISITES = Integer(ENV.fetch('KUBERNETES_WAIT_FOR_PREREQUISITES', DEFAULT_ROLLOUT_TIMEOUT))
     STABILITY_CHECK_DURATION = Integer(ENV.fetch('KUBERNETES_STABILITY_CHECK_DURATION', 1.minute))
     TICK = Integer(ENV.fetch('KUBERNETES_STABILITY_CHECK_TICK', 10.seconds))
     RESTARTED = "Restarted"
@@ -18,17 +18,6 @@ module Kubernetes
       @output = output
       @job = job
       @reference = job.deploy.reference
-    end
-
-    # restart_signal_handler.rb calls this to show details about all running job-executions
-    # and show something that identifies the deploy
-    # TODO: change to .details and call that from restart_signal_handler and job_execution
-    def pid
-      "Kubernetes-deploy-#{object_id}"
-    end
-
-    def pgid
-      pid
     end
 
     def execute(*)
@@ -44,7 +33,8 @@ module Kubernetes
       end
 
       if deploys.any?
-        return false unless deploy_and_watch(deploys, timeout: WAIT_FOR_LIVE)
+        timeout = @job.project.kubernetes_rollout_timeout || DEFAULT_ROLLOUT_TIMEOUT
+        return false unless deploy_and_watch(deploys, timeout: timeout)
       end
 
       true
@@ -70,17 +60,15 @@ module Kubernetes
 
       loop do
         statuses = resource_statuses(release_docs)
-        interesting = statuses.select { |s| s.kind == "Pod" || !s.live } # ignore boring things that rarely fail
-        if interesting.none?
-          @output.puts "No pods were created"
-          return success, statuses
-        end
-
+        pod_statuses, non_pod_statuses = statuses.partition { |s| s.kind == "Pod" }
+        display_statuses = pod_statuses + non_pod_statuses.reject(&:live) # show what is interesting
         ready_statuses, not_ready_statuses = statuses.partition(&:live)
+        failure = too_many_not_ready?(pod_statuses) || !non_pod_statuses.all?(&:live)
 
         if waiting_for_ready
-          print_statuses("Deploy status:", interesting, exact: false)
-          if too_many_not_ready?(statuses)
+          print_statuses("Deploy status:", display_statuses, exact: false) if display_statuses.any?
+
+          if failure
             if stopped = not_ready_statuses.select(&:finished).presence
               print_statuses("UNSTABLE, resources failed:", stopped, exact: true)
               return false, statuses
@@ -96,12 +84,12 @@ module Kubernetes
             wait_start_time = Time.now.to_i
           end
         else
-          if too_many_not_ready?(statuses)
+          if failure
             print_statuses("UNSTABLE, resources not ready:", not_ready_statuses, exact: true)
             return false, statuses
           else
             remaining = time_left(wait_start_time, STABILITY_CHECK_DURATION)
-            @output.puts "Testing for stability: #{remaining}s"
+            @output.puts "Testing for stability: #{remaining}s remaining"
             return success, statuses if remaining == 0
           end
         end
@@ -146,11 +134,15 @@ module Kubernetes
     end
 
     def show_logs_on_deploy_if_requested(statuses)
-      statuses = statuses.select do |s|
-        s.resource&.dig(:metadata, :annotations, :'samson/show_logs_on_deploy') == 'true' && s.kind == "Pod"
+      statuses = statuses.select { |s| s.kind == "Pod" && s.resource }
+
+      logging = statuses.select { |s| s.resource.dig(:metadata, :annotations, :'samson/show_logs_on_deploy') == 'true' }
+      if @job.deploy.stage.kubernetes_sample_logs_on_success
+        logging += statuses.group_by(&:role).map { |_, s| s.first }
       end
+
       log_end = Time.now # here to be consistent for all pods
-      statuses.each { |status| print_logs(status, log_end) }
+      logging.each { |status| print_logs(status, log_end) }
     rescue StandardError
       info = Samson::ErrorNotifier.notify($!, sync: true)
       @output.puts "  Error showing logs: #{info || "See samson logs for details"}"
@@ -172,15 +164,17 @@ module Kubernetes
 
       sample_pod_statuses.each do |status|
         print_events(status)
-        print_logs(status, log_end_time)
+        print_logs(status, log_end_time) unless @job.deploy.stage.kubernetes_hide_error_logs
       end
     rescue
       info = Samson::ErrorNotifier.notify($!, sync: true)
       @output.puts "Error showing failure cause: #{info}"
     ensure
-      @output.puts(
-        "\nDebug: disable 'Rollback on failure' when deploying and use 'kubectl describe pod <name>' on failed pods"
-      )
+      if @job.deploy.kubernetes_rollback?
+        @output.puts(
+          "\nDebug: disable 'Rollback on failure' when deploying and use 'kubectl describe pod <name>' on failed pods"
+        )
+      end
     end
 
     def resource_identifier(status, exact: true)
@@ -231,7 +225,16 @@ module Kubernetes
         Integer(labels.fetch(:role_id)) == role.id && Integer(labels.fetch(:deploy_group_id)) == group.id
       end
 
-      statuses = Array.new(release_doc.desired_pod_count).each_with_index.map do |_, i|
+      # when autoscaling there might be more than min pods, so we need to check all of them to find the healthiest
+      # NOTE: we should be able to remove the `role.autoscaled?` check, just keeping it to minimize blast radius
+      max_pods =
+        if role.autoscaled?
+          [release_doc.desired_pod_count, pods.size].max
+        else
+          release_doc.desired_pod_count
+        end
+
+      statuses = Array.new(max_pods) do |i|
         ResourceStatus.new(
           resource: pods[i],
           kind: "Pod",
@@ -243,7 +246,7 @@ module Kubernetes
       end.each(&:check)
 
       # If a role is autoscaled, there is a chance pods can be deleted during a deployment.
-      # Sort them by "most alive" and use the first one, so we ensure at least one pods works.
+      # Sort them by "most alive" and use the min ones, so we ensure at least that number of pods work.
       if role.autoscaled?
         statuses.sort_by! do |status|
           if status.live
@@ -251,8 +254,8 @@ module Kubernetes
           else
             status.finished ? 1 : 0
           end
-        end.slice!(1..-1)
-        statuses.each { |s| s.details += " (autoscaled role, only showing one pod)" }
+        end
+        statuses = statuses.first(release_doc.desired_pod_count)
       end
 
       statuses
@@ -305,10 +308,9 @@ module Kubernetes
       )
 
       unless release.persisted?
-        raise Samson::Hooks::UserError, "Failed to create release: #{release.errors.full_messages.inspect}"
+        raise Samson::Hooks::UserError, "Failed to store manifests: #{release.errors.full_messages.inspect}"
       end
 
-      @output.puts("Created kubernetes release #{release.url}")
       release
     end
 
@@ -326,6 +328,9 @@ module Kubernetes
 
         # check that all roles have a matching deploy_group_role and all roles are configured
         @job.deploy.stage.deploy_groups.map do |deploy_group|
+          # fail early here, this was randomly not there, also fixes an n+1
+          deploy_group.kubernetes_cluster || raise
+
           group_roles = deploy_group_roles.select { |dgr| dgr.deploy_group_id == deploy_group.id }
 
           # safe some sql queries during release creation
@@ -365,11 +370,16 @@ module Kubernetes
         if release_doc.blue_green_color
           non_service_resources(release_doc)
         else
-          release_doc.deploy_group.kubernetes_cluster # cache before threading
           [release_doc]
         end
       end
-      Samson::Parallelizer.map(resources, db: true, &:deploy)
+
+      # deploy each deploy-groups resources in logical order, but the deploy-groups in parallel
+      # this calls #deploy_group + #deploy on ReleaseDoc or Resource objects
+      resources.each { |r| r.deploy_group.kubernetes_cluster } # cache before threading
+      Samson::Parallelizer.map(resources.group_by(&:deploy_group)) do |_, grouped_resources|
+        grouped_resources.each(&:deploy)
+      end
     end
 
     def deploy_and_watch(release_docs, timeout:)
@@ -417,15 +427,14 @@ module Kubernetes
     def verify_kubernetes_templates!
       # - make sure each file exists
       # - make sure each deploy group has consistent labels
-      grouped_deploy_group_roles.each do |deploy_group_roles|
-        element_groups = deploy_group_roles.map do |deploy_group_role|
-          role = deploy_group_role.kubernetes_role
-          config = role.role_config_file(@job.commit)
-          raise Samson::Hooks::UserError, "Error parsing #{role.config_file}" unless config
-          config.elements
-        end.compact
-        Kubernetes::RoleValidator.validate_groups(element_groups)
-      end
+      # - only do this for one single deploy group since they are all identical
+      element_groups = grouped_deploy_group_roles.first.map do |deploy_group_role|
+        role = deploy_group_role.kubernetes_role
+        config = role.role_config_file(@job.commit)
+        raise Samson::Hooks::UserError, "Error parsing #{role.config_file}" unless config
+        config.elements
+      end.compact
+      Kubernetes::RoleValidator.validate_groups(element_groups)
 
       # make sure each template is valid
       temp_release_docs.each(&:verify_template)

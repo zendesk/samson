@@ -8,7 +8,7 @@ describe BuildsController do
   let(:build) { builds(:docker_build) }
 
   def stub_git_reference_check(returns)
-    Build.any_instance.stubs(:commit_from_ref).returns(returns)
+    Project.any_instance.stubs(:fast_commit_from_ref).returns(returns)
   end
 
   it "recognizes deprecated api route" do
@@ -42,7 +42,12 @@ describe BuildsController do
       end
 
       it 'can search for sha' do
-        get :index, params: {project_id: project.to_param, search: {git_sha: build.git_sha}}
+        get :index, params: {search: {commit: build.git_sha}}
+        assigns(:builds).must_equal [build]
+      end
+
+      it 'can search for ref' do
+        get :index, params: {search: {commit: build.git_ref}}
         assigns(:builds).must_equal [build]
       end
 
@@ -51,28 +56,22 @@ describe BuildsController do
         assert_response :success
       end
 
-      describe "external" do
-        it "ignores search for external blank" do
-          get :index, params: {search: {external: ''}}
+      describe "status" do
+        it "ignores search for status blank" do
+          get :index, params: {search: {status: ''}}
           assigns(:builds).count.must_equal Build.count
         end
 
-        it "can search for external YES" do
+        it "can search for external status" do
           build.update_column(:external_status, "succeeded")
-          get :index, params: {search: {external: true}}
+          get :index, params: {search: {status: "succeeded"}}
           assigns(:builds).must_equal [build]
         end
 
-        it "can search for external NO" do
-          Build.where.not(id: build.id).update(external_status: "succeeded")
-          get :index, params: {search: {external: false}}
+        it "can search for internal status" do
+          build.update_column(:docker_build_job_id, jobs(:succeeded_test).id)
+          get :index, params: {search: {status: "succeeded"}}
           assigns(:builds).must_equal [build]
-        end
-
-        it "cannot search for unknown external" do
-          assert_raises do
-            get :index, params: {search: {external: 'FOOBAR'}}
-          end
         end
       end
 

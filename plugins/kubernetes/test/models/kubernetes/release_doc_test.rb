@@ -80,19 +80,13 @@ describe Kubernetes::ReleaseDoc do
     end
 
     describe "PodDisruptionBudget" do
-      it "adds relative PodDisruptionBudget when requested" do
-        Time.stubs(:now).returns(Time.parse("2018-01-01"))
-        template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '30%'}
-        budget = create!.resource_template[2]
-        budget[:spec][:minAvailable].must_equal 1
-        budget[:metadata][:namespace].must_equal 'pod1'
-        budget[:metadata][:annotations][:"samson/updateTimestamp"].must_equal "2018-01-01T00:00:00Z"
-        refute budget.key?(:delete)
+      it "does not add budget by default" do
+        refute create!.resource_template[2]
       end
 
       it "adds valid relative PodDisruptionBudget when sometimes invalid is requested" do
-        template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '90%'}
-        create!.resource_template[2][:spec][:minAvailable].must_equal 1
+        template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '99%'}
+        create!.resource_template[2][:spec][:minAvailable].must_equal '50%'
       end
 
       it "fails when completely invalid is requested" do
@@ -103,6 +97,30 @@ describe Kubernetes::ReleaseDoc do
       it "adds absolute PodDisruptionBudget when requested" do
         template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '1'}
         create!.resource_template[2][:spec][:minAvailable].must_equal 1
+      end
+
+      describe "with relative budget" do
+        before { template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '30%'} }
+
+        it "adds relative PodDisruptionBudget" do
+          Time.stubs(:now).returns(Time.parse("2018-01-01"))
+          budget = create!.resource_template[2]
+          budget[:spec][:minAvailable].must_equal '30%'
+          budget[:metadata][:annotations][:"samson/updateTimestamp"].must_equal "2018-01-01T00:00:00Z"
+          refute budget.key?(:delete)
+        end
+
+        it "can use deploy group default namespace via template filler" do
+          template.dig(0, :metadata).delete :namespace
+          budget = create!.resource_template[2]
+          budget[:metadata][:namespace].must_equal "pod1"
+        end
+
+        it "can use custom namespace" do
+          template[0][:metadata][:namespace] = "custom"
+          budget = create!.resource_template[2]
+          budget[:metadata][:namespace].must_equal "custom"
+        end
       end
 
       describe "with auto-add" do
@@ -137,8 +155,13 @@ describe Kubernetes::ReleaseDoc do
         metadata = template.dig(0, :metadata)
         metadata[:annotations] = {"samson/minAvailable": '30%'}
         metadata[:namespace] = "default"
-        metadata[:labels][:'kubernetes.io/cluster-service'] = 'true'
         create!.resource_template[2][:metadata][:namespace].must_equal 'default'
+      end
+
+      it "keeps name when using custom namespace" do
+        doc.kubernetes_release.project.create_kubernetes_namespace!(name: "foo")
+        template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '30%'}
+        create!.resource_template[2][:metadata][:name].must_equal 'some-project-rc'
       end
 
       it "supports multiproject" do
@@ -146,6 +169,18 @@ describe Kubernetes::ReleaseDoc do
         metadata[:annotations] = {"samson/minAvailable": '30%', "samson/override_project_label": "true"}
         metadata[:labels][:project] = 'change-me'
         create!.resource_template[2][:metadata][:labels][:project].must_equal 'foo'
+      end
+
+      it "does not copy random annotations like secrets/set_via_env etc" do
+        template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '30%'}
+        create!.resource_template[2][:metadata][:annotations].keys.sort.must_equal [
+          :"samson/deploy_url", :"samson/updateTimestamp"
+        ]
+      end
+
+      it "copies keep-name so name stays in sync with the deployment" do
+        template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '30%', "samson/keep_name": 'true'}
+        assert create!.resource_template[2][:metadata][:annotations].key?(:"samson/keep_name")
       end
 
       it "deletes when set to 0" do
@@ -189,6 +224,31 @@ describe Kubernetes::ReleaseDoc do
       doc.instance_variable_get(:@previous_resources).must_equal([nil, nil]) # will not revert
     end
 
+    it "deploys resources in DEPLOY_SORT_ORDER order" do
+      configs = YAML.load_stream(read_kubernetes_sample_file('kubernetes_rbac.yml'))
+      configs.each { |c| c['metadata']['namespace'] = 'pod1' if c['metadata']['namespace'].present? }
+      doc.send(:resource_template=, doc.resource_template + configs)
+
+      expected_request_order = [:serviceaccounts, :clusterroles, :clusterrolebindings, :services, :deployments]
+      request_order = []
+      regex = %r{
+        http://foobar.server(:80)?/apis?/
+        (extensions/|rbac.authorization.k8s.io/)?
+        v1(beta\d)?/
+        (namespaces/pod1/)?
+        (\w+)
+      }x
+      stub_request(:get, %r{#{regex}/some-project.*}).to_raise(kube_404)
+      stub_request(:post, regex).to_return do |request|
+        request_order << regex.match(request.uri)[5].to_sym
+        {body: "{}"}
+      end
+
+      doc.deploy
+      doc.instance_variable_get(:@previous_resources).must_equal([nil, nil, nil, nil, nil]) # will not revert
+      request_order.must_equal expected_request_order
+    end
+
     it "remembers the previous deploy in case we have to revert" do
       # check service ... do nothing
       stub_request(:get, service_url).to_return(body: '{"SER":"VICE"}')
@@ -200,15 +260,18 @@ describe Kubernetes::ReleaseDoc do
       client.expects(:update_deployment).returns("Rest client resonse")
 
       doc.deploy
-      doc.instance_variable_get(:@previous_resources).must_equal([{DE: "PLOY"}, {SER: "VICE"}])
+      doc.instance_variable_get(:@previous_resources).must_equal([{SER: "VICE"}, {DE: "PLOY"}])
     end
   end
 
   describe '#revert' do
     it "reverts all resources" do
-      doc.instance_variable_set(:@previous_resources, [{DE: "PLOY"}, {SER: "VICE"}])
-      doc.send(:resources)[0].expects(:revert).with(DE: "PLOY")
-      doc.send(:resources)[1].expects(:revert).with(SER: "VICE")
+      doc.instance_variable_set(:@previous_resources, [{SER: "VICE"}, {DE: "PLOY"}])
+      resources = doc.send(:resources)
+      resources.detect { |r| r.is_a? Kubernetes::Resource::Deployment }.
+        expects(:revert).with(DE: "PLOY")
+      resources.detect { |r| r.is_a? Kubernetes::Resource::Service }.
+        expects(:revert).with(SER: "VICE")
       doc.revert
     end
 
