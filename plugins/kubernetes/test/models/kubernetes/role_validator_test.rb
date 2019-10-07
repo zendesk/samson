@@ -573,7 +573,7 @@ describe Kubernetes::RoleValidator do
         role.replace(job_role)
         role[0][:metadata][:labels].delete(:role)
         errors.must_equal [
-          "Missing project or role for Job metadata.labels",
+          "Missing project or role for Job pi: metadata.labels",
           error_message
         ]
       end
@@ -581,7 +581,7 @@ describe Kubernetes::RoleValidator do
       it "reports missing labels" do
         role.first[:spec][:template][:metadata][:labels].delete(:project)
         errors.must_equal [
-          "Missing project or role for Deployment spec.template.metadata.labels",
+          "Missing project or role for Deployment some-project-rc: spec.template.metadata.labels",
           error_message
         ]
       end
@@ -595,7 +595,7 @@ describe Kubernetes::RoleValidator do
       it "reports missing label section" do
         role.first[:spec][:template][:metadata].delete(:labels)
         errors.must_equal [
-          "Missing project or role for Deployment spec.template.metadata.labels",
+          "Missing project or role for Deployment some-project-rc: spec.template.metadata.labels",
           error_message
         ]
       end
@@ -613,7 +613,7 @@ describe Kubernetes::RoleValidator do
       it "reports deployments without selector, which would default to all labels (like team)" do
         role.first[:spec].delete :selector
         errors.must_equal [
-          "Missing project or role for Deployment spec.selector.matchLabels",
+          "Missing project or role for Deployment some-project-rc: spec.selector.matchLabels",
           error_message
         ]
       end
@@ -790,6 +790,13 @@ describe Kubernetes::RoleValidator do
 
     it "is invalid when using the same element twice" do
       validate_error([[role.first, role.first]]).must_equal "Deployment .some-project-rc exists multiple times"
+    end
+  end
+
+  describe "#object_name" do
+    empty = {}
+    it "returns empty string if metadata is missing" do
+      assert Kubernetes::RoleValidator.new([], project: nil).send(:object_name, empty) == ""
     end
   end
 end
