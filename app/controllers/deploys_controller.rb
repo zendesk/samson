@@ -76,7 +76,8 @@ class DeploysController < ApplicationController
   end
 
   def confirm
-    @changeset = stage.deploys.new(deploy_params).changeset
+    @deploy = stage.deploys.build(deploy_params)
+    @changeset = @deploy.changeset
     render 'changeset', layout: false
   end
 

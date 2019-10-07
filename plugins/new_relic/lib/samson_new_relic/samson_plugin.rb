@@ -41,8 +41,8 @@ end
 SamsonNewRelic.setup_initializers
 
 Samson::Hooks.view :stage_form, "samson_new_relic"
-Samson::Hooks.view :deploy_tab_nav, "samson_new_relic"
-Samson::Hooks.view :deploy_tab_body, "samson_new_relic"
+Samson::Hooks.view :deploy_changeset_tab_nav, "samson_new_relic"
+Samson::Hooks.view :deploy_changeset_tab_body, "samson_new_relic"
 
 Samson::Hooks.callback :stage_permitted_params do
   {new_relic_applications_attributes: [:id, :name, :_destroy]}

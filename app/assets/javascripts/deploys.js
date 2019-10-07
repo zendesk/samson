@@ -4,7 +4,10 @@
 //= require jquery-mentions-input/jquery.mentionsInput
 
 $(function () {
-  // Shows confirmation dropdown using Github comparison
+  // Lazy-load changeset tabs when clicked
+  // Note this is using bootstrap tabs not jquery UI tabs library
+  // https://getbootstrap.com/docs/3.4/javascript/#tabs-methods
+
   var activeTab,
       changesetLoaded = false,
       confirmed = true,
@@ -13,13 +16,22 @@ $(function () {
       $form = $("#new_deploy"),
       $submit = $form.find('input[type=submit]');
 
-  // load changeset when switching to it
-  $("#deploy-tabs a[data-type=github]").click(function (e) {
+  // load changeset when switching to it (for deploy#show)
+  $("#deploy-tabs a[data-toggle=tab][href^='#']").click(function (e) {
       e.preventDefault();
-      var tab = $(this);
-      tab.tab("show");
 
+      var $tab = $(this);
+      var $placeholder = $container.find('.changeset-placeholder');
+      $tab.tab("show");
+
+      // abort if already loaded (either static or via previous changeset load)
+      if ($container.find($tab.attr('href')).length) { return; }
+
+      // prevent double-loading
       if (!changesetLoaded) {
+        $placeholder.show();
+        $container.find('.tab-pane').removeClass('active');
+
         var changesetUrl = $("#deploy-tabs").data("changesetUrl");
 
         changesetLoaded = true;
@@ -28,16 +40,14 @@ $(function () {
           url: changesetUrl,
           dataType: "html",
           success: function (data) {
-            var container = $(".deploy-details");
-            var placeholderPanes = container.find(".changeset-placeholder");
+            $placeholder.hide()
 
-            placeholderPanes.remove();
             $('#output').after(data);
 
             // We need to switch to another tab and then switch back in order for
             // the plugin to detect that the DOM node has been replaced.
             $("#deploy-tabs a:first").tab("show");
-            tab.tab("show");
+            $tab.tab("show");
           }
         });
       }
@@ -91,6 +101,7 @@ $(function () {
       storeActiveTab($this);
 
       $('.changeset-content').remove();
+      $('.changeset-placeholder').addClass('active')
       $container.append($placeholderPanes);
 
       $.ajax({
