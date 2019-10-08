@@ -137,4 +137,18 @@ describe Samson::Hooks do
       Samson::Hooks.send(:traced, :deploy_group_permitted_params) { 1 }.must_equal 1
     end
   end
+
+  describe ".view" do
+    it "it adds a view hook" do
+      expected = "foobar/my_view"
+      Samson::Hooks.view Samson::Hooks::VIEW_HOOKS.first, expected
+      Samson::Hooks.instance_variable_get(:@hooks)[Samson::Hooks::VIEW_HOOKS.first].last.must_equal expected
+    end
+
+    it "it adds the view name to the hook" do
+      expected = "foobar/#{Samson::Hooks::VIEW_HOOKS.first}"
+      Samson::Hooks.view Samson::Hooks::VIEW_HOOKS.first, "foobar"
+      Samson::Hooks.instance_variable_get(:@hooks)[Samson::Hooks::VIEW_HOOKS.first].last.must_equal expected
+    end
+  end
 end

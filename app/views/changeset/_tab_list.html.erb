@@ -1,3 +1,5 @@
 <% Changeset::ATTRIBUTE_TABS.each do |tab| %>
   <li><a href="#<%= tab %>" data-toggle="tab"><%= tab.humanize %></a></li>
 <% end %>
+
+<%= Samson::Hooks.render_views(:deploy_changeset_tab_nav, self) %>

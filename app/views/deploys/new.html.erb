@@ -68,11 +68,9 @@
       <div id="deploy-confirmation">
         <ul class="nav nav-tabs">
           <%= render 'changeset/tab_list' %>
-          <%= Samson::Hooks.render_views(:deploy_confirmation_tab_nav, self) %>
         </ul>
         <div class="tab-content deploy-details">
-          <%= render 'changeset/pane_placeholders' %>
-          <%= Samson::Hooks.render_views(:deploy_confirmation_tab_body, self) %>
+          <div class="tab-pane changeset-placeholder">Loading...</div>
         </div>
       </div>
     </fieldset>
