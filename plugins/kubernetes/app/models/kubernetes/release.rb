@@ -22,19 +22,17 @@ module Kubernetes
     end
 
     # Creates a new Kubernetes Release and corresponding ReleaseDocs
-    def self.create_release(params)
-      Kubernetes::Release.transaction do
-        roles = params.delete(:grouped_deploy_group_roles).to_a
-        release = create(params) do |release|
-          if roles.flatten(1).any? { |dgr| dgr.kubernetes_role.blue_green? }
-            release.blue_green_color = begin
-              release.previous_succeeded_release&.blue_green_color == "blue" ? "green" : "blue"
-            end
+    def self.build_release_with_docs(params)
+      roles = params.delete(:grouped_deploy_group_roles).to_a
+      release = new(params) do |release|
+        if roles.flatten(1).any? { |dgr| dgr.kubernetes_role.blue_green? }
+          release.blue_green_color = begin
+            release.previous_succeeded_release&.blue_green_color == "blue" ? "green" : "blue"
           end
         end
-        release.send :create_release_docs, roles if release.persisted?
-        release
       end
+      release.send :build_release_docs, roles if release.valid?
+      release
     end
 
     # simple method to tie all selector logic together
@@ -84,10 +82,10 @@ module Kubernetes
     end
 
     # Creates a ReleaseDoc per DeployGroupRole
-    def create_release_docs(grouped_deploy_group_roles)
+    def build_release_docs(grouped_deploy_group_roles)
       grouped_deploy_group_roles.each do |dgrs|
         dgrs.each do |dgr|
-          release_docs.create!(
+          release_docs.build(
             deploy_group: dgr.deploy_group,
             kubernetes_release: self,
             kubernetes_role: dgr.kubernetes_role,

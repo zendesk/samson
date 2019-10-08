@@ -8,6 +8,11 @@ Samson::Application.routes.draw do
           put :update_many
         end
       end
+      resources :stages do
+        member do
+          get :manifest_preview
+        end
+      end
       resources :roles, except: :edit do
         collection do
           post :seed

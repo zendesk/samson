@@ -12,6 +12,7 @@ describe Kubernetes::DeployExecutor do
   let(:job) { jobs(:succeeded_test) }
   let(:project) { job.project }
   let(:build) { builds(:docker_build) }
+  let(:cluster) { create_kubernetes_cluster }
   let(:deploy_group) { stage.deploy_groups.first }
   let(:executor) { Kubernetes::DeployExecutor.new(job, output) }
   let(:log_url) { "http://foobar.server/api/v1/namespaces/staging/pods/pod-resque-worker/log?container=container1" }
@@ -22,6 +23,60 @@ describe Kubernetes::DeployExecutor do
   before do
     stage.update_column :kubernetes, true
     deploy.update_column :kubernetes, true
+    deploy_group.update kubernetes_cluster: cluster
+  end
+
+  describe "#preview_release_docs" do
+    let(:worker_role) { Kubernetes::Role.find_by(name: "resque-worker") }
+
+    before do
+      job.update_column(:commit, build.git_sha) # this is normally done by JobExecution
+
+      stage.update(deploy_groups: [deploy_group])
+      stage.kubernetes_stage_roles.create(kubernetes_role: worker_role, ignored: true)
+
+      GitRepository.any_instance.stubs(:file_content).
+        with(any_of('kubernetes/app_server.yml', 'kubernetes/resque_worker.yml'), commit, anything).
+        returns(read_kubernetes_sample_file('kubernetes_deployment.yml'))
+    end
+
+    it "returns built release docs" do
+      release_docs = assert_no_difference [
+        'Deploy.count',
+        'Job.count',
+        'Kubernetes::Release.count',
+        'Kubernetes::ReleaseDoc.count'
+      ] do
+        executor.preview_release_docs
+      end
+
+      release_docs.size.must_equal 1
+      release_docs.first.persisted?.must_equal false
+    end
+
+    it "skips looking up build when resolve_build is false" do
+      Samson::BuildFinder.any_instance.expects(:ensure_succeeded_builds).never
+
+      release_docs = assert_no_difference [
+        'Deploy.count',
+        'Job.count',
+        'Kubernetes::Release.count',
+        'Kubernetes::ReleaseDoc.count'
+      ] do
+        executor.preview_release_docs(resolve_build: false)
+      end
+
+      release_docs.size.must_equal 1
+      release_docs.first.persisted?.must_equal false
+    end
+
+    it "raises when release is invalid" do
+      Kubernetes::Release.any_instance.expects(:valid?).at_least_once.returns(false)
+
+      assert_raises Samson::Hooks::UserError do
+        executor.preview_release_docs
+      end
+    end
   end
 
   describe "#execute" do
@@ -390,7 +445,7 @@ describe Kubernetes::DeployExecutor do
     end
 
     it "fails when release has errors" do
-      Kubernetes::Release.any_instance.expects(:persisted?).at_least_once.returns(false)
+      Kubernetes::Release.any_instance.expects(:save).at_least_once.returns(false)
       e = assert_raises(Samson::Hooks::UserError) { execute }
       e.message.must_equal "Failed to store manifests: []" # inspected errors
     end

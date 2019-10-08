@@ -132,6 +132,13 @@ describe Kubernetes::TemplateFiller do
         must_equal doc.kubernetes_release.deploy.url
     end
 
+    it "skips deploy url when deploy is not persisted" do
+      doc.kubernetes_release.deploy.delete
+      result = template.to_hash
+      result.dig(:metadata, :annotations, :"samson/deploy_url").must_be :blank?
+      result.dig(:spec, :template, :metadata, :annotations, :"samson/deploy_url").must_be :blank?
+    end
+
     it "sets replicas for templates" do
       raw_template[:kind] = "foobar"
       raw_template[:spec].delete :replicas
