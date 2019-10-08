@@ -1,5 +1,5 @@
-<% if @deploy.persisted? %>
-  <% if @deploy.kubernetes %>
+<% if @deploy&.persisted? %>
+  <% if @deploy.kubernetes? %>
     <div class="tab-pane" id="manifests">
       <% if release = @deploy.kubernetes_release %>
         <% release.release_docs.sort_by { |rd| DeployGroup.with_deleted{ rd.deploy_group&.name_sortable }}.each do |release_doc| %>
@@ -14,7 +14,7 @@
   <% end %>
 <% elsif @stage&.kubernetes? %>
   <div class="tab-pane" id="manifests">
-    <!-- using an iframe to lazy-load the manifest preview as it is potentially expensive / slow -->
+    <!-- using an iframe to lazy-load the manifest preview as it can be slow -->
     <pre><iframe frameborder="0" seamless src="<%= manifest_preview_project_kubernetes_stage_url(@stage.project, @stage, :yaml) %>" width="100%" height="400"></iframe></pre>
   </div>
 <% end %>

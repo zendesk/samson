@@ -6,6 +6,7 @@ class Kubernetes::StagesController < ResourceController
 
   before_action :authorize_resource!
 
+  # used internally for deploy tab preview as well as an external API to render manifests for external tools
   def manifest_preview
     git_ref = params[:git_ref] || current_project.release_branch || DEFAULT_BRANCH
     git_sha = current_project.repository.commit_from_ref(git_ref)
