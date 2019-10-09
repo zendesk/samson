@@ -93,7 +93,7 @@ describe Integrations::GithubController do
 
     before do
       request.headers['X-Github-Event'] = 'status'
-      Project.any_instance.stubs(:fast_commit_from_ref).returns(commit)
+      Project.any_instance.stubs(:repo_commit_from_ref).returns(commit)
     end
 
     it 'expires github status' do

@@ -101,14 +101,14 @@ class Build < ActiveRecord::Base
     return errors.add(:git_ref, 'must be specified') if git_ref.blank? && git_sha.blank?
     return if errors.include?(:git_ref) || errors.include?(:git_sha)
     return validate_git_sha if git_ref.blank?
-    commit = project.fast_commit_from_ref(git_ref)
+    commit = project.repo_commit_from_ref(git_ref)
     return errors.add(:git_ref, 'is not a valid reference') unless commit
     return validate_git_sha if git_sha.present? && git_sha != commit
     self.git_sha = commit
   end
 
   def validate_git_sha
-    return if project.fast_commit_from_ref(git_sha)
+    return if project.repo_commit_from_ref(git_sha)
     errors.add(:git_sha, 'is not a valid SHA for this project')
   end
 

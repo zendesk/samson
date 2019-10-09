@@ -28,7 +28,7 @@ class CommitStatus
   def initialize(project, reference, stage: nil)
     @project = project
     @reference = reference # for display
-    @commit = project.fast_commit_from_ref(reference) # ref->commit but also double-check a commit exists
+    @commit = project.repo_commit_from_ref(reference) # ref->commit but also double-check a commit exists
     @stage = stage
   end
 

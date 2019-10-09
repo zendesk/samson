@@ -174,9 +174,10 @@ class Project < ActiveRecord::Base
     )
   end
 
-  # quick commit from reference without pulling the repository
-  def fast_commit_from_ref(ref)
-    GITHUB.commit(repository_path, ref).sha
+  # quick commit from reference without pulling the repository ... unless we have no remote
+  def repo_commit_from_ref(ref)
+    Samson::Hooks.fire(:repo_commit_from_ref, self, ref).compact.first ||
+      repository.commit_from_ref(ref)
   rescue StandardError
     nil
   end

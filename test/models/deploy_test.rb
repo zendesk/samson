@@ -226,7 +226,7 @@ describe Deploy do
 
   describe "#changeset" do
     it "creates a changeset to the previous deploy" do
-      deploy.changeset.reference.must_equal "abcabcaaabcabcaaabcabcaaabcabcaaabcabca1"
+      deploy.changeset.instance_variable_get(:@reference).must_equal "abcabcaaabcabcaaabcabcaaabcabcaaabcabca1"
     end
   end
 

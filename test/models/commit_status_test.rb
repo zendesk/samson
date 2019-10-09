@@ -35,12 +35,12 @@ describe CommitStatus do
   let(:status) { build_status }
 
   before do
-    Project.any_instance.stubs(:fast_commit_from_ref).returns(commit)
+    Project.any_instance.stubs(:repo_commit_from_ref).returns(commit)
     GitRepository.expects(:new).with { raise "Do not use git" }.never
   end
 
   it "is fatal when commit is unknown" do
-    Project.any_instance.stubs(:fast_commit_from_ref).returns(nil)
+    Project.any_instance.stubs(:repo_commit_from_ref).returns(nil)
     status.state.must_equal "fatal"
     status.statuses.map { |s| s[:state] }.must_equal ["missing"]
   end

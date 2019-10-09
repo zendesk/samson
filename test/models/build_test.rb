@@ -171,12 +171,12 @@ describe Build do
 
   describe "#commit_url" do
     it "builds a path when the url is unknown" do
+      build.project.repository_url = 'git@example.com:foo/bar.git'
       build.commit_url.must_equal "/tree/da39a3ee5e6b4b0d3255bfef95601890afd80709"
     end
 
     it "builds a full url when host is known" do
-      build.project.repository_url = 'git@github.com:foo/bar.git'
-      build.commit_url.must_equal "https://github.com/foo/bar/tree/da39a3ee5e6b4b0d3255bfef95601890afd80709"
+      build.commit_url.must_equal "https://github.com/bar/foo/tree/da39a3ee5e6b4b0d3255bfef95601890afd80709"
     end
   end
 

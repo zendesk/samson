@@ -47,7 +47,7 @@ describe ProjectsController do
         end
 
         it "can combine query and url" do
-          get :index, params: {search: {query: "foo", url: "git@example.com:bar/foo.git"}}
+          get :index, params: {search: {query: "foo", url: "git@github.com:bar/foo.git"}}
           assigns(:projects).map(&:name).must_equal ["Foo"]
         end
 
@@ -66,7 +66,7 @@ describe ProjectsController do
           end
 
           it "renders with ssh in url" do
-            validate_search_url("ssh://git@example.com:bar/foo.git", ["Foo"])
+            validate_search_url("ssh://git@github.com:bar/foo.git", ["Foo"])
           end
 
           it "renders without .git in url" do
@@ -74,7 +74,7 @@ describe ProjectsController do
           end
 
           it "renders without .git and with @git in url" do
-            validate_search_url("git@example.com/bar/foo", ["Foo"])
+            validate_search_url("git@github.com/bar/foo", ["Foo"])
           end
 
           it "does not find when url does not match" do

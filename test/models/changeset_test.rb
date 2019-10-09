@@ -7,6 +7,8 @@ describe Changeset do
   let(:project) { Project.new(repository_url: 'ssh://git@github.com:foo/bar.git') }
   let(:changeset) { Changeset.new(project, "a", "b") }
 
+  before { stub_github_api("repos/foo/bar/commits/b", sha: "123") }
+
   describe "#comparison" do
     it "builds a new changeset" do
       stub_github_api("repos/foo/bar/compare/a...b", "x" => "y")
@@ -18,47 +20,34 @@ describe Changeset do
       changeset.comparison.class.must_equal Changeset::NullComparison
     end
 
-    describe "with a specificed SHA" do
-      it "caches" do
-        request = stub_github_api("repos/foo/bar/compare/a...b", "x" => "y")
-        2.times { Changeset.new(project, "a", "b").comparison.to_h.must_equal x: "y" }
-        assert_requested request
-      end
+    it "caches SHA compares" do
+      request = stub_github_api("repos/foo/bar/compare/a...b", "x" => "y")
+      2.times { Changeset.new(project, "a", "b").comparison.to_h.must_equal x: "y" }
+      assert_requested request
     end
 
-    describe "with master" do
-      describe "when GitHub project" do
-        it "doesn't cache" do
-          stub_github_api("repos/foo/bar/commits/master", sha: "foo")
-          stub_github_api("repos/foo/bar/compare/a...foo", "x" => "y")
-          Changeset.new(project, "a", "master").comparison.to_h.must_equal x: "y"
+    it "caches tag compares" do
+      request = stub_github_api("repos/foo/bar/compare/a...v1", "x" => "y")
+      2.times { Changeset.new(project, "a", "v1").comparison.to_h.must_equal x: "y" }
+      assert_requested request
+    end
 
-          stub_github_api("repos/foo/bar/commits/master", sha: "bar")
-          stub_github_api("repos/foo/bar/compare/a...bar", "x" => "z")
-          Changeset.new(project, "a", "master").comparison.to_h.must_equal x: "z"
-        end
-      end
+    it "does not cache branch compares" do
+      stub_github_api("repos/foo/bar/commits/master", sha: "foo")
+      stub_github_api("repos/foo/bar/compare/a...master", "x" => "y")
+      Changeset.new(project, "a", "master").comparison.to_h.must_equal x: "y"
 
-      describe "when GitLab project" do
-        it "doesn't cache" do
-          project.repository_url = 'ssh://git@gitlab.com:foo/bar.git'
-          stub_request(:get, "https://gitlab.com/api/v4/projects/foo%2Fbar/repository/branches/master").to_return(
-            body: JSON.dump(commit: {id: 'foo'})
-          )
-          stub_request(:get, "https://gitlab.com/api/v4/projects/foo%2Fbar/repository/compare?from=a&to=foo").to_return(
-            body: JSON.dump(diffs: [], commits: [])
-          )
-          Changeset.new(project, "a", "master").comparison.to_h.must_equal(files: [], commits: [])
-        end
-      end
+      stub_github_api("repos/foo/bar/commits/master", sha: "bar")
+      stub_github_api("repos/foo/bar/compare/a...master", "x" => "z")
+      Changeset.new(project, "a", "master").comparison.to_h.must_equal x: "z"
     end
 
     {
-      Octokit::NotFound => "GitHub: Not found",
-      Octokit::Unauthorized => "GitHub: Unauthorized",
-      Octokit::InternalServerError => "GitHub: Internal server error",
-      Octokit::RepositoryUnavailable => "GitHub: Repository unavailable", # used to signal redirects too
-      Faraday::ConnectionFailed.new("Oh no") => "GitHub: Oh no"
+      Octokit::NotFound => "Repository error: NotFound",
+      Octokit::Unauthorized => "Repository error: Unauthorized",
+      Octokit::InternalServerError => "Repository error: InternalServerError",
+      Octokit::RepositoryUnavailable => "Repository error: RepositoryUnavailable", # used to signal redirects too
+      Faraday::ConnectionFailed.new("Oh no") => "Repository error: Oh no"
     }.each do |exception, message|
       it "catches #{exception} exceptions" do
         GITHUB.expects(:compare).raises(exception)
@@ -77,7 +66,7 @@ describe Changeset do
     # tests config/initializers/octokit.rb Octokit::RedirectAsError
     it "uses the cached body of a 304" do
       stub_github_api("repos/foo/bar/commits/master", {sha: "bar"}, 304)
-      stub_github_api("repos/foo/bar/compare/a...bar", "x" => "z")
+      stub_github_api("repos/foo/bar/compare/a...master", "x" => "z")
       Changeset.new(project, "a", "master").comparison.to_h.must_equal x: "z"
     end
   end
@@ -96,11 +85,19 @@ describe Changeset do
   end
 
   describe "#pull_requests" do
+    def stub_compare(a, b, commits)
+      stub_github_api("repos/foo/bar/commits/#{b}", sha: "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd")
+      comparison = Sawyer::Resource.new(sawyer_agent, commits: commits)
+      GITHUB.stubs(:compare).with("foo/bar", a, b).returns(comparison)
+    end
+
     let(:sawyer_agent) { Sawyer::Agent.new('') }
-    let(:commit1) { Sawyer::Resource.new(sawyer_agent, commit: message1) }
-    let(:commit2) { Sawyer::Resource.new(sawyer_agent, commit: message2) }
-    let(:message1) { Sawyer::Resource.new(sawyer_agent, message: 'Merge pull request #42') }
-    let(:message2) { Sawyer::Resource.new(sawyer_agent, message: 'Fix typo') }
+    let(:commit_merge) do
+      Sawyer::Resource.new(sawyer_agent, commit: Sawyer::Resource.new(sawyer_agent, message: 'Merge pull request #42'))
+    end
+    let(:commit_simple) do
+      Sawyer::Resource.new(sawyer_agent, commit: Sawyer::Resource.new(sawyer_agent, message: 'Fix typo'))
+    end
     let(:pr_from_coolcommitter) do
       Sawyer::Resource.new(
         sawyer_agent,
@@ -121,9 +118,8 @@ describe Changeset do
     end
     let(:pr_from_coolcommitter_wrapped) { Changeset::PullRequest.new("foo/bar", pr_from_coolcommitter) }
 
-    it "finds pull requests mentioned in merge commits" do
-      comparison = Sawyer::Resource.new(sawyer_agent, commits: [commit1, commit2])
-      GITHUB.stubs(:compare).with("foo/bar", "a", "b").returns(comparison)
+    it "finds merged pull requests mentioned in merge commits" do
+      stub_compare "a", "b", [commit_merge, commit_simple]
       GITHUB.stubs(:pull_requests).with("foo/bar", head: "foo:b").returns([])
 
       Changeset::PullRequest.stubs(:find).with("foo/bar", 42).returns(pr_from_coolcommitter_wrapped)
@@ -132,9 +128,8 @@ describe Changeset do
       changeset.pull_requests.first.users.first.login.must_equal 'coolcommitter'
     end
 
-    it "finds pull requests open for a branch" do
-      comparison = Sawyer::Resource.new(sawyer_agent, commits: [commit2])
-      GITHUB.stubs(:compare).with("foo/bar", "a", "b").returns(comparison)
+    it "finds open pull requests for a branch" do
+      stub_compare "a", "b", [commit_simple]
       GITHUB.stubs(:pull_requests).with("foo/bar", head: "foo:b").returns(prs_from_coolcommitter)
       GITHUB.stubs(:pull_request).with("foo/bar", 5).returns(pr_from_coolcommitter)
 
@@ -145,29 +140,30 @@ describe Changeset do
       pull_requests.first.additions.must_equal 10
     end
 
-    it "does not fail if fetching pull request from Github fails" do
-      comparison = Sawyer::Resource.new(sawyer_agent, commits: [commit2])
-      GITHUB.stubs(:compare).with("foo/bar", "a", "b").returns(comparison)
+    it "does not fail if fetching open pull request from Github fails" do
+      stub_compare "a", "b", [commit_simple]
       GITHUB.stubs(:pull_requests).with("foo/bar", head: "foo:b").raises(Octokit::Error)
-
       changeset.pull_requests.must_equal []
     end
 
-    it "skips fetching pull request for non PR branches" do
-      comparison = Sawyer::Resource.new(sawyer_agent, commits: [commit2])
-      stub_github_api("repos/foo/bar/commits/master", sha: "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd")
-      GITHUB.stubs(:compare).returns(comparison)
-      find_pr_stub = stub_github_api("repos/foo/bar/pulls", []).with(query: hash_including({}))
+    it "does not load open pull requests for tags because they never exist" do
+      stub_compare "a", "v1", [commit_simple]
+      Changeset.new(project, "a", "v1").pull_requests
+    end
 
-      %w[abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd master v123].each do |reference|
-        changeset = Changeset.new(project, "a", reference)
-        changeset.pull_requests
-        assert_not_requested(find_pr_stub)
-      end
+    it "does not load open pull requests for shas because they are not supported" do
+      sha = "b" * 40
+      stub_compare "a", sha, [commit_simple]
+      Changeset.new(project, "a", sha).pull_requests
+    end
+
+    it "does not load open pull requests for head branches because nobody uses them to pull from" do
+      stub_compare "a", "master", [commit_simple]
+      Changeset.new(project, "a", "master").pull_requests
     end
 
     it "ignores invalid pull request numbers" do
-      comparison = Sawyer::Resource.new(sawyer_agent, commits: [commit1])
+      comparison = Sawyer::Resource.new(sawyer_agent, commits: [commit_merge])
       GITHUB.stubs(:compare).with("foo/bar", "a", "b").returns(comparison)
       GITHUB.stubs(:pull_requests).with("foo/bar", head: "foo:b").returns([])
 
@@ -253,11 +249,19 @@ describe Changeset do
 
   describe Changeset::NullComparison do
     it "has no commits" do
-      Changeset::NullComparison.new(nil).commits.must_equal []
+      Changeset::NullComparison.new.commits.must_equal []
     end
 
     it "has no files" do
-      Changeset::NullComparison.new(nil).files.must_equal []
+      Changeset::NullComparison.new.files.must_equal []
+    end
+
+    it "has no error" do
+      Changeset::NullComparison.new.error.must_be_nil
+    end
+
+    it "can have error" do
+      Changeset::NullComparison.new(error: "a").error.must_equal "a"
     end
   end
 end
