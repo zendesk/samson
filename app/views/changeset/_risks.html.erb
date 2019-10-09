@@ -1,20 +1,23 @@
 <div class="alert alert-info">
-  If you want Samson to pick up and display any risks associated with your pull request, add a heading called "Risks"
-  in your pull request description. Anything in that section will be listed here as a risk.
+  To display risks from pull request, add a "Risks" heading in the pull request description
 </div>
 
-<% changeset.pull_requests.each do |pr| %>
-  <% if pr.risky? %>
-    <h5><strong>#<%= pr.number %></strong> <%= link_to pr.title, pr.url %> <%= github_users(pr.users) %></h5>
-    <%= markdown pr.risks %>
-  <% elsif pr.missing_risks? %>
-    <div>
-      <% help_icon = additional_info(
-            "Missing 'Risks' section or failed to parse risks",
-            class: 'glyphicon glyphicon-alert deployment-alert'
-          )
-      %>
-      <h5><strong>#<%= pr.number %></strong> <%= link_to pr.title, pr.url %> <%= github_users(pr.users) %><%= help_icon %></h5>
-    </div>
+<% if changeset.pull_requests.any? %>
+  <% changeset.pull_requests.each do |pr| %>
+    <% if pr.risky? %>
+      <h5><strong>#<%= pr.number %></strong> <%= link_to pr.title, pr.url %> <%= github_users(pr.users) %></h5>
+      <%= markdown pr.risks %>
+    <% elsif pr.missing_risks? %>
+      <div>
+        <% help_icon = additional_info(
+              "Missing 'Risks' section or failed to parse risks",
+              class: 'glyphicon glyphicon-alert deployment-alert'
+            )
+        %>
+        <h5><strong>#<%= pr.number %></strong> <%= link_to pr.title, pr.url %> <%= github_users(pr.users) %><%= help_icon %></h5>
+      </div>
+    <% end %>
   <% end %>
+<% else %>
+  <p>There were no pull requests in this deploy.</p>
 <% end %>
