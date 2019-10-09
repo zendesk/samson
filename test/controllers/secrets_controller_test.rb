@@ -113,6 +113,11 @@ describe SecretsController do
         get :index
         assert flash[:alert]
       end
+
+      it "renders json" do
+        get :index, format: "json"
+        assert_response :ok
+      end
     end
 
     describe "#duplicates" do

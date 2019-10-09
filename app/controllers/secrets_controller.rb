@@ -35,6 +35,13 @@ class SecretsController < ApplicationController
       @secrets.select! { |id, _, _| matching.include?(id) }
     end
     @pagy, @secrets = pagy_array(@secrets, page: params[:page], items: 50)
+
+    respond_to do |format|
+      format.html
+      format.json do
+        render_as_json :secrets, @secrets, @pagy
+      end
+    end
   rescue Samson::Secrets::BackendError => e
     flash[:alert] = e.message
     render html: "", layout: true
