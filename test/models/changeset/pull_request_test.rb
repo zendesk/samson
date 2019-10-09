@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../../test_helper'
 
-SingleCov.covered! uncovered: 1
+SingleCov.covered!
 
 describe Changeset::PullRequest do
   def add_risks
@@ -31,16 +31,21 @@ describe Changeset::PullRequest do
       data.title = "Make it bigger!"
 
       pr = Changeset::PullRequest.find("foo/bar", 42)
-
       pr.title.must_equal "Make it bigger!"
     end
 
     it "returns nil if the pull request could not be found" do
       GITHUB.stubs(:pull_request).with("foo/bar", 42).raises(Octokit::NotFound)
+      refute Changeset::PullRequest.find("foo/bar", 42)
+    end
+  end
 
-      pr = Changeset::PullRequest.find("foo/bar", 42)
-
-      pr.must_be_nil
+  describe ".expire" do
+    it "expires find cache" do
+      GITHUB.expects(:pull_request).with("foo/bar", 42).returns({}).times(2)
+      2.times { assert Changeset::PullRequest.find("foo/bar", 42) }
+      Changeset::PullRequest.expire("foo/bar", 42)
+      assert Changeset::PullRequest.find("foo/bar", 42)
     end
   end
 
@@ -70,13 +75,15 @@ describe Changeset::PullRequest do
       {
         "number" => 1,
         "pull_request" => {
-          "state" => 'open',
-          "body" => 'pr description [samson review]'
+          "state" => "open",
+          "body" => "pr description [samson review]"
         },
-        "github" => {
-          "action" => 'opened'
-        }
+        "action" => "opened"
       }
+    end
+
+    it "is valid" do
+      Changeset::PullRequest.valid_webhook?(webhook_data).must_equal true
     end
 
     it "is invalid for PRs that had its label changed" do

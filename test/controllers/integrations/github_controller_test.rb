@@ -86,6 +86,15 @@ describe Integrations::GithubController do
     it_does_not_deploy 'without "[samson review]" in the body' do
       payload.deep_merge!(pull_request: {body: 'imafixwolves'})
     end
+
+    it "expires PR cache" do
+      repo = project.repository_path
+      request = stub_github_api("repos/#{repo}/pulls/123", {})
+      2.times { assert Changeset::PullRequest.find(repo, 123) }
+      post :create, params: {token: project.token, number: 123}
+      assert Changeset::PullRequest.find(repo, 123)
+      assert_requested request, times: 2
+    end
   end
 
   describe 'with a commit status event' do
@@ -103,7 +112,7 @@ describe Integrations::GithubController do
     end
   end
 
-  describe 'with a pull issue comment' do
+  describe 'with a pull/issue comment' do
     let(:payload) do
       {
         action: 'created',

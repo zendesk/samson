@@ -20,43 +20,54 @@ class Changeset::PullRequest
   # Docs on the pull request event: https://developer.github.com/v3/activity/events/types/#pullrequestevent
   VALID_ACTIONS = ['opened', 'edited', 'synchronize'].freeze
 
-  # Finds the pull request with the given number.
-  #
-  # repo   - The String repository name, e.g. "zendesk/samson".
-  # number - The Integer pull request number.
-  #
-  # Returns a ChangeSet::PullRequest describing the PR or nil if it couldn't
-  #   be found.
-  def self.find(repo, number)
-    data = Rails.cache.fetch([self, repo, number].join("-")) do
-      GITHUB.pull_request(repo, number)
+  class << self
+    # Finds the pull request with the given number.
+    #
+    # @param [String] repository name, e.g. "zendesk/samson".
+    # @param [Integer] pull request number
+    #
+    # @return [ChangeSet::PullRequest, nil]
+    def find(repo, number)
+      data = Rails.cache.fetch(cache_key(repo, number)) do
+        GITHUB.pull_request(repo, number)
+      end
+
+      new(repo, data)
+    rescue Octokit::NotFound
+      nil
     end
 
-    new(repo, data)
-  rescue Octokit::NotFound
-    nil
-  end
-
-  def self.changeset_from_webhook(project, payload)
-    data = Sawyer::Resource.new(Octokit.agent, payload.fetch('pull_request'))
-    new(project.repository_path, data)
-  end
-
-  # Webhook events that are valid should be related to a pr code push or someone adding [samson review]
-  # to the description. The actions related to a code push are 'opened' and 'synchronized'
-  # The 'edited' action gets sent when the PR description is edited. To trigger a deploy from an edit - it
-  # should only be when the edit is related to adding the text [samson review]
-  def self.valid_webhook?(payload)
-    data = payload['pull_request'] || {}
-    action = payload['action']
-    return false if data['state'] != 'open' || !VALID_ACTIONS.include?(action)
-
-    if action == 'edited'
-      previous_desc = payload.dig('changes', 'body', 'from')
-      return false if !previous_desc || (previous_desc =~ WEBHOOK_FILTER && data['body'] =~ WEBHOOK_FILTER)
+    def expire(repo, number)
+      Rails.cache.delete cache_key(repo, number)
     end
 
-    !!(data['body'] =~ WEBHOOK_FILTER)
+    def changeset_from_webhook(project, payload)
+      data = Sawyer::Resource.new(Octokit.agent, payload.fetch('pull_request'))
+      new(project.repository_path, data)
+    end
+
+    # Webhook events that are valid should be related to a pr code push or someone adding [samson review]
+    # to the description. The actions related to a code push are 'opened' and 'synchronized'
+    # The 'edited' action gets sent when the PR description is edited. To trigger a deploy from an edit - it
+    # should only be when the edit is related to adding the text [samson review]
+    def valid_webhook?(payload)
+      data = payload['pull_request'] || {}
+      action = payload['action']
+      return false if data['state'] != 'open' || !VALID_ACTIONS.include?(action)
+
+      if action == 'edited'
+        previous_desc = payload.dig('changes', 'body', 'from')
+        return false if !previous_desc || (previous_desc =~ WEBHOOK_FILTER && data['body'] =~ WEBHOOK_FILTER)
+      end
+
+      data['body'].match? WEBHOOK_FILTER
+    end
+
+    private
+
+    def cache_key(repo, number)
+      [self, repo, number].join("-")
+    end
   end
 
   attr_reader :repo
