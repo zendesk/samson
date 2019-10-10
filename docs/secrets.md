@@ -24,7 +24,7 @@ Secrets can be `deprecated` first and deleted when all use outside of samson (va
 
 ### Resolving secrets from external tools
 
-Secrets can be resolved in the context of a projects deploy group with the `/secrets/resolve.json` endpoint.
+Secrets can be resolved to their full path in the context of a projects deploy group with the `/secrets/resolve.json` endpoint.
 
 In the below example we have a secret configured for `a` in the deploy group `group1`, but no secret configured for `b`.
 
