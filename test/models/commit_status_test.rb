@@ -33,6 +33,7 @@ describe CommitStatus do
   let(:reference) { 'master' }
   let(:commit) { "a" * 40 }
   let(:status) { build_status }
+  let(:url) { "repos/#{stage.project.repository_path}/commits/#{commit}/status" }
 
   before do
     Project.any_instance.stubs(:repo_commit_from_ref).returns(commit)
@@ -51,8 +52,6 @@ describe CommitStatus do
     end
 
     before { stub_checks_api } # user only using Status API
-
-    let(:url) { "repos/#{stage.project.repository_path}/commits/#{commit}/status" }
 
     describe "#state" do
       it "returns state" do
@@ -460,6 +459,43 @@ describe CommitStatus do
           status.state.must_equal('pending')
         end
       end
+    end
+  end
+
+  describe '#github_risks_status' do
+    with_env COMMIT_STATUS_RISKS: 'true'
+    let(:pull_requests) { [Changeset::PullRequest.new("foo", OpenStruct.new(body: "NOPE"))] }
+
+    before do
+      status.expects(:github_check_status).returns(nil)
+      status.expects(:github_commit_status).
+        returns(state: "success", statuses: [{state: "success", updated_at: Time.now}])
+      Changeset.any_instance.stubs(:pull_requests).returns(pull_requests)
+    end
+
+    it "shows when PR is missing risks" do
+      status.state.must_equal 'error'
+    end
+
+    it "ignores missing PRs" do
+      pull_requests.clear
+      status.state.must_equal 'success'
+    end
+
+    it "ignores when deactivated" do
+      with_env COMMIT_STATUS_RISKS: nil do
+        status.state.must_equal 'success'
+      end
+    end
+
+    it "ignores when there is no previous deploy" do
+      deploys(:succeeded_test).delete
+      status.state.must_equal 'success'
+    end
+
+    it "ignores PR with risks" do
+      pull_requests.replace([Changeset::PullRequest.new("foo", OpenStruct.new(body: "### Risks\n - None"))])
+      status.state.must_equal 'success'
     end
   end
 

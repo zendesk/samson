@@ -49,12 +49,20 @@ class CommitStatus
 
   private
 
+  # TODO: do non-db lookups in parallel to save time
   # @return [Hash]
   def combined_status
     @combined_status ||= begin
       if @commit
         statuses = [github_combined_status]
-        statuses += [release_status, *only_production_status, *plugin_statuses].compact if @stage
+        if @stage
+          statuses.concat [
+            release_status,
+            only_production_status,
+            *plugin_statuses,
+            changeset_risks_status
+          ].compact
+        end
         merge_statuses(statuses)
       else
         {
@@ -65,18 +73,18 @@ class CommitStatus
     end
   end
 
-  # Gets a reference's state, combining results from both the Status and Checks API
-  # NOTE: reply is an api object that does not support .fetch
+  # Gets a reference's state, combining results from both the Status API, Checks API
+  # TODO: we can do these 2 lookups in parallel to save time
   # @return [Hash]
   def github_combined_status
     expires_in = ->(reply) { cache_duration(reply) }
     Samson::DynamicTtlCache.cache_fetch_if true, cache_key(@commit), expires_in: expires_in do
-      checks_result = octokit_error_as_status('checks') { github_check_status }
-      status_result = octokit_error_as_status('status') { github_commit_status }
+      results = [
+        octokit_error_as_status('checks') { github_check_status },
+        octokit_error_as_status('status') { github_commit_status }
+      ].compact.select { |result| result[:statuses].any? }
 
-      results_with_statuses = [checks_result, status_result].select { |result| result[:statuses].any? }
-
-      results_with_statuses.empty? ? NO_STATUSES_REPORTED_RESULT : merge_statuses(results_with_statuses)
+      results.empty? ? NO_STATUSES_REPORTED_RESULT.dup : merge_statuses(results)
     end
   end
 
@@ -140,6 +148,29 @@ class CommitStatus
   # @return [Hash]
   def github_commit_status
     GITHUB.combined_status(@project.repository_path, @commit).to_h
+  end
+
+  # Show if included PRs are missing risks
+  # There can be lots of PRs, so only use a single status
+  # Ignore if all PRs are "None" risk or no PRs (return nil)
+  # TODO: pass in commit to changeset to avoid extra commit resolution
+  # TODO: parse risk level and display "pending" for "High" risks
+  # @return [Hash, NilClass]
+  def changeset_risks_status
+    return unless ENV["COMMIT_STATUS_RISKS"]
+    return unless previous = @stage.deploys.succeeded.first
+    pull_requests = Changeset.new(@stage.project, previous.commit, @reference).pull_requests
+
+    if pull_requests.any?(&:missing_risks?)
+      {
+        state: "error",
+        statuses: [{
+          state: "Missing risks",
+          description: "Risks section missing or failed to parse risks on some PRs",
+          updated_at: 1.minute.ago # do not cache for long so user can update the PR
+        }]
+      }
+    end
   end
 
   # merges multiple statuses into a single status
