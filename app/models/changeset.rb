@@ -95,6 +95,7 @@ class Changeset
 
   # github only supports finding open PRs for branches (not commits or tags)
   # https://help.github.com/en/articles/searching-issues-and-pull-requests
+  # TODO: can we just use .new here to avoid extra fetch ?
   def open_pull_requests
     return [] if static? || MAIN_BRANCHES.include?(@reference)
     org = @repo.split("/", 2).first
