@@ -54,6 +54,26 @@ class SecretsController < ApplicationController
       sort_by { |_, v| -v.size }
   end
 
+  def resolve
+    params.require([:project_id, :deploy_group, :keys])
+
+    project = Project.find(params[:project_id])
+    deploy_group = DeployGroup.find_by_permalink(params[:deploy_group])
+    keys = params[:keys]
+    resolver = Samson::Secrets::KeyResolver.new(project, [deploy_group])
+
+    resolved = {}
+    keys.each do |key|
+      resolved[key] = resolver.expand('unused', key).first&.last
+    end
+
+    respond_to do |format|
+      format.json do
+        render_as_json :secrets, resolved, nil
+      end
+    end
+  end
+
   def history
     @history = Samson::Secrets::Manager.history(id, resolve: true)
   end

@@ -21,3 +21,27 @@ For these the `visible` flag can be used to keep them visible for everyone.
 ### Deprecated
 
 Secrets can be `deprecated` first and deleted when all use outside of samson (vault backend or accessing secrets via api client) has stopped.
+
+### Resolving secrets from external tools
+
+Secrets can be resolved in the context of a projects deploy group with the `/secrets/resolve.json` endpoint.
+
+In the below example we have a secret configured for `a` in the deploy group `group1`, but no secret configured for `b`.
+
+```
+# params.json
+{
+  "project_id": 2,
+  "deploy_group": "group1",
+  "keys": [
+    "a",
+    "b"
+  ]
+}
+
+$ curl -s -d @params.json -H "Content-Type: application/json" -H "Authorization: Bearer $SAMSON_ACCESS_TOKEN" $SAMSON_BASE_URL/secrets/resolve.json | jq '.'
+{
+  "a": "global/example-kubernetes/global/a",
+  "b": null
+}
+```

@@ -37,6 +37,8 @@ describe SecretsController do
     unauthorized :post, :revert, id: 'production/foo/group/bar'
     unauthorized :patch, :update, id: 'production/foo/group/bar'
     unauthorized :delete, :destroy, id: 'production/foo/group/bar'
+    unauthorized :get, :resolve
+    unauthorized :post, :resolve
   end
 
   as_a :project_deployer do
@@ -199,6 +201,13 @@ describe SecretsController do
     describe '#revert' do
       it "is unauthrized" do
         post :revert, params: {id: secret, version: 'v1'}
+        assert_response :unauthorized
+      end
+    end
+
+    describe '#resolve' do
+      it "is unauthorized" do
+        get :resolve
         assert_response :unauthorized
       end
     end
@@ -505,6 +514,19 @@ describe SecretsController do
         delete :destroy, params: {id: secret.id}
         assert_redirected_to "/secrets"
         Samson::Secrets::DbBackend::Secret.exists?(secret.id).must_equal(false)
+      end
+    end
+
+    describe "#resolve" do
+      it "renders resolved secrets" do
+        create_secret 'production/z/pod2/bar'
+        get :resolve, params: {project_id: other_project.id, deploy_group: 'pod2', keys: ['bar', 'foo'], format: 'json'}
+        assert_response :success
+
+        result = JSON.parse(response.body)
+        secrets = result['secrets']
+        secrets['bar'].must_equal 'production/z/pod2/bar'
+        secrets['foo'].must_be_nil
       end
     end
   end
