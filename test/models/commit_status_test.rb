@@ -308,8 +308,6 @@ describe CommitStatus do
       end
 
       it 'raises with unknown conclusion' do
-        status.unstub(:github_commit_status)
-
         stub_github_api(
           check_suite_url,
           check_suites: [{conclusion: 'bingbong', id: 1}]

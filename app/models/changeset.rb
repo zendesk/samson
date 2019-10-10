@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 class Changeset
   ATTRIBUTE_TABS = ["files", "commits", "pull_requests", "risks", "jira_issues"].freeze
   MAIN_BRANCHES = ["master", "develop", "staging", "production"].freeze
@@ -31,7 +32,11 @@ class Changeset
   end
 
   def pull_requests
-    @pull_requests ||= merged_pull_requests + open_pull_requests
+    @pull_requests ||= begin
+      numbers = (merged_pull_requests + open_pull_requests)
+      PullRequest.name # avoid require race conditions in development
+      Samson::Parallelizer.map(numbers) { |number| PullRequest.find(@repo, number) }.compact
+    end
   end
 
   def risks?
@@ -75,8 +80,9 @@ class Changeset
     Changeset::NullComparison.new(error: "Repository error: #{e.message.split("::").last}")
   end
 
+  # @return [Array<Integer>]
   def merged_pull_requests
-    commits.map(&:pull_request_number).compact.map { |num| PullRequest.find(@repo, num) }.compact
+    commits.map(&:pull_request_number).compact
   end
 
   # for branches that frequently change we make sure to always get the correct cache,
@@ -95,13 +101,14 @@ class Changeset
 
   # github only supports finding open PRs for branches (not commits or tags)
   # https://help.github.com/en/articles/searching-issues-and-pull-requests
-  # TODO: can we just use .new here to avoid extra fetch ?
+  #
+  # List response is not the same as the show response, do not use PullRequest.new
+  #
+  # @return [Array<Integer>]
   def open_pull_requests
     return [] if static? || MAIN_BRANCHES.include?(@reference)
     org = @repo.split("/", 2).first
-    GITHUB.pull_requests(@repo, head: "#{org}:#{@reference}").map do |github_pr|
-      PullRequest.find(@repo, github_pr.number)
-    end.compact
+    GITHUB.pull_requests(@repo, head: "#{org}:#{@reference}").map(&:number)
   rescue Octokit::Error, Faraday::ConnectionFailed => e
     Rails.logger.warn "Failed fetching pull requests for branch #{@reference}:\n#{e}"
     []
