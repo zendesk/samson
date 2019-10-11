@@ -28,6 +28,19 @@ Secrets can be resolved to their full path in the context of a projects deploy g
 
 In the below example we have a secret configured for `a` in the deploy group `group1`, but no secret configured for `b`.
 
+The endpoint supports both GET:
+
+```
+$ curl -s -H "Content-Type: application/json" -H "Authorization: Bearer $SAMSON_ACCESS_TOKEN" $SAMSON_BASE_URL/secrets/resolve.json?project_id=2&deploy_group=group1&keys[]=a&keys[]=b
+{
+  "a": "global/example-kubernetes/global/a",
+  "b": null
+}
+```
+
+For ease of use to clients parameters can be sent in JSON format in a POST request. This way clients doesn't need to deal with url encoding semantics.
+
+
 ```
 # params.json
 {
@@ -45,3 +58,5 @@ $ curl -s -d @params.json -H "Content-Type: application/json" -H "Authorization:
   "b": null
 }
 ```
+
+This endpoint was added and is useful for resolving secrets as defined in kubernetes manifests, in the format that the `samson_secret_puller` or similar solutions use. The secrets are usually a list of names, with actual paths in the backend being different because of scoping/sharing concerns.
