@@ -524,9 +524,34 @@ describe SecretsController do
         assert_response :success
 
         result = JSON.parse(response.body)
-        secrets = result['secrets']
-        secrets['bar'].must_equal 'production/z/pod2/bar'
-        secrets['foo'].must_be_nil
+        resolved = result['resolved']
+        resolved['bar'].must_equal 'production/z/pod2/bar'
+        resolved['foo'].must_be_nil
+      end
+      it "supports permalink given as project_id" do
+        get :resolve, params: {
+          project_id: other_project.permalink, deploy_group: 'pod2', keys: ['bar', 'foo'], format: 'json'
+        }
+        assert_response :success
+      end
+      it "supports resolving by projet permalink param" do
+        get :resolve, params: {
+          project_permalink: other_project.permalink, deploy_group: 'pod2', keys: ['bar', 'foo'], format: 'json'
+        }
+        assert_response :success
+      end
+      it "raises when no project can be resolved" do
+        assert_raise(RuntimeError) do
+          get :resolve, params: {format: 'json'}
+        end
+      end
+      it "handles keys passed as comma delimited list" do
+        get :resolve, params: {
+          project_permalink: other_project.permalink, deploy_group: 'pod2', keys: 'bar,foo,baz', format: 'json'
+        }
+        result = JSON.parse(response.body)
+        resolved = result['resolved']
+        resolved.keys.size.must_equal 3
       end
     end
   end

@@ -55,21 +55,38 @@ class SecretsController < ApplicationController
   end
 
   def resolve
-    params.require([:project_id, :deploy_group, :keys])
+    if params[:project_id].present?
+      project = if params[:project_id].match?(/^\d+$/)
+        Project.find_by_id(params[:project_id])
+      else
+        Project.find_by_permalink(params[:project_id])
+      end
+    elsif params[:project_permalink].present?
+      project = Project.find_by_permalink(params[:project_permalink])
+    else
+      raise "Neither project_id or project_permalink given as parameters"
+    end
 
-    project = Project.find(params[:project_id])
-    deploy_group = DeployGroup.find_by_permalink(params[:deploy_group])
-    keys = params[:keys]
+    deploy_group = DeployGroup.find_by_permalink(params.require(:deploy_group))
+    keys_param = params.require(:keys)
+    keys = keys_param.is_a?(Array) ? keys_param : keys_param.split(/, ?/)
+
     resolver = Samson::Secrets::KeyResolver.new(project, [deploy_group])
 
     resolved = {}
     keys.each do |key|
-      resolved[key] = resolver.expand('unused', key).first&.last
+      expanded = resolver.expand(key, key)
+      found = expanded.first&.last
+      if found
+        expanded.each { |k, r| resolved[k] = r }
+      else
+        resolved[key] = nil
+      end
     end
 
     respond_to do |format|
       format.json do
-        render_as_json :secrets, resolved, nil
+        render_as_json :resolved, resolved, nil
       end
     end
   end
