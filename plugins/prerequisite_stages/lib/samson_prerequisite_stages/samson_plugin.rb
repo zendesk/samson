@@ -14,8 +14,12 @@ module SamsonPrerequisiteStages
   Samson::Hooks.view :stage_show, 'samson_prerequisite_stages'
 
   Samson::Hooks.callback :before_deploy do |deploy, _|
+    # This check is technically redundant (undeployed_prerequisite_stages above will be empty anyway if this
+    # is not true) but a whole bunch of unrelated tests will complain about a missing HTTP stub from resolving
+    # the ref to a commit if we don't do this.
+    next unless deploy.stage.prerequisite_stage_ids?
     error = SamsonPrerequisiteStages.validate_deployed_to_all_prerequisite_stages(
-      deploy.stage, deploy.reference, deploy.commit
+      deploy.stage, deploy.reference, deploy.project.repo_commit_from_ref(deploy.reference)
     )
     raise error if error
   end
