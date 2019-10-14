@@ -8,24 +8,28 @@ describe SamsonPrerequisiteStages do
   let(:stage1) { stages(:test_staging) }
   let(:stage2) { stages(:test_production) }
   let(:deploy) { stage1.deploys.first }
+  let(:staging_commit) { "0000000000000000000000000000000000000002" }
+  let(:production_commit) { "0000000000000000000000000000000000000001" }
 
   before do
     stage1.update_attributes!(prerequisite_stage_ids: [stage2.id])
+    deploy.project.stubs(:repo_commit_from_ref).with(stage1.deploys.first.reference).returns(staging_commit)
+    deploy.project.stubs(:repo_commit_from_ref).with(stage2.deploys.first.reference).returns(production_commit)
   end
 
   describe SamsonPrerequisiteStages::Engine do
     describe '.validate_deployed_to_all_prerequisite_stages' do
       it 'shows unmet prerequisite stages' do
-        stage1.expects(:undeployed_prerequisite_stages).with(deploy.commit).returns([stage2])
+        stage1.expects(:undeployed_prerequisite_stages).with(staging_commit).returns([stage2])
         error = SamsonPrerequisiteStages.
-          validate_deployed_to_all_prerequisite_stages(stage1, deploy.reference, deploy.commit)
+          validate_deployed_to_all_prerequisite_stages(stage1, deploy.reference, staging_commit)
         error.must_equal "Reference 'staging' has not been deployed to these prerequisite stages: Production."
       end
 
       it 'is silent when there are no unmet prerequisites' do
-        stage1.expects(:undeployed_prerequisite_stages).with(deploy.commit).returns([])
+        stage1.expects(:undeployed_prerequisite_stages).with(staging_commit).returns([])
         SamsonPrerequisiteStages.
-          validate_deployed_to_all_prerequisite_stages(stage1, deploy.reference, deploy.commit).must_be_nil
+          validate_deployed_to_all_prerequisite_stages(stage1, deploy.reference, staging_commit).must_be_nil
       end
     end
   end
@@ -35,7 +39,7 @@ describe SamsonPrerequisiteStages do
       only_callbacks_for_plugin :before_deploy
 
       it 'raises if a prerequisite stage has not been deployed for ref' do
-        stage1.expects(:undeployed_prerequisite_stages).with(deploy.reference).returns([stage2])
+        stage1.expects(:undeployed_prerequisite_stages).with(staging_commit).returns([stage2])
 
         error_message = "Reference 'staging' has not been deployed to these prerequisite stages: Production."
         error = assert_raises RuntimeError do
@@ -45,8 +49,13 @@ describe SamsonPrerequisiteStages do
       end
 
       it 'does not raise if ref has not been deployed' do
-        stage1.expects(:undeployed_prerequisite_stages).with(deploy.reference).returns([])
+        stage1.expects(:undeployed_prerequisite_stages).with(staging_commit).returns([])
 
+        Samson::Hooks.fire(:before_deploy, deploy, nil)
+      end
+
+      it 'does not raise if there are no prerequisite stages' do
+        stage1.update_attributes!(prerequisite_stage_ids: [])
         Samson::Hooks.fire(:before_deploy, deploy, nil)
       end
     end
@@ -55,7 +64,7 @@ describe SamsonPrerequisiteStages do
       only_callbacks_for_plugin :ref_status
 
       it 'returns status if stage does not meet prerequisites' do
-        stage1.expects(:undeployed_prerequisite_stages).with(deploy.commit).returns([stage2])
+        stage1.expects(:undeployed_prerequisite_stages).with(staging_commit).returns([stage2])
 
         error_message = "Reference 'staging' has not been deployed to these prerequisite stages: Production."
         expected = {
@@ -66,12 +75,12 @@ describe SamsonPrerequisiteStages do
           }]
         }
 
-        Samson::Hooks.fire(:ref_status, stage1, deploy.reference, deploy.commit).must_include expected
+        Samson::Hooks.fire(:ref_status, stage1, deploy.reference, staging_commit).must_include expected
       end
 
       it 'returns nil if stage meets prerequisites' do
-        stage1.expects(:undeployed_prerequisite_stages).with(deploy.commit).returns([])
-        Samson::Hooks.fire(:ref_status, stage1, deploy.reference, deploy.commit).must_equal [nil]
+        stage1.expects(:undeployed_prerequisite_stages).with(staging_commit).returns([])
+        Samson::Hooks.fire(:ref_status, stage1, deploy.reference, staging_commit).must_equal [nil]
       end
     end
 
