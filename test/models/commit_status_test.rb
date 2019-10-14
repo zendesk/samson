@@ -247,7 +247,7 @@ describe CommitStatus do
     end
 
     before do
-      status.expects(:github_commit_status).returns(state: 'pending', statuses: []) # user only using Checks API
+      status.stubs(:github_commit_status).returns(state: 'pending', statuses: []) # user only using Checks API
     end
 
     describe '#state' do

@@ -34,7 +34,7 @@ class Changeset
   def pull_requests
     @pull_requests ||= begin
       numbers = (merged_pull_requests + open_pull_requests)
-      PullRequest.name # avoid require race conditions in development
+      PullRequest.name # call no-op method to load class before running in parallel
       Samson::Parallelizer.map(numbers) { |number| PullRequest.find(@repo, number) }.compact
     end
   end
