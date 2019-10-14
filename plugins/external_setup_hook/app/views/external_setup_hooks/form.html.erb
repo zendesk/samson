@@ -1,0 +1,40 @@
+<%
+  # title = (@group.new_record? ? "New group" : "Edit #{@group.name}")
+  # can_edit = can?(:write, :environment_variable_groups, @group)
+  # disabled = can_edit ? '' : 'disabled'
+  # crumbs = [["Environment variables", EnvironmentVariableGroup]]
+  title = "New Hook"
+  can_edit = true
+  disabled = false
+  crumbs = [["External Setup Hook", ExternalSetupHook]]
+%>
+
+<% if @hook.new_record? %>
+  <%= manual_breadcrumb(crumbs + [[title, nil]]) %>
+<% else %>
+  <%= manual_breadcrumb(crumbs + [[@hook.name, @group], ["Edit", nil]]) %>
+<% end %>
+
+<%= page_title title %>
+
+<section>
+  <% if !can_edit %>
+    <div class="alert alert-warning">
+      You must either be an admin or have project admin privileges for all projects that use this environment group to
+      edit it.
+    </div>
+  <% end %>
+
+  <%= form_for @hook, html: { class: "form-horizontal" } do |form| %>
+    <fieldset <%= disabled %>>
+      <%= form.input :name %>
+      <%= form.input :description %>
+      <%= form.input :endpoint %>
+      <%= form.input :auth_type, help: 'Select auth type' do %>
+        <%= form.select :auth_type, ['Token'], {}, class: "form-control" %>
+      <% end %>
+      <%= form.input :auth_token %>
+    </fieldset>
+    <%= form.submit "Save", class: "btn btn-primary" %>
+  <% end %>
+</section>

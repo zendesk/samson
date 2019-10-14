@@ -1,0 +1,31 @@
+<% title = "Hooks" %>
+<% page_title title %>
+
+<h1><%= title %></h1>
+<section class="clearfix">
+  <div class="pull-right">
+    <%= link_to "New", new_external_setup_hook_path, class: "btn btn-default" %>
+  </div>
+  <div class="clearfix"></div>
+  <table class="table table-hover table-condensed">
+    <thead>
+    <tr>
+      <th>Name</th>
+      <th>Description</th>
+      <th>Endpoint</th>
+      <th>Auth Type</th>
+    </tr>
+    </thead>
+    <% @hooks.each do |hook| %>
+      <tr>
+        <td><%= hook.name %></td>
+        <td><%= hook.description %></td>
+        <td><%= hook.endpoint %></td>
+        <td><%= hook.auth_type %></td>
+        <td>
+          <%= link_to_delete hook %>
+        </td>
+      </tr>
+    <% end %>
+  </table>
+</section>
