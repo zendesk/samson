@@ -36,12 +36,64 @@ class JobExecution
     @repository.full_checkout = true if @stage&.full_checkout
   end
 
+  def wait_for_external_setup
+    interval = 5
+    poll_wait_time = trigger_wait_time = 30
+    status_poll = nil
+    success = false
+
+    setup_hook = @stage.external_setup_hook
+    payload = stage_context_env
+
+    return true if setup_hook.nil?
+
+    @output.write("Trigger external setup through #{setup_hook.endpoint} with payload #{payload}\n")
+
+    until trigger_wait_time < 0 do
+      trigger_wait_time -= interval
+
+      response = Faraday.post(setup_hook.endpoint, payload.to_json) do |req|
+        req.options.timeout = req.options.open_timeout = 1
+        req.headers['Authorization'] = "token #{setup_hook.auth_token}"
+        req.headers['Content-Type'] = 'application/json'
+      end
+      if response.status == 200
+        body = JSON.parse response.body
+        status_poll = body['status_poll_url'] || nil
+      end
+
+      break unless status_poll.nil?
+      sleep interval
+    end
+
+    return false if status_poll.nil?
+
+    until poll_wait_time < 0 do
+      poll_wait_time -= interval
+
+      response = Faraday.get(status_poll) do |req|
+        req.options.timeout = req.options.open_timeout = 1
+      end
+      if response.status == 200
+        body = JSON.parse response.body
+        success = (body['status'] == 'success')
+      end
+
+      break if success
+      sleep interval
+    end
+
+    return success
+  end
+
   def perform
     @output.write('', :started)
     @start_callbacks.each(&:call)
     @job.running!
 
     success = make_tempdir do |dir|
+      raise "External Setup Failed" unless wait_for_external_setup
+
       return @job.errored! unless setup(dir)
 
       if @execution_block
@@ -180,8 +232,10 @@ class JobExecution
     end
   end
 
-  def commands(dir)
-    env = {
+  def stage_context_env
+    return @stage_context_env unless @stage_context_env.nil?
+
+    @stage_context_env = {
       DEPLOY_ID: @job.deploy&.id || @job.id,
       DEPLOY_URL: @job.url,
       DEPLOYER: @job.user.email,
@@ -198,11 +252,17 @@ class JobExecution
     }
 
     if @stage
-      env[:STAGE] = @stage.permalink
+      @stage_context_env[:STAGE] = @stage.permalink
 
       group_names = @stage.deploy_groups.pluck(:env_value).join(" ")
-      env[:DEPLOY_GROUPS] = group_names if group_names.present?
+      @stage_context_env[:DEPLOY_GROUPS] = group_names if group_names.present?
     end
+
+    @stage_context_env
+  end
+
+  def commands(dir)
+    env = stage_context_env
 
     env.merge!(make_builds_available) if @stage&.builds_in_environment
 
