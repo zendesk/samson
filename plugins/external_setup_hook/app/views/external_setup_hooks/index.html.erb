@@ -14,14 +14,16 @@
       <th>Description</th>
       <th>Endpoint</th>
       <th>Auth Type</th>
+      <th>Verify SSL</th>
     </tr>
     </thead>
     <% @hooks.each do |hook| %>
       <tr>
-        <td><%= hook.name %></td>
+        <td><%= link_to hook.name, hook %></td>
         <td><%= hook.description %></td>
         <td><%= hook.endpoint %></td>
         <td><%= hook.auth_type %></td>
+        <td><%= hook.verify_ssl %></td>
         <td>
           <%= link_to_delete hook %>
         </td>

@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 class ExternalSetupHooksController < ApplicationController
-  before_action :authorize_user!, except: [:index, :show, :preview]
-  # before_action :group, only: [:show]
+  before_action :authorize_user!, except: [:index, :show]
+  before_action :hook, only: [:show]
 
   def index
     @hooks = ExternalSetupHook.all
@@ -16,9 +16,17 @@ class ExternalSetupHooksController < ApplicationController
   end
 
   def create
-    allowed = [:name, :description, :endpoint, :auth_type, :auth_token]
-    hook.attributes = params.require(:external_setup_hook).permit(*allowed)
+    hook.attributes = attributes
     hook.save!
+    redirect_to action: :index
+  end
+
+  def show
+    render 'form'
+  end
+
+  def update
+    hook.update_attributes!(attributes)
     redirect_to action: :index
   end
 
@@ -35,6 +43,17 @@ class ExternalSetupHooksController < ApplicationController
     else
       ExternalSetupHook.find(params[:id])
     end
+  end
+
+  def attributes
+    params.require(:external_setup_hook).permit(*[
+      :name,
+      :description,
+      :endpoint,
+      :auth_type,
+      :auth_token,
+      :verify_ssl
+    ])
   end
 
   def authorize_user!

@@ -34,6 +34,7 @@
         <%= form.select :auth_type, ['Token'], {}, class: "form-control" %>
       <% end %>
       <%= form.input :auth_token %>
+      <%= form.input :verify_ssl, as: :check_box %>
     </fieldset>
     <%= form.submit "Save", class: "btn btn-primary" %>
   <% end %>

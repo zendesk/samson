@@ -16,6 +16,6 @@ end
 
 Samson::Hooks.callback :stage_permitted_params do
   [
-    :external_setup_hook_id,
+    {stage_external_setup_hook_attributes: [:external_setup_hook_id]}
   ]
 end

@@ -3,9 +3,12 @@
   <div class="col-lg-offset-2">
     <div class="form-group">
       <h3>Choose the external setup hook <%= additional_info "Leave empty to do nothing.".html_safe %></h3>
-      <div class="col-lg-6">
-        <%= form.collection_select :external_setup_hook_id, ExternalSetupHook.all, :id, :name, { include_blank: true }, { class: 'form-control' } %>
-      </div>
+      <% form.object.stage_external_setup_hook || form.object.build_stage_external_setup_hook %>
+      <%= form.fields_for :stage_external_setup_hook, include_id: false do |hook_form| %>
+        <%= hook_form.input :external_setup_id, label: "External Setup" do %>
+          <%= hook_form.collection_select(:external_setup_hook_id, ExternalSetupHook.all, :id, :name, { include_blank: true }, { class: 'form-control' }) %>
+        <% end %>
+      <% end %>
     </div>
   </div>
 </fieldset>

@@ -1,17 +1,20 @@
 # frozen_string_literal: true
 
 Stage.class_eval do
-  validates(
-    :external_setup_hook_id, allow_blank: true, numericality: { only_integer: true }
+  has_one(
+    :stage_external_setup_hook,
+    class_name: 'StageExternalSetupHook',
+    foreign_key: :stage_id,
+    inverse_of: :stage,
+    dependent: :destroy
   )
+  has_one :external_setup_hook,
+    class_name: 'ExternalSetupHook', through: :stage_external_setup_hook, source: :external_setup_hook, inverse_of: :stages
 
-  validate :validate_external_setup_hook_id
-
-  private
-
-  def validate_external_setup_hook_id
-    unless external_setup_hook_id.blank? || ExternalSetupHook.exists?(external_setup_hook_id)
-     errors.add(:external_setup_hook_id, "is invalid")
-    end
-  end
+  accepts_nested_attributes_for(
+    :stage_external_setup_hook,
+    allow_destroy: true,
+    update_only: true,
+    reject_if: ->(h) { h[:external_setup_hook_id].blank? }
+  )
 end
