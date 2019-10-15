@@ -247,7 +247,7 @@ describe CommitStatus do
     end
 
     before do
-      status.expects(:github_commit_status).returns(state: 'pending', statuses: []) # user only using Checks API
+      status.stubs(:github_commit_status).returns(state: 'pending', statuses: []) # user only using Checks API
     end
 
     describe '#state' do
@@ -308,8 +308,6 @@ describe CommitStatus do
       end
 
       it 'raises with unknown conclusion' do
-        status.unstub(:github_commit_status)
-
         stub_github_api(
           check_suite_url,
           check_suites: [{conclusion: 'bingbong', id: 1}]

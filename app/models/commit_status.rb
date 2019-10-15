@@ -49,20 +49,22 @@ class CommitStatus
 
   private
 
-  # TODO: do non-db lookups in parallel to save time
   # @return [Hash]
   def combined_status
     @combined_status ||= begin
       if @commit
-        statuses = [github_combined_status]
+        lookups = [
+          -> { github_combined_status }
+        ]
         if @stage
-          statuses.concat [
-            release_status,
-            only_production_status,
-            *plugin_statuses,
-            changeset_risks_status
-          ].compact
+          lookups.concat [
+            -> { release_status },
+            -> { only_production_status },
+            -> { plugin_statuses },
+            -> { changeset_risks_status }
+          ]
         end
+        statuses = Samson::Parallelizer.map(lookups, db: true, &:call).flatten(1).compact
         merge_statuses(statuses)
       else
         {
@@ -74,15 +76,17 @@ class CommitStatus
   end
 
   # Gets a reference's state, combining results from both the Status API, Checks API
-  # TODO: we can do these 2 lookups in parallel to save time
   # @return [Hash]
   def github_combined_status
     expires_in = ->(reply) { cache_duration(reply) }
     Samson::DynamicTtlCache.cache_fetch_if true, cache_key(@commit), expires_in: expires_in do
-      results = [
-        octokit_error_as_status('checks') { github_check_status },
-        octokit_error_as_status('status') { github_commit_status }
-      ].compact.select { |result| result[:statuses].any? }
+      results = Samson::Parallelizer.map(
+        [
+          -> { octokit_error_as_status('checks') { github_check_status } },
+          -> { octokit_error_as_status('status') { github_commit_status } }
+        ],
+        &:call
+      ).compact.select { |result| result[:statuses].any? }
 
       results.empty? ? NO_STATUSES_REPORTED_RESULT.dup : merge_statuses(results)
     end
