@@ -11,7 +11,13 @@ module Samson
 
     def input(
       attribute,
-      as: :text_field, help: false, label: false, input_html: nil, pattern: nil, required: false,
+      as: :text_field,
+      help: false,
+      label: false,
+      input_html: nil,
+      pattern: nil,
+      required: false,
+      field_class: 'col-lg-4',
       &block
     )
       raise ArgumentError if block && input_html
@@ -42,7 +48,7 @@ module Samson
             # Spacer with no label, useful for subfields or fields that are already under a different header
             content_tag(:div, '', class: 'col-lg-2 control-label')
           end
-          content << content_tag(:div, class: 'col-lg-4', &block)
+          content << content_tag(:div, class: field_class, &block)
           content << help
         end
       end
