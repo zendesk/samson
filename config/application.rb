@@ -38,10 +38,12 @@ module Samson
     # -- all .rb files in that directory are automatically loaded.
     config.load_defaults 5.2
 
-    deprecated_url = ->(var) do
-      url = ENV[var].presence
-      return url if !url || url.start_with?('http')
-      raise "Using deprecated url without protocol for #{var}"
+    class ApplicationConfiguration
+      def self.deprecated_url(var)
+        url = ENV[var].presence
+        return url if !url || url.start_with?('http')
+        raise "Using deprecated url without protocol for #{var}"
+      end
     end
 
     config.eager_load_paths << "#{config.root}/lib"
@@ -100,8 +102,8 @@ module Samson
     config.samson.github.organization = ENV["GITHUB_ORGANIZATION"].presence
     config.samson.github.admin_team = ENV["GITHUB_ADMIN_TEAM"].presence
     config.samson.github.deploy_team = ENV["GITHUB_DEPLOY_TEAM"].presence
-    config.samson.github.web_url = deprecated_url.call("GITHUB_WEB_URL") || 'https://github.com'
-    config.samson.github.api_url = deprecated_url.call("GITHUB_API_URL") || 'https://api.github.com'
+    config.samson.github.web_url = ApplicationConfiguration.deprecated_url("GITHUB_WEB_URL") || 'https://github.com'
+    config.samson.github.api_url = ApplicationConfiguration.deprecated_url("GITHUB_API_URL") || 'https://api.github.com'
 
     # Configuration for LDAP
     config.samson.ldap = ActiveSupport::OrderedOptions.new
@@ -114,7 +116,7 @@ module Samson
     config.samson.ldap.password = ENV["LDAP_PASSWORD"].presence
 
     config.samson.gitlab = ActiveSupport::OrderedOptions.new
-    config.samson.gitlab.web_url = deprecated_url.call("GITLAB_URL") || 'https://gitlab.com'
+    config.samson.gitlab.web_url = ApplicationConfiguration.deprecated_url("GITLAB_URL") || 'https://gitlab.com'
 
     config.samson.auth = ActiveSupport::OrderedOptions.new
     config.samson.auth.github = Samson::EnvCheck.set?("AUTH_GITHUB")
