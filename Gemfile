@@ -88,18 +88,19 @@ group :assets do
   end
 end
 
+group :debugging do
+  gem 'pry-byebug'
+  gem 'pry-rails'
+  gem 'pry-rescue'
+  gem 'pry-stack_explorer'
+end
+
 group :development, :staging do
   gem 'rack-mini-profiler'
 end
 
 group :development, :test do
-  gem 'byebug'
   gem 'bootsnap'
-  gem 'pry'
-  gem 'pry-byebug'
-  gem 'pry-rails'
-  gem 'pry-rescue'
-  gem 'pry-stack_explorer'
   gem 'awesome_print'
   gem 'brakeman'
   gem 'rubocop'

@@ -601,7 +601,6 @@ DEPENDENCIES
   brakeman
   bundler
   bundler-audit
-  byebug
   coderay
   concurrent-ruby
   connection_pool
@@ -640,7 +639,6 @@ DEPENDENCIES
   parallel
   parallel_tests
   pg
-  pry
   pry-byebug
   pry-rails
   pry-rescue
