@@ -7,7 +7,12 @@ require 'action_mailer/railtie'
 require 'action_cable/engine'
 require 'rails/test_unit/railtie'
 require 'sprockets/railtie'
-require 'pry-rails'
+
+begin
+  require 'pry-rails'
+rescue LoadError # rubocop:disable Lint/HandleExceptions
+  # ignore if pry-rails is not included in bundle
+end
 
 if (google_domain = ENV["GOOGLE_DOMAIN"]) && !ENV['EMAIL_DOMAIN']
   Rails.logger.warn "Stop using deprecated GOOGLE_DOMAIN"
