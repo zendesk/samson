@@ -54,8 +54,8 @@ ActiveRecord::Schema.define(version: 2019_09_19_212707) do
     t.string "external_status"
     t.string "image_name"
     t.index ["created_by"], name: "index_builds_on_created_by"
-    t.index ["git_sha", "dockerfile"], name: "index_builds_on_git_sha_and_dockerfile", unique: true
-    t.index ["git_sha", "image_name"], name: "index_builds_on_git_sha_and_image_name", unique: true, length: 80
+    t.index ["git_sha", "dockerfile", "external_url"], name: "index_builds_on_git_sha_and_dockerfile_and_external_url", unique: true, length: { git_sha: 80, dockerfile: 80, external_url: 191 }
+    t.index ["git_sha", "image_name", "external_url"], name: "index_builds_on_git_sha_and_image_name_and_external_url", unique: true, length: { git_sha: 80, image_name: 80, external_url: 191 }
     t.index ["project_id"], name: "index_builds_on_project_id"
   end
 

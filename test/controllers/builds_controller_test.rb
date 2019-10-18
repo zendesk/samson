@@ -173,49 +173,78 @@ describe BuildsController do
 
       describe "updates external builds" do
         let(:digest) { 'foo.com/test@sha256:5f1d7c7381b2e45ca73216d7b06004fdb0908ed7bb8786b62f2cdfa5035fde2c' }
-
-        before do
-          build.update_columns(external_status: 'running', docker_repo_digest: nil)
-        end
-
-        it 'updates a failed external build' do
-          create(
+        let(:external_url) { 'https://blob.com/1234' }
+        let(:create_args) do
+          {
             git_sha: build.git_sha,
-            external_status: 'failed',
-            external_url: "https://blob.com",
+            external_status: 'succeeded',
+            external_url: external_url,
             docker_repo_digest: digest,
             dockerfile: build.dockerfile,
             format: :json
-          )
+          }
+        end
+
+        before do
+          build.update_columns(external_status: 'running', external_url: external_url, docker_repo_digest: nil)
+        end
+
+        it 'creates a new build when external url changes for the same git sha' do
+          assert_difference 'Build.count' do
+            create create_args.merge(external_url: 'https://blob.com/1235')
+            assert_response :success
+          end
+
+          build.reload
+          build.external_status.must_equal 'running'
+          build.docker_repo_digest.must_equal nil
+          build.external_url.must_equal external_url
+
+          new_build = Build.last
+          new_build.external_status.must_equal 'succeeded'
+          new_build.docker_repo_digest.must_equal digest
+          new_build.external_url.must_equal 'https://blob.com/1235'
+        end
+
+        it 'updates existing running build when succeeded' do
+          create create_args
+          assert_response :success
+
+          build.reload
+          build.external_status.must_equal 'succeeded'
+          build.docker_repo_digest.must_equal digest
+          build.external_url.must_equal external_url
+        end
+
+        it 'allows updating a failed external build' do
+          create create_args.merge(external_status: 'failed')
           assert_response :success
 
           build.reload
           build.external_status.must_equal 'failed'
           build.docker_repo_digest.must_equal digest
-          build.external_url.must_equal "https://blob.com"
+          build.external_url.must_equal external_url
         end
 
         it 'does not allow updating a succeeded build to prevent tampering' do
-          build.update_columns docker_repo_digest: digest
+          build.update_columns docker_repo_digest: digest, external_status: 'succeeded'
 
-          create external_url: "https://blob.com", git_sha: build.git_sha, dockerfile: build.dockerfile, format: :json
+          create create_args.merge(docker_repo_digest: digest.reverse)
           assert_response 422
 
           build.reload
-          build.external_url.must_be_nil
+          build.external_status.must_equal 'succeeded'
+          build.docker_repo_digest.must_equal digest
+          build.external_url.must_equal external_url
         end
 
         it 'returns no content for succeeded builds that have not changes' do
-          build.update_columns(docker_repo_digest: digest, external_status: 'success', description: 'hello')
+          build.update_columns(docker_repo_digest: digest, external_status: 'succeeded', description: 'hello')
 
           # duplicate success
-          create(
+          create create_args.merge(
             name: build.name,
-            description: build.description,
-            git_sha: build.git_sha,
-            dockerfile: build.dockerfile,
-            external_status: 'success',
-            format: :json
+            description: 'hello'
           )
 
           assert_response :ok
@@ -224,14 +253,7 @@ describe BuildsController do
         it 'retries when 2 requests come in at the exact same time and cause uniqueness error' do
           Build.any_instance.expects(:save).returns(true)
           Build.any_instance.expects(:save).raises(ActiveRecord::RecordNotUnique)
-          create(
-            git_sha: build.git_sha,
-            external_status: 'failed',
-            external_url: "https://blob.com",
-            docker_repo_digest: digest,
-            dockerfile: build.dockerfile,
-            format: :json
-          )
+          create create_args.merge(external_status: 'failed')
           assert_response :success
         end
       end
