@@ -9,15 +9,16 @@ class BuildsController < ApplicationController
   before_action :find_build, only: [:show, :build_docker_image, :edit, :update]
 
   def index
-    search = params[:search]&.to_unsafe_h&.except(:time_format)&.select { |_, v| v.present? } || {}
     builds = scope
-    if status = search.delete(:status)
+    search = params[:search] || ActionController::Parameters.new
+
+    if status = search.delete(:status).presence
       builds = builds.
         left_outer_joins(:docker_build_job).
         where("jobs.status = ? OR external_status = ?", status, status)
     end
 
-    if commit = search.delete(:commit)
+    if commit = search.delete(:git_commit).presence
       builds =
         if commit.match?(Build::SHA1_REGEX)
           builds.where(git_sha: commit)
@@ -26,7 +27,8 @@ class BuildsController < ApplicationController
         end
     end
 
-    @builds = builds.where(search).order(id: :desc)
+    search_scope = search.permit(*Build.column_names).select { |_, v| v.present? }
+    @builds = builds.where(search_scope).order(id: :desc)
     @pagy, @builds = pagy(@builds, page: params[:page], items: 15)
 
     respond_to do |format|
