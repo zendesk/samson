@@ -98,6 +98,8 @@ Samson::Application.routes.draw do
   resources :secrets, except: [:edit] do
     collection do
       get :duplicates
+      get :resolve
+      post :resolve
     end
     member do
       get :history

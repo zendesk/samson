@@ -54,6 +54,39 @@ class SecretsController < ApplicationController
       sort_by { |_, v| -v.size }
   end
 
+  def resolve
+    if params[:project_id].present?
+      project = Project.find(params[:project_id])
+    elsif params[:project_permalink].present?
+      project = Project.find_by_permalink!(params[:project_permalink])
+    else
+      render_json_error 400, "Neither project_id or project_permalink given as parameters"
+      return
+    end
+
+    deploy_group = DeployGroup.find_by_permalink!(params.require(:deploy_group))
+    keys_param = params.require(:keys)
+    keys = keys_param.is_a?(Array) ? keys_param : keys_param.split(/, ?/)
+
+    resolver = Samson::Secrets::KeyResolver.new(project, [deploy_group])
+
+    resolved = {}
+    keys.each do |key|
+      expanded = resolver.expand(key, key)
+      if expanded.any?
+        expanded.each { |k, r| resolved[k] = r }
+      else
+        resolved[key] = nil
+      end
+    end
+
+    respond_to do |format|
+      format.json do
+        render json: {resolved: resolved}
+      end
+    end
+  end
+
   def history
     @history = Samson::Secrets::Manager.history(id, resolve: true)
   end
