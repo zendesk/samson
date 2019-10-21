@@ -65,7 +65,10 @@ end
 Samson::Hooks.callback(:link_parts_for_resource) do
   [
     "Kubernetes::DeployGroupRole",
-    ->(dgr) { ["#{dgr.project&.name} role #{dgr.kubernetes_role&.name} for #{dgr.deploy_group&.name}", dgr] }
+    ->(dgr) do
+      name = "#{dgr.project&.name} role #{dgr.kubernetes_role&.name} for #{dgr.deploy_group&.name}"
+      [name, [dgr.project, dgr]]
+    end
   ]
 end
 Samson::Hooks.callback(:link_parts_for_resource) do

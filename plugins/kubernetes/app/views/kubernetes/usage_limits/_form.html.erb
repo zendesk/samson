@@ -1,25 +1,23 @@
-<section>
-  <%= form_for @kubernetes_usage_limit, html: { class: "form-horizontal" } do |form| %>
-    <%= render 'shared/errors', object: form.object %>
+<%= form_for @kubernetes_usage_limit, html: { class: "form-horizontal" } do |form| %>
+  <%= render 'shared/errors', object: form.object %>
 
-    <fieldset>
-      <% if DeployGroup.enabled? %>
-        <%= form.input :scope_type_and_id, label: "Scope" do %>
-          <%= form.select :scope_type_and_id, Environment.env_deploy_group_array(include_all: true), {}, Samson::FormBuilder::LIVE_SELECT_OPTIONS %>
-        <% end %>
+  <fieldset>
+    <% if DeployGroup.enabled? %>
+      <%= form.input :scope_type_and_id, label: "Scope" do %>
+        <%= form.select :scope_type_and_id, Environment.env_deploy_group_array(include_all: true), {}, Samson::FormBuilder::LIVE_SELECT_OPTIONS %>
       <% end %>
+    <% end %>
 
-      <%= form.input :project_id do %>
-        <% projects = Project.with_kubernetes_roles.pluck(:name, :id).unshift ["All", nil] %>
-        <%= form.select :project_id, projects, {}, Samson::FormBuilder::LIVE_SELECT_OPTIONS %>
-      <% end %>
+    <%= form.input :project_id do %>
+      <% projects = Project.with_kubernetes_roles.pluck(:name, :id).unshift ["All", nil] %>
+      <%= form.select :project_id, projects, {}, Samson::FormBuilder::LIVE_SELECT_OPTIONS %>
+    <% end %>
 
-      <%= form.input :cpu, required: true %>
-      <%= form.input :memory, required: true %>
+    <%= form.input :cpu, required: true %>
+    <%= form.input :memory, required: true %>
 
-      <%= form.input :comment, as: :text_area %>
-    </fieldset>
+    <%= form.input :comment, as: :text_area %>
+  </fieldset>
 
-    <%= form.actions delete: true, history: true %>
-  <% end %>
-</section>
+  <%= form.actions delete: true, history: true %>
+<% end %>

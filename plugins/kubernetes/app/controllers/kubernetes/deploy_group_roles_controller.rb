@@ -1,11 +1,13 @@
 # frozen_string_literal: true
 class Kubernetes::DeployGroupRolesController < ResourceController
+  include CurrentProject
+
+  before_action :authorize_project_admin!, except: [:index, :show, :new]
   before_action :set_resource, only: [:show, :edit, :update, :destroy, :new, :create]
   before_action :find_stage, only: [:seed]
-  before_action :authorize_project_admin!, except: [:index, :show, :new]
 
   def index
-    if params[:project_id] && request.format.html? # nice but slow display on project tab
+    if params[:project_id] && request.format.html? # sorted/complete but slow display on project tab
       super resources: sorted_resources, paginate: false
     else
       super
@@ -83,21 +85,8 @@ class Kubernetes::DeployGroupRolesController < ResourceController
     @stage = Stage.find(params.require(:stage_id))
   end
 
-  def current_project
-    @project ||= # rubocop:disable Naming/MemoizedInstanceVariableName
-      if action_name == 'create'
-        Project.find(resource_params.require(:project_id))
-      elsif action_name == 'seed'
-        @stage.project
-      elsif ['index', 'edit_many', 'update_many'].include?(action_name)
-        Project.find_by_param!(params.require(:project_id))
-      else
-        @kubernetes_deploy_group_role.project
-      end
-  end
-
   def resource_params
-    super.permit(*permitted_params)
+    super.permit(*permitted_params).merge(project: @project)
   end
 
   def permitted_params
@@ -105,8 +94,12 @@ class Kubernetes::DeployGroupRolesController < ResourceController
       :requests_memory, :requests_cpu, :limits_memory, :limits_cpu,
       :replicas, :delete_resource
     ]
-    allowed.concat [:project_id, :deploy_group_id, :kubernetes_role_id] if ["new", "create"].include?(action_name)
+    allowed.concat [:deploy_group_id, :kubernetes_role_id] if ["new", "create"].include?(action_name)
     allowed << :no_cpu_limit if Kubernetes::DeployGroupRole::NO_CPU_LIMIT_ALLOWED
     allowed
+  end
+
+  def resource_path
+    [@project, @resource]
   end
 end
