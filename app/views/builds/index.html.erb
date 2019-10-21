@@ -20,7 +20,6 @@
         <%= label_tag :docker_repo_digest, "Docker Digest" %><br/>
         <%= text_field_tag 'search[docker_repo_digest]', params.dig(:search, :docker_repo_digest), class: "form-control" %>
       </div>
-      <%= search_select :time_format, User::TIME_FORMATS, selected: params.dig(:search, :time_format) || current_user.time_format, label: 'Time', size: 1 %>
     <% end %>
   </div>
 

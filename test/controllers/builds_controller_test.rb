@@ -51,15 +51,16 @@ describe BuildsController do
         assigns(:builds).must_equal [build]
       end
 
-      it 'does not blow up when setting time_format' do
-        get :index, params: {search: {time_format: 'relative'}}
-        assert_response :success
-      end
-
       describe "status" do
         it "ignores search for status blank" do
           get :index, params: {search: {status: ''}}
           assigns(:builds).count.must_equal Build.count
+        end
+
+        it "only allows valid search parameters" do
+          assert_raises ActionController::UnpermittedParameters do
+            get :index, params: {search: {foo: "bar"}}
+          end
         end
 
         it "can search for external status" do

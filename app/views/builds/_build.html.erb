@@ -5,7 +5,7 @@
   <% else %>
     <td><%= link_to build.project.name, build.project %></td>
   <% end %>
-  <td><%= relative_time(build.created_at) %></td>
+  <td><%= render_time(build.created_at) %></td>
   <td><%= duration_text build.duration if build.duration %></td>
   <td><%= git_ref_and_sha_for(build) %></td>
   <td><%= build.image_name.presence || build.dockerfile %></td>
