@@ -6,7 +6,7 @@
 
     <div class="col-lg-5">
       <%# using a text area so users can resize them with browser controls %>
-      <%= fields.text_area :value, class: "form-control monospace", rows: 1, placeholder: "Value" %>
+      <%= fields.text_area :value, class: "form-control monospace validate_whitespace", rows: 1, placeholder: "Value" %>
     </div>
 
     <% if DeployGroup.enabled? && defined?(scopes) %>
