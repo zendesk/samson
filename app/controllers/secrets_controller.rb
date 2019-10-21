@@ -56,18 +56,15 @@ class SecretsController < ApplicationController
 
   def resolve
     if params[:project_id].present?
-      project = if params[:project_id].match?(/^\d+$/)
-        Project.find_by_id(params[:project_id])
-      else
-        Project.find_by_permalink(params[:project_id])
-      end
+      project = Project.find(params[:project_id])
     elsif params[:project_permalink].present?
-      project = Project.find_by_permalink(params[:project_permalink])
+      project = Project.find_by_permalink!(params[:project_permalink])
     else
-      raise "Neither project_id or project_permalink given as parameters"
+      render_json_error 400, "Neither project_id or project_permalink given as parameters"
+      return
     end
 
-    deploy_group = DeployGroup.find_by_permalink(params.require(:deploy_group))
+    deploy_group = DeployGroup.find_by_permalink!(params.require(:deploy_group))
     keys_param = params.require(:keys)
     keys = keys_param.is_a?(Array) ? keys_param : keys_param.split(/, ?/)
 
@@ -76,8 +73,7 @@ class SecretsController < ApplicationController
     resolved = {}
     keys.each do |key|
       expanded = resolver.expand(key, key)
-      found = expanded.first&.last
-      if found
+      if expanded.any?
         expanded.each { |k, r| resolved[k] = r }
       else
         resolved[key] = nil
@@ -86,7 +82,7 @@ class SecretsController < ApplicationController
 
     respond_to do |format|
       format.json do
-        render_as_json :resolved, resolved, nil
+        render json: {resolved: resolved}
       end
     end
   end

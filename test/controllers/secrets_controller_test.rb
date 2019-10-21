@@ -528,23 +528,19 @@ describe SecretsController do
         resolved['bar'].must_equal 'production/z/pod2/bar'
         resolved['foo'].must_be_nil
       end
-      it "supports permalink given as project_id" do
-        get :resolve, params: {
-          project_id: other_project.permalink, deploy_group: 'pod2', keys: ['bar', 'foo'], format: 'json'
-        }
-        assert_response :success
-      end
-      it "supports resolving by projet permalink param" do
+
+      it "supports resolving by project permalink param" do
         get :resolve, params: {
           project_permalink: other_project.permalink, deploy_group: 'pod2', keys: ['bar', 'foo'], format: 'json'
         }
         assert_response :success
       end
-      it "raises when no project can be resolved" do
-        assert_raise(RuntimeError) do
-          get :resolve, params: {format: 'json'}
-        end
+
+      it "errors when no project can be resolved" do
+        get :resolve, params: {format: 'json'}
+        assert_response :bad_request
       end
+
       it "handles keys passed as comma delimited list" do
         get :resolve, params: {
           project_permalink: other_project.permalink, deploy_group: 'pod2', keys: 'bar,foo,baz', format: 'json'
