@@ -13,23 +13,6 @@ class Kubernetes::DeployGroupRolesController < ResourceController
     end
   end
 
-  # TODO: use super
-  def show
-    respond_to do |format|
-      format.html
-      format.json do
-        deploy_group_role = @kubernetes_deploy_group_role.as_json
-        if params[:include].to_s.split(',').include?("verification_template")
-          deploy_group_role[:verification_template] = verification_template.to_hash(verification: true)
-        end
-
-        render json: {
-          kubernetes_deploy_group_role: deploy_group_role
-        }
-      end
-    end
-  end
-
   def edit_many
     @kubernetes_deploy_group_roles = sorted_resources
   end
@@ -94,37 +77,6 @@ class Kubernetes::DeployGroupRolesController < ResourceController
     end
 
     deploy_group_roles
-  end
-
-  def verification_template
-    role = @kubernetes_deploy_group_role
-    project = role.project
-
-    # find ref and sha ... sha takes priority since it's most accurate
-    git_sha = params[:git_sha]
-    git_ref = params[:git_ref] || git_sha || DEFAULT_BRANCH
-    git_sha ||= project.repository.commit_from_ref(git_ref)
-
-    release = Kubernetes::Release.new(
-      git_ref: git_ref,
-      git_sha: git_sha,
-      project: project,
-      user: current_user,
-      builds: [],
-      deploy_groups: [role.deploy_group]
-    )
-    release_doc = Kubernetes::ReleaseDoc.new(
-      kubernetes_release: release,
-      kubernetes_role: role.kubernetes_role,
-      deploy_group: role.deploy_group,
-      requests_cpu: role.requests_cpu,
-      limits_cpu: role.limits_cpu,
-      requests_memory: role.requests_memory,
-      limits_memory: role.limits_memory,
-      replica_target: role.replicas
-    )
-
-    release_doc.verification_template
   end
 
   def find_stage
