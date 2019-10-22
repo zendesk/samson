@@ -125,7 +125,9 @@ module Kubernetes
       end
     end
 
-    # samson/ keys in containers trigger validation warnings in kubectl, so we allow using annotations too
+    # read container config from pod annotation
+    # (or deprecated fallback to container key, which makes kubectl validation fail)
+    #
     # NOTE: containers always have a name see role_validator.rb
     def samson_container_config(container, key)
       pod_annotations[samson_container_config_key(container, key)] || container[key]

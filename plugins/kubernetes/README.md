@@ -108,14 +108,14 @@ Kubernetes::Release
 
 ### Docker Images
 
-(To opt out of this feature set `containers[].samson/dockerfile: none` or `metadata.annotations.container-nameofcontainer-samson/dockerfile: none`)
+(To opt out of this feature set `metadata.annotations.container-nameofcontainer-samson/dockerfile: none`)
 
 For each container (including init containers) Samson finds or creates a matching Docker image for the Git SHA that is being deployed.
 Samson always sets the Docker digest, and not a tag, to make deployments immutable.
 
 If `KUBERNETES_ADDITIONAL_CONTAINERS_WITHOUT_DOCKERFILE=true` is set, it will only enforce builds for the first container.
 
-Samson matches builds to containers by looking at the `containers[].samson/dockerfile` attribute or the
+Samson matches builds to containers by looking at the `metadata.annotations.container-nameofcontainer-samson/dockerfile` attribute or the
 base image name (part after the last `/`), if the project has enabled `Docker images built externally`.
 
 Images can be built locally via `docker build`, or via `gcloud` CLI (see Gcloud plugin), or externally and then sent to Samson via the
@@ -133,8 +133,8 @@ Via [Template filler](/plugins/kubernetes/app/models/kubernetes/template_filler.
 
 ### Migrations / Prerequisite
 
-Should be added as a separate role with the annotation  `samson/prerequisite: 'true'` set on the `Job`/`Deployment`/`Pod`
-(annotation should be added to the 'root' object, not the template).
+Should be added as a separate role with `metadata.annotations.samson/prerequisite: 'true'` set on the `Job`/`Deployment`/`Pod`
+(annotation should be added to the 'root' object, not the `spec.template`).
 This role will be deployed/executed before any other role is deployed.
 By default it waits for 10 minutes before timeout, change the timeout using
 `KUBERNETES_WAIT_FOR_PREREQUISITES` env variable (specified in seconds).
@@ -211,7 +211,7 @@ since old pods shut down before everyone all clients are refreshed.
 To prevent this, samson can automatically add `container[].lifecycle.preStop` `/bin/sleep <INT>`
 and increase the `spec.terminationGracePeriodSeconds` if necessary.
 
-(will only add if `preStop` hook is not set and `container[].samson/preStop` is not set to `disabled` and container has ports)
+(will only add if `preStop` hook is not set and `metadata.annotations.container-nameofcontainer-samson/preStop` is not set to `disabled` and container has ports)
 
 - Set `KUBERNETES_ADD_PRESTOP=true` to enable
 - Set `KUBERNETES_PRESTOP_SLEEP_DURATION=30` in seconds to override default sleep duration (3 seconds)
