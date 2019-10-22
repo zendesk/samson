@@ -344,4 +344,10 @@ describe Kubernetes::ReleaseDoc do
       refute doc.blue_green_color
     end
   end
+
+  describe '#deploy_group_role' do
+    it "returns an instance of a DeployGroupRole" do
+      doc.deploy_group_role.must_be_instance_of Kubernetes::DeployGroupRole
+    end
+  end
 end
