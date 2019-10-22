@@ -29,6 +29,15 @@
     </div>
   </div>
 
+  <% if show_istio_sidecar_ui? %>
+  <div class="form-group">
+    <label class="col-lg-2 control-label">Istio Sidecar Injection</label>
+    <div class="col-lg-4">
+      <p class="form-control-static"><%= @kubernetes_deploy_group_role.inject_istio_annotation? ? 'Yes' : 'No' %></p>
+    </div>
+  </div>
+  <% end %>
+
   <div class="form-group">
     <label class="col-lg-2 control-label">CPU</label>
     <div class="col-lg-4">
