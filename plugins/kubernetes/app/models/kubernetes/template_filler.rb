@@ -55,6 +55,7 @@ module Kubernetes
           set_resource_blue_green if blue_green_color
           set_init_containers
           set_kritis_breakglass
+          set_istio_sidecar_injection
         elsif kind == 'PodDisruptionBudget'
           set_name
           set_match_labels_blue_green if blue_green_color
@@ -441,8 +442,7 @@ module Kubernetes
 
     def set_istio_sidecar_injection
       return unless Kubernetes::DeployGroupRole.istio_injection_supported?
-      return unless ['Deployment', 'DaemonSet', 'StatefulSet'].include?(template[:kind])
-      return unless @doc.kubernetes_role.inject_istio_annotation?
+      return unless @doc.deploy_group_role.inject_istio_annotation?
 
       # https://istio.io/docs/setup/additional-setup/sidecar-injection/#policy
       annotation_name = 'sidecar.istio.io/inject'.to_sym
