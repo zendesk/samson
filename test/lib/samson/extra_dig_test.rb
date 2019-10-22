@@ -20,6 +20,8 @@ describe Samson::ExtraDig do
     it "fetches with full key when missing" do
       e = assert_raises(KeyError) { {a: {b: 1}}.dig_fetch(:a, :c) }
       e.message.must_equal "key not found: [:a, :c]"
+      e.key.must_equal [:a, :c]
+      e.receiver.must_equal a: {b: 1}
     end
 
     it "returns default when missing" do
@@ -42,6 +44,8 @@ describe Samson::ExtraDig do
       it "does not set missing since we do not know if things are arrays or hashes" do
         e = assert_raises(KeyError) { subject.dig_set([:b, :c], 2) }
         e.message.must_equal "key not found: [:b]"
+        e.key.must_equal [:b]
+        e.receiver.must_equal subject
       end
 
       it "fail without value" do
