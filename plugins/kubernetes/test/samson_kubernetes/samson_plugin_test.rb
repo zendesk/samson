@@ -39,7 +39,7 @@ describe SamsonKubernetes do
 
     it "links to deploy group role" do
       dg_role = kubernetes_deploy_group_roles(:test_pod1_app_server)
-      link_parts(dg_role).must_equal ["Foo role app-server for Pod1", dg_role]
+      link_parts(dg_role).must_equal ["Foo role app-server for Pod1", [dg_role.project, dg_role]]
     end
 
     it "links to role" do

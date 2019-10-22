@@ -36,8 +36,8 @@
               </td>
               <td><%= dg_role.requests_memory %> to <%= dg_role.limits_memory %></td>
               <td>
-                <% if current_user.admin_for?(@stage.project) %>
-                  <%= link_to 'Edit', edit_kubernetes_deploy_group_role_path(dg_role) %>
+                <% if current_user.admin_for?(@project) %>
+                  <%= link_to 'Edit', edit_project_kubernetes_deploy_group_role_path(@project, dg_role) %>
                 <% end %>
               </td>
             <% else %>

@@ -1,4 +1,4 @@
-<%= form_for @kubernetes_deploy_group_role, html: { class: "form-horizontal" } do |form| %>
+<%= form_for [@project, @kubernetes_deploy_group_role], html: { class: "form-horizontal" } do |form| %>
   <%= redirect_to_field %>
   <%= render 'shared/errors', object: form.object %>
   <%
@@ -11,13 +11,9 @@
       <%= form.select :deploy_group_id, DeployGroup.pluck(:name, :id), {}, class: "form-control", disabled: updating %>
     <% end %>
 
-    <%= form.input :project_id do %>
-      <% projects = current_user.administrated_projects.with_kubernetes_roles.pluck(:name, :id) %>
-      <%= form.select :project_id, projects, {}, class: "form-control", disabled: updating %>
-    <% end %>
-
     <%= form.input :kubernetes_role_id, label: 'Role' do %>
-      <%= form.select :kubernetes_role_id, [['Loading ...', form.object.kubernetes_role_id]], {}, class: "form-control", disabled: updating %>
+      <% roles = @project.kubernetes_roles.not_deleted.pluck(:name, :id) %>
+      <%= form.select :kubernetes_role_id, roles, {}, class: "form-control", disabled: updating %>
     <% end %>
 
     <%= form.input :delete_resource, as: :check_box, help: "Delete all resources on next deploy. Always set replicas to 0 too." %>
@@ -26,6 +22,7 @@
       <%= form.input :no_cpu_limit, as: :check_box, help: "Cpu limit will not be set when deploying, but still be used for cluster math, so pick a good estimate." %>
     <% end %>
 
+    <%# display fields and their suggested defaults %>
     <% [
          [:replicas, @kubernetes_deploy_group_role.kubernetes_role&.autoscaled? ? "Min Replicas" : "Replicas"],
          [:requests_cpu, 'Requests CPU Cores'],
@@ -41,39 +38,15 @@
       <% end %>
     <% end %>
 
-    <%# use form.actions with delete: true, history: true and block %>
+    <%# TODO: use form.actions with delete: true, history: true and block %>
     <div class="form-group">
       <div class="col-lg-offset-2 col-lg-10">
         <%= form.submit 'Save', class: "btn btn-primary" %>
         <%= submit_tag ResourceController::ADD_MORE, class: 'btn btn-default' %>
-        <%= link_to_delete form.object, class: 'btn btn-default', redirect_back: true if form.object.persisted? %>
+        <%= link_to_delete [@project, form.object], class: 'btn btn-default', redirect_back: true if form.object.persisted? %>
         <%= link_to "Cancel", :back, class: 'btn btn-default' %>
         <%= link_to_history form.object %>
       </div>
     </div>
   </fieldset>
 <% end %>
-
-<script>
-  // change selectable roles when project changes, since every project has different roles
-  $(function(){
-    var project_data = <%= Kubernetes::Role.not_deleted.pluck(:project_id, :id, :name).group_by(&:first).to_json.html_safe %>
-    $('#kubernetes_deploy_group_role_project_id').change(function () {
-      var $role_select = $('#kubernetes_deploy_group_role_kubernetes_role_id');
-      var project_id = parseInt($(this).val(), 10);
-      var val = parseInt($role_select.val(), 10);
-      var roles = project_data[project_id];
-
-      // clear out previous options and refresh the select
-      $role_select.html('').val('');
-
-      // fill in currently selectable roles, keeping the current selection for edit or failed create
-      $.each(roles, function(i, e){
-        $role_select.append($("<option>", { value: e[1], html: e[2], selected: (e[1] === val) }));
-      });
-
-      // highlight the changed select so user sees the effect
-      $role_select.effect("highlight", {color: "#ffffe0"}, 500);
-    }).trigger('change');
-  });
-</script>
