@@ -441,7 +441,7 @@ module Kubernetes
     end
 
     def set_istio_sidecar_injection
-      return unless Kubernetes::DeployGroupRole.istio_injection_supported?
+      return unless Samson::EnvCheck.set?('ISTIO_INJECTION_SUPPORTED')
       return unless @doc.deploy_group_role.inject_istio_annotation?
 
       # https://istio.io/docs/setup/additional-setup/sidecar-injection/#policy

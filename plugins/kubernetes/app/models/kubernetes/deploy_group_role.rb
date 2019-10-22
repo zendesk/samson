@@ -93,10 +93,6 @@ module Kubernetes
       end
     end
 
-    def self.istio_injection_supported?
-      Samson::EnvCheck.set?("ISTIO_INJECTION_SUPPORTED")
-    end
-
     def requests_below_limits
       if limits_cpu && requests_cpu && requests_cpu > limits_cpu
         errors.add :requests_cpu, "must be less than or equal to the limit"
