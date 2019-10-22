@@ -439,6 +439,22 @@ module Kubernetes
       template.dig_fetch(:metadata, :annotations)[:"kritis.grafeas.io/breakglass"] = "true"
     end
 
+    def set_istio_sidecar_injection
+      return unless Kubernetes::DeployGroupRole.istio_injection_supported?
+      return unless ['Deployment', 'DaemonSet', 'StatefulSet'].include?(template[:kind])
+      return unless @doc.kubernetes_role.inject_istio_annotation?
+
+      # https://istio.io/docs/setup/additional-setup/sidecar-injection/#policy
+      annotation_name = 'sidecar.istio.io/inject'.to_sym
+      template.dig_set([:spec, :template, :metadata, :annotations, annotation_name], "true")
+
+      # Also add labels to the Deployment or DaemonSet, and to the Pod template
+      # This is not necessary for Istio, but makes it easier for us to select and see
+      # which resources should have sidecars injected.
+      template.dig_set([:spec, :template, :metadata, :labels, annotation_name], "true")
+      template.dig_set([:metadata, :labels, annotation_name], "true")
+    end
+
     # custom annotation we support here and in kucodiff
     def missing_env
       test_env = pod_containers.flat_map { |c| c[:env] ||= [] }

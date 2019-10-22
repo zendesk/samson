@@ -962,6 +962,31 @@ describe Kubernetes::TemplateFiller do
       end
     end
 
+    describe 'istio sidecar injection' do
+      with_env ISTIO_INJECTION_SUPPORTED: "true"
+      let(:istio_annotation) { :'sidecar.istio.io/inject' }
+
+      before do
+        doc.kubernetes_role.inject_istio_annotation = true
+      end
+
+      it "modifies the Deployment" do
+        hash = template.to_hash
+
+        hash.dig_fetch(:spec, :template, :metadata, :annotations, istio_annotation).must_equal 'true'
+        hash.dig_fetch(:spec, :template, :metadata, :labels, istio_annotation).must_equal 'true'
+        hash.dig_fetch(:metadata, :labels, istio_annotation).must_equal 'true'
+      end
+
+      it "has no effect when not enabled" do
+        doc.kubernetes_role.inject_istio_annotation = false
+
+        hash.dig(:spec, :template, :metadata, :annotations, istio_annotation).must_be_nil
+        hash.dig(:spec, :template, :metadata, :labels, istio_annotation).must_be_nil
+        hash.dig(:metadata, :labels, istio_annotation).must_be_nil
+      end
+    end
+
     describe "set_via_env_json" do
       let!(:environment) { EnvironmentVariable.create!(parent: project, name: "FOO", value: '"bar"') }
 

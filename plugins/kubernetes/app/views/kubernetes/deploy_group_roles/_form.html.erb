@@ -26,6 +26,10 @@
       <%= form.input :no_cpu_limit, as: :check_box, help: "Cpu limit will not be set when deploying, but still be used for cluster math, so pick a good estimate." %>
     <% end %>
 
+    <% if Kubernetes::DeployGroupRole.istio_injection_supported? %>
+      <%= form.input :inject_istio_annotation, as: :check_box, help: "Add an annotation to the Pod template which should cause Istio to inject a sidecar proxy." %>
+    <% end %>
+
     <% [
          [:replicas, @kubernetes_deploy_group_role.kubernetes_role&.autoscaled? ? "Min Replicas" : "Replicas"],
          [:requests_cpu, 'Requests CPU Cores'],
