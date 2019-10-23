@@ -14,7 +14,7 @@ class EnvironmentVariableGroupsController < ApplicationController
     if deploy_group = params[:deploy_group].presence
       group = DeployGroup.find_by_permalink!(deploy_group)
       @groups = @groups.references(:environment_variables).
-      where("environment_variables.scope_type = 'DeployGroup' && environment_variables.scope_id", group.id)
+      where("environment_variables.scope_type = 'DeployGroup' AND environment_variables.scope_id", group.id)
     end
 
     respond_to do |format|

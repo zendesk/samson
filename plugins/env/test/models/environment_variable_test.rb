@@ -189,6 +189,11 @@ describe EnvironmentVariable do
         EnvironmentVariable.env(deploy, nil).must_equal("X" => "Y", "Y" => "Z", "PROJECT" => "PROJECT")
       end
 
+      it "includes only project environment variables" do
+        EnvironmentVariable.env(deploy, nil, env_group: false).
+        must_equal("PROJECT" => "PROJECT")
+      end
+
       it "includes common for scoped groups" do
         EnvironmentVariable.env(deploy, deploy_group).must_equal(
           "PROJECT" => "DEPLOY", "X" => "Y", "Z" => "A", "Y" => "Z"
