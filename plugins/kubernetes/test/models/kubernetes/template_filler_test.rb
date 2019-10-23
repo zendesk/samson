@@ -4,9 +4,8 @@ require_relative "../../test_helper"
 SingleCov.covered!
 
 describe Kubernetes::TemplateFiller do
-  def add_init_container(container)
-    annotations = (raw_template[:spec][:template][:metadata][:annotations] ||= {})
-    annotations[init_container_key] = [container].to_json
+  def with_init_container(container)
+    raw_template[:spec][:template][:spec][:initContainers] = [container]
   end
 
   let(:doc) { kubernetes_release_docs(:test_release_pod_1) }
@@ -17,9 +16,7 @@ describe Kubernetes::TemplateFiller do
   end
   let(:template) { Kubernetes::TemplateFiller.new(doc, raw_template, index: 0) }
   let(:init_container_key) { :'pod.beta.kubernetes.io/init-containers' }
-  let(:init_containers) do
-    JSON.parse(template.to_hash[:spec][:template][:metadata][:annotations][init_container_key])
-  end
+  let(:init_containers) { template.to_hash[:spec][:template][:spec][:initContainers] }
   let(:project) { doc.kubernetes_release.project }
 
   before do
@@ -414,12 +411,12 @@ describe Kubernetes::TemplateFiller do
         end
 
         it "allows selecting dockerfile for init containers" do
-          add_init_container "samson/dockerfile": 'Dockerfile', name: 'foo'
-          init_containers[0].must_equal("samson/dockerfile" => "Dockerfile", "image" => image, "name" => "foo")
+          with_init_container "samson/dockerfile": 'Dockerfile', name: 'foo'
+          init_containers[0].must_equal("samson/dockerfile": "Dockerfile", image: image, name: "foo")
         end
 
         it "raises if an init container does not specify a dockerfile" do
-          add_init_container a: 1, "samson/dockerfile": 'Foo', name: 'foo'
+          with_init_container a: 1, "samson/dockerfile": 'Foo', name: 'foo'
           e = assert_raises(Samson::Hooks::UserError) { init_containers[0] }
           e.message.must_equal(
             "Did not find build for dockerfile \"Foo\".\nFound builds: [[\"Dockerfile\"]].\n"\
@@ -477,60 +474,40 @@ describe Kubernetes::TemplateFiller do
       end
 
       describe '#modify_init_container' do
-        def add_init_contnainer_new_syntax(container)
-          raw_template[:spec][:template][:spec][:initContainers] = [container]
+        def with_init_contnainer_old_syntax(container)
+          annotations = (raw_template[:spec][:template][:metadata][:annotations] ||= {})
+          annotations[init_container_key] = [container].to_json
         end
 
         let(:spec_annotation_containers) do
           JSON.parse(result.dig(:spec, :template, :metadata, :annotations, init_container_key) || '[]')
         end
-
         let(:spec_init_containers) { result.dig(:spec, :template, :spec, :initContainers) || [] }
 
-        it 'sets init containers in annotations if using < 1.6.0 k8s server version' do
-          add_init_container "samson/dockerfile": 'Dockerfile', name: 'foo'
-          spec_annotation_containers[0].must_equal(
-            "samson/dockerfile" => "Dockerfile",
-            "image" => image,
-            "name" => "foo"
+        it 'sets init containers' do
+          with_init_container "samson/dockerfile": 'Dockerfile', name: 'foo'
+
+          spec_annotation_containers.must_equal []
+          spec_init_containers[0].must_equal(
+            "samson/dockerfile": "Dockerfile",
+            image: image,
+            name: "foo"
           )
         end
 
-        it 'sets init containers using updated syntax to old syntax if using < 1.6.0 k8s server version' do
-          add_init_contnainer_new_syntax('samson/dockerfile': 'Dockerfile', name: 'foo')
+        it 'sets init containers when given using old syntax' do
+          with_init_contnainer_old_syntax('samson/dockerfile': 'Dockerfile', name: 'foo')
 
-          spec_init_containers.must_equal([])
-          spec_annotation_containers[0].must_equal(
-            "samson/dockerfile" => "Dockerfile",
-            "image" => image,
-            "name" => "foo"
+          spec_annotation_containers.must_equal([])
+          spec_init_containers[0].must_equal(
+            "samson/dockerfile": "Dockerfile",
+            image: image,
+            name: "foo"
           )
         end
 
         it 'does not set init containers if there are none' do
           spec_annotation_containers.must_equal([])
-        end
-
-        describe 'using new server version' do
-          before do
-            stub_request(:get, 'http://foobar.server/version').to_return(body: '{"gitVersion": "v1.6.0"}')
-          end
-
-          it 'sets init containers in spec if using >= 1.6.0 k8s server version' do
-            add_init_contnainer_new_syntax("samson/dockerfile": 'Dockerfile', name: 'foo')
-            spec_init_containers[0].must_equal('samson/dockerfile': "Dockerfile", image: image, name: 'foo')
-          end
-
-          it 'sets init containers using old syntax to new syntax if using >= 1.6.0 k8s server version' do
-            add_init_container "samson/dockerfile": 'Dockerfile', name: 'foo'
-
-            spec_annotation_containers.must_equal([])
-            spec_init_containers[0].must_equal('samson/dockerfile': "Dockerfile", image: image, name: 'foo')
-          end
-
-          it 'does not set init containers if there are none' do
-            spec_init_containers.must_equal([])
-          end
         end
       end
 
@@ -638,12 +615,12 @@ describe Kubernetes::TemplateFiller do
       end
 
       it "adds secret puller container" do
-        init_containers.first['name'].must_equal('secret-puller')
-        init_containers.first['env'].must_equal(
+        init_containers.first[:name].must_equal('secret-puller')
+        init_containers.first[:env].must_equal(
           [
-            {"name" => "VAULT_TLS_VERIFY", "value" => "false"},
-            {"name" => "VAULT_MOUNT", "value" => "secret"},
-            {"name" => "VAULT_PREFIX", "value" => "apps"}
+            {name: "VAULT_TLS_VERIFY", value: "false"},
+            {name: "VAULT_MOUNT", value: "secret"},
+            {name: "VAULT_PREFIX", value: "apps"}
           ]
         )
 
@@ -656,7 +633,7 @@ describe Kubernetes::TemplateFiller do
 
       it "adds vault kv v2 hint so puller knows to use the new api" do
         vault_server.update_column :versioned_kv, true
-        init_containers.first['env'].last.must_equal "name" => "VAULT_PREFIX", "value" => "apps"
+        init_containers.first[:env].last.must_equal name: "VAULT_PREFIX", value: "apps"
       end
 
       it "fails when vault is not configured" do
@@ -1209,7 +1186,7 @@ describe Kubernetes::TemplateFiller do
       end
 
       it "finds images from init-containers" do
-        add_init_container image: 'init-container', name: 'foo'
+        with_init_container image: 'init-container', name: 'foo'
         template.build_selectors.must_equal(
           [[nil, "docker-registry.zende.sk/truth_service:latest"], [nil, "init-container"]]
         )

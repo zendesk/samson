@@ -9,6 +9,7 @@ module Kubernetes
 
       def self.init_containers(pod)
         containers = pod.dig(:spec, :initContainers) || []
+        # TODO: remove this deprecated support
         if json = pod.dig(:metadata, :annotations, Kubernetes::Api::Pod::INIT_CONTAINER_KEY)
           containers += JSON.parse(json, symbolize_names: true)
         end

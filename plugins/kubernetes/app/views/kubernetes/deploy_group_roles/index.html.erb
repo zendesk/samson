@@ -37,7 +37,7 @@
       <% @kubernetes_deploy_group_roles.each do |deploy_group_role| %>
         <tr>
           <% unless @project %>
-            <td><%= link_to deploy_group_role.project.name, deploy_group_role.project %></td>
+            <td><%= link_to_resource deploy_group_role.project %></td>
           <% end %>
           <td><%= link_to deploy_group_role.deploy_group.name, deploy_group_role.deploy_group %></td>
           <td><%= link_to deploy_group_role.kubernetes_role.name, [deploy_group_role.project, deploy_group_role.kubernetes_role] %></td>
@@ -49,7 +49,7 @@
           <% end %>
           <td>
             <% if current_user.admin_for?(deploy_group_role.project) %>
-              <%= link_to 'Edit', edit_kubernetes_deploy_group_role_path(deploy_group_role, redirect_to: request.fullpath) %>
+              <%= link_to 'Edit', edit_project_kubernetes_deploy_group_role_path(deploy_group_role.project, deploy_group_role, redirect_to: request.fullpath) %>
             <% end %>
           </td>
         </tr>
@@ -71,9 +71,12 @@
   </div>
 
   <div class="admin-actions">
-    <%= paginate @pagy unless @project %>
-    <div class="pull-right">
-      <%= link_to "New", new_kubernetes_deploy_group_role_path, class: "btn btn-default" %>
-    </div>
+    <% if @project %>
+      <div class="pull-right">
+        <%= link_to "New", new_project_kubernetes_deploy_group_role_path(@project), class: "btn btn-default" %>
+      </div>
+    <% else %>
+      <%= paginate @pagy %>
+    <% end %>
   </div>
 </section>

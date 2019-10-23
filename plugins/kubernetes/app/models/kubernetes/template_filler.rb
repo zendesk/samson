@@ -126,7 +126,9 @@ module Kubernetes
       end
     end
 
-    # samson/ keys in containers trigger validation warnings in kubectl, so we allow using annotations too
+    # read container config from pod annotation
+    # (or deprecated fallback to container key, which makes kubectl validation fail)
+    #
     # NOTE: containers always have a name see role_validator.rb
     def samson_container_config(container, key)
       pod_annotations[samson_container_config_key(container, key)] || container[key]
@@ -307,22 +309,10 @@ module Kubernetes
       ]
     end
 
-    # Init containers are stored as a json annotation
-    # see http://kubernetes.io/docs/user-guide/production-pods/#handling-initialization
     def set_init_containers
       return if init_containers.empty?
-      key = Kubernetes::Api::Pod::INIT_CONTAINER_KEY
-      if init_containers_in_beta?
-        pod_template.dig_set([:spec, :initContainers], init_containers)
-        pod_annotations.delete(key)
-      else
-        pod_annotations[key] = JSON.pretty_generate(init_containers)
-        pod_template[:spec].delete(:initContainers)
-      end
-    end
-
-    def init_containers_in_beta?
-      @doc.deploy_group.kubernetes_cluster.server_version >= Gem::Version.new('1.6.0')
+      pod_template.dig_set [:spec, :initContainers], init_containers
+      pod_annotations.delete Kubernetes::Api::Pod::INIT_CONTAINER_KEY # clear deprecated annotation to avoid duplicates
     end
 
     # This key replaces the default kubernetes key: 'deployment.kubernetes.io/podTemplateHash'
