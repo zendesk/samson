@@ -277,6 +277,11 @@ KUBERNETES_INGRESS_NGINX_ANNOTATION_ALLOWED=project-permalink,[project-permalink
 
 Allow users to set kritis breakglass per deploy-group or deploy by setting environment variable `KRITIS_BREAKGLASS_SUPPORTED=true`
 
+### Setting environment variables on init containers
+
+Environment variables do not get set on init container by default, but it can be opted in with:
+`metadata.annotations.container-nameofcontainer-samson/set_env_vars: "true"`
+
 ### Istio sidecar injection via annotation
 
 [Istio](https://istio.io) comes with a Mutating Webhook Admission Controller that will inject an

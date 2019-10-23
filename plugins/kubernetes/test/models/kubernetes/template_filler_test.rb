@@ -473,7 +473,7 @@ describe Kubernetes::TemplateFiller do
         end
       end
 
-      describe '#modify_init_container' do
+      describe 'init container' do
         def with_init_contnainer_old_syntax(container)
           annotations = (raw_template[:spec][:template][:metadata][:annotations] ||= {})
           annotations[init_container_key] = [container].to_json
@@ -485,29 +485,26 @@ describe Kubernetes::TemplateFiller do
         let(:spec_init_containers) { result.dig(:spec, :template, :spec, :initContainers) || [] }
 
         it 'sets init containers' do
-          with_init_container "samson/dockerfile": 'Dockerfile', name: 'foo'
+          with_init_container name: 'foo'
 
           spec_annotation_containers.must_equal []
-          spec_init_containers[0].must_equal(
-            "samson/dockerfile": "Dockerfile",
-            image: image,
-            name: "foo"
-          )
+          spec_init_containers[0].must_equal image: image, name: "foo"
         end
 
         it 'sets init containers when given using old syntax' do
-          with_init_contnainer_old_syntax('samson/dockerfile': 'Dockerfile', name: 'foo')
+          with_init_contnainer_old_syntax(name: 'foo')
 
           spec_annotation_containers.must_equal([])
-          spec_init_containers[0].must_equal(
-            "samson/dockerfile": "Dockerfile",
-            image: image,
-            name: "foo"
-          )
+          spec_init_containers[0].must_equal image: image, name: "foo"
         end
 
         it 'does not set init containers if there are none' do
           spec_annotation_containers.must_equal([])
+        end
+
+        it "adds env vars to init containers when requested" do
+          with_init_container name: 'foo', "samson/set_env_vars": "true"
+          spec_init_containers.dig(0, :env, 0, :name).must_equal "REVISION"
         end
       end
 

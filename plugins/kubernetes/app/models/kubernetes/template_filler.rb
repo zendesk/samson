@@ -130,6 +130,9 @@ module Kubernetes
     # (or deprecated fallback to container key, which makes kubectl validation fail)
     #
     # NOTE: containers always have a name see role_validator.rb
+    #
+    # @param [Hash] container
+    # @param [Symbol] key
     def samson_container_config(container, key)
       pod_annotations[samson_container_config_key(container, key)] || container[key]
     end
@@ -289,7 +292,7 @@ module Kubernetes
       init_containers.unshift container
 
       # mark the container as not needing a dockerfile without making the pod invalid for kubelet
-      pod_annotations[samson_container_config_key(container, "samson/dockerfile")] = DOCKERFILE_NONE
+      pod_annotations[samson_container_config_key(container, :"samson/dockerfile")] = DOCKERFILE_NONE
 
       # share secrets volume between all pod containers
       pod_containers.each do |container|
@@ -447,7 +450,7 @@ module Kubernetes
 
     # custom annotation we support here and in kucodiff
     def missing_env
-      test_env = pod_containers.flat_map { |c| c[:env] ||= [] }
+      test_env = env_containers.flat_map { |c| c[:env] ||= [] }
       (required_env - test_env.map { |e| e.fetch(:name) }).presence
     end
 
@@ -480,7 +483,7 @@ module Kubernetes
         }
       end
 
-      pod_containers.each do |c|
+      env_containers.each do |c|
         env = (c[:env] ||= [])
         env.concat all
 
@@ -489,6 +492,11 @@ module Kubernetes
         env.uniq! { |h| h[:name] }
         env.reverse!
       end
+    end
+
+    # containers we will set env for
+    def env_containers
+      pod_containers + init_containers.select { |c| samson_container_config(c, :"samson/set_env_vars") }
     end
 
     def static_env
