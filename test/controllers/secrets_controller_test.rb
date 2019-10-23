@@ -187,7 +187,7 @@ describe SecretsController do
         secret.update_column(:updater_id, 32232323)
         get :show, params: {id: secret}
         assert_template :show
-        response.body.must_include "Unknown user id"
+        response.body.must_include "Unknown user"
       end
     end
 
