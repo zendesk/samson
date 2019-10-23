@@ -46,6 +46,15 @@ describe EnvironmentVariableGroupsController do
       }
     )
   end
+  let!(:other_env_group) do
+    EnvironmentVariableGroup.create!(
+      name: "OtherG1",
+      environment_variables_attributes: {
+        0 => {name: "X", value: "Y"},
+        1 => {name: "Y", value: "Z", scope_type_and_id: "DeployGroup-#{deploy_group.id}"}
+      }
+    )
+  end
   let(:other_project) do
     p = project.dup
     p.name = 'xxxxx'
@@ -94,6 +103,33 @@ describe EnvironmentVariableGroupsController do
         assert_response :success
         project = JSON.parse(response.body)
         project.keys.must_include "environment_variables"
+      end
+
+      it "filters by project" do
+        ProjectEnvironmentVariableGroup.create!(environment_variable_group: other_env_group, project: other_project)
+        get :index, params: {project_id: other_project.id, format: :json}
+        assert_response :success
+        json_response = JSON.parse response.body
+        first_group = json_response['environment_variable_groups'].first
+
+        json_response['environment_variable_groups'].count.must_equal 1
+        first_group.keys.must_include "name"
+        first_group.keys.must_include "variable_names"
+        first_group['name'].must_equal other_env_group.name
+        first_group['variable_names'].must_equal ["X", "Y"]
+      end
+
+      it "filters by deploy groups" do
+        get :index, params: {deploy_group: deploy_group.permalink, format: :json}
+        assert_response :success
+        json_response = JSON.parse response.body
+        first_group = json_response['environment_variable_groups'].first
+
+        json_response['environment_variable_groups'].count.must_equal 1
+        first_group.keys.must_include "name"
+        first_group.keys.must_include "variable_names"
+        first_group['name'].must_equal other_env_group.name
+        first_group['variable_names'].must_equal ["Y"]
       end
     end
 

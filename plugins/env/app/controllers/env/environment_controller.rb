@@ -14,6 +14,19 @@ module Env
       end
     end
 
+    def preview
+      deploy_groups =
+        if deploy_group = params[:deploy_group].presence
+          [DeployGroup.find_by_permalink!(deploy_group)]
+        else
+          DeployGroup.all
+        end
+      deploy = Deploy.new(project: current_project)
+      envs = SamsonEnv.env_groups(deploy, deploy_groups, preview: true, env_group: false)
+
+      render json: {environment_variables: envs || []}
+    end
+
     private
 
     def unexpanded_secrets(env)

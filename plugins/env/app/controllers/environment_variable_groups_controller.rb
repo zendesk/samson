@@ -5,6 +5,18 @@ class EnvironmentVariableGroupsController < ApplicationController
 
   def index
     @groups = EnvironmentVariableGroup.all.includes(:environment_variables)
+
+    if project_id = params[:project_id].presence
+      @groups = @groups.joins(:project_environment_variable_groups).
+      where("project_environment_variable_groups.project_id = ?", project_id)
+    end
+
+    if deploy_group = params[:deploy_group].presence
+      group = DeployGroup.find_by_permalink!(deploy_group)
+      @groups = @groups.references(:environment_variables).
+      where("environment_variables.scope_type = 'DeployGroup' && environment_variables.scope_id", group.id)
+    end
+
     respond_to do |format|
       format.html
       format.json do

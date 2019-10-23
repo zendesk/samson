@@ -6,7 +6,10 @@ Samson::Application.routes.draw do
     end
   end
   resources :environment_variables, only: [:index, :destroy]
-  resources :projects, only: [] do
-    resource :environment, only: [:show], controller: 'env/environment'
+  resources :projects, param: :project_id do
+    member do
+      get :environment, action: :show, controller: 'env/environment'
+      get :environment_variables_preview, action: :preview, controller: 'env/environment'
+    end
   end
 end
