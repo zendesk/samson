@@ -439,7 +439,7 @@ module Kubernetes
 
       # https://istio.io/docs/setup/additional-setup/sidecar-injection/#policy
       annotation_name = 'sidecar.istio.io/inject'.to_sym
-      pod_template.dig_set [:metadata, :annotations, annotation_name], init_containers
+      pod_template.dig_set [:metadata, :annotations, annotation_name], "true"
 
       # Also add labels to the resource and to the Pod template.
       # This is not necessary for Istio, but makes it easier for us to select and see
