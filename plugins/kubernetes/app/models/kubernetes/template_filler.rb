@@ -436,12 +436,12 @@ module Kubernetes
 
       # https://istio.io/docs/setup/additional-setup/sidecar-injection/#policy
       annotation_name = 'sidecar.istio.io/inject'.to_sym
-      template.dig_set([:spec, :template, :metadata, :annotations, annotation_name], "true")
+      pod_template.dig_set [:metadata, :annotations, annotation_name], init_containers
 
-      # Also add labels to the Deployment or DaemonSet, and to the Pod template
+      # Also add labels to the resource and to the Pod template.
       # This is not necessary for Istio, but makes it easier for us to select and see
       # which resources should have sidecars injected.
-      template.dig_set([:spec, :template, :metadata, :labels, annotation_name], "true")
+      pod_template.dig_set([:metadata, :labels, annotation_name], "true")
       template.dig_set([:metadata, :labels, annotation_name], "true")
     end
 
