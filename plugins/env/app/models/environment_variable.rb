@@ -25,7 +25,7 @@ class EnvironmentVariable < ActiveRecord::Base
     # preview parameter can be used to not raise an error,
     # but return a value with a helpful message
     # also used by an external plugin
-    def env(deploy, deploy_group, preview: false, resolve_secrets: true)
+    def env(deploy, deploy_group, preview: false, resolve_secrets: true, project_specific: nil)
       env = {}
 
       if deploy_group && deploy.project.config_service?
@@ -36,7 +36,7 @@ class EnvironmentVariable < ActiveRecord::Base
         env.merge! env_vars_from_repo(env_repo_name, deploy.project, deploy_group)
       end
 
-      env.merge! env_vars_from_db(deploy, deploy_group)
+      env.merge! env_vars_from_db(deploy, deploy_group, project_specific: project_specific)
 
       resolve_dollar_variables(env)
       resolve_secrets(deploy.project, deploy_group, env, preview: preview) if resolve_secrets
@@ -73,11 +73,24 @@ class EnvironmentVariable < ActiveRecord::Base
 
     private
 
-    def env_vars_from_db(deploy, deploy_group)
+    def env_vars_from_db(deploy, deploy_group, project_specific: nil)
+      # Project Specific:
+      # nil   => project env + groups env
+      # true  => project env
+      # false => groups env
+      project_envs =
+        if project_specific.to_s == "true"
+          deploy.project.environment_variables
+        elsif project_specific.to_s == "false"
+          deploy.project.environment_variable_groups.flat_map(&:environment_variables)
+        else
+          deploy.project.nested_environment_variables
+        end
+
       variables =
         deploy.environment_variables +
         (deploy.stage&.environment_variables || []) +
-        deploy.project.nested_environment_variables
+        project_envs
       variables.sort_by!(&:priority)
       variables.each_with_object({}) do |ev, all|
         all[ev.name] = ev.value if !all[ev.name] && ev.matches_scope?(deploy_group)

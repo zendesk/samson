@@ -46,6 +46,17 @@ describe EnvironmentVariableGroupsController do
       }
     )
   end
+
+  let!(:other_env_group) do
+    EnvironmentVariableGroup.create!(
+      name: "OtherG1",
+      environment_variables_attributes: {
+        0 => {name: "X", value: "Y"},
+        1 => {name: "Y", value: "Z", scope_type_and_id: "DeployGroup-#{deploy_group.id}"}
+      }
+    )
+  end
+
   let(:other_project) do
     p = project.dup
     p.name = 'xxxxx'
@@ -128,7 +139,8 @@ describe EnvironmentVariableGroupsController do
       end
 
       it "calls env with preview" do
-        EnvironmentVariable.expects(:env).with(anything, anything, preview: true).times(3)
+        EnvironmentVariable.expects(:env).
+        with(anything, anything, project_specific: nil, resolve_secrets: false).times(3)
         get :preview, params: {group_id: env_group.id}
         assert_response :success
       end
@@ -136,7 +148,7 @@ describe EnvironmentVariableGroupsController do
 
     describe "a json GET to #preview" do
       it "succeeds" do
-        get :preview, params: {group_id: env_group.id, project_id: project.id}, format: :json
+        get :preview, params: {group_id: env_group.id, project_id: project.id, preview: true}, format: :json
         assert_response :success
         json_response = JSON.parse response.body
         json_response['groups'].sort.must_equal [
@@ -158,6 +170,45 @@ describe EnvironmentVariableGroupsController do
       it "fails when deploy group is unknown" do
         assert_raises ActiveRecord::RecordNotFound do
           get :preview, params: {group_id: env_group.id, project_id: project.id, deploy_group: "pod23"}, format: :json
+        end
+      end
+
+      describe "project_specific" do
+        before do
+          EnvironmentVariable.create!(parent: project, name: 'B', value: 'b')
+          ProjectEnvironmentVariableGroup.create!(environment_variable_group: other_env_group, project: project)
+        end
+        it "renders only project env" do
+          get :preview, params: {project_id: project.id, project_specific: true}, format: :json
+          assert_response :success
+          json_response = JSON.parse response.body
+          json_response['groups'].sort.must_equal [
+            [".pod-100", {"B" => "b"}],
+            [".pod1", {"B" => "b"}],
+            [".pod2", {"B" => "b"}]
+          ]
+        end
+
+        it "renders only groups env" do
+          get :preview, params: {project_id: project.id, project_specific: false}, format: :json
+          assert_response :success
+          json_response = JSON.parse response.body
+          json_response['groups'].sort.must_equal [
+            [".pod-100", {"Y" => "Z", "X" => "Y"}],
+            [".pod1", {"X" => "Y"}],
+            [".pod2", {"X" => "Y"}]
+          ]
+        end
+
+        it "renders without project_specific" do
+          get :preview, params: {project_id: project.id, project_specific: nil}, format: :json
+          assert_response :success
+          json_response = JSON.parse response.body
+          json_response['groups'].sort.must_equal [
+            [".pod-100", {"B" => "b", "Y" => "Z", "X" => "Y"}],
+            [".pod1", {"B" => "b", "X" => "Y"}],
+            [".pod2", {"B" => "b", "X" => "Y"}]
+          ]
         end
       end
     end

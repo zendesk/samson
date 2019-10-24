@@ -54,7 +54,10 @@ class EnvironmentVariableGroupsController < ApplicationController
       @project = Project.find(params[:project_id])
     end
 
-    @groups = SamsonEnv.env_groups(Deploy.new(project: @project), deploy_groups, preview: true)
+    options = {project_specific: params[:project_specific]}
+    options.merge!(params[:preview] ? {preview: true, resolve_secrets: true} : {resolve_secrets: false})
+
+    @groups = SamsonEnv.env_groups(Deploy.new(project: @project), deploy_groups, **options)
 
     respond_to do |format|
       format.html
