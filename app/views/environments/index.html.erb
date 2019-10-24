@@ -18,7 +18,7 @@
               <%= link_to env.name, env %>
               <%= resource_lock_icon env %>
             </td>
-            <td><%= env.production ? 'Yes' : 'No' %></td>
+            <td><%= env.production ? 'Yes' : '-' %></td>
             <td>
               <%= link_to_delete env if can? :write, :environments %>
             </td>

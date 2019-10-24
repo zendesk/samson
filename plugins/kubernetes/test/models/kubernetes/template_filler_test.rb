@@ -1043,6 +1043,39 @@ describe Kubernetes::TemplateFiller do
         end
       end
     end
+
+    describe 'istio sidecar injection' do
+      with_env ISTIO_INJECTION_SUPPORTED: "true"
+
+      before { doc.deploy_group_role.inject_istio_annotation = true }
+
+      let(:istio_annotation) { :'sidecar.istio.io/inject' }
+
+      let(:pod_annotation) { template.to_hash.dig(:spec, :template, :metadata, :annotations, istio_annotation) }
+      let(:pod_label) { template.to_hash.dig(:spec, :template, :metadata, :labels, istio_annotation) }
+      let(:resource_label) { template.to_hash.dig(:metadata, :labels, istio_annotation) }
+
+      it "modifies the Deployment" do
+        pod_annotation.must_equal 'true'
+        pod_label.must_equal 'true'
+        resource_label.must_equal 'true'
+      end
+
+      it "has no effect when not enabled" do
+        doc.deploy_group_role.inject_istio_annotation = false
+
+        pod_annotation.must_be_nil
+        pod_label.must_be_nil
+        resource_label.must_be_nil
+      end
+
+      it "does not modify resources like Service" do
+        raw_template[:kind] = "Service"
+        pod_annotation.must_be_nil
+        pod_label.must_be_nil
+        resource_label.must_be_nil
+      end
+    end
   end
 
   describe "#verify" do

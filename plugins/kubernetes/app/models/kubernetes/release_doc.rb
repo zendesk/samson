@@ -24,6 +24,10 @@ module Kubernetes
       resources.each(&:deploy)
     end
 
+    def deploy_group_role
+      @deploy_group_role ||= DeployGroupRole.where(kubernetes_role: kubernetes_role, deploy_group: deploy_group).first!
+    end
+
     def revert
       raise "Can only be done after a deploy" unless @previous_resources
       resources.each_with_index do |resource, i|

@@ -38,6 +38,10 @@
       <% end %>
     <% end %>
 
+    <% if show_istio_sidecar_ui? %>
+      <%= form.input :inject_istio_annotation, as: :check_box, help: "Add an annotation to the Pod template which should cause Istio to inject a sidecar proxy." %>
+    <% end %>
+
     <%# TODO: use form.actions with delete: true, history: true and block %>
     <div class="form-group">
       <div class="col-lg-offset-2 col-lg-10">

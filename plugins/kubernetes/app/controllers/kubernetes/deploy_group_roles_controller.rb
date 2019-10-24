@@ -92,7 +92,7 @@ class Kubernetes::DeployGroupRolesController < ResourceController
   def permitted_params
     allowed = [
       :requests_memory, :requests_cpu, :limits_memory, :limits_cpu,
-      :replicas, :delete_resource
+      :replicas, :delete_resource, :inject_istio_annotation
     ]
     allowed.concat [:deploy_group_id, :kubernetes_role_id] if ["new", "create"].include?(action_name)
     allowed << :no_cpu_limit if Kubernetes::DeployGroupRole::NO_CPU_LIMIT_ALLOWED

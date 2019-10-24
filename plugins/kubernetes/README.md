@@ -281,3 +281,16 @@ Allow users to set kritis breakglass per deploy-group or deploy by setting envir
 
 Environment variables do not get set on init container by default, but it can be opted in with:
 `metadata.annotations.container-nameofcontainer-samson/set_env_vars: "true"`
+
+### Istio sidecar injection via annotation
+
+[Istio](https://istio.io) comes with a Mutating Webhook Admission Controller that will inject an
+Envoy proxy sidecar. See Istio's docs on [sidecar injection](https://istio.io/docs/setup/additional-setup/sidecar-injection/)
+for more info. The injection is triggered by adding a `sidecar.istio.io/inject: "true"`
+annotation on a Pod.
+
+You can configure a Kubernetes Role to tell Samson to inject that annotation to a Pod template
+of a Deployment, DaemonSet, or StatefulSet. Assuming you have Istio configured to use the
+MutatingWebhook in the target namespace, that should trigger Istio to inject the sidecar.
+
+To enable this functionality, set the environment variable `ISTIO_INJECTION_SUPPORTED=true`.

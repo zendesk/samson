@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 # NOTE: using kubernetes namespace resulted in a strange error on every page
 module DeployGroupRolesHelper
+  def show_istio_sidecar_ui?
+    Samson::EnvCheck.set?('ISTIO_INJECTION_SUPPORTED')
+  end
+
   def kubernetes_deploy_group_role_replica(role, dgr)
     if dgr.delete_resource?
       icon_tag :remove, title: "Marked for deletion"

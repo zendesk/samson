@@ -55,6 +55,7 @@ module Kubernetes
           set_resource_blue_green if blue_green_color
           set_init_containers
           set_kritis_breakglass
+          set_istio_sidecar_injection
         elsif kind == 'PodDisruptionBudget'
           set_name
           set_match_labels_blue_green if blue_green_color
@@ -430,6 +431,21 @@ module Kubernetes
       return if !@doc.deploy_group.kubernetes_cluster.kritis_breakglass &&
         !@doc.kubernetes_release.deploy.kubernetes_ignore_kritis_vulnerabilities
       template.dig_fetch(:metadata, :annotations)[:"kritis.grafeas.io/breakglass"] = "true"
+    end
+
+    def set_istio_sidecar_injection
+      return unless Samson::EnvCheck.set?('ISTIO_INJECTION_SUPPORTED')
+      return unless @doc.deploy_group_role.inject_istio_annotation?
+
+      # https://istio.io/docs/setup/additional-setup/sidecar-injection/#policy
+      annotation_name = 'sidecar.istio.io/inject'.to_sym
+      pod_template.dig_set [:metadata, :annotations, annotation_name], "true"
+
+      # Also add labels to the resource and to the Pod template.
+      # This is not necessary for Istio, but makes it easier for us to select and see
+      # which resources should have sidecars injected.
+      pod_template.dig_set([:metadata, :labels, annotation_name], "true")
+      template.dig_set([:metadata, :labels, annotation_name], "true")
     end
 
     # custom annotation we support here and in kucodiff
