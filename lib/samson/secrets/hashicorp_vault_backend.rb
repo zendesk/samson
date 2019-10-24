@@ -80,7 +80,7 @@ module Samson
             begin
               vault_path(secret_path, :decode)
             rescue ActiveRecord::RecordNotFound => e
-              Samson::ErrorNotifier.notify(e, notice: true)
+              Samson::ErrorNotifier.notify(e)
               nil
             end
           end
