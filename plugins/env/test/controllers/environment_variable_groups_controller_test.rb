@@ -140,7 +140,7 @@ describe EnvironmentVariableGroupsController do
 
       it "calls env with preview" do
         EnvironmentVariable.expects(:env).
-        with(anything, anything, project_specific: nil, resolve_secrets: false).times(3)
+        with(anything, anything, project_specific: nil, preview: true, resolve_secrets: true).times(3)
         get :preview, params: {group_id: env_group.id}
         assert_response :success
       end
@@ -148,7 +148,7 @@ describe EnvironmentVariableGroupsController do
 
     describe "a json GET to #preview" do
       it "succeeds" do
-        get :preview, params: {group_id: env_group.id, project_id: project.id, preview: true}, format: :json
+        get :preview, params: {group_id: env_group.id, project_id: project.id, preview: false}, format: :json
         assert_response :success
         json_response = JSON.parse response.body
         json_response['groups'].sort.must_equal [
