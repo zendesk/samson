@@ -24,8 +24,18 @@ Project.class_eval do
     EnvironmentVariable.serialize(nested_environment_variables, @env_scopes)
   end
 
-  def nested_environment_variables
-    [self, *environment_variable_groups].flat_map(&:environment_variables)
+  def nested_environment_variables(project_specific: nil)
+    # Project Specific:
+    # nil           => project env + groups env
+    # true/"true"   => project env
+    # false/"false" => groups env
+    if project_specific.to_s == "true"
+      environment_variables
+    elsif project_specific.to_s == "false"
+      environment_variable_groups.flat_map(&:environment_variables)
+    else
+      [self, *environment_variable_groups].flat_map(&:environment_variables)
+    end
   end
 
   private
