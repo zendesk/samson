@@ -73,24 +73,11 @@ class EnvironmentVariable < ActiveRecord::Base
 
     private
 
-    def env_vars_from_db(deploy, deploy_group, project_specific: nil)
-      # Project Specific:
-      # nil   => project env + groups env
-      # true  => project env
-      # false => groups env
-      project_envs =
-        if project_specific.to_s == "true"
-          deploy.project.environment_variables
-        elsif project_specific.to_s == "false"
-          deploy.project.environment_variable_groups.flat_map(&:environment_variables)
-        else
-          deploy.project.nested_environment_variables
-        end
-
+    def env_vars_from_db(deploy, deploy_group, **args)
       variables =
         deploy.environment_variables +
         (deploy.stage&.environment_variables || []) +
-        project_envs
+        deploy.project.nested_environment_variables(**args)
       variables.sort_by!(&:priority)
       variables.each_with_object({}) do |ev, all|
         all[ev.name] = ev.value if !all[ev.name] && ev.matches_scope?(deploy_group)
