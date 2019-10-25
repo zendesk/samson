@@ -166,6 +166,16 @@ module Kubernetes
         ensure_not_updating_match_labels
         request(:update, template_for_update)
         expire_resource_cache
+      rescue Samson::Hooks::UserError => e
+        raise unless e.message.include?("cannot change")
+
+        path = [:metadata, :annotations, :"samson/force_update"]
+        if @template.dig(*path)
+          delete
+          create
+        else
+          raise Samson::Hooks::UserError, "#{e.message} (#{path.join(".")}=\"true\" to recreate)"
+        end
       end
 
       def ensure_not_updating_match_labels

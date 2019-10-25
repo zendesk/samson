@@ -719,6 +719,14 @@ describe Kubernetes::Resource do
         end
       end
 
+      it "updates when existing" do
+        assert_request(:get, url, to_return: {body: "{}"}) do
+          assert_request(:put, url, to_return: {body: "{}"}) do
+            resource.deploy
+          end
+        end
+      end
+
       it "replaces existing while keeping fields that kubernetes demands" do
         assert_request(:get, url, to_return: {body: old.to_json}) do
           assert_request(:put, url, with: {body: expected_body_version.to_json}, to_return: {body: "{}"}) do
@@ -776,6 +784,44 @@ describe Kubernetes::Resource do
           expected = expected_body.deep_merge(metadata: {foo: "B", resourceVersion: nil})
           assert_request(:put, url, with: {body: expected.to_json}, to_return: {body: "{}"}) do
             resource.deploy
+          end
+        end
+      end
+
+      describe "forced update" do
+        let(:error) { +"Foo is invalid: cannot change spec.bar" }
+
+        before { template[:metadata][:annotations] = {"samson/force_update": "true"} }
+
+        it "re-creates when updating is not possible" do
+          assert_request(:get, url, to_return: [{body: "{}"}, {status: 404}]) do
+            assert_request(:put, url, to_return: {body: {message: error}.to_json, status: 422}) do
+              assert_request(:delete, url, to_return: {body: '{}'}) do
+                assert_request(:post, base_url, to_return: {body: '{}'}) do
+                  resource.deploy
+                end
+              end
+            end
+          end
+        end
+
+        it "tells users how to enable re-create" do
+          template[:metadata][:annotations].clear
+
+          assert_request(:get, url, to_return: [{body: "{}"}]) do
+            assert_request(:put, url, to_return: {body: {message: error}.to_json, status: 422}) do
+              e = assert_raises(Samson::Hooks::UserError) { resource.deploy }
+              e.message.must_include "samson/force_update"
+            end
+          end
+        end
+
+        it "does not re-creates when spec is invalid" do
+          error = "Foo is invalid: spec.bar is not allowed"
+          assert_request(:get, url, to_return: {body: "{}"}) do
+            assert_request(:put, url, to_return: {body: {message: error}.to_json, status: 422}) do
+              assert_raises(Samson::Hooks::UserError) { resource.deploy }
+            end
           end
         end
       end

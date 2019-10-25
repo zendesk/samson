@@ -294,3 +294,11 @@ of a Deployment, DaemonSet, or StatefulSet. Assuming you have Istio configured t
 MutatingWebhook in the target namespace, that should trigger Istio to inject the sidecar.
 
 To enable this functionality, set the environment variable `ISTIO_INJECTION_SUPPORTED=true`.
+
+### Forcing updates when kubernetes cannot change a resource
+
+Delete old resource and create new when an update fails because it `cannot change` a resources.
+
+```
+metadata.annotation.samson/force_update: "true"
+```
