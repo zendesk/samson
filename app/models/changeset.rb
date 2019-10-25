@@ -102,7 +102,7 @@ class Changeset
   # github only supports finding open PRs for branches (not commits or tags)
   # https://help.github.com/en/articles/searching-issues-and-pull-requests
   #
-  # List response is not the same as the show response (missing commits/additions/etc), do not use PullRequest.new
+  # List response is not the same as the show response, do not use PullRequest.new
   #
   # @return [Array<Integer>]
   def open_pull_requests
