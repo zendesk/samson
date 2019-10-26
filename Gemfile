@@ -51,6 +51,8 @@ gem 'validates_lengths_from_database'
 gem 'large_object_store'
 gem 'parallel'
 gem 'stackprof'
+gem 'sprockets', '~> 3.0' # 4.0 needs a migration
+gem 'mime-types', '~> 3.1.0' # above it shows a warning during testing
 
 # treat included plugins like gems
 Dir[File.join(Bundler.root, 'plugins/*/')].each { |f| gemspec path: f }
@@ -68,14 +70,14 @@ group :sqlite do
 end
 
 group :assets do
-  gem 'sass-rails'
+  gem 'sass-rails', '~> 5.0' # 6.0 needs a migration
   gem 'uglifier'
-  gem 'bootstrap-sass', '>= 3.4.1'
+  gem 'bootstrap-sass', '~> 3.4'
   gem 'momentjs-rails'
   gem 'bootstrap3-datetimepicker-rails'
 
   source 'https://rails-assets.org' do
-    gem 'rails-assets-bootstrap-select'
+    gem 'rails-assets-bootstrap-select', '~> 1.10.0' # higher version causes bootstrap update/double-load
     gem 'rails-assets-jquery'
     gem 'rails-assets-jquery-ui'
     gem 'rails-assets-jquery-ujs'
@@ -89,6 +91,7 @@ group :assets do
 end
 
 group :debugging do
+  gem 'pry', '~> 0.10.0' # newer versions print 'Frame number' in rails c
   gem 'pry-byebug'
   gem 'pry-rails'
   gem 'pry-rescue'
@@ -96,7 +99,7 @@ group :debugging do
 end
 
 group :development, :staging do
-  gem 'rack-mini-profiler'
+  gem 'rack-mini-profiler', '~> 0.10.2' # higher versions show errors in development logs
 end
 
 group :development, :test do

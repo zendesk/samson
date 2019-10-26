@@ -6,9 +6,11 @@ class << Samson
 end
 
 raise "use STATSD_HOST and STATSD_PORT" if File.exist?("config/statsd.yml")
-Samson.statsd = Datadog::Statsd.new(ENV['STATSD_HOST'] || '127.0.0.1', ENV['STATSD_PORT'] || '8125')
-Samson.statsd.namespace = "samson.app"
-
+Samson.statsd = Datadog::Statsd.new(
+  ENV['STATSD_HOST'] || '127.0.0.1',
+  ENV['STATSD_PORT'] || '8125',
+  namespace: "samson.app"
+)
 Samson.statsd.event "Startup", "Samson startup" if ENV['SERVER_MODE']
 
 # tested via test/lib/samson/time_sum_test.rb

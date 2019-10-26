@@ -13,6 +13,7 @@ $LOAD_PATH.delete 'lib'
 $LOAD_PATH.delete 'test'
 
 require_relative '../config/environment'
+require 'maxitest/global_must'
 require 'rails/test_help'
 require 'minitest/rails'
 require 'rails-controller-testing'
