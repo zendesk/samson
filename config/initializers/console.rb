@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 Rails.application.console do
-  Rails::ConsoleMethods.send(:prepend, Samson::ConsoleExtensions)
+  Rails::ConsoleMethods.prepend Samson::ConsoleExtensions
 
   puts "Samson version: #{SAMSON_VERSION.first(7)}" if SAMSON_VERSION
 

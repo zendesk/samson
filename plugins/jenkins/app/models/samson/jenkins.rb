@@ -231,8 +231,8 @@ module Samson
       @response ||=
         begin
           client.job.get_build_details(job_name, jenkins_job_id)
-        rescue JenkinsApi::Exceptions::NotFound => error
-          {'result' => error.message, 'url' => '#'}
+        rescue JenkinsApi::Exceptions::NotFound => e
+          {'result' => e.message, 'url' => '#'}
         end
     end
 

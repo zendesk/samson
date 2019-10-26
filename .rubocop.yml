@@ -54,10 +54,10 @@ Style/NumericLiterals:
 Style/NumericPredicate:
   EnforcedStyle: comparison
 
-Layout/FirstParameterIndentation:
+Layout/IndentFirstArgument:
   Enabled: false
 
-Layout/IndentHash:
+Layout/IndentFirstHashElement:
   EnforcedStyle: consistent
 
 Layout/AlignParameters:
@@ -189,6 +189,9 @@ Style/IfInsideElse:
 # Enable this once https://github.com/rubocop-hq/rubocop/issues/6410 is fixed
 Layout/AlignHash:
   Enabled: false
+
+Layout/AlignArguments:
+  EnforcedStyle: with_fixed_indentation
 
 # Opt-in
 Layout/FirstHashElementLineBreak:
