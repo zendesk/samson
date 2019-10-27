@@ -86,10 +86,10 @@ class JobExecution
     @finish_callbacks << -> do
       begin
         yield
-      rescue => exception
-        message = "Finish hook failed: #{exception.message}"
+      rescue => e
+        message = "Finish hook failed: #{e.message}"
         output.puts message
-        Samson::ErrorNotifier.notify(exception, error_message: message, parameters: {job_url: job.url})
+        Samson::ErrorNotifier.notify(e, error_message: message, parameters: {job_url: job.url})
       end
     end
   end

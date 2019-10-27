@@ -25,8 +25,8 @@ module SamsonPipelines
       raise deploy.errors.full_messages.join(", ") unless deploy.persisted?
 
       output.puts "# Pipeline: Started stage: '#{stage.name}' - #{deploy.url}\n"
-    rescue => ex
-      output.puts "# Pipeline: Failed to start stage '#{stage.name}': #{ex.message}\n"
+    rescue => e
+      output.puts "# Pipeline: Failed to start stage '#{stage.name}': #{e.message}\n"
     end
   end
 end
