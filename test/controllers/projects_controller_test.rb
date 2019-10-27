@@ -161,6 +161,13 @@ describe ProjectsController do
           refute project.key?('token')
         end
 
+        it "renders 404 when project is not found" do
+          get :show, params: {id: 'doesnotexist', format: :json}
+          assert_response 404
+          body = JSON.parse(response.body)
+          assert_equal(body, 'error' => 'Resource not found')
+        end
+
         it "renders with envionment_variable_groups if present" do
           get :show, params: {id: project.to_param, includes: "environment_variable_groups", format: :json}
           assert_response :success

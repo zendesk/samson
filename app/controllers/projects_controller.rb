@@ -5,6 +5,14 @@ class ProjectsController < ResourceController
   before_action :set_resource, only: [:show, :edit, :update, :destroy, :deploy_group_versions, :new, :create]
   before_action :authorize_resource!, except: [:deploy_group_versions, :edit]
 
+  rescue_from ActiveRecord::RecordNotFound do |exception|
+    if request.format.json?
+      render json: {error: 'Resource not found'}, status: :not_found
+    else
+      raise exception
+    end
+  end
+
   # TODO: make this behave more like resource_controller
   def index
     projects = projects_for_user
