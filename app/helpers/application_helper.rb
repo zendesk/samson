@@ -281,7 +281,7 @@ module ApplicationHelper
 
   def paginate(pagy)
     multi_page = pagy.pages > 1
-    result = (multi_page ? pagy_nav_bootstrap(pagy) : "").html_safe
+    result = (multi_page ? pagy_bootstrap_nav(pagy) : "").html_safe
     if multi_page
       result << content_tag(:span, " #{pagy.count} records", style: "padding: 10px")
     end
