@@ -34,7 +34,8 @@ module Kubernetes
       end
 
       def restart_details
-        @pod.dig(:status, :containerStatuses)&.detect do |s|
+        statuses = (@pod.dig(:status, :containerStatuses) || []) + (@pod.dig(:status, :initContainerStatuses) || [])
+        statuses.detect do |s|
           next unless s.fetch(:restartCount) > 0
           reason = s.dig(:lastState, :terminated, :reason) || s.dig(:state, :terminated, :reason) || "Unknown"
           return "Restarted (#{s[:name]} #{reason})"
