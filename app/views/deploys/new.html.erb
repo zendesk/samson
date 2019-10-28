@@ -11,7 +11,7 @@
       'confirmation' => @stage.confirm?
     }
   %>
-  <%= form_for [@project, @stage, @deploy], html: { class: "form-horizontal" }, data: data do |form| %>
+  <%= form_for [@project, @stage, @deploy], html: { class: "form-horizontal collapse_fieldsets" }, data: data do |form| %>
     <fieldset>
       <%= render 'shared/errors', object: @deploy %>
 
