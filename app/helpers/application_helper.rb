@@ -315,20 +315,35 @@ module ApplicationHelper
     link_to icon_tag('signal'), url, target: :blank
   end
 
-  # show which stages this reference is deploy(ed+ing) to
+  # Show which stages this reference has been or is currently being deployed to.
   def deployed_or_running_list(stages, reference)
-    html = "".html_safe
-    stages.each do |stage|
-      next unless deploy = stage.deployed_or_running_deploy
-      next unless deploy.references?(reference)
-      label = (deploy.active? ? "label-warning" : "label-success")
+    deploys = Deploy.of_reference_in_stages(reference, stages)
 
-      text = "".html_safe
-      text << stage.name
-      html << content_tag(:span, text, class: "label #{label} release-stage")
-      html << " "
+    pieces = stages.map do |stage|
+      deploy = deploys[stage]
+
+      label = if deploy.nil?
+        nil
+      elsif deploy.running?
+        "label-warning"
+      elsif deploy.succeeded?
+        if deploy == stage.last_deploy
+          "label-success"
+        else
+          # Deploy is neither active nor is it the last successful one, but it
+          # succeeded in the past.
+          "label-default"
+        end
+      end
+
+      if label
+        text = "".html_safe
+        text << stage.name
+        content_tag(:span, text, class: "label #{label} release-stage")
+      end
     end
-    html
+
+    safe_join(pieces, " ")
   end
 
   def github_user_avatar(github_user)

@@ -183,6 +183,26 @@ class Deploy < ActiveRecord::Base
     where("#{table_name}.id > ?", deploy.id)
   end
 
+  # Returns a Hash of Stage => Deploy for the given reference and stages.
+  def self.of_reference_in_stages(reference, stages)
+    # Group by stage, then select the latest deploy id.
+    deploys_and_stages = where(reference: reference).
+      where(stage_id: stages.map(&:id)).
+      group(:stage_id).
+      select("MAX(id) AS id, stage_id")
+
+    # Fetch the actual deploys.
+    deploys = Deploy.where(id: deploys_and_stages.map(&:id))
+
+    # Map to a hash of stage => deploy entries.
+    deploys.map do |deploy|
+      # Don't trigger another query in order to fetch the stage.
+      stage = stages.find { |stage| stage.id == deploy.stage_id }
+
+      [stage, deploy]
+    end.to_h
+  end
+
   def self.expired
     threshold = Samson::BuddyCheck.time_limit.ago
     stale = where(buddy_id: nil).joins(:job).where(jobs: {status: 'pending'}).where("jobs.created_at < ?", threshold)
