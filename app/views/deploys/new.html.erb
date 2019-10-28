@@ -53,10 +53,10 @@
         <%= form.input :redeploy_previous_when_failed, as: :check_box %>
       <% end %>
 
-      <%= Samson::Hooks.render_views(:deploy_form, self, project: @project, form: form) %>
-
       <%= render 'recent_releases' %>
       <%= render 'currently_deployed' %>
+
+      <%= Samson::Hooks.render_views(:deploy_form, self, project: @project, form: form) %>
 
       <div class="form-group" id="new-deploy-buttons">
         <div class="col-lg-offset-2 col-lg-10">
