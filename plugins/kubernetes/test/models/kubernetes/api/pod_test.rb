@@ -116,6 +116,11 @@ describe Kubernetes::Api::Pod do
       refute pod.restart_details
     end
 
+    it "shows restarted for init containers" do
+      pod_attributes[:status][:initContainerStatuses] = [{name: "foo", restartCount: 1}]
+      pod.restart_details.must_equal "Restarted (foo Unknown)"
+    end
+
     describe "when restarted" do
       before { pod_attributes[:status][:containerStatuses][0][:restartCount] = 1 }
 
