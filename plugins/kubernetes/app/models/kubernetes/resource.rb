@@ -493,6 +493,14 @@ module Kubernetes
     class HorizontalPodAutoscaler < Base
     end
 
+    class ServiceAccount < VersionedUpdate
+      def template_for_update
+        t = super
+        t[:secrets] ||= resource[:secrets]
+        t
+      end
+    end
+
     def self.build(*args)
       klass = "Kubernetes::Resource::#{args.first.fetch(:kind)}".safe_constantize || VersionedUpdate
       klass.new(*args)

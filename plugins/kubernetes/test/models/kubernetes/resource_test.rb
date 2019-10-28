@@ -942,6 +942,22 @@ describe Kubernetes::Resource do
     end
   end
 
+  describe Kubernetes::Resource::ServiceAccount do
+    let(:kind) { 'ServiceAccount' }
+    let(:api_version) { 'v1' }
+
+    describe "#deploy" do
+      it "updates" do
+        with = ->(r) { r.body.must_include '"a":1' }
+        assert_request(:get, url, to_return: [{body: {secrets: [{a: 1}]}.to_json}]) do
+          assert_request(:put, url, to_return: {body: '{}'}, with: with) do
+            resource.deploy
+          end
+        end
+      end
+    end
+  end
+
   describe Kubernetes::Resource::VersionedUpdate do
     let(:kind) { 'CustomResourceDefinition' }
     let(:api_version) { 'apiextensions.k8s.io/v1beta1' }
