@@ -40,6 +40,20 @@ describe WebhooksController do
         assert_template :index
       end
     end
+
+    describe '#show' do
+      it 'renders json' do
+        get :show, params: {project_id: project.to_param, id: webhook.id, format: :json}
+        assert_response :success
+        assert_equal webhook.id, JSON.parse(response.body)["webhook"]["id"]
+      end
+
+      it 'returns 404 when webhook not found' do
+        assert_raises ActiveRecord::RecordNotFound do
+          get :show, params: {project_id: project.to_param, id: 123456, format: :json}
+        end
+      end
+    end
   end
 
   as_a :project_deployer do
