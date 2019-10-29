@@ -92,6 +92,29 @@ describe Samson::Secrets::HashicorpVaultBackend do
         result.must_equal versions: {v1: {metadata: {foo: "bar", destroyed: true}}}
       end
     end
+
+    it "does not resolve deleted versions" do
+      id = "production/foo/pod2/bar"
+      versions_body = {data: {versions: {
+        "v1" => {foo: "bar", destroyed: false, deletion_time: "2019-10-29"},
+        "v2" => {foo: "bar2", destroyed: false, deletion_time: ""}
+      }}}
+      version_body = {data: {data: {vault: 1}, metadata: {v2: {metadata: {foo: "bar2", destroyed: false}}}}}
+      assert_vault_request :get, id, versioned_kv: "metadata", body: versions_body.to_json do
+        assert_vault_request :get, "#{id}?version=v2", versioned_kv: "data", body: version_body.to_json do
+          result = backend.history('production/foo/pod2/bar', resolve: true)
+          result.must_equal versions: {
+            v1: {metadata: {foo: "bar", destroyed: false, deletion_time: "2019-10-29"}},
+            v2: {
+              metadata: {
+                v2: {metadata: {foo: "bar2", destroyed: false}}
+              },
+              auth: nil, lease_duration: nil, lease_id: nil, renewable: nil, warnings: nil, wrap_info: nil, value: 1
+            }
+          }
+        end
+      end
+    end
   end
 
   describe ".read_multi" do
