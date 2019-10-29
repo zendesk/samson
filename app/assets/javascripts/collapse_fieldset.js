@@ -1,5 +1,6 @@
 // fold empty fieldsets and let users unfold them to reduce clutter
-// except for the attributes and command fieldsets
+// except for the attributes and command fieldsets (.unfoldable)
+// folding is done by hiding (toggle) all children of the fieldset
 $(function(){
   $(".collapse_fieldsets fieldset:not(.unfoldable)").each(function(_, fieldset){
     var $fieldset = $(fieldset);
@@ -16,9 +17,9 @@ $(function(){
 
     if(filled.size() == 0) {
       $fieldset.find('legend').
-      click(function(){ $fieldset.find('> *').not('legend').toggle() }).click().
-      css('cursor', 'pointer').
-      append(' &#x2304;');
+        click(function(){ $fieldset.find('> *').not('legend').toggle() }).click().
+        css('cursor', 'pointer').
+        append(' &#x2304;'); // down caret
     }
   });
 });
