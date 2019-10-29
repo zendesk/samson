@@ -736,6 +736,7 @@ describe ApplicationHelper do
 
   describe "#deployed_or_running_list" do
     let(:stage_list) { [stages(:test_staging)] }
+    let(:deploy) { deploys(:succeeded_test) }
 
     it "produces safe output" do
       html = deployed_or_running_list([], "foo")
@@ -745,25 +746,49 @@ describe ApplicationHelper do
 
     it "renders succeeded deploys" do
       html = deployed_or_running_list(stage_list, "staging")
-      html.must_equal "<span class=\"label label-success release-stage\">Staging</span> "
+      html.must_equal "<a href=\"/projects/foo/deploys/#{Deploy.last.id}\"><span class=\"label label-success release-stage\">Staging</span></a> "
     end
 
     it "ignores failed deploys" do
-      deploys(:succeeded_test).job.update_column(:status, 'failed')
+      deploy.job.update_column(:status, 'failed')
       html = deployed_or_running_list(stage_list, "staging")
       html.must_equal ""
     end
 
     it "ignores non-matching deploys" do
-      deploys(:succeeded_test).update_column(:reference, 'nope')
+      deploy.update_column(:reference, 'nope')
       html = deployed_or_running_list(stage_list, "staging")
       html.must_equal ""
     end
 
     it "shows active deploys" do
-      deploys(:succeeded_test).job.update_column(:status, 'running')
+      deploy.job.update_column(:status, 'running')
       html = deployed_or_running_list(stage_list, "staging")
-      html.must_equal "<span class=\"label label-warning release-stage\">Staging</span> "
+      html.must_equal "<a href=\"/projects/foo/deploys/#{deploy.id}\"><span class=\"label label-warning release-stage\">Staging</span></a> "
+    end
+  end
+
+  describe "#deployed_or_running_builds" do
+    let(:build) { builds(:docker_build) }
+    let(:deploy) { deploys(:succeeded_test) }
+    let(:stage_list) { [stages(:test_staging)] }
+
+    it "ignores non-matching deploys" do
+      html = deployed_or_running_builds(stage_list, build)
+      html.must_equal ""
+    end
+
+    it "ignores failed deploys" do
+      deploy.job.update_column(:status, 'failed')
+      html = deployed_or_running_builds(stage_list, build)
+      html.must_equal ""
+    end
+
+    it "shows active deploys" do
+      deploy.job.update_column(:status, 'running')
+      deploy.builds = [build]
+      html = deployed_or_running_builds(stage_list, build)
+      html.must_equal "<a href=\"/projects/foo/deploys/#{deploy.id}\"><span class=\"label label-warning release-stage\">Staging</span></a> "
     end
   end
 

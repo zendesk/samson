@@ -12,7 +12,7 @@ class Deploy < ActiveRecord::Base
   belongs_to :job, inverse_of: :deploy
   belongs_to :buddy, -> { unscope(where: "deleted_at") }, class_name: 'User', optional: true, inverse_of: nil
   has_many :deploy_builds, dependent: :destroy
-  has_many :builds, through: :deploy_builds
+  has_many :builds, through: :deploy_builds, inverse_of: :deploys
 
   default_scope { order(id: :desc) }
 

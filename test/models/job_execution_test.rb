@@ -320,6 +320,11 @@ describe JobExecution do
       job.output.must_include "export BUILD_FROM_Dockerfile=docker-registry.example.com"
     end
 
+    it "saves builds made available to the deploy" do
+      JobExecution.new('master', job).perform
+      job.deploy.builds.must_equal [build]
+    end
+
     it "creates valid env variables when build name is not valid" do
       build.update_columns(dockerfile: nil, image_name: 'foo-bar-∂-baz')
       JobExecution.new('master', job).perform
