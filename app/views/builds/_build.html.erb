@@ -1,7 +1,7 @@
 <tr>
   <td><%= link_to build.nice_name, project_build_path(build.project, build) %></td>
   <% if @project %>
-    <td><%= deployed_or_running_list @project.stages, build.git_sha %></td>
+    <td><%= deployed_or_running_builds @project.stages, build %></td>
   <% else %>
     <td><%= link_to build.project.name, build.project %></td>
   <% end %>
