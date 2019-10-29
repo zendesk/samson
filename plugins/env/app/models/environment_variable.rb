@@ -25,7 +25,7 @@ class EnvironmentVariable < ActiveRecord::Base
     # preview parameter can be used to not raise an error,
     # but return a value with a helpful message
     # also used by an external plugin
-    def env(deploy, deploy_group, preview: false, resolve_secrets: true, project_specific: nil)
+    def env(deploy, deploy_group, resolve_secrets:, project_specific: nil)
       env = {}
 
       if deploy_group && deploy.project.config_service?
@@ -39,7 +39,7 @@ class EnvironmentVariable < ActiveRecord::Base
       env.merge! env_vars_from_db(deploy, deploy_group, project_specific: project_specific)
 
       resolve_dollar_variables(env)
-      resolve_secrets(deploy.project, deploy_group, env, preview: preview) if resolve_secrets
+      resolve_secrets(deploy.project, deploy_group, env, preview: resolve_secrets == :preview) if resolve_secrets
 
       env
     end

@@ -14,7 +14,7 @@ module SamsonEnv
 
   class << self
     def write_env_files(dir, deploy, deploy_groups)
-      return unless groups = env_groups(deploy, deploy_groups)
+      return unless groups = env_groups(deploy, deploy_groups, resolve_secrets: true)
       write_dotenv("#{dir}/.env", groups)
     end
 
