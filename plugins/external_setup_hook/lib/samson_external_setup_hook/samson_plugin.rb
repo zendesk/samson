@@ -11,6 +11,7 @@ module SamsonExternalSetupHook
     success = false
 
     setup_hook = stage.external_setup_hook
+    conn = Faraday.new(:ssl => {:verify => setup_hook.verify_ssl})
 
     return true if setup_hook.nil?
 
@@ -20,7 +21,7 @@ module SamsonExternalSetupHook
     until trigger_wait_time < 0 do
       trigger_wait_time -= POLL_INTERVAL
 
-      response = Faraday.post(setup_hook.endpoint, ctx_data.to_json) do |req|
+      response = conn.post(setup_hook.endpoint, ctx_data.to_json) do |req|
         req.options.timeout = req.options.open_timeout = 5
         req.headers['Content-Type'] = 'application/json'
 
@@ -45,12 +46,16 @@ module SamsonExternalSetupHook
     until poll_wait_time < 0 do
       poll_wait_time -= POLL_INTERVAL
 
-      response = Faraday.get(status_poll_url) do |req|
+      response = conn.get(status_poll_url) do |req|
         req.options.timeout = req.options.open_timeout = 5
       end
       if response.status == 200
         body = JSON.parse response.body
         success = (body['status'] == 'success')
+        messages = body.fetch('messages', [])
+        unless success || messages.empty?
+          output.write("External message: #{messages.join('\n')}")
+        end
       end
 
       break if success
