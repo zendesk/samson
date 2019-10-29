@@ -8,7 +8,6 @@ class Deploy < ActiveRecord::Base
   extend Inlinable
 
   belongs_to :stage, touch: true, inverse_of: :deploys
-  belongs_to :build, optional: true, inverse_of: :deploys
   belongs_to :project, inverse_of: :deploys
   belongs_to :job, inverse_of: :deploy
   belongs_to :buddy, -> { unscope(where: "deleted_at") }, class_name: 'User', optional: true, inverse_of: nil

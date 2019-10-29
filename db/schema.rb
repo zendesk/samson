@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_10_22_023140) do
+ActiveRecord::Schema.define(version: 2019_10_29_174730) do
 
   create_table "audits" do |t|
     t.integer "auditable_id", null: false
@@ -125,7 +125,6 @@ ActiveRecord::Schema.define(version: 2019_10_22_023140) do
     t.integer "buddy_id"
     t.datetime "started_at"
     t.datetime "deleted_at"
-    t.integer "build_id"
     t.boolean "release", default: false, null: false
     t.boolean "kubernetes", default: false, null: false
     t.integer "project_id", null: false
@@ -135,7 +134,6 @@ ActiveRecord::Schema.define(version: 2019_10_22_023140) do
     t.integer "triggering_deploy_id"
     t.boolean "redeploy_previous_when_failed", default: false, null: false
     t.boolean "kubernetes_ignore_kritis_vulnerabilities", default: false, null: false
-    t.index ["build_id"], name: "index_deploys_on_build_id"
     t.index ["deleted_at"], name: "index_deploys_on_deleted_at"
     t.index ["job_id", "deleted_at"], name: "index_deploys_on_job_id_and_deleted_at"
     t.index ["project_id", "deleted_at"], name: "index_deploys_on_project_id_and_deleted_at"
