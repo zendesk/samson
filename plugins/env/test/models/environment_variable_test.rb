@@ -245,12 +245,12 @@ describe EnvironmentVariable do
 
       it "includes only project specific environment variables" do
         EnvironmentVariable.env(deploy, nil, project_specific: true).
-        must_equal("PROJECT" => "PROJECT")
+          must_equal("PROJECT" => "PROJECT")
       end
 
       it "includes only project groups environment variables" do
         EnvironmentVariable.env(deploy, nil, project_specific: false).
-        must_equal("X" => "Y", "Y" => "Z")
+          must_equal("X" => "Y", "Y" => "Z")
       end
 
       describe "secrets" do

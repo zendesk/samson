@@ -85,7 +85,7 @@ Style/Next:
   Enabled: false
 
 Layout/MultilineMethodCallIndentation:
-  Enabled: false # none of the EnforcedStyle options allow for consistent 2-space indent
+  EnforcedStyle: indented
 
 Lint/AmbiguousRegexpLiteral:
   Enabled: false
