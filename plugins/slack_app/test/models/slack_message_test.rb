@@ -160,7 +160,7 @@ describe SlackMessage do
       before do
         DeployResponseUrl.create! deploy_id: deploy.id, response_url: 'http://example.com/xyz'
         stub_request(:post, 'http://example.com/xyz').
-        with(body: /successfully deployed/)
+          with(body: /successfully deployed/)
       end
 
       it 'sends a request to the response URL' do

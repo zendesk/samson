@@ -66,17 +66,17 @@ describe Project do
 
     it "includes only project specific environment variables" do
       project.nested_environment_variables(project_specific: true).
-      must_equal [@project_env]
+        must_equal [@project_env]
     end
 
     it "includes only project groups environment variables" do
       project.nested_environment_variables(project_specific: false).
-      must_equal group_env
+        must_equal group_env
     end
 
     it "includes both project and groups environment variables" do
       project.nested_environment_variables.
-      must_equal group_env.unshift(@project_env)
+        must_equal group_env.unshift(@project_env)
     end
   end
 end

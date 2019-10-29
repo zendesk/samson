@@ -140,7 +140,7 @@ describe EnvironmentVariableGroupsController do
 
       it "calls env with preview" do
         EnvironmentVariable.expects(:env).
-        with(anything, anything, project_specific: nil, preview: true, resolve_secrets: true).times(3)
+          with(anything, anything, project_specific: nil, preview: true, resolve_secrets: true).times(3)
         get :preview, params: {group_id: env_group.id}
         assert_response :success
       end
