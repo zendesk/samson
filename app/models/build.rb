@@ -7,7 +7,6 @@ class Build < ActiveRecord::Base
   belongs_to :project, inverse_of: :builds
   belongs_to :docker_build_job, class_name: 'Job', optional: true
   belongs_to :creator, class_name: 'User', foreign_key: 'created_by', inverse_of: :builds
-  has_many :deploys, dependent: nil
 
   before_validation :nil_out_blanks
   before_validation :make_default_dockerfile_and_image_name_not_collide, on: :create
