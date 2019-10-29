@@ -138,10 +138,17 @@ describe EnvironmentVariableGroupsController do
         assert_response :success
       end
 
-      it "calls env with preview" do
+      it "shows secret previews" do
         EnvironmentVariable.expects(:env).
-          with(anything, anything, project_specific: nil, preview: true, resolve_secrets: true).times(3)
+          with(anything, anything, project_specific: nil, resolve_secrets: :preview).times(3)
         get :preview, params: {group_id: env_group.id}
+        assert_response :success
+      end
+
+      it "can show secret paths" do
+        EnvironmentVariable.expects(:env).
+          with(anything, anything, project_specific: nil, resolve_secrets: false).times(3)
+        get :preview, params: {group_id: env_group.id, preview: "false"}
         assert_response :success
       end
     end

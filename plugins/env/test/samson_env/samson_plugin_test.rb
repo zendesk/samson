@@ -105,7 +105,8 @@ describe SamsonEnv do
       project.environment_variables.create!(name: "WORLD1", value: "hello", scope: environments(:staging))
       project.environment_variables.create!(name: "WORLD2", value: "hello", scope: deploy_group)
       project.environment_variables.create!(name: "WORLD3", value: "hello")
-      all = Samson::Hooks.fire(:deploy_env, Deploy.new(project: project), deploy_group).inject({}, :merge!)
+      deploy = Deploy.new(project: project)
+      all = Samson::Hooks.fire(:deploy_env, deploy, deploy_group, resolve_secrets: false).inject({}, :merge!)
 
       refute all["WORLD1"]
       all["WORLD2"].must_equal "hello"
@@ -113,17 +114,20 @@ describe SamsonEnv do
     end
 
     it "is empty" do
-      Samson::Hooks.fire(:deploy_env, deploy, deploy_groups(:pod1)).must_equal [{}]
+      Samson::Hooks.fire(:deploy_env, deploy, deploy_groups(:pod1), resolve_secrets: false).
+        must_equal [{}]
     end
 
     it "adds stage env variables" do
       deploy.stage.environment_variables.build(name: "Foo", value: "bar")
-      Samson::Hooks.fire(:deploy_env, deploy, deploy_groups(:pod1)).must_equal [{"Foo" => "bar"}]
+      Samson::Hooks.fire(:deploy_env, deploy, deploy_groups(:pod1), resolve_secrets: false).
+        must_equal [{"Foo" => "bar"}]
     end
 
     it "adds deploy env variables" do
       deploy.environment_variables.build(name: "Foo", value: "bar")
-      Samson::Hooks.fire(:deploy_env, deploy, deploy_groups(:pod1)).must_equal [{"Foo" => "bar"}]
+      Samson::Hooks.fire(:deploy_env, deploy, deploy_groups(:pod1), resolve_secrets: false).
+        must_equal [{"Foo" => "bar"}]
     end
   end
 
