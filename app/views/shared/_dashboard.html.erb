@@ -1,4 +1,4 @@
 <% if resource.dashboard.present? %>
   <h2>Dashboard</h2>
-  <div><%= sanitize resource.dashboard, tags: Loofah::HTML5::WhiteList::ACCEPTABLE_ELEMENTS + %w[iframe] %></div>
+  <div><%= sanitize resource.dashboard, tags: Loofah::HTML5::SafeList::ACCEPTABLE_ELEMENTS + %w[iframe] %></div>
 <% end %>
