@@ -55,6 +55,11 @@ PATH
       dotenv
 
 PATH
+  remote: plugins/external_setup_hook
+  specs:
+    samson_external_setup_hook (0.0.0)
+
+PATH
   remote: plugins/flowdock
   specs:
     samson_flowdock (0.0.0)
@@ -664,6 +669,7 @@ DEPENDENCIES
   samson_datadog!
   samson_datadog_tracer!
   samson_env!
+  samson_external_setup_hook!
   samson_flowdock!
   samson_github!
   samson_gitlab!
