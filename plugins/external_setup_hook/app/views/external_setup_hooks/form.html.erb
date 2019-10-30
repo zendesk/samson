@@ -1,12 +1,8 @@
 <%
-  # title = (@group.new_record? ? "New group" : "Edit #{@group.name}")
-  # can_edit = can?(:write, :environment_variable_groups, @group)
-  # disabled = can_edit ? '' : 'disabled'
-  # crumbs = [["Environment variables", EnvironmentVariableGroup]]
-  title = "New Hook"
-  can_edit = true
-  disabled = false
-  crumbs = [["External Setup Hook", ExternalSetupHook]]
+  title = (@hook.new_record? ? "New external setup hook" : "Edit #{@hook.name}")
+  can_edit = can?(:write, :external_setup_hooks, @hook)
+  disabled = can_edit ? '' : 'disabled'
+  crumbs = [["External Setup Hooks", ExternalSetupHook]]
 %>
 
 <% if @hook.new_record? %>
