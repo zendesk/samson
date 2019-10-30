@@ -38,6 +38,9 @@ module Kubernetes
         unless @release.save
           raise Samson::Hooks::UserError, "Failed to store manifests: #{@release.errors.full_messages.inspect}"
         end
+
+        # save which builds were used in this deploy
+        @job.deploy.builds = @release.builds
       end
 
       prerequisites, deploys = @release.release_docs.partition(&:prerequisite?)

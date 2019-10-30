@@ -168,6 +168,7 @@ describe Kubernetes::DeployExecutor do
       out.must_include "SUCCESS"
       out.must_include waiting_message
       out.wont_include "BigDecimal" # properly serialized configs
+      deploy.builds.must_equal [build]
     end
 
     it "watches resources until they are stable" do
@@ -216,7 +217,7 @@ describe Kubernetes::DeployExecutor do
       end
 
       it "does limited amounts of queries" do
-        assert_sql_queries(16) do
+        assert_sql_queries(17) do
           assert execute, out
         end
       end

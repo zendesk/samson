@@ -317,15 +317,36 @@ module ApplicationHelper
 
   # show which stages this reference is deploy(ed+ing) to
   def deployed_or_running_list(stages, reference)
-    html = "".html_safe
-    stages.each do |stage|
+    deploys = stages.map do |stage|
       next unless deploy = stage.deployed_or_running_deploy
       next unless deploy.references?(reference)
+      [stage, deploy]
+    end.compact
+
+    stage_deploy_labels(deploys)
+  end
+
+  # show which stages this build is deploy(ed+ing) to
+  def deployed_or_running_builds(stages, build)
+    deploys = stages.map do |stage|
+      next unless deploy = stage.deployed_or_running_deploy
+      next unless deploy.builds.include?(build)
+      [stage, deploy]
+    end.compact
+
+    stage_deploy_labels(deploys)
+  end
+
+  def stage_deploy_labels(deploy_map)
+    html = "".html_safe
+    deploy_map.each do |stage, deploy|
       label = (deploy.active? ? "label-warning" : "label-success")
 
       text = "".html_safe
       text << stage.name
-      html << content_tag(:span, text, class: "label #{label} release-stage")
+      html << link_to([@project || deploy.project, deploy]) do
+        content_tag(:span, text, class: "label #{label} release-stage")
+      end
       html << " "
     end
     html

@@ -87,6 +87,15 @@ ActiveRecord::Schema.define(version: 2019_10_30_151254) do
     t.index ["scope_id", "scope_type"], name: "index_datadog_monitor_queries_on_scope_id_and_scope_type", length: { scope_type: 100 }
   end
 
+  create_table "deploy_builds" do |t|
+    t.bigint "build_id", null: false
+    t.bigint "deploy_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["build_id"], name: "index_deploy_builds_on_build_id"
+    t.index ["deploy_id"], name: "index_deploy_builds_on_deploy_id"
+  end
+
   create_table "deploy_groups", id: :integer do |t|
     t.string "name", null: false
     t.integer "environment_id", null: false
