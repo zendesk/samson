@@ -167,6 +167,22 @@ ActiveRecord::Schema.define(version: 2019_10_29_174730) do
     t.index ["permalink"], name: "index_environments_on_permalink", unique: true
   end
 
+  create_table "external_setup_hook_stages" do |t|
+    t.bigint "external_setup_hook_id", null: false
+    t.bigint "stage_id", null: false
+    t.index ["external_setup_hook_id"], name: "index_external_setup_hook_stages_on_external_setup_hook_id"
+    t.index ["stage_id"], name: "index_external_setup_hook_stages_on_stage_id"
+  end
+
+  create_table "external_setup_hooks" do |t|
+    t.string "name", null: false
+    t.string "description", default: "", null: false
+    t.string "endpoint", null: false
+    t.string "auth_type", null: false
+    t.string "auth_token", null: false
+    t.boolean "verify_ssl", default: true, null: false
+  end
+
   create_table "flowdock_flows", id: :integer do |t|
     t.string "name", null: false
     t.string "token", null: false
