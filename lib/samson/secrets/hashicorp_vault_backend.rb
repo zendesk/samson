@@ -31,8 +31,8 @@ module Samson
           return history unless resolve
           history.fetch(:versions).each do |version, metadata|
             metadata.replace(metadata: metadata.dup)
-            next if metadata.dig(:metadata, :destroyed)
-            metadata.merge!(read(id, version))
+            next if metadata.dig(:metadata, :destroyed) || metadata.dig(:metadata, :deletion_time).present?
+            metadata.merge!(read(id, version) || {}) # don't blow up when version can't be read.
           end
           history
         end
