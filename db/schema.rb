@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_10_29_174730) do
+ActiveRecord::Schema.define(version: 2019_10_30_151254) do
 
   create_table "audits" do |t|
     t.integer "auditable_id", null: false
@@ -254,6 +254,7 @@ ActiveRecord::Schema.define(version: 2019_10_29_174730) do
     t.string "comment", limit: 512
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.text "template"
     t.index ["name"], name: "index_kubernetes_namespaces_on_name", unique: true, length: 191
   end
 

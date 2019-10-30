@@ -5,7 +5,7 @@
     <fieldset>
       <%= render 'shared/errors', object: @command %>
 
-      <%= form.input :command, as: :text_area, input_html: {rows: 10, style: 'width: 800px'} %>
+      <%= form.input :command, as: :text_area, input_html: {rows: 10, style: "width: 800px", class: "form-control monospace"} %>
 
       <%= form.input :project_id do %>
         <% options = (current_user.admin? ? { include_blank: "Global" } : {}) %>

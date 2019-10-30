@@ -12,8 +12,20 @@ module Kubernetes
     has_many :projects, dependent: nil, foreign_key: :kubernetes_namespace_id, inverse_of: :kubernetes_namespace
 
     validates :name, presence: true, uniqueness: true, format: NAME_PATTERN
+    validate :validate_template
     after_save :remove_configured_resource_names
     before_destroy :ensure_unused
+
+    def manifest
+      parsed_template.deep_symbolize_keys.deep_merge(
+        metadata: {
+          name: name,
+          annotations: {
+            "samson/url": Rails.application.routes.url_helpers.kubernetes_namespace_url(self)
+          }
+        }
+      )
+    end
 
     private
 
@@ -31,6 +43,18 @@ module Kubernetes
       roles.find_each do |role|
         role.update_attributes!(resource_name: nil, service_name: nil, manual_deletion_acknowledged: true)
       end
+    end
+
+    # @return [Hash]
+    def parsed_template
+      template.present? ? YAML.safe_load(template) || {} : {}
+    end
+
+    def validate_template
+      return if template.blank?
+      errors.add :template, "needs to be a Hash" unless parsed_template.is_a?(Hash)
+    rescue Psych::Exception
+      errors.add :template, "needs to be valid yaml"
     end
   end
 end
