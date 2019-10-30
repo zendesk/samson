@@ -75,6 +75,15 @@ describe Kubernetes::NamespacesController do
         patch :update, params: {id: namespace.id, kubernetes_namespace: {comment: ""}}
         assert_template :edit
       end
+
+      it "updates namespace when template was changed" do
+        assert_request(:get, "http://foobar.server/api/v1/namespaces/test", to_return: {body: '{}'}) do
+          assert_request(:patch, "http://foobar.server/api/v1/namespaces/test", to_return: {body: '{}'}) do
+            patch :update, params: {id: namespace.id, kubernetes_namespace: {template: "foo: 1"}}
+            assert_redirected_to namespace
+          end
+        end
+      end
     end
 
     describe "#destroy" do
@@ -117,11 +126,11 @@ describe Kubernetes::NamespacesController do
           end
         end
         assert_redirected_to "http://test.host/kubernetes/namespaces"
-        flash[:alert].must_include "Failed to create namespace test in cluster test: 404"
+        flash[:alert].must_include "Failed to upsert namespace test in cluster test: 404"
       end
     end
 
-    describe "#create_callback" do
+    describe "#sync_namespace" do
       before { @controller.instance_variable_set(:@kubernetes_namespace, namespace) }
 
       it "creates a namespace" do
@@ -142,7 +151,7 @@ describe Kubernetes::NamespacesController do
         end
         flash[:alert].must_equal <<~TEXT.rstrip
           <p>Error upserting namespace in some clusters:
-          <br />Failed to create namespace test in cluster test: Timed out connecting to server</p>
+          <br />Failed to upsert namespace test in cluster test: Timed out connecting to server</p>
         TEXT
       end
 

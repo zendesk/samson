@@ -16,6 +16,21 @@ describe Kubernetes::Namespace do
       namespace.name = "Test"
       refute_valid namespace
     end
+
+    it "is valid with valid template" do
+      namespace.template = {"foo" => "bar"}.to_yaml
+      assert_valid namespace
+    end
+
+    it "is not valid with non-hash template" do
+      namespace.template = "true"
+      refute_valid namespace
+    end
+
+    it "is not valid with invalid template" do
+      namespace.template = {a: 1}.to_yaml
+      refute_valid namespace
+    end
   end
 
   describe "#ensure_unused" do
@@ -44,6 +59,19 @@ describe Kubernetes::Namespace do
       assert_difference "Audited::Audit.count", 1 do
         project.create_kubernetes_namespace!(name: "bar")
       end
+    end
+  end
+
+  describe "#manifest" do
+    let(:url) { "http://www.test-url.com/kubernetes/namespaces/#{namespace.id}" }
+
+    it "is a hash" do
+      namespace.manifest.must_equal metadata: {name: "test", annotations: {"samson/url": url}}
+    end
+
+    it "merges template" do
+      namespace.template = {"metadata" => {"name" => "no", "foo" => "bar"}}.to_yaml
+      namespace.manifest.must_equal metadata: {name: "test", foo: "bar", annotations: {"samson/url": url}}
     end
   end
 end
