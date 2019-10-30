@@ -46,18 +46,17 @@ class ExternalSetupHooksController < ApplicationController
   end
 
   def attributes
-    params.require(:external_setup_hook).permit(*[
+    params.require(:external_setup_hook).permit(
       :name,
       :description,
       :endpoint,
       :auth_type,
       :auth_token,
       :verify_ssl
-    ])
+    )
   end
 
   def authorize_user!
-    # unauthorized! unless can? :write, :environment_variable_groups, hook
-    hook
+    unauthorized! unless can? :write, :external_setup_hooks, hook
   end
 end

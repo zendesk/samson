@@ -29,6 +29,7 @@ module SamsonExternalSetupHook
           req.headers['Authorization'] = "token #{setup_hook.auth_token}"
         end
       end
+      # TODO: handle more failure case based on requirements
       if response.status == 200
         body = JSON.parse response.body
         status_poll_url = body['status_poll_url'] || nil
@@ -49,6 +50,7 @@ module SamsonExternalSetupHook
       response = conn.get(status_poll_url) do |req|
         req.options.timeout = req.options.open_timeout = 5
       end
+      # TODO: handle more failure case based on requirements
       if response.status == 200
         body = JSON.parse response.body
         success = (body['status'] == 'success')
@@ -69,6 +71,20 @@ end
 Samson::Hooks.view :manage_menu, 'samson_external_setup_hook'
 
 Samson::Hooks.view :stage_form, 'samson_external_setup_hook'
+
+Samson::Hooks.callback :can do
+  [
+    :external_setup_hooks,
+    ->(user, action, hook) do
+      case action
+      when :write
+        user.admin?
+      else
+        raise ArgumentError, "Unsupported action #{action}"
+      end
+    end
+  ]
+end
 
 Samson::Hooks.callback :link_parts_for_resource do
   [
