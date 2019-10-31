@@ -93,6 +93,12 @@ describe SamsonKubernetes do
       ignore = ['id', 'created_at', 'updated_at', 'deploy_group_id']
       new_stage_dgr.attributes.except(*ignore).must_equal old_stage_dgr.attributes.except(*ignore)
     end
+
+    it "copies kubernetes_stage_roles" do
+      @old_stage.kubernetes_stage_roles.create!(kubernetes_role: kubernetes_roles(:app_server))
+      stage_clone(@old_stage, @new_stage)
+      @new_stage.kubernetes_stage_roles.map(&:kubernetes_role).must_equal [kubernetes_roles(:app_server)]
+    end
   end
 
   describe ".connection_errors" do
