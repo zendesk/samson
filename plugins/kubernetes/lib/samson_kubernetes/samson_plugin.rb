@@ -92,6 +92,8 @@ end
 
 Samson::Hooks.callback(:deploy_group_includes) { :kubernetes_cluster }
 
+# when doing mass stage rollout, prefill stage deploy groups
+# won't work for manual clone since new_stage groups are not set yet
 Samson::Hooks.callback(:stage_clone) do |old_stage, new_stage|
   roles_to_copy = Kubernetes::DeployGroupRole.where(
     project: old_stage.project,
@@ -107,4 +109,10 @@ Samson::Hooks.callback(:stage_clone) do |old_stage, new_stage|
       )
     end
   end
+end
+
+Samson::Hooks.callback(:stage_clone) do |old_stage, new_stage|
+  new_stage.kubernetes_stage_roles.build(
+    old_stage.kubernetes_stage_roles.map { |f| f.attributes.except("id", "created_at", "updated_at") }
+  )
 end
