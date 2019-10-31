@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_10_30_151254) do
+ActiveRecord::Schema.define(version: 2019_10_31_151553) do
 
   create_table "audits" do |t|
     t.integer "auditable_id", null: false
@@ -143,6 +143,7 @@ ActiveRecord::Schema.define(version: 2019_10_30_151254) do
     t.integer "triggering_deploy_id"
     t.boolean "redeploy_previous_when_failed", default: false, null: false
     t.boolean "kubernetes_ignore_kritis_vulnerabilities", default: false, null: false
+    t.boolean "pipeline_to_next_stages", default: false, null: false
     t.index ["deleted_at"], name: "index_deploys_on_deleted_at"
     t.index ["job_id", "deleted_at"], name: "index_deploys_on_job_id_and_deleted_at"
     t.index ["project_id", "deleted_at"], name: "index_deploys_on_project_id_and_deleted_at"
@@ -589,6 +590,7 @@ ActiveRecord::Schema.define(version: 2019_10_30_151254) do
     t.boolean "kubernetes_sample_logs_on_success", default: false, null: false
     t.string "jira_transition_id"
     t.boolean "kubernetes_hide_error_logs", default: false, null: false
+    t.boolean "pipeline_to_next_stages_allowed", default: false, null: false
     t.index ["project_id", "permalink"], name: "index_stages_on_project_id_and_permalink", unique: true, length: { permalink: 191 }
     t.index ["template_stage_id"], name: "index_stages_on_template_stage_id"
   end

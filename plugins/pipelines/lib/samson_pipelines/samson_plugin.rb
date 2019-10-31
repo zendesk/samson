@@ -7,7 +7,13 @@ module SamsonPipelines
     def start_pipelined_stages(deploy, output)
       return unless deploy.succeeded?
 
-      deploy.stage.next_stages.each do |next_stage|
+      next_stages = deploy.stage.next_stages
+
+      # TODO: add to next_stages logic or reuse somehow
+      stages = deploy.project.stages.to_a
+      next_stages += stages[(stages.index(deploy.stage) + 1)..-1]
+
+      next_stages.each do |next_stage|
         deploy_to_stage(next_stage, deploy, output)
       end
     end
@@ -20,7 +26,8 @@ module SamsonPipelines
         stage,
         reference: previous_deploy.reference,
         buddy: previous_deploy.buddy,
-        triggering_deploy: previous_deploy
+        triggering_deploy: previous_deploy,
+        pipeline_to_next_stages: previous_deploy.pipeline_to_next_stages
       )
       raise deploy.errors.full_messages.join(", ") unless deploy.persisted?
 
@@ -33,10 +40,15 @@ end
 
 Samson::Hooks.view :stage_form, "samson_pipelines"
 Samson::Hooks.view :stage_show, "samson_pipelines"
+Samson::Hooks.view :deploy_form, "samson_pipelines"
 Samson::Hooks.view :deploys_header, "samson_pipelines"
 
+Samson::Hooks.callback :deploy_permitted_params do
+  [:pipeline_to_next_stages]
+end
+
 Samson::Hooks.callback :stage_permitted_params do
-  {next_stage_ids: []}
+  [:pipeline_to_next_stages_allowed, {next_stage_ids: []}]
 end
 
 Samson::Hooks.callback :after_deploy do |deploy, job_execution|

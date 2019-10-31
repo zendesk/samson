@@ -1,0 +1,8 @@
+<% if @stage.pipeline_to_next_stages_allowed? %>
+  <% # TODO: add to next_stages logic or reuse somehow %>
+  <% stages = @project.stages.to_a %>
+  <% next_stages = stages[(stages.index(@stage) + 1)..-1] %>
+  <% if next_stages.any? && next_stages.map(&:production?).uniq == [@stage.production?] %>
+    <%= form.input :pipeline_to_next_stages, as: :check_box, label: "Pipeline to #{next_stages.size} next stages" %>
+  <% end %>
+<% end %>

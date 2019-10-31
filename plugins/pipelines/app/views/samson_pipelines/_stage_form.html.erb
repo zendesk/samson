@@ -1,2 +1,4 @@
 <% help_text = 'Set the stages that will get automatically deployed after this one.' %>
 <%= check_box_section('Pipelining', help_text, :stage, :next_stage_ids, @project.stages - [@stage]) %>
+
+<%= form.input :pipeline_to_next_stages_allowed, as: :check_box, label: "Ad-hoc pipeline to next stages allowed" %>

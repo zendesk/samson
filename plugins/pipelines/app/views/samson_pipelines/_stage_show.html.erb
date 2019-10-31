@@ -1,4 +1,5 @@
 <%
+  # TODO: add next ad-hoc pipelining stages
   next_stages = @stage.next_stages.sort_by(&:name)
   previous_stages = @stage.previous_stages.sort_by(&:name)
 %>
@@ -19,8 +20,8 @@
     <div>
       After this stage finishes deploying it will deploy to:
       <%= unordered_list next_stages do |stage| %>
-        <%= link_to stage.name, [@project, stage] %>  
-        <% if last_deploy = stage.last_deploy %> 
+        <%= link_to stage.name, [@project, stage] %>
+        <% if last_deploy = stage.last_deploy %>
           Last Deploy: <%= render_time last_deploy.start_time %> <%= status_badge last_deploy.status %>
         <% end %>
       <% end %>
