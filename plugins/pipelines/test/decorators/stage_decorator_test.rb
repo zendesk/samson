@@ -23,14 +23,14 @@ describe Stage do
       end
 
       it 'is true if marked production' do
-        stage1.update(production: true)
+        stage1.update_columns(production: true)
         stage1.production?.must_equal true
       end
     end
 
     describe "with pipeline without production" do
       before do
-        stage1.update!(next_stage_ids: [stage3.id, stage2.id])
+        stage1.update_columns(next_stage_ids: [stage3.id, stage2.id])
       end
 
       it 'is false if not marked production' do
@@ -38,15 +38,15 @@ describe Stage do
       end
 
       it 'is true if marked production' do
-        stage1.update(production: true)
+        stage1.update_columns(production: true)
         stage1.production?.must_equal true
       end
     end
 
     describe "with pipeline with production" do
       before do
-        stage2.update(production: true)
-        stage1.update!(next_stage_ids: [stage3.id, stage2.id])
+        stage2.update_columns(production: true)
+        stage1.update_columns(next_stage_ids: [stage3.id, stage2.id])
       end
 
       it 'is true if not marked production' do
@@ -59,13 +59,13 @@ describe Stage do
       end
 
       it 'is true if marked production' do
-        stage1.update(production: true)
+        stage1.update_columns(production: true)
         stage1.production?.must_equal true
       end
 
       it 'is true for production in nested child node' do
-        stage1.update!(next_stage_ids: [stage3.id])
-        stage3.update!(next_stage_ids: [stage2.id])
+        stage1.update_columns(next_stage_ids: [stage3.id])
+        stage3.update_columns(next_stage_ids: [stage2.id])
         stage1.production?.must_equal true
       end
     end
@@ -94,79 +94,80 @@ describe Stage do
       end
 
       it 'is not required when not deploying' do
-        stage2.update_column(:no_code_deployed, true)
+        stage1.pipeline_next_stages.first.no_code_deployed = true
         refute stage1.deploy_requires_approval?
       end
     end
   end
 
-  describe '#next_stages' do
+  describe '#pipeline_next_stages' do
     it 'does not query when empty' do
-      assert_sql_queries(0) { stage1.next_stages.must_equal [] }
+      assert_sql_queries(0) { stage1.pipeline_next_stages.must_equal [] }
     end
 
     it 'queries when filled' do
       stage1.next_stage_ids = [stage2.id]
-      assert_sql_queries(1) { stage1.next_stages.must_equal [stage2] }
+      assert_sql_queries(1) { stage1.pipeline_next_stages.must_equal [stage2] }
     end
   end
 
   describe '#valid_pipeline?' do
     it 'validates an empty pipeline' do
-      stage1.valid?.must_equal true
+      assert_valid stage1
     end
 
     it 'validates an empty params submission' do
       stage1.next_stage_ids = ['']
-      stage1.valid?.must_equal true
+      assert_valid stage1
       stage1.next_stage_ids.empty?.must_equal true
     end
 
     it 'validates a valid pipeline' do
-      stage1.update!(next_stage_ids: [stage3.id, stage2.id])
-      stage1.valid?.must_equal true
+      stage1.next_stage_ids = [stage3.id, stage2.id]
+      assert_valid stage1
     end
 
     it 'invalidates a pipeline with itself in it' do
-      stage1.update(next_stage_ids: [stage1.id])
-      stage1.valid?.must_equal false
+      stage1.next_stage_ids = [stage1.id]
+      refute_valid stage1
       stage1.errors.messages.must_equal base: ["Stage stage1 causes a circular pipeline with this stage"]
     end
 
     it 'invalidates a circular pipeline' do
-      stage3.update!(next_stage_ids: [stage1.id])
-      stage1.update(next_stage_ids: [stage3.id])
-      stage1.valid?.must_equal false
+      stage3.update_columns(next_stage_ids: [stage1.id])
+      stage1.next_stage_ids = [stage3.id]
+      refute_valid stage1
       stage1.errors.messages.must_equal base: ["Stage stage3 causes a circular pipeline with this stage"]
     end
 
     it 'invalidates a bigger circular pipeline' do
-      stage3.update!(next_stage_ids: [stage1.id])
-      stage2.update!(next_stage_ids: [stage3.id])
-      stage1.update(next_stage_ids: [stage2.id])
-      stage1.valid?.must_equal false
+      stage3.update_columns(next_stage_ids: [stage1.id])
+      stage2.update_columns(next_stage_ids: [stage3.id])
+      stage1.next_stage_ids = [stage2.id]
+      refute_valid stage1
       stage1.errors.messages.must_equal base: ["Stage stage2 causes a circular pipeline with this stage"]
     end
 
     it 'only validates if next_stage_ids changes' do
       Stage.any_instance.expects(:valid_pipeline?).never
-      stage1.update!(order: 2)
-      stage1.valid?.must_equal true
+      stage1.order = 2
+      stage1.save!
+      assert_valid stage1
     end
   end
 
-  describe '#previous_stages' do
+  describe '#pipeline_previous_stages' do
     it 'works with an empty pipeline' do
-      stage1.previous_stages.must_equal []
+      stage1.pipeline_previous_stages.must_equal []
     end
 
     it 'returns stages correctly' do
       # Set both stage1 and stage2 to trigger stage3
-      stage1.update!(next_stage_ids: [stage3.id])
-      stage2.update!(next_stage_ids: [stage3.id])
+      stage1.update_columns(next_stage_ids: [stage3.id])
+      stage2.update_columns(next_stage_ids: [stage3.id])
 
-      stage3.previous_stages.sort.must_equal [stage1, stage2]
-      stage1.previous_stages.must_equal []
+      stage3.pipeline_previous_stages.sort.must_equal [stage1, stage2]
+      stage1.pipeline_previous_stages.must_equal []
     end
   end
 

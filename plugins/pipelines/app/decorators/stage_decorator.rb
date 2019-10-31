@@ -3,11 +3,7 @@ Stage.class_eval do
   prepend(Module.new do
     # Return true if any stages in the pipeline are marked production
     def production?(check_next_stages: true)
-      if check_next_stages
-        super() || next_stages.any?(&:production?)
-      else
-        super()
-      end
+      super() || (check_next_stages && pipeline_next_stages.any?(&:production?))
     end
 
     def production_for_approval?
@@ -16,7 +12,7 @@ Stage.class_eval do
 
     # Return true if any stages in the pipeline deploy to production
     def deploy_requires_approval?
-      super || next_stages.any?(&:deploy_requires_approval?)
+      super || pipeline_next_stages.any?(&:deploy_requires_approval?)
     end
   end)
 
@@ -28,17 +24,20 @@ Stage.class_eval do
   # to load the soft delete methods
   has_soft_deletion default_scope: true
 
-  after_destroy :destroy_stage_pipeline
-  after_soft_delete :destroy_stage_pipeline
+  after_destroy :remove_from_other_pipelines
+  after_soft_delete :remove_from_other_pipelines
 
-  def next_stages
-    next_stage_ids.any? ? Stage.where(id: next_stage_ids) : []
+  def next_stage_ids=(*)
+    super
+    @pipeline_next_stages = nil
   end
 
-  def previous_stages
-    @previous_stages ||= project.stages.select do |stage|
-      stage.next_stage_ids.include? id
-    end
+  def pipeline_next_stages
+    @pipeline_next_stages ||= next_stage_ids.any? ? Stage.where(id: next_stage_ids) : []
+  end
+
+  def pipeline_previous_stages
+    @pipeline_previous_stages ||= project.stages.select { |stage| stage.next_stage_ids.include? id }
   end
 
   protected
@@ -57,7 +56,7 @@ Stage.class_eval do
       return false
     end
 
-    next_stages.each do |stage|
+    pipeline_next_stages.each do |stage|
       unless stage.valid_pipeline?(origin_id)
         errors[:base] << "Stage #{stage.name} causes a circular pipeline with this stage"
         return false
@@ -66,7 +65,7 @@ Stage.class_eval do
     true
   end
 
-  def destroy_stage_pipeline
+  def remove_from_other_pipelines
     (project.stages - [self]).each do |s|
       if s.next_stage_ids.delete(id)
         s.save(validate: false)

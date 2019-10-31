@@ -11,7 +11,7 @@ describe SamsonPipelines do
   let(:deploy) { deploys(:succeeded_test) }
   let(:next_deploy) { deploys(:succeeded_production_test) }
   let(:stage) { deploy.stage }
-  let(:next_stages) { [stages(:test_production), stages(:test_production_pod)] }
+  let(:pipeline_next_stages) { [stages(:test_production), stages(:test_production_pod)] }
   let(:output) { StringIO.new }
   let(:job) do
     Job.create(
@@ -24,7 +24,7 @@ describe SamsonPipelines do
   end
 
   describe :after_deploy do
-    before { stage.update!(next_stage_ids: next_stages.map(&:id)) }
+    before { stage.update!(next_stage_ids: pipeline_next_stages.map(&:id)) }
 
     it 'kicks off the next stages in the deploy' do
       DeployService.any_instance.expects(:deploy).

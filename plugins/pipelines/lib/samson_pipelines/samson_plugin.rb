@@ -7,7 +7,7 @@ module SamsonPipelines
     def start_pipelined_stages(deploy, output)
       return unless deploy.succeeded?
 
-      deploy.stage.next_stages.each do |next_stage|
+      deploy.stage.pipeline_next_stages.each do |next_stage|
         deploy_to_stage(next_stage, deploy, output)
       end
     end
