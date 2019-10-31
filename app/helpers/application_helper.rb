@@ -288,11 +288,11 @@ module ApplicationHelper
     result
   end
 
-  def unordered_list(items, display_limit: nil, show_more_tag: nil, ul_options: {}, li_options: {}, &block)
-    shown_items = items.first(display_limit || items.size)
+  # render and unordered list with limited items
+  def unordered_list(items, display_limit:, show_more_tag: nil, ul_options: {}, li_options: {}, &block)
+    shown_items = items.first(display_limit)
     li_tags = shown_items.map { |item| content_tag(:li, nil, li_options) { capture(item, &block) } }
-    li_tags << show_more_tag if display_limit && items.size > display_limit
-
+    li_tags << show_more_tag if items.size > display_limit
     content_tag(:ul, safe_join(li_tags), ul_options)
   end
 
@@ -353,28 +353,20 @@ module ApplicationHelper
   end
 
   def github_user_avatar(github_user)
-    image_tag github_user.avatar_url,
+    image_tag(
+      github_user.avatar_url,
       title: github_user.login,
       class: "gravatar github-user-avatar",
       width: 20,
       height: 20,
       'data-toggle': "tooltip"
+    )
   end
 
-  def check_box_section(section_title, help_text, object, method, collection)
-    content_tag(:fieldset) do
-      result = ''.html_safe
-
-      result << content_tag(:legend, section_title)
-      result << content_tag(:p, help_text, class: 'col-lg-offset-2')
-      result << content_tag(:div, class: 'col-lg-4 col-lg-offset-2') do
-        check_boxes = ''.html_safe
-        check_boxes << collection_check_boxes(object, method, collection, :id, :name) do |b|
-          box = ''.html_safe
-          box << b.check_box + ' '
-          box << b.label
-          box << tag(:br)
-        end
+  def render_collection_check_boxes(object, method, collection)
+    content_tag(:div, class: 'col-lg-4 col-lg-offset-2') do
+      collection_check_boxes(object, method, collection, :id, :name) do |b|
+        b.check_box << ' ' << b.label << tag(:br)
       end
     end
   end

@@ -1,2 +1,5 @@
-<% help_text = 'Set the stages that must be deployed before this one for a particular reference.' %>
-<%= check_box_section('Prerequisite Stages', help_text, :stage, :prerequisite_stage_ids, @project.stages - [@stage]) %>
+<fieldset>
+  <legend>Prerequisite Stages</legend>
+  <p class="col-lg-offset-2">Set the stages that must be deployed before this one for a particular reference.</p>
+  <%= render_collection_check_boxes :stage, :prerequisite_stage_ids, @project.stages - [@stage] %>
+</fieldset>

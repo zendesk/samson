@@ -3,8 +3,10 @@
 
   <div>
     This stage can only deploy after these stages have successfully deployed:
-    <%= unordered_list prerequisite_stages do |stage| %>
-      <%= link_to stage.name, [@project, stage]%>
-    <% end %>
+    <ul>
+      <% prerequisite_stages.each do |stage| %>
+        <li><%= link_to stage.name, [@project, stage]%></li>
+      <% end %>
+    </ul>
   </div>
 <% end %>
