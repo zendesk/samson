@@ -16,7 +16,7 @@ $(function(){
     });
 
     if(filled.size() == 0) {
-      $fieldset.find('legend').
+      $fieldset.find('> legend').
         click(function(){ $fieldset.find('> *').not('legend').toggle() }).click().
         css('cursor', 'pointer').
         append(' &#x2304;'); // down caret

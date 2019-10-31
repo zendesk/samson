@@ -12,67 +12,65 @@
     }
   %>
   <%= form_for [@project, @stage, @deploy], html: { class: "form-horizontal collapse_fieldsets" }, data: data do |form| %>
-    <fieldset>
-      <%= render 'shared/errors', object: @deploy %>
+    <%= render 'shared/errors', object: @deploy %>
 
-      <div class="form-group">
-        <%= form.label :reference, "Reference", class: "col-lg-2 control-label" %>
-        <div class="col-lg-4">
-        <% if @stage.no_reference_selection %>
-          <%= form.object.reference = @stage.default_reference.presence || 'master' %>
-          <%= form.hidden_field :reference, id: 'disable_js_hooks' %>
-          <%= additional_info "Reference selection is disabled for this stage." %>
-        <% else %>
-          <div id="scrollable-dropdown-menu">
-            <%= form.text_field :reference,
-                class: "form-control",
-                autofocus: true,
-                placeholder: "e.g. v2.1.43, master, fa0b4671",
-                required: true,
-                data: { prefetch_url: project_references_path(@project, format: "json") }
-            %>
-          </div>
-        <% end %>
+    <div class="form-group">
+      <%= form.label :reference, "Reference", class: "col-lg-2 control-label" %>
+      <div class="col-lg-4">
+      <% if @stage.no_reference_selection %>
+        <%= form.object.reference = @stage.default_reference.presence || 'master' %>
+        <%= form.hidden_field :reference, id: 'disable_js_hooks' %>
+        <%= additional_info "Reference selection is disabled for this stage." %>
+      <% else %>
+        <div id="scrollable-dropdown-menu">
+          <%= form.text_field :reference,
+              class: "form-control",
+              autofocus: true,
+              placeholder: "e.g. v2.1.43, master, fa0b4671",
+              required: true,
+              data: { prefetch_url: project_references_path(@project, format: "json") }
+          %>
         </div>
-        <div class="col-lg-6">
-          <div id="ref-problem-warning" class="col-lg-10 popover show right alert alert-warning hidden" style="max-width: 100%">
-            <div class="arrow" style="top: 20px"></div>
-
-            <h3 class="popover-title">Problems detected:
-              <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-            </h3>
-            <div class="popover-content">
-              <ul id="ref-problem-list"></ul>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <% if @stage.allow_redeploy_previous_when_failed? %>
-        <% form.object.redeploy_previous_when_failed = true %>
-        <%= form.input :redeploy_previous_when_failed, as: :check_box %>
       <% end %>
+      </div>
+      <div class="col-lg-6">
+        <div id="ref-problem-warning" class="col-lg-10 popover show right alert alert-warning hidden" style="max-width: 100%">
+          <div class="arrow" style="top: 20px"></div>
 
-      <%= render 'recent_releases' %>
-      <%= render 'currently_deployed' %>
-
-      <%= Samson::Hooks.render_views(:deploy_form, self, project: @project, form: form) %>
-
-      <div class="form-group" id="new-deploy-buttons">
-        <div class="col-lg-offset-2 col-lg-10">
-          <%= form.submit "", class: "btn btn-primary", disabled: Lock.locked_for?(@stage, current_user), data: {disable_with: false} %>
-          <%= link_to "Cancel", :back, class: 'btn btn-default' %>
+          <h3 class="popover-title">Problems detected:
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+          </h3>
+          <div class="popover-content">
+            <ul id="ref-problem-list"></ul>
+          </div>
         </div>
       </div>
+    </div>
 
-      <div id="deploy-confirmation">
-        <ul class="nav nav-tabs">
-          <%= render 'changeset/tab_list' %>
-        </ul>
-        <div class="tab-content deploy-details">
-          <div class="tab-pane changeset-placeholder">Loading...</div>
-        </div>
+    <% if @stage.allow_redeploy_previous_when_failed? %>
+      <% form.object.redeploy_previous_when_failed = true %>
+      <%= form.input :redeploy_previous_when_failed, as: :check_box %>
+    <% end %>
+
+    <%= render 'recent_releases' %>
+    <%= render 'currently_deployed' %>
+
+    <%= Samson::Hooks.render_views(:deploy_form, self, project: @project, form: form) %>
+
+    <div class="form-group" id="new-deploy-buttons">
+      <div class="col-lg-offset-2 col-lg-10">
+        <%= form.submit "", class: "btn btn-primary", disabled: Lock.locked_for?(@stage, current_user), data: {disable_with: false} %>
+        <%= link_to "Cancel", :back, class: 'btn btn-default' %>
       </div>
-    </fieldset>
+    </div>
+
+    <div id="deploy-confirmation">
+      <ul class="nav nav-tabs">
+        <%= render 'changeset/tab_list' %>
+      </ul>
+      <div class="tab-content deploy-details">
+        <div class="tab-pane changeset-placeholder">Loading...</div>
+      </div>
+    </div>
   <% end %>
 </section>
