@@ -665,35 +665,21 @@ describe ApplicationHelper do
     let(:items) { %w[foo bar baz] }
 
     it 'only shows `display_limit` records' do
-      tag = unordered_list(items, display_limit: 2, show_more_tag: content_tag(:li, 'More')) do |item|
-        item
-      end
-
+      tag = unordered_list(items, display_limit: 2, show_more_tag: content_tag(:li, 'More')) { |item| item }
       tag.must_equal '<ul><li>foo</li><li>bar</li><li>More</li></ul>'
-    end
-
-    it 'shows all records if there is no display limit' do
-      tag = unordered_list(items) do |item|
-        item
-      end
-
-      tag.must_equal '<ul><li>foo</li><li>bar</li><li>baz</li></ul>'
     end
 
     it 'passes through any HTML options' do
       tag = unordered_list(
         items,
-        display_limit: 2,
+        display_limit: 4,
         show_more_tag: content_tag(:li, 'More'),
         ul_options: {class: 'show-more'},
         li_options: {class: 'sparkles'}
-      ) do |item|
-        item
-      end
+      ) { |item| item }
 
-      expected_html = '<ul class="show-more"><li class="sparkles">foo</li><li class="sparkles">bar</li>' \
-        '<li>More</li></ul>'
-      tag.must_equal expected_html
+      tag.must_equal '<ul class="show-more"><li class="sparkles">foo</li><li class="sparkles">bar</li>' \
+        '<li class="sparkles">baz</li></ul>'
     end
   end
 
@@ -792,29 +778,24 @@ describe ApplicationHelper do
     end
   end
 
-  describe "#check_box_section" do
+  describe "#render_collection_check_boxes" do
     let(:project) { projects(:test) }
+
     it 'creates a section of checkboxes from a collection' do
       project.stages.each_with_index { |s, i| s.stubs(:id).returns(i) }
 
-      expected_result = <<~HTML.gsub /^\s+|\n/, ""
-        <fieldset>
-          <legend>Project Stages</legend>
-          <p class="col-lg-offset-2">Pick some of them stages!</p>
-          <div class="col-lg-4 col-lg-offset-2">
-            <input type="hidden" name="project[stages][]" value="" />
-            <input type="checkbox" value="0" name="project[stages][]" id="project_stages_0" /> <label for="project_stages_0">Staging</label>
-            <br />
-            <input type="checkbox" value="1" name="project[stages][]" id="project_stages_1" /> <label for="project_stages_1">Production</label>
-            <br />
-            <input type="checkbox" value="2" name="project[stages][]" id="project_stages_2" /> <label for="project_stages_2">Production Pod</label>
-            <br />
-          </div>
-        </fieldset>
+      html = render_collection_check_boxes(:project, :stages, project.stages)
+      html.must_equal <<~HTML.gsub /^\s+|\n/, ""
+        <div class="col-lg-4 col-lg-offset-2">
+          <input type="hidden" name="project[stages][]" value="" />
+          <input type="checkbox" value="0" name="project[stages][]" id="project_stages_0" /> <label for="project_stages_0">Staging</label>
+          <br />
+          <input type="checkbox" value="1" name="project[stages][]" id="project_stages_1" /> <label for="project_stages_1">Production</label>
+          <br />
+          <input type="checkbox" value="2" name="project[stages][]" id="project_stages_2" /> <label for="project_stages_2">Production Pod</label>
+          <br />
+        </div>
       HTML
-
-      result = check_box_section 'Project Stages', 'Pick some of them stages!', :project, :stages, project.stages
-      result.must_equal expected_result
     end
   end
 

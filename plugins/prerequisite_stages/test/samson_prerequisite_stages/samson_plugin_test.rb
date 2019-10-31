@@ -143,7 +143,7 @@ describe SamsonPrerequisiteStages do
       it 'shows prerequisite stages' do
         result = render_view
         result.must_include '<h2>Prerequisite Stages</h2>'
-        result.must_match /<li>\n.*href="\/projects\/foo\/stages\/production"/
+        result.must_match /<li>.*href="\/projects\/foo\/stages\/production"/
       end
 
       it 'shows nothing if no prerequisite stages exist' do
