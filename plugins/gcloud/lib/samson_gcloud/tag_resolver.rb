@@ -13,7 +13,6 @@ module SamsonGcloud
         success, json = Samson::CommandExecutor.execute(
           "gcloud", "container", "images", "describe", image, "--format", "json",
           *SamsonGcloud.cli_options,
-          err: '/dev/null',
           timeout: 10,
           whitelist_env: ["PATH"]
         )
