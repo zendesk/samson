@@ -81,5 +81,18 @@ describe DatadogDeployEvent do
         deliver(tags: [], time: happened)
       end
     end
+
+    it "can notify about kubernetes project/role/team" do
+      expected_values = {tags: ["deploy", "kube_project:foo", "team:foo"]}
+
+      deploy.kubernetes = true
+      doc = Kubernetes::ReleaseDoc.new
+      doc.send(:resource_template=, [{metadata: {labels: {project: "foo", role: "bar", team: "baz"}}}])
+      deploy.stubs(:kubernetes_release).returns Kubernetes::Release.new(release_docs: [doc])
+
+      assert_request(:post, url, with: {body: expected_body(expected_values)}) do
+        deliver(tags: [], time: happened)
+      end
+    end
   end
 end
