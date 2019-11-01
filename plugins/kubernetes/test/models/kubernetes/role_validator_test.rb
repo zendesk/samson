@@ -332,13 +332,18 @@ describe Kubernetes::RoleValidator do
       end
 
       it "passes without namespaces" do
-        role.each { |e| e[:metadata].delete(:namespace) }
         errors.must_equal nil
       end
 
       it "fails with forced default namespace" do
         role[0][:metadata][:namespace] = nil
         errors.must_equal ["Only use configured namespace \"foo\", not [nil]"]
+      end
+
+      it "fails when namespace is set on namespace-less kind" do
+        role[0][:kind] = "CustomResourceDefinition"
+        role[0][:metadata][:namespace] = "foo"
+        errors.must_equal ["Do not set namespace for CustomResourceDefinition"]
       end
 
       describe "with invalid namespace" do
