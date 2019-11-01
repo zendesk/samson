@@ -93,6 +93,7 @@ class ProjectsController < ResourceController
         :docker_build_method,
         :include_new_deploy_groups,
         :dashboard,
+        :ignore_pending_checks,
       ] + Samson::Hooks.fire(:project_permitted_params)
     ).merge(current_user: current_user)
   end

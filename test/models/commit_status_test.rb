@@ -398,6 +398,12 @@ describe CommitStatus do
         end
       end
 
+      it "does not show pending suites that are ignored per project" do
+        stub_github_api(check_run_url, check_runs: [])
+        stage.project.ignore_pending_checks = "Foo,My App,Bar"
+        status.statuses.map { |s| s[:description].first(22) }.must_equal ["No status was reported"]
+      end
+
       it "passes when other statuses passed except the ignored unreliable" do
         check_suites << {
           id: 2,
