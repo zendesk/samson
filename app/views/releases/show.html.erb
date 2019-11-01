@@ -20,7 +20,7 @@
   <p>
     <% CommitStatus.new(@release.project, @release.commit).statuses.each do |status| %>
       <%= commit_status_icon(status.fetch(:state)) %>
-      <b><%= status[:context] %>:</b> <%= link_to status[:description], status[:target_url] %><br/>
+      <b><%= status[:context] %>:</b> <%= link_to_if status[:target_url], status[:description], status[:target_url] %><br/>
     <% end %>
   </p>
 
