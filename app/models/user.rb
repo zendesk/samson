@@ -125,3 +125,4 @@ class User < ActiveRecord::Base
     user_project_roles.each(&:destroy)
   end
 end
+Samson::Hooks.load_decorators(User)

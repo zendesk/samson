@@ -33,3 +33,4 @@ class Webhook < ActiveRecord::Base
     end
   end
 end
+Samson::Hooks.load_decorators(Webhook)

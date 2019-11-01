@@ -277,3 +277,4 @@ class Deploy < ActiveRecord::Base
     self.reference = reference.strip if reference.present?
   end
 end
+Samson::Hooks.load_decorators(Deploy)

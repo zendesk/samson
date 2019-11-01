@@ -15,7 +15,7 @@ class Project < ActiveRecord::Base
     }
   ] + Samson::Hooks.fire(:project_docker_build_method_options).flatten(1)
 
-  has_soft_deletion default_scope: true unless self < SoftDeletion::Core # uncovered
+  has_soft_deletion default_scope: true
   audited
 
   include Lockable
@@ -344,3 +344,4 @@ class Project < ActiveRecord::Base
     end
   end
 end
+Samson::Hooks.load_decorators(Project)

@@ -54,3 +54,4 @@ class CsvExport < ActiveRecord::Base
     File.delete(path_file) if File.exist?(path_file)
   end
 end
+Samson::Hooks.load_decorators(CsvExport)

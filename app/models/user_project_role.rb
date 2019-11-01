@@ -17,3 +17,4 @@ class UserProjectRole < ActiveRecord::Base
   validates :role_id, inclusion: {in: ROLES.map(&:id)}
   validates_uniqueness_of :project_id, scope: :user_id
 end
+Samson::Hooks.load_decorators(UserProjectRole)

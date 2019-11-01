@@ -61,3 +61,4 @@ class Command < ActiveRecord::Base
     end
   end
 end
+Samson::Hooks.load_decorators(Command)

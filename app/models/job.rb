@@ -169,3 +169,4 @@ class Job < ActiveRecord::Base
     ActiveSupport::Notifications.instrument('job_status.samson', payload)
   end
 end
+Samson::Hooks.load_decorators(Job)
