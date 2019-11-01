@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_10_30_151254) do
+ActiveRecord::Schema.define(version: 2019_11_01_221308) do
 
   create_table "audits" do |t|
     t.integer "auditable_id", null: false
@@ -440,6 +440,7 @@ ActiveRecord::Schema.define(version: 2019_10_30_151254) do
     t.integer "kubernetes_namespace_id"
     t.boolean "config_service", default: false, null: false
     t.string "jira_issue_prefix"
+    t.string "ignore_pending_checks"
     t.index ["build_command_id"], name: "index_projects_on_build_command_id"
     t.index ["kubernetes_namespace_id"], name: "index_projects_on_kubernetes_namespace_id"
     t.index ["permalink"], name: "index_projects_on_permalink", unique: true, length: 191

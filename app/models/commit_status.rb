@@ -105,7 +105,11 @@ class CommitStatus
 
     # ignore pending unimportant
     check_suites.reject! do |s|
-      check_state(s[:conclusion]) == "pending" && IGNORE_PENDING_CHECKS.include?(s.dig(:app, :name))
+      check_state(s[:conclusion]) == "pending" &&
+        (
+          IGNORE_PENDING_CHECKS.include?(s.dig(:app, :name)) ||
+          @project.ignore_pending_checks.to_s.split(",").include?(s.dig(:app, :name))
+        )
     end
 
     overall_state = check_suites.
