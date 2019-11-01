@@ -274,13 +274,8 @@ ActiveRecord::Schema.define(version: 2019_11_01_221308) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer "deploy_group_id"
-    t.decimal "limits_cpu", precision: 6, scale: 2, null: false
-    t.integer "limits_memory", null: false
     t.text "resource_template", limit: 1073741823
-    t.decimal "requests_cpu", precision: 6, scale: 2, null: false
-    t.integer "requests_memory", null: false
     t.boolean "delete_resource", default: false, null: false
-    t.boolean "no_cpu_limit", default: false, null: false
     t.index ["kubernetes_release_id"], name: "index_kubernetes_release_docs_on_kubernetes_release_id"
     t.index ["kubernetes_role_id"], name: "index_kubernetes_release_docs_on_kubernetes_role_id"
   end
