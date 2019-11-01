@@ -87,13 +87,13 @@ describe Integrations::GithubController do
       payload.deep_merge!(pull_request: {body: 'imafixwolves'})
     end
 
-    it "expires PR cache" do
+    it "refreshes PR cache" do
       repo = project.repository_path
       request = stub_github_api("repos/#{repo}/pulls/123", {})
       2.times { assert Changeset::PullRequest.find(repo, 123) }
-      post :create, params: {token: project.token, number: 123}
+      post :create, params: {token: project.token, pull_request: {number: 123}}
       assert Changeset::PullRequest.find(repo, 123)
-      assert_requested request, times: 2
+      assert_requested request, times: 1
     end
   end
 
