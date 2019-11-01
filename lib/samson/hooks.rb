@@ -193,8 +193,8 @@ module Samson
         end
       end
 
-      def load_decorators(class_name)
-        @class_decorators[class_name].each { |path| require_dependency(path) }
+      def load_decorators(klass)
+        @class_decorators[klass.name].each { |path| require_dependency(path) }
       end
 
       def plugin_setup
@@ -264,19 +264,4 @@ module Samson
   end
 end
 
-module Samson::LoadDecorators
-  # TODO: should call decorator after subclass is done being defined, see https://stackoverflow.com/questions/7093992
-  def inherited(subclass)
-    super
-    Samson::Hooks.load_decorators(subclass.name)
-  end
-end
-
 Samson::Hooks.plugin_setup
-
-class << ActiveRecord::Base
-  prepend Samson::LoadDecorators
-end
-class << ActionController::Base
-  prepend Samson::LoadDecorators
-end

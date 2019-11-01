@@ -12,3 +12,4 @@ class Star < ActiveRecord::Base
     Rails.cache.delete([:starred_projects_ids, user_id])
   end
 end
+Samson::Hooks.load_decorators(Star)

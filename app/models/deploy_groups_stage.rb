@@ -7,3 +7,4 @@ class DeployGroupsStage < ActiveRecord::Base
     self.class.where(stage_id: stage_id, deploy_group_id: deploy_group_id).delete_all
   end
 end
+Samson::Hooks.load_decorators(DeployGroupsStage)

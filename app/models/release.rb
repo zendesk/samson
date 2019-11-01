@@ -97,3 +97,4 @@ class Release < ActiveRecord::Base
     self.commit = project.repository.commit_from_ref(commit)
   end
 end
+Samson::Hooks.load_decorators(Release)

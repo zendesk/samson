@@ -4,7 +4,7 @@ class Stage < ActiveRecord::Base
   AUTOMATED_NAME = 'Automated Deploys'
   NON_CLONEABLE_ATTRIBUTES = %w[id next_stage_ids prerequisite_stage_ids is_template permalink].freeze
 
-  has_soft_deletion default_scope: true unless self < SoftDeletion::Core
+  has_soft_deletion default_scope: true
 
   include Lockable
   include Permalinkable
@@ -268,3 +268,4 @@ class Stage < ActiveRecord::Base
     end.tap { |stage_command| stage_command.position = position }
   end
 end
+Samson::Hooks.load_decorators(Stage)

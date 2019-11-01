@@ -89,3 +89,4 @@ class DeployGroupsController < ResourceController
     )
   end
 end
+Samson::Hooks.load_decorators(DeployGroupsController)

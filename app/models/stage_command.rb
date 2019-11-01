@@ -6,3 +6,4 @@ class StageCommand < ActiveRecord::Base
   belongs_to :stage, inverse_of: :stage_commands
   belongs_to :command, autosave: true, inverse_of: :stage_commands
 end
+Samson::Hooks.load_decorators(StageCommand)

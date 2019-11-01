@@ -29,3 +29,4 @@ class Environment < ActiveRecord::Base
     name
   end
 end
+Samson::Hooks.load_decorators(Environment)

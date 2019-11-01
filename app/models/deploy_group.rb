@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 class DeployGroup < ActiveRecord::Base
-  has_soft_deletion default_scope: true unless self < SoftDeletion::Core # uncovered
+  has_soft_deletion default_scope: true
   audited
 
   include Permalinkable
@@ -77,3 +77,4 @@ class DeployGroup < ActiveRecord::Base
     end
   end
 end
+Samson::Hooks.load_decorators(DeployGroup)

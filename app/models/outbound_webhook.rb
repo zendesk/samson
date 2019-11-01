@@ -61,3 +61,4 @@ class OutboundWebhook < ActiveRecord::Base
     errors.add(:url, "must begin with http:// or https://") unless url.start_with?("http://", "https://")
   end
 end
+Samson::Hooks.load_decorators(OutboundWebhook)
