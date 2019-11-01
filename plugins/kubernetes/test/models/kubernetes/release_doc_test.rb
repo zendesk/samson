@@ -349,5 +349,10 @@ describe Kubernetes::ReleaseDoc do
     it "returns an instance of a DeployGroupRole" do
       doc.deploy_group_role.must_be_instance_of Kubernetes::DeployGroupRole
     end
+
+    it "can be set" do
+      doc.deploy_group_role = Kubernetes::DeployGroupRole.first
+      assert_sql_queries(0) { assert doc.deploy_group_role }
+    end
   end
 end

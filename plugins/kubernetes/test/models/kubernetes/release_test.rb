@@ -63,12 +63,8 @@ describe Kubernetes::Release do
       release.release_docs.size.must_equal 2
       release.release_docs.first.kubernetes_role.name.must_equal app_server.name
       release.release_docs.first.replica_target.must_equal 1
-      release.release_docs.first.limits_cpu.must_equal 1
-      release.release_docs.first.limits_memory.must_equal 50
       release.release_docs.second.kubernetes_role.name.must_equal resque_worker.name
       release.release_docs.second.replica_target.must_equal 2
-      release.release_docs.second.limits_cpu.must_equal 2
-      release.release_docs.second.limits_memory.must_equal 100
 
       assert_difference -> { Kubernetes::Release.count } => +1, -> { Kubernetes::ReleaseDoc.count } => +2 do
         release.save

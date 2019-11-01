@@ -86,15 +86,11 @@ module Kubernetes
       grouped_deploy_group_roles.each do |dgrs|
         dgrs.each do |dgr|
           release_docs.build(
+            deploy_group_role: dgr,
             deploy_group: dgr.deploy_group,
             kubernetes_release: self,
             kubernetes_role: dgr.kubernetes_role,
             replica_target: dgr.replicas,
-            requests_cpu: dgr.requests_cpu,
-            requests_memory: dgr.requests_memory,
-            limits_cpu: dgr.limits_cpu,
-            limits_memory: dgr.limits_memory,
-            no_cpu_limit: dgr.no_cpu_limit,
             delete_resource: dgr.delete_resource
           )
         end

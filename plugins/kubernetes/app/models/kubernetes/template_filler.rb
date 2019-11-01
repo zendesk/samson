@@ -396,10 +396,16 @@ module Kubernetes
     def set_resource_usage
       container = pod_containers.first
       container[:resources] = {
-        requests: {cpu: @doc.requests_cpu.to_f, memory: "#{@doc.requests_memory}Mi"},
-        limits: {cpu: @doc.limits_cpu.to_f, memory: "#{@doc.limits_memory}Mi"}
+        requests: {
+          cpu: @doc.deploy_group_role.requests_cpu.to_f,
+          memory: "#{@doc.deploy_group_role.requests_memory}Mi"
+        },
+        limits: {
+          cpu: @doc.deploy_group_role.limits_cpu.to_f,
+          memory: "#{@doc.deploy_group_role.limits_memory}Mi"
+        }
       }
-      container[:resources][:limits].delete(:cpu) if @doc.no_cpu_limit
+      container[:resources][:limits].delete(:cpu) if @doc.deploy_group_role.no_cpu_limit
     end
 
     def set_docker_image
