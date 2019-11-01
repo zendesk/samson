@@ -25,25 +25,29 @@ class Changeset::PullRequest
     #
     # @param [String] repository name, e.g. "zendesk/samson".
     # @param [Integer] pull request number
-    #
     # @return [ChangeSet::PullRequest, nil]
     def find(repo, number)
       data = Rails.cache.fetch(cache_key(repo, number)) do
         GITHUB.pull_request(repo, number)
       end
-
-      new(repo, data)
+      new repo, data
     rescue Octokit::NotFound
       nil
     end
 
-    def expire(repo, number)
-      Rails.cache.delete cache_key(repo, number)
+    # store a PR in the cache for later use and wrap it in ChangeSet::PullRequest, mirroring .find
+    #
+    # @param [String] repository name, e.g. "zendesk/samson".
+    # @param [Hash, Sawyer::Resource] repository name, e.g. "zendesk/samson".
+    # @return [ChangeSet::PullRequest]
+    def cache(repo, payload)
+      data = fake_api_response(payload)
+      Rails.cache.write cache_key(repo, data.number), data
+      new repo, data
     end
 
     def changeset_from_webhook(project, payload)
-      data = Sawyer::Resource.new(Octokit.agent, payload.fetch('pull_request'))
-      new(project.repository_path, data)
+      new project.repository_path, fake_api_response(payload)
     end
 
     # Webhook events that are valid should be related to a pr code push or someone adding [samson review]
@@ -64,6 +68,13 @@ class Changeset::PullRequest
     end
 
     private
+
+    def fake_api_response(payload)
+      Sawyer::Resource.new(
+        Octokit.agent,
+        payload.deep_symbolize_keys.fetch(:pull_request) # need to symbolize or caching breaks
+      )
+    end
 
     def cache_key(repo, number)
       [self, repo, number].join("-")

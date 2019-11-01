@@ -40,12 +40,15 @@ describe Changeset::PullRequest do
     end
   end
 
-  describe ".expire" do
-    it "expires find cache" do
-      GITHUB.expects(:pull_request).with("foo/bar", 42).returns({}).times(2)
-      2.times { assert Changeset::PullRequest.find("foo/bar", 42) }
-      Changeset::PullRequest.expire("foo/bar", 42)
-      assert Changeset::PullRequest.find("foo/bar", 42)
+  describe ".cache" do
+    it "overrides find cache" do
+      GITHUB.expects(:pull_request).with("foo/bar", 42).
+        returns(Sawyer::Resource.new(Octokit.agent, title: "X"))
+
+      2.times { Changeset::PullRequest.find("foo/bar", 42).title.must_equal "X" }
+
+      Changeset::PullRequest.cache("foo/bar", "pull_request" => {"number" => 42, "title" => "C"})
+      Changeset::PullRequest.find("foo/bar", 42).title.must_equal "C"
     end
   end
 
