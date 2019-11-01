@@ -137,10 +137,16 @@ module Kubernetes
       @errors << "Needs a metadata.name" unless map_attributes([:metadata, :name]).all?
     end
 
-    # not setting a namespace is safe to ignore, because teplate-filler overrides it with the configured namespace
+    # not setting a namespace is safe to ignore, because template-filler overrides it with the configured namespace
     # and that either sets the namespace or is ignored for namespace-less resources
     def validate_namespace
       return unless namespace = @project&.kubernetes_namespace&.name
+
+      @elements.each do |e|
+        if NAMESPACELESS_KINDS.include?(e[:kind]) && e.dig(:metadata, :namespace)
+          @errors << "Do not set namespace for #{e[:kind]}"
+        end
+      end
 
       namespaces = []
       @elements.each { |e| namespaces << e.dig(:metadata, :namespace) if e[:metadata].key?(:namespace) }
