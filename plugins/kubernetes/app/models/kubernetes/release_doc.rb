@@ -18,12 +18,14 @@ module Kubernetes
     before_create :store_resource_template
 
     attr_reader :previous_resources
+    attr_writer :deploy_group_role
 
     def deploy
       @previous_resources = resources.map(&:resource)
       resources.each(&:deploy)
     end
 
+    # not used when deploying, just as fallback when building things from the console
     def deploy_group_role
       @deploy_group_role ||= DeployGroupRole.where(kubernetes_role: kubernetes_role, deploy_group: deploy_group).first!
     end
@@ -48,9 +50,10 @@ module Kubernetes
 
     def resources
       @resources ||= begin
-        resources = resource_template.map do |t|
+        resources = resource_template.map do |template|
           Kubernetes::Resource.build(
-            t, deploy_group,
+            template,
+            deploy_group,
             autoscaled: kubernetes_role.autoscaled,
             delete_resource: delete_resource
           )

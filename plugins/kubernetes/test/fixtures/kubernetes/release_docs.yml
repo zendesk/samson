@@ -3,8 +3,4 @@ test_release_pod_1:
   kubernetes_release: test_release
   deploy_group: pod1
   replica_target: 2
-  requests_cpu: 0.5
-  requests_memory: 50
-  limits_cpu: 1
-  limits_memory: 100
   resource_template: '{"kind":"Deployment", "metadata":{"name":"app-server", "namespace":"pod1"}}'

@@ -345,8 +345,6 @@ describe Kubernetes::DeployExecutor do
         doc = Kubernetes::Release.last.release_docs.max_by(&:kubernetes_role)
         config = server_role
         doc.replica_target.must_equal config.replicas
-        doc.limits_cpu.must_equal config.limits_cpu
-        doc.limits_memory.must_equal config.limits_memory
       end
 
       describe "with missing role" do
