@@ -5,6 +5,12 @@ class EnvironmentVariableGroupsController < ApplicationController
 
   def index
     @groups = EnvironmentVariableGroup.all.includes(:environment_variables)
+
+    if project_id = params[:project_id].presence
+      @groups = @groups.joins(:project_environment_variable_groups).
+        where("project_environment_variable_groups.project_id = ?", project_id)
+    end
+
     respond_to do |format|
       format.html
       format.json do
