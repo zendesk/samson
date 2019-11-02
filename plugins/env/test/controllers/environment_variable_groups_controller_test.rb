@@ -106,6 +106,20 @@ describe EnvironmentVariableGroupsController do
         project = JSON.parse(response.body)
         project.keys.must_include "environment_variables"
       end
+
+      it "filters by project" do
+        ProjectEnvironmentVariableGroup.create!(environment_variable_group: other_env_group, project: other_project)
+        get :index, params: {project_id: other_project.id, format: :json}
+        assert_response :success
+        json_response = JSON.parse response.body
+        first_group = json_response['environment_variable_groups'].first
+
+        json_response['environment_variable_groups'].count.must_equal 1
+        first_group.keys.must_include "name"
+        first_group.keys.must_include "variable_names"
+        first_group['name'].must_equal other_env_group.name
+        first_group['variable_names'].must_equal ["X", "Y"]
+      end
     end
 
     describe "#show" do
