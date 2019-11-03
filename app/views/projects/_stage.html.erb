@@ -1,5 +1,5 @@
-<tr>
-  <% cache [@project.permalink, stage, Lock.cache_key] do %>
+<% cache [@project.permalink, stage, Lock.cache_key, deployer_for_project?] do %>
+  <tr>
     <td>
       <%= link_to stage.name, [@project, stage] %>
       <%= resource_lock_icon stage %>
@@ -21,11 +21,9 @@
     <% else %>
       <td>-</td>
     <% end %>
-  <% end %>
 
-  <td align="right">
-    <% if deployer_for_project? %>
+    <td align="right">
       <%= deploy_link @project, stage %>
-    <% end %>
-  </td>
-</tr>
+    </td>
+  </tr>
+<% end %>

@@ -18,7 +18,7 @@
     </tr>
     </thead>
     <tbody>
-    <%= render partial: "deploys/deploy", collection: @deploys %>
+    <%= render partial: "deploys/deploy", collection: @deploys, cached: true %>
     </tbody>
   </table>
   <%= paginate @pagy if @pagy %>
