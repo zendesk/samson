@@ -20,7 +20,7 @@ class ApplicationController < ActionController::Base
     if request.format.json?
       render_json_error 400, exception.message
     else
-      render status: 400, plain: exception.message
+      render status: :bad_request, plain: exception.message
     end
   end
 

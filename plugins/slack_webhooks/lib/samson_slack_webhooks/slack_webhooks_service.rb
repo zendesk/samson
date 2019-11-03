@@ -37,7 +37,7 @@ module SamsonSlackWebhooks
         username: 'Samson',
         icon_url: "https://github.com/zendesk/samson/blob/master/app/assets/images/favicons/32x32_light.png?raw=true"
       }
-      payload[:channel] = webhook.channel unless webhook.channel.blank?
+      payload[:channel] = webhook.channel if webhook.channel?
       payload[:attachments] = attachments if attachments.present?
 
       begin

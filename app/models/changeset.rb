@@ -4,6 +4,8 @@ class Changeset
   ATTRIBUTE_TABS = ["files", "commits", "pull_requests", "risks", "jira_issues"].freeze
   MAIN_BRANCHES = ["master", "develop", "staging", "production"].freeze
 
+  delegate :files, :error, to: :comparison
+
   def initialize(project, previous_commit, reference)
     @project = project
     @repo = project.repository_path
@@ -25,10 +27,6 @@ class Changeset
 
   def commits
     @commits ||= comparison.commits.map { |data| Commit.new(@project, data) }
-  end
-
-  def files
-    comparison.files
   end
 
   def pull_requests
@@ -62,10 +60,6 @@ class Changeset
   # only reliable when comparing SHAs, but we only use it as "skip lookups" guard
   def empty?
     @previous_commit == @reference
-  end
-
-  def error
-    comparison.error
   end
 
   private

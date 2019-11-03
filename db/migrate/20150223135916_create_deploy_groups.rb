@@ -18,7 +18,7 @@ class CreateDeployGroups < ActiveRecord::Migration[4.2]
     end
     add_foreign_key :deploy_groups, :environments
 
-    create_table :deploy_groups_stages, id: false do |t|
+    create_table :deploy_groups_stages, id: false do |t| # rubocop:disable Rails/CreateTableWithTimestamps
       t.belongs_to :deploy_group, index: true
       t.belongs_to :stage, index: true
     end

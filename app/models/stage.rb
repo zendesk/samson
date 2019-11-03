@@ -86,7 +86,7 @@ class Stage < ActiveRecord::Base
 
   # last active or succeeded deploy
   def deployed_or_running_deploy
-    deploys.joins(:job).where("jobs.status" => Job::ACTIVE_STATUSES + ["succeeded"]).first
+    deploys.joins(:job).find_by("jobs.status" => Job::ACTIVE_STATUSES + ["succeeded"])
   end
 
   def create_deploy(user, attributes = {})
@@ -147,7 +147,7 @@ class Stage < ActiveRecord::Base
     commands.map(&:command).join("\n")
   end
 
-  def destroy
+  def destroy # rubocop:disable Rails/ActiveRecordOverride try using before_destroy or document why we need it
     mark_for_destruction
     super
   end

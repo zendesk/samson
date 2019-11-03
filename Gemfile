@@ -104,6 +104,7 @@ group :development, :test do
   gem 'awesome_print'
   gem 'brakeman'
   gem 'rubocop'
+  gem 'rubocop-rails'
   gem 'flay'
   gem 'parallel_tests'
   gem 'forking_test_runner'

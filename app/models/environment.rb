@@ -11,8 +11,8 @@ class Environment < ActiveRecord::Base
   has_many :template_stages, -> { where(is_template: true) },
     through: :deploy_groups, class_name: 'Stage', inverse_of: nil
 
-  validates_presence_of :name
-  validates_uniqueness_of :name
+  validates :name, presence: true
+  validates :name, uniqueness: true
 
   # also used by private plugin
   def self.env_deploy_group_array(include_all: true)

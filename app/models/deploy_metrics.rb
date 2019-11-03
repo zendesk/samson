@@ -20,7 +20,7 @@ class DeployMetrics
     scope = Deploy.succeeded.where(jobs: {commit: @deploy.commit}).reorder(:id)
     return {} unless @deploy == scope.where(stage: production_stages).first!
 
-    first_staging_deploy = scope.where(stage: staging_stages).first
+    first_staging_deploy = scope.find_by(stage: staging_stages)
 
     times = {}
     if time = pr_production

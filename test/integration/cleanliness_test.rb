@@ -15,7 +15,7 @@ describe "cleanliness" do
   end
 
   def assert_content(files)
-    files -= [File.expand_path(__FILE__).sub("#{Rails.root}/", '')]
+    files -= [File.expand_path(__FILE__).sub("#{Bundler.root}/", '')]
     bad = files.map do |f|
       error = yield File.read(f)
       "#{f}: #{error}" if error

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 4
+SingleCov.covered! uncovered: 3
 
 describe Stage do
   subject { stages(:test_staging) }
@@ -391,8 +391,8 @@ describe Stage do
 
   describe '#save' do
     it 'touches the stage and project when only changing deploy_groups for cache invalidation' do
-      stage.update_column(:updated_at, 1.minutes.ago)
-      stage.project.update_column(:updated_at, 1.minutes.ago)
+      stage.update_column(:updated_at, 1.minute.ago)
+      stage.project.update_column(:updated_at, 1.minute.ago)
 
       stage.deploy_groups << deploy_groups(:pod1)
       stage.save

@@ -15,10 +15,10 @@ describe SamsonAwsEcr::Engine do
   let(:base64_authorization_token)     { Base64.encode64(username + ":" + password) }
   let(:old_base64_authorization_token) { Base64.encode64("old #{username}:old #{password}") }
   let(:fresh_response) do
-    {authorization_data: [{authorization_token: base64_authorization_token, expires_at: 2.hour.from_now}]}
+    {authorization_data: [{authorization_token: base64_authorization_token, expires_at: 2.hours.from_now}]}
   end
   let(:expired_response) do
-    {authorization_data: [{authorization_token: old_base64_authorization_token, expires_at: 2.hour.ago}]}
+    {authorization_data: [{authorization_token: old_base64_authorization_token, expires_at: 2.hours.ago}]}
   end
 
   with_registries ['12322323232323.dkr.ecr.us-west-1.amazonaws.com']
@@ -87,7 +87,7 @@ describe SamsonAwsEcr::Engine do
     describe '.ensure_repositories' do
       before do
         ENV.stubs(fetch: 'x')
-        DockerRegistry.first.credentials_expire_at = 2.hour.from_now
+        DockerRegistry.first.credentials_expire_at = 2.hours.from_now
       end
 
       it 'creates missing repository' do

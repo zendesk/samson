@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 class Changeset::IssueComment
   attr_reader :repo, :data, :comment
+  delegate :sha, :branch, to: :pull_request
   VALID_ACTIONS = ['created'].freeze
 
   def initialize(repo, data)
@@ -17,14 +18,6 @@ class Changeset::IssueComment
   def self.valid_webhook?(payload)
     return false unless VALID_ACTIONS.include? payload['action']
     payload.dig('comment', 'body') =~ Changeset::PullRequest::WEBHOOK_FILTER
-  end
-
-  def sha
-    pull_request.sha
-  end
-
-  def branch
-    pull_request.branch
   end
 
   def service_type

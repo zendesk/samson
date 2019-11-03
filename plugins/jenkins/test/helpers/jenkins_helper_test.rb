@@ -30,26 +30,26 @@ describe JenkinsHelper do
     it "shows Passed message when build status in database is PASSED" do
       jenkins_job = stub_jenkins_job("SUCCESS", job_url)
       html = jenkins_status_panel(deploy, jenkins_job)
-      html.must_equal "<a target=\"_blank\" href=\"#{job_url}\"><div class=\"alert alert-success\">Jenkins build test_job for Staging has passed.</div></a>"
+      html.must_equal "<a target=\"_blank\" rel=\"noopener\" href=\"#{job_url}\"><div class=\"alert alert-success\">Jenkins build test_job for Staging has passed.</div></a>"
     end
 
     it "shows Failed message when build status in database is FAILED" do
       jenkins_job = stub_jenkins_job("FAILURE", job_url)
       html = jenkins_status_panel(deploy, jenkins_job)
-      html.must_equal "<a target=\"_blank\" href=\"#{job_url}\"><div class=\"alert alert-danger\">Jenkins build test_job for Staging has failed.</div></a>"
+      html.must_equal "<a target=\"_blank\" rel=\"noopener\" href=\"#{job_url}\"><div class=\"alert alert-danger\">Jenkins build test_job for Staging has failed.</div></a>"
     end
 
     it "links to index page when no url was returned" do
       jenkins_job = stub_jenkins_job("FAILURE", nil)
       html = jenkins_status_panel(deploy, jenkins_job)
-      html.must_equal "<a target=\"_blank\" href=\"http://www.test-url.com/job/test_job\"><div class=\"alert alert-danger\">Jenkins build test_job for Staging has failed.</div></a>"
+      html.must_equal "<a target=\"_blank\" rel=\"noopener\" href=\"http://www.test-url.com/job/test_job\"><div class=\"alert alert-danger\">Jenkins build test_job for Staging has failed.</div></a>"
     end
 
     it "shows Passed from jenkins when build starts" do
       jenkins_job = stub_jenkins_job_without_status
       assert_build_detail("SUCCESS") do
         html = jenkins_status_panel(deploy, jenkins_job)
-        html.must_equal "<a target=\"_blank\" href=\"#{job_url}\"><div class=\"alert alert-success\">Jenkins build test_job for Staging has passed.</div></a>"
+        html.must_equal "<a target=\"_blank\" rel=\"noopener\" href=\"#{job_url}\"><div class=\"alert alert-success\">Jenkins build test_job for Staging has passed.</div></a>"
       end
     end
 
@@ -57,21 +57,21 @@ describe JenkinsHelper do
       jenkins_job = stub_jenkins_job_without_status
       assert_build_detail("FAILURE") do
         html = jenkins_status_panel(deploy, jenkins_job)
-        html.must_equal "<a target=\"_blank\" href=\"#{job_url}\"><div class=\"alert alert-danger\">Jenkins build test_job for Staging has failed.</div></a>"
+        html.must_equal "<a target=\"_blank\" rel=\"noopener\" href=\"#{job_url}\"><div class=\"alert alert-danger\">Jenkins build test_job for Staging has failed.</div></a>"
       end
     end
 
     it "shows Unstable message when build status in database is UNSTABLE" do
       jenkins_job = stub_jenkins_job("UNSTABLE", job_url)
       html = jenkins_status_panel(deploy, jenkins_job)
-      html.must_equal "<a target=\"_blank\" href=\"#{job_url}\"><div class=\"alert alert-warning\">Jenkins build test_job for Staging was unstable.</div></a>"
+      html.must_equal "<a target=\"_blank\" rel=\"noopener\" href=\"#{job_url}\"><div class=\"alert alert-warning\">Jenkins build test_job for Staging was unstable.</div></a>"
     end
 
     it "shows when the jenkins job is missing" do
       jenkins_job = stub_jenkins_job_without_status
       assert_build_detail("doesnt-matter", status: 404) do
         html = jenkins_status_panel(deploy, jenkins_job)
-        html.must_equal "<a target=\"_blank\" href=\"#\"><div class=\"alert alert-warning\">Jenkins build test_job for Staging Requested component is not found on the Jenkins CI server.</div></a>"
+        html.must_equal "<a target=\"_blank\" rel=\"noopener\" href=\"#\"><div class=\"alert alert-warning\">Jenkins build test_job for Staging Requested component is not found on the Jenkins CI server.</div></a>"
       end
     end
 
@@ -88,7 +88,7 @@ describe JenkinsHelper do
       jenkins_job = stub_jenkins_job("SUCCESS", job_url)
       jenkins_job.name = "<script>FOOOO</script>"
       html = jenkins_status_panel(deploy, jenkins_job)
-      html.must_equal "<a target=\"_blank\" href=\"#{job_url}\"><div class=\"alert alert-success\">Jenkins build &lt;script&gt;FOOOO&lt;/script&gt; for Staging has passed.</div></a>"
+      html.must_equal "<a target=\"_blank\" rel=\"noopener\" href=\"#{job_url}\"><div class=\"alert alert-success\">Jenkins build &lt;script&gt;FOOOO&lt;/script&gt; for Staging has passed.</div></a>"
     end
   end
 end
