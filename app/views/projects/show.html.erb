@@ -21,9 +21,7 @@
     </thead>
     <tbody>
       <% if @project.stages.to_a.any? %>
-        <% cache [@project, 'stages', Lock.cache_key, @project.stages.map(&:updated_at).max] do %>
-          <%= render partial: "stage", collection: @project.stages %>
-        <% end %>
+        <%= render partial: "stage", collection: @project.stages, cached: true %>
       <% else %>
         <tr>
           <td colspan="3">
