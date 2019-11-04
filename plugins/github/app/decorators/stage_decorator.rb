@@ -8,7 +8,7 @@ Stage.class_eval do
     if comment = github_pull_request_comment.presence
       comment % Hash[GithubNotification::SUPPORTED_KEYS.map { |k| [k, ''] }] # Validate no extra keys are supplied
     end
-  rescue KeyError => e
+  rescue KeyError, ArgumentError => e
     errors.add(:github_pull_request_comment, e.message)
   end
 end
