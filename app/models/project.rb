@@ -334,7 +334,7 @@ class Project < ActiveRecord::Base
   # https://foo.com/bar/baz.git -> git@foo.com:bar/baz.git
   def private_repository_url
     uri = URI.parse(repository_url)
-    uri.path.slice!(0, 1)
+    uri.path&.slice!(0, 1)
     "git@#{uri.host}:#{uri.path}"
   end
 
