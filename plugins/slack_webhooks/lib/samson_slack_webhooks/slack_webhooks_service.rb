@@ -42,7 +42,9 @@ module SamsonSlackWebhooks
 
       begin
         response = Faraday.post(webhook.webhook_url, payload: payload.to_json)
-        raise "Error #{response.status} #{response.body.to_s[0..100]}" if response.status >= 300
+        if response.status >= 300
+          raise "Error: channel #{webhook.channel.inspect} #{response.status} #{response.body.to_s[0..100]}"
+        end
       rescue Faraday::ClientError, RuntimeError => e
         Samson::ErrorNotifier.notify(
           e,
