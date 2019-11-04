@@ -10,9 +10,9 @@ class SlackAppController < ApplicationController
     @need_to_connect_app = app_token.nil?
     @need_to_connect_user = @current_user_from_slack.nil?
     @missing_configs = []
-    @missing_configs << 'SLACK_CLIENT_ID' unless ENV['SLACK_CLIENT_ID'].present?
-    @missing_configs << 'SLACK_CLIENT_SECRET' unless ENV['SLACK_CLIENT_SECRET'].present?
-    @missing_configs << 'SLACK_VERIFICATION_TOKEN' unless ENV['SLACK_VERIFICATION_TOKEN'].present?
+    @missing_configs << 'SLACK_CLIENT_ID' if ENV['SLACK_CLIENT_ID'].blank?
+    @missing_configs << 'SLACK_CLIENT_SECRET' if ENV['SLACK_CLIENT_SECRET'].blank?
+    @missing_configs << 'SLACK_VERIFICATION_TOKEN' if ENV['SLACK_VERIFICATION_TOKEN'].blank?
 
     if params[:code]
       # Got an OAuth code, let's fetch our tokens

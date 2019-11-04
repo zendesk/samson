@@ -12,7 +12,7 @@ describe 'Unauthorized' do
 
   describe '#respond' do
     def request(params: {})
-      get path, {controller: "ping", action: "show"}.merge(params), headers
+      get path, {controller: "ping", action: "show"}.merge(params), headers # rubocop:disable Rails/HttpPositionalArguments
     end
 
     describe 'as html' do

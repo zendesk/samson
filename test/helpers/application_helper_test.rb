@@ -551,7 +551,7 @@ describe ApplicationHelper do
   describe "#redirect_to_field" do
     let(:root_url) { 'http://foobar.com/' }
 
-    before { stubs(request: stub(referrer: "#{root_url}referrer"), params: {redirect_to: '/params'}) }
+    before { stubs(request: stub(referer: "#{root_url}referer"), params: {redirect_to: '/params'}) }
 
     it "stores current parameter" do
       redirect_to_field.must_include "value=\"/params\""
@@ -559,23 +559,23 @@ describe ApplicationHelper do
 
     it "does not store empty parameter" do
       params[:redirect_to] = ""
-      redirect_to_field.must_include "value=\"/referrer\""
+      redirect_to_field.must_include "value=\"/referer\""
     end
 
     describe "without param" do
       before { params.delete(:redirect_to) }
 
-      it "uses referrer when param is missing" do
-        redirect_to_field.must_include "value=\"/referrer\""
+      it "uses referer when param is missing" do
+        redirect_to_field.must_include "value=\"/referer\""
       end
 
-      it "does not use referrer from other page since redirect_back_or would not work" do
-        assert request.stubs(:referrer, request.referrer.sub(root_url, 'http://hacky.com/'))
+      it "does not use referer from other page since redirect_back_or would not work" do
+        assert request.stubs(:referer, request.referer.sub(root_url, 'http://hacky.com/'))
         redirect_to_field.must_be_nil
       end
 
       it "is empty when nothing is known" do
-        request.stubs(:referrer).returns(nil)
+        request.stubs(:referer).returns(nil)
         redirect_to_field.must_be_nil
       end
     end

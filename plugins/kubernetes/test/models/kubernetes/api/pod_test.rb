@@ -254,7 +254,7 @@ describe Kubernetes::Api::Pod do
       pod_with_client.expects(:timeout_logs).never
       stub_request(:get, log_url).
         and_return(body: "HELLO\n")
-      pod_with_client.logs('some-container', 1.seconds.from_now).must_equal "HELLO\n"
+      pod_with_client.logs('some-container', 1.second.from_now).must_equal "HELLO\n"
     end
   end
 

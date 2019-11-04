@@ -16,7 +16,7 @@ class Deploy < ActiveRecord::Base
 
   default_scope { order(id: :desc) }
 
-  validates_presence_of :reference
+  validates :reference, presence: true
   validate :validate_stage_is_unlocked, on: :create
   validate :validate_stage_uses_deploy_groups_properly, on: :create
 

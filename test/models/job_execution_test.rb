@@ -400,9 +400,7 @@ describe JobExecution do
   end
 
   describe "#perform" do
-    def perform
-      execution.perform
-    end
+    delegate :perform, to: :execution
 
     def with_hidden_errors
       Rails.application.config.consider_all_requests_local = false

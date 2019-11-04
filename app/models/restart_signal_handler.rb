@@ -20,7 +20,7 @@ class RestartSignalHandler
         end
 
         # start all csv-exports jobs waiting for restart
-        CsvExport.where(status: 'pending').each do |export|
+        CsvExport.where(status: 'pending').find_each do |export|
           JobQueue.perform_later(CsvExportJob.new(export))
         end
 

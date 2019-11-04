@@ -2,6 +2,8 @@
 
 class DockerRegistry
   class << self
+    delegate :first, to: :all
+
     def check_config!
       return if ENV['DOCKER_REGISTRIES'].present?
       if ENV['DOCKER_REGISTRY']
@@ -18,10 +20,6 @@ class DockerRegistry
     # TODO: might be best to use .fetch here and fail when it is an empty string to prevent weird usecases
     def all
       @all ||= ENV['DOCKER_REGISTRIES'].to_s.split(',').map { |url| new(url) }
-    end
-
-    def first
-      all.first
     end
   end
 

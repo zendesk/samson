@@ -71,7 +71,7 @@ module JsonRenderer
 
     render status: status, json: json
   rescue ActiveRecord::AssociationNotFoundError, JsonRenderer::ForbiddenIncludesError
-    render status: 400, json: {status: 400, error: $!.message}
+    render status: :bad_request, json: {status: 400, error: $!.message}
   end
 
   def permit_requested(field, allowed = [])

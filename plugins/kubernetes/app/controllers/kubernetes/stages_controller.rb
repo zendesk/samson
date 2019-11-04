@@ -10,7 +10,7 @@ class Kubernetes::StagesController < ResourceController
   def manifest_preview
     git_ref = params[:git_ref] || current_project.release_branch || DEFAULT_BRANCH
     git_sha = current_project.repository.commit_from_ref(git_ref)
-    raise Samson::Hooks::UserError, 'Git reference not found' unless git_sha.present?
+    raise Samson::Hooks::UserError, 'Git reference not found' if git_sha.blank?
 
     # resolving builds can take some time, best to leave it off by default
     resolve_build = params[:resolve_build] == 'true'
@@ -35,7 +35,7 @@ class Kubernetes::StagesController < ResourceController
 
     render body: yaml
   rescue Samson::Hooks::UserError
-    render status: 400, body: yaml_comment($!.message)
+    render status: :bad_request, body: yaml_comment($!.message)
   end
 
   private

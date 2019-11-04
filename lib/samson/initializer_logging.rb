@@ -5,7 +5,7 @@
 if ENV['SERVER_MODE'] && !Rails.env.development?
   Rails::Engine.prepend(Module.new do
     def load(file, *)
-      Rails.logger.info "Loading initializer #{file.sub("#{Rails.root}/", "")}"
+      Rails.logger.info "Loading initializer #{file.sub("#{Bundler.root}/", "")}"
       super
     end
   end)

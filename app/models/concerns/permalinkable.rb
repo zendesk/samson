@@ -17,9 +17,9 @@ module Permalinkable
     def find_by_param(param)
       param = param.to_s
       if param.match?(/^\d+$/)
-        where("permalink = ? OR id = ?", param, param).first
+        find_by("permalink = ? OR id = ?", param, param)
       else
-        where(permalink: param).first
+        find_by(permalink: param)
       end
     end
 

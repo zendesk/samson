@@ -15,8 +15,8 @@ class OutboundWebhook < ActiveRecord::Base
     message: "one webhook per (stage, url) combination."
   }
   validate :url_is_not_relative
-  validates_presence_of :username, if: proc { |outbound_webhook| outbound_webhook.password.present? }
-  validates_presence_of :password, if: proc { |outbound_webhook| outbound_webhook.username.present? }
+  validates :username, presence: {if: proc { |outbound_webhook| outbound_webhook.password.present? }}
+  validates :password, presence: {if: proc { |outbound_webhook| outbound_webhook.username.present? }}
 
   def deliver(deploy)
     Rails.logger.info "Sending webhook notification to #{url}. Deploy: #{deploy.id}"

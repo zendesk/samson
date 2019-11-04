@@ -22,7 +22,7 @@ class Warden::Strategies::Doorkeeper < ::Warden::Strategies::Base
     elsif !(user = User.find_by_id(token.resource_owner_id))
       halt_json "Bearer token belongs to deleted user #{token.resource_owner_id}"
     else
-      token.update_column(:last_used_at, Time.now) unless token.last_used_at&.> 1.minutes.ago
+      token.update_column(:last_used_at, Time.now) unless token.last_used_at&.> 1.minute.ago
       request.session_options[:skip] = true # do not store user in session
       success! user
     end

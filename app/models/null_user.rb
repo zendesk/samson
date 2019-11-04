@@ -25,6 +25,6 @@ class NullUser
 
   def user
     return @user if defined?(@user)
-    @user = User.with_deleted { User.where(id: id).first }
+    @user = User.with_deleted { User.find_by(id: id) }
   end
 end

@@ -41,7 +41,7 @@ module JenkinsHelper
     jenkins_job_url ||= File.join(Samson::Jenkins::URL, "job", jenkins_job.name)
 
     content = "Jenkins build #{jenkins_job.name} for #{deploy.stage.name} #{status_message}"
-    link_to jenkins_job_url, target: "_blank" do
+    link_to jenkins_job_url, target: "_blank", rel: "noopener" do
       content_tag :div, content, class: "alert alert-#{status}"
     end
   end
