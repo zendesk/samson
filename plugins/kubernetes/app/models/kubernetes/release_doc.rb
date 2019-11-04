@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 module Kubernetes
   class ReleaseDoc < ActiveRecord::Base
+    # TODO: remove once they are removed + samson is restarted
+    self.ignored_columns = ["requests_cpu", "requests_memory", "no_cpu_limit"]
     self.table_name = 'kubernetes_release_docs'
 
     belongs_to :kubernetes_role, class_name: 'Kubernetes::Role', inverse_of: nil
