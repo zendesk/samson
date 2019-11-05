@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_11_01_221308) do
+ActiveRecord::Schema.define(version: 2019_11_05_170029) do
 
   create_table "audits" do |t|
     t.integer "auditable_id", null: false
@@ -388,15 +388,25 @@ ActiveRecord::Schema.define(version: 2019_11_01_221308) do
     t.index ["uid"], name: "index_oauth_applications_on_uid", unique: true, length: 191
   end
 
+  create_table "outbound_webhook_stages" do |t|
+    t.integer "stage_id", null: false
+    t.integer "outbound_webhook_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["outbound_webhook_id", "stage_id"], name: "index_on_outbound_webhook_id", unique: true
+    t.index ["stage_id"], name: "index_outbound_webhook_stages_on_stage_id"
+  end
+
   create_table "outbound_webhooks", id: :integer do |t|
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
-    t.integer "project_id", null: false
-    t.integer "stage_id", null: false
+    t.integer "project_id", default: 0, null: false
+    t.integer "stage_id", default: 0, null: false
     t.string "url", null: false
     t.string "username"
     t.string "password"
+    t.boolean "global", default: false, null: false
     t.index ["deleted_at"], name: "index_outbound_webhooks_on_deleted_at"
     t.index ["project_id"], name: "index_outbound_webhooks_on_project_id"
   end

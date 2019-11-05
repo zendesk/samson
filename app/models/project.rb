@@ -41,7 +41,6 @@ class Project < ActiveRecord::Base
   has_many :deploys, dependent: nil
   has_many :jobs, -> { order(id: :desc) }, dependent: nil, inverse_of: :project
   has_many :webhooks, dependent: :destroy
-  has_many :outbound_webhooks, dependent: :destroy
   has_many :commands, dependent: :destroy
   has_many :user_project_roles, dependent: :destroy
   has_many :users, through: :user_project_roles, inverse_of: :projects

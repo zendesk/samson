@@ -1,0 +1,25 @@
+<%= page_title "Edit Outbound Webhook" %>
+
+<% stages = @outbound_webhook.stages.to_a.presence %>
+
+<section>
+  <%= form_for @outbound_webhook, html: { class: "form-horizontal" } do |form| %>
+    <%= render 'fields', form: form %>
+
+    <% if stages %>
+      <div class="form-group">
+        <%= form.label :usage, value: "Usage", class: "col-lg-2 control-label" %>
+        <div class="col-lg4 col-lg-offset-2">
+          <ul>
+            <% stages.each do |stage| %>
+              <li><%= link_to "#{stage.name} - #{stage.project.name}", project_webhooks_path(stage.project) %></li>
+            <% end %>
+          </ul>
+        </div>
+      </div>
+    <% end %>
+
+    <%= form.actions delete: !!stages, history: true %>
+  <% end %>
+</section>
+

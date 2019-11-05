@@ -6,67 +6,105 @@ SingleCov.covered!
 describe OutboundWebhooksController do
   let(:project) { projects(:test) }
   let(:stage) { stages(:test_staging) }
-  let(:params) { {url: "https://zendesk.com", stage_id: stage.id} }
-  let(:invalid_params) { {url: "https://zendesk.com", username: "poopthe@cat.com", stage_id: stage.id} }
-  let(:webhook) { project.outbound_webhooks.create!(params) }
+  let(:params) { {url: "https://zendesk.com"} }
+  let!(:webhook) { OutboundWebhook.create!(params.merge(stages: [stage])) }
 
   as_a :viewer do
-    unauthorized :post, :create, project_id: :foo
-    unauthorized :put, :update, project_id: :foo, id: 1
-    unauthorized :delete, :destroy, project_id: :foo, id: 1
+    unauthorized :post, :create
+    unauthorized :put, :update, id: 1
+    unauthorized :delete, :destroy, id: 1
 
     describe "#index" do
+      before { OutboundWebhook.create!(url: "http://something.else") }
+
+      it "renders html" do
+        get :index
+        assert_response :success
+      end
+
       it "renders json" do
         webhook.update!(username: "foo", password: "bar")
-        get :index, params: {project_id: project}, format: :json
+        get :index, format: :json
         assert_response :success
-        json = JSON.parse(response.body).fetch("webhooks").fetch(0)
+        hooks = JSON.parse(response.body).fetch("outbound_webhooks")
+        hooks.size.must_equal 2
+        json = hooks.detect { |h| h["id"] == webhook.id }
         json["username"].must_equal "foo"
         json.keys.wont_include "password"
+      end
+
+      it "can find for project" do
+        get :index, params: {project_id: project}, format: :json
+        assert_response :success
+        JSON.parse(response.body).fetch("outbound_webhooks").size.must_equal 1
       end
     end
   end
 
   as_a :project_deployer do
+    unauthorized :put, :update, id: 1
+    unauthorized :put, :destroy, id: 1
+
     describe '#create' do
-      describe 'with valid params' do
-        it 'redirects to :index' do
-          assert_difference 'OutboundWebhook.count', 1 do
-            post :create, params: {project_id: project.to_param, outbound_webhook: params}
+      it 'creates + links + redirects to :index' do
+        assert_difference 'OutboundWebhook.count', 1 do
+          assert_difference 'OutboundWebhookStage.count', 1 do
+            post :create, params: {stage_id: stage.id, outbound_webhook: params}
             assert_redirected_to project_webhooks_path(project)
           end
         end
-
-        it 'renders JSON' do
-          post :create, params: {project_id: project.to_param, outbound_webhook: params}, format: :json
-          assert_response :success
-          outbound_webhook = JSON.parse(response.body)
-          outbound_webhook['outbound_webhook']['url'].must_equal params[:url]
-        end
       end
 
-      describe 'with invalid params' do
-        it 'renders to :index' do
-          assert_difference 'OutboundWebhook.count', 0 do
-            post :create, params: {project_id: project.to_param, outbound_webhook: invalid_params}
-            assert_equal flash[:alert], "Failed to create!"
-            assert assigns[:resource] # for rendering errors
-            assert_template 'webhooks/index'
-          end
+      it 'can create via json' do
+        post :create, params: {stage_id: stage.id, outbound_webhook: params}, format: :json
+        assert_response :success
+        outbound_webhook = JSON.parse(response.body)
+        outbound_webhook['outbound_webhook']['url'].must_equal params[:url]
+      end
+
+      it 'shows errors to user when invalid' do
+        assert_difference 'OutboundWebhook.count', 0 do
+          post :create, params: {stage_id: stage.id, outbound_webhook: params.merge(username: 'foo')}
+          assert_equal flash[:alert], "Failed to create!"
+          assert assigns[:resource] # for rendering errors
+          assert_template 'webhooks/index' # form will display errors
         end
       end
     end
 
+    describe "#destroy" do
+      it "unlinks and destroys a stage hook" do
+        assert_difference 'OutboundWebhook.count', -1 do
+          assert_difference 'OutboundWebhookStage.count', -1 do
+            delete :destroy, params: {id: webhook.id, stage_id: stage.id}
+            assert_redirected_to project_webhooks_path(project)
+          end
+        end
+      end
+
+      it "unlinks from global" do
+        webhook.update_column(:global, true)
+        assert_difference 'OutboundWebhook.count', 0 do
+          assert_difference 'OutboundWebhookStage.count', -1 do
+            delete :destroy, params: {id: webhook.id, stage_id: stage.id}
+            assert_redirected_to project_webhooks_path(project)
+          end
+        end
+      end
+    end
+  end
+
+  as_a :deployer do
     describe '#update' do
-      it "fails to update" do
+      it "fails to update via json" do
         webhook
         params[:url] = ""
-        patch :update, params: {id: webhook.id, project_id: project, outbound_webhook: params}, format: :json
+        patch :update, params: {id: webhook.id, outbound_webhook: params}, format: :json
         assert_response 422
       end
 
       it "renders JSON" do
-        patch :update, params: {id: webhook.id, project_id: project, outbound_webhook: params}, format: :json
+        patch :update, params: {id: webhook.id, outbound_webhook: params}, format: :json
         assert_response :success
         outbound_webhook = JSON.parse(response.body).fetch('outbound_webhook')
         outbound_webhook.fetch('url').must_equal params[:url]
@@ -74,10 +112,17 @@ describe OutboundWebhooksController do
     end
 
     describe "#destroy" do
-      it "deletes the hook" do
-        delete :destroy, params: {project_id: project.to_param, id: webhook.id}
+      it "deletes unused hook" do
+        webhook.outbound_webhook_stages.destroy_all
+        delete :destroy, params: {id: webhook.id}
         refute OutboundWebhook.find_by_id(webhook.id)
-        assert_redirected_to project_webhooks_path(project)
+        assert_redirected_to "/outbound_webhooks"
+      end
+
+      it "refuses to delete used hook" do
+        delete :destroy, params: {id: webhook.id}
+        webhook.reload
+        assert_redirected_to "/outbound_webhooks/#{webhook.id}"
       end
     end
   end

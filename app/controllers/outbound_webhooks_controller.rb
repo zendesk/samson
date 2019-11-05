@@ -7,27 +7,52 @@ class OutboundWebhooksController < ResourceController
   before_action :authorize_project_deployer!, except: [:index]
   before_action :set_resource, only: [:show, :edit, :update, :destroy, :new, :create]
 
-  def index
-    respond_to do |format|
-      format.json { render_as_json :webhooks, @project.outbound_webhooks, nil }
-    end
-  end
-
+  # creation is done from project webhooks page
   def create
     super(template: 'webhooks/index')
   end
 
+  def destroy
+    if @stage # unlink (does not handle json or failure)
+      @resource.outbound_webhook_stages.where(stage: @stage).destroy_all
+      @resource.destroy! unless @resource.global?
+      redirect_to project_webhooks_path(@stage.project), notice: "Deleted"
+    else
+      super
+    end
+  end
+
   private
+
+  def search_resources
+    scope = super
+    if project_id = params[:project_id]
+      stage_ids = Project.find_by_param!(project_id).stages.pluck(:id)
+      ids = OutboundWebhookStage.where(stage_id: stage_ids).pluck(:outbound_webhook_id).uniq
+      scope = scope.where(id: ids)
+    end
+    scope
+  end
 
   def resource_path
     resources_path
   end
 
   def resources_path
-    [@project, 'webhooks']
+    @project ? [@project, 'webhooks'] : super
   end
 
   def resource_params
-    super.permit(:stage_id, :url, :username, :password).merge(project: current_project)
+    allowed = [:url, :username, :password]
+    allowed << :global if action_name == "create"
+    params = super.permit(*allowed)
+    params[:stages] = [@stage] if @stage && action_name == "create"
+    params
+  end
+
+  def require_project
+    return unless stage_id = params[:stage_id] # not scoped -> need to be global deployer
+    @stage = Stage.find(stage_id)
+    @project = @stage.project
   end
 end
