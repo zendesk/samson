@@ -6,7 +6,7 @@ SingleCov.covered!
 describe AuditsController do
   def create_audit(user)
     Audited.audit_class.as_user(user) do
-      stage.update_attributes(name: "Fooo #{rand(9999999)}")
+      stage.update(name: "Fooo #{rand(9999999)}")
     end
   end
 

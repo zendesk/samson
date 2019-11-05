@@ -47,7 +47,7 @@ class CsvExport < ActiveRecord::Base
   end
 
   def status!(status)
-    update_attributes!(status: status)
+    update!(status: status)
   end
 
   def delete_file

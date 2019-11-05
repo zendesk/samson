@@ -498,8 +498,8 @@ describe ApplicationHelper do
     end
 
     it "shows number of entries" do
-      user.update_attributes!(name: "Foo")
-      user.update_attributes!(name: "Bar")
+      user.update!(name: "Foo")
+      user.update!(name: "Bar")
       link_to_history(user).must_include "History (2)"
     end
 

@@ -72,7 +72,7 @@ describe EnvironmentVariablesController do
       end
 
       it "can filter by scope_id and scope_type via json" do
-        env_var.update_attributes!(scope_id: 1, scope_type: 'DeployGroup')
+        env_var.update!(scope_id: 1, scope_type: 'DeployGroup')
         get :index, params: {search: {scope_id: env_var.scope_id, scope_type: env_var.scope_type}}, format: "json"
         assert_response :success
         body = JSON.parse(response.body)

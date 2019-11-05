@@ -197,7 +197,7 @@ describe Build do
 
   describe "#nil_out_blanks" do
     it "nils out dockerfile so it stays unique" do
-      build.update_attributes!(image_name: '   ')
+      build.update!(image_name: '   ')
       build.image_name.must_be_nil
     end
   end

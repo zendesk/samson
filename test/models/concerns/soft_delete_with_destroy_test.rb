@@ -29,7 +29,7 @@ describe SoftDeleteWithDestroy do
 
     it 'does not destroy when already deleted' do
       assert_difference 'StageCommand.count', 0 do
-        project.update_attributes!(deleted_at: Time.now)
+        project.update!(deleted_at: Time.now)
       end
     end
 

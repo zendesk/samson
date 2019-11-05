@@ -36,7 +36,7 @@ class EnvironmentVariableGroupsController < ApplicationController
   end
 
   def update
-    group.update_attributes!(attributes)
+    group.update!(attributes)
     redirect_to action: :index
   end
 

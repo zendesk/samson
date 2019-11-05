@@ -75,7 +75,7 @@ class BuildsController < ApplicationController
   end
 
   def update
-    success = @build.update_attributes(edit_build_params(validate: true))
+    success = @build.update(edit_build_params(validate: true))
     respond_to_save success, :ok, :edit
   end
 

@@ -486,38 +486,38 @@ describe Stage do
 
   describe "auditing" do
     it "tracks important changes" do
-      stage.update_attributes!(name: "Foo")
+      stage.update!(name: "Foo")
       stage.audits.size.must_equal 1
       stage.audits.first.audited_changes.must_equal "name" => ["Staging", "Foo"]
     end
 
     it "ignores unimportant changes" do
-      stage.update_attributes(order: 5, updated_at: 1.second.from_now)
+      stage.update(order: 5, updated_at: 1.second.from_now)
       stage.audits.size.must_equal 0
     end
 
     it "tracks selecting an existing command" do
       old = stage.command_ids
       new = old + [commands(:global).id]
-      stage.update_attributes!(command_ids: new)
+      stage.update!(command_ids: new)
       stage.audits.size.must_equal 1
       stage.audits.first.audited_changes.must_equal "script" => ["echo hello", "echo hello\necho global"]
     end
 
     it "does not track when commands do not change" do
-      stage.update_attributes!(command_ids: stage.command_ids.map(&:to_s))
+      stage.update!(command_ids: stage.command_ids.map(&:to_s))
       stage.audits.size.must_equal 0
     end
 
     it "tracks command removal" do
-      stage.update_attributes!(command_ids: [])
+      stage.update!(command_ids: [])
       stage.audits.size.must_equal 1
       stage.audits.first.audited_changes.must_equal "script" => ["echo hello", ""]
     end
 
     it "tracks command_ids reorder" do
       stage.send(:stage_commands).create!(command: commands(:global), position: 1)
-      stage.update_attributes!(command_ids: stage.command_ids.reverse)
+      stage.update!(command_ids: stage.command_ids.reverse)
       stage.audits.size.must_equal 1
       stage.audits.first.audited_changes.must_equal(
         "script" => ["echo hello\necho global", "echo global\necho hello"]

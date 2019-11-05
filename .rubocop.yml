@@ -235,10 +235,6 @@ Rails/LexicallyScopedActionFilter:
 Rails/ApplicationRecord:
   Enabled: false
 
-# TODO: enable and fix
-Rails/ActiveRecordAliases:
-  Enabled: false
-
 # Not helpful
 Rails/OutputSafety:
   Enabled: false

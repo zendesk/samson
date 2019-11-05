@@ -200,7 +200,7 @@ describe SamsonEnv do
     end
 
     it "can write groups not used by any projet" do
-      group.update_attributes!(projects: [])
+      group.update!(projects: [])
       assert call(users(:project_admin), :write, group)
     end
   end

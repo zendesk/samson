@@ -17,14 +17,14 @@ describe EnvironmentVariableGroup do
     let(:var) { group.environment_variables.first! }
 
     it "does not record an audit when env vars did not change" do
-      group.update_attributes!(environment_variables_attributes: [env_attributes.merge(id: var.id)])
+      group.update!(environment_variables_attributes: [env_attributes.merge(id: var.id)])
       project.audits.map(&:audited_changes).must_equal [
         {"environment_variables" => ["", "A=\"B\" # All"]},
       ]
     end
 
     it "record an audit on all projects when env vars did change" do
-      group.update_attributes!(environment_variables_attributes: [env_attributes.merge(id: var.id, value: 'NEW')])
+      group.update!(environment_variables_attributes: [env_attributes.merge(id: var.id, value: 'NEW')])
       project.audits.map(&:audited_changes).must_equal(
         [
           {"environment_variables" => ["", "A=\"B\" # All"]},
@@ -41,7 +41,7 @@ describe EnvironmentVariableGroup do
 
     describe "#variable_names" do
       it "gives unique variable names" do
-        group.update_attributes!(
+        group.update!(
           environment_variables_attributes: [
             {name: "B", value: "B", scope_type_and_id: "Environment-#{environments(:production)}"},
             {name: "C", value: "C", scope_type_and_id: "Environment-#{environments(:production)}"},

@@ -25,7 +25,7 @@ class Kubernetes::DeployGroupRolesController < ResourceController
     all_params = params.require(:kubernetes_deploy_group_roles)
     status = @kubernetes_deploy_group_roles.map do |deploy_group_role|
       role_params = all_params.require(deploy_group_role.id.to_s).permit(permitted_params)
-      deploy_group_role.update_attributes(role_params)
+      deploy_group_role.update(role_params)
     end
 
     if status.all?

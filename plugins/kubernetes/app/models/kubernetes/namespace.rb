@@ -41,7 +41,7 @@ module Kubernetes
         where(project_id: projects.map(&:id)).
         where("resource_name IS NOT NULL OR service_name IS NOT NULL")
       roles.find_each do |role|
-        role.update_attributes!(resource_name: nil, service_name: nil, manual_deletion_acknowledged: true)
+        role.update!(resource_name: nil, service_name: nil, manual_deletion_acknowledged: true)
       end
     end
 

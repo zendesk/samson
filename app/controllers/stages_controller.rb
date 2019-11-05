@@ -49,7 +49,7 @@ class StagesController < ResourceController
   def clone
     @stage = Stage.build_clone(@stage)
     if request.post?
-      @stage.update_attributes! resource_params
+      @stage.update! resource_params
       render json: {stage: @stage}
     else
       render :new

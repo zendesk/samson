@@ -17,7 +17,7 @@ describe OutboundWebhooksController do
 
     describe "#index" do
       it "renders json" do
-        webhook.update_attributes!(username: "foo", password: "bar")
+        webhook.update!(username: "foo", password: "bar")
         get :index, params: {project_id: project}, format: :json
         assert_response :success
         json = JSON.parse(response.body).fetch("webhooks").fetch(0)
