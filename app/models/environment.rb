@@ -9,7 +9,7 @@ class Environment < ActiveRecord::Base
 
   has_many :deploy_groups, dependent: :destroy
   has_many :template_stages, -> { where(is_template: true) },
-    through: :deploy_groups, class_name: 'Stage', inverse_of: nil
+    through: :deploy_groups, class_name: 'Stage', inverse_of: false
 
   validates :name, presence: true
   validates :name, uniqueness: true

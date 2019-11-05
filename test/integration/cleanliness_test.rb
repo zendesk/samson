@@ -270,7 +270,7 @@ describe "cleanliness" do
       model.reflect_on_all_associations.map do |association|
         next if association.name == :audits # should not be cleaned up and added by external helper
         next if association.options[:polymorphic] # TODO: should verify all possible types have a cleanup association
-        next if association.options.fetch(:inverse_of, false).nil? # disabled on purpose
+        next if association.options[:inverse_of] == false # disabled on purpose
         next if association.inverse_of
         "#{model.name} #{association.name}"
       end
@@ -281,7 +281,7 @@ describe "cleanliness" do
         These associations need an inverse association.
         For example project has stages and stage has project.
         If automatic connection does not work, use `:inverse_of` option on the association.
-        If inverse association is missing AND the inverse should not destroyed when dependency is destroyed, use `inverse_of: nil`.
+        If inverse association is missing AND the inverse should not destroyed when dependency is destroyed, use `inverse_of: false`.
         #{bad.join("\n")}
       TEXT
     )

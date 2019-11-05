@@ -3,7 +3,7 @@ class Job < ActiveRecord::Base
   belongs_to :project, inverse_of: :jobs
   belongs_to :user, -> { unscope(where: :deleted_at) }, inverse_of: :jobs
   belongs_to :canceller, -> { unscope(where: "deleted_at") },
-    class_name: 'User', optional: true, inverse_of: nil
+    class_name: 'User', optional: true, inverse_of: false
 
   has_one :deploy, dependent: nil
   has_one :build, dependent: nil, inverse_of: :docker_build_job

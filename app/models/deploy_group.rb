@@ -14,7 +14,7 @@ class DeployGroup < ActiveRecord::Base
   has_many :deploy_groups_stages, dependent: :destroy
   has_many :stages, through: :deploy_groups_stages, inverse_of: :deploy_groups
   has_many :template_stages, -> { where(is_template: true) },
-    through: :deploy_groups_stages, source: :stage, inverse_of: nil
+    through: :deploy_groups_stages, source: :stage, inverse_of: false
 
   delegate :production?, to: :environment
 

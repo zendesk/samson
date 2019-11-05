@@ -22,7 +22,7 @@ class User < ActiveRecord::Base
   has_many :builds, dependent: nil, foreign_key: :created_by, inverse_of: :creator
   has_many :jobs, dependent: nil, inverse_of: :user
   has_many :access_tokens,
-    dependent: :destroy, class_name: 'Doorkeeper::AccessToken', foreign_key: :resource_owner_id, inverse_of: nil
+    dependent: :destroy, class_name: 'Doorkeeper::AccessToken', foreign_key: :resource_owner_id, inverse_of: false
 
   validates :role_id, inclusion: {in: Role.all.map(&:id)}
 

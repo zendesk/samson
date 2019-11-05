@@ -3,7 +3,7 @@ module Kubernetes
   class Release < ActiveRecord::Base
     self.table_name = 'kubernetes_releases'
 
-    belongs_to :user, inverse_of: nil
+    belongs_to :user, inverse_of: false
     belongs_to :project, inverse_of: :kubernetes_releases
     belongs_to :deploy, inverse_of: :kubernetes_release
     has_many :release_docs,
@@ -11,7 +11,7 @@ module Kubernetes
       foreign_key: 'kubernetes_release_id',
       dependent: :destroy,
       inverse_of: :kubernetes_release
-    has_many :deploy_groups, through: :release_docs, inverse_of: nil
+    has_many :deploy_groups, through: :release_docs, inverse_of: false
 
     attr_accessor :builds
 

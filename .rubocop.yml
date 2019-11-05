@@ -251,10 +251,6 @@ Rails/Output:
 Rails/HasManyOrHasOneDependent:
   Enabled: false
 
-# TODO: enable and fix
-Rails/InverseOf:
-  Enabled: false
-
 # We use that a lot
 Rails/HelperInstanceVariable:
   Enabled: false
