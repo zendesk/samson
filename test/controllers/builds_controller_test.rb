@@ -343,7 +343,7 @@ describe BuildsController do
         end
 
         it "renders when it fails to update" do
-          Build.any_instance.expects(:update_attributes).returns false
+          Build.any_instance.expects(:update).returns false
           update
           assert_template :edit
           assert_response :unprocessable_entity
@@ -373,7 +373,7 @@ describe BuildsController do
         end
 
         it "renders when it fails to update" do
-          Build.any_instance.expects(:update_attributes).returns false
+          Build.any_instance.expects(:update).returns false
           update
           assert_response :unprocessable_entity
           response.body.must_equal "{\"status\":422,\"error\":{}}"

@@ -279,7 +279,7 @@ describe StagesController do
         let(:echo_command) { commands(:echo) }
         before do
           other_project = project.dup
-          other_project.update_attributes(name: 'duplicate', permalink: 'duplicate')
+          other_project.update(name: 'duplicate', permalink: 'duplicate')
 
           echo_command.project_id = other_project.id
           echo_command.save!

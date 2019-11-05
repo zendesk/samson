@@ -40,7 +40,7 @@ class Build < ActiveRecord::Base
   def self.cancel_stalled_builds
     builds_to_cancel = where('created_at < ?', Rails.application.config.samson.deploy_timeout.seconds.ago).
       where(external_status: Job::ACTIVE_STATUSES)
-    builds_to_cancel.find_each { |b| b.update_attributes(external_status: 'cancelled') }
+    builds_to_cancel.find_each { |b| b.update(external_status: 'cancelled') }
   end
 
   def nice_name

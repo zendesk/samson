@@ -261,7 +261,7 @@ describe MassRolloutsController do
 
         template_stage.update_column(:kubernetes, true)
         template_dgr = kubernetes_deploy_group_roles(:test_pod1_app_server)
-        template_dgr.update_attributes!(deploy_group_id: template_stage.deploy_groups.first.id)
+        template_dgr.update!(deploy_group_id: template_stage.deploy_groups.first.id)
 
         assert_difference 'Stage.count', 1 do
           post :create, params: {deploy_group_id: deploy_group}

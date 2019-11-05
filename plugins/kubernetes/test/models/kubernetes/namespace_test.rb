@@ -47,7 +47,7 @@ describe Kubernetes::Namespace do
   describe "#remove_configured_resource_names" do
     it "clean existing roles" do
       assert_difference "Audited::Audit.count", 3 do
-        namespace.update_attributes!(project_ids: [project.id]) # do what controller does
+        namespace.update!(project_ids: [project.id]) # do what controller does
       end
       role = kubernetes_roles(:app_server)
       role.resource_name.must_be_nil

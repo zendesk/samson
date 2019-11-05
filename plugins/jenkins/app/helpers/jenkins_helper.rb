@@ -28,7 +28,7 @@ module JenkinsHelper
       jenkins_job_status = jenkins.job_status(jenkins_job.jenkins_job_id) || "Unable to retrieve status from jenkins"
       jenkins_job_url = jenkins.job_url(jenkins_job.jenkins_job_id)
       attributes = {status: jenkins_job_status, url: jenkins_job_url}
-      jenkins_job.update_attributes!(attributes)
+      jenkins_job.update!(attributes)
     end
 
     if status = JENKINS_MAPPING[jenkins_job_status]

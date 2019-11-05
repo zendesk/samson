@@ -153,7 +153,7 @@ describe Deploy do
 
     describe "buddy present" do
       it "returns 'bypassed' when bypassed" do
-        @deploy.update_attributes(buddy: user)
+        @deploy.update(buddy: user)
         @deploy.buddy_name.must_equal "bypassed"
         @deploy.buddy_email.must_equal "bypassed"
       end
@@ -541,7 +541,7 @@ describe Deploy do
 
     it "can update a deploy while something else is deployed" do
       create_deploy!(job_attributes: {user: user, status: "running"})
-      deploys(:succeeded_test).update_attributes!(buddy_id: 123)
+      deploys(:succeeded_test).update!(buddy_id: 123)
     end
   end
 

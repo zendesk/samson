@@ -264,7 +264,7 @@ describe Lock do
       lock # trigger create
 
       Lock.send(:all_cached).must_equal [lock]
-      lock.update_attributes(warning: false)
+      lock.update(warning: false)
       assert_sql_queries 1 do
         Lock.send(:all_cached).must_equal [lock]
       end

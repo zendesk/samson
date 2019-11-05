@@ -30,7 +30,7 @@ class VaultServersController < ApplicationController
   end
 
   def update
-    if @vault_server.update_attributes(server_params)
+    if @vault_server.update(server_params)
       redirect_to({action: :index}, notice: "Updated")
     else
       render :show

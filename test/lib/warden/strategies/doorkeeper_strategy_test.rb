@@ -77,7 +77,7 @@ describe 'Warden::Strategies::DoorkeeperStrategy Integration' do
   end
 
   it "checks and fails with expired token" do
-    token.update_attributes(expires_in: 1, created_at: 1.day.ago)
+    token.update(expires_in: 1, created_at: 1.day.ago)
     assert_sql_queries(2) { perform_get(valid_header) } # FYI queries are: find token, revoke token
     error.must_equal "Bearer token is expired"
     assert_response :unauthorized

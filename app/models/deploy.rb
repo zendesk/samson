@@ -131,7 +131,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def confirm_buddy!(buddy)
-    update_attributes!(buddy: buddy, started_at: Time.now)
+    update!(buddy: buddy, started_at: Time.now)
     start
   end
 

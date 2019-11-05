@@ -9,7 +9,7 @@ class UserMergesController < ApplicationController
   def create
     target = User.find(params[:merge_target_id])
     target.soft_delete!(validate: false)
-    @user.update_attributes!(external_id: target.external_id)
+    @user.update!(external_id: target.external_id)
     redirect_to @user, notice: "Merge successful."
   end
 

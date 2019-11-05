@@ -12,7 +12,7 @@ describe SamsonPrerequisiteStages do
   let(:production_commit) { "0000000000000000000000000000000000000001" }
 
   before do
-    stage1.update_attributes!(prerequisite_stage_ids: [stage2.id])
+    stage1.update!(prerequisite_stage_ids: [stage2.id])
     deploy.project.stubs(:repo_commit_from_ref).with(stage1.deploys.first.reference).returns(staging_commit)
     deploy.project.stubs(:repo_commit_from_ref).with(stage2.deploys.first.reference).returns(production_commit)
   end
@@ -55,7 +55,7 @@ describe SamsonPrerequisiteStages do
       end
 
       it 'does not raise if there are no prerequisite stages' do
-        stage1.update_attributes!(prerequisite_stage_ids: [])
+        stage1.update!(prerequisite_stage_ids: [])
         Samson::Hooks.fire(:before_deploy, deploy, nil)
       end
     end
@@ -147,7 +147,7 @@ describe SamsonPrerequisiteStages do
       end
 
       it 'shows nothing if no prerequisite stages exist' do
-        stage1.update_attributes!(prerequisite_stage_ids: [])
+        stage1.update!(prerequisite_stage_ids: [])
         result = render_view
         result.must_equal "\n"
       end

@@ -20,7 +20,7 @@ describe ProfilesController do
       end
 
       it 'renders when it fails to update' do
-        User.any_instance.expects(:update_attributes).returns false
+        User.any_instance.expects(:update).returns false
         put :update, params: {user: {name: 'Hans'}}
         assert_template :show
       end
