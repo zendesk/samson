@@ -276,6 +276,13 @@ describe Project do
       project.errors.messages.must_equal repository_url: ["is not valid or accessible"]
     end
 
+    it 'is invalid with repo url without path' do
+      project = Project.new(id: 9999, name: 'demo_apps', repository_url: 'https:.//github.com/samson-test-org/example-project.git')
+      GitRepository.any_instance.stubs(:valid_url?).returns(false) # avoid git-clones
+      refute_valid project
+      project.errors.messages.must_equal repository_url: ["is not valid or accessible"]
+    end
+
     it 'is invalid without repo url' do
       project = Project.new(id: 9999, name: 'demo_apps', repository_url: '')
       refute_valid project
