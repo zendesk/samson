@@ -50,9 +50,9 @@ class DatadogMonitor
   def state(deploy_groups)
     return unless response[:overall_state] # show fallback as warning
 
-    if query.match_source.present?
+    if query.match_source?
       return "OK" unless alerting = alerting_tags.presence
-      deployed = deploy_groups.map { |dg| "#{query.match_target}:#{match_value(dg)}" }
+      deployed = deploy_groups.map { |dg| deploy_group_scope(dg) }
       (deployed & alerting).any? ? "Alert" : "OK"
     else
       response[:overall_state]
@@ -63,8 +63,12 @@ class DatadogMonitor
     response[:name] || 'api error'
   end
 
-  def url
-    "#{BASE_URL}/monitors/#{@id}"
+  def url(deploy_groups)
+    base = "#{BASE_URL}/monitors/#{@id}"
+    if deploy_groups.size == 1 && query.match_source?
+      base += "?#{{q: deploy_group_scope(deploy_groups.first)}.to_query}"
+    end
+    base
   end
 
   def reload_from_api
@@ -76,6 +80,10 @@ class DatadogMonitor
   end
 
   private
+
+  def deploy_group_scope(dg)
+    "#{query.match_target}:#{match_value(dg)}"
+  end
 
   # @return [Array<String>]
   def alerting_tags
