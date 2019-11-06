@@ -36,7 +36,9 @@ class DatadogMonitorQuery < ActiveRecord::Base
 
   def url
     if single_monitor?
-      DatadogMonitor.new(query).url
+      monitor = DatadogMonitor.new(query)
+      monitor.query = self
+      monitor.url([])
     else
       q = URI.encode query.tr(",", " ") # rubocop:disable Lint/UriEscapeUnescape .to_query/CGI.escape do not work here
       "#{DatadogMonitor::BASE_URL}/monitors/manage?q=#{q}"
@@ -73,7 +75,7 @@ class DatadogMonitorQuery < ActiveRecord::Base
         next if groups.to_s.tr('"\'', '').split(",").include?(match_target)
 
         errors.add(
-          :match_target, "#{match_target} must appear in #{m.url} grouping so it can trigger alerts for this tag"
+          :match_target, "#{match_target} must appear in #{m.url([])} grouping so it can trigger alerts for this tag"
         )
       end
     end

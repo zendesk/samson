@@ -164,7 +164,19 @@ describe DatadogMonitor do
 
   describe "#url" do
     it "builds a url" do
-      monitor.url.must_equal "https://app.datadoghq.com/monitors/123"
+      monitor.url([]).must_equal "https://app.datadoghq.com/monitors/123"
+    end
+
+    describe "with match source" do
+      before { monitor.query = DatadogMonitorQuery.new(match_source: "deploy_group.permalink", match_target: "pod") }
+
+      it "builds a url for exact matches" do
+        monitor.url([deploy_groups(:pod100)]).must_equal "https://app.datadoghq.com/monitors/123?q=pod%3Apod100"
+      end
+
+      it "does not build urls when multiple tags need to match" do
+        monitor.url([deploy_groups(:pod100), deploy_groups(:pod1)]).must_equal "https://app.datadoghq.com/monitors/123"
+      end
     end
   end
 

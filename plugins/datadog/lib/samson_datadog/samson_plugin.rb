@@ -40,7 +40,8 @@ module SamsonDatadog
         end
 
         # some monitors alerting
-        job_execution.output.puts "Alert on datadog monitors:\n#{alerting.map { |m| "#{m.name} #{m.url}" }.join("\n")}"
+        alerts = alerting.map { |m| "#{m.name} #{m.url(deploy.stage.deploy_groups)}" }
+        job_execution.output.puts "Alert on datadog monitors:\n#{alerts.join("\n")}"
 
         alerting.each do |monitor|
           case monitor.query.failure_behavior
