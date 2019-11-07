@@ -4,71 +4,30 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe OutboundWebhook do
-  let(:webhook_attributes) do
-    {
-      stage: stages(:test_staging),
-      project: projects(:test),
-      url: "https://testing.com/deploys"
-    }
-  end
-  let(:webhook) { OutboundWebhook.create(webhook_attributes) }
+  let(:webhook_attributes) { {url: "https://testing.com/deploys"} }
+  let(:webhook) { OutboundWebhook.new(webhook_attributes) }
 
-  describe '#create' do
-    it 'creates the webhook' do
-      assert OutboundWebhook.create(webhook_attributes)
-    end
-
-    it 'refuses to create a duplicate webhook' do
-      OutboundWebhook.create!(webhook_attributes)
-
-      refute_valid OutboundWebhook.new(webhook_attributes)
+  describe '#validations' do
+    it 'is valid' do
+      assert_valid webhook
     end
 
     it "validates that url begins with http:// or https://" do
-      refute_valid OutboundWebhook.new(webhook_attributes.merge(url: "/foobar"))
-    end
-
-    it 'recreates a webhook after soft_delete' do
-      webhook = OutboundWebhook.create!(webhook_attributes)
-
-      assert_difference 'OutboundWebhook.count', -1 do
-        webhook.soft_delete!(validate: false)
-      end
-
-      assert_difference 'OutboundWebhook.count', +1 do
-        OutboundWebhook.create!(webhook_attributes)
-      end
+      webhook.url = "/foobar"
+      refute_valid webhook
     end
   end
 
-  describe '#soft_delete!' do
-    let(:webhook) { OutboundWebhook.create!(webhook_attributes) }
-
-    before { webhook }
-
-    it 'deletes the webhook' do
-      assert_difference 'OutboundWebhook.count', -1 do
-        webhook.soft_delete!(validate: false)
-      end
+  describe "#ensure_unused" do
+    it "allows deletion when unused" do
+      webhook.save!
+      webhook.destroy!
     end
 
-    it 'soft deletes the webhook' do
-      assert_difference  'OutboundWebhook.with_deleted { OutboundWebhook.count} ', 0 do
-        webhook.soft_delete!(validate: false)
-      end
-    end
-
-    # We have validation to stop us from having multiple of the same webhook active.
-    # lets ensure that same validation doesn't stop us from having multiple of the same webhook soft-deleted.
-    it 'can soft delete duplicate webhooks' do
-      assert_difference 'OutboundWebhook.count', -1 do
-        webhook.soft_delete!(validate: false)
-      end
-
-      webhook2 = OutboundWebhook.create!(webhook_attributes)
-      assert_difference 'OutboundWebhook.count', -1 do
-        webhook2.soft_delete!(validate: false)
-      end
+    it "does not allow deletion when used" do
+      webhook.save!
+      webhook.stages = [stages(:test_staging)]
+      refute webhook.destroy
     end
   end
 

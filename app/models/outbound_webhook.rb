@@ -3,20 +3,17 @@
 require 'faraday'
 
 class OutboundWebhook < ActiveRecord::Base
-  has_soft_deletion default_scope: true
-  include SoftDeleteWithDestroy
+  self.ignored_columns = ["stage_id", "project_id", "deleted_at"]
+  audited
 
-  belongs_to :project, inverse_of: :outbound_webhooks
-  belongs_to :stage, inverse_of: :outbound_webhooks
+  has_many :outbound_webhook_stages, dependent: nil, inverse_of: :outbound_webhook
+  has_many :stages, through: :outbound_webhook_stages, dependent: nil, inverse_of: :outbound_webhooks
 
-  validates :url, uniqueness: {
-    scope: :stage_id,
-    conditions: -> { where("deleted_at IS NULL") },
-    message: "one webhook per (stage, url) combination."
-  }
   validate :url_is_not_relative
   validates :username, presence: {if: proc { |outbound_webhook| outbound_webhook.password.present? }}
   validates :password, presence: {if: proc { |outbound_webhook| outbound_webhook.username.present? }}
+
+  before_destroy :ensure_unused
 
   def deliver(deploy)
     Rails.logger.info "Sending webhook notification to #{url}. Deploy: #{deploy.id}"
@@ -44,7 +41,7 @@ class OutboundWebhook < ActiveRecord::Base
   end
 
   def as_json(*)
-    super(except: [:password])
+    super(except: [:password, :stage_id, :project_id, :delete_at])
   end
 
   private
@@ -59,6 +56,12 @@ class OutboundWebhook < ActiveRecord::Base
 
   def url_is_not_relative
     errors.add(:url, "must begin with http:// or https://") unless url.start_with?("http://", "https://")
+  end
+
+  def ensure_unused
+    return if outbound_webhook_stages.empty?
+    errors.add :base, 'Can only delete when unused.'
+    throw :abort
   end
 end
 Samson::Hooks.load_decorators(OutboundWebhook)

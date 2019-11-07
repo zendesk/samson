@@ -82,6 +82,7 @@ module ApplicationHelper
       [name, [resource.project, resource]]
     when Deploy then ["Deploy ##{resource.id}", [resource.project, resource]]
     when SecretSharingGrant then [resource.key, resource]
+    when OutboundWebhook then [resource.url, resource]
     else
       @@link_parts_for_resource ||= Samson::Hooks.fire(:link_parts_for_resource).to_h
       proc = @@link_parts_for_resource[resource.class.name] ||

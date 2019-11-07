@@ -1,0 +1,6 @@
+<%= render 'shared/errors', object: form.object %>
+
+<%= form.input :url, required: true %>
+<%= form.input :username %>
+<%= form.input :password, as: :password_field %>
+<%= form.input :global, as: :check_box, help: "Can be reused by other stages" if form.object.new_record? %>
