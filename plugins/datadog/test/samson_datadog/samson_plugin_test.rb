@@ -24,7 +24,7 @@ describe SamsonDatadog do
 
   describe ".store_validation_monitors" do
     def store(state: "OK")
-      url = "https://api.datadoghq.com/api/v1/monitor/123?api_key=dapikey&application_key=dappkey&group_states=alert"
+      url = "https://api.datadoghq.com/api/v1/monitor/123?api_key=dapikey&application_key=dappkey&group_states=alert,warn"
       stub_request(:get, url).to_return(body: {id: 123, overall_state: state}.to_json)
       SamsonDatadog.store_validation_monitors(deploy)
       deploy.datadog_monitors_for_validation
@@ -55,7 +55,7 @@ describe SamsonDatadog do
 
   describe ".validate_deploy" do
     def validate(state: "Alert")
-      url = "https://api.datadoghq.com/api/v1/monitor/123?api_key=dapikey&application_key=dappkey&group_states=alert"
+      url = "https://api.datadoghq.com/api/v1/monitor/123?api_key=dapikey&application_key=dappkey&group_states=alert,warn"
       stub_request(:get, url).
         to_return(Array(state).map { |s| {body: {id: 123, overall_state: s, name: "Foo is down"}.to_json} })
       SamsonDatadog.validate_deploy(deploy, stub("Ex", output: out))

@@ -10,7 +10,7 @@ describe DatadogMonitorQuery do
     def assert_id_request(to_return: {body: {overall_state: "OK", query: "foo by {foo}"}.to_json}, &block)
       assert_request(
         :get,
-        "#{api_url}/monitor/123?api_key=dapikey&application_key=dappkey&group_states=alert",
+        "#{api_url}/monitor/123?api_key=dapikey&application_key=dappkey&group_states=alert,warn",
         to_return: to_return,
         &block
       )
@@ -19,7 +19,7 @@ describe DatadogMonitorQuery do
     def assert_tag_request(response, &block)
       q = "foo:bar,bar:vaz"
       query.query = q
-      url = "#{api_url}/monitor?api_key=dapikey&application_key=dappkey&group_states=alert&monitor_tags=#{q}"
+      url = "#{api_url}/monitor?api_key=dapikey&application_key=dappkey&group_states=alert,warn&monitor_tags=#{q}"
       assert_request(:get, url, to_return: {body: response.to_json}, &block)
     end
 
