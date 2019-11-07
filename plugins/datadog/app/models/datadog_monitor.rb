@@ -6,6 +6,7 @@ class DatadogMonitor
   APP_KEY = ENV["DATADOG_APPLICATION_KEY"]
   SUBDOMAIN = ENV["DATADOG_SUBDOMAIN"] || "app"
   BASE_URL = ENV["DATADOG_URL"] || "https://#{SUBDOMAIN}.datadoghq.com"
+  GROUP_STATES = 'alert,warn'
 
   attr_reader :id
   attr_accessor :query
@@ -13,12 +14,12 @@ class DatadogMonitor
   class << self
     # returns raw data
     def get(id)
-      request("/api/v1/monitor/#{id}", params: {group_states: 'alert'}, fallback: {})
+      request("/api/v1/monitor/#{id}", params: {group_states: GROUP_STATES}, fallback: {})
     end
 
     # returns pre-filled [DatadogMonitor]
     def list(tags)
-      data = request("/api/v1/monitor", params: {monitor_tags: tags, group_states: 'alert'}, fallback: [{id: 0}])
+      data = request("/api/v1/monitor", params: {monitor_tags: tags, group_states: GROUP_STATES}, fallback: [{id: 0}])
       data.map { |d| new(d[:id], d) }
     end
 
@@ -46,14 +47,17 @@ class DatadogMonitor
     @response = response
   end
 
-  # @return [String] nil, "Alert", "OK", "NoData"
+  # @return [String,nil] "Alert", "Warn", "OK", "NoData"
   def state(deploy_groups)
     return unless response[:overall_state] # show fallback as warning
 
     if query.match_source?
-      return "OK" unless alerting = alerting_tags.presence
+      return "OK" unless groups = (response.dig(:state, :groups) || {}).presence
       deployed = deploy_groups.map { |dg| deploy_group_scope(dg) }
-      (deployed & alerting).any? ? "Alert" : "OK"
+      groups.sort_by { |_, v| v[:status] }.each do |k, v|
+        return v[:status] if (k.to_s.split(",") & deployed).any?
+      end
+      "OK"
     else
       response[:overall_state]
     end
@@ -83,12 +87,6 @@ class DatadogMonitor
 
   def deploy_group_scope(dg)
     "#{query.match_target}:#{match_value(dg)}"
-  end
-
-  # @return [Array<String>]
-  def alerting_tags
-    groups = response.dig(:state, :groups) || {}
-    groups.keys.flat_map { |k| k.to_s.split(",") }
   end
 
   def match_value(deploy_group)

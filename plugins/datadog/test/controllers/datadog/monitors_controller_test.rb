@@ -10,7 +10,8 @@ describe Datadog::MonitorsController do
       let(:stage) { stages(:test_staging) }
 
       before do
-        url = "https://api.datadoghq.com/api/v1/monitor/123?api_key=dapikey&application_key=dappkey&group_states=alert"
+        host = "https://api.datadoghq.com"
+        url = "#{host}/api/v1/monitor/123?api_key=dapikey&application_key=dappkey&group_states=alert,warn"
         stub_request(:get, url).to_return(body: {overall_state: "OK"}.to_json)
         stage.datadog_monitor_queries.create!(query: 123)
       end

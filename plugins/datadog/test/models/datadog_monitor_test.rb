@@ -19,7 +19,7 @@ describe DatadogMonitor do
 
   let(:monitor) { DatadogMonitor.new(123) }
   let(:monitor_url) do
-    "https://api.datadoghq.com/api/v1/monitor/123?api_key=dapikey&application_key=dappkey&group_states=alert"
+    "https://api.datadoghq.com/api/v1/monitor/123?api_key=dapikey&application_key=dappkey&group_states=alert,warn"
   end
   let(:api_response) do
     {
@@ -33,7 +33,7 @@ describe DatadogMonitor do
       options: {notify_no_data: false, no_data_timeframe: 60, notify_audit: false, silenced: {}}
     }
   end
-  let(:alerting_groups) { {state: {groups: {"pod:pod1": {}}}} }
+  let(:alerting_groups) { {state: {groups: {"pod:pod1": {status: "Alert"}}}} }
 
   describe "#state" do
     let(:groups) { [deploy_groups(:pod1), deploy_groups(:pod2)] }
@@ -72,19 +72,36 @@ describe DatadogMonitor do
     end
 
     it "shows Alert when nested groups are alerting" do
-      assert_datadog(state: {groups: {"foo:bar,pod:pod1,bar:foo": {}}}) do
+      assert_datadog(state: {groups: {"foo:bar,pod:pod1,bar:foo": {status: "Alert"}}}) do
+        monitor.state(groups).must_equal "Alert"
+      end
+    end
+
+    it "shows Warn when nested groups are warning" do
+      assert_datadog(state: {groups: {"foo:bar,pod:pod1,bar:foo": {status: "Warn"}}}) do
+        monitor.state(groups).must_equal "Warn"
+      end
+    end
+
+    it "shows Warn when nested groups are alerting and warning" do
+      state_groups = {
+        "foo:bar1,pod:pod1,bar:foo": {status: "Warn"},
+        "foo:bar2,pod:pod1,bar:foo": {status: "Alert"},
+        "foo:bar3,pod:pod1,bar:foo": {status: "Warn"}
+      }
+      assert_datadog(state: {groups: state_groups}) do
         monitor.state(groups).must_equal "Alert"
       end
     end
 
     it "shows OK when other groups are alerting" do
-      assert_datadog(state: {groups: {"pod:pod3": {}}}) do
+      assert_datadog(state: {groups: {"pod:pod3": {status: "Alert"}}}) do
         monitor.state(groups).must_equal "OK"
       end
     end
 
     it "raises on unknown source" do
-      assert_datadog(state: {groups: {"pod:pod3": {}}}) do
+      assert_datadog(state: {groups: {"pod:pod3": {status: "Alert"}}}) do
         monitor.query.match_source = "wut"
         assert_raises(ArgumentError) { monitor.state(groups) }
       end
@@ -110,14 +127,14 @@ describe DatadogMonitor do
 
     it "can match on environment" do
       monitor.query.match_source = "environment.permalink"
-      assert_datadog(state: {groups: {"pod:production": {}}}) do
+      assert_datadog(state: {groups: {"pod:production": {status: "Alert"}}}) do
         monitor.state(groups).must_equal "Alert"
       end
     end
 
     it "can match on deploy_group.env_value" do
       monitor.query.match_source = "deploy_group.env_value"
-      assert_datadog(state: {groups: {"pod:pod1": {}}}) do
+      assert_datadog(state: {groups: {"pod:pod1": {status: "Alert"}}}) do
         monitor.state(groups).must_equal "Alert"
       end
     end
@@ -126,14 +143,14 @@ describe DatadogMonitor do
       before { monitor.query.match_source = "kubernetes_cluster.permalink" }
 
       it "can query by cluster" do
-        assert_datadog(state: {groups: {"pod:foo1": {}}}) do
+        assert_datadog(state: {groups: {"pod:foo1": {status: "Alert"}}}) do
           groups.each { |g| g.kubernetes_cluster.name = "Foo 1" }
           monitor.state(groups).must_equal "Alert"
         end
       end
 
       it "ignores missing clusters" do
-        assert_datadog(state: {groups: {"pod:foo1": {}}}) do
+        assert_datadog(state: {groups: {"pod:foo1": {status: "Alert"}}}) do
           groups.each { |g| g.kubernetes_cluster = nil }
           monitor.state(groups).must_equal "OK"
         end
@@ -197,7 +214,9 @@ describe DatadogMonitor do
   end
 
   describe ".list" do
-    let(:url) { "https://api.datadoghq.com/api/v1/monitor?api_key=dapikey&application_key=dappkey&group_states=alert" }
+    let(:url) do
+      "https://api.datadoghq.com/api/v1/monitor?api_key=dapikey&application_key=dappkey&group_states=alert,warn"
+    end
 
     it "finds multiple" do
       assert_request(:get, url, to_return: {body: [{id: 1, name: "foo"}].to_json}) do

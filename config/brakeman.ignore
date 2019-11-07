@@ -3,13 +3,13 @@
     {
       "warning_type": "Cross-Site Scripting",
       "warning_code": 4,
-      "fingerprint": "29a4796a9319fe691f5da3c68471b34a26d9940700a6ba0d953a9c9f02cf5c71",
+      "fingerprint": "3fc89350d41082dbd68a0c57c3978ad86224e2eac077d6421f7c3b0ef88ea884",
       "check_name": "LinkToHref",
       "message": "Potentially unsafe model attribute in `link_to` href",
       "file": "plugins/datadog/app/views/samson_datadog/_monitor_list.html.erb",
       "line": 3,
       "link": "https://brakemanscanner.org/docs/warning_types/link_to_href",
-      "code": "link_to((Unresolved Model).new.name, (Unresolved Model).new.url(Stage.find(params.fetch(:id)).deploy_groups), :class => (\"label label-#{({ \"OK\" => \"success\", \"Alert\" => \"danger\" }[(Unresolved Model).new.state(Stage.find(params.fetch(:id)).deploy_groups)] or \"warning\")}\"))",
+      "code": "link_to((Unresolved Model).new.name, (Unresolved Model).new.url(Stage.find(params.fetch(:id)).deploy_groups), :class => (\"label label-#{({ \"OK\" => \"success\", \"Alert\" => \"danger\", \"Warn\" => \"warning\" }[(Unresolved Model).new.state(Stage.find(params.fetch(:id)).deploy_groups)] or \"info\")}\"))",
       "render_path": [
         {
           "type": "controller",
@@ -32,6 +32,6 @@
       "note": ""
     }
   ],
-  "updated": "2019-11-06 14:04:52 -0800",
+  "updated": "2019-11-07 15:01:13 -0800",
   "brakeman_version": "4.7.1"
 }
