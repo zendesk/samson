@@ -18,7 +18,7 @@
     </tr>
     </thead>
     <tbody>
-    <%= render partial: "deploys/deploy", collection: @deploys, cached: true %>
+    <%= render partial: "deploys/deploy", collection: @deploys, cached: ->(deploy) { [@project, !!@stage, deploy, params[:time_format].presence || current_user.time_format  ] } %>
     </tbody>
   </table>
   <%= paginate @pagy if @pagy %>

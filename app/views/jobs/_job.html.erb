@@ -1,10 +1,8 @@
-<% cache job do %>
-  <tr>
-    <td><%= relative_time(job.created_at) %></td>
-    <td>
-      <%= link_to "#{job.user.name} executed:", [@project, job] %>
-      <pre class="pre-command"><%= job.command %></pre>
-    </td>
-    <td><%= status_badge job.status %></td>
-  </tr>
-<% end %>
+<tr>
+  <td><%= relative_time(job.created_at) %></td>
+  <td>
+    <%= link_to "#{job.user.name} executed:", [@project, job] %>
+    <pre class="pre-command"><%= job.command %></pre>
+  </td>
+  <td><%= status_badge job.status %></td>
+</tr>

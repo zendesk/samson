@@ -1,21 +1,19 @@
-<% cache [@project, !!@stage, deploy, params[:time_format].presence || current_user.time_format  ] do %>
-  <tr>
-    <% unless @project %>
-      <td><%= link_to deploy.project.name, deploy.project %></td>
+<tr>
+  <% unless @project %>
+    <td><%= link_to deploy.project.name, deploy.project %></td>
+  <% end %>
+  <td><%= render_time(deploy.start_time) %></td>
+  <td>
+    <%= duration_text deploy.duration %>
+    <% if deploy.active? && (eta = duration_text(deploy.stage.average_deploy_time).presence) %>
+      <%= " (#{eta})" %>
     <% end %>
-    <td><%= render_time(deploy.start_time) %></td>
-    <td>
-      <%= duration_text deploy.duration %>
-      <% if deploy.active? && (eta = duration_text(deploy.stage.average_deploy_time).presence) %>
-        <%= " (#{eta})" %>
-      <% end %>
-    </td>
-    <td>
-      <%= link_to deploy.summary, [@project || deploy.project, deploy, with_deleted: params[:with_deleted]] %>
-    </td>
-    <% unless @stage %>
-      <td><%= link_to deploy.stage.name, [deploy.project, deploy.stage] %></td>
-    <% end %>
-    <td><%= status_badge deploy.job.status %></td>
-  </tr>
-<% end %>
+  </td>
+  <td>
+    <%= link_to deploy.summary, [@project || deploy.project, deploy, with_deleted: params[:with_deleted]] %>
+  </td>
+  <% unless @stage %>
+    <td><%= link_to deploy.stage.name, [deploy.project, deploy.stage] %></td>
+  <% end %>
+  <td><%= status_badge deploy.job.status %></td>
+</tr>

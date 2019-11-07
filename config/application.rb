@@ -56,7 +56,7 @@ module Samson
 
     case ENV["CACHE_STORE"]
     when "memory"
-      config.cache_store = :memory_store
+      config.cache_store = :memory_store # to debug cache keys, bundle open activesupport -> active_support/cache.rb#log
     when "memcached"
       options = {
         value_max_bytes: 3000000,
