@@ -6,7 +6,7 @@
   <% projects = Project.order(:permalink).pluck(:permalink, :id) %>
   <%= search_select :project_id, projects, live: true, label: "Project" %>
 
-  <div class="pull-right">
+  <div class="col-md-1 col-xs-6 pull-right">
     <label>&nbsp;</label>
     <%= link_to "New", new_secret_sharing_grant_path, class: "btn btn-default", style: "display: block" %>
   </div>
