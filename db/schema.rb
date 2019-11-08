@@ -400,9 +400,6 @@ ActiveRecord::Schema.define(version: 2019_11_08_223054) do
   create_table "outbound_webhooks", id: :integer do |t|
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.datetime "deleted_at"
-    t.integer "project_id", default: 0, null: false
-    t.integer "stage_id", default: 0, null: false
     t.string "url", null: false
     t.string "username"
     t.string "password"
@@ -410,8 +407,6 @@ ActiveRecord::Schema.define(version: 2019_11_08_223054) do
     t.string "auth_type", null: false
     t.boolean "insecure", default: false, null: false
     t.boolean "before_deploy", default: false, null: false
-    t.index ["deleted_at"], name: "index_outbound_webhooks_on_deleted_at"
-    t.index ["project_id"], name: "index_outbound_webhooks_on_project_id"
   end
 
   create_table "project_environment_variable_groups", id: :integer do |t|
