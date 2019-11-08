@@ -96,18 +96,28 @@ describe OutboundWebhooksController do
 
   as_a :deployer do
     describe '#update' do
-      it "fails to update via json" do
-        webhook
-        params[:url] = ""
-        patch :update, params: {id: webhook.id, outbound_webhook: params}, format: :json
-        assert_response 422
+      it "updates" do
+        patch :update, params: {id: webhook.id, outbound_webhook: params}
+        assert_redirected_to "/outbound_webhooks"
       end
 
-      it "renders JSON" do
+      it "fails to update" do
+        params[:url] = ""
+        patch :update, params: {id: webhook.id, outbound_webhook: params}
+        assert_response :success
+      end
+
+      it "updates via json" do
         patch :update, params: {id: webhook.id, outbound_webhook: params}, format: :json
         assert_response :success
         outbound_webhook = JSON.parse(response.body).fetch('outbound_webhook')
         outbound_webhook.fetch('url').must_equal params[:url]
+      end
+
+      it "fails to update via json" do
+        params[:url] = ""
+        patch :update, params: {id: webhook.id, outbound_webhook: params}, format: :json
+        assert_response 422
       end
     end
 

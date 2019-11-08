@@ -22,6 +22,10 @@ class OutboundWebhooksController < ResourceController
     end
   end
 
+  def update
+    super template: 'show'
+  end
+
   private
 
   def search_resources
