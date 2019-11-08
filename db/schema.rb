@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_11_08_223054) do
+ActiveRecord::Schema.define(version: 2019_11_08_232023) do
 
   create_table "audits" do |t|
     t.integer "auditable_id", null: false
@@ -407,6 +407,7 @@ ActiveRecord::Schema.define(version: 2019_11_08_223054) do
     t.string "auth_type", null: false
     t.boolean "insecure", default: false, null: false
     t.boolean "before_deploy", default: false, null: false
+    t.string "status_path"
   end
 
   create_table "project_environment_variable_groups", id: :integer do |t|
