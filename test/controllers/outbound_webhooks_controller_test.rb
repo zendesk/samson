@@ -107,6 +107,20 @@ describe OutboundWebhooksController do
         assert_response :success
       end
 
+      it "does remove stored password from rails not rendering the password fields value" do
+        webhook.update_column(:password, 'b')
+        patch :update, params: {id: webhook.id, outbound_webhook: {username: 'a', password: ''}}
+        assert_response :redirect
+        webhook.reload.password.must_equal 'b'
+      end
+
+      it "allows unsetting username/password by setting both blank" do
+        webhook.update_column(:password, 'b')
+        patch :update, params: {id: webhook.id, outbound_webhook: {username: '', password: ''}}
+        assert_response :redirect
+        webhook.reload.password.must_equal ''
+      end
+
       it "updates via json" do
         patch :update, params: {id: webhook.id, outbound_webhook: params}, format: :json
         assert_response :success

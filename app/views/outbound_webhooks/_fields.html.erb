@@ -2,5 +2,5 @@
 
 <%= form.input :url, required: true %>
 <%= form.input :username %>
-<%= form.input :password, as: :password_field %>
+<%= form.input :password, as: :password_field, input_html: {placeholder: ("--hidden--" if form.object.password?) } %>
 <%= form.input :global, as: :check_box, help: "Can be reused by other stages" if form.object.new_record? %>

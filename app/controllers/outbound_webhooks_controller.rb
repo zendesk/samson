@@ -49,9 +49,10 @@ class OutboundWebhooksController < ResourceController
   def resource_params
     allowed = [:url, :username, :password]
     allowed << :global if action_name == "create"
-    params = super.permit(*allowed)
-    params[:stages] = [@stage] if @stage && action_name == "create"
-    params
+    permitted = super.permit(*allowed)
+    permitted[:stages] = [@stage] if @stage && action_name == "create"
+    permitted.delete :password if permitted[:password].blank? && permitted[:username].present?
+    permitted
   end
 
   def require_project
