@@ -215,32 +215,39 @@ describe DatadogMonitor do
 
   describe ".list" do
     let(:url) do
-      "https://api.datadoghq.com/api/v1/monitor?api_key=dapikey&application_key=dappkey&group_states=alert,warn"
+      "https://api.datadoghq.com/api/v1/monitor?api_key=dapikey&application_key=dappkey&group_states=alert,warn&monitor_tags="
     end
 
-    it "finds multiple" do
+    it "finds all" do
       assert_request(:get, url, to_return: {body: [{id: 1, name: "foo"}].to_json}) do
-        DatadogMonitor.list({}).map(&:name).must_equal ["foo"]
+        DatadogMonitor.list("").map(&:name).must_equal ["foo"]
+      end
+    end
+
+    it "can ignore by id" do
+      body = [{id: 1, name: "foo"}, {id: 12345, name: "bar"}].to_json
+      assert_request(:get, url + "foo,bar", to_return: {body: body}) do
+        DatadogMonitor.list("foo,-12345,bar").map(&:name).must_equal ["foo"]
       end
     end
 
     it "adds tags" do
-      assert_request(:get, url + "&monitor_tags=foo,bar", to_return: {body: [{id: 1, name: "foo"}].to_json}) do
-        DatadogMonitor.list("foo,bar")
+      assert_request(:get, url + "foo,bar", to_return: {body: [{id: 1, name: "foo"}].to_json}) do
+        DatadogMonitor.list("foo,bar").map(&:id).must_equal [1]
       end
     end
 
     it "shows api error in the UI when it times out" do
       Samson::ErrorNotifier.expects(:notify)
       assert_request(:get, url, to_timeout: []) do
-        DatadogMonitor.list({}).map(&:name).must_equal ["api error"]
+        DatadogMonitor.list("").map(&:name).must_equal ["api error"]
       end
     end
 
     it "shows api error in the UI when it fails" do
       Samson::ErrorNotifier.expects(:notify)
       assert_request(:get, url, to_return: {status: 500}) do
-        DatadogMonitor.list({}).map(&:name).must_equal ["api error"]
+        DatadogMonitor.list("").map(&:name).must_equal ["api error"]
       end
     end
   end

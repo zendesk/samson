@@ -75,7 +75,9 @@ class DatadogMonitorQuery < ActiveRecord::Base
         next if groups.to_s.tr('"\'', '').split(",").include?(match_target)
 
         errors.add(
-          :match_target, "#{match_target} must appear in #{m.url([])} grouping so it can trigger alerts for this tag"
+          :match_target,
+          "#{match_target} must appear in #{m.url([])} grouping so it can trigger alerts for this tag, " \
+          "or ignored by adding ',-#{m.id}' to the tag query"
         )
       end
     end
