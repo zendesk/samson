@@ -18,8 +18,13 @@ class DatadogMonitor
     end
 
     # returns pre-filled [DatadogMonitor]
-    def list(tags)
-      data = request("/api/v1/monitor", params: {monitor_tags: tags, group_states: GROUP_STATES}, fallback: [{id: 0}])
+    def list(tag_query)
+      ignored, queried = tag_query.split(",").partition { |t| t.match?(/^-\d+$/) }
+      data = request(
+        "/api/v1/monitor",
+        params: {monitor_tags: queried.join(","), group_states: GROUP_STATES}, fallback: [{id: 0}]
+      )
+      data.reject! { |d| ignored.include?("-#{d[:id]}") }
       data.map { |d| new(d[:id], d) }
     end
 
