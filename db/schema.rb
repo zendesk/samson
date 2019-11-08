@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_11_05_170029) do
+ActiveRecord::Schema.define(version: 2019_11_08_204120) do
 
   create_table "audits" do |t|
     t.integer "auditable_id", null: false
@@ -407,6 +407,8 @@ ActiveRecord::Schema.define(version: 2019_11_05_170029) do
     t.string "username"
     t.string "password"
     t.boolean "global", default: false, null: false
+    t.string "auth_type", null: false
+    t.boolean "insecure", default: false, null: false
     t.index ["deleted_at"], name: "index_outbound_webhooks_on_deleted_at"
     t.index ["project_id"], name: "index_outbound_webhooks_on_project_id"
   end

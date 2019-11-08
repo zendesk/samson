@@ -158,18 +158,23 @@
     <% else %>
       <ul>
         <% outbound_webhook_stages.each do |outbound_webhook_stage| %>
+          <% outbound_webhook = outbound_webhook_stage.outbound_webhook %>
           <li>
             POST to
-            <strong><%= outbound_webhook_stage.outbound_webhook.url %></strong>
+            <strong><%= outbound_webhook.url %></strong>
+            <%= "(no SSL)" unless outbound_webhook.ssl? %>
             on the
             <strong><%= outbound_webhook_stage.stage.name %></strong>
             stage
             <strong>
-            <% if outbound_webhook_stage.outbound_webhook.username.present? %>
-              <%= "with Basic Auth as #{outbound_webhook_stage.outbound_webhook.username}" %>
+            <% case outbound_webhook.auth_type %>
+            <% when "Basic" %>
+              <%= "with Basic Auth as #{outbound_webhook.username}" %>
+            <% when "Bearer", "Token" %>
+              <%= "with #{outbound_webhook.auth_type} Auth" %>
             <% end %>
             </strong>
-            <%= link_to_delete outbound_webhook_path(outbound_webhook_stage.outbound_webhook, stage_id: outbound_webhook_stage.stage_id) %>
+            <%= link_to_delete outbound_webhook_path(outbound_webhook, stage_id: outbound_webhook_stage.stage_id) %>
           </li>
         <% end %>
       </ul>

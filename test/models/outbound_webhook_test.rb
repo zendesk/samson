@@ -4,7 +4,7 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe OutboundWebhook do
-  let(:webhook_attributes) { {url: "https://testing.com/deploys"} }
+  let(:webhook_attributes) { {url: "https://testing.com/deploys", auth_type: "None"} }
   let(:webhook) { OutboundWebhook.new(webhook_attributes) }
 
   describe '#validations' do
@@ -15,6 +15,46 @@ describe OutboundWebhook do
     it "validates that url begins with http:// or https://" do
       webhook.url = "/foobar"
       refute_valid webhook
+    end
+
+    it "validates user+password for basic auth" do
+      webhook.auth_type = "Basic"
+      refute_valid webhook
+
+      webhook.username = "U"
+      refute_valid webhook
+
+      webhook.password = "P"
+      assert_valid webhook
+    end
+
+    it "validates password for token auth" do
+      webhook.auth_type = "Token"
+      refute_valid webhook
+
+      webhook.password = "P"
+      assert_valid webhook
+    end
+
+    it "validates auth type" do
+      webhook.auth_type = "Wut"
+      refute_valid webhook
+    end
+  end
+
+  describe "#ssl?" do
+    it "is ssl with https" do
+      assert webhook.ssl?
+    end
+
+    it "is not ssl with http" do
+      webhook.url = "http://sdfsf.com"
+      refute webhook.ssl?
+    end
+
+    it "is not ssl with insecure" do
+      webhook.insecure = true
+      refute webhook.ssl?
     end
   end
 
@@ -32,25 +72,29 @@ describe OutboundWebhook do
   end
 
   describe "#connection" do
-    before do
-      @webhook = OutboundWebhook.create!(selected_webhook)
-      @connection = @webhook.send(:connection)
+    let(:connection) { webhook.send(:connection) }
+
+    it "does not add auth when not configured" do
+      refute_includes connection.headers, 'Authorization'
     end
 
-    describe "with no authorization" do
-      let(:selected_webhook) { webhook_attributes }
-
-      it "builds a connection with the correct params" do
-        refute_includes @connection.headers, 'Authorization'
-      end
+    it "adds basic auth" do
+      webhook.auth_type = "Basic"
+      webhook.username = "adminuser"
+      webhook.password = "abc123"
+      assert_equal connection.headers['Authorization'], 'Basic YWRtaW51c2VyOmFiYzEyMw=='
     end
 
-    describe "with authorization" do
-      let(:selected_webhook) { webhook_attributes.merge(username: "adminuser", password: "abc123") }
+    it "adds token auth" do
+      webhook.auth_type = "Token"
+      webhook.username = "adminuser"
+      webhook.password = "abc123"
+      assert_equal connection.headers['Authorization'], 'Token abc123'
+    end
 
-      it "builds a connection with the correct params" do
-        assert_equal @connection.headers['Authorization'], 'Basic YWRtaW51c2VyOmFiYzEyMw=='
-      end
+    it "fails on unsupported type" do
+      webhook.auth_type = "Wut"
+      assert_raises(ArgumentError) { connection }
     end
   end
 
