@@ -164,7 +164,7 @@
             <strong><%= outbound_webhook.url %></strong>
             <%= "(no SSL)" unless outbound_webhook.ssl? %>
             on the
-            <strong><%= outbound_webhook_stage.stage.name %></strong>
+            <%= link_to_resource outbound_webhook_stage.stage %>
             stage
             <strong>
             <% case outbound_webhook.auth_type %>

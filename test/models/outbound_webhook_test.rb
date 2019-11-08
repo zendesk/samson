@@ -100,21 +100,28 @@ describe OutboundWebhook do
 
   describe "#deliver" do
     let(:webhook) { OutboundWebhook.create!(webhook_attributes) }
-
-    before do
-      OutboundWebhook.stubs(:deploy_as_json).returns({})
-    end
+    let(:deploy) { deploys(:succeeded_test) }
+    let(:output) { StringIO.new }
 
     it "posts" do
-      assert_request :post, "https://testing.com/deploys", with: {body: "{}"} do
-        assert webhook.deliver(Deploy.new)
+      assert_request :post, "https://testing.com/deploys" do
+        webhook.deliver(deploy, output)
       end
+      output.string.must_equal <<~TEXT
+        Webhook notification: sending to https://testing.com/deploys ...
+        Webhook notification: succeeded
+      TEXT
     end
 
     it "fails on bad response" do
-      assert_request :post, "https://testing.com/deploys", to_return: {status: 400} do
-        refute webhook.deliver(Deploy.new)
+      assert_request :post, "https://testing.com/deploys", to_return: {status: 400, body: "a" * 200} do
+        webhook.deliver(deploy, output)
       end
+      output.string.must_equal <<~TEXT
+        Webhook notification: sending to https://testing.com/deploys ...
+        Webhook notification: failed 400
+        aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...
+      TEXT
     end
   end
 

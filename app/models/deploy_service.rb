@@ -45,7 +45,7 @@ class DeployService
     job_execution.on_finish { send_deploy_update finished: true }
     job_execution.on_finish { send_deploy_email(deploy) }
     job_execution.on_finish { send_failed_deploy_email(deploy) }
-    job_execution.on_finish { notify_outbound_webhooks(deploy) }
+    job_execution.on_finish { notify_outbound_webhooks(deploy, job_execution.output) }
     job_execution.on_finish do
       if deploy.redeploy_previous_when_failed? && deploy.status == "failed"
         redeploy_previous(deploy, job_execution.output)
@@ -143,8 +143,8 @@ class DeployService
     end
   end
 
-  def notify_outbound_webhooks(deploy)
-    deploy.stage.outbound_webhooks.each { |webhook| webhook.deliver(deploy) }
+  def notify_outbound_webhooks(deploy, output)
+    deploy.stage.outbound_webhooks.each { |webhook| webhook.deliver(deploy, output) }
   end
 
   def send_deploy_update(finished: false)

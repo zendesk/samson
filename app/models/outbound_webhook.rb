@@ -16,8 +16,9 @@ class OutboundWebhook < ActiveRecord::Base
 
   before_destroy :ensure_unused
 
-  def deliver(deploy)
-    Rails.logger.info "Sending webhook notification to #{url}. Deploy: #{deploy.id}"
+  def deliver(deploy, output)
+    prefix = "Webhook notification:"
+    output.puts "#{prefix} sending to #{url} ..."
 
     response = connection.post url do |req|
       req.headers['Content-Type'] = 'application/json'
@@ -25,12 +26,11 @@ class OutboundWebhook < ActiveRecord::Base
     end
 
     if response.success?
-      Rails.logger.info "Webhook notification sent. Deploy: #{deploy.id}"
+      output.puts "#{prefix} succeeded"
     else
-      Rails.logger.error "Failed to send webhook notification. Deploy: #{deploy.id} Response: #{response.inspect}"
+      Rails.logger.error "Outbound Webhook Error #{id} #{url} #{response.body}"
+      output.puts "#{prefix} failed #{response.status}\n#{response.body.to_s.truncate(100)}"
     end
-
-    response.success?
   end
 
   def self.deploy_as_json(deploy)
