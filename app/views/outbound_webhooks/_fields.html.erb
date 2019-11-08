@@ -1,6 +1,7 @@
 <%= render 'shared/errors', object: form.object %>
 
 <%= form.input :url, required: true %>
+<%= form.input :before_deploy, as: :check_box %>
 <%= form.input :insecure, as: :check_box, help: "Do not verify SSL" %>
 <%= form.input :global, as: :check_box, help: "Can be reused by other stages" if form.object.new_record? %>
 

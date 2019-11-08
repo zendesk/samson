@@ -243,6 +243,13 @@ describe DeployService do
         job_execution.perform
       end.map(&:first).must_equal [deploy]
     end
+
+    it "sends before deploy outbound webhooks" do
+      OutboundWebhook.create!(url: "http://foo", auth_type: "None", stages: [stage], before_deploy: true)
+      service.deploy(stage, reference: reference)
+      job_execution.expects(:finish) # do not call finish hooks ...
+      assert_request(:post, "http://foo/") { job_execution.perform }
+    end
   end
 
   describe "finish callbacks" do
@@ -289,6 +296,12 @@ describe DeployService do
       DeployMailer.expects(:deploy_failed_email).returns(stub("DeployMailer", deliver_now: true))
 
       run_deploy
+    end
+
+    it "after before deploy outbound webhooks" do
+      OutboundWebhook.create!(url: "http://foo", auth_type: "None", stages: [stage], before_deploy: false)
+      service.deploy(stage, reference: reference)
+      assert_request(:post, "http://foo/") { job_execution.perform }
     end
 
     describe "with redeploy_previous_when_failed" do

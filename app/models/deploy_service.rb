@@ -39,13 +39,14 @@ class DeployService
 
     job_execution.on_start { Samson::Hooks.fire(:before_deploy, deploy, job_execution) }
     job_execution.on_start { send_before_notifications(deploy) }
+    job_execution.on_start { notify_outbound_webhooks(deploy, job_execution.output, before: true) }
 
     # independent so each one can fail and report errors
     job_execution.on_finish { update_average_deploy_time(deploy) }
     job_execution.on_finish { send_deploy_update finished: true }
     job_execution.on_finish { send_deploy_email(deploy) }
     job_execution.on_finish { send_failed_deploy_email(deploy) }
-    job_execution.on_finish { notify_outbound_webhooks(deploy, job_execution.output) }
+    job_execution.on_finish { notify_outbound_webhooks(deploy, job_execution.output, before: false) }
     job_execution.on_finish do
       if deploy.redeploy_previous_when_failed? && deploy.status == "failed"
         redeploy_previous(deploy, job_execution.output)
@@ -143,8 +144,10 @@ class DeployService
     end
   end
 
-  def notify_outbound_webhooks(deploy, output)
-    deploy.stage.outbound_webhooks.each { |webhook| webhook.deliver(deploy, output) }
+  def notify_outbound_webhooks(deploy, output, before:)
+    deploy.stage.outbound_webhooks.
+      select { |w| w.before_deploy == before }.
+      each { |webhook| webhook.deliver(deploy, output) }
   end
 
   def send_deploy_update(finished: false)
