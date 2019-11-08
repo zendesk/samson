@@ -6,7 +6,7 @@ SingleCov.covered!
 describe OutboundWebhooksController do
   let(:project) { projects(:test) }
   let(:stage) { stages(:test_staging) }
-  let(:params) { {url: "https://zendesk.com"} }
+  let(:params) { {url: "https://zendesk.com", auth_type: "None"} }
   let!(:webhook) { OutboundWebhook.create!(params.merge(stages: [stage])) }
 
   as_a :viewer do
@@ -15,7 +15,7 @@ describe OutboundWebhooksController do
     unauthorized :delete, :destroy, id: 1
 
     describe "#index" do
-      before { OutboundWebhook.create!(url: "http://something.else") }
+      before { OutboundWebhook.create!(url: "http://something.else", auth_type: "None") }
 
       it "renders html" do
         get :index
@@ -64,8 +64,9 @@ describe OutboundWebhooksController do
 
       it 'shows errors to user when invalid' do
         assert_difference 'OutboundWebhook.count', 0 do
-          post :create, params: {stage_id: stage.id, outbound_webhook: params.merge(username: 'foo')}
-          assert_equal flash[:alert], "Failed to create!"
+          params.merge!(auth_type: "Basic", username: 'foo')
+          post :create, params: {stage_id: stage.id, outbound_webhook: params}
+          flash[:alert].must_equal "Failed to create!"
           assert assigns[:resource] # for rendering errors
           assert_template 'webhooks/index' # form will display errors
         end

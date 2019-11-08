@@ -7,7 +7,9 @@
     <thead>
     <tr>
       <th>Url</th>
+      <th>Auth</th>
       <th>Global</th>
+      <th>SSL</th>
       <th>Usages</th>
       <th>Actions</th>
     </tr>
@@ -16,10 +18,10 @@
     <tbody>
     <% @outbound_webhooks.each do |outbound_webhook| %>
       <tr>
-        <td>
-          <%= outbound_webhook.url %>
-        </td>
+        <td><%= outbound_webhook.url %></td>
+        <td><%= outbound_webhook.auth_type %></td>
         <td><%= outbound_webhook.global ? "YES" : "-" %></td>
+        <td><%= outbound_webhook.ssl? ? "YES" : "-" %></td>
         <td><%= usages[outbound_webhook.id] || 0 %></td>
         <td><%= link_to "Edit", outbound_webhook %></td>
       </tr>

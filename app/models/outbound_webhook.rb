@@ -3,15 +3,16 @@
 require 'faraday'
 
 class OutboundWebhook < ActiveRecord::Base
+  AUTH_TYPES = ["None", "Basic", "Token", "Bearer"].freeze
+
   self.ignored_columns = ["stage_id", "project_id", "deleted_at"]
   audited
 
   has_many :outbound_webhook_stages, dependent: nil, inverse_of: :outbound_webhook
   has_many :stages, through: :outbound_webhook_stages, dependent: nil, inverse_of: :outbound_webhooks
 
-  validate :url_is_not_relative
-  validates :username, presence: {if: proc { |outbound_webhook| outbound_webhook.password.present? }}
-  validates :password, presence: {if: proc { |outbound_webhook| outbound_webhook.username.present? }}
+  validate :validate_url_is_absolute
+  validate :validate_auth
 
   before_destroy :ensure_unused
 
@@ -40,6 +41,10 @@ class OutboundWebhook < ActiveRecord::Base
     )
   end
 
+  def ssl?
+    url.start_with?("https://") && !insecure?
+  end
+
   def as_json(*)
     super(except: [:password, :stage_id, :project_id, :delete_at])
   end
@@ -47,14 +52,29 @@ class OutboundWebhook < ActiveRecord::Base
   private
 
   def connection
-    Faraday.new do |faraday|
-      faraday.request  :url_encoded
-      faraday.adapter  Faraday.default_adapter
-      faraday.basic_auth(username, password) if username.present?
+    Faraday.new(ssl: {verify: !insecure}) do |connection|
+      connection.request  :url_encoded
+      connection.adapter  Faraday.default_adapter
+
+      case auth_type
+      when "None" # rubocop:disable Lint/EmptyWhen noop
+      when "Basic" then connection.basic_auth(username, password)
+      when "Bearer", "Token" then connection.authorization auth_type, password
+      else raise ArgumentError, "Unsupported auth_type #{auth_type.inspect}"
+      end
     end
   end
 
-  def url_is_not_relative
+  def validate_auth
+    case auth_type
+    when "None" # rubocop:disable Lint/EmptyWhen noop
+    when "Basic" then errors.add :username, "and password must be set" if !username? || !password?
+    when "Bearer", "Token" then errors.add :password, "must be set" unless password?
+    else errors.add(:auth_type, "unknown, supported types are #{AUTH_TYPES.to_sentence}")
+    end
+  end
+
+  def validate_url_is_absolute
     errors.add(:url, "must begin with http:// or https://") unless url.start_with?("http://", "https://")
   end
 
