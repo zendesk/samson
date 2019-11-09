@@ -19,17 +19,25 @@ class OutboundWebhook < ActiveRecord::Base
     prefix = "Webhook notification:"
     output.puts "#{prefix} sending to #{url} ..."
 
-    response = connection.post url do |req|
-      req.headers['Content-Type'] = 'application/json'
-      req.body = self.class.deploy_as_json(deploy).to_json
-    end
+    error_message =
+      begin
+        response = connection.post url do |req|
+          req.headers['Content-Type'] = 'application/json'
+          req.body = self.class.deploy_as_json(deploy).to_json
+        end
 
-    if response.success?
-      output.puts "#{prefix} succeeded"
-    else
-      Rails.logger.error "Outbound Webhook Error #{id} #{url} #{response.body}"
-      output.puts "#{prefix} failed #{response.status}\n#{response.body.to_s.truncate(100)}"
-    end
+        if response.success?
+          output.puts "#{prefix} succeeded"
+          return
+        else
+          Rails.logger.error "Outbound Webhook Error #{id} #{url} #{response.body}"
+          "#{prefix} failed #{response.status}\n#{response.body.to_s.truncate(100)}"
+        end
+      rescue StandardError => e # Timeout or SSL error
+        "#{prefix} failed #{e.class}"
+      end
+
+    raise Samson::Hooks::UserError, error_message
   end
 
   def self.deploy_as_json(deploy)

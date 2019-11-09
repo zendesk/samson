@@ -244,11 +244,22 @@ describe DeployService do
       end.map(&:first).must_equal [deploy]
     end
 
-    it "sends before deploy outbound webhooks" do
-      OutboundWebhook.create!(url: "http://foo", auth_type: "None", stages: [stage], before_deploy: true)
-      service.deploy(stage, reference: reference)
-      job_execution.expects(:finish) # do not call finish hooks ...
-      assert_request(:post, "http://foo/") { job_execution.perform }
+    describe "with before-deploy outbound webhook" do
+      before { OutboundWebhook.create!(url: "http://foo", auth_type: "None", stages: [stage], before_deploy: true) }
+
+      it "sends" do
+        service.deploy(stage, reference: reference)
+        job_execution.expects(:finish) # do not run finish hooks so we know we got the right oubound hook
+        job_execution.expects(:setup) # executes
+        assert_request(:post, "http://foo/") { job_execution.perform }
+      end
+
+      it "stops the deploy when it fails" do
+        service.deploy(stage, reference: reference)
+        job_execution.expects(:setup).never # stops the execution
+        assert_request(:post, "http://foo/", to_return: {status: 422}) { job_execution.perform }
+        job_execution.output.messages.must_include "JobExecution failed: Webhook notification: failed"
+      end
     end
   end
 
@@ -298,7 +309,7 @@ describe DeployService do
       run_deploy
     end
 
-    it "after before deploy outbound webhooks" do
+    it "runs after deploy outbound webhooks" do
       OutboundWebhook.create!(url: "http://foo", auth_type: "None", stages: [stage], before_deploy: false)
       service.deploy(stage, reference: reference)
       assert_request(:post, "http://foo/") { job_execution.perform }

@@ -114,14 +114,28 @@ describe OutboundWebhook do
     end
 
     it "fails on bad response" do
-      assert_request :post, "https://testing.com/deploys", to_return: {status: 400, body: "a" * 200} do
-        webhook.deliver(deploy, output)
+      e = assert_raises Samson::Hooks::UserError do
+        assert_request :post, "https://testing.com/deploys", to_return: {status: 400, body: "a" * 200} do
+          webhook.deliver(deploy, output)
+        end
       end
-      output.string.must_equal <<~TEXT
-        Webhook notification: sending to https://testing.com/deploys ...
+      output.string.must_equal "Webhook notification: sending to https://testing.com/deploys ...\n"
+
+      # this will go into the job-execution log via the error catcher
+      e.message.must_equal <<~TEXT.rstrip
         Webhook notification: failed 400
         aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...
       TEXT
+    end
+
+    it "fails on internal error" do
+      e = assert_raises Samson::Hooks::UserError do
+        assert_request :post, "https://testing.com/deploys", to_timeout: [] do
+          webhook.deliver(deploy, output)
+        end
+      end
+      e.message.must_equal "Webhook notification: failed Faraday::ConnectionFailed"
+      output.string.must_equal "Webhook notification: sending to https://testing.com/deploys ...\n"
     end
   end
 
