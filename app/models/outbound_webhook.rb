@@ -5,7 +5,6 @@ require 'faraday'
 class OutboundWebhook < ActiveRecord::Base
   AUTH_TYPES = ["None", "Basic", "Token", "Bearer"].freeze
 
-  self.ignored_columns = ["stage_id", "project_id", "deleted_at"]
   audited
 
   has_many :outbound_webhook_stages, dependent: nil, inverse_of: :outbound_webhook
@@ -46,7 +45,7 @@ class OutboundWebhook < ActiveRecord::Base
   end
 
   def as_json(*)
-    super(except: [:password, :stage_id, :project_id, :delete_at])
+    super(except: [:password])
   end
 
   private
