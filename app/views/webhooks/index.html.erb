@@ -195,5 +195,25 @@
 
       <%= form.submit "Add", class: "btn btn-primary" %>
     <% end %>
+
+    <% if global_webhooks = OutboundWebhook.where(global: true).pluck(:url, :id).presence %>
+      <%= form_for OutboundWebhook.new, url: connect_outbound_webhooks_path, html: {class: "form-horizontal"} do |form| %>
+        <div class="form-group">
+          <%= form.label "Global Webhook", class: "col-lg-2 control-label" %>
+          <div class="col-lg-4">
+            <%= select_tag "id", options_for_select(global_webhooks), class: "form-control" %>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <%= form.label "Stage", class: "col-lg-2 control-label" %>
+          <div class="col-lg-4">
+            <%= select_tag "stage_id", options_from_collection_for_select(@project.stages, :id, :name), class: "form-control" %>
+          </div>
+        </div>
+
+        <%= form.submit "Add", class: "btn btn-primary" %>
+      <% end %>
+    <% end %>
   </details>
 </section>

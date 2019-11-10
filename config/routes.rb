@@ -56,7 +56,11 @@ Samson::Application.routes.draw do
     end
   end
 
-  resources :outbound_webhooks, only: [:index, :create, :show, :update, :destroy]
+  resources :outbound_webhooks, only: [:index, :create, :show, :update, :destroy] do
+    collection do
+      post :connect
+    end
+  end
   resources :user_project_roles, only: [:index, :create]
   resources :locks, only: [:index, :create, :destroy]
 
