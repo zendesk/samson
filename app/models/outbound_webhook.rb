@@ -17,27 +17,32 @@ class OutboundWebhook < ActiveRecord::Base
 
   def deliver(deploy, output)
     prefix = "Webhook notification:"
+
     output.puts "#{prefix} sending to #{url} ..."
+    response = post_hook(deploy)
 
-    error_message =
-      begin
-        response = connection.post url do |req|
-          req.headers['Content-Type'] = 'application/json'
-          req.body = self.class.deploy_as_json(deploy).to_json
-        end
-
-        if response.success?
+    if response.success?
+      if status_path?
+        if status_url = JSON.parse(response.body)[status_path]
+          output.puts "#{prefix} polling #{status_url} ..."
+          poll_status_url(status_url) { |body| output.puts "#{prefix} #{body}" }
           output.puts "#{prefix} succeeded"
-          return
         else
-          Rails.logger.error "Outbound Webhook Error #{id} #{url} #{response.body}"
-          "#{prefix} failed #{response.status}\n#{response.body.to_s.truncate(100)}"
+          raise Samson::Hooks::UserError, "#{prefix} response did not include status url at #{status_path}"
         end
-      rescue StandardError => e # Timeout or SSL error
-        "#{prefix} failed #{e.class}"
+      else
+        output.puts "#{prefix} succeeded"
       end
-
-    raise Samson::Hooks::UserError, error_message
+    else
+      Rails.logger.error "Outbound Webhook Error #{id} #{url} #{response.body}"
+      raise(
+        Samson::Hooks::UserError,
+        "#{prefix} failed #{response.status}\n#{response.body.to_s.truncate(100)}"
+      )
+    end
+  rescue StandardError => e # Timeout or SSL
+    raise e if e.is_a?(Samson::Hooks::UserError)
+    raise Samson::Hooks::UserError, "#{prefix} failed #{e.class}"
   end
 
   def self.deploy_as_json(deploy)
@@ -57,6 +62,22 @@ class OutboundWebhook < ActiveRecord::Base
   end
 
   private
+
+  def post_hook(deploy)
+    connection.post url do |req|
+      req.headers['Content-Type'] = 'application/json'
+      req.body = self.class.deploy_as_json(deploy).to_json
+    end
+  end
+
+  # loop forever until user cancels the deploy or deploy times out
+  def poll_status_url(url)
+    loop do
+      response = connection.get(url)
+      yield response.body
+      break if response.success?
+    end
+  end
 
   def connection
     Faraday.new(ssl: {verify: !insecure}) do |connection|

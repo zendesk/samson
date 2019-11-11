@@ -137,6 +137,78 @@ describe OutboundWebhook do
       e.message.must_equal "Webhook notification: failed Faraday::ConnectionFailed"
       output.string.must_equal "Webhook notification: sending to https://testing.com/deploys ...\n"
     end
+
+    describe "status_path" do
+      def assert_webhook_fired(&block)
+        assert_request :post, "https://testing.com/deploys", to_return: polling_target, &block
+      end
+
+      let(:polling_target) { {body: {foo: "http://foo.com/bar"}.to_json} }
+
+      before { webhook.status_path = 'foo' }
+
+      it "polls status url until it succeeds" do
+        replies = [
+          {status: 102, body: "HELLO"},
+          {status: 102, body: "WORLD"},
+          {status: 200, body: "DONE"}
+        ]
+        assert_webhook_fired do
+          assert_request :get, "http://foo.com/bar", to_return: replies do
+            webhook.deliver(deploy, output)
+          end
+        end
+        output.string.must_equal <<~TEXT
+          Webhook notification: sending to https://testing.com/deploys ...
+          Webhook notification: polling http://foo.com/bar ...
+          Webhook notification: HELLO
+          Webhook notification: WORLD
+          Webhook notification: DONE
+          Webhook notification: succeeded
+        TEXT
+      end
+
+      it "fails on parse error" do
+        polling_target[:body] = "<html>wtf</html>"
+        e = assert_raises Samson::Hooks::UserError do
+          assert_webhook_fired do
+            webhook.deliver(deploy, output)
+          end
+        end
+        e.message.must_equal "Webhook notification: failed JSON::ParserError"
+        output.string.must_equal <<~TEXT
+          Webhook notification: sending to https://testing.com/deploys ...
+        TEXT
+      end
+
+      it "fails when status url is missing" do
+        polling_target[:body] = "{}"
+        e = assert_raises Samson::Hooks::UserError do
+          assert_webhook_fired do
+            webhook.deliver(deploy, output)
+          end
+        end
+        e.message.must_equal "Webhook notification: response did not include status url at foo"
+        output.string.must_equal <<~TEXT
+          Webhook notification: sending to https://testing.com/deploys ...
+        TEXT
+      end
+
+      it "fails when status polling fails" do
+        e = assert_raises Samson::Hooks::UserError do
+          assert_webhook_fired do
+            assert_request :get, "http://foo.com/bar", to_timeout: [] do
+              webhook.deliver(deploy, output)
+            end
+          end
+        end
+        e.message.must_equal "Webhook notification: failed Faraday::ConnectionFailed"
+        output.string.must_equal <<~TEXT
+          Webhook notification: sending to https://testing.com/deploys ...
+          Webhook notification: polling http://foo.com/bar ...
+        TEXT
+      end
+    end
   end
 
   describe "#as_json" do
