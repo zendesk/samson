@@ -15,7 +15,6 @@ module Kubernetes
     validates :kubernetes_release, presence: true
     validate :validate_config_file, on: :create
 
-    before_create :backfill_broken_columns
     before_create :store_resource_template
 
     attr_reader :previous_resources
@@ -153,13 +152,6 @@ module Kubernetes
       else
         [non_blocking, Integer(min_available)].min
       end
-    end
-
-    def backfill_broken_columns
-      columns = self.class.columns.map(&:name)
-      self.requests_cpu = 0 if columns.include?("requests_cpu") # uncovered
-      self.requests_memory = 0 if columns.include?("requests_memory") # uncovered
-      self.no_cpu_limit = false if columns.include?("no_cpu_limit") # uncovered
     end
 
     def validate_config_file
