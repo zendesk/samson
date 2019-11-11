@@ -5,7 +5,7 @@ class OutboundWebhooksController < ResourceController
   include CurrentProject
 
   before_action :authorize_project_deployer!, except: [:index]
-  before_action :set_resource, only: [:show, :edit, :update, :destroy, :new, :create]
+  before_action :set_resource, only: [:show, :edit, :update, :destroy, :new, :create, :connect]
 
   # creation is done from project webhooks page
   def create
@@ -24,6 +24,15 @@ class OutboundWebhooksController < ResourceController
 
   def update
     super template: 'show'
+  end
+
+  def connect
+    connection = OutboundWebhookStage.create(stage: @stage, outbound_webhook: @outbound_webhook)
+    if connection.persisted?
+      redirect_to resources_path, notice: "Added"
+    else
+      redirect_to resources_path, alert: connection.errors.full_messages.join(', ')
+    end
   end
 
   private

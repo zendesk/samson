@@ -13,6 +13,7 @@ describe OutboundWebhooksController do
     unauthorized :post, :create
     unauthorized :put, :update, id: 1
     unauthorized :delete, :destroy, id: 1
+    unauthorized :post, :connect, id: 1
 
     describe "#index" do
       before { OutboundWebhook.create!(url: "http://something.else", auth_type: "None") }
@@ -91,6 +92,23 @@ describe OutboundWebhooksController do
             assert_redirected_to project_webhooks_path(project)
           end
         end
+      end
+    end
+
+    describe "#connect" do
+      it "can connect" do
+        webhook.stages = []
+        post :connect, params: {id: webhook.id, stage_id: stage.id}
+        assert_redirected_to "/projects/foo/webhooks"
+        webhook.reload.stages.size.must_equal 1
+        assert flash[:notice]
+      end
+
+      it "shows error when duplicating" do
+        post :connect, params: {id: webhook.id, stage_id: stage.id}
+        assert_redirected_to "/projects/foo/webhooks"
+        webhook.reload.stages.size.must_equal 1
+        assert flash[:alert]
       end
     end
   end
