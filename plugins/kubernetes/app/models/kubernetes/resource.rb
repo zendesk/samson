@@ -24,7 +24,8 @@ module Kubernetes
       def patch_replace
         update = resource.deep_dup
         patch_paths.each do |keys|
-          update.dig_set keys, @template.dig_fetch(*keys)
+          next unless value = @template.dig(*keys)
+          update.dig_set keys, value
         end
         with_patch_header do
           request :patch, name, [{op: "replace", path: "/spec", value: update.fetch(:spec)}], namespace
@@ -439,7 +440,12 @@ module Kubernetes
         # update the template via special magic
         # https://kubernetes.io/docs/tutorials/stateful-application/basic-stateful-set/#on-delete
         # fails when trying to update anything outside of containers or replicas
-        [[:spec, :replicas], [:spec, :template, :spec, :containers]]
+        [
+          [:spec, :replicas],
+          [:spec, :template, :spec, :containers],
+          [:spec, :template, :spec, :initContainers],
+          [:spec, :template, :spec, :volumes]
+        ]
       end
 
       def wait_for_pods_to_restart
