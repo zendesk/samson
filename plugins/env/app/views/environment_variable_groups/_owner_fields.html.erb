@@ -1,0 +1,18 @@
+<%= form.fields_for :environment_variable_group_owners, form.object.environment_variable_group_owners + [EnvironmentVariableGroupOwner.new] do |fields| %>
+  <div class="form-group">
+    <div class="col-lg-2"></div>
+    <div class="col-lg-4">
+      <%= fields.text_field :name, class: "form-control monospace" %>
+    </div>
+
+    <% if fields.object.persisted? %>
+      <div class="col-lg-1 checkbox">
+        <%= fields.label :_destroy do %>
+          <%= fields.check_box :_destroy %>
+          Delete
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+<%= link_to "Add row", "#", class: "duplicate_previous_row col-lg-6 env_group_owner_add_row" %>

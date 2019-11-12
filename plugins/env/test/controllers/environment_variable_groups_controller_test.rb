@@ -7,12 +7,16 @@ describe EnvironmentVariableGroupsController do
   def self.it_updates
     it "updates" do
       variable = env_group.environment_variables.first
+      owner = env_group.environment_variable_group_owners.first
       refute_difference "EnvironmentVariable.count" do
         put :update, params: {
           id: env_group.id,
           environment_variable_group: {
             environment_variables_attributes: {
               "0" => {name: "N1", value: "V2", scope_type_and_id: "DeployGroup-#{deploy_group.id}", id: variable.id}
+            },
+            environment_variable_group_owners_attributes: {
+              "0" => {name: "changed", id: owner.id}
             }
           }
         }
@@ -20,6 +24,7 @@ describe EnvironmentVariableGroupsController do
 
       assert_redirected_to "/environment_variable_groups"
       variable.reload.value.must_equal "V2"
+      owner.reload.name.must_equal "changed"
       variable.reload.scope.must_equal deploy_group
     end
   end
@@ -40,6 +45,10 @@ describe EnvironmentVariableGroupsController do
   let!(:env_group) do
     EnvironmentVariableGroup.create!(
       name: "G1",
+      environment_variable_group_owners_attributes: {
+        0 => {name: "test@samson.com"},
+        1 => {name: "samson_team"},
+      },
       environment_variables_attributes: {
         0 => {name: "X", value: "Y"},
         1 => {name: "Y", value: "Z"}
@@ -98,6 +107,8 @@ describe EnvironmentVariableGroupsController do
         first_group.keys.must_include "variable_names"
         first_group['name'].must_equal "G1"
         first_group['variable_names'].must_equal ["X", "Y"]
+        first_group.keys.must_include "owners"
+        first_group['owners'].must_equal ["test@samson.com", "samson_team"]
       end
 
       it "renders with envionment_variables if present" do
@@ -250,7 +261,10 @@ describe EnvironmentVariableGroupsController do
             post :create, params: {
               environment_variable_group: {
                 environment_variables_attributes: {"0" => {name: "N1", value: "V1"}},
-                name: "G2"
+                name: "G2",
+                environment_variable_group_owners_attributes: {
+                  0 => {name: "test@samson.com"}
+                }
               }
             }
           end
@@ -268,7 +282,10 @@ describe EnvironmentVariableGroupsController do
             comment: "COOMMMENT",
             environment_variables_attributes: {
               "0" => {name: "N1", value: "V1"}
-            }
+            },
+            environment_variable_group_owners_attributes: {
+              0 => {name: "changed"},
+            },
           }
         }
       end
@@ -300,6 +317,19 @@ describe EnvironmentVariableGroupsController do
           }
         end
 
+        assert_redirected_to "/environment_variable_groups"
+      end
+
+      it "destroys group owner" do
+        owner = env_group.environment_variable_group_owners.first
+        put :update, params: {
+          id: env_group.id, environment_variable_group: {
+            environment_variable_group_owners_attributes: {
+              "0" => {name: "test@samson.com", id: owner.id, _destroy: true}
+            }
+          }
+        }
+        env_group.environment_variable_group_owners.reload.wont_include owner
         assert_redirected_to "/environment_variable_groups"
       end
 

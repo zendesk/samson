@@ -1,0 +1,7 @@
+.env_group_owner_add_row {
+	text-align: right;	
+}
+
+label.env_group_owner .popover{
+	width: 20em;
+}

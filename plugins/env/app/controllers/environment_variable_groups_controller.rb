@@ -89,7 +89,9 @@ class EnvironmentVariableGroupsController < ApplicationController
     params.require(:environment_variable_group).permit(
       :name,
       :comment,
-      AcceptsEnvironmentVariables::ASSIGNABLE_ATTRIBUTES
+      AcceptsEnvironmentVariables::ASSIGNABLE_ATTRIBUTES.merge(
+        environment_variable_group_owners_attributes: [:name, :_destroy, :id]
+      )
     )
   end
 

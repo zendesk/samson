@@ -50,5 +50,17 @@ describe EnvironmentVariableGroup do
         group.variable_names.must_equal ["A", "B", "C"]
       end
     end
+
+    describe "#owners" do
+      it "gives owner names" do
+        group.update!(
+          environment_variable_group_owners_attributes: [
+            {name: "A"},
+            {name: "B"},
+          ]
+        )
+        group.owners.must_equal ["A", "B"]
+      end
+    end
   end
 end

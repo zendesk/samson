@@ -14,6 +14,8 @@ class EnvironmentVariableGroup < ActiveRecord::Base
 
   has_many :project_environment_variable_groups, dependent: :destroy
   has_many :projects, through: :project_environment_variable_groups, inverse_of: :environment_variable_groups
+  has_many :environment_variable_group_owners, dependent: :destroy
+  accepts_nested_attributes_for :environment_variable_group_owners, allow_destroy: true, reject_if: ->(a) { a[:name].blank? }
 
   validates :name, presence: true
 
@@ -21,7 +23,11 @@ class EnvironmentVariableGroup < ActiveRecord::Base
     environment_variables.sort_by(&:id).map(&:name).uniq
   end
 
+  def owners
+    environment_variable_group_owners.sort_by(&:id).map(&:name)
+  end
+
   def as_json(methods: [], **options)
-    super({methods: [:variable_names] + methods}.merge(options))
+    super({methods: [:variable_names, :owners] + methods}.merge(options))
   end
 end

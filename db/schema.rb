@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_11_08_232023) do
+ActiveRecord::Schema.define(version: 2019_11_12_051956) do
 
   create_table "audits" do |t|
     t.integer "auditable_id", null: false
@@ -154,6 +154,14 @@ ActiveRecord::Schema.define(version: 2019_11_08_232023) do
     t.string "name", null: false
     t.text "comment"
     t.index ["name"], name: "index_environment_variable_groups_on_name", unique: true
+  end
+
+  create_table "environment_variable_group_owners" do |t|
+    t.string "name", null: false
+    t.bigint "environment_variable_group_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["environment_variable_group_id"], name: "index_environment_variable_group_owners_group_id"
   end
 
   create_table "environment_variables", id: :integer do |t|
