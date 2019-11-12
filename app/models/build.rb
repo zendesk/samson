@@ -123,3 +123,4 @@ class Build < ActiveRecord::Base
     self.number = biggest_number + 1
   end
 end
+Samson::Hooks.load_decorators(Build)

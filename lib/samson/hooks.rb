@@ -43,9 +43,7 @@ module Samson
       :deploy_group_includes,
       :deploy_group_permitted_params,
       :deploy_permitted_params,
-      :ensure_build_is_succeeded,
       :error,
-      :ensure_docker_image_has_no_vulnerabilities,
       :ignore_error,
       :deploy_env,
       :deploy_execution_env,
@@ -74,7 +72,6 @@ module Samson
       :before_deploy,
       :before_docker_build,
       :before_docker_repository_usage,
-      :ensure_build_is_succeeded,
       :ref_status,
       :stage_clone
     ].freeze

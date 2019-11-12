@@ -1,8 +1,0 @@
-<% if ENV['GCLOUD_IMAGE_SCANNER'] && @project.show_gcr_vulnerabilities && @build.docker_repo_digest %>
-  <dt>Vulnerabilities</dt>
-  <dd>
-    <% url = SamsonGcloud::ImageScanner.result_url(@build.docker_repo_digest) %>
-    <%= link_to_if url, SamsonGcloud::ImageScanner.status(SamsonGcloud::ImageScanner.scan(@build.docker_repo_digest)), url %>
-    <%= additional_info "Images scan results are updated when deploying." %>
-  </dd>
-<% end %>

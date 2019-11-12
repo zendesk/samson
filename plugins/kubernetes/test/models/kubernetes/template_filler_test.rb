@@ -447,27 +447,15 @@ describe Kubernetes::TemplateFiller do
             raw_template[:spec][:template][:spec][:containers][0][:image] = 'foo'
           end
 
-          it "calls vulnerability scanner for digests" do
-            image = "foo.com/example/bar@sha256:#{"a" * 64}"
-            raw_template[:spec][:template][:spec][:containers][0][:image] = image
-            SamsonGcloud.expects(:ensure_docker_image_has_no_vulnerabilities).
-              with(anything, image)
-            result
-          end
-
-          it "calls vulnerability scanner for resolved tags" do
-            Samson::Hooks.with_callback(:resolve_docker_image_tag, ->(*) { "resolved-digest" }) do
-              SamsonGcloud.expects(:ensure_docker_image_has_no_vulnerabilities).
-                with(anything, "resolved-digest")
-              result
+          it "does not modify image when resolve fails" do
+            Samson::Hooks.with_callback(:resolve_docker_image_tag, ->(*) { nil }) do
+              result.dig(:spec, :template, :spec, :containers, 0, :image).must_equal "foo"
             end
           end
 
-          it "does not modify image when resolve fails" do
-            Samson::Hooks.with_callback(:resolve_docker_image_tag, ->(*) { nil }) do
-              SamsonGcloud.expects(:ensure_docker_image_has_no_vulnerabilities).
-                with(anything, "foo")
-              result
+          it "modifies image with resolution result" do
+            Samson::Hooks.with_callback(:resolve_docker_image_tag, ->(*) { "some-sha" }) do
+              result.dig(:spec, :template, :spec, :containers, 0, :image).must_equal "some-sha"
             end
           end
         end
