@@ -421,10 +421,6 @@ module Kubernetes
         elsif resolved = Samson::Hooks.fire(:resolve_docker_image_tag, container.fetch(:image)).compact.first
           container[:image] = resolved
         end
-
-        # verify there are no vulnerabilities
-        stage = @doc.kubernetes_release.deploy.stage
-        Samson::Hooks.fire(:ensure_docker_image_has_no_vulnerabilities, stage, container.fetch(:image))
       end
     end
 

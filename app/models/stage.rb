@@ -4,6 +4,8 @@ class Stage < ActiveRecord::Base
   AUTOMATED_NAME = 'Automated Deploys'
   NON_CLONEABLE_ATTRIBUTES = %w[id next_stage_ids prerequisite_stage_ids is_template permalink].freeze
 
+  self.ignored_columns = ["block_on_gcr_vulnerabilities"] # TODO: remove once migrated
+
   has_soft_deletion default_scope: true
 
   include Lockable

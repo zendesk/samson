@@ -92,17 +92,6 @@ describe Samson::BuildFinder do
       out.wont_include "Creating Build"
     end
 
-    it "fails when plugin checks fail" do
-      build.update_column :docker_repo_digest, 'foo'
-      Samson::Hooks.with_callback(:ensure_build_is_succeeded, ->(*) { false }) do
-        e = assert_raises Samson::Hooks::UserError do
-          execute
-        end
-        e.message.must_equal "Plugin build checks for #{build.url} failed."
-        out.wont_include "Creating Build"
-      end
-    end
-
     describe "when build needs to be created" do
       let(:build_selectors) { [["Dockerfile", nil]] }
 
