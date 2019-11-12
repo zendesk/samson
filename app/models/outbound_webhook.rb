@@ -47,6 +47,7 @@ class OutboundWebhook < ActiveRecord::Base
 
   def self.deploy_as_json(deploy)
     deploy.as_json.merge(
+      "deploy_groups" => deploy.stage.deploy_groups.as_json,
       "project" => deploy.project.as_json,
       "stage" => deploy.stage.as_json,
       "user" => deploy.user.as_json

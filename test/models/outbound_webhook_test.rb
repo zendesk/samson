@@ -225,6 +225,7 @@ describe OutboundWebhook do
       json.keys.must_include 'user'
       json.keys.must_include 'project'
       json.keys.must_include 'stage'
+      json.keys.must_include 'deploy_groups'
     end
   end
 end
