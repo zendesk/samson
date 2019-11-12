@@ -103,6 +103,12 @@ describe OutboundWebhook do
     let(:deploy) { deploys(:succeeded_test) }
     let(:output) { StringIO.new }
 
+    # Make sure most paths don't sleep unexpectedly
+    before do
+      webhook.unstub(:sleep)
+      webhook.expects(:sleep).with { raise "Unexpected sleep poll" }.never
+    end
+
     it "posts" do
       assert_request :post, "https://testing.com/deploys" do
         webhook.deliver(deploy, output)
@@ -143,17 +149,21 @@ describe OutboundWebhook do
         assert_request :post, "https://testing.com/deploys", to_return: polling_target, &block
       end
 
+      with_env OUTBOUND_WEBHOOK_POLL_PERIOD: '1'
+
       let(:polling_target) { {body: {foo: "http://foo.com/bar"}.to_json} }
 
       before { webhook.status_path = 'foo' }
 
       it "polls status url until it succeeds" do
         replies = [
-          {status: 102, body: "HELLO"},
-          {status: 102, body: "WORLD"},
+          {status: 202, body: "HELLO"},
+          {status: 202, body: "WORLD"},
           {status: 200, body: "DONE"}
         ]
         assert_webhook_fired do
+          webhook.unstub(:sleep)
+          webhook.expects(:sleep).with(1).times(2)
           assert_request :get, "http://foo.com/bar", to_return: replies do
             webhook.deliver(deploy, output)
           end
