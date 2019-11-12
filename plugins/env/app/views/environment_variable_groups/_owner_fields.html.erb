@@ -5,14 +5,15 @@
       <%= fields.text_field :name, class: "form-control monospace" %>
     </div>
 
-    <% if fields.object.persisted? %>
-      <div class="col-lg-1 checkbox">
+    
+    <div class="col-lg-1 checkbox">
+      <% if fields.object.persisted? %>
         <%= fields.label :_destroy do %>
           <%= fields.check_box :_destroy %>
           Delete
         <% end %>
-      </div>
-    <% end %>
+      <% end %>
+    </div>
   </div>
 <% end %>
 <%= link_to "Add row", "#", class: "duplicate_previous_row col-lg-6 env_group_owner_add_row" %>
