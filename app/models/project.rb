@@ -15,8 +15,6 @@ class Project < ActiveRecord::Base
     }
   ] + Samson::Hooks.fire(:project_docker_build_method_options).flatten(1)
 
-  self.ignored_columns = ["show_gcr_vulnerabilities"] # TODO: remove once migrated
-
   has_soft_deletion default_scope: true
   audited
 
