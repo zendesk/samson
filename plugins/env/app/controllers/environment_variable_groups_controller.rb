@@ -89,6 +89,7 @@ class EnvironmentVariableGroupsController < ApplicationController
     params.require(:environment_variable_group).permit(
       :name,
       :comment,
+      :owners,
       AcceptsEnvironmentVariables::ASSIGNABLE_ATTRIBUTES
     )
   end
