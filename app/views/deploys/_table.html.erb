@@ -7,8 +7,11 @@
       <% end %>
       <th>Started</th>
       <th>
-        Duration
-        <%= link_to_chart "#{@project&.name || @stage&.name} Deploy duration", @deploys.map(&:duration) %>
+        <% if @project || @stage %>
+          <%= link_to_chart "Duration", @deploys.map(&:duration), title: "#{@project&.name || @stage&.name} Deploy duration" %>
+        <% else %>
+          Duration
+        <% end %>
       </th>
       <th>Deploy</th>
       <% unless @stage %>

@@ -685,19 +685,19 @@ describe ApplicationHelper do
 
   describe "#link_to_chart" do
     it "renders" do
-      chart = link_to_chart("Hello world", [200, 3, 4, 100, 500])
+      chart = link_to_chart("Hello world", [200, 3, 4, 100, 500], title: "Hello")
       chart.must_include "https://chart.googleapis.com/chart"
     end
 
     it "renders all 0" do
-      chart = link_to_chart("Hello world", [0, 0, 0, 0, 0])
+      chart = link_to_chart("Hello world", [0, 0, 0, 0, 0], title: "Hello")
       chart.must_include "https://chart.googleapis.com/chart"
     end
 
     it "does not render for useless data" do
-      link_to_chart("Hello world", []).must_equal nil
-      link_to_chart("Hello world", [1]).must_equal nil
-      link_to_chart("Hello world", [1, 2]).must_equal nil
+      link_to_chart("Hello world", [], title: "Hello").must_equal nil
+      link_to_chart("Hello world", [1], title: "Hello").must_equal nil
+      link_to_chart("Hello world", [1, 2], title: "Hello").must_equal nil
     end
   end
 

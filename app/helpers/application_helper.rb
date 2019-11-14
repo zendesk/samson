@@ -298,7 +298,7 @@ module ApplicationHelper
   end
 
   # See https://developers.google.com/chart/image/docs/chart_params
-  def link_to_chart(name, values)
+  def link_to_chart(name, values, title:)
     return if values.size < 3
 
     max = values.max.round
@@ -306,14 +306,14 @@ module ApplicationHelper
     y_values = values.reverse.map { |v| max == 0 ? max : (v * 100.0 / max).round }.join(",") # values as % of max
     params = {
       cht: "lc", # chart type
-      chtt: name,
+      chtt: title,
       chd: "t:#{y_values}", # data
       chxt: "y", # axis to draw
       chxl: "0:|#{y_axis}", # axis labels
       chs: "1000x200", # size
     }
     url = "https://chart.googleapis.com/chart?#{params.to_query}"
-    link_to icon_tag('signal'), url, target: :blank
+    link_to name, url, target: :blank
   end
 
   # show which stages this reference is deploy(ed+ing) to
