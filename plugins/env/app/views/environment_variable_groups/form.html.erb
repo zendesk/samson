@@ -25,6 +25,7 @@
     <fieldset <%= disabled %>>
       <%= form.input :name %>
       <%= form.input :comment, as: :text_area, input_html: {size: "80x4"} %>
+      <%= form.input :owners, help: "Github team names or email to contact with questions (comma separated)" %>
     </fieldset>
 
     <% if @group.projects.length > 0 %>
