@@ -15,8 +15,13 @@ class SecretsController < ApplicationController
       [id, Samson::Secrets::Manager.parse_id(id), secret_stub]
     end
 
+    @project_permalinks =
+      @secrets.map { |_, parts, _| parts.fetch(:project_permalink) }.uniq.sort - ['global'] + ['global']
+    @deploy_group_permalinks =
+      @secrets.map { |_, parts, _| parts.fetch(:deploy_group_permalink) }.uniq.sort - ['global'] + ['global']
+    @environment_permalinks =
+      @secrets.map { |_, parts, _| parts.fetch(:environment_permalink) }.uniq.sort - ['global'] + ['global']
     @keys = @secrets.map { |_, parts, _| parts.fetch(:key) }.uniq.sort
-    @project_permalinks = @secrets.map { |_, parts, _| parts.fetch(:project_permalink) }.uniq.sort
 
     Samson::Secrets::Manager::ID_PARTS.each do |part|
       if value = params.dig(:search, part).presence
