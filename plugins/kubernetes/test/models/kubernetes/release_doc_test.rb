@@ -159,7 +159,7 @@ describe Kubernetes::ReleaseDoc do
       end
 
       it "keeps name when using custom namespace" do
-        doc.kubernetes_release.project.create_kubernetes_namespace!(name: "foo")
+        doc.kubernetes_release.project.kubernetes_namespace = kubernetes_namespaces(:test)
         template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '30%'}
         create!.resource_template[2][:metadata][:name].must_equal 'some-project-rc'
       end

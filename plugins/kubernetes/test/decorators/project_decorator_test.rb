@@ -39,7 +39,7 @@ describe Project do
   describe "#override_resource_names?" do
     it "is disabled when namespace is used" do
       assert project.override_resource_names?
-      project.create_kubernetes_namespace!(name: "bar")
+      project.kubernetes_namespace = kubernetes_namespaces(:test)
       refute project.override_resource_names?
     end
   end
