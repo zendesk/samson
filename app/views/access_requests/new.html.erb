@@ -18,8 +18,7 @@
         <%= form.select :project_ids, @projects.pluck(:name, :id), {include_hidden: false}, multiple: true, **Samson::FormBuilder::LIVE_SELECT_OPTIONS %>
       <% end %>
       <%= form.input :role_id, required: true do %>
-        <%= select_tag 'access_request[role_id]', options_from_collection_for_select(@roles, :id, :display_name),
-            class: 'form-control' %>
+        <%= select_tag 'access_request[role_id]', options_from_collection_for_select(@roles, :id, :display_name), class: 'form-control' %>
       <% end %>
       <%= form.actions %>
     <% end %>

@@ -83,6 +83,12 @@ describe Samson::Secrets::VaultClientManager do
         manager.delete('staging/global/pod100/foo', all: true)
       end
     end
+
+    it "deletes from all servers when no server is marked responsible" do
+      assert_vault_request :delete, 'staging/global/oops/foo', times: 2 do
+        manager.delete('staging/global/oops/foo')
+      end
+    end
   end
 
   describe "#list_recursive" do
@@ -151,18 +157,22 @@ describe Samson::Secrets::VaultClientManager do
       it "fails when no servers were found" do
         deploy_groups(:pod1).delete
         deploy_groups(:pod2).delete
-        e = assert_raises(RuntimeError) { manager.write('production/global/global/foo', foo: :bar) }
-        e.message.must_equal "no vault servers found for production/global/global/foo"
+        e = assert_raises(Samson::Secrets::VaultClientManager::VaultServerNotConfigured) do
+          manager.write('production/global/global/foo', foo: :bar)
+        end
+        e.message.must_equal "no environment with permalink production found"
       end
 
       it "fails with unknown environment" do
-        e = assert_raises(RuntimeError) { manager.write('unfound/global/global/foo', foo: :bar) }
+        e = assert_raises(Samson::Secrets::VaultClientManager::VaultServerNotConfigured) do
+          manager.write('unfound/global/global/foo', foo: :bar)
+        end
         e.message.must_equal "no environment with permalink unfound found"
       end
     end
 
     it "fails descriptively when not deploy group was found" do
-      e = assert_raises(RuntimeError) do
+      e = assert_raises(Samson::Secrets::VaultClientManager::VaultServerNotConfigured) do
         manager.write('global/global/podoops/foo', foo: :bar)
       end
       e.message.must_equal "no deploy group with permalink podoops found"
@@ -186,7 +196,9 @@ describe Samson::Secrets::VaultClientManager do
     it "fails descriptively when vault client cannot be found" do
       manager # trigger caching
       deploy_groups(:pod2).update_column(:vault_server_id, 123)
-      e = assert_raises(RuntimeError) { manager.send(:client, deploy_groups(:pod2).permalink) }
+      e = assert_raises(Samson::Secrets::VaultClientManager::VaultServerNotConfigured) do
+        manager.send(:client, deploy_groups(:pod2).permalink)
+      end
       e.message.must_equal "no vault server found with id 123"
     end
 
