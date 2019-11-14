@@ -80,7 +80,11 @@ class OutboundWebhook < ActiveRecord::Base
     loop do
       response = connection.get(url)
       yield response.body
-      break if response.success? && response.status != 202
+      if response.success?
+        break if response.status != 202
+      else
+        raise Samson::Hooks::UserError, "error polling status endpoint"
+      end
       sleep poll_period
     end
   end

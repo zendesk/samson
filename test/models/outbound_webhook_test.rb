@@ -178,6 +178,22 @@ describe OutboundWebhook do
         TEXT
       end
 
+      it "fails on non successful status code" do
+        e = assert_raises Samson::Hooks::UserError do
+          assert_webhook_fired do
+            assert_request :get, "http://foo.com/bar", to_return: {status: 500, body: "SERVER_ERROR"} do
+              webhook.deliver(deploy, output)
+            end
+          end
+        end
+        e.message.must_equal "error polling status endpoint"
+        output.string.must_equal <<~TEXT
+          Webhook notification: sending to https://testing.com/deploys ...
+          Webhook notification: polling http://foo.com/bar ...
+          Webhook notification: SERVER_ERROR
+        TEXT
+      end
+
       it "fails on parse error" do
         polling_target[:body] = "<html>wtf</html>"
         e = assert_raises Samson::Hooks::UserError do
