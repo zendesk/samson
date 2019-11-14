@@ -103,6 +103,12 @@ describe OutboundWebhook do
     let(:deploy) { deploys(:succeeded_test) }
     let(:output) { StringIO.new }
 
+    # Make sure most paths don't sleep unexpectedly
+    before do
+      webhook.unstub(:sleep)
+      webhook.expects(:sleep).with { raise "Unexpected sleep poll" }.never
+    end
+
     it "posts" do
       assert_request :post, "https://testing.com/deploys" do
         webhook.deliver(deploy, output)
@@ -143,17 +149,21 @@ describe OutboundWebhook do
         assert_request :post, "https://testing.com/deploys", to_return: polling_target, &block
       end
 
+      with_env OUTBOUND_WEBHOOK_POLL_PERIOD: '1'
+
       let(:polling_target) { {body: {foo: "http://foo.com/bar"}.to_json} }
 
       before { webhook.status_path = 'foo' }
 
       it "polls status url until it succeeds" do
         replies = [
-          {status: 102, body: "HELLO"},
-          {status: 102, body: "WORLD"},
+          {status: 202, body: "HELLO"},
+          {status: 202, body: "WORLD"},
           {status: 200, body: "DONE"}
         ]
         assert_webhook_fired do
+          webhook.unstub(:sleep)
+          webhook.expects(:sleep).with(1).times(2)
           assert_request :get, "http://foo.com/bar", to_return: replies do
             webhook.deliver(deploy, output)
           end
@@ -165,6 +175,22 @@ describe OutboundWebhook do
           Webhook notification: WORLD
           Webhook notification: DONE
           Webhook notification: succeeded
+        TEXT
+      end
+
+      it "fails on non successful status code" do
+        e = assert_raises Samson::Hooks::UserError do
+          assert_webhook_fired do
+            assert_request :get, "http://foo.com/bar", to_return: {status: 500, body: "SERVER_ERROR"} do
+              webhook.deliver(deploy, output)
+            end
+          end
+        end
+        e.message.must_equal "error polling status endpoint"
+        output.string.must_equal <<~TEXT
+          Webhook notification: sending to https://testing.com/deploys ...
+          Webhook notification: polling http://foo.com/bar ...
+          Webhook notification: SERVER_ERROR
         TEXT
       end
 
@@ -225,6 +251,7 @@ describe OutboundWebhook do
       json.keys.must_include 'user'
       json.keys.must_include 'project'
       json.keys.must_include 'stage'
+      json.keys.must_include 'deploy_groups'
     end
   end
 end

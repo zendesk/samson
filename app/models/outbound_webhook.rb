@@ -47,6 +47,7 @@ class OutboundWebhook < ActiveRecord::Base
 
   def self.deploy_as_json(deploy)
     deploy.as_json.merge(
+      "deploy_groups" => deploy.stage.deploy_groups.as_json,
       "project" => deploy.project.as_json,
       "stage" => deploy.stage.as_json,
       "user" => deploy.user.as_json
@@ -63,6 +64,10 @@ class OutboundWebhook < ActiveRecord::Base
 
   private
 
+  def poll_period
+    @poll_period ||= Integer(ENV['OUTBOUND_WEBHOOK_POLL_PERIOD'] || '30')
+  end
+
   def post_hook(deploy)
     connection.post url do |req|
       req.headers['Content-Type'] = 'application/json'
@@ -70,12 +75,17 @@ class OutboundWebhook < ActiveRecord::Base
     end
   end
 
-  # loop forever until user cancels the deploy or deploy times out
+  # loop forever, with sleeping in between, until user cancels the deploy or deploy times out
   def poll_status_url(url)
     loop do
       response = connection.get(url)
       yield response.body
-      break if response.success?
+      if response.success?
+        break if response.status != 202
+      else
+        raise Samson::Hooks::UserError, "error polling status endpoint"
+      end
+      sleep poll_period
     end
   end
 
