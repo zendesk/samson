@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'samson/secrets/vault_logical_wrapper'
+
 module Samson
   module Secrets
     # Vault wrapper that sends requests to all matching vault servers
@@ -54,7 +56,16 @@ module Samson
 
       # delete from all servers that hold this id
       def delete(id, all: false)
-        selected_clients = (all ? clients.values : responsible_clients(id))
+        selected_clients =
+          if all
+            clients.values
+          else
+            begin
+              responsible_clients(id)
+            rescue VaultServerNotConfigured
+              clients.values
+            end
+          end
         Samson::Parallelizer.map(selected_clients) do |vault_client|
           with_retries { vault_client.kv.delete(id) }
         end
@@ -78,13 +89,13 @@ module Samson
 
       def client(deploy_group_permalink)
         unless client_map[:deploy_groups].key?(deploy_group_permalink)
-          raise "no deploy group with permalink #{deploy_group_permalink} found"
+          raise VaultServerNotConfigured, "no deploy group with permalink #{deploy_group_permalink} found"
         end
         unless id = client_map[:deploy_groups][deploy_group_permalink]
           raise VaultServerNotConfigured, "deploy group #{deploy_group_permalink} has no vault server configured"
         end
         unless vault_client = clients[id]
-          raise "no vault server found with id #{id}"
+          raise VaultServerNotConfigured, "no vault server found with id #{id}"
         end
         vault_client
       end
@@ -105,16 +116,16 @@ module Samson
 
         if deploy_group_permalink == 'global'
           if environment_permalink == 'global'
-            clients.values
+            clients.values.presence || raise(VaultServerNotConfigured, "no vault servers configured")
           else
-            unless deploy_group_permalinks = client_map[:environments][environment_permalink]
-              raise "no environment with permalink #{environment_permalink} found"
+            unless deploy_group_permalinks = client_map[:environments][environment_permalink].presence
+              raise VaultServerNotConfigured, "no environment with permalink #{environment_permalink} found"
             end
             deploy_group_permalinks.map { |p| client(p) }.uniq
           end
         else
           [client(deploy_group_permalink)]
-        end.presence || raise("no vault servers found for #{id}")
+        end
       end
 
       def clients

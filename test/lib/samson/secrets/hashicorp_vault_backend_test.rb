@@ -261,8 +261,13 @@ describe Samson::Secrets::HashicorpVaultBackend do
     end
 
     it ".write" do
-      manager.expects(:read).returns(nil)
-      manager.expects(:write).raises(Vault::HTTPConnectionError.new("address", RuntimeError.new('no write for you')))
+      manager.expects(:read).returns(nil) # does not exist -> create
+      # tries to revert after failure ... but also fails
+      manager.expects(:delete).
+        raises(Vault::HTTPConnectionError.new("address", RuntimeError.new('no delete for you')))
+      manager.expects(:write).
+        raises(Vault::HTTPConnectionError.new("address", RuntimeError.new('no write for you')))
+
       e = assert_raises Samson::Secrets::BackendError do
         backend.write(
           'production/foo/group/isbar/foo', value: 'whatever', visible: false, user_id: 1, comment: 'secret!'
