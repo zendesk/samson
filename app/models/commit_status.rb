@@ -168,13 +168,14 @@ class CommitStatus
     return unless ENV["COMMIT_STATUS_RISKS"]
     return unless previous = @stage.deploys.succeeded.first
     pull_requests = Changeset.new(@stage.project, previous.commit, @reference).pull_requests
+    count = pull_requests.count(&:missing_risks?)
 
-    if pull_requests.any?(&:missing_risks?)
+    if count > 0
       {
         state: "error",
         statuses: [{
           state: "Missing risks",
-          description: "Risks section missing or failed to parse risks on some PRs",
+          description: "Risks section missing or failed to parse risks on #{count} PRs",
           updated_at: 1.minute.ago # do not cache for long so user can update the PR
         }]
       }
