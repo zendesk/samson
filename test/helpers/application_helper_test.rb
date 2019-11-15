@@ -232,29 +232,6 @@ describe ApplicationHelper do
     end
   end
 
-  describe "#flash_messages" do
-    let(:flash) { {} }
-
-    it "returns empty" do
-      flash_messages.must_equal []
-    end
-
-    it "fails on unknown" do
-      flash[:foo] = "bar"
-      assert_raises(KeyError) { flash_messages }
-    end
-
-    it "translates bootstrap classes" do
-      flash[:notice] = "N"
-      flash_messages.must_equal [[:notice, :info, "N"]]
-    end
-
-    it "returns arrays of messages" do
-      flash[:notice] = ["bar", "baz"]
-      flash_messages.must_equal [[:notice, :info, "bar"], [:notice, :info, "baz"]]
-    end
-  end
-
   describe "#link_to_delete" do
     it "builds a link" do
       link_to_delete("/foo").must_include ">Delete</a>"

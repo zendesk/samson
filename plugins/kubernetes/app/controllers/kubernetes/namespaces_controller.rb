@@ -10,10 +10,10 @@ class Kubernetes::NamespacesController < ResourceController
 
   def sync_all
     clusters = Kubernetes::Cluster.all.to_a
-    errors = Samson::Parallelizer.map(Kubernetes::Namespace.all.to_a) do |namespace|
+    warnings = Samson::Parallelizer.map(Kubernetes::Namespace.all.to_a) do |namespace|
       upsert_namespace clusters, namespace
     end.flatten(1)
-    show_namespace_errors errors
+    show_namespace_warnings warnings
     redirect_to action: :index
   end
 
@@ -29,8 +29,8 @@ class Kubernetes::NamespacesController < ResourceController
   end
 
   def sync_namespace
-    errors = upsert_namespace Kubernetes::Cluster.all, @kubernetes_namespace
-    show_namespace_errors errors
+    warnings = upsert_namespace Kubernetes::Cluster.all, @kubernetes_namespace
+    show_namespace_warnings warnings
   end
 
   # @return [Array<String>] errors
@@ -54,9 +54,9 @@ class Kubernetes::NamespacesController < ResourceController
     end.compact
   end
 
-  def show_namespace_errors(errors)
-    return if errors.empty?
-    flash[:alert] = helpers.simple_format("Error upserting namespace in some clusters:\n" + errors.join("\n"))
+  def show_namespace_warnings(warnings)
+    return if warnings.empty?
+    flash[:warn] = helpers.simple_format("Error upserting namespace in some clusters:\n" + warnings.join("\n"))
   end
 
   def resource_params

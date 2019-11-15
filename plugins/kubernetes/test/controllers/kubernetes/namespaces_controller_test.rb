@@ -107,7 +107,7 @@ describe Kubernetes::NamespacesController do
           end
         end
         assert_redirected_to "http://test.host/kubernetes/namespaces/#{namespace.id}"
-        refute flash[:alert]
+        refute flash[:warn]
       end
     end
 
@@ -119,7 +119,7 @@ describe Kubernetes::NamespacesController do
           end
         end
         assert_redirected_to "http://test.host/kubernetes/namespaces"
-        refute flash[:alert]
+        refute flash[:warn]
       end
 
       it "shows errors" do
@@ -129,7 +129,7 @@ describe Kubernetes::NamespacesController do
           end
         end
         assert_redirected_to "http://test.host/kubernetes/namespaces"
-        flash[:alert].must_include "Failed to upsert namespace test in cluster test: 404"
+        flash[:warn].must_include "Failed to upsert namespace test in cluster test: 404"
       end
     end
 
@@ -142,7 +142,7 @@ describe Kubernetes::NamespacesController do
             @controller.send(:create_callback)
           end
         end
-        refute flash[:alert]
+        refute flash[:warn]
       end
 
       it "shows creation errors" do
@@ -152,7 +152,7 @@ describe Kubernetes::NamespacesController do
             @controller.send(:create_callback)
           end
         end
-        flash[:alert].must_equal <<~TEXT.rstrip
+        flash[:warn].must_equal <<~TEXT.rstrip
           <p>Error upserting namespace in some clusters:
           <br />Failed to upsert namespace test in cluster test: Timed out connecting to server</p>
         TEXT
@@ -164,7 +164,7 @@ describe Kubernetes::NamespacesController do
             @controller.send(:create_callback)
           end
         end
-        refute flash[:alert]
+        refute flash[:warn]
       end
     end
   end
