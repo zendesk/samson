@@ -169,7 +169,7 @@ describe Kubernetes::TemplateFiller do
 
       it "keeps resource name when project namespace is set" do
         raw_template[:metadata][:name] = "foobar"
-        project.create_kubernetes_namespace!(name: "bar")
+        project.kubernetes_namespace = kubernetes_namespaces(:test)
         template.to_hash[:metadata][:name].must_equal 'foobar'
       end
     end
@@ -189,8 +189,8 @@ describe Kubernetes::TemplateFiller do
 
       it "sets namespace from kubernetes_namespace" do
         raw_template[:metadata].delete(:namespace)
-        project.create_kubernetes_namespace!(name: "bar")
-        template.to_hash[:metadata][:namespace].must_equal "bar"
+        project.kubernetes_namespace = kubernetes_namespaces(:test)
+        template.to_hash[:metadata][:namespace].must_equal "test"
       end
     end
 
@@ -266,7 +266,7 @@ describe Kubernetes::TemplateFiller do
 
         it "keeps service name when project namespace is set" do
           raw_template[:metadata][:name] = "foobar"
-          project.create_kubernetes_namespace!(name: "bar")
+          project.kubernetes_namespace = kubernetes_namespaces(:test)
           template.to_hash[:metadata][:name].must_equal 'foobar'
         end
       end
@@ -352,7 +352,7 @@ describe Kubernetes::TemplateFiller do
         end
 
         it "does nothing when names are manual" do
-          project.create_kubernetes_namespace!(name: "bar")
+          project.kubernetes_namespace = kubernetes_namespaces(:test)
           service_name.must_equal "unchanged"
         end
       end
@@ -876,7 +876,7 @@ describe Kubernetes::TemplateFiller do
       end
 
       it "does not change names when using namespaces" do
-        project.create_kubernetes_namespace!(name: "bar")
+        project.kubernetes_namespace = kubernetes_namespaces(:test)
         template.to_hash.dig_fetch(:metadata, :name).must_equal("some-project-rc")
         template.to_hash.dig_fetch(:spec, :scaleTargetRef).must_equal({})
       end

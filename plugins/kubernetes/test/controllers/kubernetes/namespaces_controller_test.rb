@@ -46,7 +46,7 @@ describe Kubernetes::NamespacesController do
 
       it "redirects on success" do
         @controller.expects(:create_callback)
-        post :create, params: {kubernetes_namespace: {name: "foo"}}
+        post :create, params: {kubernetes_namespace: {name: "foo", template: "metadata:\n  labels:\n    team: foo"}}
         namespace = Kubernetes::Namespace.find_by_name!("foo")
         assert_redirected_to "http://test.host/kubernetes/namespaces/#{namespace.id}"
       end
@@ -79,7 +79,10 @@ describe Kubernetes::NamespacesController do
       it "updates namespace when template was changed" do
         assert_request(:get, "http://foobar.server/api/v1/namespaces/test", to_return: {body: '{}'}) do
           assert_request(:patch, "http://foobar.server/api/v1/namespaces/test", to_return: {body: '{}'}) do
-            patch :update, params: {id: namespace.id, kubernetes_namespace: {template: "foo: 1"}}
+            patch(
+              :update,
+              params: {id: namespace.id, kubernetes_namespace: {template: "metadata:\n  labels:\n    team: bar"}}
+            )
             assert_redirected_to namespace
           end
         end

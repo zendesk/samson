@@ -47,12 +47,14 @@ module Kubernetes
 
     # @return [Hash]
     def parsed_template
-      template.present? ? YAML.safe_load(template) || {} : {}
+      YAML.safe_load(template.to_s)
     end
 
     def validate_template
-      return if template.blank?
-      errors.add :template, "needs to be a Hash" unless parsed_template.is_a?(Hash)
+      unless parsed_template.is_a?(Hash)
+        return errors.add :template, "needs to be a Hash"
+      end
+      errors.add :template, "needs metadata.labels.team" unless parsed_template.dig("metadata", "labels", "team")
     rescue Psych::Exception
       errors.add :template, "needs to be valid yaml"
     end

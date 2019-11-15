@@ -324,10 +324,10 @@ describe Kubernetes::RoleValidator do
     end
 
     describe "#validate_namespace" do
-      before { project.create_kubernetes_namespace! name: "foo" }
+      before { project.kubernetes_namespace = kubernetes_namespaces(:test) }
 
       it "passes with correct namespaces" do
-        role.each { |e| e[:metadata][:namespace] = "foo" }
+        role.each { |e| e[:metadata][:namespace] = "test" }
         errors.must_equal nil
       end
 
@@ -337,12 +337,12 @@ describe Kubernetes::RoleValidator do
 
       it "fails with forced default namespace" do
         role[0][:metadata][:namespace] = nil
-        errors.must_equal ["Only use configured namespace \"foo\", not [nil]"]
+        errors.must_equal ["Only use configured namespace \"test\", not [nil]"]
       end
 
       it "fails when namespace is set on namespace-less kind" do
         role[0][:kind] = "CustomResourceDefinition"
-        role[0][:metadata][:namespace] = "foo"
+        role[0][:metadata][:namespace] = "test"
         errors.must_equal ["Do not set namespace for CustomResourceDefinition"]
       end
 
@@ -355,7 +355,7 @@ describe Kubernetes::RoleValidator do
         end
 
         it "fails with invalid namespace" do
-          errors.must_equal ["Only use configured namespace \"foo\", not [\"bar\"]"]
+          errors.must_equal ["Only use configured namespace \"test\", not [\"bar\"]"]
         end
       end
     end
@@ -368,7 +368,7 @@ describe Kubernetes::RoleValidator do
       end
 
       it "ignores when using project namespace" do
-        project.create_kubernetes_namespace! name: "foo"
+        project.kubernetes_namespace = kubernetes_namespaces(:test)
         errors.must_be_nil
       end
 

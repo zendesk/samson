@@ -12,24 +12,27 @@ describe Kubernetes::Namespace do
       assert_valid namespace
     end
 
-    it "is not valid when capitalized" do
+    it "is not valid when name is capitalized" do
       namespace.name = "Test"
       refute_valid namespace
-    end
-
-    it "is valid with valid template" do
-      namespace.template = {"foo" => "bar"}.to_yaml
-      assert_valid namespace
     end
 
     it "is not valid with non-hash template" do
       namespace.template = "true"
       refute_valid namespace
+      namespace.errors.full_messages.must_equal ["Template needs to be a Hash"]
     end
 
     it "is not valid with invalid template" do
       namespace.template = {a: 1}.to_yaml
       refute_valid namespace
+      namespace.errors.full_messages.must_equal ["Template needs to be valid yaml"]
+    end
+
+    it "is not valid without a team" do
+      namespace.template = {"metadata" => {"foo" => "foo"}}.to_yaml
+      refute_valid namespace
+      namespace.errors.full_messages.must_equal ["Template needs metadata.labels.team"]
     end
   end
 
@@ -57,7 +60,7 @@ describe Kubernetes::Namespace do
     it "skips clean roles" do
       Kubernetes::Role.update_all(resource_name: nil, service_name: nil)
       assert_difference "Audited::Audit.count", 1 do
-        project.create_kubernetes_namespace!(name: "bar")
+        project.create_kubernetes_namespace!(name: "bar", template: "metadata:\n  labels:\n    team: foo")
       end
     end
   end
@@ -66,7 +69,7 @@ describe Kubernetes::Namespace do
     let(:url) { "http://www.test-url.com/kubernetes/namespaces/#{namespace.id}" }
 
     it "is a hash" do
-      namespace.manifest.must_equal metadata: {name: "test", annotations: {"samson/url": url}}
+      namespace.manifest.must_equal metadata: {name: "test", annotations: {"samson/url": url}, labels: {team: "foo"}}
     end
 
     it "merges template" do

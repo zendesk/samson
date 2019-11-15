@@ -1,3 +1,4 @@
 test:
   name: test
   comment: test cluster
+  template: "metadata:\n  labels:\n    team: foo"
