@@ -23,6 +23,61 @@ describe Kubernetes::NamespacesController do
         assert_template :show
       end
     end
+
+    describe "#preview" do
+      let(:template) do
+        {
+          apiVersion: "v1",
+          kind: "Pod",
+          metadata: {
+            name: "test-app-server",
+            labels: {
+              team: "t",
+              project: "p",
+              role: "r"
+            }
+          },
+          annotation: {"samson/keep_name": "false"}
+        }.to_yaml
+      end
+      before do
+        GitRepository.any_instance.stubs(:file_content).returns template
+        # kubernetes_roles(:app_server).update_column(:resource_name, "foo")
+        kubernetes_roles(:resque_worker).delete # 1 is enough
+      end
+
+      it "shows when there are no changes" do
+        get :preview, params: {project_id: projects(:test).id}
+        assert_redirected_to "/kubernetes/namespaces"
+        assert flash[:notice]
+      end
+
+      it "warns when config file cannot be read" do
+        GitRepository.any_instance.stubs(:file_content).returns nil
+        get :preview, params: {project_id: projects(:test).id}
+        flash[:alert].must_equal "<p>Unable to read kubernetes/app_server.yml</p>"
+      end
+
+      it "can validate against services" do
+        raise unless template.sub!('Pod', 'Service')
+        get :preview, params: {project_id: projects(:test).id}
+        assert flash[:alert]
+      end
+
+      it "ignores immutable because their name cannot change" do
+        raise unless template.sub!('Pod', 'APIService')
+        get :preview, params: {project_id: projects(:test).id}
+        assert flash[:notice]
+      end
+
+      it "shows when there are changes" do
+        raise unless template.sub!('test-app-server', 'nope')
+        get :preview, params: {project_id: projects(:test).id}
+        flash[:alert].must_equal(
+          "<p>Project config kubernetes/app_server.yml Pod nope would be duplicated with name test-app-server</p>"
+        )
+      end
+    end
   end
 
   as_a :deployer do
@@ -73,7 +128,7 @@ describe Kubernetes::NamespacesController do
       it "shows errors when it fails to update" do
         Kubernetes::Namespace.any_instance.expects(:valid?).returns(false) # no validation that can fail
         patch :update, params: {id: namespace.id, kubernetes_namespace: {comment: ""}}
-        assert_template :edit
+        assert_template :show
       end
 
       it "updates namespace when template was changed" do
