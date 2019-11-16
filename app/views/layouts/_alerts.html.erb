@@ -1,7 +1,6 @@
-<% flash_messages.each do |type, klass, message| %>
-  <div class="alert alert-<%= klass %>">
+<% flash.each do |type, message| %>
+  <div class="alert alert-<%= ApplicationHelper::BOOTSTRAP_FLASH_MAPPINGS.fetch(type.to_sym) %>">
     <button type="button" class="close" data-dismiss="alert">&times;</button>
     <%= message %>
-    <%= link_to_request_access if type == :authorization_error && display_access_request_link? %>
   </div>
 <% end %>

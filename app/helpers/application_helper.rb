@@ -3,7 +3,7 @@ require 'ansible'
 require 'github/markdown'
 
 module ApplicationHelper
-  BOOTSTRAP_FLASH_MAPPINGS = {notice: :info, alert: :danger, authorization_error: :danger, success: :success}.freeze
+  BOOTSTRAP_FLASH_MAPPINGS = {notice: :info, alert: :danger, warn: :warning, success: :success}.freeze
   BOOTSTRAP_TOOLTIP_PROPS = {toggle: 'popover', placement: 'right', trigger: 'hover'}.freeze
 
   include Ansible
@@ -176,17 +176,6 @@ module ApplicationHelper
   # @param [String] add
   def add_to_url(url, add)
     url.include?("?") ? "#{url}&#{add}" : "#{url}?#{add}"
-  end
-
-  # Flash type -> Bootstrap alert class
-  def flash_messages
-    flash.flat_map do |type, messages|
-      type = type.to_sym
-      bootstrap_class = BOOTSTRAP_FLASH_MAPPINGS.fetch(type)
-      Array.wrap(messages).map do |message|
-        [type, bootstrap_class, message]
-      end
-    end
   end
 
   def link_to_url(url)
