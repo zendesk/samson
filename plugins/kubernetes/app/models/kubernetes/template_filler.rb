@@ -50,8 +50,8 @@ module Kubernetes
           set_spec_template_metadata
           set_docker_image unless verification
           set_resource_usage
-          set_env
-          set_secrets
+          set_env unless @doc.delete_resource
+          set_secrets unless @doc.delete_resource
           set_image_pull_secrets
           set_resource_blue_green if blue_green_color
           set_init_containers
@@ -340,7 +340,7 @@ module Kubernetes
     end
 
     def validate_replica_target_is_supported
-      return if @doc.replica_target == 1 || (@doc.replica_target == 0 && @doc.delete_resource)
+      return if @doc.replica_target == 1 || @doc.delete_resource
       raise(
         Samson::Hooks::UserError,
         "#{template[:kind]} #{template.dig(:metadata, :name)} is set to #{@doc.replica_target} replicas, " \

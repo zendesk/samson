@@ -145,6 +145,16 @@ describe Kubernetes::TemplateFiller do
       result[:spec][:template][:spec][:replicas].must_equal 2
     end
 
+    it "does not fail when env/secrets are missing during deletion" do
+      raw_template[:spec][:template][:metadata][:annotations] = {"secret/FOO": "bar"}
+      doc.replica_target = 0
+      doc.delete_resource = true
+
+      hash = template.to_hash
+      refute hash.dig(:spec, :template, :spec, :containers, 0, :env)
+      hash.dig(:spec, :template, :metadata, :annotations).keys.must_equal [:"secret/FOO", :"samson/deploy_url"]
+    end
+
     ['CustomResourceDefinition', 'APIService'].each do |kind|
       it "does not set override name for #{kind} since it follows a fixed naming pattern" do
         raw_template[:kind] = kind
