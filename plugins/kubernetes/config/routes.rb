@@ -38,6 +38,7 @@ Samson::Application.routes.draw do
         post :sync
       end
       collection do
+        get :preview
         post :sync_all
       end
     end

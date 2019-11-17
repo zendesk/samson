@@ -1,11 +1,46 @@
 # frozen_string_literal: true
 class Kubernetes::NamespacesController < ResourceController
-  before_action :authorize_admin!, except: [:show, :index]
+  before_action :authorize_admin!, except: [:show, :index, :preview]
   before_action :set_resource, only: [:show, :update, :destroy, :new, :create, :sync]
 
   def update
-    super
+    super template: :show
     sync_namespace if @kubernetes_namespace.previous_changes.key?(:template)
+  end
+
+  # changing resource names means we will duplicate resources and not clean up the old ones, so avoid it
+  def preview
+    project = Project.find params.require(:project_id)
+    reference = project.release_branch.presence || "master"
+    errors = []
+
+    project.kubernetes_roles.not_deleted.each do |role|
+      unless config = role.config_for_ref(project, reference)
+        errors << "Unable to read #{role.config_file}"
+        next
+      end
+
+      config.elements.each do |element|
+        kind = element[:kind]
+        name = element.dig(:metadata, :name)
+
+        # name was never changed
+        next if Kubernetes::RoleValidator::IMMUTABLE_NAME_KINDS.include?(kind) ||
+          Kubernetes::RoleValidator.keep_name?(element)
+
+        # correct name was configured
+        expected = (kind == "Service" ? role.service_name : role.resource_name)
+        next if name == expected
+
+        errors << "Project config #{config.path} #{kind} #{name} would be duplicated with name #{expected}"
+      end
+    end
+
+    if errors.any?
+      redirect_to({action: :index}, alert: helpers.simple_format(errors.join("\n")))
+    else
+      redirect_to({action: :index}, notice: "No name change expected")
+    end
   end
 
   def sync_all

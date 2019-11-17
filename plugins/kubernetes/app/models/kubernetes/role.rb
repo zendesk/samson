@@ -95,9 +95,7 @@ module Kubernetes
       # ... we ignore those without to allow users to deploy a branch that changes roles
       def configured_for_project(project, git_sha)
         project.kubernetes_roles.not_deleted.select do |role|
-          path = role.config_file
-          next unless file_contents = project.repository.file_content(path, git_sha)
-          Kubernetes::RoleConfigFile.new(file_contents, path, project: project) # run validations
+          role.config_for_ref(project, git_sha)
         end
       end
 
@@ -159,6 +157,12 @@ module Kubernetes
 
     def manual_deletion_required?
       resource_name_change&.first || service_name_change&.first
+    end
+
+    # passes the project to reuse the repository cache when doing multiple lookups
+    def config_for_ref(project, reference)
+      return unless file_contents = project.repository.file_content(config_file, reference)
+      Kubernetes::RoleConfigFile.new(file_contents, config_file, project: project) # run validations
     end
 
     private

@@ -28,6 +28,7 @@ module Kubernetes
 
         if RoleValidator::IMMUTABLE_NAME_KINDS.include?(kind)
           # names have a fixed pattern so we cannot override them
+          # TODO: move this into keep_name? and remove this case
         elsif kind == 'HorizontalPodAutoscaler'
           set_name
           set_hpa_scale_target_name

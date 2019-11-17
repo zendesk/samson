@@ -72,14 +72,13 @@ class GitRepository
     !!capture_stdout("git", "-c", "core.askpass=true", "ls-remote", "-h", repository_url, dir: '.')
   end
 
-  # updates the repo only if sha is not found, to not pull unnecessarily
   # @return [content, nil]
-  def file_content(file, sha, pull: true)
+  def file_content(file, reference, pull: true)
     pull = false if mirror_current? # no need to pull when we are up-to-date
-    instance_cache [:file_content, file, sha, pull] do
+    instance_cache [:file_content, file, reference, pull] do
       next if !pull && !mirrored?
-      ensure_mirror_current if pull && (!sha.match?(Build::SHA1_REGEX) || !sha_exist?(sha))
-      capture_stdout "git", "show", "#{sha}:#{file}"
+      ensure_mirror_current if pull && (!reference.match?(Build::SHA1_REGEX) || !sha_exist?(reference))
+      capture_stdout "git", "show", "#{reference}:#{file}"
     end
   end
 
