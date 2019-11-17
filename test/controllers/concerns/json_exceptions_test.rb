@@ -30,7 +30,10 @@ describe "JsonExceptions Integration" do
       end
     end
 
-    before { stub_session_auth }
+    before do
+      stub_session_auth
+      Airbrake.stubs(:build_notice) # prevent threadpool creation
+    end
 
     it "presents validation errors" do
       # HACK: to deal with new controller implementation.

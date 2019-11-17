@@ -7,5 +7,4 @@ Gem::Specification.new 'samson_airbrake', '0.0.0' do |s|
   s.files = Dir['{app,config,db,lib}/**/*']
 
   s.add_runtime_dependency 'airbrake'
-  s.add_runtime_dependency 'airbrake-user_informer'
 end
