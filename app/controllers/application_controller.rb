@@ -6,9 +6,6 @@ class ApplicationController < ActionController::Base
   # For APIs, you may want to use :null_session instead.
   protect_from_forgery with: :exception, unless: :using_per_request_auth?
 
-  # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
-  force_ssl if: :force_ssl?
-
   include CurrentUser # must be after protect_from_forgery, so that authenticate! is called
   include JsonExceptions
   include JsonRenderer
@@ -25,10 +22,6 @@ class ApplicationController < ActionController::Base
   end
 
   protected
-
-  def force_ssl?
-    ENV['FORCE_SSL'] == '1'
-  end
 
   def verified_request?
     warden.winning_strategy || super
