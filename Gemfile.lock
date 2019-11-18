@@ -16,7 +16,6 @@ PATH
   specs:
     samson_airbrake (0.0.0)
       airbrake
-      airbrake-user_informer
 
 PATH
   remote: plugins/assertible
@@ -205,14 +204,10 @@ GEM
       minitest (~> 5.1)
       tzinfo (~> 1.1)
     addressable (2.3.8)
-    airbrake (7.3.0)
-      airbrake-ruby (~> 2.5)
-    airbrake-ruby (2.9.0)
-    airbrake-user_informer (0.6.0)
-      airbrake (~> 7.0)
-      airbrake-ruby (~> 2.0)
-      rack
-      railties (>= 5.0.0, < 5.3.0)
+    airbrake (9.5.0)
+      airbrake-ruby (~> 4.8)
+    airbrake-ruby (4.8.0)
+      rbtree3 (~> 0.5)
     ansible (0.2.2)
     ar_multi_threaded_transactional_tests (0.3.0)
       activerecord (>= 4.2.0, < 5.3.0)
@@ -500,6 +495,7 @@ GEM
       thor (>= 0.19.0, < 2.0)
     rainbow (3.0.0)
     rake (12.3.3)
+    rbtree3 (0.5.0)
     recursive-open-struct (1.1.0)
     request_store (1.4.0)
       rack (>= 1.4)

@@ -30,6 +30,11 @@ task :asset_compilation_environment do
   ar = ActiveRecord::Base
   def ar.establish_connection
   end
+
+  # for https://github.com/airbrake/airbrake/issues/1022
+  def ar.connection_config
+    {}
+  end
 end
 Rake::Task['assets:precompile'].prerequisites.unshift :asset_compilation_environment
 
