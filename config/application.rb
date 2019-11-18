@@ -44,6 +44,10 @@ module Samson
     # -- all .rb files in that directory are automatically loaded.
     config.load_defaults 5.2
 
+    # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
+    config.force_ssl = (ENV["FORCE_SSL"] == "1")
+    config.ssl_options = {redirect: {exclude: ->(request) { request.path.match?(/^\/ping(\/|$)/) }}}
+
     class ApplicationConfiguration
       def self.deprecated_url(var)
         url = ENV[var].presence
