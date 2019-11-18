@@ -738,7 +738,7 @@ describe Stage do
 
       it "returns true if finds environment lock on stage" do
         lock = Lock.new(resource: environments(:staging))
-        assert_sql_queries 3 do # deploy-groups -> deploy-groups-stages -> environments
+        assert_sql_queries 2 do # deploy-groups with deploy-groups-stages -> environments
           assert stage.locked_by?(lock)
         end
       end
@@ -762,14 +762,14 @@ describe Stage do
     describe "with deploy groups" do
       it "is locked by own groups" do
         lock = Lock.new(resource: deploy_groups(:pod100))
-        assert_sql_queries 2 do # deploy-groups -> deploy-groups-stages
+        assert_sql_queries 1 do # deploy-groups with deploy-groups-stages
           assert stage.locked_by?(lock)
         end
       end
 
       it "is not locked by other groups" do
         lock = Lock.new(resource: deploy_groups(:pod1))
-        assert_sql_queries 2 do # deploy-groups -> deploy-groups-stages
+        assert_sql_queries 1 do # deploy-groups with deploy-groups-stages
           refute stage.locked_by?(lock)
         end
       end
