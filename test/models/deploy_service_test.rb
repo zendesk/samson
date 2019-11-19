@@ -245,7 +245,10 @@ describe DeployService do
     end
 
     describe "with before-deploy outbound webhook" do
-      before { OutboundWebhook.create!(url: "http://foo", auth_type: "None", stages: [stage], before_deploy: true) }
+      before do
+        GITHUB.expects(:commit).returns(stub(sha: "abc"))
+        OutboundWebhook.create!(url: "http://foo", auth_type: "None", stages: [stage], before_deploy: true)
+      end
 
       it "sends" do
         service.deploy(stage, reference: reference)
@@ -310,6 +313,7 @@ describe DeployService do
     end
 
     it "runs after deploy outbound webhooks" do
+      GITHUB.expects(:commit).returns(stub(sha: "abc"))
       OutboundWebhook.create!(url: "http://foo", auth_type: "None", stages: [stage], before_deploy: false)
       service.deploy(stage, reference: reference)
       assert_request(:post, "http://foo/") { job_execution.perform }
