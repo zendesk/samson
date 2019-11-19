@@ -54,6 +54,7 @@ module Kubernetes
           @details = "Waiting for resources (#{@pod.phase}, #{@pod.reason})"
         elsif @pod.events_indicate_failure?
           @details = "Error event"
+          @finished = true
         else
           @details = "Waiting (#{@pod.phase}, #{@pod.reason})"
         end
