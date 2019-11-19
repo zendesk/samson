@@ -64,7 +64,10 @@ describe Kubernetes::ResourceStatus do
 
     it "errors when bad events happen" do
       events[0].merge!(type: "Warning", reason: "Boom")
-      expect_event_request { details.must_equal "Error event" }
+      expect_event_request do
+        details.must_equal "Error event"
+        assert status.finished
+      end
     end
 
     describe "non-pods" do
