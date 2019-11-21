@@ -10,7 +10,7 @@ describe "database schema" do
     conn = mock('adapter')
     conn.stub_everything
     conn.define_singleton_method(:create_table) do |name, *_, &blk|
-      table = ActiveRecord::ConnectionAdapters::TableDefinition.new(name)
+      table = ActiveRecord::ConnectionAdapters::TableDefinition.new(conn, name)
       blk.call(table)
       tables << table
     end

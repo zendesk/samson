@@ -25,7 +25,8 @@ class Build < ActiveRecord::Base
         allow_nil: true,
         uniqueness: {
           scope: [:git_sha, scope, :external_url].without(attribute),
-          message: "already exists with this #{attribute} and #{scope}"
+          message: "already exists with this #{attribute} and #{scope}",
+          case_sensitive: false
         },
         if: ->(build) { build.send(scope).present? && build.external_url.present? }
       )
@@ -89,7 +90,7 @@ class Build < ActiveRecord::Base
 
   def nil_out_blanks
     [:docker_repo_digest, :image_name, :dockerfile].each do |attribute|
-      send("#{attribute}=", send(attribute).presence) if changes_include? attribute
+      send("#{attribute}=", send(attribute).presence) if attribute_changed? attribute
     end
   end
 

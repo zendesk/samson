@@ -24,7 +24,7 @@ module Samson
       attribute :token
       attr_encrypted :token
 
-      validates :name, presence: true, uniqueness: true
+      validates :name, presence: true, uniqueness: {case_sensitive: false}
       validates :address, presence: true, format: ADDRESS_PATTERN
       validate :validate_cert
       validate :validate_connection

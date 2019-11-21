@@ -6,7 +6,8 @@ class Webhook < ActiveRecord::Base
   validates :branch, uniqueness: {
     scope: [:stage_id],
     conditions: -> { where("deleted_at IS NULL") },
-    message: "one webhook per (stage, branch) combination."
+    message: "one webhook per (stage, branch) combination.",
+    case_sensitive: false
   }
   validate :validate_not_auto_deploying_without_buddy
 

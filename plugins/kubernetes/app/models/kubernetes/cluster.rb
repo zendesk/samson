@@ -19,7 +19,7 @@ module Kubernetes
       inverse_of: :cluster
     has_many :deploy_groups, through: :cluster_deploy_groups, inverse_of: :kubernetes_cluster
 
-    validates :name, presence: true, uniqueness: true
+    validates :name, presence: true, uniqueness: {case_sensitive: false}
     validates :ip_prefix, format: IP_PREFIX_PATTERN, allow_blank: true
     validate :test_client_connection
 

@@ -143,11 +143,11 @@ describe DeploysController do
         before { get :show, params: {format: :text, project_id: project.to_param, id: deploy.to_param} }
 
         it "responds with a plain text file" do
-          assert_equal response.content_type, "text/plain"
+          assert_equal response.media_type, "text/plain"
         end
 
         it "responds with a .log file" do
-          assert response.header["Content-Disposition"] =~ /\.log"$/
+          assert response.header["Content-Disposition"] =~ /\.log"/
         end
       end
 
@@ -247,7 +247,7 @@ describe DeploysController do
 
       it "renders html" do
         get :index
-        assert_equal "text/html", @response.content_type
+        assert_equal "text/html", @response.media_type
         assert_response :ok
       end
 

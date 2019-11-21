@@ -20,13 +20,12 @@ describe "db" do
     Release.delete_all
     Project.any_instance.expects(:clone_repository)
     assert_difference 'Project.count', +2 do
-      tasks["db:seed"].execute
+      load "db/seeds.rb" # ideally call tasks["db:seed"].execute, but that is in a different transaction
     end
   end
 
   it "produces the current schema from checked in migrations" do
     tasks["db:schema:dump"].execute
-
     if ActiveRecord::Base.connection.adapter_name.match?(/mysql/i)
       # additional expected diff can be mitigated in lib/tasks/dump.rake where we hook into db:schema:dump
       content = File.read("db/schema.rb")

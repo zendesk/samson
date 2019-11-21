@@ -12,7 +12,7 @@ class Environment < ActiveRecord::Base
     through: :deploy_groups, class_name: 'Stage', inverse_of: false
 
   validates :name, presence: true
-  validates :name, uniqueness: true
+  validates :name, uniqueness: {case_sensitive: false}
 
   # also used by private plugin
   def self.env_deploy_group_array(include_all: true)

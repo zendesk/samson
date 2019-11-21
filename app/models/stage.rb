@@ -31,7 +31,7 @@ class Stage < ActiveRecord::Base
 
   default_scope { order(:order) }
 
-  validates :name, presence: true, uniqueness: {scope: [:project, :deleted_at]}
+  validates :name, presence: true, uniqueness: {scope: [:project, :deleted_at], case_sensitive: false}
 
   # n emails separated by ;
   email = '([^\s;]+@[^\s;]+)'

@@ -135,7 +135,7 @@ describe 'Authentication Integration' do
 
           it 'has an access token' do
             post "/oauth/token", params: new_params
-            response.content_type.must_equal 'application/json'
+            response.media_type.must_equal 'application/json'
             JSON.parse(response.body)['access_token'].must_equal oauth_app.access_tokens.first.token
           end
         end

@@ -15,31 +15,35 @@ describe SamsonSlackWebhooks::SlackWebhooksService do
     with_env(SLACK_API_TOKEN: 'some-token')
 
     it "shows all users" do
-      stub_request(:post, "https://slack.com/api/users.list").
-        to_return(body: {ok: true, members: [{id: 1, name: 'NICK', profile: {image_48: 'AVATAR'}}]}.to_json)
-      service.users.must_equal([{id: 1, name: "NICK", avatar: "AVATAR", type: "contact"}])
-
-      # is cached
-      service.users.object_id.must_equal service.users.object_id
+      assert_request(
+        :post, "https://slack.com/api/users.list",
+        to_return: {body: {ok: true, members: [{id: 1, name: 'NICK', profile: {image_48: 'AVATAR'}}]}.to_json}
+      ) do
+        2.times do # cache caching
+          service.users.must_equal([{id: 1, name: "NICK", avatar: "AVATAR", type: "contact"}])
+        end
+      end
     end
 
     it "returns empty users when there's an error" do
-      stub_request(:post, "https://slack.com/api/users.list").
-        to_return(body: {ok: false, error: "some error"}.to_json)
-      Rails.logger.expects(:error).with(includes('Error fetching slack users'))
-      service.users.must_equal([])
-
-      # is cached
-      service.users.object_id.must_equal service.users.object_id
+      assert_request(
+        :post, "https://slack.com/api/users.list",
+        to_return: {body: {ok: false, error: "some error"}.to_json}
+      ) do
+        Rails.logger.expects(:error).with(includes('Error fetching slack users'))
+        2.times do # cache caching
+          service.users.must_equal([])
+        end
+      end
     end
 
     it "shows nothing when slack fails to fetch users" do
-      stub_request(:post, "https://slack.com/api/users.list").to_timeout
-      Rails.logger.expects(:error).with(includes('Error fetching slack users'))
-      service.users.must_equal([])
-
-      # is cached
-      service.users.object_id.must_equal service.users.object_id
+      assert_request(:post, "https://slack.com/api/users.list", to_timeout: []) do
+        Rails.logger.expects(:error).with(includes('Error fetching slack users'))
+        2.times do # cache caching
+          service.users.must_equal([])
+        end
+      end
     end
 
     it "shows nothing when api token is not configured" do
