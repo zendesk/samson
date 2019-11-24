@@ -10,6 +10,7 @@ module Doorkeeper
   autoload :AccessToken, 'doorkeeper/orm/active_record/access_token'
   autoload :Application, 'doorkeeper/orm/active_record/application'
   autoload :BaseRecord, 'doorkeeper/orm/active_record/base_record'
+  autoload :RedirectUriValidator, 'doorkeeper/orm/active_record/redirect_uri_validator'
   module Orm
     module ActiveRecord
       class << self
@@ -31,4 +32,5 @@ Doorkeeper.configure do
   default_scopes :default
   base_controller 'DoorkeeperBaseController'
   force_ssl_in_redirect_uri !%w[development test].include?(Rails.env)
+  admin_authenticator { authorize_super_admin! }
 end

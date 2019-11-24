@@ -5,7 +5,12 @@ SingleCov.covered!
 
 describe OauthTestController do
   let!(:application) do
-    Doorkeeper::Application.create!(redirect_uri: 'http://test.host/oauth_test/token', name: 'test')
+    Doorkeeper::Application.create!(
+      secret: 'foo',
+      uid: 'bar',
+      redirect_uri: 'http://test.host/oauth_test/token',
+      name: 'test'
+    )
   end
 
   describe "#ensure_application" do
