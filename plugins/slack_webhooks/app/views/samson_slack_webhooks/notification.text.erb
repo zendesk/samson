@@ -1,4 +1,4 @@
-<%= status_emoji %> *<%= subject %>* (<<%= deploy.url %>|view the deploy>)
+<%= status_emoji %> *<%= subject %>* (<%= deploy.url.match?(/:\d+/) ? deploy.url : "<#{deploy.url}|view the deploy>" %>)
 <% if changeset.commits.count == 0 %>
 There are no new commits since last time.
 <% else %>

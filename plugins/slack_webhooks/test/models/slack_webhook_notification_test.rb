@@ -138,6 +138,11 @@ describe SlackWebhookNotification do
       TEXT
     end
 
+    it "does not use links with ports that do not work in slack" do
+      deploy.stubs(:url).returns("http://sams.on:123/url")
+      render.must_include "Staging* (http://sams.on:123/url)"
+    end
+
     it "alerts users when pull requests were not used" do
       deploy.job.status = "pending"
       pull_requests.clear
