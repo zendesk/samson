@@ -213,7 +213,8 @@ describe "cleanliness" do
       # check if all actions were tested
       missing = controller_actions - unauthorized_actions - viewer_actions - public_actions
       if missing.any?
-        "#{f} is missing unauthorized, viewer accessible, or public accessible test for #{missing.join(', ')}"
+        "#{f} is missing unauthorized, viewer accessible, or public accessible test for #{missing.join(', ')}\n" \
+        "actions (if these are helpers and not actions, make them private)"
       end
     end.compact
 
