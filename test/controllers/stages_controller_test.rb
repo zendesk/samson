@@ -126,6 +126,17 @@ describe StagesController do
           json["stage"].keys.must_include 'last_succeeded_deploy_id'
           json["stage"].keys.must_include 'active_deploy_id'
         end
+
+        it 'renders deploy_groups if included in the includes param' do
+          get :show, params: {
+            project_id: subject.project.to_param, id: subject.to_param,
+            includes: "deploy_groups"
+          }, format: :json
+
+          assert_equal subject.deploy_group_ids, json['stage']['deploy_group_ids']
+          json.keys.must_include 'deploy_groups'
+          json['deploy_groups'].first.keys.must_include 'id'
+        end
       end
 
       it "fails with invalid project" do
