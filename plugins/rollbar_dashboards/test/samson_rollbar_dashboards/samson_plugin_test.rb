@@ -28,9 +28,10 @@ describe SamsonRollbarDashboards do
       view_context
     end
 
-    describe 'project_view callback' do
+    describe 'project_dashboard callback' do
       def render_view(project)
-        Samson::Hooks.render_views(:project_view, view_context, project: project)
+        view_context.instance_variable_set(:@project, project)
+        Samson::Hooks.render_views(:project_dashboard, view_context)
       end
 
       it 'renders nothing if project has no dashboard settings' do

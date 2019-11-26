@@ -1,21 +1,16 @@
-<div class="panel panel-default" style="min-height: <%= RollbarDashboards::DashboardsHelper::DASHBOARD_HEIGHT %>em">
+<% setting, items = dashboard_data %>
+
+<div class="panel panel-default" style="min-height: <%= RollbarDashboards::DashboardsHelper::ROLLBAR_DASHBOARD_HEIGHT %>em">
   <div class="panel-heading">
-    <%= image_tag 'rollbar_dashboards/icon.png', height: '30px' %>
-    <%= "#{title} (#{dashboard_data.first.base_url})" %>
+    <%= link_to_if setting.items_url, image_tag('rollbar_dashboards/icon.png', height: '30px'), setting.items_url %>
+    <%= title %>
+    <%= "Warning: missing Account/Project setting" unless setting.account_and_project_name? %> <%# TODO: remove after migration to make it required %>
   </div>
-  <% items = dashboard_data.second %>
   <% if items.present? %>
     <table class="table rollbar-table">
-      <tr>
-        <th class="rollbar-table__count">Count</th>
-        <th class="rollbar-table__title">Title</th>
-        <th class="rollbar-table__env">Environment</th>
-      </tr>
-      <%= render partial: 'rollbar_dashboards/item', collection: items, locals: {dashboard_setting: dashboard_data.first} %>
+      <%= render partial: 'rollbar_dashboards/item', collection: items, locals: {dashboard_setting: setting} %>
     </table>
   <% else %>
-    <div class="panel-body">
-      <p>There are no items to display at this time...</p>
-    </div>
+    <div class="panel-body"><p>No items found</p></div>
   <% end %>
 </div>

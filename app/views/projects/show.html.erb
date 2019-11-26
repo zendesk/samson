@@ -7,6 +7,8 @@
 <section class="clearfix tabs">
   <%= render 'shared/dashboard', resource: @project %>
 
+  <%= Samson::Hooks.render_views(:project_dashboard, self) %>
+
   <table class="project-stages table table-condensed">
     <thead>
       <tr>

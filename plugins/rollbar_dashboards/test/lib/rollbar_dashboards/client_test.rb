@@ -9,6 +9,7 @@ describe RollbarDashboards::Client do
     RollbarDashboards::Setting.create!(
       project: projects(:test),
       base_url: 'https://bingbong.gov/api/1',
+      account_and_project_name: "Foo/Bar",
       read_token: '12345'
     )
   end
@@ -20,21 +21,26 @@ describe RollbarDashboards::Client do
 
     it 'gets top errors' do
       assert_request(:get, endpoint, to_return: {body: {result: [item: {marco: 'polo'}]}.to_json}) do
-        result = RollbarDashboards::Client.new(dashboard).top_errors
+        result = RollbarDashboards::Client.new(dashboard).top_errors(hours: 24, environments: ["production"])
         result.must_equal([{marco: 'polo'}])
       end
     end
 
-    it 'returns nil if response is unsuccessful' do
-      assert_request(:get, endpoint, to_return: {status: 400}) do
-        RollbarDashboards::Client.new(dashboard).top_errors.must_be_nil
+    it 'shows error if response is unsuccessful' do
+      Samson::ErrorNotifier.expects(:notify)
+      assert_raises Samson::Hooks::UserError do
+        assert_request(:get, endpoint, to_return: {status: 400}) do
+          RollbarDashboards::Client.new(dashboard).top_errors(hours: 24, environments: ["production"])
+        end
       end
     end
 
-    it 'returns nil if a json parse error occurs' do
+    it 'shows error if a json parse error occurs' do
       Samson::ErrorNotifier.expects(:notify)
-      assert_request(:get, endpoint, to_return: {body: '<definitely>notjson</definitely>'}) do
-        RollbarDashboards::Client.new(dashboard).top_errors.must_be_nil
+      assert_raises Samson::Hooks::UserError do
+        assert_request(:get, endpoint, to_return: {body: '<definitely>notjson</definitely>'}) do
+          RollbarDashboards::Client.new(dashboard).top_errors(hours: 24, environments: ["production"])
+        end
       end
     end
   end
@@ -62,17 +68,21 @@ describe RollbarDashboards::Client do
       end
     end
 
-    it 'returns nil if response is unsuccessful' do
-      assert_request(:post, endpoint, with: with, to_return: {status: 400}) do
-        result = RollbarDashboards::Client.new(dashboard).create_rql_job(query)
-        result.must_be_nil
+    it 'shows error if response is unsuccessful' do
+      Samson::ErrorNotifier.expects(:notify)
+      assert_raises Samson::Hooks::UserError do
+        assert_request(:post, endpoint, with: with, to_return: {status: 400}) do
+          RollbarDashboards::Client.new(dashboard).create_rql_job(query)
+        end
       end
     end
 
     it 'returns nil if an error occurs' do
       Samson::ErrorNotifier.expects(:notify)
-      assert_request(:post, endpoint, with: with, to_return: {body: '<definitely>notjson</definitely>'}) do
-        RollbarDashboards::Client.new(dashboard).create_rql_job(query).must_be_nil
+      assert_raises Samson::Hooks::UserError do
+        assert_request(:post, endpoint, with: with, to_return: {body: '<definitely>notjson</definitely>'}) do
+          RollbarDashboards::Client.new(dashboard).create_rql_job(query)
+        end
       end
     end
   end
@@ -119,17 +129,22 @@ describe RollbarDashboards::Client do
       end
     end
 
-    it 'returns nil if response was unsuccessful' do
-      assert_request(:get, endpoint, to_return: {status: 400}) do
-        RollbarDashboards::Client.new(dashboard).rql_job_result(1).must_be_nil
+    it 'shows error if response was unsuccessful' do
+      Samson::ErrorNotifier.expects(:notify)
+      assert_raises Samson::Hooks::UserError do
+        assert_request(:get, endpoint, to_return: {status: 400}) do
+          RollbarDashboards::Client.new(dashboard).rql_job_result(1)
+        end
       end
     end
 
-    it 'returns nil if an error occurs' do
+    it 'shows error' do
       Samson::ErrorNotifier.expects(:notify)
-      assert_request(:get, endpoint, to_return: {body: '{}'}) do
-        RollbarDashboards::Client.new(dashboard).rql_job_result(1).must_be_nil
-      end
+      assert_raises Samson::Hooks::UserError do
+        assert_request(:get, endpoint, to_return: {body: '{}'}) do
+          RollbarDashboards::Client.new(dashboard).rql_job_result(1)
+        end
+      end.message.must_equal "Failed to contact rollbar"
     end
 
     it 'waits for job to complete' do
@@ -158,9 +173,11 @@ describe RollbarDashboards::Client do
 
       client = RollbarDashboards::Client.new(dashboard)
       client.expects(:sleep).with(1).times(4)
-      assert_request(:get, endpoint, to_return: Array.new(5) { {body: pending_job_result} }) do
-        client.rql_job_result(1).must_be_nil
-      end
+      assert_raises Samson::Hooks::UserError do
+        assert_request(:get, endpoint, to_return: Array.new(5) { {body: pending_job_result} }) do
+          client.rql_job_result(1)
+        end
+      end.message.must_equal "Timeout retrieving RQL job 1 result"
     end
   end
 end
