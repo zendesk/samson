@@ -43,8 +43,9 @@
           %>
         </div>
         <div class="col-lg-2 checkbox">
-          <%# updated dynammically in the client-side JS %>
-          <%= link_to "Preview", preview_environment_variable_groups_path %>
+          <%# linked to selected group in env/app/assets/javascripts/env/application.js %>
+          <%= link_to "Vars", environment_variable_group_path(0) %> |
+          <%= link_to "Preview", preview_environment_variable_groups_path(group_id: 0) %>
         </div>
       </div>
     <% end %>
