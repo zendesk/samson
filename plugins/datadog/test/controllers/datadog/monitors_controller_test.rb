@@ -17,7 +17,15 @@ describe Datadog::MonitorsController do
       end
 
       it "renders without layout" do
-        get :index, params: {id: stage.id}
+        get :index, params: {stage_id: stage}
+        assert_response :success
+        response.body.must_include "monitors/123"
+        response.body.wont_include "<html"
+      end
+
+      it "renders for projects" do
+        stage.project.datadog_monitor_queries.create!(query: 123)
+        get :index, params: {project_id: stage.project}
         assert_response :success
         response.body.must_include "monitors/123"
         response.body.wont_include "<html"
