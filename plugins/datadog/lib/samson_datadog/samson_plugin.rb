@@ -61,6 +61,7 @@ module SamsonDatadog
 end
 
 Samson::Hooks.view :project_form, "samson_datadog"
+Samson::Hooks.view :project_dashboard, "samson_datadog"
 Samson::Hooks.view :stage_form, "samson_datadog"
 Samson::Hooks.view :stage_show, "samson_datadog"
 
