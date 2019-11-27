@@ -2,54 +2,58 @@
 
 class RollbarDashboards::DashboardsController < ApplicationController
   NUM_ITEMS = 4
+  EXPIRES_IN = 1.minute
 
   def project_dashboard
     project = Project.find_by_permalink!(params.require(:project_id))
-
-    dashboard_html = Rails.cache.fetch(['project_dashboard', project], expires_in: 10.minutes) do
+    dashboard_html = Rails.cache.fetch(['project_dashboard', project], expires_in: EXPIRES_IN) do
+      environment = "production"
+      hours = 24
       data = project.rollbar_dashboards_settings.map do |setting|
-        items = RollbarDashboards::Client.new(setting).top_errors&.first(NUM_ITEMS)
+        items = RollbarDashboards::Client.new(setting).top_errors(
+          hours: hours, environments: [environment]
+        )&.first(NUM_ITEMS)
         [setting, items]
       end
 
-      render_to_string(
-        partial: 'rollbar_dashboards/dashboard',
-        collection: data,
-        as: :dashboard_data,
-        locals: {title: "Top #{NUM_ITEMS} Items in the Last 24 Hours"}
-      )
+      dashboard_to_string "Top #{NUM_ITEMS} Items in #{environment} in the Last #{hours} Hours", data
     end
-
     render plain: dashboard_html
+  rescue Samson::Hooks::UserError => e
+    render plain: e.message
   end
 
   def deploy_dashboard
     deploy = Deploy.find(params.require(:deploy_id))
 
-    dashboard_html = Rails.cache.fetch(['deploy_dashboard', deploy], expires_in: 10.minutes) do
+    dashboard_html = Rails.cache.fetch(['deploy_dashboard', deploy], expires_in: EXPIRES_IN) do
+      environment = deploy.stage.deploy_groups.first.environment.name.downcase
       data = deploy.project.rollbar_dashboards_settings.map do |setting|
         client = RollbarDashboards::Client.new(setting)
-
-        rql_job_id = client.create_rql_job(deploy_rql_query(deploy))
-        items = rql_job_id ? client.rql_job_result(rql_job_id) : nil
-        [setting, items]
+        rql_job_id = client.create_rql_job(deploy_rql_query(deploy, environment))
+        [setting, client.rql_job_result(rql_job_id)]
       end
 
-      render_to_string(
-        partial: 'rollbar_dashboards/dashboard',
-        collection: data,
-        as: :dashboard_data,
-        locals: {title: "Top #{NUM_ITEMS} Items That Occurred This Deploy"}
-      )
+      dashboard_to_string "Top #{NUM_ITEMS} Items in #{environment} For This Deploy", data
     end
 
     render plain: dashboard_html
+  rescue Samson::Hooks::UserError => e
+    render plain: e.message
   end
 
   private
 
-  def deploy_rql_query(deploy)
-    environment = deploy.stage.deploy_groups.first.environment.name.downcase
+  def dashboard_to_string(title, data)
+    render_to_string(
+      partial: 'rollbar_dashboards/dashboard',
+      collection: data,
+      as: :dashboard_data,
+      locals: {title: title}
+    )
+  end
+
+  def deploy_rql_query(deploy, environment)
     next_succeeded_deploy = deploy.next_succeeded_deploy
 
     timestamp_query = if next_succeeded_deploy

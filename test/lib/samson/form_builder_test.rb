@@ -188,6 +188,7 @@ describe Samson::FormBuilder do
       RollbarDashboards::Setting.create!(
         project: projects(:test),
         base_url: 'https://bingbong.gov/api/1',
+        account_and_project_name: "Foo/Bar",
         read_token: '12345'
       )
     end

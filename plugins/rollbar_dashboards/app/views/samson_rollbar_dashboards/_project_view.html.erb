@@ -1,8 +1,0 @@
-<% if settings = project.rollbar_dashboards_settings.presence %>
-  <%# replaced by responsive_load.js.erb %>
-  <%= rollbar_dashboard_container(
-        project_dashboard_project_rollbar_dashboards_dashboards_path(project),
-        settings
-      )
-  %>
-<% end %>

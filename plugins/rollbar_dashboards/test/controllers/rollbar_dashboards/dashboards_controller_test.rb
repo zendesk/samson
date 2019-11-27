@@ -5,11 +5,16 @@ require_relative "../../test_helper"
 SingleCov.covered!
 
 describe RollbarDashboards::DashboardsController do
+  def assert_not_found
+    assert_select 'p', text: 'No items found'
+  end
+
   let(:setting) do
     RollbarDashboards::Setting.create!(
       project: projects(:test),
       base_url: 'https://bingbong.gov/api/1',
-      read_token: '12345'
+      read_token: '12345',
+      account_and_project_name: "Foo/Bar"
     )
   end
   let(:deploy) { deploys(:succeeded_test) }
@@ -29,40 +34,34 @@ describe RollbarDashboards::DashboardsController do
       it 'renders project dashboard' do
         assert_request(:get, endpoint, to_return: {body: {result: [item: item]}.to_json}) do
           get_dashboard(project)
-          assert_select '.panel-heading', 'Top 4 Items in the Last 24 Hours (https://bingbong.gov/api/1)'
-          assert_select '.badge', '9000'
           assert_select 'td', 'Crazy Error'
-          assert_select 'td', 'production'
         end
       end
 
       it 'renders empty dashboard if items are nil' do
+        Samson::ErrorNotifier.expects(:notify)
         assert_request(:get, endpoint, to_return: {status: 400}) do
           get_dashboard(project)
-          assert_select 'p', text: 'There are no items to display at this time...'
+          assert_select 'p', text: 'Failed to contact rollbar'
         end
       end
 
       it 'renders empty dashboard if there are no items' do
         assert_request(:get, endpoint, to_return: {body: {result: []}.to_json}) do
           get_dashboard(project)
-          assert_select 'p', text: 'There are no items to display at this time...'
+          assert_not_found
         end
       end
 
       it 'caches the project items' do
         assert_request(:get, endpoint, to_return: {body: {result: [item: item]}.to_json}) do
           get_dashboard(project)
-          assert_select '.badge', '9000'
           assert_select 'td', 'Crazy Error'
-          assert_select 'td', 'production'
         end
 
         get_dashboard(project) # Request result was cached
 
-        assert_select '.badge', '9000'
         assert_select 'td', 'Crazy Error'
-        assert_select 'td', 'production'
       end
     end
   end
@@ -109,9 +108,7 @@ describe RollbarDashboards::DashboardsController do
         assert_create_rql_job do
           assert_rql_job_result(items) do
             get_dashboard(deploy)
-            assert_select '.badge', '123'
             assert_select 'td', 'A most terrible error'
-            assert_select 'td', 'production'
           end
         end
       end
@@ -122,35 +119,32 @@ describe RollbarDashboards::DashboardsController do
         assert_create_rql_job do
           assert_rql_job_result(items) do
             get_dashboard(deploy)
-            assert_select '.badge', '123'
             assert_select 'td', 'A most terrible error'
-            assert_select 'td', 'production'
           end
         end
 
         get_dashboard(deploy) # items are cached
-        assert_select '.badge', '123'
         assert_select 'td', 'A most terrible error'
-        assert_select 'td', 'production'
       end
 
       it 'renders no items when job id is nil' do
+        Samson::ErrorNotifier.expects(:notify)
         stub_deploy_rql_query(query)
 
         assert_create_rql_job(return_value: {status: 400}) do
           get_dashboard(deploy)
-          assert_select 'p', text: 'There are no items to display at this time...'
+          assert_select 'p', text: 'Failed to contact rollbar'
         end
       end
 
-      it 'renders no items when items are nil' do
+      it 'fails when query returned invalid result' do
         Samson::ErrorNotifier.expects(:notify)
         stub_deploy_rql_query(query)
 
         assert_create_rql_job do
           assert_rql_job_result(body: 'invalidstuffs') do
             get_dashboard(deploy)
-            assert_select 'p', text: 'There are no items to display at this time...'
+            assert_select 'p', text: 'Failed to contact rollbar'
           end
         end
       end
@@ -174,7 +168,7 @@ describe RollbarDashboards::DashboardsController do
         LIMIT  4
       RQL
 
-      @controller.send(:deploy_rql_query, deploy).must_equal expected
+      @controller.send(:deploy_rql_query, deploy, 'staging').must_equal expected
     end
 
     it 'returns query with range timestamp if there is a next succeeded deploy' do
@@ -202,7 +196,7 @@ describe RollbarDashboards::DashboardsController do
         LIMIT  4
       RQL
 
-      @controller.send(:deploy_rql_query, deploy).must_equal expected
+      @controller.send(:deploy_rql_query, deploy, 'staging').must_equal expected
     end
   end
 end

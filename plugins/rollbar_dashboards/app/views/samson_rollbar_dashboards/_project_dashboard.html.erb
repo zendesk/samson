@@ -1,0 +1,3 @@
+<% if settings = @project.rollbar_dashboards_settings.presence %>
+  <%= rollbar_lazy_load_dashboard_container project_dashboard_project_rollbar_dashboards_dashboards_path(@project), settings %>
+<% end %>

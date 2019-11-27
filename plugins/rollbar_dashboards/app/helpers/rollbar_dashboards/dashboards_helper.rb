@@ -2,13 +2,14 @@
 
 module RollbarDashboards
   module DashboardsHelper
-    DASHBOARD_HEIGHT = 22 # em
+    ROLLBAR_DASHBOARD_HEIGHT = 18 # em
 
     def rollbar_dashboard_placeholder_size(settings)
-      settings.size * DASHBOARD_HEIGHT
+      settings.size * ROLLBAR_DASHBOARD_HEIGHT
     end
 
-    def rollbar_dashboard_container(item_path, settings)
+    # replaced by responsive_load.js.erb
+    def rollbar_lazy_load_dashboard_container(item_path, settings)
       content_tag(
         :div,
         '',
@@ -21,16 +22,9 @@ module RollbarDashboards
       )
     end
 
-    def item_link(item_title, item_id, dashboard_setting)
-      if account_and_project_name = dashboard_setting.account_and_project_name.presence
-        # Removes path and handles https://api.rollbar.com cases
-        domain = URI.join(dashboard_setting.base_url, '/').to_s.sub('://api.', '://')
-
-        item_url = "#{domain}#{account_and_project_name}/items/#{item_id}"
-        link_to item_title, item_url
-      else
-        item_title
-      end
+    def rollbar_item_link(item_title, item_id, dashboard_setting)
+      url = dashboard_setting.items_url
+      url ? link_to(item_title, "#{url}/#{item_id}") : item_title
     end
   end
 end
