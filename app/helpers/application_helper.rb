@@ -3,7 +3,7 @@ require 'ansible'
 require 'github/markdown'
 
 module ApplicationHelper
-  BOOTSTRAP_FLASH_MAPPINGS = {notice: :info, alert: :danger, warn: :warning, success: :success}.freeze
+  BOOTSTRAP_FLASH_MAPPINGS = {notice: :info, alert: :danger, warn: :warning}.freeze
   BOOTSTRAP_TOOLTIP_PROPS = {toggle: 'popover', placement: 'right', trigger: 'hover'}.freeze
 
   include Ansible
