@@ -37,7 +37,7 @@ ActiveRecord::Schema.define(version: 2019_11_13_043345) do
   create_table "builds", id: :integer do |t|
     t.integer "project_id", null: false
     t.integer "number"
-    t.string "git_sha", null: false
+    t.string "git_sha", limit: 128, null: false
     t.string "git_ref", null: false
     t.string "docker_tag"
     t.string "docker_repo_digest"
@@ -154,7 +154,7 @@ ActiveRecord::Schema.define(version: 2019_11_13_043345) do
     t.string "name", null: false
     t.text "comment"
     t.string "owners"
-    t.index ["name"], name: "index_environment_variable_groups_on_name", unique: true
+    t.index ["name"], name: "index_environment_variable_groups_on_name", unique: true, length: 191
   end
 
   create_table "environment_variables", id: :integer do |t|
@@ -174,7 +174,7 @@ ActiveRecord::Schema.define(version: 2019_11_13_043345) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "permalink", null: false
-    t.index ["permalink"], name: "index_environments_on_permalink", unique: true
+    t.index ["permalink"], name: "index_environments_on_permalink", unique: true, length: 191
   end
 
   create_table "flowdock_flows", id: :integer do |t|
@@ -210,7 +210,7 @@ ActiveRecord::Schema.define(version: 2019_11_13_043345) do
     t.string "tag"
     t.integer "canceller_id"
     t.index ["project_id"], name: "index_jobs_on_project_id"
-    t.index ["status"], name: "index_jobs_on_status"
+    t.index ["status"], name: "index_jobs_on_status", length: 191
     t.index ["user_id"], name: "index_jobs_on_user_id"
   end
 
@@ -343,7 +343,7 @@ ActiveRecord::Schema.define(version: 2019_11_13_043345) do
   create_table "new_relic_applications", id: :integer do |t|
     t.string "name"
     t.integer "stage_id"
-    t.index ["stage_id", "name"], name: "index_new_relic_applications_on_stage_id_and_name", unique: true
+    t.index ["stage_id", "name"], name: "index_new_relic_applications_on_stage_id_and_name", unique: true, length: { name: 191 }
   end
 
   create_table "oauth_access_grants", id: :integer do |t|
@@ -438,7 +438,6 @@ ActiveRecord::Schema.define(version: 2019_11_13_043345) do
     t.string "dockerfiles"
     t.boolean "build_with_gcb", default: false, null: false
     t.boolean "show_gcr_vulnerabilities", default: false, null: false
-    t.boolean "kubernetes_allow_writing_to_root_filesystem", default: false, null: false
     t.boolean "jenkins_status_checker", default: false, null: false
     t.boolean "use_env_repo", default: false, null: false
     t.integer "kubernetes_rollout_timeout"
@@ -491,8 +490,7 @@ ActiveRecord::Schema.define(version: 2019_11_13_043345) do
     t.index ["project_id", "key"], name: "index_secret_sharing_grants_on_project_id_and_key", unique: true, length: { key: 160 }
   end
 
-  create_table "secrets", id: false do |t|
-    t.string "id"
+  create_table "secrets", id: :string do |t|
     t.string "encrypted_value", null: false
     t.string "encrypted_value_iv", null: false
     t.string "encryption_key_sha", null: false
@@ -504,15 +502,6 @@ ActiveRecord::Schema.define(version: 2019_11_13_043345) do
     t.string "comment"
     t.timestamp "deprecated_at"
     t.index ["id"], name: "index_secrets_on_id", unique: true, length: 191
-  end
-
-  create_table "slack_channels", id: :integer do |t|
-    t.string "name", null: false
-    t.string "channel_id", null: false
-    t.integer "stage_id", null: false
-    t.datetime "created_at"
-    t.datetime "updated_at"
-    t.index ["stage_id"], name: "index_slack_channels_on_stage_id"
   end
 
   create_table "slack_identifiers", id: :integer do |t|
@@ -554,6 +543,7 @@ ActiveRecord::Schema.define(version: 2019_11_13_043345) do
     t.integer "project_id", null: false
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.string "notify_email_address"
     t.integer "order", null: false
     t.datetime "deleted_at"
     t.boolean "confirm", default: true, null: false
@@ -562,19 +552,19 @@ ActiveRecord::Schema.define(version: 2019_11_13_043345) do
     t.boolean "deploy_on_release", default: false, null: false
     t.boolean "comment_on_zendesk_tickets", default: false, null: false
     t.boolean "production", default: false, null: false
-    t.string "permalink", null: false
     t.boolean "use_github_deployment_api", default: false, null: false
+    t.string "permalink", null: false
     t.text "dashboard"
     t.boolean "email_committers_on_automated_deploy_failure", default: false, null: false
     t.string "static_emails_on_automated_deploy_failure"
     t.string "jenkins_job_names"
     t.string "next_stage_ids"
     t.boolean "no_code_deployed", default: false, null: false
+    t.boolean "kubernetes", default: false, null: false
     t.boolean "is_template", default: false, null: false
     t.boolean "notify_airbrake", default: false, null: false
     t.integer "template_stage_id"
     t.boolean "jenkins_email_committers", default: false, null: false
-    t.boolean "kubernetes", default: false, null: false
     t.boolean "run_in_parallel", default: false, null: false
     t.boolean "jenkins_build_params", default: false, null: false
     t.boolean "cancel_queued_deploys", default: false, null: false
@@ -583,13 +573,12 @@ ActiveRecord::Schema.define(version: 2019_11_13_043345) do
     t.boolean "builds_in_environment", default: false, null: false
     t.boolean "block_on_gcr_vulnerabilities", default: false, null: false
     t.boolean "notify_assertible", default: false, null: false
-    t.string "notify_email_address"
     t.float "average_deploy_time"
     t.string "prerequisite_stage_ids"
     t.string "default_reference"
-    t.boolean "full_checkout", default: false, null: false
     t.string "aws_sts_iam_role_arn"
     t.integer "aws_sts_iam_role_session_duration"
+    t.boolean "full_checkout", default: false, null: false
     t.boolean "allow_redeploy_previous_when_failed", default: false, null: false
     t.string "github_pull_request_comment"
     t.boolean "kubernetes_sample_logs_on_success", default: false, null: false
@@ -668,11 +657,10 @@ ActiveRecord::Schema.define(version: 2019_11_13_043345) do
     t.datetime "updated_at"
     t.datetime "deleted_at"
     t.string "source", null: false
-    t.index ["project_id", "branch"], name: "index_webhooks_on_project_id_and_branch"
-    t.index ["stage_id", "branch"], name: "index_webhooks_on_stage_id_and_branch"
+    t.index ["project_id", "branch"], name: "index_webhooks_on_project_id_and_branch", length: { branch: 191 }
+    t.index ["stage_id", "branch"], name: "index_webhooks_on_stage_id_and_branch", length: { branch: 191 }
   end
 
-  add_foreign_key "deploy_groups", "environments"
   add_foreign_key "deploys", "deploys", column: "triggering_deploy_id"
   add_foreign_key "oauth_access_grants", "oauth_applications", column: "application_id"
   add_foreign_key "oauth_access_tokens", "oauth_applications", column: "application_id"

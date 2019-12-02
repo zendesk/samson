@@ -6,7 +6,7 @@ class CreateLocks < ActiveRecord::Migration[4.2]
       t.belongs_to :user
 
       t.timestamps
-      t.timestamp :deleted_at
+      t.datetime :deleted_at
     end
   end
 end
