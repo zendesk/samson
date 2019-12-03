@@ -319,6 +319,20 @@ describe DeployService do
       assert_request(:post, "http://foo/") { job_execution.perform }
     end
 
+    it 'runs only active outbound webhooks' do
+      GITHUB.expects(:commit).returns(stub(sha: "abc"))
+      OutboundWebhook.create!(url: "http://foo", auth_type: "None", stages: [stage], disabled: true)
+      OutboundWebhook.create!(url: "http://bar", auth_type: "None", stages: [stage])
+      foo_request = stub_request(:post, "http://foo/")
+      bar_request = stub_request(:post, "http://bar/")
+
+      service.deploy(stage, reference: reference)
+      job_execution.perform
+
+      assert_not_requested(foo_request)
+      assert_requested(bar_request, times: 1)
+    end
+
     describe "with redeploy_previous_when_failed" do
       def run_deploy(redeploy)
         service.deploy(stage, reference: reference)

@@ -106,13 +106,17 @@
         <li>No inbound rules configured</li>
       <% else %>
         <% inbound_webhooks.each do |webhook| %>
-          <li>
+          <% disabled = webhook.disabled? %>
+          <li class="<%= 'disabled' if disabled %>">
             <strong><%= webhook.branch.blank? ? 'Any' : webhook.branch %></strong>
             branch &rarr;
             <strong><%= webhook.stage&.name || "Deleted stage" %></strong>
             stage for:
             <%= webhook.source.humanize %>
-            (<%= link_to_delete [@project, webhook] %>)
+            (
+            <%= link_to disabled ? 'Enable' : 'Disable', project_webhook_path(@project, webhook, webhook: { disabled: !disabled }), method: :patch %>,
+            <%= link_to_delete [@project, webhook] %>
+            )
           </li>
         <% end %>
       <% end %>
@@ -159,7 +163,8 @@
       <ul>
         <% outbound_webhook_stages.each do |outbound_webhook_stage| %>
           <% outbound_webhook = outbound_webhook_stage.outbound_webhook %>
-          <li>
+          <% disabled = outbound_webhook.disabled? %>
+          <li class="<%= 'disabled' if disabled %>">
             POST to
             <strong><%= outbound_webhook.url %></strong>
             <%= "(no SSL)" unless outbound_webhook.ssl? %>
@@ -174,7 +179,10 @@
               <%= "with #{outbound_webhook.auth_type} Auth" %>
             <% end %>
             </strong>
+            (
+            <%= link_to disabled ? 'Enable' : 'Disable', outbound_webhook_path(outbound_webhook, stage_id: outbound_webhook_stage.stage_id, outbound_webhook: { disabled: !disabled }), method: :patch %>,
             <%= link_to_delete outbound_webhook_path(outbound_webhook, stage_id: outbound_webhook_stage.stage_id) %>
+            )
           </li>
         <% end %>
       </ul>

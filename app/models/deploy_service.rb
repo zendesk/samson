@@ -145,7 +145,7 @@ class DeployService
   end
 
   def notify_outbound_webhooks(deploy, output, before:)
-    return unless hooks = deploy.stage.outbound_webhooks.select { |w| w.before_deploy == before }.presence
+    return unless hooks = deploy.stage.outbound_webhooks.active.select { |w| w.before_deploy == before }.presence
 
     # TODO: remove this once we make the job resolve the commit before setup
     deploy.job.commit = deploy.stage.project.repo_commit_from_ref(deploy.reference)

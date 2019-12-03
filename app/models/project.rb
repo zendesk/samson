@@ -140,7 +140,7 @@ class Project < ActiveRecord::Base
   end
 
   def webhook_stages_for(branch, service_type, service_name)
-    webhooks.for_source(service_type, service_name).for_branch(branch).map(&:stage)
+    webhooks.active.for_source(service_type, service_name).for_branch(branch).map(&:stage)
   end
 
   def repository_homepage
