@@ -5,6 +5,7 @@
 <%= form.input :before_deploy, as: :check_box %>
 <%= form.input :insecure, as: :check_box, help: "Do not verify SSL" %>
 <%= form.input :global, as: :check_box, help: "Can be reused by other stages" if form.object.new_record? %>
+<%= form.input :disabled, as: :check_box %>
 
 <%= form.input :auth_type do %>
   <%= form.select :auth_type, OutboundWebhook::AUTH_TYPES, {}, class: "form-control" %>

@@ -254,4 +254,12 @@ describe OutboundWebhook do
       json.keys.must_include 'deploy_groups'
     end
   end
+
+  describe '.active' do
+    it 'returns only active webhooks' do
+      active_webhook = OutboundWebhook.create!(webhook_attributes)
+      OutboundWebhook.create!(webhook_attributes.merge(disabled: true))
+      OutboundWebhook.active.must_equal([active_webhook])
+    end
+  end
 end

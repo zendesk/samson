@@ -28,6 +28,6 @@ class WebhooksController < ResourceController
   end
 
   def resource_params
-    super.permit(:branch, :source, :stage_id).merge(project: current_project)
+    super.permit(:branch, :source, :stage_id, :disabled).merge(project: current_project)
   end
 end

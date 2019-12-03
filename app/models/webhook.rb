@@ -13,6 +13,8 @@ class Webhook < ActiveRecord::Base
   belongs_to :project, inverse_of: :webhooks
   belongs_to :stage, inverse_of: :webhooks
 
+  scope :active, -> { where(disabled: false) }
+
   def self.for_branch(branch)
     where(branch: ['', branch])
   end

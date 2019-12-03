@@ -15,6 +15,8 @@ class OutboundWebhook < ActiveRecord::Base
 
   before_destroy :ensure_unused
 
+  scope :active, -> { where(disabled: false) }
+
   def deliver(deploy, output)
     prefix = "Webhook notification:"
 

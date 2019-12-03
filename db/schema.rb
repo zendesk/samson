@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_11_13_043345) do
+ActiveRecord::Schema.define(version: 2019_12_03_085811) do
 
   create_table "audits" do |t|
     t.integer "auditable_id", null: false
@@ -409,6 +409,7 @@ ActiveRecord::Schema.define(version: 2019_11_13_043345) do
     t.boolean "insecure", default: false, null: false
     t.boolean "before_deploy", default: false, null: false
     t.string "status_path"
+    t.boolean "disabled", default: false, null: false
   end
 
   create_table "project_environment_variable_groups", id: :integer do |t|
@@ -657,6 +658,7 @@ ActiveRecord::Schema.define(version: 2019_11_13_043345) do
     t.datetime "updated_at"
     t.datetime "deleted_at"
     t.string "source", null: false
+    t.boolean "disabled", default: false, null: false
     t.index ["project_id", "branch"], name: "index_webhooks_on_project_id_and_branch", length: { branch: 191 }
     t.index ["stage_id", "branch"], name: "index_webhooks_on_stage_id_and_branch", length: { branch: 191 }
   end

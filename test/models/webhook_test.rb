@@ -131,4 +131,12 @@ describe Webhook do
       assert Webhook.source_matches?('any_code', 'code', 'github')
     end
   end
+
+  describe '.active' do
+    it 'returns only active webhooks' do
+      Webhook.create!(webhook_attributes.merge(disabled: true))
+      active_webhook = Webhook.create!(webhook_attributes.merge(branch: 'develop'))
+      Webhook.active.must_equal([active_webhook])
+    end
+  end
 end

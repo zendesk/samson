@@ -129,6 +129,16 @@ describe Project do
       project.webhook_stages_for("master", "ci", "jenkins").must_equal [master_stage]
       project.webhook_stages_for("production", "ci", "travis").must_equal [production_stage]
     end
+
+    it 'returns only stages with active webhooks' do
+      active_stage = project.stages.create!(name: 'stage 1')
+      inactive_stage = project.stages.create!(name: 'stage 2')
+
+      project.webhooks.create!(branch: 'master', stage: active_stage, source: 'any')
+      project.webhooks.create!(branch: 'master', stage: inactive_stage, source: 'any', disabled: true)
+
+      project.webhook_stages_for('master', 'ci', 'jenkins').must_equal [active_stage]
+    end
   end
 
   describe "#repository_path" do
