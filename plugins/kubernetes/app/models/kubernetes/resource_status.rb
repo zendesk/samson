@@ -86,10 +86,10 @@ module Kubernetes
         ).fetch(:items)
 
         # ignore events from before the deploy, comparing strings for speed
-        events.select! { |e| e.dig(:lastTimestamp) >= @start }
+        events.select! { |e| last_timestamp(e) >= @start }
 
         # https://github.com/kubernetes/kubernetes/issues/29838
-        events.sort_by! { |e| e.dig(:lastTimestamp) }
+        events.sort_by! { |e| last_timestamp(e) }
 
         events
       end
@@ -100,6 +100,11 @@ module Kubernetes
     end
 
     private
+
+    # prefer lastTimestamp but sometime it is empty, see https://github.com/eclipse/che/issues/15395
+    def last_timestamp(event)
+      event[:lastTimestamp] || event.dig(:metadata, :creationTimestamp)
+    end
 
     # ignore known events that randomly happen
     def failures(kind)

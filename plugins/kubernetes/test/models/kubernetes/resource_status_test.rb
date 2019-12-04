@@ -103,6 +103,12 @@ describe Kubernetes::ResourceStatus do
       result.size.must_equal 0
     end
 
+    it "does not fail when missing lastTimestamp" do
+      events[0][:lastTimestamp] = nil
+      events[0][:metadata] = {creationTimestamp: 30.seconds.from_now.utc.iso8601}
+      result.size.must_equal 1
+    end
+
     it "sorts" do
       new = 60.seconds.from_now.utc.iso8601
       events.unshift lastTimestamp: new
