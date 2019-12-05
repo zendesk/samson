@@ -131,7 +131,7 @@ describe Kubernetes::Resource do
         end
       end
 
-      it "keeps replicase when autoscaled, to not revert autoscaler changes" do
+      it "keeps replicas when autoscaled, to not revert autoscaler changes" do
         assert_request(:get, url, to_return: {body: {spec: {replicas: 5}}.to_json}) do
           args = ->(x) { x.body.must_include '"replicas":5'; true }
           assert_request(:put, url, to_return: {body: "{}"}, with: args) do
@@ -708,6 +708,12 @@ describe Kubernetes::Resource do
 
     describe "#deploy" do
       let(:old) { {metadata: {foo: "B"}, spec: {clusterIP: "C"}} }
+      let(:old_with_ports) do
+        {
+          metadata: {foo: "B"},
+          spec: {clusterIP: "C", ports: [{name: "http", port: 80, nodePort: 30080}]}
+        }
+      end
       let(:expected_body) { template.deep_merge(spec: {clusterIP: "C"}) }
       let(:expected_body_version) { expected_body.deep_merge(metadata: {resourceVersion: nil}) }
 
@@ -741,6 +747,33 @@ describe Kubernetes::Resource do
             with = {body: expected_body.deep_merge(metadata: {foo: "B", resourceVersion: nil}).to_json}
             assert_request(:put, url, with: with, to_return: {body: "{}"}) do
               resource.deploy
+            end
+          end
+        end
+      end
+
+      it "keeps nodePorts" do
+        service_template = {
+          kind: kind,
+          apiVersion: api_version,
+          metadata: {name: 'some-project', namespace: 'pod1'},
+          spec: {
+            clusterIP: "C",
+            ports: [{name: "http", port: 80, nodePort: 30080}]
+          }
+        }
+        service_resource = Kubernetes::Resource.build(
+          service_template, deploy_group, autoscaled: false, delete_resource: false
+        )
+        expected_body = service_template.deep_merge(
+          spec: {clusterIP: "C", ports: [{name: "http", port: 80, nodePort: 30080}]}
+        )
+
+        with_env KUBERNETES_SERVICE_PERSISTENT_FIELDS: "metadata.foo" do
+          assert_request(:get, url, to_return: {body: old_with_ports.to_json}) do
+            expected = expected_body.deep_merge(metadata: {foo: "B", resourceVersion: nil})
+            assert_request(:put, url, with: request_with_json(expected), to_return: {body: "{}"}) do
+              service_resource.deploy
             end
           end
         end
@@ -782,7 +815,7 @@ describe Kubernetes::Resource do
         template[:metadata][:annotations] = {"samson/persistent_fields": "barfoo, metadata.foo"}
         assert_request(:get, url, to_return: {body: old.to_json}) do
           expected = expected_body.deep_merge(metadata: {foo: "B", resourceVersion: nil})
-          assert_request(:put, url, with: {body: expected.to_json}, to_return: {body: "{}"}) do
+          assert_request(:put, url, with: request_with_json(expected), to_return: {body: "{}"}) do
             resource.deploy
           end
         end

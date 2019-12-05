@@ -77,6 +77,12 @@ module Kubernetes
       all_containers.each_with_index.map { |c, i| build_selector_for_container(c, first: i == 0) }.compact
     end
 
+    def self.dig_path(path)
+      path = path.split(/\.(labels|annotations)\./) # make sure we do not split inside of labels or annotations
+      path[0..0] = path[0].split(".")
+      path.map! { |k| k.match?(/^\d+$/) ? Integer(k) : k.to_sym }
+    end
+
     private
 
     def set_via_env_json
@@ -95,9 +101,7 @@ module Kubernetes
 
       # set values
       data.each do |path, v|
-        path = path.split(/\.(labels|annotations)\./) # make sure we do not split inside of labels or annotations
-        path[0..0] = path[0].split(".")
-        path.map! { |k| k.match?(/^\d+$/) ? Integer(k) : k.to_sym }
+        path = self.class.dig_path(path)
 
         begin
           template.dig_set(path, JSON.parse(static_env.fetch(v), symbolize_names: true))

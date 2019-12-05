@@ -214,7 +214,7 @@ module Kubernetes
 
         # copy fields
         persistent_fields.each do |keep|
-          path = keep.split(".").map!(&:to_sym)
+          path = TemplateFiller.dig_path(keep)
           old_value = resource.dig(*path)
           copy.dig_set path, old_value unless old_value.nil? # boolean fields are kept, but nothing is nil in kubernetes
         end
@@ -330,6 +330,7 @@ module Kubernetes
       def persistent_fields
         [
           "spec.clusterIP",
+          *(@template.dig(:spec, :ports) || []).each_with_index.map { |_, i| "spec.ports.#{i}.nodePort" },
           *ENV["KUBERNETES_SERVICE_PERSISTENT_FIELDS"].to_s.split(/\s,/),
           *@template.dig(:metadata, :annotations, :"samson/persistent_fields").to_s.split(/[,\s]+/)
         ]
