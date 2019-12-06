@@ -38,18 +38,6 @@ task :asset_compilation_environment do
 end
 Rake::Task['assets:precompile'].prerequisites.unshift :asset_compilation_environment
 
-# normalize schema after dumping so we do not have a diff
-# tested via test/integration/tasks_test.rb
-task "db:schema:dump" do
-  file = "db/schema.rb"
-  schema = File.read(file)
-  schema.gsub!(/, options: .* do/, " do")
-  schema.gsub!('t.text "output", limit: 4294967295', 't.text "output", limit: 268435455')
-  schema.gsub!('t.text "audited_changes", limit: 4294967295', 't.text "audited_changes", limit: 1073741823')
-  schema.gsub!('t.text "object", limit: 4294967295', 't.text "object", limit: 1073741823')
-  File.write(file, schema)
-end
-
 namespace :test do
   task migrate_without_plugins: :environment do
     raise unless ENV.fetch('PLUGINS') == ''

@@ -25,19 +25,12 @@ describe "db" do
   end
 
   it "produces the current schema from checked in migrations" do
-    File.read("db/schema.rb").wont_include "4294967295", "replace 4294967295 with 1073741823"
     tasks["db:schema:dump"].execute
 
     if ActiveRecord::Base.connection.adapter_name.match?(/mysql/i)
-      # normalize ... travis is set up with weird charsets
-      # TODO: make it not produce a diff without these hacks
-      actual = File.read("db/schema.rb")
-      actual.gsub!(", options: \"ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC\", force: :cascade", "") || raise
-      actual.gsub!('"resource_template", limit: 4294967295', '"resource_template", limit: 1073741823') || raise
-      actual.gsub!('"object", limit: 4294967295', '"object", limit: 1073741823') || raise
-      actual.gsub!('"output", limit: 4294967295', '"output", limit: 268435455') || raise
-      actual.gsub!('"audited_changes", limit: 4294967295', '"audited_changes", limit: 1073741823') || raise
-      File.write("db/schema.rb", actual)
+      # additional expected diff can be mitigated in lib/tasks/dump.rake where we hook into db:schema:dump
+      content = File.read("db/schema.rb")
+      refute content.include?("4294967295"), "replace 4294967295 with 1073741823 in db/schema.rb\n#{content}"
 
       diff = `git diff -- db/schema.rb`
       assert diff.empty?, diff
