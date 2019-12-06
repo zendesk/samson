@@ -30,7 +30,7 @@ ActiveSupport::TestCase.class_eval do
   end
 
   def request_with_json(json)
-    ->(r) { p r.body; JSON.parse(r.body, symbolize_names: true) == json }
+    ->(r) { JSON.parse(r.body, symbolize_names: true) == json }
   end
 
   # TODO: prevent this getting called twice in the same test ... leads to weird bugs
