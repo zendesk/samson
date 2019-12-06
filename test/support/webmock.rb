@@ -29,6 +29,10 @@ ActiveSupport::TestCase.class_eval do
     end
   end
 
+  def request_with_json(json)
+    ->(r) { p r.body; JSON.parse(r.body, symbolize_names: true) == json }
+  end
+
   # TODO: prevent this getting called twice in the same test ... leads to weird bugs
   def self.assert_requests
     before { @assert_requests = [] } # set here so we can check that users did not forget to set the block
