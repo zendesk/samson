@@ -223,7 +223,7 @@ module Kubernetes
       end
 
       def persistent_fields
-        []
+        [*@template.dig(:metadata, :annotations, :"samson/persistent_fields").to_s.split(/[,\s]+/)]
       end
 
       def fetch_resource
@@ -328,11 +328,10 @@ module Kubernetes
       # we also keep whitelisted fields that are manually changed for load-balancing
       # (meant for labels, but other fields could work too)
       def persistent_fields
-        [
+        super + [
           "spec.clusterIP",
           *(@template.dig(:spec, :ports) || []).each_with_index.map { |_, i| "spec.ports.#{i}.nodePort" },
-          *ENV["KUBERNETES_SERVICE_PERSISTENT_FIELDS"].to_s.split(/\s,/),
-          *@template.dig(:metadata, :annotations, :"samson/persistent_fields").to_s.split(/[,\s]+/)
+          *ENV["KUBERNETES_SERVICE_PERSISTENT_FIELDS"].to_s.split(/\s,/)
         ]
       end
     end

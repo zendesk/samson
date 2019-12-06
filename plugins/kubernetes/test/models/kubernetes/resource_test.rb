@@ -151,6 +151,21 @@ describe Kubernetes::Resource do
         end
       end
 
+      it "can keep persistent fields" do
+        with = ->(r) do
+          body = JSON.parse(r.body)
+          body.fetch("foo").must_equal "bar"
+          refute body["baz"]
+          true
+        end
+        template[:metadata][:annotations] = {"samson/persistent_fields": "foo"}
+        assert_request(:get, url, to_return: {body: {foo: "bar", baz: "bar"}.to_json}, times: 1) do
+          assert_request(:put, url, with: with, to_return: {body: "{}"}) do
+            resource.deploy
+          end
+        end
+      end
+
       describe "updating matchLabels" do
         before { template[:spec][:selector] = {matchLabels: {foo: "bar"}} }
 

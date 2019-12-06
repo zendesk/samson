@@ -160,10 +160,11 @@ Prefer `RollingUpdate` if possible instead.
 To deploy the same repository multiple times, create separate projects and then set `metadata.annotations.samson/override_project_label: "true"`,
 samson will then override the `project` labels and keep deployments/services unique.
 
-### Service updates
+### Updates without overriding
 
-Too keep fields/labels that are manually managed persistent during updates, use `KUBERNETES_SERVICE_PERSISTENT_FIELDS`, see .env.example
-or set `metadata.annotations.samson/persistent_fields`
+Too keep fields/labels that are managed outside of samson during updates
+- for everything set `metadata.annotations.samson/persistent_fields`
+- for `Service` also use `KUBERNETES_SERVICE_PERSISTENT_FIELDS`, see .env.example
 
 ### PodDisruptionBudget
 
