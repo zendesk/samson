@@ -8,13 +8,8 @@ describe Samson::FormBuilder do
     builder.instance_variable_get(:@template).output_buffer << "XYZ"
   end
 
-  let(:template) do
-    template = ActionView::Base.new
-    template.extend ApplicationHelper
-    template
-  end
   let(:object) { User.new }
-  let(:builder) { Samson::FormBuilder.new(:user, object, template, {}) }
+  let(:builder) { Samson::FormBuilder.new(:user, object, view_context, {}) }
 
   describe '#input' do
     it "adds a clickable label" do
@@ -131,22 +126,22 @@ describe Samson::FormBuilder do
     end
 
     it "can include delete link" do
-      template.expects(:url_for).with(builder.object).returns('/xxx')
+      view_context.expects(:url_for).with(builder.object).returns('/xxx')
       builder.actions(delete: true).must_include "Delete"
     end
 
     it "can include custom delete link" do
-      template.expects(:url_for).with([:admin, commands(:echo)]).returns('/xxx')
+      view_context.expects(:url_for).with([:admin, commands(:echo)]).returns('/xxx')
       builder.actions(delete: [:admin, commands(:echo)]).must_include "Delete"
     end
 
     it "can add help text to delete" do
-      template.expects(:url_for).with(builder.object).returns('/xxx')
+      view_context.expects(:url_for).with(builder.object).returns('/xxx')
       builder.actions(delete: true, delete_help: "Bar").must_include 'data-content="Bar"'
     end
 
     it "can include type_to_delete link" do
-      template.expects(:url_for).with(builder.object).returns('/xxx')
+      view_context.expects(:url_for).with(builder.object).returns('/xxx')
       builder.actions(delete: :type).must_include "type-to-delete"
     end
 
@@ -156,13 +151,13 @@ describe Samson::FormBuilder do
     end
 
     it "can include history link" do
-      template.expects(:audits_path).returns('/xxx')
+      view_context.expects(:audits_path).returns('/xxx')
       builder.actions(history: true).must_include "> <a href=\"/xxx\">History"
     end
 
     it "can include visibly separated history and delete link" do
-      template.expects(:url_for).times(2).returns('/xxx') # audits_url is passed into url_for
-      template.expects(:audits_path).returns('/xxx')
+      view_context.expects(:url_for).times(2).returns('/xxx') # audits_url is passed into url_for
+      view_context.expects(:audits_path).returns('/xxx')
       builder.actions(history: true, delete: true).must_include "> | <a href=\"/xxx\">History"
     end
 
@@ -193,7 +188,7 @@ describe Samson::FormBuilder do
       )
     end
     let(:project) { Project.new(rollbar_dashboards_settings: [setting]) }
-    let(:builder) { Samson::FormBuilder.new(:project, project, template, {}) }
+    let(:builder) { Samson::FormBuilder.new(:project, project, view_context, {}) }
 
     it 'renders' do
       result = render(:rollbar_dashboards_settings)

@@ -8,10 +8,6 @@ describe SamsonFlowdock::FlowdockService do
   let(:service) { SamsonFlowdock::FlowdockService.new(deploy) }
 
   describe '#users' do
-    def assert_cached
-      service.users.object_id.must_equal service.users.object_id # is cached
-    end
-
     with_env(FLOWDOCK_API_TOKEN: 'some-token')
 
     it "shows all users" do
@@ -19,16 +15,18 @@ describe SamsonFlowdock::FlowdockService do
         :get, "https://api.flowdock.com/v1/users",
         to_return: {body: [{id: 1, nick: 'NICK', avatar: 'AVATAR', contact: 'CONTACT'}].to_json}
       ) do
-        service.users.must_equal([{id: 1, name: "NICK", avatar: "AVATAR", type: "CONTACT"}])
-        assert_cached
+        2.times do # check caching
+          service.users.must_equal([{id: 1, name: "NICK", avatar: "AVATAR", type: "CONTACT"}])
+        end
       end
     end
 
     it "shows nothing when flowdock fails to fetch users" do
       assert_request(:get, "https://api.flowdock.com/v1/users", to_timeout: []) do
         Rails.logger.expects(:error).with(includes('Error fetching flowdock users'))
-        service.users.must_equal([])
-        assert_cached
+        2.times do # check caching
+          service.users.must_equal([])
+        end
       end
     end
 
@@ -37,8 +35,9 @@ describe SamsonFlowdock::FlowdockService do
         Rails.logger.expects(:error).with(
           'Set the FLOWDOCK_API_TOKEN env variable to enabled user mention autocomplete.'
         )
-        service.users.must_equal([])
-        assert_cached
+        2.times do # check caching
+          service.users.must_equal([])
+        end
       end
     end
   end

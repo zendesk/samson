@@ -245,7 +245,7 @@ describe ImageBuilder do
     end
 
     describe "with secondary registry" do
-      let(:secondary_repo) { project.docker_repo(DockerRegistry.all[1], 'Dockerfile') }
+      let(:secondary_repo) { project.docker_repo(DockerRegistry.all.to_a[1], 'Dockerfile') }
 
       with_registries ["docker-registry.example.com", 'extra.registry']
 

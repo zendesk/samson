@@ -41,7 +41,7 @@ module Samson
   class Application < Rails::Application
     # Settings in config/environments/* take precedence over those specified here.
     # Application configuration should go into files in config/initializers
-    # -- all .rb files in that directory are automatically loaded.
+    # TODO: use 6.0 ... check migration etc
     config.load_defaults 5.2
 
     # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
@@ -92,6 +92,9 @@ module Samson
     # Allow streaming
     config.preload_frameworks = true
     config.allow_concurrency = true
+
+    # TODO: allow ping-controller to not need ssl
+    config.force_ssl = (ENV['FORCE_SSL'] == '1')
 
     # Used for all Samson specific configuration.
     config.samson = ActiveSupport::OrderedOptions.new

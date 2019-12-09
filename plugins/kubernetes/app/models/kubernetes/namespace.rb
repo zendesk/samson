@@ -11,7 +11,7 @@ module Kubernetes
     default_scope { order(:name) }
     has_many :projects, dependent: nil, foreign_key: :kubernetes_namespace_id, inverse_of: :kubernetes_namespace
 
-    validates :name, presence: true, uniqueness: true, format: NAME_PATTERN
+    validates :name, presence: true, uniqueness: {case_sensitive: false}, format: NAME_PATTERN
     validate :validate_template
     after_save :remove_configured_resource_names
     before_destroy :ensure_unused

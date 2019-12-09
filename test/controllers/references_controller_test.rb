@@ -17,7 +17,7 @@ describe ReferencesController do
 
       it 'shows git references for the project' do
         get :index, params: {project_id: project.to_param, format: :json}
-        response.content_type.must_equal 'application/json'
+        response.media_type.must_equal 'application/json'
         JSON.parse(response.body).must_equal ["master"]
       end
 

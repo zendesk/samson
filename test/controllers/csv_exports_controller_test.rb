@@ -62,7 +62,7 @@ describe CsvExportsController do
         it "renders json" do
           create_exports
           get :index, params: {format: :json}
-          @response.content_type.must_equal "application/json"
+          @response.media_type.must_equal "application/json"
           @response.body.must_include CsvExport.all.to_json
         end
       end
@@ -71,7 +71,7 @@ describe CsvExportsController do
         it "renders json" do
           CsvExport.delete_all
           get :index, params: {format: :json}
-          @response.content_type.must_equal "application/json"
+          @response.media_type.must_equal "application/json"
         end
       end
     end
@@ -195,7 +195,7 @@ describe CsvExportsController do
           describe "as json" do
             it "renders json" do
               get :show, params: {id: export.id, format: :json}
-              @response.content_type.must_equal "application/json"
+              @response.media_type.must_equal "application/json"
               @response.body.must_equal export.reload.to_json
             end
           end
@@ -232,7 +232,7 @@ describe CsvExportsController do
 
               it "receives file" do
                 get :show, params: {id: export.id, format: 'csv'}
-                @response.content_type.must_equal "text/csv"
+                @response.media_type.must_equal "text/csv"
                 export.reload.status.must_equal "downloaded"
                 assert export.reload.status? :downloaded
               end
@@ -260,7 +260,7 @@ describe CsvExportsController do
         describe "as json" do
           it "returns not found" do
             get :show, params: {id: -9999, format: :json}
-            @response.content_type.must_equal "application/json"
+            @response.media_type.must_equal "application/json"
             @response.body.must_include "not found"
             assert_response 404
           end
@@ -269,7 +269,7 @@ describe CsvExportsController do
         describe "as csv" do
           it "returns not found" do
             get :show, params: {id: -9999, format: :csv}
-            @response.content_type.must_equal "text/csv"
+            @response.media_type.must_equal "text/csv"
             @response.body.must_include "not found"
             assert_response 404
           end

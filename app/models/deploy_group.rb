@@ -19,7 +19,7 @@ class DeployGroup < ActiveRecord::Base
   delegate :production?, to: :environment
 
   validates :name, :environment_id, presence: true
-  validates :name, :env_value, uniqueness: true
+  validates :name, :env_value, uniqueness: {case_sensitive: false}
   validates :env_value, format: {with: /\A\w[-:\w]*\w\z/}
   before_validation :initialize_env_value, on: :create
   before_validation :generated_name_sortable, if: :name_changed?

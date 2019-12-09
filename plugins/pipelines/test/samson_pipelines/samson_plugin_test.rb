@@ -85,24 +85,14 @@ describe SamsonPipelines do
   end
 
   describe 'view callbacks' do
-    let(:view_context) do
-      view_context = ActionView::Base.new(ActionController::Base.view_paths)
-
-      class << view_context
-        include Rails.application.routes.url_helpers
-      end
-
-      view_context.instance_variable_set(:@project, Project.first)
-
-      view_context
-    end
-
     describe 'deploys_header callback' do
       def render_view
         Samson::Hooks.render_views(:deploys_header, view_context, deploy: deploy)
       end
 
       let(:deploy) { deploys(:succeeded_test) }
+
+      before { view_context.instance_variable_set(:@project, Project.first) }
 
       it 'renders alert if there is a triggering deploy' do
         other_deploy = deploys(:succeeded_production_test)

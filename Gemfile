@@ -5,10 +5,10 @@ ruby File.read('.ruby-version').strip
 
 # gems that have rails engines are are always needed
 group :preload do
-  gem 'rails', '5.2.3'
+  gem 'rails', '6.0.1'
   gem 'dotenv'
   gem 'connection_pool'
-  gem 'marco-polo'
+  gem 'marco-polo', git: "https://github.com/jurajmasar/marco-polo.git", branch: "master" # https://github.com/arches/marco-polo/pull/10
 
   # AR extensions
   gem 'goldiloader'
@@ -111,7 +111,7 @@ group :development, :test do
 end
 
 group :test do
-  gem 'minitest-rails'
+  gem 'minitest-rails', git: "https://github.com/blowmage/minitest-rails.git", branch: "master" # need >v6.0.0
   gem 'rails-controller-testing'
   gem 'maxitest'
   gem 'mocha'

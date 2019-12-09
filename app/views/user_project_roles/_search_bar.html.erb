@@ -11,7 +11,7 @@
   </div>
 
   <div class="col-md-2 clearfix">
-    <% roles = [['', '']] + (system_level ? Role.all[1..-1] : UserProjectRole::ROLES).map { |r| [r.name.capitalize, r.id] } %>
+    <% roles = [['', '']] + (system_level ? Role.all.to_a[1..-1] : UserProjectRole::ROLES).map { |r| [r.name.capitalize, r.id] } %>
     <%= select_tag :role_id, options_for_select(roles, params[:role_id]), class: 'form-control' %>
   </div>
 

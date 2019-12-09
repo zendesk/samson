@@ -210,23 +210,6 @@ describe SamsonEnv do
       view_context.instance_variable_set(:@project, project)
     end
 
-    let(:view_context) do
-      view_context = ActionView::Base.new(ActionController::Base.view_paths)
-
-      class << view_context
-        include Rails.application.routes.url_helpers
-        include ApplicationHelper
-      end
-
-      view_context.instance_eval do
-        # stub for testing render
-        def protect_against_forgery?
-        end
-      end
-
-      view_context
-    end
-
     # see plugins/env/app/views/samson_env/_fields.html.erb
     describe :project_form do
       let(:checkbox) { 'id="project_use_env_repo"' }

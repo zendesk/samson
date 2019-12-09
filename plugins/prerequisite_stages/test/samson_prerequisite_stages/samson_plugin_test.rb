@@ -97,23 +97,6 @@ describe SamsonPrerequisiteStages do
       view_context.instance_variable_set(:@stage, stage1)
     end
 
-    let(:view_context) do
-      view_context = ActionView::Base.new(ActionController::Base.view_paths)
-
-      class << view_context
-        include Rails.application.routes.url_helpers
-        include ApplicationHelper
-      end
-
-      view_context.instance_eval do
-        # stub for testing render
-        def protect_against_forgery?
-        end
-      end
-
-      view_context
-    end
-
     describe 'stage_form callback' do
       def with_form
         view_context.form_for [stage1.project, stage1] do |form|

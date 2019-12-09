@@ -28,7 +28,8 @@ class User < ActiveRecord::Base
 
   validates :time_format, inclusion: {in: TIME_FORMATS}
   validates :external_id,
-    uniqueness: {scope: :deleted_at}, presence: true, unless: :integration?, if: :external_id_changed?
+    uniqueness: {scope: :deleted_at, case_sensitive: false},
+    presence: true, unless: :integration?, if: :external_id_changed?
   validates :github_username, uniqueness: {case_sensitive: false}, format: GITHUB_USERNAME_REGEX, allow_blank: true
 
   before_soft_delete :destroy_user_project_roles

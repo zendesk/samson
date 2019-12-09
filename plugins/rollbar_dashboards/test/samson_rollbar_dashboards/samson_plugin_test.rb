@@ -18,16 +18,6 @@ describe SamsonRollbarDashboards do
   end
 
   describe 'view callbacks' do
-    let(:view_context) do
-      view_context = ActionView::Base.new(ActionController::Base.view_paths)
-
-      class << view_context
-        include Rails.application.routes.url_helpers
-      end
-
-      view_context
-    end
-
     describe 'project_dashboard callback' do
       def render_view(project)
         view_context.instance_variable_set(:@project, project)

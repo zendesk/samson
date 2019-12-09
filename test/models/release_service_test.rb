@@ -58,14 +58,14 @@ describe ReleaseService do
     end
 
     it "deploys the commit to stages if they're configured to" do
-      stage = project.stages.create!(name: "production", deploy_on_release: true)
+      stage = project.stages.create!(name: "release", deploy_on_release: true)
       release = service.release(commit: commit, author: author)
 
       assert_equal release.version, stage.deploys.first.reference
     end
 
     context 'with release_deploy_conditions hook' do
-      let!(:stage) { project.stages.create!(name: "production", deploy_on_release: true) }
+      let!(:stage) { project.stages.create!(name: "release", deploy_on_release: true) }
 
       it 'does not deploy if the release_deploy_condition check is false' do
         deployable_condition_check = ->(_, _) { false }

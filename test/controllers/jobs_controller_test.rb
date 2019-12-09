@@ -54,8 +54,8 @@ describe JobsController do
 
       it "renders logs when requesting text" do
         get :show, params: {project_id: project.to_param, id: job}, format: :text
-        response.content_type.must_equal "text/plain"
-        response.header["Content-Disposition"].must_match /\.log"$/
+        response.media_type.must_equal "text/plain"
+        response.header["Content-Disposition"].must_match /\.log"/
       end
 
       describe "header" do
