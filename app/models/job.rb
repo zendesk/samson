@@ -145,9 +145,9 @@ class Job < ActiveRecord::Base
   end
 
   def status!(status)
-    # TODO: use update_attribute instead if this hack once we figure out why it causes nil errors see #3662
+    # TODO: use update_attribute instead if this hack once we figure out why it causes nil errors see #3662 + #3664
     update_columns(status: status, updated_at: Time.now)
-    deploy&.touch # same as after_update
+    deploy&.update_column(:updated_at, Time.now) # same as after_update
 
     report_state if finished?
     true
