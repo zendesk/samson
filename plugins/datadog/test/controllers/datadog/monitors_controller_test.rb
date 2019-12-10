@@ -17,7 +17,7 @@ describe Datadog::MonitorsController do
       end
 
       it "renders without layout" do
-        get :index, params: {stage_id: stage}
+        get :index, params: {project_id: stage.project, stage_id: stage}
         assert_response :success
         response.body.must_include "monitors/123"
         response.body.wont_include "<html"

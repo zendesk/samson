@@ -2,10 +2,9 @@
 
 class Datadog::MonitorsController < ApplicationController
   def index
-    if project_id = params[:project_id]
-      @project = Project.find_by_param!(project_id)
-    else
-      @stage = Stage.find_by_param!(params.fetch(:stage_id))
+    @project = Project.find_by_param!(params.require(:project_id))
+    if stage_permalink = params[:stage_id]
+      @stage = @project.stages.find_by_param!(stage_permalink)
     end
 
     render "samson_datadog/_monitor_list", layout: false
