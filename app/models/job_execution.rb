@@ -36,6 +36,12 @@ class JobExecution
     @repository.full_checkout = true if @stage&.full_checkout
   end
 
+  # reload instance var to avoid multithreading bug that results in @_touch_attr_names begin unset
+  # NoMethodError: undefined method `include?' for nil:NilClass
+  def reload!
+    @job = Job.find(@job.id)
+  end
+
   def perform
     @output.write('', :started)
     @start_callbacks.each(&:call)
