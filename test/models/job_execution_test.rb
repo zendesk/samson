@@ -399,14 +399,6 @@ describe JobExecution do
     end
   end
 
-  describe "#reload!" do
-    it "unsets instance vars" do
-      execution.job.instance_variable_set(:@_touch_attr_names, 1)
-      execution.reload!
-      refute execution.job.instance_variable_get(:@_touch_attr_names)
-    end
-  end
-
   describe "#perform" do
     delegate :perform, to: :execution
 

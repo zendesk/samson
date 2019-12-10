@@ -11,9 +11,6 @@ class CsvExportJob
     "csv-export-#{@csv_export.id}"
   end
 
-  def reload!
-  end
-
   def perform
     ActiveRecord::Base.connection_pool.with_connection do
       create_export_folder(@csv_export)
