@@ -145,12 +145,17 @@ class Job < ActiveRecord::Base
   end
 
   def status!(status)
-    # TODO: use update_attribute instead if this hack once we figure out why it causes nil errors see #3662 + #3664
-    update_columns(status: status, updated_at: Time.now)
-    deploy&.update_column(:updated_at, Time.now) # same as after_update
-
+    hacky_update_attribute(:status, status)
     report_state if finished?
     true
+  end
+
+  # TODO: use update_attribute instead if this hack once we figure out why it causes nil errors see #3662 + #3664
+  def hacky_update_attribute(key, value)
+    update_columns(key => value, updated_at: Time.now)
+    # same as after_update where touch cascades to stage
+    deploy&.update_column(:updated_at, Time.now)
+    deploy&.stage&.update_column(:updated_at, Time.now)
   end
 
   def short_reference
