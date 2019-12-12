@@ -98,7 +98,7 @@ class StagesController < ResourceController
   end
 
   def resource_params
-    super.permit(stage_permitted_params).merge(project: current_project)
+    super.permit(stage_permitted_params).reverse_merge(project: current_project)
   end
 
   def set_resource
