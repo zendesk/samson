@@ -225,34 +225,18 @@ describe StagesController do
 
       let(:project) { projects(:test) }
 
-      describe 'valid' do
-        subject { assigns(:stage) }
+      it 'is creates' do
+        create_stage(stage: {name: 'test', command_ids: [commands(:echo).id, "one more"]})
 
-        before do
-          new_command = Command.create!(command: 'test2 command')
-
-          create_stage(stage: {name: 'test', command_ids: [commands(:echo).id, new_command.id]})
-        end
-
-        it 'is created' do
-          subject.persisted?.must_equal(true)
-          subject.command_ids.must_include(commands(:echo).id)
-          subject.script.must_equal(commands(:echo).command + "\ntest2 command")
-        end
-
-        it 'redirects' do
-          assert_redirected_to project_stage_path(project, assigns(:stage))
-        end
+        stage = assigns(:stage)
+        stage.script.must_equal "echo hello\none more"
+        stage.commands.last.project.must_equal project
+        assert_redirected_to project_stage_path(project, stage)
       end
 
-      describe 'invalid attributes' do
-        before do
-          create_stage(stage: {name: nil, command_ids: ['echo foobar']})
-        end
-
-        it 'renders' do
-          assert_template :new
-        end
+      it 'fails when invalid' do
+        create_stage(stage: {name: nil, command_ids: ['echo foobar']})
+        assert_template :new
       end
 
       it "fails when trying to set no code deployed" do
