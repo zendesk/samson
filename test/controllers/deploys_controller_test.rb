@@ -338,7 +338,7 @@ describe DeploysController do
 
       it "filters for code_deployed" do
         Deploy.last.stage.update_column(:no_code_deployed, true)
-        get :index, params: {search: {code_deployed: "true"}}, format: "json"
+        get :index, params: {search: {code_deployed: "false"}}, format: "json"
         assert_response :ok
         deploys["deploys"].count.must_equal 3
       end

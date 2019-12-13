@@ -167,7 +167,7 @@ class DeploysController < ApplicationController
         stages = stages.where(project: projects)
       end
       unless code_deployed.nil?
-        stages = stages.where(no_code_deployed: param_to_bool(code_deployed))
+        stages = stages.where.not(no_code_deployed: param_to_bool(code_deployed))
       end
       unless production.nil?
         production = param_to_bool(production)
