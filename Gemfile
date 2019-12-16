@@ -8,7 +8,7 @@ group :preload do
   gem 'rails', '6.0.1'
   gem 'dotenv'
   gem 'connection_pool'
-  gem 'marco-polo', git: "https://github.com/jurajmasar/marco-polo.git", branch: "master" # https://github.com/arches/marco-polo/pull/10
+  gem 'marco-polo'
 
   # AR extensions
   gem 'goldiloader'
