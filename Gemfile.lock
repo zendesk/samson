@@ -8,13 +8,6 @@ GIT
       railties (~> 6.0.0)
 
 GIT
-  remote: https://github.com/jurajmasar/marco-polo.git
-  revision: d083076872f933cecf58086826f79959f64b2098
-  branch: master
-  specs:
-    marco-polo (1.2.1)
-
-GIT
   remote: https://github.com/zendesk/vault-ruby.git
   revision: 96be391a2fd50a42871c8b9dc3c59fddbdbdc556
   ref: 96be391a2fd50a42871c8b9dc3c59fddbdbdc556
@@ -375,6 +368,8 @@ GEM
       mini_mime (>= 0.1.1)
     marcel (0.3.3)
       mimemagic (~> 0.3.2)
+    marco-polo (2.0.0)
+      railties (>= 6)
     maxitest (3.3.0)
       minitest (>= 5.0.0, < 5.12.0)
     metaclass (0.0.4)
@@ -644,7 +639,7 @@ DEPENDENCIES
   large_object_store
   lograge
   logstash-event
-  marco-polo!
+  marco-polo
   maxitest
   minitest-rails!
   mocha
