@@ -14,9 +14,7 @@ class EnvironmentVariableGroupsController < ApplicationController
     respond_to do |format|
       format.html
       format.json do
-        render_as_json :environment_variable_groups, @groups, nil, allowed_includes: [
-          :environment_variables,
-        ]
+        render_as_json :environment_variable_groups, @groups, nil, allowed_includes: allowed_includes
       end
     end
   end
@@ -32,7 +30,12 @@ class EnvironmentVariableGroupsController < ApplicationController
   end
 
   def show
-    render 'form'
+    respond_to do |format|
+      format.html { render 'form' }
+      format.json do
+        render_as_json :environment_variable_group, @group, nil, allowed_includes: allowed_includes
+      end
+    end
   end
 
   def update
@@ -76,6 +79,10 @@ class EnvironmentVariableGroupsController < ApplicationController
   end
 
   private
+
+  def allowed_includes
+    [:environment_variables]
+  end
 
   def group
     @group ||= if ['new', 'create'].include?(action_name)

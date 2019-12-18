@@ -132,6 +132,26 @@ describe EnvironmentVariableGroupsController do
         assert_response :success
       end
 
+      it "renders json" do
+        get :show, params: {id: env_group.id}, format: :json
+        json = JSON.parse(response.body)
+        group = json['environment_variable_group']
+        group.keys.must_include 'name'
+        group.keys.must_include 'variable_names'
+        assert_response :success
+      end
+
+      it "renders with envionment_variables if present" do
+        get :show, params: {id: env_group.id, includes: 'environment_variables', format: :json}
+        assert_response :success
+        json = JSON.parse(response.body)
+        json.keys.must_include 'environment_variables'
+
+        group = json['environment_variable_group']
+        group.keys.must_include 'environment_variable_ids'
+        env_group.environment_variable_ids.must_equal group['environment_variable_ids']
+      end
+
       it 'disables fields if user cannot edit env group' do
         unauthorized_env_group
         get :show, params: {id: env_group.id}
