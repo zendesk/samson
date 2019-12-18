@@ -26,7 +26,17 @@ class EnvironmentVariableGroupsController < ApplicationController
   def create
     group.attributes = attributes
     group.save!
-    redirect_to action: :index
+
+    respond_to do |format|
+      format.html { redirect_to action: :index }
+      format.json do
+        render_as_json :environment_variable_group,
+          group,
+          nil,
+          allowed_includes: allowed_includes,
+          status: :created
+      end
+    end
   end
 
   def show

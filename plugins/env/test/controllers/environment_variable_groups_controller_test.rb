@@ -264,18 +264,36 @@ describe EnvironmentVariableGroupsController do
     end
 
     describe "#create" do
+      let(:params) do
+        {
+          environment_variable_group: {
+            environment_variables_attributes: {'0' => {name: 'N1', value: 'V1'}},
+            name: 'G2'
+          }
+        }
+      end
+
       it "creates" do
         assert_difference "EnvironmentVariable.count", +1 do
           assert_difference "EnvironmentVariableGroup.count", +1 do
-            post :create, params: {
-              environment_variable_group: {
-                environment_variables_attributes: {"0" => {name: "N1", value: "V1"}},
-                name: "G2"
-              }
-            }
+            post :create, params: params
           end
         end
         assert_redirected_to "/environment_variable_groups"
+      end
+
+      it 'renders json' do
+        assert_difference "EnvironmentVariable.count", +1 do
+          assert_difference "EnvironmentVariableGroup.count", +1 do
+            post :create, params: params, format: :json
+          end
+        end
+        assert_response :created
+
+        json = JSON.parse(response.body)
+        group = json['environment_variable_group']
+        group.keys.must_include 'name'
+        group.keys.must_include 'variable_names'
       end
     end
 
