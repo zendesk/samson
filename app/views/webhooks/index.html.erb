@@ -147,10 +147,10 @@
     Outbound Webhooks
     <%= additional_info "POST to an external url after a deploy has finished. The request body will contain deploy, stage, and project information." %>
   </h2>
-  <% if @project.deploys.first %>
+  <% if latest_deploy = @project.deploys.first %>
     <details>
       <summary>Example payload</summary>
-      <pre><%= JSON.pretty_generate(OutboundWebhook.deploy_as_json(@project.deploys.first)) %></pre>
+      <pre><%= JSON.pretty_generate(OutboundWebhook.deploy_as_json(latest_deploy)) %></pre>
     </details>
   <% else %>
     <p>Deploy this project at least once to see a sample payload.</p>
