@@ -165,6 +165,7 @@
           <% outbound_webhook = outbound_webhook_stage.outbound_webhook %>
           <% disabled = outbound_webhook.disabled? %>
           <li class="<%= 'disabled' if disabled %>">
+            <%= "#{outbound_webhook.name}: " if outbound_webhook.name? %>
             POST to
             <strong><%= outbound_webhook.url %></strong>
             <%= "(no SSL)" unless outbound_webhook.ssl? %>
@@ -203,8 +204,11 @@
 
       <%= form.submit "Add", class: "btn btn-primary" %>
     <% end %>
+  </details>
 
-    <% if global_webhooks = OutboundWebhook.where(global: true).pluck(:url, :id).presence %>
+  <% if global_webhooks = OutboundWebhook.where(global: true).pluck(:name, :id).presence %>
+    <details>
+      <summary>Link global</summary>
       <%= form_for OutboundWebhook.new, url: connect_outbound_webhooks_path, html: {class: "form-horizontal"} do |form| %>
         <div class="form-group">
           <%= form.label "Global Webhook", class: "col-lg-2 control-label" %>

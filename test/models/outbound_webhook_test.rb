@@ -40,6 +40,22 @@ describe OutboundWebhook do
       webhook.auth_type = "Wut"
       refute_valid webhook
     end
+
+    it "needs a name when global" do
+      webhook.global = true
+      refute_valid webhook, :name
+    end
+
+    it "allows multiple blank names" do
+      webhook.name = ""
+      webhook.save!
+      OutboundWebhook.create!(webhook_attributes.merge(name: ""))
+    end
+
+    it "does not allow names for non-global since that leads to duplication" do
+      webhook.name = "foo"
+      refute_valid webhook, :name
+    end
   end
 
   describe "#ssl?" do
