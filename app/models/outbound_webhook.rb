@@ -12,6 +12,8 @@ class OutboundWebhook < ActiveRecord::Base
 
   validate :validate_url_is_absolute
   validate :validate_auth
+  validate :validate_name_for_global
+  validates :name, uniqueness: {case_sensitive: false}, if: :global?
 
   before_destroy :ensure_unused
 
@@ -122,6 +124,15 @@ class OutboundWebhook < ActiveRecord::Base
     return if outbound_webhook_stages.empty?
     errors.add :base, 'Can only delete when unused.'
     throw :abort
+  end
+
+  def validate_name_for_global
+    if global?
+      errors.add(:name, "must be present") unless name?
+    else
+      self.name = name.presence # prevent unique index failing on blank
+      errors.add(:name, "must be blank for non-global webhooks") if name?
+    end
   end
 end
 Samson::Hooks.load_decorators(OutboundWebhook)

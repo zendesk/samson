@@ -1,5 +1,6 @@
 <%= render 'shared/errors', object: form.object %>
 
+<%= form.input :name, help: "For global webhooks" %>
 <%= form.input :url, required: true %>
 <%= form.input :status_path, help: "Json parse the response and poll the returned status url from this path" %>
 <%= form.input :before_deploy, as: :check_box %>
