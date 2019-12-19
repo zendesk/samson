@@ -406,6 +406,12 @@ describe EnvironmentVariableGroupsController do
         delete :destroy, params: {id: env_group.id}
         assert_response :unauthorized
       end
+
+      it 'renders json' do
+        delete :destroy, params: {id: env_group.id}, format: :json
+        assert_response :success
+        response.body.must_equal ''
+      end
     end
   end
 

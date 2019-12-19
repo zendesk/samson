@@ -60,7 +60,10 @@ class EnvironmentVariableGroupsController < ApplicationController
 
   def destroy
     group.destroy!
-    redirect_to action: :index
+    respond_to do |format|
+      format.html { redirect_to action: :index }
+      format.json { head(:ok) }
+    end
   end
 
   def preview
