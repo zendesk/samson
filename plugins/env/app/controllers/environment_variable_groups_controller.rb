@@ -50,7 +50,12 @@ class EnvironmentVariableGroupsController < ApplicationController
 
   def update
     group.update!(attributes)
-    redirect_to action: :index
+    respond_to do |format|
+      format.html { redirect_to action: :index }
+      format.json do
+        render_as_json :environment_variable_group, group, nil, allowed_includes: allowed_includes
+      end
+    end
   end
 
   def destroy

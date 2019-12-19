@@ -37,6 +37,7 @@ describe EnvironmentVariableGroupsController do
   let(:stage) { stages(:test_staging) }
   let(:project) { stage.project }
   let(:deploy_group) { stage.deploy_groups.first }
+  let(:json_response) { JSON.parse(response.body) }
   let!(:env_group) do
     EnvironmentVariableGroup.create!(
       name: "G1",
@@ -92,7 +93,6 @@ describe EnvironmentVariableGroupsController do
       it "renders json" do
         get :index, format: :json
         assert_response :success
-        json_response = JSON.parse response.body
         first_group = json_response['environment_variable_groups'].first
         first_group.keys.must_include "name"
         first_group.keys.must_include "variable_names"
@@ -134,8 +134,7 @@ describe EnvironmentVariableGroupsController do
 
       it "renders json" do
         get :show, params: {id: env_group.id}, format: :json
-        json = JSON.parse(response.body)
-        group = json['environment_variable_group']
+        group = json_response['environment_variable_group']
         group.keys.must_include 'name'
         group.keys.must_include 'variable_names'
         assert_response :success
@@ -144,10 +143,9 @@ describe EnvironmentVariableGroupsController do
       it "renders with envionment_variables if present" do
         get :show, params: {id: env_group.id, includes: 'environment_variables', format: :json}
         assert_response :success
-        json = JSON.parse(response.body)
-        json.keys.must_include 'environment_variables'
+        json_response.keys.must_include 'environment_variables'
 
-        group = json['environment_variable_group']
+        group = json_response['environment_variable_group']
         group.keys.must_include 'environment_variable_ids'
         env_group.environment_variable_ids.must_equal group['environment_variable_ids']
       end
@@ -290,10 +288,18 @@ describe EnvironmentVariableGroupsController do
         end
         assert_response :created
 
-        json = JSON.parse(response.body)
-        group = json['environment_variable_group']
+        group = json_response['environment_variable_group']
         group.keys.must_include 'name'
         group.keys.must_include 'variable_names'
+      end
+
+      it 'renders with envionment_variables if present' do
+        post :create, params: params.merge(includes: 'environment_variables'), format: :json
+        assert_response :created
+
+        json_response.keys.must_include 'environment_variables'
+        group = json_response['environment_variable_group']
+        group['environment_variable_ids'] = env_group.environment_variables.map(&:id)
       end
     end
 
@@ -325,6 +331,36 @@ describe EnvironmentVariableGroupsController do
       end
 
       it_updates
+
+      it 'renders json' do
+        variable = env_group.environment_variables.first
+        refute_difference "EnvironmentVariable.count" do
+          put :update, params: {
+            id: env_group.id,
+            includes: "environment_variables",
+            environment_variable_group: {
+              environment_variables_attributes: {
+                "0" => {name: "N1", value: "V2", scope_type_and_id: "DeployGroup-#{deploy_group.id}", id: variable.id}
+              }
+            }
+          }, format: :json
+        end
+        variable.reload.value.must_equal 'V2'
+        variable.reload.scope.must_equal deploy_group
+
+        group = json_response['environment_variable_group']
+        group['id'].must_equal env_group.id
+        group['name'].must_equal env_group.name
+      end
+
+      it 'renders with envionment_variables if present' do
+        put :update, params: params.merge(includes: 'environment_variables'), format: :json
+        assert_response :success
+        json_response.keys.must_include 'environment_variables'
+
+        group = json_response['environment_variable_group']
+        group['environment_variable_ids'] = env_group.environment_variables.map(&:id)
+      end
 
       it "destroys variables" do
         variable = env_group.environment_variables.first
