@@ -118,7 +118,9 @@ module Samson
       end
 
       def execute_block(config)
-        config.fetch(:block).call # needs a Proc
+        Audited.with_username "Samson::Periodical" do
+          config.fetch(:block).call # needs a Proc
+        end
       end
 
       def env_settings(name)

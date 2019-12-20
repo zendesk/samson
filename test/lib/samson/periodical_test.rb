@@ -89,6 +89,14 @@ describe Samson::Periodical do
         with(instance_of(custom_error), error_message: "Samson::Periodical remove_expired_locks failed")
       Samson::Periodical.run_once(:remove_expired_locks)
     end
+
+    it "uses distinct user in audits" do
+      assert_difference "Audited::Audit.count", +1 do
+        Samson::Periodical.run_once(:global_command_cleanup)
+      end
+      Audited::Audit.last.username.must_equal "Samson::Periodical"
+      Audited.store[:audited_user].must_be_nil # unsets after
+    end
   end
 
   # starts background threads and should always shut them down
