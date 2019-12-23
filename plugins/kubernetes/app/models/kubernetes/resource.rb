@@ -10,7 +10,7 @@ module Kubernetes
   module Resource
     module PatchReplace
       def patch_replace?
-        !@delete_resource && exist?
+        !@delete_resource && !server_side_apply? && exist?
       end
 
       # Some kinds can be updated only using PATCH requests.
@@ -27,18 +27,9 @@ module Kubernetes
           next unless value = @template.dig(*keys)
           update.dig_set keys, value
         end
-        with_patch_header do
+        with_header 'application/json-patch+json' do
           request :patch, name, [{op: "replace", path: "/spec", value: update.fetch(:spec)}], namespace
         end
-      end
-
-      # https://github.com/abonas/kubeclient/issues/268
-      def with_patch_header
-        old = client.headers['Content-Type']
-        client.headers['Content-Type'] = 'application/json-patch+json'
-        yield
-      ensure
-        client.headers['Content-Type'] = old
       end
     end
 
@@ -130,6 +121,10 @@ module Kubernetes
 
       private
 
+      def server_side_apply?
+        @template.dig(:metadata, :annotations, :"samson/server_side_apply") == "true"
+      end
+
       def error_location
         "#{name} #{namespace} #{@deploy_group.name}"
       end
@@ -155,7 +150,11 @@ module Kubernetes
       def create
         return if @delete_resource
         restore_template do
-          request(:create, @template)
+          if server_side_apply?
+            server_side_apply @template
+          else
+            request :create, @template
+          end
         end
         expire_resource_cache
       rescue Kubeclient::ResourceNotFoundError => e
@@ -165,7 +164,11 @@ module Kubernetes
       # TODO: remove the expire_cache and assign @resource but that breaks a bunch of deploy_executor tests
       def update
         ensure_not_updating_match_labels
-        request(:update, template_for_update)
+        if server_side_apply?
+          server_side_apply template_for_update
+        else
+          request :update, template_for_update
+        end
         expire_resource_cache
       rescue Samson::Hooks::UserError => e
         raise unless e.message.include?("cannot change")
@@ -177,6 +180,22 @@ module Kubernetes
         else
           raise Samson::Hooks::UserError, "#{e.message} (#{path.join(".")}=\"true\" to recreate)"
         end
+      end
+
+      # TODO: remove name hack https://github.com/abonas/kubeclient/issues/427
+      def server_side_apply(template)
+        with_header 'application/apply-patch+yaml' do # NOTE: we send json but say +yaml since +json gives a 415
+          request(:patch, "#{name}?fieldManager=samson&force=true", template, namespace)
+        end
+      end
+
+      # https://github.com/abonas/kubeclient/issues/268
+      def with_header(header)
+        old = client.headers['Content-Type']
+        client.headers['Content-Type'] = header
+        yield
+      ensure
+        client.headers['Content-Type'] = old
       end
 
       def ensure_not_updating_match_labels

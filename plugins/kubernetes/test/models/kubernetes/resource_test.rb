@@ -68,8 +68,8 @@ describe Kubernetes::Resource do
     it "does not modify passed in template" do
       content = File.read(File.expand_path("../../../app/models/kubernetes/resource.rb", __dir__))
       restore_usages = content.scan('restore_template do').size
-      template_modified = content.scan(/@template.*(=|dig_set|delete)/).size
-      template_modified.must_equal restore_usages + 4
+      template_modified = content.scan(/@template(?: =|\.dig_set|\.delete).*/)
+      template_modified.size.must_equal restore_usages + 2, template_modified # we use = twice inside of restore
     end
 
     it "falls back to using VersionedUpdate" do
@@ -235,6 +235,28 @@ describe Kubernetes::Resource do
         it "does nothing when delete was requested but was not existing" do
           assert_request(:get, url, to_return: {status: 404}) do
             resource.deploy
+          end
+        end
+      end
+
+      describe "server-side apply" do
+        before { template[:metadata][:annotations] = {"samson/server_side_apply": "true"} }
+
+        it "updates" do
+          assert_request(:get, url, to_return: {body: "{}"}) do
+            args = ->(x) { x.body.must_include '"replicas":2'; true }
+            assert_request(:patch, "#{url}?fieldManager=samson&force=true", to_return: {body: "{}"}, with: args) do
+              resource.deploy
+            end
+          end
+        end
+
+        it "creates when missing" do
+          assert_request(:get, url, to_return: {status: 404}) do
+            args = ->(x) { x.body.must_include '"replicas":2'; true }
+            assert_request(:patch, "#{url}?fieldManager=samson&force=true", to_return: {body: "{}"}, with: args) do
+              resource.deploy
+            end
           end
         end
       end
@@ -659,6 +681,11 @@ describe Kubernetes::Resource do
 
       it "is not a replace when creating" do
         resource.stubs(:exist?).returns(false)
+        refute resource.patch_replace?
+      end
+
+      it "is not a replace when applying" do
+        resource.stubs(:server_side_apply?).returns(true)
         refute resource.patch_replace?
       end
     end

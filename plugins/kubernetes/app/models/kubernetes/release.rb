@@ -60,7 +60,8 @@ module Kubernetes
           }
         ]
       end
-      # avoiding doing a .uniq on clients which might do weird stuff
+
+      # avoiding doing a .uniq on clients which might trigger api calls
       scopes.uniq.map { |group, query| [group.kubernetes_cluster.client('v1'), query] }
     end
 

@@ -151,9 +151,13 @@ These can be configured (in seconds) using `KUBERNETES_STABILITY_CHECK_DURATION`
 
 ### StatefulSet
 
-On kubernetes <1.7 they can only be updated with `OnDelete` updateStrategy,
-which is supported by updating only the pod containers and replica count (not set metadata/annotations).
-Prefer `RollingUpdate` if possible instead.
+Prefer `spec.updateStrategy.type=RollingUpdate`
+
+### Server-side apply
+
+Set `metadata.annotation.samson/server_side_apply='true'` and use a valid template.
+This only works for kubernetes 1.16+ clusters, but will soon be the default way samson works,
+see [kubernetes docs](https://kubernetes.io/docs/reference/using-api/api-concepts/#server-side-apply) for details.
 
 ### Duplicate deployments
 
