@@ -37,7 +37,7 @@ module Kubernetes
           prefix_service_cluster_ip
           set_service_blue_green if blue_green_color
         elsif Kubernetes::RoleConfigFile.primary?(template)
-          if kind != 'Pod'
+          if kind == 'Deployment'
             set_rc_unique_label_key
             set_history_limit
           end
@@ -402,11 +402,11 @@ module Kubernetes
       container = pod_containers.first
       container[:resources] = {
         requests: {
-          cpu: @doc.deploy_group_role.requests_cpu.to_f,
+          cpu: @doc.deploy_group_role.requests_cpu.to_f.to_s,
           memory: "#{@doc.deploy_group_role.requests_memory}Mi"
         },
         limits: {
-          cpu: @doc.deploy_group_role.limits_cpu.to_f,
+          cpu: @doc.deploy_group_role.limits_cpu.to_f.to_s,
           memory: "#{@doc.deploy_group_role.limits_memory}Mi"
         }
       }
