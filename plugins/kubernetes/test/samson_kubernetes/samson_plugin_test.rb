@@ -28,7 +28,7 @@ describe SamsonKubernetes do
   describe :deploy_group_permitted_params do
     it "adds ours" do
       params = Samson::Hooks.fire(:deploy_group_permitted_params).flatten(1)
-      params.must_include cluster_deploy_group_attributes: [:kubernetes_cluster_id, :namespace]
+      params.must_include cluster_deploy_group_attributes: [:id, :kubernetes_cluster_id, :namespace]
     end
   end
 

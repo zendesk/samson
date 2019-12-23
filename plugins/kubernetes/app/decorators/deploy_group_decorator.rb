@@ -16,8 +16,15 @@ DeployGroup.class_eval do
   accepts_nested_attributes_for(
     :cluster_deploy_group,
     allow_destroy: true,
-    update_only: true,
-    reject_if: ->(h) { h[:kubernetes_cluster_id].blank? }
+    reject_if: ->(h) do
+      empty = h[:kubernetes_cluster_id].blank?
+      if h[:id]
+        h[:_destroy] = true if empty # user removed cluster -> delete connection
+        false
+      else
+        empty
+      end
+    end
   )
 
   def kubernetes_namespace
