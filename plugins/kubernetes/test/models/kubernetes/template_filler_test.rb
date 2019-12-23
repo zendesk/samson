@@ -509,11 +509,11 @@ describe Kubernetes::TemplateFiller do
       it "copies resource values" do
         container.fetch(:resources).must_equal(
           requests: {
-            cpu: 0.1,
+            cpu: '0.1',
             memory: "128Mi"
           },
           limits: {
-            cpu: 0.5,
+            cpu: '0.5',
             memory: "1024Mi"
           }
         )
@@ -523,7 +523,7 @@ describe Kubernetes::TemplateFiller do
         doc.deploy_group_role.no_cpu_limit = true
         container.fetch(:resources).must_equal(
           requests: {
-            cpu: 0.1,
+            cpu: '0.1',
             memory: "128Mi"
           },
           limits: {
