@@ -5,7 +5,8 @@ require 'bundler/setup'
 
 # anything loaded before coverage will be uncovered
 require 'single_cov'
-SingleCov::APP_FOLDERS << 'decorators' << 'presenters'
+SingleCov::APP_FOLDERS << 'presenters'
+SingleCov.rewrite { |path| path.sub("/lib/decorators/", "/decorators/") }
 SingleCov.setup :minitest, branches: true unless defined?(Spring)
 
 # rake adds these, but we don't need them / want to be consistent with using `ruby x_test.rb`

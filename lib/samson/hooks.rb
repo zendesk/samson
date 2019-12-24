@@ -119,7 +119,7 @@ module Samson
       private
 
       def decorators_root
-        @decorators_root ||= Pathname("#{@folder}/app/decorators")
+        @decorators_root ||= Pathname("#{@folder}/decorators")
       end
 
       # {root}/xyz_decorator.rb -> Xyz
