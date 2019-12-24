@@ -76,7 +76,7 @@ class SessionsController < ApplicationController
   end
 
   def github_authorization
-    GithubAuthorization.new(
+    Omniauth::GithubAuthorization.new(
       auth_hash.extra.raw_info.login,
       # Use a global token that can query the org groups. No need to use
       # the logged in user's token here since GithubAuthorization is only

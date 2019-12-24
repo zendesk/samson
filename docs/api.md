@@ -3,7 +3,7 @@
 
 Many endpoints offer a `.json` response, open PRs for missing ones.
 
-Api authentication is done via OAuth tokens and scopes, see [/lib/warden/strategies/doorkeeper_strategy.rb](/lib/warden/strategies/doorkeeper_strategy.rb) for details.
+Api authentication is done via OAuth tokens and scopes, see [/lib/warden/strategies/doorkeeper.rb](/lib/warden/strategies/doorkeeper.rb) for details.
 
 Scopes are default="all" ... locks="allowed to read+write locks".
 

@@ -35,7 +35,7 @@ describe Samson::Secrets::VaultClientWrapper do
       let(:client) { Samson::Secrets::VaultClientWrapper.new(versioned_kv: true).kv }
 
       it 'instantiates a versioned logical wrapper if server is versioned' do
-        client.must_be_instance_of Samson::Secrets::VaultKVWrapper
+        client.must_be_instance_of Samson::Secrets::VaultKvWrapper
       end
     end
   end

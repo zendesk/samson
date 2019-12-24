@@ -17,7 +17,7 @@ module Samson
       # Could remove if this is implemented: https://github.com/hashicorp/vault-ruby/pull/194#issuecomment-448448359
       def kv
         if @versioned_kv
-          @kv ||= VaultKVWrapper.new(self, Samson::Secrets::VaultClientManager::MOUNT)
+          @kv ||= VaultKvWrapper.new(self, Samson::Secrets::VaultClientManager::MOUNT)
         else
           @logical ||= VaultLogicalWrapper.new(self)
         end

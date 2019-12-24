@@ -50,7 +50,7 @@ describe SessionsController do
     let(:role_id) { Role::VIEWER.id }
 
     before do
-      GithubAuthorization.any_instance.stubs(role_id: role_id)
+      Omniauth::GithubAuthorization.any_instance.stubs(role_id: role_id)
 
       @request.env.merge!(env)
       @request.env['omniauth.auth'] = auth_hash

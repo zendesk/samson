@@ -4,7 +4,7 @@ require_relative '../../../test_helper'
 
 SingleCov.covered!
 
-describe Samson::Secrets::VaultKVWrapper do
+describe Samson::Secrets::VaultKvWrapper do
   # TODO: use VaultRequestHelper
   let(:server) { create_vault_server(name: 'pod0', versioned_kv: true) }
 

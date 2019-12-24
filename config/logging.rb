@@ -9,6 +9,7 @@ elsif Samson::EnvCheck.set?("RAILS_LOG_TO_SYSLOG")
   # good for production hosts with syslog
   # TODO: add Syslog::Logger#silence to support dev mode
   # TODO: add tagged logging so we get request-ids
+  require_relative "../lib/samson/syslog_formatter"
   config.logger = Syslog::Logger.new('samson')
   config.logger.formatter = Samson::SyslogFormatter.new
 elsif ENV["SERVER_MODE"]
@@ -54,3 +55,14 @@ end
 
 # workaround for our server ... always gets SIGHUP even though it does not do file logging
 Signal.trap(:SIGHUP) {} if ENV["IGNORE_SIGHUP"]
+
+# We saw initializers hanging boot so we are logging before every initializer is called to easily debug
+# Test: boot up rails and look at the logs
+if ENV['SERVER_MODE'] && !Rails.env.development?
+  Rails::Engine.prepend(Module.new do
+    def load(file, *)
+      Rails.logger.info "Loading initializer #{file.sub("#{Bundler.root}/", "")}"
+      super
+    end
+  end)
+end
