@@ -7,7 +7,7 @@ module SamsonGcloud
   SCAN_WAIT_PERIOD = 10.minutes
   SCAN_SLEEP_PERIOD = 5.seconds
 
-  class Engine < Rails::Engine
+  class SamsonPlugin < Rails::Engine
   end
 
   class << self

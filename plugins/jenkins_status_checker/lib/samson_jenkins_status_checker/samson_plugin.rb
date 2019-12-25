@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 module SamsonJenkinsStatusChecker
-  class Engine < Rails::Engine
+  class SamsonPlugin < Rails::Engine
   end
 end
 

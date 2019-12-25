@@ -5,7 +5,7 @@ module SamsonGithub
   # however 'https://www.githubstatus.com' also works
   STATUS_URL = ENV["GITHUB_STATUS_URL"] || 'https://www.githubstatus.com'
 
-  class Engine < Rails::Engine
+  class SamsonPlugin < Rails::Engine
   end
 end
 

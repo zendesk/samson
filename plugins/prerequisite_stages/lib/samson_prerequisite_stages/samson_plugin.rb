@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module SamsonPrerequisiteStages
-  class Engine < Rails::Engine
+  class SamsonPlugin < Rails::Engine
   end
 
   def self.validate_deployed_to_all_prerequisite_stages(stage, reference, commit)

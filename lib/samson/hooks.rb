@@ -113,7 +113,7 @@ module Samson
       end
 
       def engine
-        @engine ||= Kernel.const_get("::Samson#{@name.camelize}::Engine")
+        @engine ||= Kernel.const_get("::Samson#{@name.camelize}::SamsonPlugin")
       end
 
       private
@@ -133,7 +133,7 @@ module Samson
     class << self
       def plugins
         @plugins ||= begin
-          Gem.find_files("*/samson_plugin.rb").
+          Gem.find_files("samson_*/samson_plugin.rb").
             map { |path| Plugin.new(path) }.
             select { |p| active_plugin?(p.name) }.
             sort_by(&:name)

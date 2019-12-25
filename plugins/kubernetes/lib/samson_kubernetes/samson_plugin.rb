@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module SamsonKubernetes
-  class Engine < Rails::Engine
+  class SamsonPlugin < Rails::Engine
     initializer "refinery.assets.precompile" do |app|
       app.config.assets.precompile.append %w[kubernetes/icon.png]
     end

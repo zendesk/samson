@@ -39,7 +39,7 @@
       </div>
 
       <%= form.actions delete: true do %>
-        <% if Samson::Hooks.active_plugin?('aws_ecr') && SamsonAwsEcr::Engine.active? && @kubernetes_cluster.persisted? %>
+        <% if Samson::Hooks.active_plugin?('aws_ecr') && SamsonAwsEcr::SamsonPlugin.active? && @kubernetes_cluster.persisted? %>
           <%= link_to "Seed ECR", seed_ecr_kubernetes_cluster_path(@kubernetes_cluster), class: "btn btn-default", data: {method: :post} %>
         <% end %>
       <% end %>
