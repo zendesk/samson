@@ -137,7 +137,8 @@ describe Kubernetes::TemplateFiller do
     end
 
     it "sets replicas for templates" do
-      raw_template[:kind] = "foobar"
+      raw_template[:apiVersion] = "zendesk.com/v1alpha1"
+      raw_template[:kind] = "ShardedDeployment"
       raw_template[:spec].delete :replicas
       raw_template[:spec][:template][:spec][:replicas] = 1
       result = template.to_hash
@@ -155,9 +156,12 @@ describe Kubernetes::TemplateFiller do
       hash.dig(:spec, :template, :metadata, :annotations).keys.must_equal [:"secret/FOO", :"samson/deploy_url"]
     end
 
-    ['CustomResourceDefinition', 'APIService'].each do |kind|
-      it "does not set override name for #{kind} since it follows a fixed naming pattern" do
-        raw_template[:kind] = kind
+    [
+      { apiVersion: 'apiregistration.k8s.io/v1beta1', kind: 'APIService' },
+      { apiVersion: 'apiextensions.k8s.io/v1beta1', kind: 'CustomResourceDefinition' }
+    ].each do |config|
+      it "does not set override name for #{config} since it follows a fixed naming pattern" do
+        raw_template.merge!(config)
         raw_template[:metadata].delete(:namespace)
         template.to_hash[:metadata][:name].must_equal "some-project-rc"
         template.to_hash[:metadata][:namespace].must_equal nil
@@ -166,7 +170,8 @@ describe Kubernetes::TemplateFiller do
 
     describe "name" do
       it "sets name for unknown non-primary kinds" do
-        raw_template[:kind] = "foobar"
+        raw_template[:apiVersion] = "zendesk.com/v1alpha1"
+        raw_template[:kind] = "ShardedDeployment"
         raw_template[:spec][:template][:spec].delete(:containers)
         template.to_hash[:metadata][:name].must_equal "test-app-server"
       end
@@ -223,6 +228,7 @@ describe Kubernetes::TemplateFiller do
 
       it "overrides project label in pod" do
         raw_template.replace(raw_template.dig(:spec, :template).merge(raw_template.slice(:metadata)))
+        raw_template[:apiVersion] = "v1"
         raw_template[:kind] = "Pod"
         doc.replica_target = 1
         raw_template[:spec].delete(:template)
@@ -238,6 +244,7 @@ describe Kubernetes::TemplateFiller do
 
     describe "configmap" do
       it "modifies nothing" do
+        raw_template[:apiVersion] = 'v1'
         raw_template[:kind] = "ConfigMap"
         raw_template.delete(:spec)
         result = template.to_hash
@@ -247,7 +254,10 @@ describe Kubernetes::TemplateFiller do
     end
 
     describe "service" do
-      before { raw_template[:kind] = 'Service' }
+      before do
+        raw_template[:apiVersion] = 'v1'
+        raw_template[:kind] = 'Service'
+      end
 
       it "does not override with blank service name" do
         doc.kubernetes_role.update_column(:service_name, '') # user left field empty
@@ -775,6 +785,7 @@ describe Kubernetes::TemplateFiller do
         original_metadata = raw_template.fetch(:metadata)
         raw_template.replace(raw_template.dig(:spec, :template))
         raw_template[:metadata].merge!(original_metadata)
+        raw_template[:apiVersion] = 'v1'
         raw_template[:kind] = "Pod"
         raw_template[:spec].delete :replicas
         doc.replica_target = 1
@@ -876,6 +887,7 @@ describe Kubernetes::TemplateFiller do
 
     describe "HorizontalPodAutoscaler" do
       before do
+        raw_template[:apiVersion] = 'autoscaling/v1'
         raw_template[:kind] = "HorizontalPodAutoscaler"
         raw_template[:spec][:scaleTargetRef] = {}
       end
@@ -894,6 +906,7 @@ describe Kubernetes::TemplateFiller do
 
     describe "PodDisruptionBudget" do
       before do
+        raw_template[:apiVersion] = 'policy/v1beta1'
         raw_template[:kind] = 'PodDisruptionBudget'
         raw_template[:spec][:template][:spec].delete(:containers)
       end
@@ -912,6 +925,7 @@ describe Kubernetes::TemplateFiller do
       end
 
       it "modifies the service" do
+        raw_template[:apiVersion] = 'v1'
         raw_template[:kind] = 'Service'
         template.to_hash.dig_fetch(:spec, :selector, :blue_green).must_equal 'green'
       end
@@ -926,6 +940,7 @@ describe Kubernetes::TemplateFiller do
       end
 
       it "modified budgets so we do not get errors when 2 budgets match the same pod" do
+        raw_template[:apiVersion] = 'policy/v1beta1'
         raw_template[:kind] = 'PodDisruptionBudget'
         raw_template[:spec].delete(:template)
         hash = template.to_hash
@@ -1036,6 +1051,7 @@ describe Kubernetes::TemplateFiller do
         end
 
         it "does not add to non-runnables" do
+          raw_template[:apiVersion] = 'v1'
           raw_template[:kind] = "Service"
           kritis.must_be_nil
         end
@@ -1068,6 +1084,7 @@ describe Kubernetes::TemplateFiller do
       end
 
       it "does not modify resources like Service" do
+        raw_template[:apiVersion] = "v1"
         raw_template[:kind] = "Service"
         pod_annotation.must_be_nil
         pod_label.must_be_nil
