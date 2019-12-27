@@ -208,6 +208,13 @@ describe Kubernetes::TemplateFiller do
         e.message.must_equal "Cluster \"test\" does not support v1 Deployment"
       end
 
+      it "alerts on unknown namespace" do
+        stub_request(:get, "http://foobar.server/apis/vwtf").to_return(status: 404)
+        raw_template[:apiVersion] = "vwtf"
+        e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
+        e.message.must_equal "Cluster \"test\" does not support vwtf Deployment"
+      end
+
       it "sets namespace from kubernetes_namespace" do
         raw_template[:metadata].delete(:namespace)
         project.kubernetes_namespace = kubernetes_namespaces(:test)

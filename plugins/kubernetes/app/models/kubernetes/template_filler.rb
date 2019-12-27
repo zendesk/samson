@@ -87,10 +87,13 @@ module Kubernetes
       cluster = @doc.deploy_group.kubernetes_cluster
       api_version = template.fetch(:apiVersion)
 
-      resources = Rails.cache.fetch(["template-filler-resources", api_version, cluster]) do
-        # TODO: don't use private API - https://github.com/abonas/kubeclient/issues/428
-        cluster.client(api_version).send(:fetch_entities)
-      end
+      resources =
+        Rails.cache.fetch(["template-filler-resources", api_version, cluster]) do
+          # TODO: don't use private API - https://github.com/abonas/kubeclient/issues/428
+          cluster.client(api_version).send(:fetch_entities)
+        rescue Kubeclient::ResourceNotFoundError
+          {"resources" => []}
+        end
 
       resource = resources["resources"].find { |r| r["kind"] == kind } ||
         raise(Samson::Hooks::UserError, "Cluster \"#{cluster.name}\" does not support #{api_version} #{kind}")
