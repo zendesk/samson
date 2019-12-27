@@ -22,7 +22,7 @@ module Kubernetes
         kind = template[:kind]
 
         set_via_env_json
-        set_namespace unless Kubernetes::RoleValidator::NAMESPACELESS_KINDS.include? kind
+        set_namespace
         set_project_labels if template.dig(:metadata, :annotations, :"samson/override_project_label")
         set_deploy_url
 
@@ -84,6 +84,20 @@ module Kubernetes
     end
 
     private
+
+    def namespaced_kind?(kind)
+      cluster = @doc.deploy_group.kubernetes_cluster
+      api_version = template.fetch(:apiVersion)
+
+      resources = Rails.cache.fetch(["template-filler-resources", api_version, cluster]) do
+        # TODO: don't use private API - https://github.com/abonas/kubeclient/issues/428
+        cluster.client(api_version).send(:fetch_entities)
+      end
+
+      resource = resources["resources"].find { |r| r["kind"] == kind } ||
+        raise(Samson::Hooks::UserError, "Cluster \"#{cluster.name}\" does not support #{api_version} #{kind}")
+      resource.fetch("namespaced")
+    end
 
     def set_via_env_json
       data = {}
@@ -220,7 +234,13 @@ module Kubernetes
 
     # assumed to be validated by role_validator
     def set_namespace
-      return if template[:metadata].key?(:namespace)
+      namespace_needed = !!namespaced_kind?(template[:kind])
+      namespace_set = !!template.dig(:metadata, :namespace)
+      return if namespace_set == namespace_needed
+
+      if namespace_set && !namespace_needed
+        raise Samson::Hooks::UserError, "#{template[:kind]} should not have a namespace"
+      end
       template[:metadata][:namespace] = project.kubernetes_namespace&.name || @doc.deploy_group.kubernetes_namespace
     end
 

@@ -117,7 +117,8 @@ class ActiveSupport::TestCase
         {"name" => "replicasets/scale", "namespaced" => true, "kind" => "Scale"},
         {"name" => "replicasets/status", "namespaced" => true, "kind" => "ReplicaSet"},
         {"name" => "replicationcontrollers", "namespaced" => true, "kind" => "ReplicationControllerDummy"},
-        {"name" => "replicationcontrollers/scale", "namespaced" => true, "kind" => "Scale"}
+        {"name" => "replicationcontrollers/scale", "namespaced" => true, "kind" => "Scale"},
+        {"name" => "statefulsets", "namespaced" => true, "kind" => "StatefulSet"}
       ]
     },
     "batch/v1" => {
@@ -154,13 +155,13 @@ class ActiveSupport::TestCase
     "apiregistration.k8s.io/v1beta1" => {
       "kind" => "APIResourceList",
       "resources" => [
-        {"name" => "apiservices", "namespaced" => true, "kind" => "APIService"}
+        {"name" => "apiservices", "namespaced" => false, "kind" => "APIService"}
       ]
     },
     "apiextensions.k8s.io/v1beta1" => {
       "kind" => "APIResourceList",
       "resources" => [
-        {"name" => "customresourcedefinitions", "namespaced" => true, "kind" => "CustomResourceDefinition"}
+        {"name" => "customresourcedefinitions", "namespaced" => false, "kind" => "CustomResourceDefinition"}
       ]
     },
     "rbac.authorization.k8s.io/v1" => {
@@ -170,6 +171,13 @@ class ActiveSupport::TestCase
         {"name" => "clusterroles", "namespaced" => false, "kind" => "ClusterRole"},
         {"name" => "rolebindings", "namespaced" => true, "kind" => "RoleBinding"},
         {"name" => "roles", "namespaced" => true, "kind" => "Role"}
+      ]
+    },
+    # example of custom, deployment-like CRDs
+    "zendesk.com/v1alpha1" => {
+      "kind" => "APIResourceList",
+      "resources" => [
+        {"name" => "shardeddeployments", "namespaced" => true, "kind" => "ShardedDeployment"}
       ]
     }
   }.freeze

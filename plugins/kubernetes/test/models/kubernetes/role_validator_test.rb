@@ -340,12 +340,6 @@ describe Kubernetes::RoleValidator do
         errors.must_equal ["Only use configured namespace \"test\", not [nil]"]
       end
 
-      it "fails when namespace is set on namespace-less kind" do
-        role[0][:kind] = "CustomResourceDefinition"
-        role[0][:metadata][:namespace] = "test"
-        errors.must_equal ["Do not set namespace for CustomResourceDefinition"]
-      end
-
       describe "with invalid namespace" do
         before { role[0][:metadata][:namespace] = "bar" }
 
