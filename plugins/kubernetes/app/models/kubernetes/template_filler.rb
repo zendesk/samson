@@ -4,7 +4,6 @@ module Kubernetes
   class TemplateFiller
     attr_reader :template
 
-    CUSTOM_UNIQUE_LABEL_KEY = 'rc_unique_identifier'
     SECRET_PULLER_IMAGE = ENV['SECRET_PULLER_IMAGE'].presence
     KUBERNETES_ADD_PRESTOP = Samson::EnvCheck.set?('KUBERNETES_ADD_PRESTOP')
     SECRET_PREFIX = "secret/"
@@ -38,7 +37,6 @@ module Kubernetes
           set_service_blue_green if blue_green_color
         elsif Kubernetes::RoleConfigFile.primary?(template)
           if kind == 'Deployment'
-            set_rc_unique_label_key
             set_history_limit
           end
 
@@ -341,12 +339,6 @@ module Kubernetes
       return if init_containers.empty?
       pod_template.dig_set [:spec, :initContainers], init_containers
       pod_annotations.delete Kubernetes::Api::Pod::INIT_CONTAINER_KEY # clear deprecated annotation to avoid duplicates
-    end
-
-    # This key replaces the default kubernetes key: 'deployment.kubernetes.io/podTemplateHash'
-    # This label is used by kubernetes to identify a RC and corresponding Pods
-    def set_rc_unique_label_key
-      template.dig_set [:spec, :uniqueLabelKey], CUSTOM_UNIQUE_LABEL_KEY
     end
 
     def set_replica_target

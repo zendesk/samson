@@ -35,7 +35,6 @@ describe Kubernetes::TemplateFiller do
       result.size.must_equal 4
 
       spec = result.fetch(:spec)
-      spec.fetch(:uniqueLabelKey).must_equal "rc_unique_identifier"
       spec.fetch(:replicas).must_equal doc.replica_target
       spec.fetch(:template).fetch(:metadata).fetch(:labels).symbolize_keys.must_equal(
         revision: "1a6f551a2ffa6d88e15eef5461384da0bfb1c194",
