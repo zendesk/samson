@@ -157,10 +157,10 @@ describe Kubernetes::TemplateFiller do
     end
 
     [
-      { apiVersion: 'apiregistration.k8s.io/v1beta1', kind: 'APIService' },
-      { apiVersion: 'apiextensions.k8s.io/v1beta1', kind: 'CustomResourceDefinition' }
+      {apiVersion: 'apiregistration.k8s.io/v1beta1', kind: 'APIService'},
+      {apiVersion: 'apiextensions.k8s.io/v1beta1', kind: 'CustomResourceDefinition'}
     ].each do |config|
-      it "does not set override name for #{config} since it follows a fixed naming pattern" do
+      it "does not set override name for #{config[:kind]} since it follows a fixed naming pattern" do
         raw_template.merge!(config)
         raw_template[:metadata].delete(:namespace)
         template.to_hash[:metadata][:name].must_equal "some-project-rc"
@@ -195,11 +195,18 @@ describe Kubernetes::TemplateFiller do
         template.to_hash[:metadata][:namespace].must_equal 'default'
       end
 
-      it "keeps namespaces when nil is set for 1-off namespace-less kinds" do
-        raw_template[:metadata][:namespace] = nil
-        # secret pulling does not work without namespace, but deployments never have none
-        template.stubs(:set_image_pull_secrets)
-        template.to_hash[:metadata][:namespace].must_equal nil
+      it "alerts when setting a namespace for a namespace-less kind" do
+        raw_template[:apiVersion] = "apiregistration.k8s.io/v1beta1"
+        raw_template[:kind] = "APIService"
+        raw_template[:metadata][:namespace] = "oops"
+        e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
+        e.message.must_equal "APIService should not have a namespace"
+      end
+
+      it "alerts on unknown kind" do
+        raw_template[:apiVersion] = "v1"
+        e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
+        e.message.must_equal "Cluster \"test\" does not support v1 Deployment"
       end
 
       it "sets namespace from kubernetes_namespace" do

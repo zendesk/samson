@@ -116,12 +116,6 @@ module Kubernetes
     def validate_namespace
       return unless namespace = @project&.kubernetes_namespace&.name
 
-      @elements.each do |e|
-        if NAMESPACELESS_KINDS.include?(e[:kind]) && e.dig(:metadata, :namespace)
-          @errors << "Do not set namespace for #{e[:kind]}"
-        end
-      end
-
       namespaces = []
       @elements.each { |e| namespaces << e.dig(:metadata, :namespace) if e[:metadata].key?(:namespace) }
       namespaces.uniq!
