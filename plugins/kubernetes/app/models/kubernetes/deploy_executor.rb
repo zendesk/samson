@@ -220,6 +220,10 @@ module Kubernetes
       end
     end
 
+    def sum_event_group(event_group)
+      event_group.sum { |e| e.fetch(:count, 0) }
+    end
+
     # show what happened in kubernetes internally since we might not have any logs
     # reloading the events so we see things added during+after pod restart
     def print_events(status)
@@ -228,7 +232,7 @@ module Kubernetes
 
       groups = events.group_by { |e| [e[:type], e[:reason], (e[:message] || "").split("\n").sort] }
       groups.each do |_, event_group|
-        count = event_group.sum { |e| e[:count] }
+        count = sum_event_group(event_group)
         counter = " x#{count}" if count != 1
         e = event_group.first
         @output.puts "  #{e[:type]} #{e[:reason]}: #{e[:message]}#{counter}"

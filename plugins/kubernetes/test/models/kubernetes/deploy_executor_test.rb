@@ -960,6 +960,34 @@ describe Kubernetes::DeployExecutor do
     end
   end
 
+  describe "#sum_event_group" do
+    context "when counts are present" do
+      let(:events) do
+        [
+          {count: 1},
+          {count: 2}
+        ]
+      end
+
+      it "sums the counts in the event_group" do
+        executor.send(:sum_event_group, events).must_equal 3
+      end
+    end
+
+    context "when counts are missing" do
+      let(:events) do
+        [
+          {},
+          {}
+        ]
+      end
+
+      it "returns 0" do
+        executor.send(:sum_event_group, events).must_equal 0
+      end
+    end
+  end
+
   describe "#show_logs_on_deploy_if_requested" do
     it "prints errors but continues to not block the deploy" do
       Kubernetes::DeployExecutor.any_instance.stubs(:build_selectors).returns([])
