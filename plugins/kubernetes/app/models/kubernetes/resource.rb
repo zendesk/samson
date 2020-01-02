@@ -158,7 +158,7 @@ module Kubernetes
         end
         expire_resource_cache
       rescue Kubeclient::ResourceNotFoundError => e
-        raise_kubernetes_error(e.message)
+        raise Samson::Hooks::UserError, e.message
       end
 
       # TODO: remove the expire_cache and assign @resource but that breaks a bunch of deploy_executor tests
@@ -191,11 +191,12 @@ module Kubernetes
 
       # https://github.com/abonas/kubeclient/issues/268
       def with_header(header)
-        old = client.headers['Content-Type']
-        client.headers['Content-Type'] = header
+        kubeclient = client
+        old = kubeclient.headers['Content-Type']
+        kubeclient.headers['Content-Type'] = header
         yield
       ensure
-        client.headers['Content-Type'] = old
+        kubeclient.headers['Content-Type'] = old
       end
 
       def ensure_not_updating_match_labels
@@ -254,7 +255,7 @@ module Kubernetes
       def pods
         ids = resource.dig_fetch(:spec, :template, :metadata, :labels).values_at(:release_id, :deploy_group_id)
         selector = Kubernetes::Release.pod_selector(*ids, query: true)
-        pod_client.get_pods(label_selector: selector, namespace: namespace).fetch(:items)
+        client_request(pod_client, :get_pods, label_selector: selector, namespace: namespace).fetch(:items)
       end
 
       def delete_pods
@@ -262,7 +263,12 @@ module Kubernetes
         yield if block_given?
         old_pods.each do |pod|
           ignore_404 do
-            pod_client.delete_pod pod.dig_fetch(:metadata, :name), pod.dig_fetch(:metadata, :namespace)
+            client_request(
+              pod_client,
+              :delete_pod,
+              pod.dig_fetch(:metadata, :name),
+              pod.dig_fetch(:metadata, :namespace)
+            )
           end
         end
       end
@@ -271,8 +277,9 @@ module Kubernetes
         SamsonKubernetes.retry_on_connection_errors do
           begin
             method = "#{verb}_#{Kubeclient::ClientMixin.underscore_entity(kind)}"
-            if client.respond_to? method
-              client.send(method, *args)
+            kubeclient = client
+            if kubeclient.respond_to? method
+              client_request(kubeclient, method, *args)
             else
               raise(
                 Samson::Hooks::UserError,
@@ -287,17 +294,23 @@ module Kubernetes
               args[0][:metadata][:resourceVersion] = fetch_resource.dig(:metadata, :resourceVersion)
               raise # retry
             elsif message.include?(" is invalid:") || message.include?(" no kind ")
-              raise_kubernetes_error(message)
+              raise Samson::Hooks::UserError, e.message
             else
-              e.message.insert(0, "Kubernetes error #{error_location}: ") unless e.message.frozen?
               raise
             end
           end
         end
       end
 
-      def raise_kubernetes_error(message)
-        raise Samson::Hooks::UserError, "Kubernetes error #{error_location}: #{message}"
+      # request but instrument the error before sending it up
+      #
+      # having our own error type would be better, but that requires refactoring in retry_on_connection_errors
+      # and ideally never calling kube-client directly but always throug a wrapper
+      def client_request(kubeclient, *args)
+        kubeclient.send(*args)
+      rescue Kubeclient::HttpError => e
+        e.message.insert(0, "Kubernetes error #{error_location}: ") unless e.message.frozen?
+        raise
       end
 
       def client
