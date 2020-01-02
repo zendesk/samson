@@ -24,8 +24,7 @@ module Kubernetes
       def patch_replace
         update = resource.deep_dup
         patch_paths.each do |keys|
-          next unless value = @template.dig(*keys)
-          update.dig_set keys, value
+          update.dig_set keys, @template.dig_fetch(*keys)
         end
         with_header 'application/json-patch+json' do
           request :patch, name, [{op: "replace", path: "/spec", value: update.fetch(:spec)}], namespace
@@ -260,7 +259,7 @@ module Kubernetes
 
       def delete_pods
         old_pods = pods
-        yield if block_given?
+        yield
         old_pods.each do |pod|
           ignore_404 do
             client_request(
@@ -427,6 +426,7 @@ module Kubernetes
       end
     end
 
+    # TODO: check that PatchReplace actually still works here
     class PersistentVolumeClaim < Base
       include PatchReplace
 
@@ -438,54 +438,12 @@ module Kubernetes
     end
 
     class StatefulSet < Base
-      include PatchReplace
-
-      def patch_replace?
-        return false unless super
-
-        # TODO: default is RollingUpdate, so this is wrong
-        deprecated = @template.dig(:spec, :updateStrategy) # supporting pre 1.9 clusters
-        strategy = deprecated.is_a?(String) ? deprecated : @template.dig(:spec, :updateStrategy, :type)
-        [nil, "OnDelete"].include? strategy
-      end
-
-      # StatefulSet cannot be updated normally when OnDelete is used or kubernetes <1.7
-      # So we patch and then delete all pods to let them re-create
-      # TODO: copy-paste from PatchReplace module. Ideally we need to wait for pods to restart when we do an update.
       def deploy
-        return super unless patch_replace?
-
-        patch_replace
-
-        # pods will restart with updated settings
-        # need to wait here or deploy_executor.rb will instantly finish since everything is running
-        wait_for_pods_to_restart
-      end
-
-      def delete
-        delete_pods { super }
-      end
-
-      private
-
-      def patch_paths
-        # update the template via special magic
-        # https://kubernetes.io/docs/tutorials/stateful-application/basic-stateful-set/#on-delete
-        # fails when trying to update anything outside of containers or replicas
-        [
-          [:spec, :replicas],
-          [:spec, :template, :spec, :containers],
-          [:spec, :template, :spec, :initContainers],
-          [:spec, :template, :spec, :volumes]
-        ]
-      end
-
-      def wait_for_pods_to_restart
-        old_pods = delete_pods
-        old_created = old_pods.map { |pod| pod.dig_fetch(:metadata, :creationTimestamp) }
-        backoff_wait(Array.new(60) { 2 }, "restart pods") do
-          return if pods.none? { |pod| old_created.include?(pod.dig_fetch(:metadata, :creationTimestamp)) }
+        if [[:spec, :updateStrategy, :type], [:spec, :updateStrategy]].any? { |p| @template.dig(*p) == "OnDelete" }
+          raise Samson::Hooks::UserError, "StatefulSet OnDelete strategy is no longer supported, use RollingUpdate"
         end
+
+        super
       end
     end
 

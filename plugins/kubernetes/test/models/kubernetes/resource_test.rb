@@ -581,123 +581,11 @@ describe Kubernetes::Resource do
         end
       end
 
-      it "updates when existing and using RollingUpdate" do
-        template[:spec][:updateStrategy] = "RollingUpdate"
-        assert_request(:get, url, to_return: {body: "{}"}) do
-          assert_request(:put, url, to_return: {body: "{}"}) do
-            resource.deploy
-          end
+      it "refuses OnDelete since that would fail and leave pods running " do
+        template[:spec][:updateStrategy] = {type: "OnDelete"}
+        assert_raises Samson::Hooks::UserError do
+          resource.deploy
         end
-      end
-
-      it "updates when existing and using RollingUpdate" do
-        template[:spec][:updateStrategy] = {type: "RollingUpdate"}
-        assert_request(:get, url, to_return: {body: "{}"}) do
-          assert_request(:put, url, to_return: {body: "{}"}) do
-            resource.deploy
-          end
-        end
-      end
-
-      it "patches and deletes pods when using OnDelete (default)" do
-        set = {
-          spec: {
-            replicas: 2,
-            selector: {matchLabels: {project: "foo", release: "bar"}},
-            template: {spec: {containers: []}}
-          }
-        }
-        assert_request(:get, url, to_return: {body: set.to_json}) do
-          assert_request(
-            :patch,
-            url,
-            with: {headers: {"Content-Type" => "application/json-patch+json"}},
-            to_return: {body: "{}"}
-          ) do
-            assert_pod_deletion do
-              resource.expects(:sleep)
-              resource.expects(:pods).times(3).returns(
-                [{metadata: {creationTimestamp: '1', name: 'pod1', namespace: 'name1'}}], # old
-                [{metadata: {creationTimestamp: '1'}}], # first check
-                [{metadata: {creationTimestamp: '2'}}] # second check
-              )
-              resource.deploy
-            end
-          end
-        end
-      end
-
-      it "does not fail when scaling down and previous generation pods have been removed already" do
-        set = {
-          spec: {
-            replicas: 2,
-            selector: {matchLabels: {project: "foo", release: "bar"}},
-            template: {spec: {containers: []}}
-          }
-        }
-        assert_request(:get, url, to_return: {body: set.to_json}) do
-          assert_request(
-            :patch,
-            url,
-            with: {headers: {"Content-Type" => "application/json-patch+json"}},
-            to_return: {body: "{}"}
-          ) do
-            assert_request(:delete, "#{origin}/api/v1/namespaces/name1/pods/pod1", to_return: {status: 404}) do
-              resource.expects(:pods).times(2).returns(
-                [{metadata: {creationTimestamp: '1', name: 'pod1', namespace: 'name1'}}],
-                [{metadata: {creationTimestamp: '2'}}]
-              )
-              resource.deploy
-            end
-          end
-        end
-      end
-
-      it "deletes when user requested deletion" do
-        delete_resource!
-        resource.expects(:pods).returns([])
-        assert_request(:get, url, to_return: [{body: "{}"}, {status: 404}]) do
-          assert_request(:delete, url, to_return: {body: "{}"}) do
-            resource.deploy
-          end
-        end
-      end
-    end
-
-    describe "#delete" do
-      around { |t| assert_request(:delete, url, to_return: {body: "{}"}, &t) }
-
-      it "deletes set and pods" do
-        assert_request(:get, url, to_return: [{body: template.to_json}, {status: 404}]) do
-          assert_pods_lookup do
-            assert_pod_deletion do
-              resource.delete
-            end
-          end
-        end
-      end
-    end
-
-    describe "#patch_replace?" do
-      before { resource.stubs(:exist?).returns(true) }
-
-      it "is a replace when replacing existing" do
-        assert resource.patch_replace?
-      end
-
-      it "is not a replace when deleting" do
-        delete_resource!
-        refute resource.patch_replace?
-      end
-
-      it "is not a replace when creating" do
-        resource.stubs(:exist?).returns(false)
-        refute resource.patch_replace?
-      end
-
-      it "is not a replace when applying" do
-        resource.stubs(:server_side_apply?).returns(true)
-        refute resource.patch_replace?
       end
     end
   end
@@ -724,6 +612,22 @@ describe Kubernetes::Resource do
                 assert_request(:post, base_url, to_return: {body: "{}"}) do
                   resource.deploy
                 end
+              end
+            end
+          end
+        end
+      end
+    end
+
+    describe "#delete" do
+      it "deletes pods" do
+        replies = [{body: {spec: {template: {metadata: {labels: {}}}}}.to_json}, {status: 404}]
+        assert_request(:get, url, to_return: replies) do
+          pod = {metadata: {name: "a", namespace: "b"}}
+          assert_request(:get, /pod1\/pods\?/, to_return: {body: {items: [pod]}.to_json}) do
+            assert_request(:delete, url, to_return: {body: {}.to_json}) do
+              assert_request(:delete, /b\/pods\/a/, to_return: {body: {}.to_json}) do
+                resource.delete
               end
             end
           end

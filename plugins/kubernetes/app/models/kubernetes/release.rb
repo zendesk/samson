@@ -50,13 +50,12 @@ module Kubernetes
     # ... supports that the same namespace might exist on different clusters
     def clients
       scopes = release_docs.map do |release_doc|
-        release_id = resource_release_id(release_doc)
         deploy_group = DeployGroup.with_deleted { release_doc.deploy_group }
         [
           deploy_group,
           {
             namespace: release_doc.resources.first.namespace,
-            label_selector: self.class.pod_selector(release_id, deploy_group.id, query: true)
+            label_selector: self.class.pod_selector(id, deploy_group.id, query: true)
           }
         ]
       end
@@ -70,17 +69,6 @@ module Kubernetes
     end
 
     private
-
-    # StatefulSet does not update the labels when using patch_replace, so find by old label
-    def resource_release_id(release_doc)
-      stateful_set = release_doc.resources.detect do |r|
-        r.is_a?(Kubernetes::Resource::StatefulSet) && r.patch_replace?
-      end
-      return id unless stateful_set
-
-      stateful_set.resource.dig(:spec, :template, :metadata, :labels, :release_id) ||
-        raise(KeyError, "Unable to find previous release_id")
-    end
 
     # Creates a ReleaseDoc per DeployGroupRole
     def build_release_docs(grouped_deploy_group_roles)
