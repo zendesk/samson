@@ -4,12 +4,12 @@ require 'omniauth/github_authorization'
 
 SingleCov.covered!
 
-describe GithubAuthorization do
+describe Omniauth::GithubAuthorization do
   let(:teams) { [] }
   let(:organization) { config.organization }
   let(:organization_member) { true }
   let(:config) { Rails.application.config.samson.github }
-  let(:authorization) { GithubAuthorization.new('test.user', '123') }
+  let(:authorization) { Omniauth::GithubAuthorization.new('test.user', '123') }
 
   before do
     if organization

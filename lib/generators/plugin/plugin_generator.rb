@@ -1,6 +1,14 @@
 # frozen_string_literal: true
 require 'rails/generators'
 
+# make zeitwerk happy
+module Generators
+  module Plugin
+    module PluginGenerator
+    end
+  end
+end
+
 class PluginGenerator < Rails::Generators::NamedBase
   source_root File.expand_path('templates', __dir__)
 
