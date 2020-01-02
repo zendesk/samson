@@ -412,6 +412,17 @@ describe Kubernetes::Resource do
         resource.send(:request, :update, metadata: {resourceVersion: "old"})
       end
     end
+
+    describe "#pods" do
+      it "raises a descriptive error when it fails" do
+        assert_request(:get, url, to_return: {body: {spec: {template: {metadata: {labels: {}}}}}.to_json}) do
+          assert_request(:get, /pod1\/pods/, to_timeout: []) do
+            e = assert_raises(Kubeclient::HttpError) { resource.send(:pods) }
+            e.message.must_equal "Kubernetes error some-project pod1 Pod1: Timed out connecting to server"
+          end
+        end
+      end
+    end
   end
 
   describe Kubernetes::Resource::DaemonSet do
