@@ -170,10 +170,10 @@ module Kubernetes
         end
         expire_resource_cache
       rescue Samson::Hooks::UserError => e
-        raise unless e.message.include?("cannot change")
+        raise unless e.message.match?(/cannot change|Forbidden: updates to .* for fields other than/)
 
         path = [:metadata, :annotations, :"samson/force_update"]
-        if @template.dig(*path)
+        if @template.dig(*path) == "true"
           delete
           create
         else
