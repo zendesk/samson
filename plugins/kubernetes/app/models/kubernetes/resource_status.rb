@@ -78,6 +78,7 @@ module Kubernetes
         "involvedObject.name=#{name}",
         "involvedObject.kind=#{@kind}",
       ]
+      selector << "involvedObject.uid=#{@pod.uid}" if @pod
       selector << "type=#{type}" if type
       SamsonKubernetes.retry_on_connection_errors do
         events = @client.get_events(
