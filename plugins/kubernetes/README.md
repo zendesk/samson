@@ -303,6 +303,7 @@ To enable this functionality, set the environment variable `ISTIO_INJECTION_SUPP
 ### Forcing updates when kubernetes cannot change a resource
 
 Delete old resource and create new when an update fails because it `cannot change` a resources.
+(Should not be used with `persistentVolumeReclaimPolicy` set to `Delete`)
 
 ```
 metadata.annotation.samson/force_update: "true"

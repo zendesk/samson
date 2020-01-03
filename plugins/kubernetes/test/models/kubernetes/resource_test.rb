@@ -779,11 +779,7 @@ describe Kubernetes::Resource do
       end
 
       describe "forced update" do
-        let(:error) { +"Foo is invalid: cannot change spec.bar" }
-
-        before { template[:metadata][:annotations] = {"samson/force_update": "true"} }
-
-        it "re-creates when updating is not possible" do
+        def assert_recreate(error)
           assert_request(:get, url, to_return: [{body: "{}"}, {status: 404}]) do
             assert_request(:put, url, to_return: {body: {message: error}.to_json, status: 422}) do
               assert_request(:delete, url, to_return: {body: '{}'}) do
@@ -793,6 +789,23 @@ describe Kubernetes::Resource do
               end
             end
           end
+        end
+
+        let(:error) { +"Foo is invalid: cannot change spec.bar" }
+
+        before do
+          template[:metadata][:annotations] = {"samson/force_update": "true"}
+        end
+
+        it "re-creates when updating is not possible" do
+          assert_recreate(error)
+        end
+
+        it "re-creates when fields are forbidden" do
+          assert_recreate(
+            "StatefulSet.apps \"foo\" is invalid: spec: Forbidden: " \
+            "updates to statefulset spec for fields other than 'bar' are forbidden"
+          )
         end
 
         it "tells users how to enable re-create" do
