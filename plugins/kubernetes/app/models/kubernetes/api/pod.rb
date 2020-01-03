@@ -21,6 +21,10 @@ module Kubernetes
         @client = client
       end
 
+      def uid
+        @pod.dig(:metadata, :uid)
+      end
+
       def live?
         completed? || (phase == 'Running' && ready?)
       end

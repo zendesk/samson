@@ -14,7 +14,8 @@ describe Kubernetes::Api::Pod do
         labels: {
           deploy_group_id: '123',
           role_id: '234',
-        }
+        },
+        uid: '123'
       },
       status: {
         phase: "Running",
@@ -46,6 +47,12 @@ describe Kubernetes::Api::Pod do
   end
   let(:event) { {metadata: {creationTimestamp: start_time}, type: 'Normal'} }
   let(:events) { [event] }
+
+  describe "#uid" do
+    it "returns" do
+      pod.uid.must_equal '123'
+    end
+  end
 
   describe "#live?" do
     it "is done" do
