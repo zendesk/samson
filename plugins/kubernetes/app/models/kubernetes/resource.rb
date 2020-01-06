@@ -34,7 +34,7 @@ module Kubernetes
 
     class Base
       TICK = 2 # seconds
-      UNSETTABLE_METADATA = [:selfLink, :uid, :resourceVersion, :generation, :creationTimestamp].freeze
+      UNSETTABLE_METADATA = [:selfLink, :uid, :resourceVersion, :generation, :creationTimestamp, :managedFields].freeze
       attr_reader :template, :deploy_group
 
       def initialize(template, deploy_group, autoscaled:, delete_resource:)
