@@ -326,7 +326,7 @@ class Project < ActiveRecord::Base
     return if ReleaseService.new(self).can_release?
     errors.add(
       :release_branch,
-      "could not be set. Samson's github user needs 'Write' permission to push new tags to #{repository_path}."
+      "could not be set. Add github user 'Deploy' with 'Write' permission to push new tags to #{repository_path}."
     )
   end
 
