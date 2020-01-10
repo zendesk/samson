@@ -28,11 +28,6 @@ class EnvironmentVariable < ActiveRecord::Base
     def env(deploy, deploy_group, resolve_secrets:, project_specific: nil)
       env = {}
 
-      # Retained the code, to make use for config shared env_group.
-      # if deploy_group
-      #   env.merge! env_vars_from_config_service(deploy, deploy_group)
-      # end
-
       if deploy_group && (env_repo_name = ENV["DEPLOYMENT_ENV_REPO"]) && deploy.project.use_env_repo
         env.merge! env_vars_from_repo(env_repo_name, deploy.project, deploy_group)
       end
@@ -58,21 +53,6 @@ class EnvironmentVariable < ActiveRecord::Base
       end.join("\n")
     end
 
-    # Retained the code, to make use for config shared env_group.
-    # bucket and key for reading OR url for display
-    # NOTE: `deploy_group` already signals if it is for `display`, but I want it to be explicit
-    # def config_service_location(project, deploy_group, display:)
-    #   prefix = "samson/#{project.permalink}"
-
-    #   if display
-    #     return unless bucket = ENV["CONFIG_SERVICE_BUCKET"]
-    #     "s3://#{bucket}/#{prefix}"
-    #   else
-    #     bucket = ENV.fetch "CONFIG_SERVICE_BUCKET"
-    #     [bucket, "#{prefix}/#{deploy_group.permalink}.yml"]
-    #   end
-    # end
-
     private
 
     def env_vars_from_db(deploy, deploy_group, **args)
@@ -93,33 +73,6 @@ class EnvironmentVariable < ActiveRecord::Base
     rescue StandardError => e
       raise Samson::Hooks::UserError, "Cannot download env file #{path} from #{env_repo_name} (#{e.message})"
     end
-
-    # Retained the code, to make use for config shared env_group.
-    # def env_vars_from_config_service(deploy, deploy_group)
-    #   _, key = config_service_location(deploy.project, deploy_group, display: false)
-    #   response = config_service_read_with_failover(key)
-    #   YAML.safe_load(response)
-    # rescue StandardError => e
-    #   raise Samson::Hooks::UserError, "Error reading env vars from config service: #{e.message}"
-    # end
-
-    # def config_service_read_with_failover(key)
-    #   bucket = ENV.fetch 'CONFIG_SERVICE_BUCKET'
-    #   region = ENV.fetch 'CONFIG_SERVICE_REGION'
-    #   dr_bucket = ENV.fetch 'CONFIG_SERVICE_DR_BUCKET'
-    #   dr_region = ENV.fetch 'CONFIG_SERVICE_DR_REGION'
-    #   Samson::Retry.with_retries(Aws::S3::Errors::ServiceError, 3) do
-    #     begin
-    #       config_service_s3_client = Aws::S3::Client.new(region: region)
-    #       config_service_s3_client.get_object(bucket: bucket, key: key).body.read
-    #     rescue Aws::S3::Errors::NoSuchKey
-    #       raise "key \"#{key}\" does not exist in bucket #{bucket}!"
-    #     rescue Aws::S3::Errors::ServiceError
-    #       config_service_s3_client = Aws::S3::Client.new(region: dr_region)
-    #       config_service_s3_client.get_object(bucket: dr_bucket, key: key).body.read
-    #     end
-    #   end
-    # end
 
     def resolve_dollar_variables(env)
       env.each do |k, value|

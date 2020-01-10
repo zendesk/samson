@@ -113,18 +113,6 @@ describe EnvironmentVariable do
     end
 
     describe "env vars from config service" do
-      # Retained the code, to make use for config shared env_group.
-      # with_env CONFIG_SERVICE_REGION: "us-east-1",
-      #   CONFIG_SERVICE_BUCKET: "a-bucket",
-      #   CONFIG_SERVICE_DR_REGION: "ap-southeast-2",
-      #   CONFIG_SERVICE_DR_BUCKET: "dr-bucket"
-      # let(:s3) { stub("S3") }
-
-      # before do
-      #   EnvironmentVariable.instance_variable_set(:@config_service_s3_client, nil) # clear cache
-      #   Aws::S3::Client.stubs(:new).returns(s3)
-      # end
-
       it "ignores without deploy group" do
         EnvironmentVariable.env(deploy, nil, resolve_secrets: false).must_equal({})
       end
@@ -265,32 +253,6 @@ describe EnvironmentVariable do
       end
     end
   end
-  # Retained the code, to make use for config shared env_group.
-  # describe ".config_service_location" do
-  #   it "shows full bucket path in the UI" do
-  #     with_env CONFIG_SERVICE_BUCKET: "da-bucket" do
-  #       EnvironmentVariable.config_service_location(project, nil, display: true).
-  #         must_equal 's3://da-bucket/samson/foo'
-  #     end
-  #   end
-
-  #   it "shows nothing in the UI when bucket is not set" do
-  #     EnvironmentVariable.config_service_location(project, nil, display: true).must_be_nil
-  #   end
-
-  #   it "returns bucket + key for reading" do
-  #     with_env CONFIG_SERVICE_BUCKET: "da-bucket" do
-  #       EnvironmentVariable.config_service_location(project, deploy_group, display: false).
-  #         must_equal ['da-bucket', 'samson/foo/pod100.yml']
-  #     end
-  #   end
-
-  #   it "raises when bucket is not set but project is configured to read env vars" do
-  #     assert_raises KeyError do
-  #       EnvironmentVariable.config_service_location(project, deploy_group, display: false)
-  #     end
-  #   end
-  # end
 
   describe ".sort_by_scopes" do
     it "sorts by name, type, id" do
