@@ -258,9 +258,11 @@ module Kubernetes
     end
 
     def validate_not_matching_team
+      paths = [[:spec, :selector, :team], [:spec, :selector, :matchLabels, :team]]
       @elements.each do |element|
-        if element.dig(:spec, :selector, :team) || element.dig(:spec, :selector, :matchLabels, :team)
-          @errors << "Team names change, do not select or match on them"
+        if paths.any? { |p| element.dig(*p) }
+          message = paths.map { |p| p.join(".") }.join(" or ")
+          @errors << "Do not use #{message}, they can change and will break routing."
         end
       end
     end

@@ -643,12 +643,12 @@ describe Kubernetes::RoleValidator do
     describe "#validate_not_matching_team" do
       it "reports bad selector" do
         role.last[:spec][:selector][:team] = 'foo'
-        errors.must_equal ["Team names change, do not select or match on them"]
+        errors.to_s.must_include "Do not use spec.selector.team"
       end
 
       it "reports bad matchLabels" do
         role.first[:spec][:selector][:matchLabels][:team] = 'foo'
-        errors.must_equal ["Team names change, do not select or match on them"]
+        errors.to_s.must_include "Do not use spec.selector.team"
       end
     end
 
