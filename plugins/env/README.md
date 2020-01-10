@@ -15,15 +15,6 @@ Can be used to have generic stages to run one-off jobs or other tasks that need 
 Includes `/projects/:permalink/environment?deploy_group=permalink` endpoint that returns the `.env` content
 for a project and deploy_group.
 
-## Service to manage environment variables
-
-Run a service that writes config to an s3 bucket, 1 folder per project and 1 file per deploy group.
-To enable reading environment variables from an S3 bucket,
-set samson environment variables `CONFIG_SERVICE_BUCKET` and `CONFIG_SERVICE_REGION`.
-To support reading from a replicated S3 bucket on failure, also set `CONFIG_SERVICE_DR_BUCKET`
-and `CONFIG_SERVICE_DR_REGION` environment variables.
-Database environment variable config will override returned env variables.
-
 For details, see `app/models/environment_variable.rb`
 
 ## GitHub to manage environment variables

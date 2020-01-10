@@ -63,8 +63,7 @@ Samson::Hooks.callback :project_permitted_params do
     AcceptsEnvironmentVariables::ASSIGNABLE_ATTRIBUTES.merge(
       environment_variable_group_ids: []
     ),
-    :use_env_repo,
-    :config_service
+    :use_env_repo
   ]
 end
 
