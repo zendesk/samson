@@ -220,9 +220,19 @@ describe Kubernetes::TemplateFiller do
         project.kubernetes_namespace = kubernetes_namespaces(:test)
         template.to_hash[:metadata][:namespace].must_equal "test"
       end
+
+      it "can read CRDs from currently deploying role" do
+        raw_template[:kind] = "MyCustomResource"
+        doc.resource_template.replace(
+          [
+            {kind: "CustomResourceDefinition", spec: {scope: "Namespaced", names: {kind: "MyCustomResource"}}},
+          ]
+        )
+        template.to_hash[:metadata][:namespace].must_equal "pod1"
+      end
     end
 
-    describe "unqiue deployments" do
+    describe "unique deployments" do
       let(:labels) do
         hash = template.to_hash
         [

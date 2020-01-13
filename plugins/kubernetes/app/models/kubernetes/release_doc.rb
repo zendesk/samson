@@ -65,6 +65,12 @@ module Kubernetes
       end
     end
 
+    def custom_resource_definitions
+      resource_template.select { |t| t[:kind] == "CustomResourceDefinition" }.map do |t|
+        [t.dig(:spec, :names, :kind), {"namespaced" => t.dig(:spec, :scope) == "Namespaced"}]
+      end.to_h
+    end
+
     # Temporary template we run validations on ... so can be cheap / not fully fleshed out
     # and only be the primary since services/configmaps are not very interesting anyway
     def verification_template
