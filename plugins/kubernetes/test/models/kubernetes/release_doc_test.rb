@@ -208,6 +208,23 @@ describe Kubernetes::ReleaseDoc do
     end
   end
 
+  describe "#custom_resource_definitions" do
+    it "creates a map that the template_filler can use" do
+      doc.resource_template.replace(
+        [
+          {kind: "Pod"},
+          {kind: "CustomResourceDefinition", spec: {scope: "Namespaced", names: {kind: "Foo"}}},
+          {kind: "CustomResourceDefinition", spec: {scope: "Cluster", names: {kind: "Bar"}}},
+        ]
+      )
+
+      doc.custom_resource_definitions.must_equal(
+        "Foo" => {"namespaced" => true},
+        "Bar" => {"namespaced" => false}
+      )
+    end
+  end
+
   describe "#deploy" do
     let(:client) { doc.deploy_group.kubernetes_cluster.client('extensions/v1beta1') }
 

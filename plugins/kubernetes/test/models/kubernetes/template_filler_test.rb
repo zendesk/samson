@@ -205,14 +205,14 @@ describe Kubernetes::TemplateFiller do
       it "alerts on unknown kind" do
         raw_template[:apiVersion] = "v1"
         e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
-        e.message.must_equal "Cluster \"test\" does not support v1 Deployment"
+        e.message.must_equal "Cluster \"test\" does not support v1 Deployment (cached 1h)"
       end
 
       it "alerts on unknown namespace" do
         stub_request(:get, "http://foobar.server/apis/vwtf").to_return(status: 404)
         raw_template[:apiVersion] = "vwtf"
         e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
-        e.message.must_equal "Cluster \"test\" does not support vwtf Deployment"
+        e.message.must_equal "Cluster \"test\" does not support vwtf Deployment (cached 1h)"
       end
 
       it "sets namespace from kubernetes_namespace" do
@@ -220,9 +220,19 @@ describe Kubernetes::TemplateFiller do
         project.kubernetes_namespace = kubernetes_namespaces(:test)
         template.to_hash[:metadata][:namespace].must_equal "test"
       end
+
+      it "can read CRDs from currently deploying role" do
+        raw_template[:kind] = "MyCustomResource"
+        doc.resource_template.replace(
+          [
+            {kind: "CustomResourceDefinition", spec: {scope: "Namespaced", names: {kind: "MyCustomResource"}}},
+          ]
+        )
+        template.to_hash[:metadata][:namespace].must_equal "pod1"
+      end
     end
 
-    describe "unqiue deployments" do
+    describe "unique deployments" do
       let(:labels) do
         hash = template.to_hash
         [
