@@ -205,14 +205,14 @@ describe Kubernetes::TemplateFiller do
       it "alerts on unknown kind" do
         raw_template[:apiVersion] = "v1"
         e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
-        e.message.must_equal "Cluster \"test\" does not support v1 Deployment"
+        e.message.must_equal "Cluster \"test\" does not support v1 Deployment (cached 1h)"
       end
 
       it "alerts on unknown namespace" do
         stub_request(:get, "http://foobar.server/apis/vwtf").to_return(status: 404)
         raw_template[:apiVersion] = "vwtf"
         e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
-        e.message.must_equal "Cluster \"test\" does not support vwtf Deployment"
+        e.message.must_equal "Cluster \"test\" does not support vwtf Deployment (cached 1h)"
       end
 
       it "sets namespace from kubernetes_namespace" do

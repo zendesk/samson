@@ -88,7 +88,7 @@ module Kubernetes
       api_version = template.fetch(:apiVersion)
 
       resources =
-        Rails.cache.fetch(["template-filler-resources", api_version, cluster]) do
+        Rails.cache.fetch(["template-filler-resources", api_version, cluster], expires_in: 1.hour) do
           # TODO: don't use private API - https://github.com/abonas/kubeclient/issues/428
           cluster.client(api_version).send(:fetch_entities)
         rescue Kubeclient::ResourceNotFoundError
@@ -96,7 +96,10 @@ module Kubernetes
         end
 
       resource = resources["resources"].find { |r| r["kind"] == kind } ||
-        raise(Samson::Hooks::UserError, "Cluster \"#{cluster.name}\" does not support #{api_version} #{kind}")
+        raise(
+          Samson::Hooks::UserError,
+          "Cluster \"#{cluster.name}\" does not support #{api_version} #{kind} (cached 1h)"
+        )
       resource.fetch("namespaced")
     end
 
