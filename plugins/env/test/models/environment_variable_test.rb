@@ -113,71 +113,11 @@ describe EnvironmentVariable do
     end
 
     describe "env vars from config service" do
-      def fake_response(response)
-        stub(body: stub(read: response))
-      end
-
-      with_env CONFIG_SERVICE_REGION: "us-east-1",
-        CONFIG_SERVICE_BUCKET: "a-bucket",
-        CONFIG_SERVICE_DR_REGION: "ap-southeast-2",
-        CONFIG_SERVICE_DR_BUCKET: "dr-bucket"
-      let(:s3) { stub("S3") }
-
-      before do
-        project.config_service = true
-        EnvironmentVariable.instance_variable_set(:@config_service_s3_client, nil) # clear cache
-        Aws::S3::Client.stubs(:new).returns(s3)
-      end
-
-      it "add to env hash" do
-        response = {"FOO" => "one"}.to_yaml
-        s3.expects(:get_object).with(bucket: 'a-bucket', key: 'samson/foo/pod100.yml').returns(fake_response(response))
-        EnvironmentVariable.env(deploy, deploy_group, resolve_secrets: false).must_equal "FOO" => "one"
-      end
-
       it "ignores without deploy group" do
         EnvironmentVariable.env(deploy, nil, resolve_secrets: false).must_equal({})
       end
 
-      it "shows error when deploy group is not configured" do
-        s3.expects(:get_object).raises(Aws::S3::Errors::NoSuchKey.new({}, "The specified key does not exist."))
-        e = assert_raises(Samson::Hooks::UserError) do
-          EnvironmentVariable.env(deploy, deploy_group, resolve_secrets: false)
-        end
-        e.message.must_equal(
-          "Error reading env vars from config service: key \"samson/foo/pod100.yml\" does not exist in bucket a-bucket!"
-        )
-      end
-
-      it "tries reading from a DR bucket if available" do
-        response = {"FOO" => "one"}.to_yaml
-        s3.expects(:get_object).with(
-          bucket: 'a-bucket', key: 'samson/foo/pod100.yml'
-        ).raises(Aws::S3::Errors::ServiceError.new({}, "DOWN"))
-        s3.expects(:get_object).with(
-          bucket: 'dr-bucket', key: 'samson/foo/pod100.yml'
-        ).returns(fake_response(response))
-        EnvironmentVariable.env(deploy, deploy_group, resolve_secrets: false).must_equal "FOO" => "one"
-      end
-
-      it "shows error when api times out after multiple retries" do
-        s3.expects(:get_object).times(8).raises(Aws::S3::Errors::ServiceError.new({}, "DOWN"))
-        e = assert_raises(Samson::Hooks::UserError) do
-          EnvironmentVariable.env(deploy, deploy_group, resolve_secrets: false)
-        end
-        e.message.must_equal "Error reading env vars from config service: DOWN"
-      end
-
-      it "refuses to deploy when configured but env var is missing" do
-        with_env CONFIG_SERVICE_BUCKET: nil do
-          assert_raises Samson::Hooks::UserError do
-            EnvironmentVariable.env(deploy, deploy_group, resolve_secrets: false)
-          end
-        end
-      end
-
       it "does not read env vars when project is not opted in" do
-        project.config_service = false
         EnvironmentVariable.env(deploy, deploy_group, resolve_secrets: false)
       end
     end
@@ -310,32 +250,6 @@ describe EnvironmentVariable do
             "PROJECT" => "secret://foobar X", "X" => "Y", "Y" => "Z"
           )
         end
-      end
-    end
-  end
-
-  describe ".config_service_location" do
-    it "shows full bucket path in the UI" do
-      with_env CONFIG_SERVICE_BUCKET: "da-bucket" do
-        EnvironmentVariable.config_service_location(project, nil, display: true).
-          must_equal 's3://da-bucket/samson/foo'
-      end
-    end
-
-    it "shows nothing in the UI when bucket is not set" do
-      EnvironmentVariable.config_service_location(project, nil, display: true).must_be_nil
-    end
-
-    it "returns bucket + key for reading" do
-      with_env CONFIG_SERVICE_BUCKET: "da-bucket" do
-        EnvironmentVariable.config_service_location(project, deploy_group, display: false).
-          must_equal ['da-bucket', 'samson/foo/pod100.yml']
-      end
-    end
-
-    it "raises when bucket is not set but project is configured to read env vars" do
-      assert_raises KeyError do
-        EnvironmentVariable.config_service_location(project, deploy_group, display: false)
       end
     end
   end

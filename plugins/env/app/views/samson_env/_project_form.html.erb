@@ -15,16 +15,6 @@
     %>
   <% end %>
 
-  <% if @project.config_service? || url = EnvironmentVariable.config_service_location(@project, nil, display: true) %>
-    <%= form.input(
-        :config_service,
-        as: :check_box,
-        label: "Use Config service",
-        help: "Use config service to manage deployment environment variables, S3 folder is #{url}"
-      )
-    %>
-  <% end %>
-
   <% scopes = Environment.env_deploy_group_array %>
   <% sorted_env_vars = EnvironmentVariable.sort_by_scopes(form.object.environment_variables, scopes) %>
   <% sorted_env_vars << EnvironmentVariable.new %>

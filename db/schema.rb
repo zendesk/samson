@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_12_18_163745) do
+ActiveRecord::Schema.define(version: 2020_01_09_202014) do
 
   create_table "audits" do |t|
     t.integer "auditable_id", null: false
@@ -445,7 +445,6 @@ ActiveRecord::Schema.define(version: 2019_12_18_163745) do
     t.boolean "use_env_repo", default: false, null: false
     t.integer "kubernetes_rollout_timeout"
     t.integer "kubernetes_namespace_id"
-    t.boolean "config_service", default: false, null: false
     t.string "jira_issue_prefix"
     t.string "ignore_pending_checks"
     t.index ["build_command_id"], name: "index_projects_on_build_command_id"
