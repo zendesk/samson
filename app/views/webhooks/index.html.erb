@@ -181,8 +181,13 @@
             <% end %>
             </strong>
             (
-            <%= link_to disabled ? 'Enable' : 'Disable', outbound_webhook_path(outbound_webhook, stage_id: outbound_webhook_stage.stage_id, outbound_webhook: { disabled: !disabled }), method: :patch %>,
-            <%= link_to_delete outbound_webhook_path(outbound_webhook, stage_id: outbound_webhook_stage.stage_id) %>
+            <%# Disabling a global webhook affects all projects using it %>
+            <% if outbound_webhook.global? %>
+              <%= link_to_delete outbound_webhook_path(outbound_webhook, stage_id: outbound_webhook_stage.stage_id), text: 'Unlink' %>
+            <% else %>
+              <%= link_to disabled ? 'Enable' : 'Disable', outbound_webhook_path(outbound_webhook, stage_id: outbound_webhook_stage.stage_id, outbound_webhook: { disabled: !disabled }), method: :patch %>,
+              <%= link_to_delete outbound_webhook_path(outbound_webhook, stage_id: outbound_webhook_stage.stage_id) %>
+            <% end %>
             )
           </li>
         <% end %>
