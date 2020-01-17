@@ -142,6 +142,18 @@ describe SamsonEnv do
       fire(var).must_equal ["WORLD3 on Foo", EnvironmentVariable]
     end
 
+    it "links to external env var group" do
+      group = ExternalEnvironmentVariableGroup.new(
+          name: "A",
+          description: "B",
+          url: "https://a-bucket.s3.amazonaws.com/key?versionId=version_id",
+          project: project
+        )
+      group.expects(:external_service_read_with_failover).returns(true)
+      group.save!
+      fire(group).must_equal ["A", ""]
+    end
+
     it "links to scoped env var" do
       group = EnvironmentVariableGroup.create!(name: "Bar")
       var = group.environment_variables.create!(

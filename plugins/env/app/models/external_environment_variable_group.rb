@@ -2,7 +2,7 @@
 require 'aws-sdk-s3'
 
 class ExternalEnvironmentVariableGroup < ActiveRecord::Base
-  S3_URL_REGEX = /https:\/\/([^.]+)\.s3\.amazonaws\.com\//i.freeze
+  S3_URL_REGEX = /\Ahttps:\/\/([^.]+)\.s3\.amazonaws\.com\/([\w\W]+)\Z/i.freeze
   S3_URL_FORMAT = "https://[bucket].s3.amazonaws.com/[key]?versionId=[version_id]"
   HELP_TEXT = ENV.fetch(
     "EXTERNAL_ENV_GROUP_HELP_TEXT",
