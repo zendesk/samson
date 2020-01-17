@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_01_09_202014) do
+ActiveRecord::Schema.define(version: 2020_01_10_213328) do
 
   create_table "audits" do |t|
     t.integer "auditable_id", null: false
@@ -175,6 +175,16 @@ ActiveRecord::Schema.define(version: 2020_01_09_202014) do
     t.datetime "updated_at", null: false
     t.string "permalink", null: false
     t.index ["permalink"], name: "index_environments_on_permalink", unique: true, length: 191
+  end
+
+  create_table "external_environment_variable_groups" do |t|
+    t.string "name", null: false
+    t.string "description", limit: 1024
+    t.string "url", null: false
+    t.bigint "project_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["project_id"], name: "index_external_environment_variable_groups_on_project_id"
   end
 
   create_table "flowdock_flows", id: :integer do |t|
