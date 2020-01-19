@@ -149,7 +149,7 @@ describe SamsonEnv do
           url: "https://a-bucket.s3.amazonaws.com/key?versionId=version_id",
           project: project
         )
-      group.expects(:external_service_read_with_failover).returns(true)
+      group.expects(:read).returns(true)
       group.save!
       fire(group).must_equal ["A", ""]
     end

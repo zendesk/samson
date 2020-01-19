@@ -19,9 +19,9 @@ class ExternalEnvironmentVariableGroup < ActiveRecord::Base
     message: "Invalid format, valid url format is #{S3_URL_FORMAT}"
   }
   validate :validate_s3_url
-  after_find :resolve_s3_url
 
-  def external_service_read_with_failover
+  def read
+    resolve_s3_url
     default_bucket = ENV.fetch 'EXTERNAL_ENV_GROUP_S3_BUCKET'
     default_region = ENV.fetch 'EXTERNAL_ENV_GROUP_S3_REGION'
     dr_bucket      = ENV['EXTERNAL_ENV_GROUP_S3_DR_BUCKET']
@@ -42,8 +42,13 @@ class ExternalEnvironmentVariableGroup < ActiveRecord::Base
           s3_client = Aws::S3::Client.new(region: dr_region)
           s3_client.get_object(bucket: dr_bucket, key: key, version_id: version_id)
         end
+      # loads both json and yaml
       YAML.safe_load response.body.read
     end
+  end
+
+  def self.configured?
+    ENV['EXTERNAL_ENV_GROUP_S3_BUCKET'] && ENV['EXTERNAL_ENV_GROUP_S3_REGION']
   end
 
   private
@@ -54,12 +59,13 @@ class ExternalEnvironmentVariableGroup < ActiveRecord::Base
       errors.add(:url, 'Invalid URL, unable to get s3 key or bucket')
       return
     end
-    external_service_read_with_failover
+    read
   rescue StandardError => e
     errors.add(:url, "Invalid URL, #{e.message}")
   end
 
   def resolve_s3_url
+    # Resolves the S3 key and bucket name from URL
     return unless url
     parsed_url = URI.parse url.to_s
     @key = parsed_url.path.to_s[1..-1]

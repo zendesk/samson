@@ -54,7 +54,7 @@ describe ExternalEnvironmentVariableGroup do
 
   describe "validations" do
     before do
-      ExternalEnvironmentVariableGroup.any_instance.expects(:external_service_read_with_failover).returns(true)
+      ExternalEnvironmentVariableGroup.any_instance.expects(:read).returns(true)
     end
     describe "validate url" do
       it "valid URL format" do
@@ -70,8 +70,8 @@ describe ExternalEnvironmentVariableGroup do
       end
 
       it "unable to parse s3 key or bucket" do
-        ExternalEnvironmentVariableGroup.any_instance.unstub(:external_service_read_with_failover)
-        ExternalEnvironmentVariableGroup.any_instance.expects(:external_service_read_with_failover).never
+        ExternalEnvironmentVariableGroup.any_instance.unstub(:read)
+        ExternalEnvironmentVariableGroup.any_instance.expects(:read).never
         group = ExternalEnvironmentVariableGroup.new(
            env_group_attributes.merge(
                project: project,
@@ -106,7 +106,20 @@ describe ExternalEnvironmentVariableGroup do
     end
   end
 
-  describe "#external_service_read_with_failover" do
+  describe "#configured?" do
+    it "returns true with env's" do
+      ExternalEnvironmentVariableGroup.configured?.wont_be_nil
+    end
+
+    it "returns false without env's" do
+      with_env EXTERNAL_ENV_GROUP_S3_REGION: nil,
+      EXTERNAL_ENV_GROUP_S3_BUCKET: nil do
+        refute ExternalEnvironmentVariableGroup.configured?
+      end
+    end
+  end
+
+  describe "#read" do
     before do
       Aws::S3::Client.stubs(:new).returns(s3)
     end
@@ -120,7 +133,7 @@ describe ExternalEnvironmentVariableGroup do
       response = {"FOO" => "one"}.to_yaml
       s3.expects(:get_object).times(2).with(bucket: 'a-bucket', key: 'key', version_id: 'version_id').
         returns(fake_response(response))
-      group.external_service_read_with_failover.must_equal "FOO" => "one"
+      group.read.must_equal "FOO" => "one"
     end
 
     it "invalid s3 bucket" do
@@ -137,7 +150,7 @@ describe ExternalEnvironmentVariableGroup do
     it "shows error when s3 file is missing" do
       s3.expects(:get_object).raises(Aws::S3::Errors::NoSuchKey.new({}, "The specified key does not exist."))
       e = assert_raises(ActiveRecord::RecordInvalid) do
-        group.external_service_read_with_failover
+        group.read
       end
       e.message.must_equal(
         "Validation failed: Url Invalid URL, key \"key\" does not exist in bucket a-bucket!"
@@ -154,7 +167,7 @@ describe ExternalEnvironmentVariableGroup do
         s3.expects(:get_object).times(2).with(
           bucket: 'dr-bucket', key: 'key', version_id: 'version_id'
         ).returns(fake_response(response))
-        group.external_service_read_with_failover.must_equal "FOO" => "one"
+        group.read.must_equal "FOO" => "one"
       end
     end
 
@@ -163,7 +176,7 @@ describe ExternalEnvironmentVariableGroup do
         bucket: 'a-bucket', key: 'key', version_id: 'version_id'
       ).raises(Aws::S3::Errors::ServiceError.new({}, "DOWN"))
       e = assert_raises(ActiveRecord::RecordInvalid) do
-        group.external_service_read_with_failover
+        group.read
       end
       e.message.must_equal "Validation failed: Url Invalid URL, DOWN"
     end
@@ -171,7 +184,7 @@ describe ExternalEnvironmentVariableGroup do
     it "shows error when api times out after multiple retries" do
       s3.expects(:get_object).times(4).raises(Aws::S3::Errors::ServiceError.new({}, "DOWN"))
       e = assert_raises(ActiveRecord::RecordInvalid) do
-        group.external_service_read_with_failover
+        group.read
       end
       e.message.must_equal "Validation failed: Url Invalid URL, DOWN"
     end
@@ -181,7 +194,7 @@ describe ExternalEnvironmentVariableGroup do
       s3.expects(:get_object).with(bucket: 'a-bucket', key: 'key', version_id: 'version_id').
         returns(fake_response(response))
       e = assert_raises(ActiveRecord::RecordInvalid) do
-        group.external_service_read_with_failover
+        group.read
       end
       e.message.must_equal "Validation failed: Url Invalid URL, no implicit conversion of Integer into String"
     end

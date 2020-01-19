@@ -89,7 +89,7 @@ describe Project do
 
   describe "nested_external_environment_variable_groups" do
     it "includes both name and url" do
-      ExternalEnvironmentVariableGroup.any_instance.expects(:external_service_read_with_failover).returns(true)
+      ExternalEnvironmentVariableGroup.any_instance.expects(:read).returns(true)
       project.update!(
         external_environment_variable_groups_attributes: [env_group_attributes]
       )

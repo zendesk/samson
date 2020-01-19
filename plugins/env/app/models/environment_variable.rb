@@ -79,7 +79,7 @@ class EnvironmentVariable < ActiveRecord::Base
 
     def env_vars_from_external_groups(project, deploy_group)
       project.external_environment_variable_groups.each_with_object({}) do |group, envs|
-        group_env = group.external_service_read_with_failover[deploy_group.permalink]
+        group_env = group.read[deploy_group.permalink]
         envs.merge! group_env if group_env
       end
     rescue StandardError => e

@@ -6,17 +6,17 @@ SingleCov.covered!
 describe ExternalEnvironmentVariableGroupsController do
   before do
     ExternalEnvironmentVariableGroup.any_instance.
-      expects(:external_service_read_with_failover).times(2).returns("a" => "b")
+      expects(:read).times(2).returns("a" => "b")
   end
 
   let(:project) { projects(:test) }
   let(:group) do
     ExternalEnvironmentVariableGroup.create!(
-        name: "A",
-        description: "B",
-        url: "https://a-bucket.s3.amazonaws.com/key?versionId=version_id",
-        project: project
-      )
+      name: "A",
+      description: "B",
+      url: "https://a-bucket.s3.amazonaws.com/key?versionId=version_id",
+      project: project
+    )
   end
   as_a :viewer do
     describe "#preview" do
@@ -35,7 +35,7 @@ describe ExternalEnvironmentVariableGroupsController do
         end
 
         it "fails when env group is unknown" do
-          ExternalEnvironmentVariableGroup.any_instance.unstub(:external_service_read_with_failover)
+          ExternalEnvironmentVariableGroup.any_instance.unstub(:read)
           assert_raises ActiveRecord::RecordNotFound do
             get :preview, params: {id: "00"}, format: :json
           end

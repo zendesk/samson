@@ -2,7 +2,7 @@
 class ExternalEnvironmentVariableGroupsController < ApplicationController
   def preview
     @group = ExternalEnvironmentVariableGroup.find(params[:id])
-    @data = @group.external_service_read_with_failover
+    @data = @group.read
 
     respond_to do |format|
       format.html
