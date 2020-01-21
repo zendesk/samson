@@ -43,6 +43,7 @@ class ExternalEnvironmentVariableGroup < ActiveRecord::Base
           s3_client.get_object(bucket: dr_bucket, key: key, version_id: version_id)
         end
       # loads both json and yaml
+      # Refer https://stackoverflow.com/questions/24608600/is-it-safe-to-parse-json-with-yaml-load
       YAML.safe_load response.body.read
     end
   end
