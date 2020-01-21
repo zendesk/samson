@@ -48,7 +48,8 @@ module Samson
               if value = read(id)
                 found[id] = value
               end
-            rescue # deploy group has no vault server or deploy group no longer exists
+            rescue => e # deploy group has no vault server or deploy group no longer exists
+              raise e.class, e.message if e.class == Samson::Secrets::BackendError # dont rescue Vault errors
               nil
             end
           end
@@ -112,7 +113,7 @@ module Samson
 
         def vault_action(method, *args)
           vault_client_manager.public_send(method, *args)
-        rescue Vault::HTTPConnectionError => e
+        rescue Vault::HTTPConnectionError, Vault::HTTPClientError => e
           raise Samson::Secrets::BackendError, "Error talking to vault backend: #{e.message}"
         end
 
