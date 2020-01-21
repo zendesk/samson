@@ -63,7 +63,8 @@ Samson::Hooks.callback :project_permitted_params do
     AcceptsEnvironmentVariables::ASSIGNABLE_ATTRIBUTES.merge(
       environment_variable_group_ids: []
     ),
-    :use_env_repo
+    :use_env_repo,
+    external_environment_variable_groups_attributes: [:name, :description, :url, :_destroy, :id]
   ]
 end
 
@@ -95,6 +96,13 @@ Samson::Hooks.callback(:link_parts_for_resource) do
   [
     "EnvironmentVariableGroup",
     ->(env_group) { [env_group.name, env_group] }
+  ]
+end
+
+Samson::Hooks.callback(:link_parts_for_resource) do
+  [
+    "ExternalEnvironmentVariableGroup",
+    ->(env_group) { [env_group.name, ""] }
   ]
 end
 

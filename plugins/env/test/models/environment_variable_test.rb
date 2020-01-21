@@ -112,13 +112,41 @@ describe EnvironmentVariable do
       end
     end
 
-    describe "env vars from config service" do
+    describe "env vars from external env groups" do
+      before do
+        group = ExternalEnvironmentVariableGroup.new(
+          name: "A",
+          description: "B",
+          url: "https://a-bucket.s3.amazonaws.com/key?versionId=version_id",
+          project: project
+        )
+        group.expects(:read).returns(true)
+        group.save!
+      end
+
       it "ignores without deploy group" do
         EnvironmentVariable.env(deploy, nil, resolve_secrets: false).must_equal({})
       end
 
-      it "does not read env vars when project is not opted in" do
-        EnvironmentVariable.env(deploy, deploy_group, resolve_secrets: false)
+      it "add to env hash" do
+        response = {deploy_group.permalink => {"FOO" => "one"}}
+        ExternalEnvironmentVariableGroup.any_instance.expects(:read).returns(response)
+        EnvironmentVariable.env(deploy, deploy_group, resolve_secrets: false).must_equal "FOO" => "one"
+      end
+
+      it "shows error while problem reading from external service" do
+        ExternalEnvironmentVariableGroup.any_instance.expects(:read).
+          raises(Aws::S3::Errors::NoSuchKey.new({}, "The specified key does not exist."))
+        e = assert_raises Samson::Hooks::UserError do
+          EnvironmentVariable.env(deploy, deploy_group, resolve_secrets: true)
+        end
+        e.message.must_include "The specified key does not exist."
+      end
+
+      it "ignores env groups without deploy group" do
+        response = {"ABC" => {"FOO" => "one"}}
+        ExternalEnvironmentVariableGroup.any_instance.expects(:read).returns(response)
+        EnvironmentVariable.env(deploy, deploy_group, resolve_secrets: false).must_equal({})
       end
     end
 
@@ -163,7 +191,7 @@ describe EnvironmentVariable do
 
       it "produces few queries when doing multiple versions as the env builder does" do
         groups = DeployGroup.all.to_a
-        assert_sql_queries 2 do
+        assert_sql_queries 3 do
           EnvironmentVariable.env(deploy, nil, resolve_secrets: false)
           groups.each { |deploy_group| EnvironmentVariable.env(deploy, deploy_group, resolve_secrets: false) }
         end

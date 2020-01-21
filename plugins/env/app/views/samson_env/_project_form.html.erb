@@ -20,6 +20,14 @@
   <% sorted_env_vars << EnvironmentVariable.new %>
   <%= render "samson_env/environment_variables", form: form, environment_variables: sorted_env_vars %>
 
+  <% if ExternalEnvironmentVariableGroup.configured? %>
+    <h4>
+      External Groups
+      <%= additional_info ExternalEnvironmentVariableGroup::HELP_TEXT %>
+    </h4>
+    <%= render "external_environment_variable_groups/fields", form: form %>
+  <% end %>
+
   <h4>Groups</h4>
   <% project = form.object %>
   <% ids = project.environment_variable_group_ids + [nil] %>

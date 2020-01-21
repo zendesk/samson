@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 require 'validates_lengths_from_database'
-require 'aws-sdk-s3'
 
 class EnvironmentVariable < ActiveRecord::Base
   FAILED_LOOKUP_MARK = ' X' # SpaceX
@@ -27,6 +26,10 @@ class EnvironmentVariable < ActiveRecord::Base
     # also used by an external plugin
     def env(deploy, deploy_group, resolve_secrets:, project_specific: nil)
       env = {}
+
+      if deploy_group
+        env.merge! env_vars_from_external_groups(deploy.project, deploy_group)
+      end
 
       if deploy_group && (env_repo_name = ENV["DEPLOYMENT_ENV_REPO"]) && deploy.project.use_env_repo
         env.merge! env_vars_from_repo(env_repo_name, deploy.project, deploy_group)
@@ -72,6 +75,15 @@ class EnvironmentVariable < ActiveRecord::Base
       Dotenv::Parser.call(content)
     rescue StandardError => e
       raise Samson::Hooks::UserError, "Cannot download env file #{path} from #{env_repo_name} (#{e.message})"
+    end
+
+    def env_vars_from_external_groups(project, deploy_group)
+      project.external_environment_variable_groups.each_with_object({}) do |group, envs|
+        group_env = group.read[deploy_group.permalink]
+        envs.merge! group_env if group_env
+      end
+    rescue StandardError => e
+      raise Samson::Hooks::UserError, "Error reading env vars from external env-groups: #{e.message}"
     end
 
     def resolve_dollar_variables(env)

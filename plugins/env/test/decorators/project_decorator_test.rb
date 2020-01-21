@@ -7,6 +7,13 @@ describe Project do
   let(:project) { projects(:test) }
   let(:group) { EnvironmentVariableGroup.create!(name: "Foo", environment_variables_attributes: [env_attributes]) }
   let(:env_attributes) { {name: "A", value: "B", scope_type_and_id: "Environment-#{environments(:production)}"} }
+  let(:env_group_attributes) do
+    {
+      name: "A",
+      description: "B",
+      url: "https://a-bucket.s3.amazonaws.com/key?versionId=version_id"
+    }
+  end
 
   describe "auditing" do
     it "does not audit when var did not change" do
@@ -77,6 +84,21 @@ describe Project do
     it "includes both project and groups environment variables" do
       project.nested_environment_variables.
         must_equal group_env.unshift(@project_env)
+    end
+  end
+
+  describe "nested_external_environment_variable_groups" do
+    it "includes both name and url" do
+      ExternalEnvironmentVariableGroup.any_instance.expects(:read).returns(true)
+      project.update!(
+        external_environment_variable_groups_attributes: [env_group_attributes]
+      )
+    end
+
+    it "skips if both name and url are empty" do
+      project.update!(
+        external_environment_variable_groups_attributes: [{name: "", url: ""}]
+      )
     end
   end
 end
