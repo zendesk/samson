@@ -48,7 +48,7 @@ module Samson
               if value = read(id)
                 found[id] = value
               end
-            rescue # deploy group has no vault server or deploy group no longer exists
+            rescue VaultClientManager::VaultServerNotConfigured # deploy group has no vault server
               nil
             end
           end
