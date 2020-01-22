@@ -141,8 +141,20 @@ describe Samson::Secrets::HashicorpVaultBackend do
       end
     end
 
-    it "leaves out vaules from deploy groups that have no vault server so KeyResolver works" do
+    it "raises an error if client is not authorized" do
+      assert_raises Vault::HTTPClientError do
+        assert_vault_request :get, "production/foo/pod2/bar", status: 403 do
+          backend.read_multi(['production/foo/pod2/bar'])
+        end
+      end
+    end
+
+    it "leaves out values from deploy groups that have no vault server so KeyResolver works" do
       backend.read_multi(['production/foo/pod100/bar']).must_equal({})
+    end
+
+    it "leaves out values from unknown deploy groups" do
+      backend.read_multi(['production/foo/pod1nope/bar']).must_equal({})
     end
   end
 
