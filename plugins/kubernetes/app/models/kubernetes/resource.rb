@@ -251,8 +251,8 @@ module Kubernetes
         end
       end
 
-      def pods
-        ids = resource.dig_fetch(:spec, :template, :metadata, :labels).values_at(:release_id, :deploy_group_id)
+      def pods(res = resource)
+        ids = res.dig_fetch(:spec, :template, :metadata, :labels).values_at(:release_id, :deploy_group_id)
         selector = Kubernetes::Release.pod_selector(*ids, query: true)
         client_request(pod_client, :get_pods, label_selector: selector, namespace: namespace).fetch(:items)
       end
@@ -444,6 +444,15 @@ module Kubernetes
         end
 
         super
+      end
+
+      def delete
+        res = resource
+        super
+        # wait for pods to die, before we create new pods, since they would error if they have the same name
+        backoff_wait([0.0, 0.1, 0.2, 0.5, 1, 2, 4, 8, 16], "delete pods") do
+          return true if pods(res).empty?
+        end
       end
     end
 

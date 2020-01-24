@@ -588,6 +588,20 @@ describe Kubernetes::Resource do
         end
       end
     end
+
+    describe "#delete" do
+      it "waits for pods to be gone before allowing a new deploy" do
+        existing = {spec: {template: {metadata: {labels: {release_id: 1, deploy_group_id: 2}}}}}
+        assert_request(:get, url, to_return: [{body: existing.to_json}, {status: 404}]) do
+          assert_request(:delete, url, to_return: {body: "{}"}) do
+            pods_url = "http://foobar.server/api/v1/namespaces/pod1/pods?labelSelector=release_id=1,deploy_group_id=2"
+            assert_request(:get, pods_url, to_return: [{body: {items: [{}]}.to_json}, {body: {items: []}.to_json}]) do
+              resource.delete
+            end
+          end
+        end
+      end
+    end
   end
 
   describe Kubernetes::Resource::Job do
