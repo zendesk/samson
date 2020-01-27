@@ -64,7 +64,11 @@
           <% if show_istio_sidecar_ui? %>
             <td></td>
           <% end %>
-          <td><%= link_to "Edit all", edit_many_project_kubernetes_deploy_group_roles_path(@project) if current_user.admin_for?(@project) %></td>
+          <td>
+            <% if current_user.admin_for?(@project) && @kubernetes_deploy_group_roles.any? %>
+              <%= link_to "Edit all", edit_many_project_kubernetes_deploy_group_roles_path(@project) %>
+            <% end %>
+          </td>
         </tr>
       <% end %>
     </table>
