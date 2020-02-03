@@ -3,7 +3,7 @@
 require 'base64'
 
 module SamsonJira
-  class Engine < Rails::Engine
+  class SamsonPlugin < Rails::Engine
   end
 
   def self.jira_base_url

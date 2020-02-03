@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module SamsonRollbarDashboards
-  class Engine < Rails::Engine
+  class SamsonPlugin < Rails::Engine
     config.assets.precompile.append ['rollbar_dashboards/icon.png', 'rollbar_dashboards/deploy_dashboard.js']
   end
 

@@ -21,7 +21,7 @@ class Kubernetes::ClustersController < ResourceController
   end
 
   def seed_ecr
-    SamsonAwsEcr::Engine.refresh_credentials
+    SamsonAwsEcr::SamsonPlugin.refresh_credentials
     @kubernetes_cluster.namespaces.each do |namespace|
       update_secret namespace
     end

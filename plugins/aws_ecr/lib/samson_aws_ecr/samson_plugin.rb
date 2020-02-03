@@ -2,7 +2,7 @@
 require 'aws-sdk-ecr'
 
 module SamsonAwsEcr
-  class Engine < Rails::Engine
+  class SamsonPlugin < Rails::Engine
     AMAZON_REGISTRY = /\A.*\.dkr.ecr.([\w\-]+).amazonaws.com\z/.freeze
 
     class << self
@@ -64,6 +64,6 @@ end
 # need credentials to pull (via Dockerfile FROM) and push images
 # ATM this only authenticates the default docker registry and not any extra registries
 Samson::Hooks.callback :before_docker_repository_usage do |build|
-  SamsonAwsEcr::Engine.ensure_repositories(build)
-  SamsonAwsEcr::Engine.refresh_credentials
+  SamsonAwsEcr::SamsonPlugin.ensure_repositories(build)
+  SamsonAwsEcr::SamsonPlugin.refresh_credentials
 end

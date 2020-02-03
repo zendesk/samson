@@ -3,7 +3,7 @@ require_relative '../test_helper'
 
 SingleCov.covered!
 
-describe SamsonAirbrakeHook::Engine do
+describe SamsonAirbrakeHook::SamsonPlugin do
   describe :after_deploy do
     def notify
       Samson::Hooks.fire :after_deploy, deploy, stub(output: nil)

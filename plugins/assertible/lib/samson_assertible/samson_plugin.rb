@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module SamsonAssertible
-  class Engine < Rails::Engine
+  class SamsonPlugin < Rails::Engine
   end
 
   class Notification

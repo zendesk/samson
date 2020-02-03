@@ -4,7 +4,7 @@ require 'rollbar'
 require 'rollbar/user_informer'
 
 module SamsonRollbar
-  class Engine < Rails::Engine
+  class SamsonPlugin < Rails::Engine
   end
 end
 

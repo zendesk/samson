@@ -9,7 +9,7 @@ module SamsonEnv
     </ul>
   TEXT
 
-  class Engine < Rails::Engine
+  class SamsonPlugin < Rails::Engine
   end
 
   class << self

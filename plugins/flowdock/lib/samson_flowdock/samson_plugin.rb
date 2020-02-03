@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 module SamsonFlowdock
-  class Engine < Rails::Engine
+  class SamsonPlugin < Rails::Engine
   end
 end
 

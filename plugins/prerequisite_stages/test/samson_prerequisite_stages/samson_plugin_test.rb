@@ -17,7 +17,7 @@ describe SamsonPrerequisiteStages do
     deploy.project.stubs(:repo_commit_from_ref).with(stage2.deploys.first.reference).returns(production_commit)
   end
 
-  describe SamsonPrerequisiteStages::Engine do
+  describe SamsonPrerequisiteStages::SamsonPlugin do
     describe '.validate_deployed_to_all_prerequisite_stages' do
       it 'shows unmet prerequisite stages' do
         stage1.expects(:undeployed_prerequisite_stages).with(staging_commit).returns([stage2])

@@ -42,7 +42,6 @@ module Samson
     # Settings in config/environments/* take precedence over those specified here.
     # Application configuration should go into files in config/initializers
     config.load_defaults 6.0
-    config.autoloader = :classic # TODO: use :zeitwerk, but that clashes with app/decorators
 
     # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
     config.force_ssl = (ENV["FORCE_SSL"] == "1")

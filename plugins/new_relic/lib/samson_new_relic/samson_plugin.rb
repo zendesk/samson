@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 module SamsonNewRelic
-  class Engine < Rails::Engine
+  class SamsonPlugin < Rails::Engine
   end
 
   def self.find_api_key

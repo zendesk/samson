@@ -156,7 +156,7 @@ class JobExecution
 
   # ideally the plugin should handle this, but that was even hackier
   def kubernetes?
-    defined?(SamsonKubernetes::Engine) && @stage&.kubernetes
+    defined?(SamsonKubernetes::SamsonPlugin) && @stage&.kubernetes
   end
 
   def setup(dir)
