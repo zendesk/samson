@@ -290,7 +290,7 @@ describe Kubernetes::DeployExecutor do
         e = assert_raises Samson::Hooks::UserError do
           refute execute
         end
-        e.message.must_include "Error parsing kubernetes/" # order is random so we check prefix
+        e.message.must_include "Error found when validating kubernetes/" # order is random so we check prefix
       end
 
       it "fails before building when roles as a group are invalid" do
@@ -335,7 +335,7 @@ describe Kubernetes::DeployExecutor do
         e = assert_raises Samson::Hooks::UserError do
           refute execute
         end
-        e.message.must_include "Error parsing kubernetes/resque_worker.yml"
+        e.message.must_equal "does not contain config file 'kubernetes/resque_worker.yml'"
       end
     end
 
@@ -380,12 +380,13 @@ describe Kubernetes::DeployExecutor do
         # we need multiple different templates here
         # make the worker a job and keep the app server
         Kubernetes::ReleaseDoc.any_instance.unstub(:raw_template)
-        GitRepository.any_instance.stubs(:file_content).with('kubernetes/resque_worker.yml', commit).returns({
+        GitRepository.any_instance.unstub(:file_content)
+        GitRepository.any_instance.stubs(:file_content).with('kubernetes/resque_worker.yml', commit, anything).returns({
           'kind' => 'Job',
           'apiVersion' => 'batch/v1',
           'spec' => {
             'template' => {
-              'metadata' => {'labels' => {'project' => 'foobar', 'role' => 'migrate'}},
+              'metadata' => {'labels' => {'project' => 'some-project', 'role' => 'migrate'}},
               'spec' => {
                 'containers' => [{'name' => 'job', 'image' => 'docker-registry.zende.sk/truth_service:latest'}],
                 'restartPolicy' => 'Never'
@@ -394,11 +395,11 @@ describe Kubernetes::DeployExecutor do
           },
           'metadata' => {
             'name' => 'test',
-            'labels' => {'project' => 'foobar', 'role' => 'migrate'},
+            'labels' => {'project' => 'some-project', 'role' => 'migrate'},
             'annotations' => {'samson/prerequisite' => 'true'}
           }
         }.to_yaml)
-        GitRepository.any_instance.stubs(:file_content).with('kubernetes/app_server.yml', commit).
+        GitRepository.any_instance.stubs(:file_content).with('kubernetes/app_server.yml', commit, anything).
           returns(read_kubernetes_sample_file('kubernetes_deployment.yml'))
 
         # check if the job already exists ... it does not
