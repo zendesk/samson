@@ -442,14 +442,11 @@ module Kubernetes
     # verify with a temp release so we can verify everything before creating a real release
     # and having to wait for docker build to finish
     def verify_kubernetes_templates!
-      # - make sure each file exists
+      # - make sure each file exists / valid
       # - make sure each deploy group has consistent labels
       # - only do this for one single deploy group since they are all identical
       element_groups = grouped_deploy_group_roles.first.map do |deploy_group_role|
-        role = deploy_group_role.kubernetes_role
-        config = role.role_config_file(@job.commit)
-        raise Samson::Hooks::UserError, "Error parsing #{role.config_file}" unless config
-        config.elements
+        deploy_group_role.kubernetes_role.role_config_file(@job.commit, ignore_errors: false).elements
       end.compact
       Kubernetes::RoleValidator.validate_groups(element_groups)
 

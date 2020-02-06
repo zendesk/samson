@@ -168,11 +168,10 @@ module Kubernetes
     end
 
     def raw_template
-      @raw_template ||= begin
-        file = kubernetes_role.config_file
-        content = kubernetes_release.project.repository.file_content(file, kubernetes_release.git_sha)
-        RoleConfigFile.new(content, file, project: kubernetes_release.project).elements
-      end
+      @raw_template ||=
+        kubernetes_role.role_config_file(
+          kubernetes_release.git_sha, project: kubernetes_release.project, pull: true, ignore_errors: false
+        ).elements
     end
   end
 end

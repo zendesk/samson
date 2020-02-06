@@ -66,7 +66,7 @@ module Kubernetes
       def seed!(project, git_ref)
         configs = kubernetes_config_files_in_repo(project, git_ref)
         if configs.empty?
-          raise Samson::Hooks::UserError, "No configs found in kubernetes folder or invalid git ref #{git_ref}"
+          raise Samson::Hooks::UserError, "No configs found in kubernetes/ folder or invalid git ref #{git_ref}"
         end
         existing = where(project: project, deleted_at: nil).to_a
 
@@ -95,7 +95,7 @@ module Kubernetes
       # ... we ignore those without to allow users to deploy a branch that changes roles
       def configured_for_project(project, git_sha)
         project.kubernetes_roles.not_deleted.select do |role|
-          role.config_for_ref(project, git_sha)
+          role.role_config_file(git_sha, project: project, ignore_missing: true, ignore_errors: false, pull: true)
         end
       end
 
@@ -122,7 +122,7 @@ module Kubernetes
     end
 
     def defaults
-      return unless resource = role_config_file('HEAD')&.primary
+      return unless resource = role_config_file('HEAD', ignore_errors: true)&.primary
       spec = resource.fetch(:spec)
       if resource[:kind] == "Pod"
         replicas = 0 # these are one-off tasks most of the time, so we should not count them in totals
@@ -149,20 +149,15 @@ module Kubernetes
       }
     end
 
-    def role_config_file(reference)
-      self.class.role_config_file(project, config_file, reference)
+    # allows passing the project to reuse the repository cache when doing multiple lookups
+    def role_config_file(reference, project: project(), ignore_errors:, **args) # rubocop:disable Style/MethodCallWithoutArgsParentheses
+      self.class.role_config_file(project, config_file, reference, **args)
     rescue Samson::Hooks::UserError
-      nil
+      ignore_errors ? nil : raise
     end
 
     def manual_deletion_required?
       resource_name_change&.first || service_name_change&.first
-    end
-
-    # passes the project to reuse the repository cache when doing multiple lookups
-    def config_for_ref(project, reference)
-      return unless file_contents = project.repository.file_content(config_file, reference)
-      Kubernetes::RoleConfigFile.new(file_contents, config_file, project: project) # run validations
     end
 
     private
@@ -189,16 +184,21 @@ module Kubernetes
       # all configs in kubernetes/* at given ref
       def kubernetes_config_files_in_repo(project, git_ref)
         folder = 'kubernetes'
-        files = project.repository.file_content(folder, git_ref).
-          to_s.split("\n").
-          map! { |f| "#{folder}/#{f}" }.
-          grep(/\.(yml|yaml|json)$/)
+        paths = project.repository.
+          file_content(folder, git_ref).
+          to_s. # nil when not found
+          split("\n")[2..-1] || []
+        paths.map! { |f| "#{folder}/#{f}" }
+
+        files = paths.grep(/\.(yml|yaml|json)$/)
 
         files.map! { |path| role_config_file(project, path, git_ref) }
       end
 
-      def role_config_file(project, path, git_ref)
-        return unless raw_template = project.repository.file_content(path, git_ref, pull: false)
+      # find and validate config or blow up with Samson::Hooks::UserError
+      def role_config_file(project, path, git_ref, ignore_missing: false, pull: false)
+        raw_template = project.repository.file_content(path, git_ref, pull: pull)
+        return nil if ignore_missing && !raw_template
         Kubernetes::RoleConfigFile.new(raw_template, path, project: project)
       end
     end
