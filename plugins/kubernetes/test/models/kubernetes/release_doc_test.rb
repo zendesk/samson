@@ -208,6 +208,15 @@ describe Kubernetes::ReleaseDoc do
     end
   end
 
+  describe "#raw_template" do
+    it "can read from dynamic olders" do
+      doc.kubernetes_role.config_file = "kubernetes/$deploy_group/server.yml"
+      GitRepository.any_instance.expects(:file_content).with("kubernetes/pod1/server.yml", anything, anything).
+        returns(read_kubernetes_sample_file('kubernetes_deployment.yml'))
+      doc.send(:raw_template).dig(0, :kind).must_equal "Deployment"
+    end
+  end
+
   describe "#custom_resource_definitions" do
     it "creates a map that the template_filler can use" do
       doc.resource_template.replace(

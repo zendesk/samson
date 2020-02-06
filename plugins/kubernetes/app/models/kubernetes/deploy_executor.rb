@@ -340,7 +340,8 @@ module Kubernetes
         ).where.not(kubernetes_role_id: ignored_role_ids)
 
         # roles that exist in the repo for this sha
-        roles_present_in_repo = Kubernetes::Role.configured_for_project(@job.project, @job.commit).
+        roles_present_in_repo = Kubernetes::Role.
+          configured_for_project(@job.project, @job.commit).
           reject { |role| ignored_role_ids.include?(role.id) }
 
         # check that all roles have a matching deploy_group_role and all roles are configured
@@ -357,7 +358,10 @@ module Kubernetes
             dgr.kubernetes_role = found if found
           end
 
-          if missing = (group_roles.map(&:kubernetes_role) - roles_present_in_repo).presence
+          # TODO: make missing+extra work using dynamic folders by doing the roles_present_in_repo per deploy_group
+          if group_roles.none? { |dgr| dgr.kubernetes_role.dynamic_folders? } &&
+            missing = (group_roles.map(&:kubernetes_role) - roles_present_in_repo).presence
+
             files = missing.map(&:config_file).sort
             raise(
               Samson::Hooks::UserError,
@@ -446,7 +450,10 @@ module Kubernetes
       # - make sure each deploy group has consistent labels
       # - only do this for one single deploy group since they are all identical
       element_groups = grouped_deploy_group_roles.first.map do |deploy_group_role|
-        deploy_group_role.kubernetes_role.role_config_file(@job.commit, ignore_errors: false).elements
+        deploy_group_role.kubernetes_role.role_config_file(
+          @job.commit,
+          ignore_errors: false, deploy_group: deploy_group_role.deploy_group
+        ).elements
       end.compact
       Kubernetes::RoleValidator.validate_groups(element_groups)
 

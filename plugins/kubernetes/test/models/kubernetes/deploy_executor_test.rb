@@ -278,6 +278,16 @@ describe Kubernetes::DeployExecutor do
       assert execute, out
     end
 
+    it "can use dynamic folders" do
+      GitRepository.any_instance.expects(:file_content).with('kubernetes/pod100/resque_worker.yml', commit, anything).
+        returns(read_kubernetes_sample_file('kubernetes_deployment.yml'))
+      GitRepository.any_instance.expects(:file_content).with('kubernetes/pod100/app_server.yml', commit, anything).
+        returns(read_kubernetes_sample_file('kubernetes_deployment.yml').gsub(/some-role/, 'other-role'))
+      kubernetes_roles(:app_server).update_column(:config_file, 'kubernetes/$deploy_group/app_server.yml')
+      kubernetes_roles(:resque_worker).update_column(:config_file, 'kubernetes/$deploy_group/resque_worker.yml')
+      assert execute, out
+    end
+
     describe "invalid configs" do
       before { build.delete } # build needs to be created -> assertion fails
       around { |test| refute_difference('Build.count') { refute_difference('Release.count', &test) } }
