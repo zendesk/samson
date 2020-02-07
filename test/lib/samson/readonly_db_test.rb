@@ -21,7 +21,9 @@ describe Samson::ReadonlyDb do
       end
     end
 
-    it "does not add our warnings when not enabled" do
+    it "does not add our warnings when disabled" do
+      Samson::ReadonlyDb.enable
+      Samson::ReadonlyDb.disable
       e = assert_raises(ActiveRecord::ReadOnlyError) do
         User.connection_handler.while_preventing_writes do
           User.create!(name: "Foo")
