@@ -26,7 +26,7 @@ gem 'sawyer'
 gem 'dalli'
 gem 'omniauth'
 gem 'omniauth-oauth2'
-gem 'omniauth-github'
+gem 'omniauth-github', git: "https://github.com/omniauth/omniauth-github.git" # needs >1.3.0
 gem 'omniauth-google-oauth2'
 gem 'omniauth-ldap'
 gem 'omniauth-gitlab'
