@@ -63,6 +63,7 @@ module Kubernetes
 
     class << self
       # create initial roles for a project by reading kubernetes/*{.yml,.yaml,json} files into roles
+      # TODO: support dynamic folders
       def seed!(project, git_ref)
         configs = kubernetes_config_files_in_repo(project, git_ref)
         if configs.empty?
@@ -95,7 +96,10 @@ module Kubernetes
       # ... we ignore those without to allow users to deploy a branch that changes roles
       def configured_for_project(project, git_sha)
         project.kubernetes_roles.not_deleted.select do |role|
-          role.role_config_file(git_sha, project: project, ignore_missing: true, ignore_errors: false, pull: true)
+          role.role_config_file(
+            git_sha,
+            project: project, ignore_missing: true, ignore_errors: false, pull: true, deploy_group: nil
+          )
         end
       end
 
@@ -121,8 +125,9 @@ module Kubernetes
       end
     end
 
+    # TODO: support dynamic folders
     def defaults
-      return unless resource = role_config_file('HEAD', ignore_errors: true)&.primary
+      return unless resource = role_config_file('HEAD', deploy_group: nil, ignore_errors: true)&.primary
       spec = resource.fetch(:spec)
       if resource[:kind] == "Pod"
         replicas = 0 # these are one-off tasks most of the time, so we should not count them in totals
@@ -150,8 +155,10 @@ module Kubernetes
     end
 
     # allows passing the project to reuse the repository cache when doing multiple lookups
-    def role_config_file(reference, project: project(), ignore_errors:, **args) # rubocop:disable Style/MethodCallWithoutArgsParentheses
-      self.class.role_config_file(project, config_file, reference, **args)
+    def role_config_file(reference, project: project(), deploy_group:, ignore_errors:, **args) # rubocop:disable Style/MethodCallWithoutArgsParentheses
+      file = config_file
+      file = file.sub('$deploy_group', deploy_group.env_value) if deploy_group && dynamic_folders?
+      self.class.role_config_file(project, file, reference, **args)
     rescue Samson::Hooks::UserError
       ignore_errors ? nil : raise
     end
@@ -160,7 +167,9 @@ module Kubernetes
       resource_name_change&.first || service_name_change&.first
     end
 
-    private
+    def dynamic_folders?
+      config_file.include?("$")
+    end
 
     def parse_memory_value(limits)
       return unless bytes = parse_resource_value(limits[:memory], KUBE_MEMORY_VALUES)

@@ -9,7 +9,7 @@ describe Kubernetes::Role do
   def write_config(file, content)
     Dir.chdir(repo_temp_dir) do
       dir = File.dirname(file)
-      Dir.mkdir(dir) if file.include?("/") && !File.exist?(dir)
+      FileUtils.mkdir_p(dir) if file.include?("/") && !File.exist?(dir)
       File.write(file, content)
     end
     commit
@@ -454,6 +454,16 @@ describe Kubernetes::Role do
     it "required when removing" do
       role.resource_name = nil
       assert role.manual_deletion_required?
+    end
+  end
+
+  describe "#role_config_file" do
+    it "can read from dynamic folders" do
+      GitRepository.any_instance.
+        expects(:file_content).with('kubernetes/pod100/foo.yaml', "master", anything).
+        returns(read_kubernetes_sample_file('kubernetes_job.yml'))
+      role.config_file = "kubernetes/$deploy_group/foo.yaml"
+      assert role.role_config_file("master", deploy_group: deploy_groups(:pod100), ignore_errors: false)
     end
   end
 end

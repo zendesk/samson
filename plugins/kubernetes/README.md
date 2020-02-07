@@ -308,3 +308,7 @@ Delete old resource and create new when an update fails because it `cannot chang
 ```
 metadata.annotation.samson/force_update: "true"
 ```
+
+### Static config per deploy group
+
+Set the kubernetes roles to `kubernetes/$deploy_group/server.yml`
