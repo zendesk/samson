@@ -30,9 +30,12 @@ Stage.class_eval do
 
   def seed_kubernetes_roles
     return unless kubernetes
-    Kubernetes::Role.seed! project, 'master'
-  rescue Samson::Hooks::UserError
-    nil # ignore ... user can set this up later
+    return if project.kubernetes_roles.not_deleted.any?
+    begin
+      Kubernetes::Role.seed! project, 'master'
+    rescue Samson::Hooks::UserError
+      nil # ignore ... user can set this up later
+    end
   end
 
   def clear_commands
