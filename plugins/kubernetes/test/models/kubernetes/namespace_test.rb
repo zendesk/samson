@@ -17,6 +17,12 @@ describe Kubernetes::Namespace do
       refute_valid namespace
     end
 
+    it "is not valid with empty template" do
+      namespace.template = ""
+      refute_valid namespace
+      namespace.errors.full_messages.must_equal ["Template needs to be set"]
+    end
+
     it "is not valid with non-hash template" do
       namespace.template = "true"
       refute_valid namespace
