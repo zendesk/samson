@@ -130,9 +130,16 @@ class Project < ActiveRecord::Base
 
   # The user/repo part of the repository URL.
   def repository_path
-    # GitHub allows underscores, hyphens and dots in repo names
-    # but only hyphens in user/organisation names (as well as alphanumeric).
-    repository_url.scan(%r{[:/]([A-Za-z0-9-]+/[\w.-]+?)(?:\.git)?$}).join
+    if gitlab?
+      # This is GitLab, which allows similar characters in repository names, but
+      # also follows a subgroup convention which can contain an n-number of paths
+      # underneath the organization group.
+      repository_url.scan(%r{[:/]([A-Za-z0-9-/]+/[\w.-]+?)(?:\.git)?$}).join
+    else
+      # GitHub allows underscores, hyphens and dots in repo names
+      # but only hyphens in user/organisation names (as well as alphanumeric).
+      repository_url.scan(%r{[:/]([A-Za-z0-9-]+/[\w.-]+?)(?:\.git)?$}).join
+    end
   end
 
   def repository_directory

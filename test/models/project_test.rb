@@ -169,6 +169,11 @@ describe Project do
       project = Project.new(repository_url: "https://github.com/foo/bar")
       project.repository_path.must_equal "foo/bar"
     end
+
+    it "handles gitlab ssh URLs that nest projects under organization groups" do
+      project = Project.new(repository_url: "git@gitlab.com:foo/bar/baz.git")
+      project.repository_path.must_equal "foo/bar/baz"
+    end
   end
 
   describe 'project repository initialization' do
