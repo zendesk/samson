@@ -109,6 +109,7 @@ module Kubernetes
 
     def add_pod_disruption_budget
       return unless deployment = raw_template.detect { |r| ["Deployment", "StatefulSet"].include? r[:kind] }
+      return if raw_template.any? { |r| r[:kind] == "PodDisruptionBudget" }
       return unless target = disruption_budget_target(deployment)
 
       annotations = (deployment.dig(:metadata, :annotations) || {}).slice(
