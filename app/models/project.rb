@@ -130,7 +130,7 @@ class Project < ActiveRecord::Base
 
   # The user/repo part of the repository URL.
   def repository_path
-    if self.gitlab?
+    if gitlab?
       # This is GitLab, which allows similar characters in repository names, but
       # also follows a subgroup convention which can contain an n-number of paths
       # underneath the organization group.
