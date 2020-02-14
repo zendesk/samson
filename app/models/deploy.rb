@@ -123,7 +123,7 @@ class Deploy < ActiveRecord::Base
 
   # user clicked "Bypass" button to bypass deploy approval
   def bypassed_approval?
-    stage.deploy_requires_approval? && buddy == user
+    stage.deploy_requires_approval? && (buddy == user || buddy.nil?)
   end
 
   def waiting_for_buddy?
