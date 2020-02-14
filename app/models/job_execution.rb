@@ -59,6 +59,7 @@ class JobExecution
       @job.failed!
     end
   rescue JobQueue::Cancel
+    @job.reload # fetch canceller, set by job.rb, so notifications are correct
     @job.cancelling!
     raise
   rescue => e
