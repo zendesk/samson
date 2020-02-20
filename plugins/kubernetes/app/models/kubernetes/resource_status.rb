@@ -14,7 +14,8 @@ module Kubernetes
         "FailedRescale",
         "FailedGetResourceMetric",
         "FailedGetExternalMetric",
-        "FailedComputeMetricsReplicas"
+        "FailedComputeMetricsReplicas",
+        "FailedUpdateStatus"
       ],
       PodDisruptionBudget: [
         "CalculateExpectedPodCountFailed",
