@@ -254,10 +254,6 @@ To debug services or to create resources that needs to reference a selector that
 
 `metadata.annotations.samson/service_selector_across_roles: "true"`
 
-### Blocking LoadBalancer usage
-
-Set `KUBERNETES_ALLOWED_LOAD_BALANCER_NAMESPACES=foo,bar` to block all other namespaces from using them.
-
 ### Updating matchLabels
 
 Samson will by default block updating `matchLabels` since it leads to abandoned pods.

@@ -42,7 +42,6 @@ module Kubernetes
       validate_not_matching_team
       validate_stateful_set_service_consistent
       validate_daemon_set_supported
-      validate_load_balancer
       unless validate_annotations
         validate_prerequisites_kinds
         validate_prerequisites_consistency
@@ -95,17 +94,6 @@ module Kubernetes
     end
 
     private
-
-    def validate_load_balancer
-      allowed = ENV["KUBERNETES_ALLOWED_LOAD_BALANCER_NAMESPACES"].to_s.split(",")
-      return if allowed.empty?
-      bad = @elements.map do |e|
-        next unless e[:kind] == "Service" && e.dig(:spec, :type) == "LoadBalancer"
-        namespace = e.dig(:metadata, :namespace) || "unset"
-        namespace unless allowed.include?(namespace)
-      end.compact
-      @errors << "LoadBalancer is not allowed in #{bad.join(", ")} namespace" if bad.any?
-    end
 
     def validate_name
       @errors << "Needs a metadata.name" unless map_attributes([:metadata, :name]).all?
