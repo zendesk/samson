@@ -652,26 +652,6 @@ describe Kubernetes::RoleValidator do
       end
     end
 
-    describe "#validate_load_balancer" do
-      before { role[1][:metadata][:namespace] = "foo" }
-
-      it "allows when not configured" do
-        errors.must_be_nil
-      end
-
-      it "allows when namespace is allowed" do
-        with_env KUBERNETES_ALLOWED_LOAD_BALANCER_NAMESPACES: "foo" do
-          errors.must_be_nil
-        end
-      end
-
-      it "does not allow when namespace is not allowed" do
-        with_env KUBERNETES_ALLOWED_LOAD_BALANCER_NAMESPACES: "bar" do
-          errors.must_equal ["LoadBalancer is not allowed in foo namespace"]
-        end
-      end
-    end
-
     describe "#validate_daemon_set_supported" do
       before do
         role[0][:kind] = "DaemonSet"
