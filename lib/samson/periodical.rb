@@ -50,7 +50,7 @@ module Samson
           # run at startup so we are in a consistent and clean state after a restart
           # not using TimerTask `now` option since then initial constant loading would happen in multiple threads
           # and we run into fun autoload errors like `LoadError: Unable to autoload constant Job` in development/test
-          if !config[:now] && enabled
+          if enabled && !config[:consistent_start_time]
             ActiveRecord::Base.connection_pool.with_connection do
               run_once(name)
             end
