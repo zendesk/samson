@@ -8,6 +8,8 @@ require 'action_cable/engine'
 require 'rails/test_unit/railtie'
 require 'sprockets/railtie'
 
+abort "Do not run server with PRECOMPILE env var set" if ENV["SERVER_MODE"] && ENV["PRECOMPILE"]
+
 begin
   require 'pry-rails'
 rescue LoadError # rubocop:disable Lint/HandleExceptions
