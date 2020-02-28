@@ -9,8 +9,9 @@
           </div>
         <% end %>
       <% else %>
-        Manifests not yet create, reload page.
+        Manifests not yet created, reload the page.
       <% end %>
+    </div>
   <% end %>
 <% elsif @stage&.kubernetes? %>
   <div class="tab-pane" id="manifests">
