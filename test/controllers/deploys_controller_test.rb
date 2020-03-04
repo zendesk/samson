@@ -380,6 +380,35 @@ describe DeploysController do
         end
         e.message.must_equal "Unsupported type Blob"
       end
+
+      describe "stage_id" do
+        let(:params) { {project_id: 'foo', search: {stage_id: 'production'}} }
+
+        it "filters by stage permalink" do
+          get :index, params: params, format: "json"
+          assert_response :ok
+          deploys["deploys"].count.must_equal 3
+        end
+
+        it "filters by stage id" do
+          params[:search][:stage_id] = stages(:test_production).id
+          get :index, params: params, format: "json"
+          assert_response :ok
+          deploys["deploys"].count.must_equal 3
+        end
+
+        it "refuses to search all stages by permalink since that is most likely not what the user wanted" do
+          params.delete(:project_id)
+          get :index, params: params, format: "json"
+          assert_response 400
+        end
+
+        it "refuses to search stage by permalink + other conditions since that makes little sense" do
+          params[:search][:production] = true
+          get :index, params: params, format: "json"
+          assert_response 400
+        end
+      end
     end
 
     unauthorized :get, :new, project_id: :foo, stage_id: 2
