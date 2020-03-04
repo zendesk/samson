@@ -32,6 +32,9 @@ class ReleaseService
       @project.repository.update_mirror
       @project.repository.commit_from_ref(tag)
     end
+  rescue RuntimeError
+    ::Rails.logger.error("Failed ensuring git repository #{@project.repository.executor.output.string}")
+    raise
   end
 
   def start_deploys(release)
