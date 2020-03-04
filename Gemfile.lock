@@ -466,7 +466,7 @@ GEM
     pry-stack_explorer (0.4.9.3)
       binding_of_caller (>= 0.7)
       pry (>= 0.9.11)
-    puma (4.3.1)
+    puma (4.3.3)
       nio4r (~> 2.0)
     pyu-ruby-sasl (0.0.3.3)
     rack (2.1.2)
