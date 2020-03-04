@@ -175,6 +175,12 @@ class DeploysController < ApplicationController
       end
     end
 
+    if stage_param = search[:stage_id].presence
+      raise Samson::Hooks::UserError, "Finding stages by permalink needs project route" unless current_project
+      raise Samson::Hooks::UserError, "Exact stage and other stage queries don't combine" if stages
+      stages = [current_project.stages.find_by_param!(stage_param)]
+    end
+
     deploys = deploys_scope
     deploys = deploys.where(stage: stages) if stages
     deploys = deploys.where(job: jobs) if jobs
