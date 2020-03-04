@@ -183,13 +183,13 @@ class GitRepository
   # success: stdout as string
   # error: nil
   def capture_stdout(*command, dir: repo_cache_dir)
-    success, output = Samson::CommandExecutor.execute(
+    result = Samson::CommandExecutor.execute(
       *command,
       whitelist_env: ['HOME', 'PATH'],
       timeout: 30.minutes,
       err: '/dev/null',
       dir: dir
     )
-    output.strip if success
+    result.output.strip if result.status
   end
 end

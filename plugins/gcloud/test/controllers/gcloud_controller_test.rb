@@ -30,7 +30,7 @@ describe GcloudController do
       end
 
       it "can sync" do
-        Samson::CommandExecutor.expects(:execute).returns([true, result.to_json])
+        Samson::CommandExecutor.expects(:execute).returns(OpenStruct.new(status: true, output: result.to_json))
         do_sync
         assert flash[:notice]
         build.reload
@@ -40,13 +40,13 @@ describe GcloudController do
 
       it "can sync images with a tag" do
         result[:results][:images][1][:name] += ":foo"
-        Samson::CommandExecutor.expects(:execute).returns([true, result.to_json])
+        Samson::CommandExecutor.expects(:execute).returns(OpenStruct.new(status: true, output: result.to_json))
         do_sync
         build.reload.docker_repo_digest.must_equal repo_digest
       end
 
       it "fails when gcloud cli fails" do
-        Samson::CommandExecutor.expects(:execute).returns([false, result.to_json])
+        Samson::CommandExecutor.expects(:execute).returns(OpenStruct.new(status: false, output: result.to_json))
         do_sync
         assert flash[:alert]
       end
@@ -55,7 +55,7 @@ describe GcloudController do
         let(:image_name) { "gcr.io/foo*baz+bing/#{build.image_name}" }
 
         it "fails when digest does not pass validations" do
-          Samson::CommandExecutor.expects(:execute).returns([true, result.to_json])
+          Samson::CommandExecutor.expects(:execute).returns(OpenStruct.new(status: true, output: result.to_json))
 
           do_sync
 
@@ -66,7 +66,7 @@ describe GcloudController do
 
       it "fails when image is not found" do
         result[:results][:images].last[:name] = "gcr.io/other"
-        Samson::CommandExecutor.expects(:execute).returns([true, result.to_json])
+        Samson::CommandExecutor.expects(:execute).returns(OpenStruct.new(status: true, output: result.to_json))
 
         do_sync
 
@@ -77,7 +77,7 @@ describe GcloudController do
       it "can store failures" do
         result[:status] = "QUEUED"
         result.delete(:results)
-        Samson::CommandExecutor.expects(:execute).returns([true, result.to_json])
+        Samson::CommandExecutor.expects(:execute).returns(OpenStruct.new(status: true, output: result.to_json))
 
         do_sync
 
