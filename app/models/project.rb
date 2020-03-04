@@ -176,7 +176,7 @@ class Project < ActiveRecord::Base
     @repository ||= GitRepository.new(
       repository_url: repository_url,
       repository_dir: repository_directory,
-      executor: TerminalExecutor.new(StringIO.new, project: self)
+      executor: TerminalExecutor.new(StringIO.new, project: self, timeout: 30)
     )
   end
 
