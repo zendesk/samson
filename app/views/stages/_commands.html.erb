@@ -5,15 +5,18 @@
   <div id="commands">
     <% usage_ids = Command.usage_ids %>
     <% administrated = current_user.administrated_projects.pluck(:id) %>
+    <% editing = form.object.persisted? %>
     <%= form.collection_check_boxes(:command_ids, Command.for_stage(form.object), :id, :command) do |b| %>
       <% command = b.object %>
-      <% others = usage_ids.count(command.id) - (b.check_box.include?('checked') && form.object.persisted? ? 1 : 0) %>
+      <% check_box = b.check_box %>
+      <% checked = check_box.include?('"checked"') %>
+      <% others = usage_ids.count(command.id) - (checked && editing ? 1 : 0) %>
       <% others_warning = "#{others} others" if others > 0 %>
 
       <% if command.persisted? %>
-        <div class="row stage-bar bar">
+        <div class="row stage-bar bar" <%= 'style="display: none"'.html_safe if editing && !checked %>>
           <div data-id="<%= b.value %>" class="col-lg-offset-2 col-lg-2 command-checkbox">
-            <%= b.check_box %>
+            <%= check_box %>
           </div>
           <div class="col-lg-8">
             <% klass = "pre-command pre-inline #{command.global? ? 'global' : 'local'} #{'others' if others_warning} #{'no_access' unless administrated.include?(command.project_id)}" %>
@@ -30,6 +33,7 @@
   </div>
 
   <%= button_tag 'Add Stage Command', class: 'btn btn-primary stage-command-button', type: 'button' %>
+  <%= button_tag 'Show Unselected Commands', class: 'btn btn-default show-command-button', type: 'button' if editing %>
 </fieldset>
 
 <script>
@@ -99,6 +103,12 @@
 
     $('.stage-command-button').click(function() {
       $commandsContainer.append(newCommandHTML);
+    });
+
+    // hide unused commands until user wants to see them, so default stage view does not have giant scroll area
+    $('.show-command-button').click(function() {
+      $commandsContainer.find(".row").show();
+      $(this).hide();
     });
   });
 </script>
