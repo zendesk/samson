@@ -37,7 +37,7 @@ class EnvironmentVariable < ActiveRecord::Base
 
       env.merge! env_vars_from_db(deploy, deploy_group, project_specific: project_specific)
 
-      resolve_dollar_variables(env)
+      resolve_dollar_variables!(env)
       resolve_secrets(deploy.project, deploy_group, env, preview: resolve_secrets == :preview) if resolve_secrets
 
       env
@@ -65,7 +65,7 @@ class EnvironmentVariable < ActiveRecord::Base
         deploy.project.nested_environment_variables(**args)
       variables.sort_by!(&:priority)
       variables.each_with_object({}) do |ev, all|
-        all[ev.name] = ev.value if !all[ev.name] && ev.matches_scope?(deploy_group)
+        all[ev.name] = ev.value.dup if !all[ev.name] && ev.matches_scope?(deploy_group)
       end
     end
 
@@ -86,9 +86,11 @@ class EnvironmentVariable < ActiveRecord::Base
       raise Samson::Hooks::UserError, "Error reading env vars from external env-groups: #{e.message}"
     end
 
-    def resolve_dollar_variables(env)
-      env.each do |k, value|
-        env[k] = value.gsub(/\$\{(\w+)\}|\$(\w+)/) { |original| env[$1 || $2] || original }
+    def resolve_dollar_variables!(env)
+      env.each_value do |value|
+        3.times do
+          break unless value.gsub!(/\$\{(\w+)\}|\$(\w+)/) { |original| env[$1 || $2] || original }
+        end
       end
     end
 

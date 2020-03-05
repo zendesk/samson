@@ -129,7 +129,7 @@ describe EnvironmentVariable do
       end
 
       it "add to env hash" do
-        response = {deploy_group.permalink => {"FOO" => "one"}}
+        response = {deploy_group.permalink => {"FOO" => +"one"}}
         ExternalEnvironmentVariableGroup.any_instance.expects(:read).returns(response)
         EnvironmentVariable.env(deploy, deploy_group, resolve_secrets: false).must_equal "FOO" => "one"
       end
@@ -202,6 +202,15 @@ describe EnvironmentVariable do
         project.environment_variables.create!(name: "POD_ID", value: "1")
         EnvironmentVariable.env(deploy, nil, resolve_secrets: false).must_equal(
           "PROJECT" => "PROJECT--1--$POD_ID_NOT--1", "POD_ID" => "1", "X" => "Y", "Y" => "Z"
+        )
+      end
+
+      it "can resolve nested references" do
+        project.environment_variables.last.update_column(:value, "PROJECT--$POD_ID")
+        project.environment_variables.create!(name: "POD_ID", value: "HEY $FOO")
+        project.environment_variables.create!(name: "FOO", value: "BAR")
+        EnvironmentVariable.env(deploy, nil, resolve_secrets: false).must_equal(
+          "FOO" => "BAR", "POD_ID" => "HEY BAR", "PROJECT" => "PROJECT--HEY BAR", "X" => "Y", "Y" => "Z"
         )
       end
 
