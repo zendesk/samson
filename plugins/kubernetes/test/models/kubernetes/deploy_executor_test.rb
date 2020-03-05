@@ -118,7 +118,7 @@ describe Kubernetes::DeployExecutor do
     let(:pod_status) { pod_reply[:items].first[:status] }
     let(:worker_role) { kubernetes_deploy_group_roles(:test_pod100_resque_worker) }
     let(:server_role) { kubernetes_deploy_group_roles(:test_pod100_app_server) }
-    let(:deployments_url) { "http://foobar.server/apis/extensions/v1beta1/namespaces/staging/deployments" }
+    let(:deployments_url) { "http://foobar.server/apis/apps/v1/namespaces/staging/deployments" }
     let(:jobs_url) { "http://foobar.server/apis/batch/v1/namespaces/staging/deployments" }
     let(:service_url) { "http://foobar.server/api/v1/namespaces/staging/services/some-project" }
     let(:waiting_message) { "Waiting for resources" }
@@ -1060,7 +1060,7 @@ describe Kubernetes::DeployExecutor do
       Kubernetes::Release.any_instance.stubs(:previous_succeeded_release).returns(other)
     end
 
-    let(:deployments_url) { "#{origin}/apis/extensions/v1beta1/namespaces/pod1/deployments" }
+    let(:deployments_url) { "#{origin}/apis/apps/v1/namespaces/pod1/deployments" }
     let(:services_url) { "#{origin}/api/v1/namespaces/pod1/services" }
     let(:release) { kubernetes_releases(:test_release) }
 

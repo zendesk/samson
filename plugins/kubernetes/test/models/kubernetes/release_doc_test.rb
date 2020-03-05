@@ -242,7 +242,7 @@ describe Kubernetes::ReleaseDoc do
   end
 
   describe "#deploy" do
-    let(:client) { doc.deploy_group.kubernetes_cluster.client('extensions/v1beta1') }
+    let(:client) { doc.deploy_group.kubernetes_cluster.client('apps/v1') }
 
     it "creates" do
       # check and then create service
@@ -266,7 +266,7 @@ describe Kubernetes::ReleaseDoc do
       request_order = []
       regex = %r{
         http://foobar.server(:80)?/apis?/
-        (extensions/|rbac.authorization.k8s.io/)?
+        (extensions/|apps/|rbac.authorization.k8s.io/)?
         v1(beta\d)?/
         (namespaces/pod1/)?
         (\w+)

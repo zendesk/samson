@@ -26,7 +26,7 @@ describe Kubernetes::RoleValidator do
         deployment_role[1],
         {
           kind: 'StatefulSet',
-          apiVersion: 'extensions/v1beta1',
+          apiVersion: 'apps/v1',
           metadata: {name: 'my-map', labels: labels},
           spec: {
             serviceName: 'foobar',
@@ -664,7 +664,7 @@ describe Kubernetes::RoleValidator do
       end
 
       it "complains about unsupported apiVersion" do
-        role[0][:apiVersion] = "extensions/v1beta1"
+        role[0][:apiVersion] = "foo/v1"
         errors.must_equal ["set DaemonSet apiVersion to apps/v1"]
       end
 
