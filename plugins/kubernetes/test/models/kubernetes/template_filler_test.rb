@@ -116,6 +116,10 @@ describe Kubernetes::TemplateFiller do
       template.to_hash[:spec][:revisionHistoryLimit].must_equal 1
     end
 
+    it "disables serviceLinks" do
+      template.to_hash[:spec][:template][:spec][:enableServiceLinks].must_equal false
+    end
+
     it "can verify without builds" do
       doc.kubernetes_release.builds = []
       template.to_hash(verification: true)

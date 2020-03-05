@@ -38,6 +38,7 @@ module Kubernetes
         elsif Kubernetes::RoleConfigFile.primary?(template)
           if kind == 'Deployment'
             set_history_limit
+            set_disable_service_links
           end
 
           make_stateful_set_match_service if kind == 'StatefulSet'
@@ -55,6 +56,7 @@ module Kubernetes
           set_init_containers
           set_kritis_breakglass
           set_istio_sidecar_injection
+
         elsif kind == 'PodDisruptionBudget'
           set_name
           set_match_labels_blue_green if blue_green_color
@@ -265,6 +267,11 @@ module Kubernetes
     # see discussion in https://github.com/kubernetes/kubernetes/issues/23597
     def set_history_limit
       template[:spec][:revisionHistoryLimit] ||= 1
+    end
+
+    # disable service links.
+    def set_disable_service_links
+      template[:spec][:template][:spec][:enableServiceLinks] ||= false
     end
 
     # replace keys in annotations by looking them up in all possible namespaces by specificity
