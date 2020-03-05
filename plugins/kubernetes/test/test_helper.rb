@@ -100,7 +100,7 @@ class ActiveSupport::TestCase
         {"name" => "services/status", "namespaced" => true, "kind" => "Service"}
       ]
     },
-    "extensions/v1beta1" => {
+    "apps/v1" => {
       "kind" => "APIResourceList",
       "resources" => [
         {"name" => "daemonsets", "namespaced" => true, "kind" => "DaemonSet"},

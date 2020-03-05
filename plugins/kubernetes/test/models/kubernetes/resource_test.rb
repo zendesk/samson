@@ -103,8 +103,8 @@ describe Kubernetes::Resource do
 
     describe "#deploy" do
       let(:kind) { 'Deployment' }
-      let(:api_version) { 'extensions/v1beta1' }
-      let(:url) { "#{origin}/apis/extensions/v1beta1/namespaces/pod1/deployments/some-project" }
+      let(:api_version) { 'apps/v1' }
+      let(:url) { "#{origin}/apis/apps/v1/namespaces/pod1/deployments/some-project" }
 
       it "creates when missing" do
         assert_request(:get, url, to_return: [{status: 404}, {body: "{}"}]) do
@@ -379,10 +379,10 @@ describe Kubernetes::Resource do
       end
 
       it "shows nice error message when user uses the wrong apiVersion" do
-        template[:apiVersion] = 'extensions/v1beta1'
+        template[:apiVersion] = 'apps/v1'
         e = assert_raises(Samson::Hooks::UserError) { resource.send(:request, :get, :foo) }
         e.message.must_equal(
-          "apiVersion extensions/v1beta1 does not support ConfigMap. Check kubernetes docs for correct apiVersion"
+          "apiVersion apps/v1 does not support ConfigMap. Check kubernetes docs for correct apiVersion"
         )
       end
 
@@ -427,7 +427,7 @@ describe Kubernetes::Resource do
 
   describe Kubernetes::Resource::DaemonSet do
     let(:kind) { 'DaemonSet' }
-    let(:api_version) { 'extensions/v1beta1' }
+    let(:api_version) { 'apps/v1' }
 
     describe "#desired_pod_count" do
       before { template[:spec] = {replicas: 2} }
@@ -466,8 +466,8 @@ describe Kubernetes::Resource do
 
     describe "#revert" do
       let(:kind) { 'DaemonSet' }
-      let(:api_version) { 'extensions/v1beta1' }
-      let(:base_url) { "#{origin}/apis/extensions/v1beta1/namespaces/bar/daemonsets" }
+      let(:api_version) { 'apps/v1' }
+      let(:base_url) { "#{origin}/apis/apps/v1/namespaces/bar/daemonsets" }
 
       it "reverts to previous version" do
         # checks if it exists and then creates the old resource
@@ -494,7 +494,7 @@ describe Kubernetes::Resource do
     end
 
     let(:kind) { 'Deployment' }
-    let(:api_version) { 'extensions/v1beta1' }
+    let(:api_version) { 'apps/v1' }
 
     describe "#delete" do
       it "does nothing when deployment is deleted" do
