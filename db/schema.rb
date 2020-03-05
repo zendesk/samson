@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_01_10_213328) do
+ActiveRecord::Schema.define(version: 2020_02_19_043627) do
 
   create_table "audits" do |t|
     t.integer "auditable_id", null: false
