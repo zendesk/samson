@@ -141,14 +141,29 @@ module Kubernetes
         end.each(&:check)
       end
 
-      pods = fetch_pods
-      non_pod_statuses + release_docs.flat_map { |release_doc| pod_statuses(pods, release_doc) }
+      pods = fetch_grouped(:pods, 'v1')
+      replica_sets = fetch_replica_sets(release_docs)
+      non_pod_statuses +
+        release_docs.flat_map do |release_doc|
+          replica_set_statuses(replica_sets, release_doc) + pod_statuses(pods, release_doc)
+        end
     end
 
-    # efficient pod fetching by querying once per cluster instead of once per deploy group
-    def fetch_pods
-      @release.clients.flat_map do |client, query|
-        SamsonKubernetes.retry_on_connection_errors { client.get_pods(query).fetch(:items) }
+    # efficient fetching by querying once per cluster/namespace instead of once per deploy group and role
+    # NOTE: finds pods of prerequisite during actual rollout
+    def fetch_grouped(type, version)
+      @release.clients(version).flat_map do |client, query|
+        SamsonKubernetes.retry_on_connection_errors { client.send("get_#{type}", query).fetch(:items) }
+      end
+    end
+
+    # efficient way to get all ReplicaSets since they often have errors when pods cannot come up
+    # ideally we'd fetch all resources that are owned by the resources we deployed, but that's much harder
+    def fetch_replica_sets(release_docs)
+      if release_docs.any? { |rd| rd.resource_template.any? { |r| r[:kind] == "Deployment" } }
+        fetch_grouped(:replica_sets, 'apps/v1')
+      else
+        [] # save time
       end
     end
 
@@ -239,34 +254,27 @@ module Kubernetes
       end
     end
 
+    # we don't need to keep track of "missing" here since pod statuses already make the deploy wait
+    def replica_set_statuses(replica_sets, release_doc)
+      replica_sets = filter_resources(replica_sets, release_doc)
+      build_status_for_resources replica_sets, release_doc, "ReplicaSet", expected: replica_sets.size
+    end
+
     def pod_statuses(pods, release_doc)
-      group = release_doc.deploy_group
       role = release_doc.kubernetes_role
 
-      pods = pods.select do |pod|
-        labels = pod.dig_fetch(:metadata, :labels)
-        Integer(labels.fetch(:role_id)) == role.id && Integer(labels.fetch(:deploy_group_id)) == group.id
-      end
+      pods = filter_resources(pods, release_doc)
 
       # when autoscaling there might be more than min pods, so we need to check all of them to find the healthiest
       # NOTE: we should be able to remove the `role.autoscaled?` check, just keeping it to minimize blast radius
-      max_pods =
+      expected =
         if role.autoscaled?
           [release_doc.desired_pod_count, pods.size].max
         else
           release_doc.desired_pod_count
         end
 
-      statuses = Array.new(max_pods) do |i|
-        ResourceStatus.new(
-          resource: pods[i],
-          kind: "Pod",
-          role: role,
-          deploy_group: group,
-          prerequisite: release_doc.prerequisite?,
-          start: @deploy_start_time
-        )
-      end.each(&:check)
+      statuses = build_status_for_resources(pods, release_doc, "Pod", expected: expected)
 
       # If a role is autoscaled, there is a chance pods can be deleted during a deployment.
       # Sort them by "most alive" and use the min ones, so we ensure at least that number of pods work.
@@ -282,6 +290,30 @@ module Kubernetes
       end
 
       statuses
+    end
+
+    def filter_resources(resources, release_doc)
+      resources.select do |resource|
+        labels = resource.dig_fetch(:metadata, :labels)
+        Integer(labels.fetch(:role_id)) == release_doc.kubernetes_role_id &&
+          Integer(labels.fetch(:deploy_group_id)) == release_doc.deploy_group_id
+      end
+    end
+
+    def build_status_for_resources(resources, release_doc, kind, expected:)
+      group = release_doc.deploy_group
+      role = release_doc.kubernetes_role
+
+      Array.new(expected) do |i|
+        ResourceStatus.new(
+          resource: resources[i],
+          kind: kind,
+          role: role,
+          deploy_group: group,
+          prerequisite: release_doc.prerequisite?,
+          start: @deploy_start_time
+        )
+      end.each(&:check)
     end
 
     def print_statuses(message, statuses, exact:)
