@@ -82,7 +82,9 @@ describe Kubernetes::DeployExecutor do
   describe "#execute" do
     def execute
       stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/pods\?}).
-        to_return(body: pod_reply.to_json) # checks pod status to see if it's good
+        to_return(*pod_responses) # checks pod status to see if it's good
+      stub_request(:get, %r{http://foobar.server/apis/apps/v1/namespaces/staging/replicasets\?}).
+        to_return(body: replica_sets_reply.to_json)
       executor.execute
     end
 
@@ -90,6 +92,7 @@ describe Kubernetes::DeployExecutor do
       pod_status[:containerStatuses].first[:restartCount] = 1
     end
 
+    let(:pod_responses) { [{body: pod_reply.to_json}] }
     let(:pod_reply) do
       {
         resourceVersion: "1",
@@ -115,7 +118,8 @@ describe Kubernetes::DeployExecutor do
         end
       }
     end
-    let(:pod_status) { pod_reply[:items].first[:status] }
+    let(:replica_sets_reply) { {items: []} }
+    let(:pod_status) { pod_reply.dig(:items, 0, :status) }
     let(:worker_role) { kubernetes_deploy_group_roles(:test_pod100_resque_worker) }
     let(:server_role) { kubernetes_deploy_group_roles(:test_pod100_app_server) }
     let(:deployments_url) { "http://foobar.server/apis/apps/v1/namespaces/staging/deployments" }
@@ -506,17 +510,51 @@ describe Kubernetes::DeployExecutor do
       out.must_include "UNSTABLE"
     end
 
+    describe "replica sets" do
+      it "stops when deployments replicaset has an error event" do
+        # was unable to spawn pods
+        pod_reply[:items].clear
+        replica_sets_reply[:items] << {
+          kind: "ReplicaSet",
+          metadata: {
+            name: "foo",
+            namespace: "staging",
+            labels: {deploy_group_id: deploy_group.id.to_s, role_id: kubernetes_roles(:resque_worker).id.to_s}
+          }
+        }
+
+        # because of this event
+        request = stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/events}).
+          to_return(
+            body: {
+              items: [
+                {
+                  type: 'Warning',
+                  reason: 'Unhealthy',
+                  message: "Warning FailedCreate: Error creating: admission webhook",
+                  lastTimestamp: 1.minute.from_now.iso8601
+                }
+              ]
+            }.to_json
+          )
+
+        refute execute, out
+        out.must_include "ReplicaSet foo: Error event"
+        assert_requested request, times: 10
+      end
+    end
+
     describe "percentage failure" do
       with_env KUBERNETES_ALLOW_NOT_READY_PERCENT: "50" # 1/2 allowed to fail (counting pods)
 
       it "fails when more than allowed amount fail" do
         worker_role.update_column(:replicas, 3) # 2 pod per role is pending = 66%
-        refute execute
+        refute execute, out
       end
 
       it "ignores when less than allowed amount fail" do
         worker_role.update_column(:replicas, 2) # 1 pod per role is pending = 50%
-        assert execute
+        assert execute, out
       end
     end
 
@@ -536,7 +574,7 @@ describe Kubernetes::DeployExecutor do
           }.to_json
         )
 
-      refute execute
+      refute execute, out
 
       out.must_include "resque-worker Pod: Error event\n"
       out.must_include "UNSTABLE"
@@ -565,7 +603,7 @@ describe Kubernetes::DeployExecutor do
         times: 2 # for first pod and again when displaying results
       )
 
-      refute execute
+      refute execute, out
 
       out.must_include "resque-worker Pod: Waiting for resources (Pending, Unknown)\n"
     end
@@ -591,10 +629,9 @@ describe Kubernetes::DeployExecutor do
     it "fails when pod is failing to boot" do
       good = pod_reply.deep_dup
       worker_is_unstable
-      stub_request(:get, %r{http://foobar.server/api/v1/namespaces/staging/pods\?}).
-        to_return([{body: good.to_json}, {body: pod_reply.to_json}])
+      pod_responses.replace([{body: good.to_json}, {body: pod_reply.to_json}])
 
-      refute executor.execute
+      refute execute, out
 
       out.must_include "READY"
       out.must_include "UNSTABLE"
@@ -620,13 +657,13 @@ describe Kubernetes::DeployExecutor do
       end
 
       it "fails when non-pods have error events" do
-        refute execute
+        refute execute, out
         out.must_include "Deployment test-app-server events:\n  Warning NO"
       end
 
       it "does not count non-pods into allowed-not-ready" do
         with_env KUBERNETES_ALLOW_NOT_READY_PERCENT: "100" do
-          refute execute
+          refute execute, out
           out.must_include "Deployment test-app-server events:\n  Warning NO"
         end
       end
@@ -655,7 +692,7 @@ describe Kubernetes::DeployExecutor do
         worker_is_unstable
         extra_pod[:status][:containerStatuses].first[:restartCount] = 1
 
-        refute execute
+        refute execute, out
 
         out.scan(/resque-worker Pod: Restarted/).count.must_equal 1, out
         out.scan(/resque-worker Pod pod-resque-worker: Restarted/).count.must_equal 1, out
@@ -687,7 +724,7 @@ describe Kubernetes::DeployExecutor do
         assert_request(:get, service_url, to_return: {body: old.to_json}, times: 4)
         assert_request(:put, service_url, to_return: {body: "{}"}, times: 4)
 
-        refute execute
+        refute execute, out
 
         out.must_include "resque-worker Pod: Restarted"
         out.must_include "UNSTABLE"
@@ -699,7 +736,7 @@ describe Kubernetes::DeployExecutor do
       end
 
       it "deletes when there was no previous deployed resource" do
-        refute execute
+        refute execute, out
 
         out.must_include "resque-worker Pod: Restarted"
         out.must_include "UNSTABLE"
@@ -713,7 +750,7 @@ describe Kubernetes::DeployExecutor do
       it "does not crash when rollback fails" do
         Kubernetes::Resource::Deployment.any_instance.stubs(:revert).raises("Weird error")
 
-        refute execute
+        refute execute, out
 
         out.must_include "resque-worker Pod: Restarted"
         out.must_include "UNSTABLE"
@@ -725,7 +762,7 @@ describe Kubernetes::DeployExecutor do
         deploy.update_column(:kubernetes_rollback, false)
         Kubernetes::Resource::Deployment.any_instance.expects(:revert).never
 
-        refute execute
+        refute execute, out
 
         out.must_include "resque-worker Pod: Restarted"
         out.must_include "UNSTABLE"
@@ -766,7 +803,7 @@ describe Kubernetes::DeployExecutor do
             }.to_json
           )
 
-        refute execute
+        refute execute, out
 
         # failed
         out.must_include "resque-worker Pod: Restarted"
@@ -810,7 +847,7 @@ describe Kubernetes::DeployExecutor do
             }.to_json
           )
 
-        refute execute
+        refute execute, out
 
         out.must_include "Foobar:  x2"
       end
@@ -830,7 +867,7 @@ describe Kubernetes::DeployExecutor do
             }.to_json
           )
 
-        refute execute
+        refute execute, out
 
         out.must_include "Foobar: \n"
       end
@@ -852,7 +889,7 @@ describe Kubernetes::DeployExecutor do
             }.to_json
           )
 
-        refute execute
+        refute execute, out
 
         out.wont_include "RESOURCE events"
       end
@@ -892,13 +929,13 @@ describe Kubernetes::DeployExecutor do
     it "retries on failure" do
       Kubeclient::Client.any_instance.expects(:get_pods).times(retries + 1).raises(Kubeclient::HttpError.new(1, 2, 3))
       executor.instance_variable_set(:@release, kubernetes_releases(:test_release))
-      assert_raises(Kubeclient::HttpError) { executor.send(:fetch_pods) }
+      assert_raises(Kubeclient::HttpError) { executor.send(:fetch_grouped, :pods, 'v1') }
     end
 
     it "retries on ssl failure" do
       Kubeclient::Client.any_instance.expects(:get_pods).times(retries + 1).raises(OpenSSL::SSL::SSLError.new)
       executor.instance_variable_set(:@release, kubernetes_releases(:test_release))
-      assert_raises(OpenSSL::SSL::SSLError) { executor.send(:fetch_pods) }
+      assert_raises(OpenSSL::SSL::SSLError) { executor.send(:fetch_grouped, :pods, 'v1') }
     end
   end
 

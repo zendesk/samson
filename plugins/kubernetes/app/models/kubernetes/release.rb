@@ -48,7 +48,7 @@ module Kubernetes
     # ... needs to check doc namespace too since it might be not overwritten
     # ... assumes that there is only 1 namespace per release_doc
     # ... supports that the same namespace might exist on different clusters
-    def clients
+    def clients(version)
       scopes = release_docs.map do |release_doc|
         deploy_group = DeployGroup.with_deleted { release_doc.deploy_group }
         [
@@ -61,7 +61,7 @@ module Kubernetes
       end
 
       # avoiding doing a .uniq on clients which might trigger api calls
-      scopes.uniq.map { |group, query| [group.kubernetes_cluster.client('v1'), query] }
+      scopes.uniq.map { |group, query| [group.kubernetes_cluster.client(version), query] }
     end
 
     def previous_succeeded_release

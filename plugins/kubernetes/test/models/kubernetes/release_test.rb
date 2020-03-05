@@ -115,7 +115,7 @@ describe Kubernetes::Release do
 
   describe "#clients" do
     it "is empty when there are no deploy groups" do
-      release.clients.must_equal []
+      release.clients("v1").must_equal []
     end
 
     it "returns scoped queries" do
@@ -124,7 +124,7 @@ describe Kubernetes::Release do
         resourceVersion: "1",
         items: [{}, {}]
       }.to_json)
-      release.clients.map { |c, q| c.get_pods(q).fetch(:items) }.first.size.must_equal 2
+      release.clients("v1").map { |c, q| c.get_pods(q).fetch(:items) }.first.size.must_equal 2
     end
 
     it "can scope queries by resource namespace" do
@@ -134,7 +134,7 @@ describe Kubernetes::Release do
         resourceVersion: "1",
         items: [{}, {}]
       }.to_json)
-      release.clients.map { |c, q| c.get_pods(q).fetch(:items) }.first.size.must_equal 2
+      release.clients("v1").map { |c, q| c.get_pods(q).fetch(:items) }.first.size.must_equal 2
     end
   end
 
