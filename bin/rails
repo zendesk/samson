@@ -5,10 +5,11 @@
 if ["s", "server"].include?(ARGV[0])
   require 'json'
   raise "No options supported, use puma directly" unless ARGV.size == 1
-  ENV.replace(Bundler::ORIGINAL_ENV) if defined?(Bundler) # fix bundle exec rails s
   ENV["RAILS_LOG_TO_STDOUT"] ||= "1"
   ENV["PORT"] ||= "3000"
-  exec *JSON.parse(File.read("Dockerfile")[/^CMD (.*)/, 1])
+  command = JSON.parse(File.read("Dockerfile")[/^CMD (.*)/, 1])
+  command.shift(2) if defined?(Bundler) # don't 'bundle exec' twice
+  exec *command
 end
 
 APP_PATH = File.expand_path('../config/application', __dir__)
