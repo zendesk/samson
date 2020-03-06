@@ -25,7 +25,6 @@
         <div id="scrollable-dropdown-menu">
           <%= form.text_field :reference,
               class: "form-control",
-              autofocus: true,
               placeholder: "e.g. v2.1.43, master, fa0b4671",
               required: true,
               data: { prefetch_url: project_references_path(@project, format: "json") }
