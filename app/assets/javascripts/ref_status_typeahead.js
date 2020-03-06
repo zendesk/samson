@@ -34,7 +34,7 @@ function refStatusTypeahead(options){
     $reference.typeahead(null, {
       display: 'value',
       source: engine.ttAdapter()
-    });
+    }).focus();
   }
 
   function show_status_problems(status_list, isDanger) {
