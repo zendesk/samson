@@ -190,9 +190,9 @@ class GitRepository
       err: '/dev/null',
       dir: dir
     )
-    unless result.status
-      ::Rails.logger.error("Failed to run command #{command}: #{result.error}")
+    unless result[:status]
+      ::Rails.logger.error("Failed to run command #{command}: #{result[:error]}")
     end
-    result.output.strip if result.status
+    result[:output].strip if result[:status]
   end
 end

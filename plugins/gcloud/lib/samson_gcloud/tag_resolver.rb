@@ -16,7 +16,7 @@ module SamsonGcloud
           timeout: 10,
           whitelist_env: ["PATH"]
         )
-        raise "GCLOUD ERROR: unable to resolve #{image}\n#{result.error}" unless result.status
+        raise "GCLOUD ERROR: unable to resolve #{image}\n#{result[:error]}" unless result[:status]
         digest = JSON.parse(result.output).dig_fetch("image_summary", "digest")
 
         base = image.split(":", 2).first

@@ -28,9 +28,9 @@ class GcloudController < ApplicationController
       "gcloud", "container", "builds", "describe", build.gcr_id, "--format", "json", *SamsonGcloud.cli_options
     ]
     result = Samson::CommandExecutor.execute(*command, timeout: 30, whitelist_env: ["PATH"])
-    return "Failed to execute gcloud command: #{result.output}" unless result.status
+    return "Failed to execute gcloud command: #{result[:output]}" unless result[:status]
 
-    response = JSON.parse(result.output)
+    response = JSON.parse(result[:output])
     build.external_status = STATUSMAP.fetch(response.fetch("status"))
 
     if build.external_status == "succeeded"

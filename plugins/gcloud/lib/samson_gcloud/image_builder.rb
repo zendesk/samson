@@ -93,7 +93,7 @@ module SamsonGcloud
           "--format", "get(digest)", "--filter", "digest=#{digest}", *SamsonGcloud.cli_options,
           timeout: 10
         )
-        result.output.strip == digest
+        result[:output].strip == digest
       end
     end
   end

@@ -38,7 +38,7 @@ describe GkeClustersController do
           timeout: 10,
           env: {'KUBECONFIG' => expected_file, "CLOUDSDK_CONTAINER_USE_CLIENT_CERTIFICATE" => "True"},
           whitelist_env: ['PATH']
-        ).returns(OpenStruct.new(status: true, output: "foo"))
+        ).returns(status: true, output: "foo")
         do_create
         assert_redirected_to(
           "/kubernetes/clusters/new?kubernetes_cluster%5Bconfig_filepath%5D=#{CGI.escape(expected_file)}"
@@ -48,7 +48,7 @@ describe GkeClustersController do
       end
 
       it "shows errors when command fails" do
-        Samson::CommandExecutor.expects(:execute).returns(OpenStruct.new(status: false, output: "foo"))
+        Samson::CommandExecutor.expects(:execute).returns(status: false, output: "foo")
         do_create
         assert_response :success
         flash[:alert].must_include(

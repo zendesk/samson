@@ -303,12 +303,12 @@ describe GitRepository do
       end
 
       it "caches" do
-        Samson::CommandExecutor.expects(:execute).times(2).returns(OpenStruct.new(status: true, output: "x"))
+        Samson::CommandExecutor.expects(:execute).times(2).returns(status: true, output: "x")
         4.times { repository.file_content('foo', sha).must_equal "x" }
       end
 
       it "caches sha too" do
-        Samson::CommandExecutor.expects(:execute).times(3).returns(OpenStruct.new(status: true, output: "x"))
+        Samson::CommandExecutor.expects(:execute).times(3).returns((status: true, output: "x")
         4.times { |i| repository.file_content("foo-#{i.odd?}", sha).must_equal "x" }
       end
 
@@ -337,7 +337,7 @@ describe GitRepository do
         it "does not cache when requesting for an update" do
           repository.unstub(:ensure_mirror_current)
           repository.expects(:ensure_mirror_current)
-          Samson::CommandExecutor.expects(:execute).times(2).returns(OpenStruct.new(status: true, output: "x"))
+          Samson::CommandExecutor.expects(:execute).times(2).returns(status: true, output: "x")
           repository.file_content('foo', 'HEAD', pull: false).must_equal "x"
           4.times { repository.file_content('foo', 'HEAD', pull: true).must_equal "x" }
         end

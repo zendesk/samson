@@ -41,9 +41,9 @@ class GkeClustersController < ApplicationController
       env: {"KUBECONFIG" => path, "CLOUDSDK_CONTAINER_USE_CLIENT_CERTIFICATE" => "True"}
     )
 
-    unless result.status
+    unless result[:status]
       flash.now[:alert] = "Failed to execute (make sure container.cluster.getCredentials permissions are granted): " \
-        "#{command.join(" ")} #{result.output}"
+        "#{command.join(" ")} #{result[:output]}"
       return render :new
     end
 

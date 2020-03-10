@@ -37,10 +37,10 @@ module SamsonGcloud
         job_output.write <<~TEXT
           #{Samson::OutputUtils.timestamp} Tagging GCR image:
           #{command.join(" ")}
-          #{result.output.strip}
+          #{result[:output].strip}
         TEXT
-        job_output.puts "FAILED" unless result.status
-        result.status
+        job_output.puts "FAILED" unless result[:status]
+        result[:status]
       end
 
       def cache_last_tagged(key, value)
