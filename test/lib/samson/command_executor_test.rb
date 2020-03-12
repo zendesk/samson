@@ -23,7 +23,7 @@ describe Samson::CommandExecutor do
 
     it "runs in specified directory" do
       Dir.mktmpdir("foobar") do |dir|
-        Samson::CommandExecutor.execute("pwd", timeout: 1, dir: dir).output.must_include dir
+        Samson::CommandExecutor.execute("pwd", timeout: 1, dir: dir)[:output].must_include dir
       end
     end
 

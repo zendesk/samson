@@ -187,7 +187,6 @@ class GitRepository
       *command,
       whitelist_env: ['HOME', 'PATH'],
       timeout: 30.minutes,
-      err: '/dev/null',
       dir: dir
     )
     unless result[:status]
