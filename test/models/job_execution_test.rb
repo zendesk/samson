@@ -251,6 +251,7 @@ describe JobExecution do
   end
 
   it 'errors if job commit resultion fails, but checkout works' do
+    GitRepository.any_instance.expects(:update_mirror).twice.returns true
     GitRepository.any_instance.expects(:commit_from_ref).returns nil
     execute_job
     assert_equal 'errored', job.status

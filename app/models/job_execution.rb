@@ -168,6 +168,7 @@ class JobExecution
   end
 
   def resolve_ref_to_commit
+    @repository.update_mirror
     commit = @repository.commit_from_ref(@reference)
     tag = @repository.fuzzy_tag_from_ref(@reference)
     if commit
