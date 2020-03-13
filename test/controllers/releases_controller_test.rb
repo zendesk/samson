@@ -83,13 +83,12 @@ describe ReleasesController do
       let(:release_params) { {commit: "abcd"} }
       before do
         GitRepository.any_instance.expects(:commit_from_ref).with('abcd').returns('a' * 40)
-        GITHUB.stubs(:create_release)
+        GITHUB.stubs(:release_for_tag)
+        GITHUB.stubs(:create_release).returns('{}')
       end
 
       it "creates a new release" do
         GitRepository.any_instance.expects(:fuzzy_tag_from_ref).with('abcd').returns("v2")
-        GitRepository.any_instance.expects(:commit_from_ref).with('v124').returns('a' * 40)
-
         assert_difference "Release.count", +1 do
           post :create, params: {project_id: project.to_param, release: release_params}
           assert_redirected_to "/projects/foo/releases/v124"

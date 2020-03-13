@@ -8,10 +8,8 @@ describe ReleaseService do
   let(:service) { ReleaseService.new(project) }
 
   describe "#release" do
-    def assert_failed_ref_find(count)
-      GITHUB.unstub(:release_for_tag)
-      project.repository.expects(:commit_from_ref).times(count).returns(nil)
-      Samson::Retry.expects(:sleep).times(count - 1)
+    def assert_failed_ref_find
+      GITHUB.stubs(:release_for_tag).raises(Octokit::NotFound)
       assert_raises RuntimeError do
         service.release(commit: commit, author: author)
       end
@@ -23,9 +21,7 @@ describe ReleaseService do
 
     before do
       GITHUB.stubs(:create_release).capture(release_params_used)
-      project.repository.stubs(:commit_from_ref).returns("abc")
-      project.repository.stubs(:commit_from_ref).returns("abc")
-      GitRepository.any_instance.expects(:fuzzy_tag_from_ref).returns(nil)
+      GITHUB.stubs(:release_for_tag)
     end
 
     it "creates a new release" do
@@ -35,7 +31,6 @@ describe ReleaseService do
     end
 
     it "does nothing when release failed validation" do
-      GitRepository.any_instance.unstub(:fuzzy_tag_from_ref)
       assert_difference "Release.count", 0 do
         Release.any_instance.expects(:save).returns(false)
         service.release(commit: commit, author: author)
@@ -48,13 +43,7 @@ describe ReleaseService do
     end
 
     it "stops when release cannot be found" do
-      assert_failed_ref_find 4
-    end
-
-    it "can configure numbers of retries" do
-      with_env RELEASE_TAG_IN_REPO_RETRIES: "10" do
-        assert_failed_ref_find 10
-      end
+      assert_failed_ref_find
     end
 
     it "deploys the commit to stages if they're configured to" do
