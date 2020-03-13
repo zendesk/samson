@@ -94,7 +94,9 @@ class Release < ActiveRecord::Base
 
   def convert_ref_to_sha
     return if commit.blank? || commit =~ Build::SHA1_REGEX
-    self.commit = project.repository.commit_from_ref(commit)
+    tag = GITHUB.compare(project.repository_path, commit, commit)
+    self.commit = tag[:base_commit][:sha]
+  rescue Octokit::NotFound
   end
 end
 Samson::Hooks.load_decorators(Release)

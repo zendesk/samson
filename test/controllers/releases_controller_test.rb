@@ -48,6 +48,7 @@ describe ReleasesController do
 
     describe "#show" do
       it "renders continuous versions" do
+        GITHUB.stubs(:compare).returns(base_commit: {sha: 'abcd'})
         get :show, params: {project_id: project.to_param, id: release.version}
         assert_template 'show'
       end
@@ -82,7 +83,7 @@ describe ReleasesController do
     describe "#create" do
       let(:release_params) { {commit: "abcd"} }
       before do
-        GitRepository.any_instance.expects(:commit_from_ref).with('abcd').returns('a' * 40)
+        GITHUB.stubs(:compare).returns(base_commit: {sha: "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"})
         GITHUB.stubs(:release_for_tag)
         GITHUB.stubs(:create_release).returns('{}')
       end

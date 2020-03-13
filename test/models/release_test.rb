@@ -56,13 +56,13 @@ describe Release do
     end
 
     it "converts refs to commits so we later know what exactly was deployed" do
-      GitRepository.any_instance.expects(:commit_from_ref).with('master').returns(commit)
+      GITHUB.stubs(:compare).returns(base_commit: {sha: commit})
       release = project.releases.create!(author: author, commit: 'master')
       release.commit.must_equal commit
     end
 
     it "fails with unresolvable ref" do
-      GitRepository.any_instance.expects(:commit_from_ref).with('master').returns(nil)
+      GITHUB.stubs(:compare).raises(Octokit::NotFound)
       e = assert_raises ActiveRecord::RecordInvalid do
         project.releases.create!(author: author, commit: 'master')
       end
@@ -71,7 +71,6 @@ describe Release do
 
     it "does not covert blank commits" do
       GitRepository.any_instance.expects(:clone!).never
-      GitRepository.any_instance.expects(:commit_from_ref).never
       e = assert_raises ActiveRecord::RecordInvalid do
         project.releases.create!(author: author, commit: '')
       end
