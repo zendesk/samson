@@ -97,6 +97,7 @@ class Release < ActiveRecord::Base
     tag = GITHUB.compare(project.repository_path, commit, commit)
     self.commit = tag[:base_commit][:sha]
   rescue Octokit::NotFound
+    ::Rails.logger.info("Couldn't convert #{commit} to tag")
   end
 end
 Samson::Hooks.load_decorators(Release)
