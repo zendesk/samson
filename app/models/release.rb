@@ -7,7 +7,7 @@ class Release < ActiveRecord::Base
   belongs_to :author, class_name: "User", inverse_of: false
 
   before_validation :assign_release_number
-  before_validation :covert_ref_to_sha
+  before_validation :convert_ref_to_sha
 
   validates :number, format: {with: NUMBER_REGEX, message: "may only contain numbers and decimals."}
   validates :commit, format: {with: Build::SHA1_REGEX, message: "can only be a full sha"}, on: :create
@@ -92,9 +92,9 @@ class Release < ActiveRecord::Base
     current_version.to_s.dup.sub!(/\d+$/) { |d| d.to_i + 1 }
   end
 
-  def covert_ref_to_sha
+  def convert_ref_to_sha
     return if commit.blank? || commit =~ Build::SHA1_REGEX
-    self.commit = project.repository.commit_from_ref(commit)
+    self.commit = project.repo_commit_from_ref(commit)
   end
 end
 Samson::Hooks.load_decorators(Release)

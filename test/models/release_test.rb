@@ -56,13 +56,13 @@ describe Release do
     end
 
     it "converts refs to commits so we later know what exactly was deployed" do
-      GitRepository.any_instance.expects(:commit_from_ref).with('master').returns(commit)
+      project.expects(:repo_commit_from_ref).with('master').returns(commit)
       release = project.releases.create!(author: author, commit: 'master')
       release.commit.must_equal commit
     end
 
     it "fails with unresolvable ref" do
-      GitRepository.any_instance.expects(:commit_from_ref).with('master').returns(nil)
+      project.expects(:repo_commit_from_ref).with('master').returns(nil)
       e = assert_raises ActiveRecord::RecordInvalid do
         project.releases.create!(author: author, commit: 'master')
       end
