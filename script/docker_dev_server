@@ -2,7 +2,7 @@
 
 bundle install --local --quiet --jobs 4 || bundle check
 
-if [ ! -f .env ]; then
+if [ ! -e .env ]; then
     cp .env.bootstrap .env
     # to use .env.virtualbox with 192.168.42.45 host prefix ./bin/decode_dot_env .env.virtualbox && source <(sed -E -n 's/[^#]+/export &/ p' .env.virtualbox) &&
     ./bin/decode_dot_env .env
