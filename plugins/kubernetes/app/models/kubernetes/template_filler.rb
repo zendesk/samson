@@ -119,6 +119,13 @@ module Kubernetes
         data.merge!(YAML.safe_load(yaml))
       end
 
+      env = static_env
+      if template.dig(:metadata, :annotations, :"samson/append_tag_to_name") == "true"
+        tag = env.fetch(:TAG)
+        env["TAG_AS_JSON"] = tag.to_json
+        env["NAME_AS_JSON"] = "#{template.dig_fetch(:metadata, :name)}-#{tag}".to_json
+      end
+
       # set values
       data.each do |path, v|
         path = self.class.dig_path(path)
