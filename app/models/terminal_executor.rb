@@ -41,23 +41,24 @@ class TerminalExecutor
       script_as_executable(script(commands)) do |command|
         output, _, pid = PTY.spawn(whitelisted_env, command, in: '/dev/null', unsetenv_others: true)
         record_pid(pid) do
-          begin
-            Timeout.timeout(timeout) do
-              stream from: output, to: @output
-              _pid, status = Process.wait2(pid)
-              status.success?
+          stream from: output, to: @output do
+            begin
+              Timeout.timeout(timeout) do
+                _pid, status = Process.wait2(pid)
+                status.success?
+              end
+            rescue Timeout::Error
+              @output.puts "Timeout: execution took longer then #{timeout}s and was terminated"
+              cancel timeout: KILL_TIMEOUT
+              false
+            rescue Errno::ECHILD
+              @output.puts "#{$!.class}: #{$!.message}"
+              cancel timeout: KILL_TIMEOUT
+              false
+            rescue JobQueue::Cancel
+              cancel timeout: @cancel_timeout
+              raise
             end
-          rescue Timeout::Error
-            @output.puts "Timeout: execution took longer then #{timeout}s and was terminated"
-            cancel timeout: KILL_TIMEOUT
-            false
-          rescue Errno::ECHILD
-            @output.puts "#{$!.class}: #{$!.message}"
-            cancel timeout: KILL_TIMEOUT
-            false
-          rescue JobQueue::Cancel
-            cancel timeout: @cancel_timeout
-            raise
           end
         end
       end
@@ -116,13 +117,20 @@ class TerminalExecutor
   end
 
   def stream(from:, to:)
-    from.each(256) do |chunk|
-      chunk.scrub!
-      ignore_cursor_movement!(chunk)
-      to.write chunk
+    thread = Thread.new do
+      begin
+        from.each(256) do |chunk|
+          chunk.scrub!
+          ignore_cursor_movement!(chunk)
+          to.write chunk
+        end
+      rescue Errno::EIO
+        nil # output was closed ... only happens on linux
+      end
     end
-  rescue Errno::EIO
-    nil # output was closed ... only happens on linux
+    yield
+  ensure
+    thread.kill
   end
 
   # http://ascii-table.com/ansi-escape-sequences.php
