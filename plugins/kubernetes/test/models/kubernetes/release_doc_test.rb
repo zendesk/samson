@@ -131,12 +131,12 @@ describe Kubernetes::ReleaseDoc do
         end
 
         it "adds when first is not a Deployment" do
-          template.unshift(apiVersion: "v1", kind: "ConfigMap", metadata: {})
+          template.unshift(apiVersion: "v1", kind: "ConfigMap", metadata: {labels: {project: "foo", role: "bar"}})
           create!.resource_template[3][:spec][:minAvailable].must_equal 1
         end
 
         it "ignores when there is no deployment" do
-          template.replace([{apiVersion: "v1", kind: "ConfigMap", metadata: {}}])
+          template.replace([{apiVersion: "v1", kind: "ConfigMap", metadata: {labels: {project: "foo", role: "bar"}}}])
           refute create!.resource_template[1]
         end
 
