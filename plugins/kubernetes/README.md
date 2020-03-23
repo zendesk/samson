@@ -307,11 +307,4 @@ metadata.annotation.samson/force_update: "true"
 
 ### Static config per deploy group
 
-Set the kubernetes roles to `kubernetes/$deploy_group/server.yml`
-
-### Name per tag (experimental)
-
-Set `metadata.annotations.samson/append_tag_to_name = "true"` to get the current tag appended to the name and available as `NAME_AS_JSON`,
-and tag available as `TAG_AS_JSON` env vars.
-This can be useful when trying to deploy each version as a separate stack.
-NOTE: use `samson/keep_name` to override the name with the env var via `set_via_env_json`. 
+Set the kubernetes roles to `kubernetes/$deploy_group/server.yml` 
