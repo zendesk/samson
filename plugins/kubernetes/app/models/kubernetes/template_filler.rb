@@ -323,8 +323,8 @@ module Kubernetes
           {name: "VAULT_PREFIX", value: Samson::Secrets::VaultClientManager::PREFIX}
         ],
         resources: {
-          requests: {cpu: "100m", memory: "100Mi"},
-          limits: {cpu: "500m", memory: "256Mi"}
+          requests: {cpu: "100m", memory: "64Mi"},
+          limits: {cpu: "100m", memory: "64Mi"}
         }
       }
       init_containers.unshift container
