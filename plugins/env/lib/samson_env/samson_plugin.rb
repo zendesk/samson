@@ -77,7 +77,7 @@ Samson::Hooks.callback :before_docker_build do |tmp_dir, build, _|
   SamsonEnv.write_env_files(tmp_dir, Deploy.new(project: build.project), [])
 end
 
-# TODO: not used for write_env_files
+# TODO: use for write_env_files
 Samson::Hooks.callback :deploy_env do |*args|
   EnvironmentVariable.env(*args)
 end

@@ -1050,6 +1050,23 @@ describe Kubernetes::TemplateFiller do
           "Unable to set path spec.foo for Deployment in role app-server: KeyError key not found: \"FOO\""
         )
       end
+
+      it "can configure with dynamic env vars" do
+        EnvironmentVariable.create!(parent: projects(:test), name: 'NAME_AS_JSON', value: '"foo-$TAG"')
+        EnvironmentVariable.create!(parent: projects(:test), name: 'TAG_AS_JSON', value: '"$TAG"')
+        raw_template[:metadata][:annotations] = {
+          "samson/keep_name": "true",
+          "samson/set_via_env_json-metadata.name": "NAME_AS_JSON",
+          "samson/set_via_env_json-spec.matches_service": "NAME_AS_JSON",
+          "samson/set_via_env_json-spec.template.metadata.labels.tag": "TAG_AS_JSON"
+        }
+        t = template.to_hash
+        t.dig(:metadata, :name).must_equal "foo-master"
+        t.dig(:spec, :matches_service).must_equal "foo-master"
+        t.dig(:spec, :template, :metadata, :labels, :tag).must_equal "master"
+        t.dig(:spec, :template, :spec, :containers, 0, :env).
+          detect { |h| h[:name] == "TAG_AS_JSON" }[:value].must_equal '"master"'
+      end
     end
 
     describe "set_kritis_breakglass" do
@@ -1112,22 +1129,6 @@ describe Kubernetes::TemplateFiller do
         pod_annotation.must_be_nil
         pod_label.must_be_nil
         resource_label.must_be_nil
-      end
-    end
-
-    describe "append_tag_to_name" do
-      it "can configure a matching pair" do
-        raw_template[:metadata][:annotations] = {
-          "samson/keep_name": "true",
-          "samson/append_tag_to_name": "true",
-          "samson/set_via_env_json-metadata.name": "NAME_AS_JSON",
-          "samson/set_via_env_json-spec.matches_service": "NAME_AS_JSON",
-          "samson/set_via_env_json-spec.template.metadata.labels.tag": "TAG_AS_JSON"
-        }
-        t = template.to_hash
-        t.dig(:metadata, :name).must_equal "some-project-rc-master"
-        t.dig(:spec, :matches_service).must_equal "some-project-rc-master"
-        t.dig(:spec, :template, :metadata, :labels, :tag).must_equal "master"
       end
     end
   end
