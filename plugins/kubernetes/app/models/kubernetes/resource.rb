@@ -251,14 +251,14 @@ module Kubernetes
         end
       end
 
-      def pods(res = resource)
-        ids = res.dig_fetch(:spec, :template, :metadata, :labels).values_at(:release_id, :deploy_group_id)
-        selector = Kubernetes::Release.pod_selector(*ids, query: true)
+      def pods(res)
+        labels = res.dig_fetch(:metadata, :labels).slice(:release_id, :deploy_group_id, :project, :role)
+        selector = labels.map { |k, v| "#{k}=#{v}" }.join(",")
         client_request(pod_client, :get_pods, label_selector: selector, namespace: namespace).fetch(:items)
       end
 
       def delete_pods
-        old_pods = pods
+        old_pods = pods(resource)
         yield
         old_pods.each do |pod|
           ignore_404 do
