@@ -130,7 +130,8 @@ class TerminalExecutor
     end
     yield
   ensure
-    thread.kill
+    thread.join(1) # wait for it to finish to avoid race conditions
+    thread.kill # kill it if it's not yet dead
   end
 
   # http://ascii-table.com/ansi-escape-sequences.php
