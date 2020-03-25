@@ -8,7 +8,7 @@ module Kubernetes
     # for non-namespace deployments: names that should not be changed since they will break dependencies
     IMMUTABLE_NAME_KINDS = [
       'APIService', 'CustomResourceDefinition', 'ConfigMap', 'Role', 'ClusterRole', 'Namespace', 'PodSecurityPolicy',
-      'ClusterRoleBinding'
+      'ClusterRoleBinding', 'RoleBinding'
     ].freeze
 
     # we either generate multiple names or allow custom names
