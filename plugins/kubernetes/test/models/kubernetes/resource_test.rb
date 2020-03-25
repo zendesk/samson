@@ -415,11 +415,9 @@ describe Kubernetes::Resource do
 
     describe "#pods" do
       it "raises a descriptive error when it fails" do
-        assert_request(:get, url, to_return: {body: {spec: {template: {metadata: {labels: {}}}}}.to_json}) do
-          assert_request(:get, /pod1\/pods/, to_timeout: []) do
-            e = assert_raises(Kubeclient::HttpError) { resource.send(:pods) }
-            e.message.must_equal "Kubernetes error some-project pod1 Pod1: Timed out connecting to server"
-          end
+        assert_request(:get, /pod1\/pods/, to_timeout: []) do
+          e = assert_raises(Kubeclient::HttpError) { resource.send(:pods, metadata: {labels: {}}) }
+          e.message.must_equal "Kubernetes error some-project pod1 Pod1: Timed out connecting to server"
         end
       end
     end
@@ -591,7 +589,7 @@ describe Kubernetes::Resource do
 
     describe "#delete" do
       it "waits for pods to be gone before allowing a new deploy" do
-        existing = {spec: {template: {metadata: {labels: {release_id: 1, deploy_group_id: 2}}}}}
+        existing = {metadata: {labels: {release_id: 1, deploy_group_id: 2}}}
         assert_request(:get, url, to_return: [{body: existing.to_json}, {status: 404}]) do
           assert_request(:delete, url, to_return: {body: "{}"}) do
             pods_url = "http://foobar.server/api/v1/namespaces/pod1/pods?labelSelector=release_id=1,deploy_group_id=2"
@@ -618,7 +616,7 @@ describe Kubernetes::Resource do
       end
 
       it "replaces existing" do
-        job = {spec: {template: {metadata: {labels: {release_id: 123, deploy_group_id: 234}}}}}
+        job = {metadata: {labels: {release_id: 123, deploy_group_id: 234}}}
         assert_request(:get, url, to_return: [{body: job.to_json}, {status: 404}]) do
           assert_request(:delete, url, to_return: {body: '{}'}) do
             assert_pods_lookup do
@@ -635,7 +633,7 @@ describe Kubernetes::Resource do
 
     describe "#delete" do
       it "deletes pods" do
-        replies = [{body: {spec: {template: {metadata: {labels: {}}}}}.to_json}, {status: 404}]
+        replies = [{body: {metadata: {labels: {}}}.to_json}, {status: 404}]
         assert_request(:get, url, to_return: replies) do
           pod = {metadata: {name: "a", namespace: "b"}}
           assert_request(:get, /pod1\/pods\?/, to_return: {body: {items: [pod]}.to_json}) do
