@@ -292,7 +292,7 @@ module Kubernetes
               # Update version and retry if we ran into a conflict from VersionedUpdate
               args[0][:metadata][:resourceVersion] = fetch_resource.dig(:metadata, :resourceVersion)
               raise # retry
-            elsif message.include?(" is invalid:") || message.include?(" no kind ")
+            elsif message.match?(/ is invalid:| no kind | admission webhook /)
               raise Samson::Hooks::UserError, e.message
             else
               raise
