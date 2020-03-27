@@ -17,7 +17,7 @@ class TerminalExecutor
   SECRET_PREFIX = "secret://"
   HIDDEN_PREFIX = "hidden://"
   HIDDEN_TXT = "HIDDEN"
-  KILL_TIMEOUT = 1
+  KILL_TIMEOUT = Integer(ENV['DEPLOY_KILL_TIMEOUT'] || '1')
 
   CURSOR = /\e\[\d*[ABCDK]/.freeze
 
