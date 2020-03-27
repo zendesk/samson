@@ -58,7 +58,7 @@ describe Integrations::BuildkiteController do
       Integrations::BuildkiteController.any_instance.stubs(:project).returns(project)
       project.stubs(:create_release?).returns(true)
       Build.any_instance.stubs(:validate_git_reference).returns(true)
-      GitRepository.any_instance.stubs(:commit_from_ref).returns('v1')
+      GITHUB.stubs(:commit).returns(stub(sha: "abcdef"))
     end
 
     it 'creates the release with the buildkite build number' do
