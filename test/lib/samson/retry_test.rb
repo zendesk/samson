@@ -86,7 +86,7 @@ describe Samson::Retry do
       calls.must_equal 3
     end
 
-    it "returns nil when it runs out of tries" do
+    it "raises when it runs out of tries" do
       results = [nil, nil, nil, :x]
       calls = 0
       Samson::Retry.expects(:sleep).times(2)
@@ -96,6 +96,17 @@ describe Samson::Retry do
           results.shift
         end
       end
+      calls.must_equal 3
+    end
+
+    it "returns nil when it runs out of tries and no error was set" do
+      results = [nil, nil, nil, :x]
+      calls = 0
+      Samson::Retry.expects(:sleep).times(2)
+      Samson::Retry.until_result(tries: 3, wait_time: 1, error: nil) do
+        calls += 1
+        results.shift
+      end.must_be_nil
       calls.must_equal 3
     end
   end
