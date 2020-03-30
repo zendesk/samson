@@ -22,7 +22,9 @@ module Samson
         tries -= 1
         result = yield
         return result if result
-        raise error if tries == 0
+        if tries == 0
+          error ? raise(error) : return
+        end
         sleep(wait_time)
       end
     end
