@@ -4,70 +4,57 @@ require_relative '../../test_helper'
 SingleCov.covered! uncovered: 9 # untestable minitest if/else and render_stylesheets / render_javascripts
 
 describe Samson::Hooks do
-  let(:number_of_plugins) { Dir['plugins/*'].size }
-  let(:plugins) { nil }
+  let(:available_plugins) { Dir['plugins/*'].map { |p| File.basename(p) } }
 
   describe '.plugins' do
     around do |test|
-      with_env(PLUGINS: plugins) do
-        Samson::Hooks.instance_variable_set(:@plugins, nil)
-        Samson::Hooks.instance_variable_set(:@plugin_list, nil)
-        test.call
-        Samson::Hooks.instance_variable_set(:@plugins, nil)
-        Samson::Hooks.instance_variable_set(:@plugin_list, nil)
-      end
+      Samson::Hooks.instance_variable_set(:@plugins, nil)
+      Samson::Hooks.instance_variable_set(:@plugin_list, nil)
+      test.call
+      Samson::Hooks.instance_variable_set(:@plugins, nil)
+      Samson::Hooks.instance_variable_set(:@plugin_list, nil)
     end
 
-    context 'when the plugins env is not set to anything' do
-      it 'returns no plugins by default' do
+    it 'returns no plugins when not set' do
+      with_env PLUGINS: nil do
         Samson::Hooks.plugins.size.must_equal 0
       end
     end
 
-    context 'when the plugins env is set to all' do
-      let(:plugins) { 'all' }
-
-      it 'returns all the plugins' do
-        Samson::Hooks.plugins.size.must_equal number_of_plugins
+    it 'returns all the plugins when set to all' do
+      with_env PLUGINS: 'all' do
+        Samson::Hooks.plugins.size.must_equal available_plugins.size
       end
     end
 
-    context 'when ignoring plugins' do
-      let(:plugins) { 'all,-kubernetes,-zendesk' }
-
-      it 'returns the plugins that were not disabled' do
-        Samson::Hooks.plugins.size.must_equal(number_of_plugins - 2)
+    it 'can ignore plugins' do
+      with_env PLUGINS: 'all,-kubernetes,-zendesk' do
+        (available_plugins - Samson::Hooks.plugins.map(&:name)).sort.must_equal ['kubernetes', 'zendesk']
         refute Samson::Hooks.active_plugin?('kubernetes')
         refute Samson::Hooks.active_plugin?('zendesk')
         assert Samson::Hooks.active_plugin?('env')
       end
     end
 
-    context 'when the plugins env is set to include some plugins' do
-      let(:plugins) { 'kubernetes, zendesk' }
-
-      it 'only returns those plugins' do
-        Samson::Hooks.plugins.size.must_equal 2
+    it 'can pick some plugins' do
+      with_env PLUGINS: 'kubernetes, zendesk' do
+        Samson::Hooks.plugins.map(&:name).sort.must_equal ['kubernetes', 'zendesk']
         assert Samson::Hooks.active_plugin?('kubernetes')
         assert Samson::Hooks.active_plugin?('zendesk')
         refute Samson::Hooks.active_plugin?('env')
       end
     end
 
-    context 'when load via local plugin' do
-      let(:plugins) { 'all' }
-      let(:path) { '/path/to/samson/plugins/zendesk/lib/samson_zendesk/samson_plugin.rb' }
-
-      it 'return correct plugin name from folder' do
+    it "can load local plugin" do
+      path = '/path/to/samson/plugins/zendesk/lib/samson_zendesk/samson_plugin.rb'
+      with_env PLUGINS: 'all' do
         Samson::Hooks::Plugin.new(path).name.must_equal 'zendesk'
       end
     end
 
-    context 'when load via gem plugin' do
-      let(:plugins) { 'all' }
-      let(:path) { '/path/to/gems/ruby-2.2.2/gems/samson_hipchat-0.0.0/lib/samson_hipchat/samson_plugin.rb' }
-
-      it 'return correct plugin name from Gem' do
+    it "can load gem plugin" do
+      path = '/path/to/gems/ruby-2.2.2/gems/samson_hipchat-0.0.0/lib/samson_hipchat/samson_plugin.rb'
+      with_env PLUGINS: 'all' do
         Samson::Hooks::Plugin.new(path).name.must_equal 'hipchat'
       end
     end
