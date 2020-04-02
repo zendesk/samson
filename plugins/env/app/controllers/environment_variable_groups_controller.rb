@@ -27,8 +27,11 @@ class EnvironmentVariableGroupsController < ApplicationController
 
   def create
     group.attributes = attributes
-    group.save!
-    redirect_to action: :index
+    if group.save
+      redirect_to action: :index
+    else
+      render 'form'
+    end
   end
 
   def show
@@ -36,8 +39,11 @@ class EnvironmentVariableGroupsController < ApplicationController
   end
 
   def update
-    group.update!(attributes)
-    redirect_to action: :index
+    if group.update(attributes)
+      redirect_to action: :index
+    else
+      render 'form'
+    end
   end
 
   def destroy
@@ -90,6 +96,7 @@ class EnvironmentVariableGroupsController < ApplicationController
       :name,
       :comment,
       :owners,
+      :external_url,
       AcceptsEnvironmentVariables::ASSIGNABLE_ATTRIBUTES
     )
   end

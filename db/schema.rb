@@ -154,6 +154,7 @@ ActiveRecord::Schema.define(version: 2020_04_02_195119) do
     t.string "name", null: false
     t.text "comment"
     t.string "owners"
+    t.string "external_url"
     t.index ["name"], name: "index_environment_variable_groups_on_name", unique: true, length: 191
   end
 

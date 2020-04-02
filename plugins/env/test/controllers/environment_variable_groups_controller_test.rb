@@ -257,6 +257,13 @@ describe EnvironmentVariableGroupsController do
         end
         assert_redirected_to "/environment_variable_groups"
       end
+
+      it "shows errors" do
+        refute_difference "EnvironmentVariable.count" do
+          post :create, params: {environment_variable_group: {name: ""}}
+        end
+        assert_template "form"
+      end
     end
 
     describe "#update" do
@@ -287,6 +294,13 @@ describe EnvironmentVariableGroupsController do
       end
 
       it_updates
+
+      it "shows errors" do
+        refute_difference "EnvironmentVariable.count" do
+          put :update, params: {id: env_group.id, environment_variable_group: {name: ""}}
+        end
+        assert_template "form"
+      end
 
       it "destroys variables" do
         variable = env_group.environment_variables.first

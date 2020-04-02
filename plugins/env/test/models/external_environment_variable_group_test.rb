@@ -8,44 +8,35 @@ describe ExternalEnvironmentVariableGroup do
     stub(body: stub(read: response))
   end
 
-  with_env EXTERNAL_ENV_GROUP_S3_REGION: "us-east-1",
-    EXTERNAL_ENV_GROUP_S3_BUCKET: "a-bucket"
-  let(:s3) { stub("S3") }
+  with_env EXTERNAL_ENV_GROUP_S3_REGION: "us-east-1", EXTERNAL_ENV_GROUP_S3_BUCKET: "a-bucket"
 
+  let(:s3) { stub("S3") }
   let(:env_group_attributes) do
     {
       name: "A",
       description: "B",
-      url: "https://a-bucket.s3.amazonaws.com/key?versionId=version_id"
+      url: "https://a-bucket.s3.amazonaws.com/key?versionId=version_id",
+      project: project
     }
   end
   let(:project) { projects(:test) }
 
   describe "auditing" do
-    before do
-      Aws::S3::Client.stubs(:new).returns(s3)
-    end
-    let(:group) do
-      ExternalEnvironmentVariableGroup.create!(
-        env_group_attributes.merge(project: project)
-      )
-    end
+    let(:group) { ExternalEnvironmentVariableGroup.create!(env_group_attributes) }
 
     it "record an audit when created" do
-      s3.expects(:get_object).with(bucket: 'a-bucket', key: 'key', version_id: 'version_id').
-        returns(fake_response(""))
+      ExternalEnvironmentVariableGroup.any_instance.expects(:read).returns(true)
       group.audits.map(&:audited_changes).must_equal [
-        env_group_attributes.merge(project_id: project.id).stringify_keys
+        env_group_attributes.except(:project).merge(project_id: project.id).stringify_keys
       ]
     end
 
     it "record an audit updated" do
-      s3.expects(:get_object).times(2).with(bucket: 'a-bucket', key: 'key', version_id: 'version_id').
-        returns(fake_response(""))
+      ExternalEnvironmentVariableGroup.any_instance.expects(:read).times(2).returns({})
       group.update!(name: "B")
       group.audits.map(&:audited_changes).must_equal(
         [
-          env_group_attributes.merge(project_id: project.id).stringify_keys,
+          env_group_attributes.except(:project).merge(project_id: project.id).stringify_keys,
           {"name" => ["A", "B"]}
         ]
       )
@@ -53,56 +44,72 @@ describe ExternalEnvironmentVariableGroup do
   end
 
   describe "validations" do
+    let(:group) { ExternalEnvironmentVariableGroup.new(env_group_attributes) }
+
     before do
-      ExternalEnvironmentVariableGroup.any_instance.expects(:read).returns(true)
+      ExternalEnvironmentVariableGroup.any_instance.stubs(:read).returns(true)
     end
+
+    it "is valid" do
+      assert_valid group
+    end
+
     describe "validate url" do
-      it "valid URL format" do
-        group = ExternalEnvironmentVariableGroup.new(env_group_attributes.merge(project: project))
-        assert group.valid?
+      it "is invalid with s3://" do
+        group.url = "s3://samson/key"
+        refute_valid group
       end
 
-      it "invalid url format" do
-        group = ExternalEnvironmentVariableGroup.new(
-            env_group_attributes.merge(url: "s3://samson/key")
-          )
-        refute group.valid?
+      it "is invalid when it fails to parse s3 key" do
+        group.url = "https://a-bucket.s3.amazonaws.com"
+        refute_valid group, :url
+        group.errors[:url].must_equal(
+          ["Invalid format, valid url format is https://.s3.amazonaws.com/[key]?versionId=[version_id]"]
+        )
       end
 
-      it "unable to parse s3 key or bucket" do
-        ExternalEnvironmentVariableGroup.any_instance.unstub(:read)
-        ExternalEnvironmentVariableGroup.any_instance.expects(:read).never
-        group = ExternalEnvironmentVariableGroup.new(
-           env_group_attributes.merge(
-               project: project,
-               url: "https://a-bucket.s3.amazonaws.com"
-             )
-         )
-        refute group.valid?
-        group.errors[:url].must_include 'Invalid URL, unable to get s3 key or bucket'
+      it "is invalid with wrong bucket" do
+        group.url = "https://a-bucket.s3.amazonaws.com"
+        refute_valid group, :url
+        group.errors[:url].must_equal(
+          ["Invalid format, valid url format is https://.s3.amazonaws.com/[key]?versionId=[version_id]"]
+        )
+      end
+
+      it "fails on invalid bucket" do
+        group.url = "https://test.s3.amazonaws.com/key?versionId=version_id"
+        refute_valid group, :url
+        group.errors.full_messages.must_equal ["Url Invalid: bucket must be a-bucket"]
+      end
+
+      it "fails on invalid key" do
+        group.expects(:resolve_s3_url).returns(nil)
+        refute_valid group, :url
+        group.errors.full_messages.must_equal ["Url Invalid: unable to get s3 key or bucket"]
       end
     end
 
-    it "name is mandatory" do
+    it "requires a name" do
       group = ExternalEnvironmentVariableGroup.new(env_group_attributes.merge(name: nil))
       refute group.valid?
-      group.errors[:name].must_include "can't be blank"
+    end
+
+    it "fails when read fails" do
+      ExternalEnvironmentVariableGroup.any_instance.unstub(:read)
+      ExternalEnvironmentVariableGroup.any_instance.stubs(:read).raises("foo")
+      group.url = "https://test.s3.amazonaws.com/key?versionId=version_id"
+      refute_valid group, :url
+      group.errors.full_messages.must_equal ["Url Invalid: bucket must be a-bucket"]
     end
   end
 
   describe "#resolve_s3_url" do
     it "parse url and gets s3 details" do
       group = ExternalEnvironmentVariableGroup.new(env_group_attributes)
-      group.send(:resolve_s3_url)
-      group.key.must_equal "key"
-      group.bucket.must_equal "a-bucket"
-      group.version_id.must_equal "version_id"
-    end
-
-    it "skips parser" do
-      group = ExternalEnvironmentVariableGroup.new
-      group.send(:resolve_s3_url)
-      group.key.must_be_nil
+      key, bucket, version_id = group.send(:resolve_s3_url)
+      key.must_equal "key"
+      bucket.must_equal "a-bucket"
+      version_id.must_equal "version_id"
     end
   end
 
@@ -123,28 +130,13 @@ describe ExternalEnvironmentVariableGroup do
     before do
       Aws::S3::Client.stubs(:new).returns(s3)
     end
-    let(:group) do
-      ExternalEnvironmentVariableGroup.create!(
-        env_group_attributes.merge(project: project)
-      )
-    end
+    let(:group) { ExternalEnvironmentVariableGroup.create!(env_group_attributes.merge(project: project)) }
 
-    it "valid response" do
+    it "can read" do
       response = {"FOO" => "one"}.to_yaml
       s3.expects(:get_object).times(2).with(bucket: 'a-bucket', key: 'key', version_id: 'version_id').
         returns(fake_response(response))
       group.read.must_equal "FOO" => "one"
-    end
-
-    it "invalid s3 bucket" do
-      s3.expects(:get_object).times(1).with(bucket: 'a-bucket', key: 'key', version_id: 'version_id').
-        returns(fake_response(""))
-      e = assert_raises(ActiveRecord::RecordInvalid) do
-        group.update!(url: "https://test.s3.amazonaws.com/key?versionId=version_id")
-      end
-      e.message.must_equal(
-        "Validation failed: Url Invalid URL, Invalid s3 bucket, acceptable buckets are a-bucket"
-      )
     end
 
     it "shows error when s3 file is missing" do
@@ -153,7 +145,7 @@ describe ExternalEnvironmentVariableGroup do
         group.read
       end
       e.message.must_equal(
-        "Validation failed: Url Invalid URL, key \"key\" does not exist in bucket a-bucket!"
+        "Validation failed: Url Invalid: key \"key\" does not exist in bucket a-bucket!"
       )
     end
 
@@ -178,7 +170,7 @@ describe ExternalEnvironmentVariableGroup do
       e = assert_raises(ActiveRecord::RecordInvalid) do
         group.read
       end
-      e.message.must_equal "Validation failed: Url Invalid URL, DOWN"
+      e.message.must_equal "Validation failed: Url Invalid: DOWN"
     end
 
     it "shows error when api times out after multiple retries" do
@@ -186,7 +178,7 @@ describe ExternalEnvironmentVariableGroup do
       e = assert_raises(ActiveRecord::RecordInvalid) do
         group.read
       end
-      e.message.must_equal "Validation failed: Url Invalid URL, DOWN"
+      e.message.must_equal "Validation failed: Url Invalid: DOWN"
     end
 
     it "invalid file format as response" do
@@ -196,7 +188,14 @@ describe ExternalEnvironmentVariableGroup do
       e = assert_raises(ActiveRecord::RecordInvalid) do
         group.read
       end
-      e.message.must_equal "Validation failed: Url Invalid URL, no implicit conversion of Integer into String"
+      e.message.must_equal "Validation failed: Url Invalid: no implicit conversion of Integer into String"
+    end
+
+    it "works with a stub record" do
+      s3.expects(:get_object).times(2).with(bucket: 'a-bucket', key: 'key', version_id: 'version_id').
+        returns(fake_response({"FOO" => "one"}.to_yaml))
+      g = ExternalEnvironmentVariableGroup.new(url: group.url)
+      g.read.must_equal "FOO" => "one"
     end
   end
 end

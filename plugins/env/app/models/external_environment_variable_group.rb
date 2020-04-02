@@ -3,12 +3,11 @@ require 'aws-sdk-s3'
 
 class ExternalEnvironmentVariableGroup < ActiveRecord::Base
   S3_URL_REGEX = /\Ahttps:\/\/([^.]+)\.s3\.amazonaws\.com\/([\w\W]+)\Z/i.freeze
-  S3_URL_FORMAT = "https://[bucket].s3.amazonaws.com/[key]?versionId=[version_id]"
+  S3_URL_FORMAT = "https://#{ENV['EXTERNAL_ENV_GROUP_S3_BUCKET']}.s3.amazonaws.com/[key]?versionId=[version_id]"
   HELP_TEXT = ENV.fetch(
     "EXTERNAL_ENV_GROUP_HELP_TEXT",
     "Use external service to manage environment variable groups"
   ).html_safe
-  attr_accessor :key, :bucket, :version_id
   audited
   default_scope -> { order(:name) }
 
@@ -21,15 +20,11 @@ class ExternalEnvironmentVariableGroup < ActiveRecord::Base
   validate :validate_s3_url
 
   def read
-    resolve_s3_url
+    key, bucket, version_id = resolve_s3_url
     default_bucket = ENV.fetch 'EXTERNAL_ENV_GROUP_S3_BUCKET'
     default_region = ENV.fetch 'EXTERNAL_ENV_GROUP_S3_REGION'
     dr_bucket      = ENV['EXTERNAL_ENV_GROUP_S3_DR_BUCKET']
     dr_region      = ENV['EXTERNAL_ENV_GROUP_S3_DR_REGION']
-    if default_bucket != bucket && dr_bucket != bucket
-      buckets = [default_bucket, dr_bucket].compact
-      raise "Invalid s3 bucket, acceptable buckets are #{buckets.join(',')}"
-    end
     Samson::Retry.with_retries(Aws::S3::Errors::ServiceError, 3) do
       response =
         begin
@@ -55,23 +50,34 @@ class ExternalEnvironmentVariableGroup < ActiveRecord::Base
   private
 
   def validate_s3_url
-    resolve_s3_url
+    return if errors[:url].any?
+    key, bucket = resolve_s3_url
+
     if key.blank? || bucket.blank?
-      errors.add(:url, 'Invalid URL, unable to get s3 key or bucket')
+      errors.add(:url, 'Invalid: unable to get s3 key or bucket')
       return
     end
+
+    default_bucket = ENV.fetch('EXTERNAL_ENV_GROUP_S3_BUCKET')
+    if bucket != default_bucket
+      errors.add(:url, "Invalid: bucket must be #{default_bucket}")
+      return
+    end
+
     read
   rescue StandardError => e
-    errors.add(:url, "Invalid URL, #{e.message}")
+    errors.add(:url, "Invalid: #{e.message}")
   end
 
+  # Resolves the S3 key and bucket name from URL
   def resolve_s3_url
-    # Resolves the S3 key and bucket name from URL
-    return unless url
     parsed_url = URI.parse url.to_s
-    @key = parsed_url.path.to_s[1..-1]
-    @bucket = parsed_url.host.to_s.chomp ".s3.amazonaws.com"
+
+    key = parsed_url.path.to_s[1..-1]
+    bucket = parsed_url.host.to_s.chomp ".s3.amazonaws.com"
+
     params = (URI.decode_www_form parsed_url.query.to_s).to_h
-    @version_id = params["versionId"]
+    version_id = params["versionId"]
+    [key, bucket, version_id]
   end
 end
