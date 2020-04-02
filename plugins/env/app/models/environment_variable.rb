@@ -31,10 +31,6 @@ class EnvironmentVariable < ActiveRecord::Base
         env.merge! env_vars_from_external_groups(deploy.project, deploy_group)
       end
 
-      if deploy_group && (env_repo_name = ENV["DEPLOYMENT_ENV_REPO"]) && deploy.project.use_env_repo
-        env.merge! env_vars_from_repo(env_repo_name, deploy.project, deploy_group)
-      end
-
       env.merge! env_vars_from_db(deploy, deploy_group, project_specific: project_specific)
 
       # TODO: these should be handled outside of the env plugin so other plugins can get their env var resolved too
@@ -68,14 +64,6 @@ class EnvironmentVariable < ActiveRecord::Base
       variables.each_with_object({}) do |ev, all|
         all[ev.name] = ev.value.dup if !all[ev.name] && ev.matches_scope?(deploy_group)
       end
-    end
-
-    def env_vars_from_repo(env_repo_name, project, deploy_group)
-      path = "generated/#{project.permalink}/#{deploy_group.permalink}.env"
-      content = GITHUB.contents(env_repo_name, path: path, headers: {Accept: 'applications/vnd.github.v3.raw'})
-      Dotenv::Parser.call(content)
-    rescue StandardError => e
-      raise Samson::Hooks::UserError, "Cannot download env file #{path} from #{env_repo_name} (#{e.message})"
     end
 
     def env_vars_from_external_groups(project, deploy_group)

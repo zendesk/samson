@@ -217,45 +217,6 @@ describe SamsonEnv do
     end
   end
 
-  describe 'view callbacks' do
-    before do
-      view_context.instance_variable_set(:@project, project)
-    end
-
-    # see plugins/env/app/views/samson_env/_fields.html.erb
-    describe :project_form do
-      let(:checkbox) { 'id="project_use_env_repo"' }
-      let(:dep_env_repo) { 'zendesk/test' }
-      let(:repo_link) { "href=\"https://github.com/#{dep_env_repo}/projects/#{project.permalink}.env.erb\"" }
-
-      def with_form
-        view_context.form_for project do |form|
-          yield form
-        end
-      end
-
-      def render_view
-        with_form do |form|
-          Samson::Hooks.render_views(:project_form, view_context, form: form)
-        end
-      end
-
-      it 'renders use_env_repo checkbox when DEPLOYMENT_ENV_REPO is present' do
-        with_env DEPLOYMENT_ENV_REPO: dep_env_repo do
-          view = render_view
-          view.must_include checkbox
-          view.must_include repo_link
-        end
-      end
-
-      it 'does not render use_env_repo checkbox when DEPLOYMENT_ENV_REPO is nil' do
-        view = render_view
-        view.wont_include checkbox
-        view.wont_include repo_link
-      end
-    end
-  end
-
   describe :stage_permitted_params do
     it "allows environment attributes" do
       Samson::Hooks.only_callbacks_for_plugin("env", :stage_permitted_params) do
