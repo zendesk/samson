@@ -126,13 +126,13 @@ module Kubernetes
       # do not validate on global since we hope to be on namespace soon
       return if !@project || !@project.override_resource_names?
 
-      # ignore service since we generate their names
+      # ignore services where we generate their names
       elements = @elements.reject { |e| !e[:kind] || (e[:kind] == "Service" && !self.class.keep_name?(e)) }
 
       # group by kind+name and to sure we have no duplicates
       groups = elements.group_by do |e|
         user_supplied = (ALLOWED_DUPLICATE_KINDS.include?(e.fetch(:kind)) || self.class.keep_name?(e))
-        [e.fetch(:kind), user_supplied ? e.dig(:metadata, :name) : "hardcoded"]
+        [e.fetch(:kind), e.dig(:metadata, :namespace), user_supplied ? e.dig(:metadata, :name) : "hardcoded"]
       end.values
       return if groups.all? { |group| group.size == 1 }
 

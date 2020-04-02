@@ -375,6 +375,16 @@ describe Kubernetes::RoleValidator do
         errors.to_s.must_include "Only use a maximum of 1 of each kind in a role"
       end
 
+      it "allows duplicate kinds and names in different namespaces services use hardcoded but duplicate names" do
+        role.each do |r|
+          r[:kind] = "Service"
+          r[:metadata][:name] = "same"
+          r.dig_set([:metadata, :annotations], "samson/keep_name": "true")
+        end
+        role.last[:metadata][:namespace] = "other"
+        errors.must_be_nil
+      end
+
       it "allows duplicate kinds with distinct names" do
         role.each { |r| r.dig_set([:metadata, :annotations], "samson/keep_name": "true") }
         refute errors
