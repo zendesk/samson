@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_02_19_043627) do
+ActiveRecord::Schema.define(version: 2020_04_02_195119) do
 
   create_table "audits" do |t|
     t.integer "auditable_id", null: false
@@ -452,7 +452,6 @@ ActiveRecord::Schema.define(version: 2020_02_19_043627) do
     t.boolean "build_with_gcb", default: false, null: false
     t.boolean "show_gcr_vulnerabilities", default: false, null: false
     t.boolean "jenkins_status_checker", default: false, null: false
-    t.boolean "use_env_repo", default: false, null: false
     t.integer "kubernetes_rollout_timeout"
     t.integer "kubernetes_namespace_id"
     t.string "jira_issue_prefix"
