@@ -45,6 +45,8 @@ describe EnvironmentVariable do
     end
 
     describe "env vars from external env groups" do
+      with_env EXTERNAL_ENV_GROUP_S3_REGION: "us-east-1", EXTERNAL_ENV_GROUP_S3_BUCKET: "a-bucket"
+
       before do
         group = ExternalEnvironmentVariableGroup.new(
           name: "A",
@@ -79,6 +81,19 @@ describe EnvironmentVariable do
         response = {"ABC" => {"FOO" => "one"}}
         ExternalEnvironmentVariableGroup.any_instance.expects(:read).returns(response)
         EnvironmentVariable.env(deploy, deploy_group, resolve_secrets: false).must_equal({})
+      end
+
+      it "adds via env groups" do
+        ExternalEnvironmentVariableGroup.delete_all
+        project.environment_variable_groups << EnvironmentVariableGroup.first
+        project.environment_variable_groups.first.update_column(:external_url, "https://foo.com")
+
+        response = {deploy_group.permalink => {"FOO" => +"one"}}
+
+        ExternalEnvironmentVariableGroup.any_instance.expects(:read).returns(response)
+        EnvironmentVariable.env(deploy, deploy_group, resolve_secrets: false).must_equal(
+          "FOO" => "one", "Z" => "A", "X" => "Y"
+        )
       end
     end
 

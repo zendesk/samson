@@ -144,13 +144,12 @@ describe SamsonEnv do
 
     it "links to external env var group" do
       group = ExternalEnvironmentVariableGroup.new(
-          name: "A",
-          description: "B",
-          url: "https://a-bucket.s3.amazonaws.com/key?versionId=version_id",
-          project: project
-        )
-      group.expects(:read).returns(true)
-      group.save!
+        name: "A",
+        description: "B",
+        url: "https://a-bucket.s3.amazonaws.com/key?versionId=version_id",
+        project: project
+      )
+      group.save!(validate: false)
       fire(group).must_equal ["A", ""]
     end
 

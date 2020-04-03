@@ -1,7 +1,17 @@
 # frozen_string_literal: true
 class ExternalEnvironmentVariableGroupsController < ApplicationController
   def preview
-    @group = ExternalEnvironmentVariableGroup.find(params[:id])
+    @group =
+      if params.require(:id) == "fake"
+        ExternalEnvironmentVariableGroup.new(
+          project: Project.new,
+          name: "Preview",
+          url: params.require(:url)
+        )
+      else
+        ExternalEnvironmentVariableGroup.find(params[:id])
+      end
+
     @data = @group.read
 
     respond_to do |format|

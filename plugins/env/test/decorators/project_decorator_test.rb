@@ -88,6 +88,8 @@ describe Project do
   end
 
   describe "nested_external_environment_variable_groups" do
+    with_env EXTERNAL_ENV_GROUP_S3_REGION: "us-east-1", EXTERNAL_ENV_GROUP_S3_BUCKET: "a-bucket"
+
     it "includes both name and url" do
       ExternalEnvironmentVariableGroup.any_instance.expects(:read).returns(true)
       project.update!(

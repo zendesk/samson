@@ -67,7 +67,13 @@ class EnvironmentVariable < ActiveRecord::Base
     end
 
     def env_vars_from_external_groups(project, deploy_group)
-      project.external_environment_variable_groups.each_with_object({}) do |group, envs|
+      external_groups = project.external_environment_variable_groups
+
+      external_groups += (project.environment_variable_groups.select(&:external_url?).map do |env_group|
+        ExternalEnvironmentVariableGroup.new(url: env_group.external_url)
+      end)
+
+      external_groups.each_with_object({}) do |group, envs|
         group_env = group.read[deploy_group.permalink]
         envs.merge! group_env if group_env
       end
