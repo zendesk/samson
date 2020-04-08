@@ -133,16 +133,28 @@ describe Kubernetes::RoleValidator do
         errors.must_equal ["Project and role labels must be consistent across resources"]
       end
 
-      it "shows eviction deadlock" do
-        role.last[:spec][:minAvailable] = 2
-        errors.must_equal [
-          "PodDisruptionBudget spec.minAvailable must be lower than spec.replicas to avoid eviction deadlock"
-        ]
-      end
-
-      it "allows correct minAvailable eviction" do
-        role.last[:spec][:minAvailable] = 1
-        errors.must_equal nil
+      [
+        [:minAvailable, 1, true],
+        [:minAvailable, 2, false],
+        [:minAvailable, "0%", true],
+        [:minAvailable, "10%", true],
+        [:minAvailable, "90%", false],
+        [:minAvailable, "100%", false],
+        [:maxUnavailable, 1, true],
+        [:maxUnavailable, 0, false],
+        [:maxUnavailable, "100%", true],
+        [:maxUnavailable, "90%", true],
+        [:maxUnavailable, "10%", true],
+        [:maxUnavailable, "0%", false],
+      ].each do |config, value, allowed|
+        it "#{allowed ? "allows" : "forbids"} setting #{config} to #{value}" do
+          role.last[:spec][config] = value
+          if allowed
+            errors.must_be_nil
+          else
+            errors.first.must_include "avoid eviction deadlock"
+          end
+        end
       end
     end
 
