@@ -335,11 +335,19 @@ module Kubernetes
 
     def validate_pod_disruption_budget
       return unless budget = @elements.detect { |e| e[:kind] == "PodDisruptionBudget" }
-      return unless min = budget.dig(:spec, :minAvailable)
+
+      min = budget.dig(:spec, :minAvailable)
+      max = budget.dig(:spec, :maxUnavailable)
+      return if !min && !max
+
       @elements.each do |e|
         next unless replicas = e.dig(:spec, :replicas)
-        next if min < replicas
-        @errors << "PodDisruptionBudget spec.minAvailable must be lower than spec.replicas to avoid eviction deadlock"
+        next if min && percentage_available(min, replicas) < replicas
+        next if max && percentage_available(max, replicas) > 0
+
+        @errors <<
+          "PodDisruptionBudget spec.minAvailable/spec.maxUnavailable " \
+          "must leave at least 1 replica for termination, to avoid eviction deadlock"
       end
     end
 
@@ -389,6 +397,14 @@ module Kubernetes
     end
 
     # helpers below
+
+    def percentage_available(num, total)
+      if num.is_a?(Integer)
+        num
+      else
+        (Float(num[/\d+/]) * total / 100).ceil # kubernetes rounds up
+      end
+    end
 
     def pod_containers
       map_attributes([:spec, :containers], elements: templates)
