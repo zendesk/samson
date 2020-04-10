@@ -125,7 +125,7 @@ module Kubernetes
       end
 
       def error_location
-        "#{name} #{namespace} #{@deploy_group.name}"
+        "#{kind} #{name} #{namespace} #{@deploy_group.name}"
       end
 
       def backoff_wait(backoff, reason)
