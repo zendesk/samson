@@ -146,7 +146,7 @@ describe Kubernetes::Resource do
           error = '{"message":"Foo.extensions \"app\" is invalid:"}'
           assert_request(:post, base_url, to_return: {body: error, status: 400}) do
             e = assert_raises(Samson::Hooks::UserError) { resource.deploy }
-            e.message.must_include "Kubernetes error some-project pod1 Pod1: Foo"
+            e.message.must_include "Kubernetes error Deployment some-project pod1 Pod1: Foo"
           end
         end
       end
@@ -320,7 +320,7 @@ describe Kubernetes::Resource do
           resource.expects(:sleep).times(tries)
 
           e = assert_raises(RuntimeError) { resource.delete }
-          e.message.must_equal "Unable to delete resource (some-project pod1 Pod1)"
+          e.message.must_equal "Unable to delete resource (ConfigMap some-project pod1 Pod1)"
         end
       end
     end
@@ -389,7 +389,7 @@ describe Kubernetes::Resource do
       it "shows location when api fails" do
         stub_request(:get, "http://foobar.server/api/v1/configmaps/foo").to_return status: 429
         e = assert_raises(Kubeclient::HttpError) { resource.send(:request, :get, :foo) }
-        e.message.must_equal "Kubernetes error some-project pod1 Pod1: 429 Too Many Requests"
+        e.message.must_equal "Kubernetes error ConfigMap some-project pod1 Pod1: 429 Too Many Requests"
       end
 
       it "does not crash on frozen messages" do
@@ -417,7 +417,7 @@ describe Kubernetes::Resource do
       it "raises a descriptive error when it fails" do
         assert_request(:get, /pod1\/pods/, to_timeout: []) do
           e = assert_raises(Kubeclient::HttpError) { resource.send(:pods, metadata: {labels: {}}) }
-          e.message.must_equal "Kubernetes error some-project pod1 Pod1: Timed out connecting to server"
+          e.message.must_equal "Kubernetes error ConfigMap some-project pod1 Pod1: Timed out connecting to server"
         end
       end
     end
