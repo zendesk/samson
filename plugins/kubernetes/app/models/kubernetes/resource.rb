@@ -288,7 +288,7 @@ module Kubernetes
             end
           rescue Kubeclient::HttpError => e
             message = e.message.to_s
-            if verb != :get && e.error_code == 409
+            if [:patch, :update].include?(verb) && e.error_code == 409
               # Update version and retry if we ran into a conflict from VersionedUpdate
               args[0][:metadata][:resourceVersion] = fetch_resource.dig(:metadata, :resourceVersion)
               raise # retry
