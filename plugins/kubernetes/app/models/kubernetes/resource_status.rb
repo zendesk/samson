@@ -7,7 +7,9 @@ module Kubernetes
       Pod: [
         # These errors may happens when Deployment which uses PVC is updated. Ignore them.
         "FailedAttachVolume",
-        "FailedMount"
+        "FailedMount",
+        "OutOfcpu",
+        "OutOfmemory"
       ],
       HorizontalPodAutoscaler: [
         "FailedGetMetrics",
