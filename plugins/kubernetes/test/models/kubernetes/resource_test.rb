@@ -932,8 +932,10 @@ describe Kubernetes::Resource do
 
     describe "#deploy" do
       it "updates" do
-        assert_create_and_delete_requests do
-          resource.deploy
+        assert_request(:get, url, to_return: [{body: '{}'}]) do
+          assert_request(:put, url, to_return: {body: '{}'}) do
+            resource.deploy
+          end
         end
       end
 
@@ -943,15 +945,6 @@ describe Kubernetes::Resource do
           assert_request(:delete, url, to_return: {body: '{}'}) do
             resource.deploy
           end
-        end
-      end
-    end
-
-    describe "#revert" do
-      it "deletes and then creates without resourceVersion because that is not allowed" do
-        with = ->(request) { request.body.wont_include "resourceVersion"; true }
-        assert_create_and_delete_requests(with: with) do
-          resource.revert(template.deep_merge(metadata: {resourceVersion: '123'}))
         end
       end
     end

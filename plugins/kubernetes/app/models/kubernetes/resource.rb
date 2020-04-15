@@ -479,7 +479,7 @@ module Kubernetes
     class Pod < Immutable
     end
 
-    class PodDisruptionBudget < Immutable
+    class PodDisruptionBudget < VersionedUpdate
       def initialize(*)
         super
         @delete_resource ||= @template[:delete] # allow deletion through release_doc logic
