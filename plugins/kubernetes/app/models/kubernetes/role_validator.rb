@@ -134,9 +134,13 @@ module Kubernetes
         user_supplied = (ALLOWED_DUPLICATE_KINDS.include?(e.fetch(:kind)) || self.class.keep_name?(e))
         [e.fetch(:kind), e.dig(:metadata, :namespace), user_supplied ? e.dig(:metadata, :name) : "hardcoded"]
       end.values
-      return if groups.all? { |group| group.size == 1 }
+      bad = groups.select { |group| group.size > 1 }
+      return if bad.empty?
 
-      @errors << "Only use a maximum of 1 of each kind in a role (except #{ALLOWED_DUPLICATE_KINDS.to_sentence})"
+      bad_kinds = bad.map { |g| g.first[:kind] }
+      @errors <<
+        "Only use 1 per kind #{bad_kinds.join(", ")} in a role\n" \
+        "To bypass: assign a namespace to the project, or set metadata.annotations.samson/keep_name=\"true\""
     end
 
     def validate_api_version
