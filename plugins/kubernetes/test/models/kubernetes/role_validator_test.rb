@@ -370,7 +370,7 @@ describe Kubernetes::RoleValidator do
       before { role.each { |r| r[:kind] = "foo" } }
 
       it "fails when there are duplicate kinds" do
-        errors.to_s.must_include "Only use a maximum of 1 of each kind in a role"
+        errors.to_s.must_include "Only use 1 per kind foo in a role"
       end
 
       it "ignores when using project namespace" do
@@ -384,7 +384,7 @@ describe Kubernetes::RoleValidator do
           r[:metadata][:name] = "same"
           r.dig_set([:metadata, :annotations], "samson/keep_name": "true")
         end
-        errors.to_s.must_include "Only use a maximum of 1 of each kind in a role"
+        errors.to_s.must_include "Only use 1 per kind Service in a role"
       end
 
       it "allows duplicate kinds and names in different namespaces services use hardcoded but duplicate names" do
