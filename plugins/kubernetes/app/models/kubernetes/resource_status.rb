@@ -111,9 +111,10 @@ module Kubernetes
     # ignore known events that randomly happen
     def failures(kind)
       failures = events(type: "Warning")
-      if ignored = IGNORED_EVENT_REASONS[kind.to_sym]
-        failures.reject! { |e| ignored.include? e[:reason] }
-      end
+      ignored =
+        @resource.dig(:metadata, :annotations, :"samson/ignore_events").to_s.split(",") +
+        (IGNORED_EVENT_REASONS[kind.to_sym] || [])
+      failures.reject! { |e| ignored.include? e[:reason] } if ignored.any?
       failures
     end
   end
