@@ -308,3 +308,11 @@ metadata.annotation.samson/force_update: "true"
 ### Static config per deploy group
 
 Set the kubernetes roles to `kubernetes/$deploy_group/server.yml` 
+
+### Ignoring warning events
+
+If a warning event fails deploys, but application owners deem them safe to ignore, add this:
+
+`metadata.annotations.samson/ignore_events="FailedCreate,AnotherEvent"`
+
+... still consider opening a samson PR if the event is universally to be ignored.
