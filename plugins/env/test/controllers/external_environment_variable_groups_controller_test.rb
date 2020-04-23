@@ -32,6 +32,15 @@ describe ExternalEnvironmentVariableGroupsController do
         assert_response :success
       end
 
+      describe "a json GET to #index" do
+        it "succeeds" do
+          get :index, format: :json
+          assert_response :success
+          json_response = JSON.parse response.body
+          json_response.keys.must_include 'groups'
+        end
+      end
+
       describe "a json GET to #preview" do
         it "succeeds" do
           get :preview, params: {id: group.id}, format: :json

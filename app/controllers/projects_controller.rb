@@ -75,6 +75,7 @@ class ProjectsController < ResourceController
     [
       :environment_variable_groups,
       :environment_variables_with_scope,
+      (:external_environment_variable_groups if ExternalEnvironmentVariableGroup.configured?)
     ]
   end
 

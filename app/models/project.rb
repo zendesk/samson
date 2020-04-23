@@ -215,6 +215,10 @@ class Project < ActiveRecord::Base
     )
   end
 
+  def external_environment_variable_groups
+    ExternalEnvironmentVariableGroup.find_by_project_id(id)
+  end
+
   def as_json(methods: [], **options)
     super(
       {
