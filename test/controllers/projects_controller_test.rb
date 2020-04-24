@@ -174,6 +174,15 @@ describe ProjectsController do
           project = JSON.parse(response.body)
           project.keys.must_include "environment_variables_with_scope"
         end
+
+        it "renders with external_environment_variable_groups if requested" do
+          with_env EXTERNAL_ENV_GROUP_S3_REGION: "us-east-1", EXTERNAL_ENV_GROUP_S3_BUCKET: "a-bucket" do
+            get :show, params: {id: project.to_param, includes: "external_environment_variable_groups", format: :json}
+            assert_response :success
+            project = JSON.parse(response.body)
+            project.keys.must_include "external_environment_variable_groups"
+          end
+        end
       end
     end
 

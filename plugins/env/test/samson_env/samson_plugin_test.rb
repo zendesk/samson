@@ -233,4 +233,20 @@ describe SamsonEnv do
       )
     end
   end
+
+  describe :project_allowed_includes do
+    it "includes external env var groups with external env configured" do
+      with_env EXTERNAL_ENV_GROUP_S3_REGION: "us-east-1", EXTERNAL_ENV_GROUP_S3_BUCKET: "a-bucket" do
+        Samson::Hooks.fire(:project_allowed_includes).must_include(
+          [:external_environment_variable_groups]
+        )
+      end
+    end
+
+    it "does not include external env var groups when not configured" do
+      Samson::Hooks.fire(:project_allowed_includes).must_equal(
+        [[]]
+      )
+    end
+  end
 end

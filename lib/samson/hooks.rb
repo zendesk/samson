@@ -61,7 +61,8 @@ module Samson
       :repo_provider_status,
       :repo_commit_from_ref,
       :repo_compare,
-      :validate_deploy
+      :validate_deploy,
+      :project_allowed_includes
     ].freeze
 
     # Hooks that are slow and we want performance info on

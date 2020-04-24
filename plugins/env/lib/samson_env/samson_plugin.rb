@@ -145,3 +145,7 @@ Samson::Hooks.view :deploy_form, 'samson_env'
 Samson::Hooks.callback :deploy_permitted_params do
   AcceptsEnvironmentVariables::ASSIGNABLE_ATTRIBUTES
 end
+
+Samson::Hooks.callback :project_allowed_includes do
+  ExternalEnvironmentVariableGroup.configured? ? [:external_environment_variable_groups] : []
+end
