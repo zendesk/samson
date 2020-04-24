@@ -3,7 +3,6 @@ class ExternalEnvironmentVariableGroupsController < ApplicationController
   def index
     @groups = ExternalEnvironmentVariableGroup.all
     respond_to do |format|
-      format.html
       format.json { render json: {groups: @groups} }
     end
   end
