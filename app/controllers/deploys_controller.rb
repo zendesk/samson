@@ -184,8 +184,14 @@ class DeploysController < ApplicationController
     deploys = deploys_scope
     deploys = deploys.where(stage: stages) if stages
     deploys = deploys.where(job: jobs) if jobs
-    if updated_at = search[:updated_at].presence
-      deploys = deploys.where("updated_at between ? AND ?", *updated_at)
+    [:updated_at, :created_at].each do |column|
+      next unless value = search[column].presence
+      case value.count(&:present?)
+      when 0 then nil
+      when 1 then flash.now[:alert] = "Fill 'from' and 'to' date"
+      when 2 then deploys = deploys.where("#{column} between ? AND ?", *value)
+      else raise ArgumentError
+      end
     end
     deploys = deploys.where.not(deleted_at: nil) if search_deleted
     pagy(deploys, page: params[:page], items: 30)
