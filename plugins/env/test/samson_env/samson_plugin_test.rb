@@ -233,4 +233,12 @@ describe SamsonEnv do
       )
     end
   end
+
+  describe :project_allowed_includes do
+    it "includes the project_allowed_includes attributes" do
+      Samson::Hooks.fire(:project_allowed_includes).must_include(
+        external_environment_variable_groups: []
+      )
+    end
+  end
 end
