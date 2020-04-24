@@ -19,7 +19,7 @@
         <%= link_to_history fields.object, counter: false %>
       </div>
       <div class="col-lg-1 checkbox external-env-group-links">
-        <%= link_to 'Preview', external_env_group_preview_path(fields.object) %>
+        <%= link_to 'Preview', preview_external_environment_variable_group_path(fields.object) %>
       </div>
       <div class="col-lg-1 checkbox external-env-group-links">
         <%= fields.label :_destroy do %>

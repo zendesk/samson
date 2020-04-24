@@ -31,7 +31,7 @@
       <% if ExternalEnvironmentVariableGroup.configured? %>
         <%= form.input :external_url do %>
           <%= form.text_field :external_url, class: "form-control", placeholder: ExternalEnvironmentVariableGroup::S3_URL_FORMAT %>
-          <%= link_to 'Preview', external_env_group_preview_path("fake", url: @group.external_url) if @group.external_url? %>
+          <%= link_to 'Preview', preview_external_environment_variable_group_path("fake", url: @group.external_url) if @group.external_url? %>
         <% end %>
       <% end %>
     </fieldset>

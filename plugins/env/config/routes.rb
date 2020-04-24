@@ -5,12 +5,11 @@ Samson::Application.routes.draw do
       get :preview
     end
   end
-
-  get '/external_environment_variable_groups(:format)',
-    to: 'external_environment_variable_groups#index', as: 'external_env_group_index'
-
-  get '/external_environment_variable_groups/:id/preview',
-    to: 'external_environment_variable_groups#preview', as: 'external_env_group_preview'
+  resources :external_environment_variable_groups do
+    member do
+      get :preview
+    end
+  end
   resources :environment_variables, only: [:index, :destroy]
   resources :projects, only: [] do
     resource :environment, only: [:show], controller: 'env/environment'
