@@ -4,8 +4,6 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe ProjectsController do
-  with_env EXTERNAL_ENV_GROUP_S3_REGION: "us-east-1", EXTERNAL_ENV_GROUP_S3_BUCKET: "a-bucket"
-
   def fields_disabled?
     assert_select 'fieldset' do |fs|
       return fs.attr('disabled').present?
@@ -177,11 +175,13 @@ describe ProjectsController do
           project.keys.must_include "environment_variables_with_scope"
         end
 
-        it "renders with external_environment_variable_groups if present" do
-          get :show, params: {id: project.to_param, includes: "external_environment_variable_groups", format: :json}
-          assert_response :success
-          project = JSON.parse(response.body)
-          project.keys.must_include "external_environment_variable_groups"
+        it "renders with external_environment_variable_groups if requested" do
+          with_env EXTERNAL_ENV_GROUP_S3_REGION: "us-east-1", EXTERNAL_ENV_GROUP_S3_BUCKET: "a-bucket" do
+            get :show, params: {id: project.to_param, includes: "external_environment_variable_groups", format: :json}
+            assert_response :success
+            project = JSON.parse(response.body)
+            project.keys.must_include "external_environment_variable_groups"
+          end
         end
       end
     end
