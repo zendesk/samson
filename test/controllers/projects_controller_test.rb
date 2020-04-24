@@ -4,6 +4,8 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe ProjectsController do
+  with_env EXTERNAL_ENV_GROUP_S3_REGION: "us-east-1", EXTERNAL_ENV_GROUP_S3_BUCKET: "a-bucket"
+
   def fields_disabled?
     assert_select 'fieldset' do |fs|
       return fs.attr('disabled').present?
