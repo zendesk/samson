@@ -367,6 +367,23 @@ describe DeploysController do
         assigns[:deploys].map(&:id).sort.must_equal expected.map(&:id).sort
       end
 
+      it "ignores empty update fields" do
+        get :index, params: {search: {updated_at: ["", ""]}}, format: "json"
+        assert_response :ok
+      end
+
+      it "warns when only submitting single date field" do
+        get :index, params: {search: {updated_at: ["", "2020-02-10"]}}, format: "json"
+        assert_response :ok
+        assert flash[:alert]
+      end
+
+      it "fails when submitting to many date fields" do
+        assert_raises ArgumentError do
+          get :index, params: {search: {updated_at: ["A", "A", "A"]}}, format: "json"
+        end
+      end
+
       it "filters by deleted" do
         Deploy.last.soft_delete!
         get :index, params: {search: {deleted: "Project,Stage,Deploy"}}, format: "json"

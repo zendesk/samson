@@ -579,6 +579,11 @@ describe ApplicationHelper do
       result.must_include "method=\"get\""
       result.must_include "class=\"btn btn-default form-control\""
     end
+
+    it "can redner without padding" do
+      search_form { "Hello" }.must_include "margin-top"
+      search_form(top_pad: false) { "Hello" }.wont_include "margin-top"
+    end
   end
 
   describe "#search_select" do

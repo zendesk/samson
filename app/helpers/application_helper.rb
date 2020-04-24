@@ -251,9 +251,9 @@ module ApplicationHelper
     end
   end
 
-  def search_form(options = {}, &block)
+  def search_form(top_pad: true, **options, &block)
     form_tag '?', options.merge(method: :get, class: "clearfix") do
-      button = submit_tag("Search", class: "btn btn-default form-control", style: "margin-top: 25px")
+      button = submit_tag("Search", class: "btn btn-default form-control", style: ("margin-top: 25px" if top_pad))
       capture(&block) << content_tag(:div, button, class: "col-md-1 clearfix")
     end
   end
