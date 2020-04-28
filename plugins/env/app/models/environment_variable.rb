@@ -74,7 +74,7 @@ class EnvironmentVariable < ActiveRecord::Base
       end)
 
       external_groups.each_with_object({}) do |group, envs|
-        group_env = group.read[deploy_group.permalink]
+        group_env = group.read[deploy_group.name.parameterize]
         envs.merge! group_env if group_env
       end
     rescue StandardError => e
