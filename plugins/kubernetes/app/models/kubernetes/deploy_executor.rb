@@ -81,30 +81,35 @@ module Kubernetes
         statuses = resource_statuses(release_docs)
         pod_statuses, non_pod_statuses = statuses.partition { |s| s.kind == "Pod" }
         display_statuses = pod_statuses + non_pod_statuses.reject(&:live) # show what is interesting
-        ready_statuses, not_ready_statuses = statuses.partition(&:live)
-        failure = too_many_not_ready?(pod_statuses) || !non_pod_statuses.all?(&:live)
+        not_ready = too_many_not_ready(statuses)
 
-        if waiting_for_ready
+        if waiting_for_ready # readiness phase
           print_statuses("Deploy status:", display_statuses, exact: false) if display_statuses.any?
 
-          if failure
-            if stopped = not_ready_statuses.select(&:finished).presence
-              print_statuses("UNSTABLE, resources failed:", stopped, exact: true)
+          if not_ready
+            if failed = too_many_failed(statuses)
+              print_statuses("UNSTABLE, resources failed:", failed, exact: true)
               return false, statuses
             elsif time_left(wait_start_time, timeout) == 0
               @output.puts "TIMEOUT, pods took too long to get live"
               return false, statuses
+            else # rubocop:disable Style/EmptyElse
+              # keep waiting for more ready
             end
-          elsif ready_statuses.all?(&:finished)
+          elsif statuses.select(&:live).all?(&:finished)
             return success, statuses
           else
             @output.puts "READY, starting stability test"
             waiting_for_ready = false
             wait_start_time = Time.now.to_i
           end
-        else
-          if failure
-            print_statuses("UNSTABLE, resources not ready:", not_ready_statuses, exact: true)
+        else # stability phase
+          if not_ready
+            if failed = too_many_failed(statuses)
+              print_statuses("UNSTABLE, resources failed:", failed, exact: true)
+            else
+              print_statuses("UNSTABLE, resources not ready:", not_ready, exact: true)
+            end
             return false, statuses
           else
             remaining = time_left(wait_start_time, STABILITY_CHECK_DURATION)
@@ -453,16 +458,26 @@ module Kubernetes
       end
     end
 
-    def too_many_not_ready?(statuses)
-      statuses.group_by(&:role).each_value.any? do |group|
-        group.count { |s| !s.live } > allowed_not_ready(group.size)
-      end
+    def too_many_not_ready(statuses)
+      too_many_matching_per_role(statuses, "KUBERNETES_ALLOW_NOT_READY_PERCENT") { |s| !s.live }
     end
 
-    def allowed_not_ready(size)
-      return 0 if size == 0
-      percent = Float(ENV["KUBERNETES_ALLOW_NOT_READY_PERCENT"] || "0")
-      (size / 100.0) * percent
+    def too_many_failed(statuses)
+      too_many_matching_per_role(statuses, "KUBERNETES_ALLOW_FAILED_PERCENT") { |s| !s.live && s.finished }
+    end
+
+    # @return [[<status>], nil]
+    def too_many_matching_per_role(statuses, flag, &block)
+      bad = statuses.select(&block) # always return full list for debugging
+      pod_statuses, non_pod_statuses = statuses.partition { |s| s.kind == "Pod" }
+
+      return bad if non_pod_statuses.any?(&block) # static failures are deadly
+
+      percent = Float(ENV[flag] || "0")
+      pod_statuses.group_by(&:role).each_value.detect do |group|
+        allowed = (group.size / 100.0) * percent
+        return bad if group.count(&block) > allowed
+      end
     end
 
     def success

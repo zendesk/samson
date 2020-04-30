@@ -626,7 +626,7 @@ describe Kubernetes::DeployExecutor do
       out.must_include "resque-worker Pod: Waiting (Running, Unknown)\n"
     end
 
-    it "fails when pod is failing to boot" do
+    it "fails when pod fails during stability phase" do
       good = pod_reply.deep_dup
       worker_is_unstable
       pod_responses.replace([{body: good.to_json}, {body: pod_reply.to_json}])
@@ -634,8 +634,20 @@ describe Kubernetes::DeployExecutor do
       refute execute, out
 
       out.must_include "READY"
-      out.must_include "UNSTABLE"
+      out.must_include "UNSTABLE, resources failed:"
       out.must_include "resque-worker Pod pod-resque-worker: Restarted"
+    end
+
+    it "fails when pod goes pending during stability phase" do
+      good = pod_reply.deep_dup
+      pod_status[:phase] = "Pending"
+      pod_responses.replace([{body: good.to_json}, {body: pod_reply.to_json}])
+
+      refute execute, out
+
+      out.must_include "READY"
+      out.must_include "UNSTABLE, resources not ready:"
+      out.must_include "resque-worker Pod pod-resque-worker: Waiting (Pending, Unknown)"
     end
 
     it "shows error when pod could not be found" do
@@ -1049,22 +1061,63 @@ describe Kubernetes::DeployExecutor do
     end
   end
 
-  describe "#allowed_not_ready" do
+  describe "#too_many_not_ready" do
     let(:log_string) { "Ignored" }
-
-    it "allows none when percent is not set" do
-      executor.send(:allowed_not_ready, 10).must_equal 0
-    end
-
-    it "allows given percentage" do
-      with_env KUBERNETES_ALLOW_NOT_READY_PERCENT: "30" do
-        executor.send(:allowed_not_ready, 10).must_equal 3
+    let(:statuses) do
+      Array.new(10) do
+        s = Kubernetes::ResourceStatus.new(
+          resource: {},
+          role: "R1",
+          deploy_group: deploy_groups(:pod1),
+          prerequisite: false,
+          start: nil,
+          kind: "Pod"
+        )
+        s.instance_variable_set(:@live, true)
+        s
       end
     end
 
-    it "does not blow up on 0" do
-      with_env KUBERNETES_ALLOW_NOT_READY_PERCENT: "50" do
-        executor.send(:allowed_not_ready, 0).must_equal 0
+    it "returns nil when everything is ready" do
+      executor.send(:too_many_not_ready, statuses).must_be_nil
+    end
+
+    it "allows no failures when percent is not set" do
+      statuses[0].instance_variable_set(:@live, false)
+      executor.send(:too_many_not_ready, statuses).size.must_equal 1
+    end
+
+    it "does not blow up on empty" do
+      executor.send(:too_many_not_ready, []).must_be_nil
+    end
+
+    describe "when given percentage" do
+      with_env KUBERNETES_ALLOW_NOT_READY_PERCENT: "30"
+
+      it "allows given percentage" do
+        3.times { |i| statuses[i].instance_variable_set(:@live, false) }
+        executor.send(:too_many_not_ready, statuses).must_be_nil
+      end
+
+      it "allows fails over given percentage" do
+        4.times { |i| statuses[i].instance_variable_set(:@live, false) }
+        executor.send(:too_many_not_ready, statuses).size.must_equal 4
+      end
+
+      it "groups by role" do
+        statuses[0].instance_variable_set(:@live, false)
+        statuses[0].instance_variable_set(:@role, "R2") # R2 is 100% dead
+        executor.send(:too_many_not_ready, statuses).size.must_equal 1
+      end
+
+      it "fails when non-pods are not-ready" do
+        statuses[0].instance_variable_set(:@live, false)
+        statuses[0].instance_variable_set(:@kind, "ConfigMap")
+        executor.send(:too_many_not_ready, statuses).size.must_equal 1
+      end
+
+      it "does not blow up on empty" do
+        executor.send(:too_many_not_ready, []).must_be_nil
       end
     end
   end
