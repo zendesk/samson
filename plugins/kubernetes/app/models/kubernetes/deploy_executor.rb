@@ -324,7 +324,7 @@ module Kubernetes
 
       # for big deploys, do not print all the identical pods
       lines.group_by(&:itself).each_value do |group|
-        group = [group.first, "  ... #{group.size - 1} identical"] if lines.size >= 10 && group.size > 2
+        group = ["#{group.first} x#{group.size}"] if lines.size >= 10 && group.size > 2
         group.each { |l| @output.puts l }
       end
     end

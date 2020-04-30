@@ -24,7 +24,6 @@ module Kubernetes
     }.freeze
 
     attr_reader :resource, :role, :deploy_group, :kind, :details, :live, :finished, :pod
-    attr_writer :details
 
     def initialize(resource:, role: nil, deploy_group:, prerequisite: false, start:, kind:)
       @resource = resource

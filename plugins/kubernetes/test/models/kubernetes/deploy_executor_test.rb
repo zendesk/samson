@@ -960,23 +960,27 @@ describe Kubernetes::DeployExecutor do
 
   describe "#print_statuses" do
     let(:status) do
-      Kubernetes::ResourceStatus.new(
+      s = Kubernetes::ResourceStatus.new(
         resource: nil,
         role: kubernetes_roles(:app_server),
         deploy_group: deploy_groups(:pod1),
         start: nil,
         kind: "Pod"
       )
+      s.instance_variable_set(:@details, "Pending")
+      s
     end
 
     it "renders" do
       executor.send(:print_statuses, "Hey:", [status], exact: false)
-      out.must_equal "Hey:\n  Pod1 app-server Pod: \n"
+      out.must_equal "Hey:\n  Pod1 app-server Pod: Pending\n"
     end
 
-    it "does not summarizes with moderate ammount of pods" do
+    it "does not summarizes with moderate amount of pods" do
       executor.send(:print_statuses, "Hey:", Array.new(3) { status.dup }, exact: false)
-      out.must_equal "Hey:\n  Pod1 app-server Pod: \n  Pod1 app-server Pod: \n  Pod1 app-server Pod: \n"
+      out.must_equal(
+        "Hey:\n  Pod1 app-server Pod: Pending\n  Pod1 app-server Pod: Pending\n  Pod1 app-server Pod: Pending\n"
+      )
     end
 
     it "does not summarizes when summary would be equal number of lines" do
@@ -990,7 +994,7 @@ describe Kubernetes::DeployExecutor do
 
     it "summarizes when too many identical statuses are shown" do
       executor.send(:print_statuses, "Hey:", Array.new(20) { status.dup }, exact: false)
-      out.must_equal "Hey:\n  Pod1 app-server Pod: \n  ... 19 identical\n"
+      out.must_equal "Hey:\n  Pod1 app-server Pod: Pending x20\n"
     end
   end
 
