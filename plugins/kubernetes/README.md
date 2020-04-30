@@ -243,9 +243,14 @@ Then configure an ENV var with that same name and a value that is valid JSON.
  - To set string values as env vars, use quotes, i.e. `"foo"`
  - To set values inside of arrays use numbers as index `spec.containers.0.name`
 
-### Allow randomly not-ready pods during readiness check
+### Allow randomly not-ready pods during readiness & stability check
 
-Set `KUBERNETES_ALLOW_NOT_READY_PERCENT=10` to allow up to 10% of pods per role being not-ready,
+Set `KUBERNETES_ALLOW_NOT_READY_PERCENT=20` to allow up to 20% of pods per role being not-ready,
+this is useful when dealing with large deployments that have some random failures.
+
+### Allow randomly failing pods during readiness & stability check
+
+Set `KUBERNETES_ALLOW_FAILED_PERCENT=10` to allow up to 10% of pods per role being failed,
 this is useful when dealing with large deployments that have some random failures.
 
 ### Disabling service selector validation
