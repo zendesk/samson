@@ -24,8 +24,8 @@ class EnvironmentVariable < ActiveRecord::Base
     # preview parameter can be used to not raise an error,
     # but return a value with a helpful message
     # also used by an external plugin
-    def env(deploy, deploy_group, resolve_secrets:, project_specific: nil, base: {})
-      env = base.dup
+    def env(deploy, deploy_group, resolve_secrets:, project_specific: nil, source: {})
+      env = {}
 
       if deploy_group
         env.merge! env_vars_from_external_groups(deploy.project, deploy_group)
@@ -34,7 +34,7 @@ class EnvironmentVariable < ActiveRecord::Base
       env.merge! env_vars_from_db(deploy, deploy_group, project_specific: project_specific)
 
       # TODO: these should be handled outside of the env plugin so other plugins can get their env var resolved too
-      resolve_dollar_variables!(env)
+      resolve_dollar_variables!(env, source)
       resolve_secrets(deploy.project, deploy_group, env, preview: resolve_secrets == :preview) if resolve_secrets
 
       env
@@ -81,10 +81,13 @@ class EnvironmentVariable < ActiveRecord::Base
       raise Samson::Hooks::UserError, "Error reading env vars from external env-groups: #{e.message}"
     end
 
-    def resolve_dollar_variables!(env)
+    def resolve_dollar_variables!(env, source)
       env.each_value do |value|
         3.times do
-          break unless value.gsub!(/\$\{(\w+)\}|\$(\w+)/) { |original| env[$1 || $2] || original }
+          break unless value.gsub!(/\$\{(\w+)\}|\$(\w+)/) do |original|
+            key = $1 || $2
+            env[key] || source[key] || original
+          end
         end
       end
     end

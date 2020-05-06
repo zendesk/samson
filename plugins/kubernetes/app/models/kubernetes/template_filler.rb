@@ -119,12 +119,14 @@ module Kubernetes
         data.merge!(YAML.safe_load(yaml))
       end
 
+      env = static_env.merge(plugin_env)
+
       # set values
       data.each do |path, v|
         path = self.class.dig_path(path)
 
         begin
-          template.dig_set(path, JSON.parse(static_env.fetch(v), symbolize_names: true))
+          template.dig_set(path, JSON.parse(env.fetch(v), symbolize_names: true))
         rescue KeyError, JSON::ParserError => e
           raise(
             Samson::Hooks::UserError,
@@ -494,9 +496,9 @@ module Kubernetes
 
     # helpful env vars, also useful for log tagging
     def set_env
-      all = []
+      static = []
 
-      static_env.each { |k, v| all << {name: k.to_s, value: v.to_s} }
+      static_env.each { |k, v| static << {name: k.to_s, value: v.to_s} }
 
       # dynamic lookups for unknown things during deploy
       {
@@ -504,20 +506,17 @@ module Kubernetes
         POD_NAMESPACE: 'metadata.namespace',
         POD_IP: 'status.podIP'
       }.each do |k, v|
-        all << {
+        static << {
           name: k.to_s,
           valueFrom: {fieldRef: {fieldPath: v}}
         }
       end
 
       env_containers.each do |c|
-        env = (c[:env] ||= [])
-        env.concat all
-
-        # unique, but keep last elements
-        env.reverse!
-        env.uniq! { |h| h[:name] }
-        env.reverse!
+        container_env = (c[:env] ||= [])
+        container_env.unshift *plugin_env.map { |k, v| {name: k.to_s, value: v.to_s} } # user configured -> no override
+        container_env.concat static # defaults -> allowed override
+        container_env.uniq! { |h| h[:name] }
       end
     end
 
@@ -545,9 +544,16 @@ module Kubernetes
         # blue-green phase
         env["BLUE_GREEN"] = blue_green_color if blue_green_color
 
-        # env from plugins
+        env
+      end
+    end
+
+    def plugin_env
+      @plugin_env ||= begin
         deploy = @doc.kubernetes_release.deploy || Deploy.new(project: project)
-        plugin_envs = Samson::Hooks.fire(:deploy_env, deploy, @doc.deploy_group, resolve_secrets: false, base: env)
+        plugin_envs = Samson::Hooks.fire(
+          :deploy_env, deploy, @doc.deploy_group, resolve_secrets: false, source: static_env
+        )
         plugin_envs.compact.inject({}, :merge!)
       end
     end

@@ -605,11 +605,19 @@ describe Kubernetes::TemplateFiller do
       it "overrides container env with deploy_env so samson can modify env variables" do
         raw_template[:spec][:template][:spec][:containers].first[:env] = [{name: 'FromEnv', value: 'THIS-IS-BAD'}]
         # plugins can return string or symbol keys, we should be prepared for both
-        Samson::Hooks.with_callback(:deploy_env, ->(*) { {'FromEnv' => "THIS-IS-MEH", FromEnv: "THIS-IS-GOOD"} }) do
+        Samson::Hooks.with_callback(:deploy_env, ->(*) { {'FromEnv' => "THIS-IS-GOOD", FromEnv: "THIS-IS-MEH"} }) do
           container.fetch(:env).select { |e| e[:name] == 'FromEnv' }.must_equal(
             [{name: 'FromEnv', value: 'THIS-IS-GOOD'}]
           )
         end
+      end
+
+      it "allows overwriting static env with container env" do
+        raw_template[:spec][:template][:spec][:containers].first[:env] = [{name: 'PROJECT', value: 'THIS-IS-GOOD'}]
+        # plugins can return string or symbol keys, we should be prepared for both
+        container.fetch(:env).select { |e| e[:name] == 'PROJECT' }.must_equal(
+          [{name: 'PROJECT', value: 'THIS-IS-GOOD'}]
+        )
       end
 
       describe "with multiple containers" do
