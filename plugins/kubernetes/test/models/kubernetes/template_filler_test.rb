@@ -612,6 +612,14 @@ describe Kubernetes::TemplateFiller do
         end
       end
 
+      it "does not override container env var when requested" do
+        raw_template[:spec][:template][:spec][:containers].first[:env] = [{name: 'TAG', value: 'OVERRIDE'}]
+        raw_template[:spec][:template][:spec][:containers].first[:"samson/keep_env_var"] = "TAG"
+        container.fetch(:env).select { |e| e[:name] == 'TAG' }.must_equal(
+          [{name: 'TAG', value: 'OVERRIDE'}]
+        )
+      end
+
       describe "with multiple containers" do
         before { raw_template[:spec][:template][:spec][:containers] = [{name: 'foo'}, {name: 'bar'}] }
 
