@@ -243,6 +243,12 @@ Then configure an ENV var with that same name and a value that is valid JSON.
  - To set string values as env vars, use quotes, i.e. `"foo"`
  - To set values inside of arrays use numbers as index `spec.containers.0.name`
 
+### Allowing to override static/db env vars
+
+If you want to override or remove env vars like PROJECT,ROLE,TAG ... set this:
+
+`metadata.annotations.container-nameofcontainer-samson/keep_env_var: "TAG,ROLE"`
+
 ### Allow randomly not-ready pods during readiness & stability check
 
 Set `KUBERNETES_ALLOW_NOT_READY_PERCENT=20` to allow up to 20% of pods per role being not-ready,

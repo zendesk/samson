@@ -511,10 +511,18 @@ module Kubernetes
       end
 
       env_containers.each do |c|
+        extra = all
         env = (c[:env] ||= [])
-        env.concat all
 
-        # unique, but keep last elements
+        # keep container env var if requested, so static+plugin env can be overwritten
+        if keep = samson_container_config(c, :"samson/keep_env_var").to_s.split(/, ?| /).presence
+          extra = all.dup
+          keep.each { |var| extra.delete_if { |e| e[:name] == var } }
+        end
+
+        env.concat extra
+
+        # unique, but keep user configured overrides
         env.reverse!
         env.uniq! { |h| h[:name] }
         env.reverse!
