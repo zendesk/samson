@@ -1123,6 +1123,13 @@ describe Kubernetes::TemplateFiller do
         resource_label.must_equal 'true'
       end
 
+      it "adds the ISTIO_STATUS env var" do
+        template.to_hash.dig(:spec, :template, :spec, :containers).each do |container|
+          istio_status_var = container[:env].detect { |ev| ev[:name] == 'ISTIO_STATUS' }
+          istio_status_var.dig(:valueFrom, :fieldRef, :fieldPath).must_equal "metadata.annotations['sidecar.istio.io/status']"
+        end
+      end
+
       it "has no effect when not enabled" do
         doc.deploy_group_role.inject_istio_annotation = false
 
