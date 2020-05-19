@@ -1126,7 +1126,8 @@ describe Kubernetes::TemplateFiller do
       it "adds the ISTIO_STATUS env var" do
         template.to_hash.dig(:spec, :template, :spec, :containers).each do |container|
           istio_status_var = container[:env].detect { |ev| ev[:name] == 'ISTIO_STATUS' }
-          istio_status_var.dig(:valueFrom, :fieldRef, :fieldPath).must_equal "metadata.annotations['sidecar.istio.io/status']"
+          value = istio_status_var.dig(:valueFrom, :fieldRef, :fieldPath)
+          value.must_equal "metadata.annotations['sidecar.istio.io/status']"
         end
       end
 
