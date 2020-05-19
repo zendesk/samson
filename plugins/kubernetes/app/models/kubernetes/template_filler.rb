@@ -499,11 +499,19 @@ module Kubernetes
       static_env.each { |k, v| all << {name: k.to_s, value: v.to_s} }
 
       # dynamic lookups for unknown things during deploy
-      {
+      dynamic_vars = {
         POD_NAME: 'metadata.name',
         POD_NAMESPACE: 'metadata.namespace',
         POD_IP: 'status.podIP'
-      }.each do |k, v|
+      }
+
+      if @doc.deploy_group_role.inject_istio_annotation?
+        # Set the ISTIO_STATUS env var so that the container(s) know that an Istio
+        # sidecar has been injected.
+        dynamic_vars['ISTIO_STATUS'] = "metadata.annotations['sidecar.istio.io/status']"
+      end
+
+      dynamic_vars.each do |k, v|
         all << {
           name: k.to_s,
           valueFrom: {fieldRef: {fieldPath: v}}
