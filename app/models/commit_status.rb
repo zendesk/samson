@@ -10,7 +10,7 @@ class CommitStatus
   CHECK_STATE = {
     error: ['action_required', 'cancelled', 'timed_out'],
     failure: ['failure'],
-    success: ['success', 'neutral']
+    success: ['success', 'neutral', 'skipped']
   }.freeze
   NO_STATUSES_REPORTED_RESULT = {
     state: 'pending',
