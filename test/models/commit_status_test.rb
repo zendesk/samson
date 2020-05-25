@@ -291,6 +291,12 @@ describe CommitStatus do
         status.state.must_equal 'error'
       end
 
+      it 'maps skipped status to success' do
+        stub_github_api(check_suite_url, check_suites: [{conclusion: 'skipped', id: 1}])
+
+        status.state.must_equal 'success'
+      end
+
       it 'picks highest priority check conclusion/status equivalent' do
         stub_github_api(
           check_suite_url,
