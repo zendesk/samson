@@ -10,12 +10,16 @@ module Samson
             ActiveRecord::Base.connection_pool.stat.fetch(:busy) == 0
           end
         else
+          extra_threads = (Thread.list - [Thread.current]).reject do |t|
+            t.backtrace(1).first.match?(/ruby_thread_local_var/) # threads get started by loading logger - ignore them
+          end
+
           # make sure we do not regress into slow startup time by preloading too much
           bad = [
             ActiveRecord::Base.descendants.map(&:name) - ["Audited::Audit"],
             ActionController::Base.descendants.map(&:name) - ["RollbarTestController"],
             (const_defined?(:Mocha) && "mocha"),
-            ((Thread.list.count != 1) && "Extra threads: #{Thread.list - [Thread.current]}")
+            (extra_threads.any? && "Extra threads: #{extra_threads}")
           ].flatten.select { |x| x }
           raise "#{bad.join(", ")} should not be loaded" if bad.any?
         end
