@@ -86,7 +86,7 @@ task :flay do
 
   files = Dir["{config,lib,app,plugins/*/{config,lib,app}}/**/*.{rb,erb}"]
   files -= [
-    'plugins/slack_app/app/models/slack_message.rb', # cannot depend on other plugin ... maybe extract
+    'plugins/slack_app/app/models/samson_slack_app/slack_message.rb', # cannot depend on other plugin ... maybe extract
     'app/views/admin/secrets/index.html.erb', # search box
     'plugins/slack_webhooks/app/views/samson_slack_webhooks/_fields.html.erb', # cannot reuse form.input
     'plugins/pipelines/app/views/samson_pipelines/_stage_show.html.erb', # super simple html

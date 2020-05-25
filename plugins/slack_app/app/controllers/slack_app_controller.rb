@@ -24,9 +24,9 @@ class SlackAppController < ApplicationController
       body = JSON.parse response.body
 
       if @need_to_connect_app
-        SlackIdentifier.create!(identifier: body.fetch('access_token')).identifier
+        SamsonSlackApp::SlackIdentifier.create!(identifier: body.fetch('access_token')).identifier
       end
-      SlackIdentifier.create!(user_id: current_user.id, identifier: body.fetch('user_id'))
+      SamsonSlackApp::SlackIdentifier.create!(user_id: current_user.id, identifier: body.fetch('user_id'))
 
       redirect_to # to what ??
     end
@@ -82,9 +82,9 @@ class SlackAppController < ApplicationController
 
     deploy_service = DeployService.new(@current_user_from_slack)
     deploy = deploy_service.deploy(stage, reference: ref_name)
-    DeployResponseUrl.create! deploy: deploy, response_url: @payload[:response_url]
+    SamsonSlackApp::DeployResponseUrl.create! deploy: deploy, response_url: @payload[:response_url]
 
-    SlackMessage.new(deploy).message_body
+    SamsonSlackApp::SlackMessage.new(deploy).message_body
   end
 
   def interact_response
@@ -129,7 +129,7 @@ class SlackAppController < ApplicationController
 
     # Buddy up
     deploy.confirm_buddy!(@current_user_from_slack)
-    SlackMessage.new(deploy).message_body
+    SamsonSlackApp::SlackMessage.new(deploy).message_body
   end
 
   def handle_slack_inputs
@@ -145,14 +145,14 @@ class SlackAppController < ApplicationController
     end
 
     @current_user_from_slack = if current_user
-      SlackIdentifier.find_by_user_id(current_user.id)&.user
+      SamsonSlackApp::SlackIdentifier.find_by_user_id(current_user.id)&.user
     else
       slack_user_id = if @payload.key? 'user'
         @payload['user']['id']
       else
         @payload['user_id']
       end
-      SlackIdentifier.find_by_identifier(slack_user_id)&.user
+      SamsonSlackApp::SlackIdentifier.find_by_identifier(slack_user_id)&.user
     end
   end
 
@@ -161,6 +161,6 @@ class SlackAppController < ApplicationController
   end
 
   def app_token
-    @app_token ||= SlackIdentifier.app_token
+    @app_token ||= SamsonSlackApp::SlackIdentifier.app_token
   end
 end
