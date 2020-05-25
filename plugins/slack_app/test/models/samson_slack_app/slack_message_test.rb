@@ -1,16 +1,16 @@
 # frozen_string_literal: true
-require_relative '../test_helper'
+require_relative '../../test_helper'
 
 SingleCov.covered!
 
-describe SlackMessage do
+describe SamsonSlackApp::SlackMessage do
   let(:deploy) { deploys(:succeeded_test) }
-  let(:msg) { SlackMessage.new deploy }
+  let(:msg) { SamsonSlackApp::SlackMessage.new deploy }
   let(:body) { msg.message_body }
   let(:super_admin) { users(:super_admin) }
   let(:deployer_buddy) { users(:deployer_buddy) }
-  let(:super_admin_identifier) { slack_identifiers(:super_admin) }
-  let(:deployer_buddy_identifier) { slack_identifiers(:deployer_buddy) }
+  let(:super_admin_identifier) { samson_slack_app_slack_identifiers(:super_admin) }
+  let(:deployer_buddy_identifier) { samson_slack_app_slack_identifiers(:deployer_buddy) }
 
   before do
     deploy.changeset.stubs(:pull_requests).returns([])
@@ -158,7 +158,7 @@ describe SlackMessage do
 
     describe 'with a URL linkage' do
       before do
-        DeployResponseUrl.create! deploy_id: deploy.id, response_url: 'http://example.com/xyz'
+        SamsonSlackApp::DeployResponseUrl.create! deploy_id: deploy.id, response_url: 'http://example.com/xyz'
         stub_request(:post, 'http://example.com/xyz').
           with(body: /successfully deployed/)
       end

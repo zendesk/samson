@@ -10,7 +10,7 @@ describe SamsonSlackApp do
   describe 'while configured' do
     it "sends notification on before hook" do
       with_env SLACK_CLIENT_ID: 'abc', SLACK_CLIENT_SECRET: 'def' do
-        SlackMessage.any_instance.expects(:deliver).twice
+        SamsonSlackApp::SlackMessage.any_instance.expects(:deliver).twice
         Samson::Hooks.fire(:before_deploy, deploy, stub(output: nil))
         Samson::Hooks.fire(:after_deploy, deploy, stub(output: nil))
       end
