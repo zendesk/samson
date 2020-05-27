@@ -18,6 +18,8 @@ Samson::Periodical.register :remove_expired_locks, "Remove expired locks" do
 end
 
 Samson::Periodical.register :report_system_stats, "Report system stats" do
+  # https://api.rubyonrails.org/classes/ActiveRecord/ConnectionAdapters/ConnectionPool.html#method-i-stat
+  conn_pool_stats = ActiveRecord::Base.connection_pool.stat
   memcached_available =
     if Rails.cache.class == ActiveSupport::Cache::MemoryStore
       1
@@ -28,8 +30,12 @@ Samson::Periodical.register :report_system_stats, "Report system stats" do
   ActiveSupport::Notifications.instrument(
     "system_stats.samson",
     thread_count: Thread.list.size,
-    mysql_wait: ActiveRecord::Base.connection_pool.num_waiting_in_queue,
-    memcached_available: memcached_available
+    memcached_available: memcached_available,
+    mysql_pool_busy: conn_pool_stats[:busy],
+    mysql_pool_dead: conn_pool_stats[:dead],
+    mysql_pool_idle: conn_pool_stats[:idle],
+    mysql_pool_size: conn_pool_stats[:size],
+    mysql_pool_wait: conn_pool_stats[:waiting]
   )
 end
 
