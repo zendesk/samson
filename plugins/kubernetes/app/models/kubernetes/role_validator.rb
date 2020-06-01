@@ -3,7 +3,8 @@ module Kubernetes
   class RoleValidator
     # per https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#syntax-and-character-set
     # not perfect since the actual rules are stricter
-    VALID_LABEL_VALUE = /\A[a-zA-Z0-9]([-a-zA-Z0-9.]*[a-zA-Z0-9])?\z/.freeze # also used in js ... cannot use /i
+    VALID_LABEL_VALUE = /\A[a-zA-Z0-9]([-a-zA-Z0-9_.]*[a-zA-Z0-9])?\z/.freeze
+    VALID_CONTAINER_NAME = /\A[a-zA-Z0-9]([-a-zA-Z0-9.]*[a-zA-Z0-9])?\z/.freeze # also used in js ... cannot use /i
 
     # for non-namespace deployments: names that should not be changed since they will break dependencies
     IMMUTABLE_NAME_KINDS = [
@@ -304,8 +305,8 @@ module Kubernetes
       names = (pod_containers + init_containers).flatten(1).map { |c| c[:name] }
       if names.any?(&:nil?)
         @errors << "Containers need a name"
-      elsif bad = names.grep_v(VALID_LABEL_VALUE).presence
-        @errors << "Container name #{bad.join(", ")} did not match #{VALID_LABEL_VALUE.source}"
+      elsif bad = names.grep_v(VALID_CONTAINER_NAME).presence
+        @errors << "Container name #{bad.join(", ")} did not match #{VALID_CONTAINER_NAME.source}"
       end
     end
 

@@ -46,14 +46,14 @@ module Kubernetes
     before_validation :strip_config_file
 
     validates :project, presence: true
-    validates :name, presence: true, format: Kubernetes::RoleValidator::VALID_LABEL_VALUE
+    validates :name, presence: true, format: Kubernetes::RoleValidator::VALID_CONTAINER_NAME
     validates :service_name,
       uniqueness: {case_sensitive: false, scope: :deleted_at},
-      format: Kubernetes::RoleValidator::VALID_LABEL_VALUE,
+      format: Kubernetes::RoleValidator::VALID_CONTAINER_NAME,
       allow_nil: true
     validates :resource_name,
       uniqueness: {case_sensitive: false, scope: :deleted_at},
-      format: Kubernetes::RoleValidator::VALID_LABEL_VALUE,
+      format: Kubernetes::RoleValidator::VALID_CONTAINER_NAME,
       allow_nil: true
     validates :manual_deletion_acknowledged, presence: {message: "must be set"}, if: :manual_deletion_required?
 

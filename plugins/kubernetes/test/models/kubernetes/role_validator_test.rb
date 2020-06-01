@@ -223,9 +223,9 @@ describe Kubernetes::RoleValidator do
     end
 
     it "reports invalid labels" do
-      role.first[:metadata][:labels][:role] = 'foo_bar'
+      role.first[:metadata][:labels][:role] = '_foo_'
       errors.must_include(
-        'Deployment metadata.labels.role is "foo_bar", but must match /\\A[a-zA-Z0-9]([-a-zA-Z0-9.]*[a-zA-Z0-9])?\\z/'
+        'Deployment metadata.labels.role is "_foo_", but must match /\\A[a-zA-Z0-9]([-a-zA-Z0-9_.]*[a-zA-Z0-9])?\\z/'
       )
     end
 
