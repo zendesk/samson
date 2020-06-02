@@ -84,6 +84,28 @@ $(function () {
     }
   }
 
+  function showChangeset($form) {
+    toggleConfirmed();
+    $("#deploy-confirmation").show();
+
+    storeActiveTab($form);
+
+    $('.changeset-content').remove();
+    $('.changeset-placeholder').addClass('active')
+    $container.append($placeholderPanes);
+
+    $.ajax({
+      method: "POST",
+      url: $form.data("confirm-url"),
+      data: $form.serialize(),
+      success: function (data) {
+        $placeholderPanes.detach();
+        $container.append(data);
+        showActiveTab($form);
+      }
+    });
+  }
+
   // When user clicks a release or deploy label, fill the deploy reference field with that version
   // also trigger version check ... see ref_status_typeahead.js
   $(".clickable-releases [data-ref]").on('click', function(event){
@@ -92,30 +114,13 @@ $(function () {
   });
 
   $form.submit(function(event) {
-    var $this = $(this);
+    var $form = $(this);
 
-    if(!confirmed && $this.data('confirmation')) {
-      toggleConfirmed();
-      $("#deploy-confirmation").show();
-
-      storeActiveTab($this);
-
-      $('.changeset-content').remove();
-      $('.changeset-placeholder').addClass('active')
-      $container.append($placeholderPanes);
-
-      $.ajax({
-        method: "POST",
-        url: $this.data("confirm-url"),
-        data: $this.serialize(),
-        success: function(data) {
-          $placeholderPanes.detach();
-          $container.append(data);
-          showActiveTab($this);
-        }
-      });
-
+    if(!confirmed && $form.data('confirmation')) { // user pressed `Review`: load in changeset
       event.preventDefault();
+      showChangeset($form);
+    } else { // user pressed `Deploy!`: start the deploy
+      $form.find("input[type=submit]").prop("disabled",true) // prevent accidental clicks
     }
   });
 
