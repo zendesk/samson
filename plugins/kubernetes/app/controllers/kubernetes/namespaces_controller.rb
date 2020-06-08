@@ -64,7 +64,34 @@ class Kubernetes::NamespacesController < ResourceController
   private
 
   def create_callback
-    sync_namespace
+    warnings = upsert_namespace(Kubernetes::Cluster.all, @kubernetes_namespace)
+    warnings += copy_secrets(
+      ENV['KUBERNETES_COPY_SECRETS_TO_NEW_NAMESPACE'].to_s.split(","),
+      from: 'default',
+      to: @kubernetes_namespace.name
+    )
+    show_namespace_warnings warnings
+  end
+
+  def copy_secrets(secret_names, from:, to:)
+    secret_names.flat_map do |secret_name|
+      Kubernetes::Cluster.all.map do |cluster|
+        client = cluster.client('v1')
+        begin
+          secret = SamsonKubernetes.retry_on_connection_errors { client.get_secret(secret_name, from) }
+          secret[:metadata][:namespace] = to
+          # remove things we should not set
+          [:resourceVersion, :selfLink, :uid, :creationTimestamp, :annotations].each do |d|
+            secret[:metadata].delete(d)
+          end
+          SamsonKubernetes.retry_on_connection_errors { client.create_secret(secret) }
+        rescue StandardError => e
+          "Failed to copy secret #{secret_name} to #{to} in cluster #{cluster.name}: #{e.message}"
+        else
+          nil
+        end
+      end
+    end.compact
   end
 
   def sync_namespace

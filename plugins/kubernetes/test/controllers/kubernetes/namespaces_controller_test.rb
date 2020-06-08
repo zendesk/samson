@@ -222,5 +222,20 @@ describe Kubernetes::NamespacesController do
         refute flash[:warn]
       end
     end
+
+    describe "#copy_secrets" do
+      it "copies secrets" do
+        stub_request(:get, "http://foobar.server/api/v1/namespaces/f/secrets/s").to_return(body: {metadata: {}}.to_json)
+        stub_request(:post, "http://foobar.server/api/v1/namespaces/t/secrets").to_return(body: '{}')
+        @controller.send(:copy_secrets, ["s"], from: "f", to: "t").must_equal []
+      end
+
+      it "shows errors" do
+        stub_request(:get, "http://foobar.server/api/v1/namespaces/f/secrets/s").to_return(status: 404)
+        @controller.send(:copy_secrets, ["s"], from: "f", to: "t").must_equal(
+          ["Failed to copy secret s to t in cluster test: 404 Not Found"]
+        )
+      end
+    end
   end
 end
