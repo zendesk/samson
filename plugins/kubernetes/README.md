@@ -327,3 +327,8 @@ If a warning event fails deploys, but application owners deem them safe to ignor
 `metadata.annotations.samson/ignore_events="FailedCreate,AnotherEvent"`
 
 ... still consider opening a samson PR if the event is universally to be ignored.
+
+### Copying secrets to created namespaces
+
+When using the namespaces UI to create new namespaces, set `KUBERNETES_COPY_SECRETS_TO_NEW_NAMESPACE=my-docker-auth,other-stuff`,
+it will then copy that secret from the `default` namespace to any newly created namespace.
