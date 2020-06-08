@@ -3,6 +3,11 @@ class Kubernetes::NamespacesController < ResourceController
   before_action :authorize_admin!, except: [:show, :index, :preview]
   before_action :set_resource, only: [:show, :update, :destroy, :new, :create, :sync]
 
+  def new
+    @kubernetes_namespace.template ||= {"metadata" => {"labels" => {"team" => "fill-me-in"}}}.to_yaml
+    super
+  end
+
   def update
     super template: :show
     sync_namespace if @kubernetes_namespace.previous_changes.key?(:template)
