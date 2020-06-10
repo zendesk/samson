@@ -68,7 +68,8 @@ class Changeset
     return NullComparison.new if empty?
 
     Rails.cache.fetch(compare_cache_key) do
-      Samson::Hooks.fire(:repo_compare, @project, @previous_commit, @reference).compact.first
+      Samson::Hooks.fire(:repo_compare, @project, @previous_commit, @reference).compact.first ||
+        NullComparison.new
     end
   rescue StandardError => e
     Changeset::NullComparison.new(error: "Repository error: #{e.message.split("::").last}")
