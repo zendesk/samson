@@ -69,6 +69,13 @@ describe Changeset do
       stub_github_api("repos/foo/bar/compare/a...master", "x" => "z")
       Changeset.new(project, "a", "master").comparison.to_h.must_equal x: "z"
     end
+
+    it "creates a null compare for local projects" do
+      project.stubs(:github?)
+      project.stubs(:gitlab?)
+      comparison = Changeset.new(project, "a", "b").comparison
+      comparison.class.must_equal Changeset::NullComparison
+    end
   end
 
   describe "#commit_range_url" do
