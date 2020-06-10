@@ -269,6 +269,11 @@ describe Samson::Periodical do
   end
 
   it "runs everything" do
+    User.create!(
+      name: "Periodical",
+      email: "periodical@example.com",
+      external_id: Samson::PeriodicalDeploy::EXTERNAL_ID
+    )
     stub_request(:get, "https://www.githubstatus.com/api/v2/status.json")
     Samson::Periodical.send(:registered).each_key do |task|
       Samson::Periodical.run_once task

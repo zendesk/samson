@@ -52,5 +52,13 @@ describe Samson::PeriodicalDeploy do
         Samson::PeriodicalDeploy.run
       end
     end
+
+    it "skips when single stage is in trouble" do
+      Samson::ErrorNotifier.expects(:notify)
+      DeployService.expects(:new).raises("Whoops")
+      refute_difference "stage.deploys.count" do
+        Samson::PeriodicalDeploy.run
+      end
+    end
   end
 end

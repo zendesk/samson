@@ -18,6 +18,12 @@ project.stages.create!(
   deploy_groups: [group1]
 )
 
+User.create!(
+  name: "Periodical",
+  email: "periodical@example.com",
+  external_id: Samson::PeriodicalDeploy::EXTERNAL_ID
+)
+
 user = User.create!(
   name: "Mr. Seed",
   email: "seed@example.com",
