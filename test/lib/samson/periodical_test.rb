@@ -154,6 +154,18 @@ describe Samson::Periodical do
       tasks = Samson::Periodical.run
       tasks.first.shutdown
     end
+
+    # cannot use 0.1s since % math and scheduler do not support it
+    it "runs consistent_start_time task when they are first due" do
+      freeze_time # we need to make sure the scheduler always wait 1s
+      ran = []
+      Samson::Periodical.register(:foo, 'bar', consistent_start_time: true, execution_interval: 1) { ran << 1 }
+      Samson::Periodical.run
+      sleep 0.8
+      ran.size.must_equal 0
+      sleep 0.3
+      ran.size.must_equal 1
+    end
   end
 
   describe ".configs_from_string" do
