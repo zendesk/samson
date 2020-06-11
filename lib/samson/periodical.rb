@@ -35,6 +35,9 @@ module Samson
           merge(env_settings(name)).
           merge(block: block, description: description).
           merge(options)
+
+        # we do not do initial runs when using consistent_start_time, so we need to run at the first invocation
+        registered[name][:now] = true if options[:consistent_start_time]
       end
 
       # works with cron like setup for .run_once and in process execution via .run
