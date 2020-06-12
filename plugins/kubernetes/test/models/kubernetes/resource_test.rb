@@ -790,6 +790,18 @@ describe Kubernetes::Resource do
         end
       end
 
+      # TODO: does not work for deployments because there we update replicas first
+      it "recreates when requested" do
+        template[:metadata][:annotations] = {"samson/recreate": "true"}
+        assert_request(:get, url, to_return: [{body: "{}"}, {status: 404}]) do
+          assert_request(:delete, url, to_return: {body: "{}"}) do
+            assert_request(:post, base_url, to_return: {body: "{}"}) do
+              resource.deploy
+            end
+          end
+        end
+      end
+
       describe "forced update" do
         def assert_recreate(error)
           assert_request(:get, url, to_return: [{body: "{}"}, {status: 404}]) do

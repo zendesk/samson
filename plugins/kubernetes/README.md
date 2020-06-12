@@ -316,6 +316,15 @@ Delete old resource and create new when an update fails because it `cannot chang
 metadata.annotation.samson/force_update: "true"
 ```
 
+### Forcing a delete-create to get back to a clean state
+
+Delete old resource and create new.
+Can be useful for Service migration from NodePort to ClusterIP, or similar scenarios where we want a clean slate.
+
+```
+metadata.annotation.samson/recreate: "true"
+```
+
 ### Static config per deploy group
 
 Set the kubernetes roles to `kubernetes/$deploy_group/server.yml` 
