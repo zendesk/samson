@@ -62,7 +62,12 @@ module Kubernetes
           if @delete_resource
             delete
           else
-            update
+            if recreate?
+              delete
+              create
+            else
+              update
+            end
           end
         else
           create
@@ -119,6 +124,10 @@ module Kubernetes
       end
 
       private
+
+      def recreate?
+        @template.dig(:metadata, :annotations, :"samson/recreate") == "true"
+      end
 
       def server_side_apply?
         @template.dig(:metadata, :annotations, :"samson/server_side_apply") == "true"
@@ -336,9 +345,8 @@ module Kubernetes
     end
 
     class Immutable < Base
-      def deploy
-        delete
-        create
+      def recreate?
+        true
       end
     end
 
