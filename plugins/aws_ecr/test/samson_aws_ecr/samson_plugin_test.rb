@@ -33,6 +33,8 @@ describe SamsonAwsEcr::SamsonPlugin do
     end
   end
 
+  before { stub_request(:put, "http://169.254.169.254/latest/api/token").to_return(status: 404) }
+
   describe :before_docker_repository_usage do
     let(:build) { builds(:docker_build) }
 
