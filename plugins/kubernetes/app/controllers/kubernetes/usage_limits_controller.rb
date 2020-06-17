@@ -5,13 +5,14 @@ class Kubernetes::UsageLimitsController < ResourceController
   before_action :authorize_admin!, except: [:show, :index]
   before_action :set_resource, only: [:show, :update, :destroy, :new, :create]
 
-  def index
+  private
+
+  def search_resources
     if project_id = params[:project_id]
       @project = Project.find_by_param!(project_id)
-      limits = @project.kubernetes_usage_limits
+      @project.kubernetes_usage_limits
     else
       limits = ::Kubernetes::UsageLimit.all
-      @projects = limits.map(&:project).uniq.compact.sort_by(&:name)
 
       if project_id = params.dig(:search, :project_id).presence
         project_id = nil if project_id == ALL
@@ -26,18 +27,10 @@ class Kubernetes::UsageLimitsController < ResourceController
         end
         limits = limits.where(scope_type: scope_type, scope_id: scope_id)
       end
-    end
 
-    @env_deploy_group_array = Environment.env_deploy_group_array(include_all: false)
-    @kubernetes_usage_limits = limits.sort_by do |l|
-      [
-        l.project&.name || '',
-        @env_deploy_group_array.index { |_, type_and_id| type_and_id == l.scope_type_and_id } || 999
-      ]
+      limits
     end
   end
-
-  private
 
   def resource_params
     super.permit(

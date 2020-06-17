@@ -5,6 +5,12 @@ class EnvironmentVariableGroupsController < ApplicationController
 
   def index
     @groups = EnvironmentVariableGroup.all.includes(:environment_variables)
+
+    if project_id = params[:project_id].presence
+      @groups = @groups.joins(:project_environment_variable_groups).
+        where("project_environment_variable_groups.project_id = ?", project_id)
+    end
+
     respond_to do |format|
       format.html
       format.json do
@@ -30,7 +36,7 @@ class EnvironmentVariableGroupsController < ApplicationController
   end
 
   def update
-    group.update_attributes!(attributes)
+    group.update!(attributes)
     redirect_to action: :index
   end
 
@@ -54,7 +60,14 @@ class EnvironmentVariableGroupsController < ApplicationController
       @project = Project.find(params[:project_id])
     end
 
-    @groups = SamsonEnv.env_groups(Deploy.new(project: @project), deploy_groups, preview: true)
+    secrets = (params[:preview].to_s == "false" ? false : :preview)
+
+    @groups = SamsonEnv.env_groups(
+      Deploy.new(project: @project),
+      deploy_groups,
+      project_specific: params[:project_specific],
+      resolve_secrets: secrets
+    )
 
     respond_to do |format|
       format.html
@@ -76,6 +89,7 @@ class EnvironmentVariableGroupsController < ApplicationController
     params.require(:environment_variable_group).permit(
       :name,
       :comment,
+      :owners,
       AcceptsEnvironmentVariables::ASSIGNABLE_ATTRIBUTES
     )
   end

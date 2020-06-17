@@ -10,7 +10,7 @@ describe Stage do
   let(:stage3) { stages(:test_production_pod) }
 
   before do
-    stage1.update_attributes!(prerequisite_stage_ids: [stage2.id, stage3.id])
+    stage1.update!(prerequisite_stage_ids: [stage2.id, stage3.id])
   end
 
   describe '#prerequisite_stages' do
@@ -19,7 +19,7 @@ describe Stage do
     end
 
     it 'returns an empty array if no prerequisite stages' do
-      stage1.update_attributes!(prerequisite_stage_ids: [])
+      stage1.update!(prerequisite_stage_ids: [])
       stage1.prerequisite_stages.must_equal []
     end
   end
@@ -28,7 +28,7 @@ describe Stage do
     let(:job) { jobs(:succeeded_test) }
 
     it 'returns empty array if there are no prereq stages' do
-      stage1.update_attributes!(prerequisite_stage_ids: [])
+      stage1.update!(prerequisite_stage_ids: [])
 
       assert_sql_queries(0) do
         stage1.undeployed_prerequisite_stages('123').must_equal []
@@ -36,21 +36,19 @@ describe Stage do
     end
 
     it 'returns empty array if ref has been deployed to all prereq stages' do
-      stage1.project.repository.expects(:commit_from_ref).with('123').returns(job.commit)
       stage3.deploys << deploys(:failed_staging_test)
       stage1.prerequisite_stages.each { |s| s.deploys.first.update_column(:job_id, job.id) }
 
       assert_sql_queries(2) do
-        stage1.undeployed_prerequisite_stages('123').must_equal []
+        stage1.undeployed_prerequisite_stages(job.commit).must_equal []
       end
     end
 
     it 'returns prereq stages where ref has not been deployed yet' do
-      stage1.project.repository.expects(:commit_from_ref).with('123').returns(job.commit)
       stage2.deploys.first.update_column(:job_id, job.id)
 
       assert_sql_queries(2) do
-        stage1.undeployed_prerequisite_stages('123').must_equal [stage3]
+        stage1.undeployed_prerequisite_stages(job.commit).must_equal [stage3]
       end
     end
   end

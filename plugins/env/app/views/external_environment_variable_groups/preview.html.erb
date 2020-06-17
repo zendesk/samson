@@ -1,0 +1,23 @@
+<% title = "Preview environment variable group" %>
+<% project = @group.project %>
+
+<%= manual_breadcrumb([
+    [project.name, project],
+    [@group.name, nil, true]
+  ]) %>
+
+<%= page_title title %>
+
+<section class="clearfix">
+  <dl class="dl-horizontal">
+    <dt>Name:</dt>
+    <dd><%= @group.name %></dd>
+    <dt>Description:</dt>
+    <dd><%= @group.description %></dd>
+    <dt>URL:</dt>
+    <dd><%= @group.url %></dd>
+  </dl>
+  <pre>
+    <%= @data.to_yaml %>
+  </pre>
+</section>

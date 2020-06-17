@@ -3,7 +3,7 @@ require 'gitlab'
 require 'git_diff_parser'
 
 module SamsonGitlab
-  class Engine < Rails::Engine
+  class SamsonPlugin < Rails::Engine
     Gitlab.configure do |config|
       config.endpoint = "#{Rails.application.config.samson.gitlab.web_url}/api/v4"
       config.private_token = ENV['GITLAB_TOKEN']
@@ -11,20 +11,14 @@ module SamsonGitlab
   end
 end
 
-Samson::Hooks.callback :changeset_api_request do |changeset, method|
-  next unless changeset.project.gitlab?
-  begin
-    case method
-    when :branch
-      Gitlab.branch(changeset.repo, changeset.commit).commit.id
-    when :compare
-      Gitlab::ChangesetPresenter.new(
-        Gitlab.compare(changeset.repo, changeset.previous_commit, changeset.commit)
-      ).build
-    else
-      raise NoMethodError
-    end
-  rescue Gitlab::Error::ResponseError => e
-    raise "GitLab: #{e.message}"
-  end
+Samson::Hooks.callback :repo_commit_from_ref do |project, reference|
+  next unless project.gitlab?
+  Gitlab.branch(project.repository_path, reference).commit.id
+end
+
+Samson::Hooks.callback :repo_compare do |project, previous_commit, reference|
+  next unless project.gitlab?
+  Gitlab::ChangesetPresenter.new(
+    Gitlab.compare(project.repository_path, previous_commit, reference)
+  ).build
 end

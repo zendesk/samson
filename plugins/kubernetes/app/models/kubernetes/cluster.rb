@@ -19,7 +19,7 @@ module Kubernetes
       inverse_of: :cluster
     has_many :deploy_groups, through: :cluster_deploy_groups, inverse_of: :kubernetes_cluster
 
-    validates :name, presence: true, uniqueness: true
+    validates :name, presence: true, uniqueness: {case_sensitive: false}
     validates :ip_prefix, format: IP_PREFIX_PATTERN, allow_blank: true
     validate :test_client_connection
 
@@ -51,7 +51,7 @@ module Kubernetes
           type,
           ssl_options: ssl_options,
           auth_options: auth_options,
-          timeouts: {open: 2, read: 10},
+          timeouts: {open: 3, read: 10},
           as: :parsed_symbolized
         )
       end

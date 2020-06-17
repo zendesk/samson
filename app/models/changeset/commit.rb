@@ -36,6 +36,7 @@ class Changeset::Commit
     @data.sha.slice(0, 7)
   end
 
+  # @return [Integer, NilClass]
   def pull_request_number
     if number = summary[PULL_REQUEST_MERGE_MESSAGE, 1] || summary[PULL_REQUEST_SQUASH_MESSAGE, 1]
       Integer(number)

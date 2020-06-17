@@ -113,3 +113,4 @@ class Lock < ActiveRecord::Base
     errors.add(:delete_at, 'Date must be in the future') if delete_at&.past?
   end
 end
+Samson::Hooks.load_decorators(Lock)

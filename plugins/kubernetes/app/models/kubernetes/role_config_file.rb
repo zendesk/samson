@@ -6,9 +6,10 @@ module Kubernetes
   class RoleConfigFile
     attr_reader :path, :elements
 
-    # from https://github.com/helm/helm/blob/release-2.13/pkg/tiller/kind_sorter.go#L29
+    # from https://github.com/helm/helm/blob/release-3.0/pkg/releaseutil/kind_sorter.go#L27-L61
     DEPLOY_SORT_ORDER = [
       "Namespace",
+      "NetworkPolicy",
       "ResourceQuota",
       "LimitRange",
       "PodSecurityPolicy",
@@ -21,15 +22,20 @@ module Kubernetes
       "ServiceAccount",
       "CustomResourceDefinition",
       "ClusterRole",
+      "ClusterRoleList",
       "ClusterRoleBinding",
+      "ClusterRoleBindingList",
       "Role",
+      "RoleList",
       "RoleBinding",
+      "RoleBindingList",
       "Service",
       "DaemonSet",
       "Pod",
       "ReplicationController",
       "ReplicaSet",
       "Deployment",
+      "HorizontalPodAutoscaler",
       "StatefulSet",
       "Job",
       "CronJob",

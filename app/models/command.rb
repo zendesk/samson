@@ -51,6 +51,16 @@ class Command < ActiveRecord::Base
     Project.pluck(:build_command_id).compact
   end
 
+  def self.cleanup_global
+    global.find_each do |command|
+      project_ids = command.usages.map { |u| u.is_a?(Project) ? u.id : u.project_id }
+      case project_ids.size
+      when 0 then command.destroy
+      when 1 then command.update_attribute(:project_id, project_ids.first)
+      end
+    end
+  end
+
   private
 
   def ensure_unused
@@ -61,3 +71,4 @@ class Command < ActiveRecord::Base
     end
   end
 end
+Samson::Hooks.load_decorators(Command)

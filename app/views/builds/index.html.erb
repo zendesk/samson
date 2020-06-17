@@ -5,8 +5,21 @@
 <section class="tabs">
   <div class="row">
     <%= search_form do %>
-      <%= search_select :external, [["Yes", "true"], ["No", "false"]], size: 1 %>
-      <%= search_select :time_format, User::TIME_FORMATS, selected: params.dig(:search, :time_format) || current_user.time_format, label: 'Time', size: 1 %>
+      <%= search_select :status, Job::VALID_STATUSES, size: 2 %>
+      <% unless @project %>
+        <% projects = Project.order(:name).pluck(:name, :id) %>
+        <%= search_select :project_id, projects, live: true, label: "Project" %>
+      <% end %>
+      <div class="col-sm-2">
+        <%= label_tag :git_sha, "Git Commit" %>
+        <%= additional_info "Full SHA or exact reference, does not resolve" %>
+        <br/>
+        <%= text_field_tag 'search[git_commit]', params.dig(:search, :git_sha), class: "form-control" %>
+      </div>
+      <div class="col-sm-2">
+        <%= label_tag :docker_repo_digest, "Docker Digest" %><br/>
+        <%= text_field_tag 'search[docker_repo_digest]', params.dig(:search, :docker_repo_digest), class: "form-control" %>
+      </div>
     <% end %>
   </div>
 
@@ -28,8 +41,11 @@
       <% end %>
       <th>Created</th>
       <th>
-        Duration
-        <%= link_to_chart "Build duration", @builds.map(&:duration).compact %>
+        <% if @project %>
+          <%= link_to_chart "Duration", @builds.map(&:duration).compact, title: "Build duration" %>
+        <% else %>
+          Duration
+        <% end %>
       </th>
       <th>Git Ref</th>
       <th></th>

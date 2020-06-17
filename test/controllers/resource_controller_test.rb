@@ -16,6 +16,8 @@ describe "ResourceController Integration" do
 
   let(:project) { projects(:test) }
 
+  before { Airbrake.stubs(:build_notice) } # prevent threadpool creation
+
   as_a :admin do
     describe "#index" do
       describe "html" do

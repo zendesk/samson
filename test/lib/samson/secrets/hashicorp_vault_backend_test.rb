@@ -92,6 +92,29 @@ describe Samson::Secrets::HashicorpVaultBackend do
         result.must_equal versions: {v1: {metadata: {foo: "bar", destroyed: true}}}
       end
     end
+
+    it "does not resolve deleted versions" do
+      id = "production/foo/pod2/bar"
+      versions_body = {data: {versions: {
+        "v1" => {foo: "bar", destroyed: false, deletion_time: "2019-10-29"},
+        "v2" => {foo: "bar2", destroyed: false, deletion_time: ""}
+      }}}
+      version_body = {data: {data: {vault: 1}, metadata: {v2: {metadata: {foo: "bar2", destroyed: false}}}}}
+      assert_vault_request :get, id, versioned_kv: "metadata", body: versions_body.to_json do
+        assert_vault_request :get, "#{id}?version=v2", versioned_kv: "data", body: version_body.to_json do
+          result = backend.history('production/foo/pod2/bar', resolve: true)
+          result.must_equal versions: {
+            v1: {metadata: {foo: "bar", destroyed: false, deletion_time: "2019-10-29"}},
+            v2: {
+              metadata: {
+                v2: {metadata: {foo: "bar2", destroyed: false}}
+              },
+              auth: nil, lease_duration: nil, lease_id: nil, renewable: nil, warnings: nil, wrap_info: nil, value: 1
+            }
+          }
+        end
+      end
+    end
   end
 
   describe ".read_multi" do
@@ -118,11 +141,19 @@ describe Samson::Secrets::HashicorpVaultBackend do
       end
     end
 
-    it "leaves out vaules from deploy groups that have no vault server so KeyResolver works" do
+    it "raises an error if client is not authorized" do
+      assert_raises Vault::HTTPClientError do
+        assert_vault_request :get, "production/foo/pod2/bar", status: 403 do
+          backend.read_multi(['production/foo/pod2/bar'])
+        end
+      end
+    end
+
+    it "leaves out values from deploy groups that have no vault server so KeyResolver works" do
       backend.read_multi(['production/foo/pod100/bar']).must_equal({})
     end
 
-    it "leaves out vaules from unknown deploy groups" do
+    it "leaves out values from unknown deploy groups" do
       backend.read_multi(['production/foo/pod1nope/bar']).must_equal({})
     end
   end
@@ -238,8 +269,13 @@ describe Samson::Secrets::HashicorpVaultBackend do
     end
 
     it ".write" do
-      manager.expects(:read).returns(nil)
-      manager.expects(:write).raises(Vault::HTTPConnectionError.new("address", RuntimeError.new('no write for you')))
+      manager.expects(:read).returns(nil) # does not exist -> create
+      # tries to revert after failure ... but also fails
+      manager.expects(:delete).
+        raises(Vault::HTTPConnectionError.new("address", RuntimeError.new('no delete for you')))
+      manager.expects(:write).
+        raises(Vault::HTTPConnectionError.new("address", RuntimeError.new('no write for you')))
+
       e = assert_raises Samson::Secrets::BackendError do
         backend.write(
           'production/foo/group/isbar/foo', value: 'whatever', visible: false, user_id: 1, comment: 'secret!'

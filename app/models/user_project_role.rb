@@ -13,7 +13,8 @@ class UserProjectRole < ActiveRecord::Base
 
   ROLES = [Role::DEPLOYER, Role::ADMIN].freeze
 
-  validates_presence_of :project, :user
+  validates :project, :user, presence: true
   validates :role_id, inclusion: {in: ROLES.map(&:id)}
-  validates_uniqueness_of :project_id, scope: :user_id
+  validates :project_id, uniqueness: {scope: :user_id}
 end
+Samson::Hooks.load_decorators(UserProjectRole)

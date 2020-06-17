@@ -5,7 +5,7 @@ ruby File.read('.ruby-version').strip
 
 # gems that have rails engines are are always needed
 group :preload do
-  gem 'rails', '5.2.2.1'
+  gem 'rails', '6.0.2.1'
   gem 'dotenv'
   gem 'connection_pool'
   gem 'marco-polo'
@@ -26,11 +26,12 @@ gem 'sawyer'
 gem 'dalli'
 gem 'omniauth'
 gem 'omniauth-oauth2'
-gem 'omniauth-github'
+gem 'omniauth-github', git: "https://github.com/omniauth/omniauth-github.git" # needs >1.3.0
 gem 'omniauth-google-oauth2'
 gem 'omniauth-ldap'
 gem 'omniauth-gitlab'
 gem 'omniauth-bitbucket'
+gem 'omniauth-rails_csrf_protection' # remove once https://github.com/omniauth/omniauth/pull/809 is resolved
 gem 'octokit'
 gem 'faraday'
 gem 'faraday-http-cache'
@@ -67,6 +68,7 @@ group :sqlite do
 end
 
 group :assets do
+  gem 'sprockets', '~> 3.7'
   gem 'sass-rails'
   gem 'uglifier'
   gem 'bootstrap-sass', '>= 3.4.1'
@@ -87,26 +89,30 @@ group :assets do
   end
 end
 
+group :debugging do
+  gem 'pry-byebug'
+  gem 'pry-rails'
+  gem 'pry-rescue'
+  gem 'pry-stack_explorer'
+end
+
 group :development, :staging do
   gem 'rack-mini-profiler'
 end
 
 group :development, :test do
-  gem 'byebug'
   gem 'bootsnap'
-  gem 'pry-rails'
-  gem 'pry-byebug'
-  gem 'pry'
   gem 'awesome_print'
   gem 'brakeman'
   gem 'rubocop'
+  gem 'rubocop-rails'
   gem 'flay'
   gem 'parallel_tests'
   gem 'forking_test_runner'
 end
 
 group :test do
-  gem 'minitest-rails'
+  gem 'minitest-rails', git: "https://github.com/blowmage/minitest-rails.git", branch: "master" # need >v6.0.0
   gem 'rails-controller-testing'
   gem 'maxitest'
   gem 'mocha'

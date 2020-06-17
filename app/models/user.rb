@@ -22,13 +22,14 @@ class User < ActiveRecord::Base
   has_many :builds, dependent: nil, foreign_key: :created_by, inverse_of: :creator
   has_many :jobs, dependent: nil, inverse_of: :user
   has_many :access_tokens,
-    dependent: :destroy, class_name: 'Doorkeeper::AccessToken', foreign_key: :resource_owner_id, inverse_of: nil
+    dependent: :destroy, class_name: 'Doorkeeper::AccessToken', foreign_key: :resource_owner_id, inverse_of: false
 
   validates :role_id, inclusion: {in: Role.all.map(&:id)}
 
   validates :time_format, inclusion: {in: TIME_FORMATS}
   validates :external_id,
-    uniqueness: {scope: :deleted_at}, presence: true, unless: :integration?, if: :external_id_changed?
+    uniqueness: {scope: :deleted_at, case_sensitive: false},
+    presence: true, unless: :integration?, if: :external_id_changed?
   validates :github_username, uniqueness: {case_sensitive: false}, format: GITHUB_USERNAME_REGEX, allow_blank: true
 
   before_soft_delete :destroy_user_project_roles
@@ -125,3 +126,4 @@ class User < ActiveRecord::Base
     user_project_roles.each(&:destroy)
   end
 end
+Samson::Hooks.load_decorators(User)

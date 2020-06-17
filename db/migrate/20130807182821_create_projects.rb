@@ -5,7 +5,7 @@ class CreateProjects < ActiveRecord::Migration[4.2]
       t.string :name, null: false
       t.string :repository_url, null: false
 
-      t.timestamp :deleted_at
+      t.datetime :deleted_at
       t.timestamps
     end
   end

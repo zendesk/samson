@@ -20,10 +20,12 @@
       edit it.
     </div>
   <% end %>
+
   <%= form_for @group, html: { class: "form-horizontal" } do |form| %>
     <fieldset <%= disabled %>>
       <%= form.input :name %>
       <%= form.input :comment, as: :text_area, input_html: {size: "80x4"} %>
+      <%= form.input :owners, help: "Github team names or email to contact with questions (comma separated)" %>
     </fieldset>
 
     <% if @group.projects.length > 0 %>
@@ -38,6 +40,7 @@
         Environment variables
         <%= additional_info SamsonEnv::HELP_TEXT %>
       </legend>
+
       <%= render "samson_env/environment_variables", form: form %> |
       <%= link_to "Preview", preview_environment_variable_groups_path(group_id: @group.id) %>
       <hr>

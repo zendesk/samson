@@ -18,6 +18,7 @@ describe Samson::ErrorNotifier do
     end
 
     it 'raises if in the test environment' do
+      Airbrake.expects(:notify) # prevert threadpool creation
       exception = ArgumentError.new('motherofgod')
       exception.set_backtrace(["neatbacktraceyougotthere"])
       e = assert_raises RuntimeError do
@@ -31,6 +32,7 @@ describe Samson::ErrorNotifier do
     end
 
     it 'logs error if not in test environment' do
+      Airbrake.expects(:notify) # prevert threadpool creation
       Rails.env.expects(:test?).returns(false)
       error = ArgumentError.new('oh no!')
       error.set_backtrace('foobar')
@@ -41,8 +43,8 @@ describe Samson::ErrorNotifier do
     end
 
     it 'can log error if exception is a string' do
+      Airbrake.expects(:notify) # prevert threadpool creation
       Rails.env.expects(:test?).returns(false)
-
       Rails.logger.expects(:error).with('ErrorNotifier: Oh no!')
 
       Samson::ErrorNotifier.notify('Oh no!')

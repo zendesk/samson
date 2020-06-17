@@ -1,29 +1,35 @@
 <%
-  next_stages = @stage.next_stages.sort_by(&:name)
-  previous_stages = @stage.previous_stages.sort_by(&:name)
+  next_stages = @stage.pipeline_next_stages.to_a.presence
+  previous_stages = @stage.pipeline_previous_stages.to_a.presence
 %>
 
-<% if next_stages.presence || previous_stages.presence %>
+<% if next_stages || previous_stages %>
   <h2>Pipelining</h2>
 
-  <% if previous_stages.presence %>
+  <% if previous_stages %>
     <div>
       The following stages will trigger this stage on completion:
-      <%= unordered_list previous_stages do |stage| %>
-        <%= link_to stage.name, [@project, stage] %>
-      <% end %>
+      <ul>
+        <% previous_stages.each do |stage| %>
+          <li><%= link_to stage.name, [@project, stage] %></li>
+        <% end %>
+      </ul>
     </div>
   <% end %>
 
-  <% if next_stages.presence %>
+  <% if next_stages %>
     <div>
       After this stage finishes deploying it will deploy to:
-      <%= unordered_list next_stages do |stage| %>
-        <%= link_to stage.name, [@project, stage] %>  
-        <% if last_deploy = stage.last_deploy %> 
-          Last Deploy: <%= render_time last_deploy.start_time %> <%= status_badge last_deploy.status %>
+      <ul>
+        <% next_stages.each do |stage| %>
+          <li>
+            <%= link_to stage.name, [@project, stage] %>
+            <% if last_deploy = stage.last_deploy %>
+              Last Deploy: <%= render_time last_deploy.start_time %> <%= status_badge last_deploy.status %>
+            <% end %>
+          </li>
         <% end %>
-      <% end %>
+      </ul>
     </div>
   <% end %>
 <% end %>

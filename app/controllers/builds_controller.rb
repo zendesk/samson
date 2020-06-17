@@ -9,20 +9,26 @@ class BuildsController < ApplicationController
   before_action :find_build, only: [:show, :build_docker_image, :edit, :update]
 
   def index
-    @builds = scope.order('id desc')
-    if search = params[:search]&.except(:time_format)
-      if external = search.delete(:external).presence
-        @builds =
-          case external.to_s
-          when "true" then @builds.where.not(external_status: nil)
-          when "false" then @builds.where(external_status: nil)
-          else raise
-          end
-      end
+    builds = scope
+    search = params[:search] || ActionController::Parameters.new
 
-      @builds = @builds.where(search.permit(*Build.column_names)) unless search.empty?
+    if status = search.delete(:status).presence
+      builds = builds.
+        left_outer_joins(:docker_build_job).
+        where("jobs.status = ? OR external_status = ?", status, status)
     end
 
+    if commit = search.delete(:git_commit).presence
+      builds =
+        if commit.match?(Build::SHA1_REGEX)
+          builds.where(git_sha: commit)
+        else
+          builds.where(git_ref: commit)
+        end
+    end
+
+    search_scope = search.permit(*Build.column_names).select { |_, v| v.present? }
+    @builds = builds.where(search_scope).order(id: :desc)
     @pagy, @builds = pagy(@builds, page: params[:page], items: 15)
 
     respond_to do |format|
@@ -38,11 +44,11 @@ class BuildsController < ApplicationController
   def create
     new = false
     saved = false
-    external_build_has_digest = false
+    external_build_already_has_digest = false
 
     Samson::Retry.retry_when_not_unique do
       if registering_external_build? && @build = find_external_build
-        external_build_has_digest = @build.docker_repo_digest.present?
+        external_build_already_has_digest = @build.docker_repo_digest.present?
         @build.attributes = edit_build_params(validate: false)
       else
         @build = scope.new(new_build_params.merge(creator: current_user))
@@ -51,7 +57,7 @@ class BuildsController < ApplicationController
       new = @build.new_record?
       changed = @build.changed?
 
-      return head :unprocessable_entity if external_build_has_digest && changed
+      return head :unprocessable_entity if external_build_already_has_digest && changed
       saved = !changed || @build.save # nothing has changed or save result
     end
 
@@ -69,7 +75,7 @@ class BuildsController < ApplicationController
   end
 
   def update
-    success = @build.update_attributes(edit_build_params(validate: true))
+    success = @build.update(edit_build_params(validate: true))
     respond_to_save success, :ok, :edit
   end
 
@@ -91,6 +97,7 @@ class BuildsController < ApplicationController
   def find_external_build
     build_params = params.require(:build)
     scope = Build.where(git_sha: build_params.require(:git_sha))
+    scope = scope.where(external_url: build_params[:external_url]) if build_params[:external_url].present?
     if image_name = build_params[:image_name].presence
       scope.where(image_name: image_name)
     else

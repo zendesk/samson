@@ -2,7 +2,7 @@
 require_relative '../test_helper'
 require 'ar_multi_threaded_transactional_tests'
 
-SingleCov.covered! uncovered: 8
+SingleCov.covered! uncovered: 7
 
 describe JobExecution do
   include GitRepoTestHelper
@@ -300,6 +300,13 @@ describe JobExecution do
     assert execute_job
   end
 
+  it "fails when validation fails" do
+    Samson::Hooks.with_callback(:validate_deploy, ->(*) { false }) do
+      execute_job
+      job.status.must_equal "failed"
+    end
+  end
+
   describe "builds_in_environment" do
     let(:build) { builds(:docker_build) }
 
@@ -311,6 +318,11 @@ describe JobExecution do
     it "makes builds available via env" do
       JobExecution.new('master', job).perform
       job.output.must_include "export BUILD_FROM_Dockerfile=docker-registry.example.com"
+    end
+
+    it "saves builds made available to the deploy" do
+      JobExecution.new('master', job).perform
+      job.deploy.builds.must_equal [build]
     end
 
     it "creates valid env variables when build name is not valid" do
@@ -327,7 +339,10 @@ describe JobExecution do
   end
 
   describe "kubernetes" do
-    before { stage.update_column :kubernetes, true }
+    before do
+      stage.update_column :kubernetes, true
+      DeployGroup.any_instance.stubs(kubernetes_cluster: true)
+    end
 
     it "does the execution with the kubernetes executor" do
       Kubernetes::DeployExecutor.any_instance.expects(:execute).returns true
@@ -385,9 +400,7 @@ describe JobExecution do
   end
 
   describe "#perform" do
-    def perform
-      execution.perform
-    end
+    delegate :perform, to: :execution
 
     def with_hidden_errors
       Rails.application.config.consider_all_requests_local = false

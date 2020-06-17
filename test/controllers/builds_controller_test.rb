@@ -8,7 +8,7 @@ describe BuildsController do
   let(:build) { builds(:docker_build) }
 
   def stub_git_reference_check(returns)
-    Build.any_instance.stubs(:commit_from_ref).returns(returns)
+    Project.any_instance.stubs(:repo_commit_from_ref).returns(returns)
   end
 
   it "recognizes deprecated api route" do
@@ -42,37 +42,37 @@ describe BuildsController do
       end
 
       it 'can search for sha' do
-        get :index, params: {project_id: project.to_param, search: {git_sha: build.git_sha}}
+        get :index, params: {search: {git_commit: build.git_sha}}
         assigns(:builds).must_equal [build]
       end
 
-      it 'does not blow up when setting time_format' do
-        get :index, params: {search: {time_format: 'relative'}}
-        assert_response :success
+      it 'can search for ref' do
+        get :index, params: {search: {git_commit: build.git_ref}}
+        assigns(:builds).must_equal [build]
       end
 
-      describe "external" do
-        it "ignores search for external blank" do
-          get :index, params: {search: {external: ''}}
+      describe "status" do
+        it "ignores search for status blank" do
+          get :index, params: {search: {status: ''}}
           assigns(:builds).count.must_equal Build.count
         end
 
-        it "can search for external YES" do
-          build.update_column(:external_status, "succeeded")
-          get :index, params: {search: {external: true}}
-          assigns(:builds).must_equal [build]
-        end
-
-        it "can search for external NO" do
-          Build.where.not(id: build.id).update(external_status: "succeeded")
-          get :index, params: {search: {external: false}}
-          assigns(:builds).must_equal [build]
-        end
-
-        it "cannot search for unknown external" do
-          assert_raises do
-            get :index, params: {search: {external: 'FOOBAR'}}
+        it "only allows valid search parameters" do
+          assert_raises ActionController::UnpermittedParameters do
+            get :index, params: {search: {foo: "bar"}}
           end
+        end
+
+        it "can search for external status" do
+          build.update_column(:external_status, "succeeded")
+          get :index, params: {search: {status: "succeeded"}}
+          assigns(:builds).must_equal [build]
+        end
+
+        it "can search for internal status" do
+          build.update_column(:docker_build_job_id, jobs(:succeeded_test).id)
+          get :index, params: {search: {status: "succeeded"}}
+          assigns(:builds).must_equal [build]
         end
       end
 
@@ -174,49 +174,78 @@ describe BuildsController do
 
       describe "updates external builds" do
         let(:digest) { 'foo.com/test@sha256:5f1d7c7381b2e45ca73216d7b06004fdb0908ed7bb8786b62f2cdfa5035fde2c' }
-
-        before do
-          build.update_columns(external_status: 'running', docker_repo_digest: nil)
-        end
-
-        it 'updates a failed external build' do
-          create(
+        let(:external_url) { 'https://blob.com/1234' }
+        let(:create_args) do
+          {
             git_sha: build.git_sha,
-            external_status: 'failed',
-            external_url: "https://blob.com",
+            external_status: 'succeeded',
+            external_url: external_url,
             docker_repo_digest: digest,
             dockerfile: build.dockerfile,
             format: :json
-          )
+          }
+        end
+
+        before do
+          build.update_columns(external_status: 'running', external_url: external_url, docker_repo_digest: nil)
+        end
+
+        it 'creates a new build when external url changes for the same git sha' do
+          assert_difference 'Build.count' do
+            create create_args.merge(external_url: 'https://blob.com/1235')
+            assert_response :success
+          end
+
+          build.reload
+          build.external_status.must_equal 'running'
+          build.docker_repo_digest.must_equal nil
+          build.external_url.must_equal external_url
+
+          new_build = Build.last
+          new_build.external_status.must_equal 'succeeded'
+          new_build.docker_repo_digest.must_equal digest
+          new_build.external_url.must_equal 'https://blob.com/1235'
+        end
+
+        it 'updates existing running build when succeeded' do
+          create create_args
+          assert_response :success
+
+          build.reload
+          build.external_status.must_equal 'succeeded'
+          build.docker_repo_digest.must_equal digest
+          build.external_url.must_equal external_url
+        end
+
+        it 'allows updating a failed external build' do
+          create create_args.merge(external_status: 'failed')
           assert_response :success
 
           build.reload
           build.external_status.must_equal 'failed'
           build.docker_repo_digest.must_equal digest
-          build.external_url.must_equal "https://blob.com"
+          build.external_url.must_equal external_url
         end
 
         it 'does not allow updating a succeeded build to prevent tampering' do
-          build.update_columns docker_repo_digest: digest
+          build.update_columns docker_repo_digest: digest, external_status: 'succeeded'
 
-          create external_url: "https://blob.com", git_sha: build.git_sha, dockerfile: build.dockerfile, format: :json
+          create create_args.merge(docker_repo_digest: digest.reverse)
           assert_response 422
 
           build.reload
-          build.external_url.must_be_nil
+          build.external_status.must_equal 'succeeded'
+          build.docker_repo_digest.must_equal digest
+          build.external_url.must_equal external_url
         end
 
         it 'returns no content for succeeded builds that have not changes' do
-          build.update_columns(docker_repo_digest: digest, external_status: 'success', description: 'hello')
+          build.update_columns(docker_repo_digest: digest, external_status: 'succeeded', description: 'hello')
 
           # duplicate success
-          create(
+          create create_args.merge(
             name: build.name,
-            description: build.description,
-            git_sha: build.git_sha,
-            dockerfile: build.dockerfile,
-            external_status: 'success',
-            format: :json
+            description: 'hello'
           )
 
           assert_response :ok
@@ -225,14 +254,7 @@ describe BuildsController do
         it 'retries when 2 requests come in at the exact same time and cause uniqueness error' do
           Build.any_instance.expects(:save).returns(true)
           Build.any_instance.expects(:save).raises(ActiveRecord::RecordNotUnique)
-          create(
-            git_sha: build.git_sha,
-            external_status: 'failed',
-            external_url: "https://blob.com",
-            docker_repo_digest: digest,
-            dockerfile: build.dockerfile,
-            format: :json
-          )
+          create create_args.merge(external_status: 'failed')
           assert_response :success
         end
       end
@@ -321,7 +343,7 @@ describe BuildsController do
         end
 
         it "renders when it fails to update" do
-          Build.any_instance.expects(:update_attributes).returns false
+          Build.any_instance.expects(:update).returns false
           update
           assert_template :edit
           assert_response :unprocessable_entity
@@ -351,7 +373,7 @@ describe BuildsController do
         end
 
         it "renders when it fails to update" do
-          Build.any_instance.expects(:update_attributes).returns false
+          Build.any_instance.expects(:update).returns false
           update
           assert_response :unprocessable_entity
           response.body.must_equal "{\"status\":422,\"error\":{}}"

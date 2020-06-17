@@ -40,8 +40,8 @@ describe EnvironmentVariable do
     end
 
     it "is empty for nothing" do
-      EnvironmentVariable.env(Deploy.new(project: Project.new), nil).must_equal({})
-      EnvironmentVariable.env(Deploy.new(project: Project.new), 123).must_equal({})
+      EnvironmentVariable.env(Deploy.new(project: Project.new), nil, resolve_secrets: false).must_equal({})
+      EnvironmentVariable.env(Deploy.new(project: Project.new), 123, resolve_secrets: false).must_equal({})
     end
 
     describe "env vars from GitHub" do
@@ -57,11 +57,11 @@ describe EnvironmentVariable do
           "FROM_REPO_VAR_ONE=one\nVAR_TWO=two\n"
         )
         expected_result = {"FROM_REPO_VAR_ONE" => "one", "VAR_TWO" => "two"}
-        EnvironmentVariable.env(deploy, deploy_group).must_equal expected_result
+        EnvironmentVariable.env(deploy, deploy_group, resolve_secrets: false).must_equal expected_result
       end
 
       it "ignores without deploy group" do
-        EnvironmentVariable.env(deploy, nil).must_equal({})
+        EnvironmentVariable.env(deploy, nil, resolve_secrets: false).must_equal({})
       end
 
       it "merges repo env into db env" do
@@ -75,7 +75,7 @@ describe EnvironmentVariable do
           "FROM_REPO_VAR_ONE" => "one", "VAR_TWO" => "two",
           "PROJECT" => "PROJECT", "Z" => "A", "X" => "Y", "Y" => "Z"
         }
-        EnvironmentVariable.env(deploy, deploy_group).must_equal expected_result
+        EnvironmentVariable.env(deploy, deploy_group, resolve_secrets: false).must_equal expected_result
       end
 
       it "returns the env first deploy env then db env then repo env" do
@@ -91,13 +91,13 @@ describe EnvironmentVariable do
           "FROM_REPO_VAR_ONE" => "one", "VAR_TWO" => "db_two",
           "PROJECT" => "DEPLOY", "Z" => "A", "X" => "Y", "Y" => "Z"
         }
-        EnvironmentVariable.env(deploy, deploy_group).must_equal expected_result
+        EnvironmentVariable.env(deploy, deploy_group, resolve_secrets: false).must_equal expected_result
       end
 
       it "shows error when repo env file does not exist" do
         stub_github_api("repos/organization/repo_name/contents/generated/foo/pod100.env", "No content", 404)
         assert_raises(Samson::Hooks::UserError) do
-          EnvironmentVariable.env(deploy, deploy_group)
+          EnvironmentVariable.env(deploy, deploy_group, resolve_secrets: false)
         end
       end
 
@@ -108,54 +108,45 @@ describe EnvironmentVariable do
           "VAR_THREE=three\nVAR_FOUR=four\n"
         )
         expected_result = {"VAR_THREE" => "three", "VAR_FOUR" => "four"}
-        EnvironmentVariable.env(deploy, deploy_group).wont_equal expected_result
+        EnvironmentVariable.env(deploy, deploy_group, resolve_secrets: false).wont_equal expected_result
       end
     end
 
-    describe "env vars from config service" do
-      let(:url) { "https://config.service/samson/foo/pod100.yml" }
-
-      with_env CONFIG_SERVICE_URL: "https://config.service"
-
-      before { project.config_service = true }
-
-      it "add to env hash" do
-        assert_request(:get, url, to_return: {body: {"FOO" => "one"}.to_yaml}) do
-          EnvironmentVariable.env(deploy, deploy_group).must_equal "FOO" => "one"
-        end
+    describe "env vars from external env groups" do
+      before do
+        group = ExternalEnvironmentVariableGroup.new(
+          name: "A",
+          description: "B",
+          url: "https://a-bucket.s3.amazonaws.com/key?versionId=version_id",
+          project: project
+        )
+        group.expects(:read).returns(true)
+        group.save!
       end
 
       it "ignores without deploy group" do
-        EnvironmentVariable.env(deploy, nil).must_equal({})
+        EnvironmentVariable.env(deploy, nil, resolve_secrets: false).must_equal({})
       end
 
-      it "shows error when api failed" do
-        assert_request(:get, url, to_return: {status: 404}) do
-          assert_raises(Samson::Hooks::UserError) do
-            EnvironmentVariable.env(deploy, deploy_group)
-          end
+      it "add to env hash" do
+        response = {deploy_group.permalink => {"FOO" => "one"}}
+        ExternalEnvironmentVariableGroup.any_instance.expects(:read).returns(response)
+        EnvironmentVariable.env(deploy, deploy_group, resolve_secrets: false).must_equal "FOO" => "one"
+      end
+
+      it "shows error while problem reading from external service" do
+        ExternalEnvironmentVariableGroup.any_instance.expects(:read).
+          raises(Aws::S3::Errors::NoSuchKey.new({}, "The specified key does not exist."))
+        e = assert_raises Samson::Hooks::UserError do
+          EnvironmentVariable.env(deploy, deploy_group, resolve_secrets: true)
         end
+        e.message.must_include "The specified key does not exist."
       end
 
-      it "shows error when api times out" do
-        assert_request(:get, url, to_timeout: [], times: 4) do
-          assert_raises(Samson::Hooks::UserError) do
-            EnvironmentVariable.env(deploy, deploy_group)
-          end
-        end
-      end
-
-      it "refuses to deploy when configured but env var is missing" do
-        with_env CONFIG_SERVICE_URL: nil do
-          assert_raises(Samson::Hooks::UserError) do
-            EnvironmentVariable.env(deploy, deploy_group)
-          end
-        end
-      end
-
-      it "does not read env vars when project is not opted in" do
-        project.config_service = false
-        EnvironmentVariable.env(deploy, deploy_group)
+      it "ignores env groups without deploy group" do
+        response = {"ABC" => {"FOO" => "one"}}
+        ExternalEnvironmentVariableGroup.any_instance.expects(:read).returns(response)
+        EnvironmentVariable.env(deploy, deploy_group, resolve_secrets: false).must_equal({})
       end
     end
 
@@ -167,18 +158,20 @@ describe EnvironmentVariable do
       end
 
       it "includes only common for common groups" do
-        EnvironmentVariable.env(deploy, nil).must_equal("X" => "Y", "Y" => "Z", "PROJECT" => "PROJECT")
+        EnvironmentVariable.env(deploy, nil, resolve_secrets: false).
+          must_equal("X" => "Y", "Y" => "Z", "PROJECT" => "PROJECT")
       end
 
       it "includes common for scoped groups" do
-        EnvironmentVariable.env(deploy, deploy_group).must_equal(
+        EnvironmentVariable.env(deploy, deploy_group, resolve_secrets: false).must_equal(
           "PROJECT" => "DEPLOY", "X" => "Y", "Z" => "A", "Y" => "Z"
         )
       end
 
       it "overwrites environment groups with project variables" do
         project.environment_variables.create!(name: "X", value: "OVER")
-        EnvironmentVariable.env(deploy, nil).must_equal("X" => "OVER", "Y" => "Z", "PROJECT" => "PROJECT")
+        EnvironmentVariable.env(deploy, nil, resolve_secrets: false).
+          must_equal("X" => "OVER", "Y" => "Z", "PROJECT" => "PROJECT")
       end
 
       it "keeps correct order for different priorities" do
@@ -191,23 +184,23 @@ describe EnvironmentVariable do
         project.environment_variables.create!(name: "Y", value: "ENV", scope: environment)
         project.environment_variables.create!(name: "Y", value: "ALL")
 
-        EnvironmentVariable.env(deploy, deploy_group).must_equal(
+        EnvironmentVariable.env(deploy, deploy_group, resolve_secrets: false).must_equal(
           "X" => "GROUP", "Y" => "ENV", "PROJECT" => "DEPLOY", "Z" => "A"
         )
       end
 
       it "produces few queries when doing multiple versions as the env builder does" do
         groups = DeployGroup.all.to_a
-        assert_sql_queries 2 do
-          EnvironmentVariable.env(deploy, nil)
-          groups.each { |deploy_group| EnvironmentVariable.env(deploy, deploy_group) }
+        assert_sql_queries 3 do
+          EnvironmentVariable.env(deploy, nil, resolve_secrets: false)
+          groups.each { |deploy_group| EnvironmentVariable.env(deploy, deploy_group, resolve_secrets: false) }
         end
       end
 
       it "can resolve references" do
         project.environment_variables.last.update_column(:value, "PROJECT--$POD_ID--$POD_ID_NOT--${POD_ID}")
         project.environment_variables.create!(name: "POD_ID", value: "1")
-        EnvironmentVariable.env(deploy, nil).must_equal(
+        EnvironmentVariable.env(deploy, nil, resolve_secrets: false).must_equal(
           "PROJECT" => "PROJECT--1--$POD_ID_NOT--1", "POD_ID" => "1", "X" => "Y", "Y" => "Z"
         )
       end
@@ -216,12 +209,22 @@ describe EnvironmentVariable do
         project.environment_variables.last.update_column(:value, "PROJECT--$POD_ID")
         project.environment_variables.create!(name: "POD_ID", value: "1", scope: deploy_groups(:pod1))
         project.environment_variables.create!(name: "POD_ID", value: "2", scope: deploy_groups(:pod2))
-        EnvironmentVariable.env(deploy, deploy_groups(:pod1)).must_equal(
+        EnvironmentVariable.env(deploy, deploy_groups(:pod1), resolve_secrets: false).must_equal(
           "PROJECT" => "PROJECT--1", "POD_ID" => "1", "X" => "Y", "Y" => "Z"
         )
-        EnvironmentVariable.env(deploy, deploy_groups(:pod2)).must_equal(
+        EnvironmentVariable.env(deploy, deploy_groups(:pod2), resolve_secrets: false).must_equal(
           "PROJECT" => "PROJECT--2", "POD_ID" => "2", "X" => "Y", "Y" => "Z"
         )
+      end
+
+      it "includes only project specific environment variables" do
+        EnvironmentVariable.env(deploy, nil, project_specific: true, resolve_secrets: false).
+          must_equal("PROJECT" => "PROJECT")
+      end
+
+      it "includes only project groups environment variables" do
+        EnvironmentVariable.env(deploy, nil, project_specific: false, resolve_secrets: false).
+          must_equal("X" => "Y", "Y" => "Z")
       end
 
       describe "secrets" do
@@ -231,7 +234,7 @@ describe EnvironmentVariable do
         end
 
         it "can resolve secrets" do
-          EnvironmentVariable.env(deploy, nil).must_equal(
+          EnvironmentVariable.env(deploy, nil, resolve_secrets: true).must_equal(
             "PROJECT" => "MY-SECRET", "X" => "Y", "Y" => "Z"
           )
         end
@@ -245,20 +248,20 @@ describe EnvironmentVariable do
         it "fails on unfound secrets" do
           Samson::Secrets::Manager.delete 'global/global/global/foobar'
           e = assert_raises Samson::Hooks::UserError do
-            EnvironmentVariable.env(deploy, nil)
+            EnvironmentVariable.env(deploy, nil, resolve_secrets: true)
           end
           e.message.must_include "Failed to resolve secret keys:\n\tfoobar"
         end
 
         it "does not show secret values in preview mode" do
-          EnvironmentVariable.env(deploy, nil, preview: true).must_equal(
+          EnvironmentVariable.env(deploy, nil, resolve_secrets: :preview).must_equal(
             "PROJECT" => "secret://global/global/global/foobar", "X" => "Y", "Y" => "Z"
           )
         end
 
         it "does not duplicate secret values in preview mode" do
           all = DeployGroup.all.map do |dg|
-            EnvironmentVariable.env(deploy, dg, preview: true)
+            EnvironmentVariable.env(deploy, dg, resolve_secrets: :preview)
           end
           all.sort_by { |x| x["PROJECT"] }.must_equal(
             [
@@ -271,7 +274,7 @@ describe EnvironmentVariable do
 
         it "does not raise on missing secret values in preview mode" do
           Samson::Secrets::Manager.delete 'global/global/global/foobar'
-          EnvironmentVariable.env(deploy, nil, preview: true).must_equal(
+          EnvironmentVariable.env(deploy, nil, resolve_secrets: :preview).must_equal(
             "PROJECT" => "secret://foobar X", "X" => "Y", "Y" => "Z"
           )
         end

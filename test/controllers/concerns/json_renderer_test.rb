@@ -70,7 +70,7 @@ describe "JsonRenderer Integration" do
       assert_response :bad_request
       json.must_equal(
         "status" => 400,
-        "error" => "Forbidden includes [nope] found, allowed includes are [job, project, user, stage]"
+        "error" => "Forbidden includes [nope] found, allowed includes are [job, project, user, stage, builds]"
       )
     end
 

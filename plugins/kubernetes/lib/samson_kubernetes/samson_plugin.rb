@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module SamsonKubernetes
-  class Engine < Rails::Engine
+  class SamsonPlugin < Rails::Engine
     initializer "refinery.assets.precompile" do |app|
       app.config.assets.precompile.append %w[kubernetes/icon.png]
     end
@@ -15,7 +15,7 @@ module SamsonKubernetes
   # see https://github.com/abonas/kubeclient/issues/240
   # using a method to avoid loading kubeclient on every boot ~0.1s
   def self.connection_errors
-    [OpenSSL::SSL::SSLError, Kubeclient::HttpError, Errno::ECONNREFUSED, Errno::ECONNRESET].freeze
+    [OpenSSL::SSL::SSLError, Kubeclient::HttpError, Errno::ECONNREFUSED, Errno::ECONNRESET, SocketError].freeze
   end
 
   def self.retry_on_connection_errors(&block)
@@ -28,8 +28,8 @@ Samson::Hooks.view :project_form, "samson_kubernetes"
 Samson::Hooks.view :manage_menu, 'samson_kubernetes'
 Samson::Hooks.view :stage_form, "samson_kubernetes"
 Samson::Hooks.view :stage_show, "samson_kubernetes"
-Samson::Hooks.view :deploy_tab_nav, "samson_kubernetes"
-Samson::Hooks.view :deploy_tab_body, "samson_kubernetes"
+Samson::Hooks.view :deploy_changeset_tab_nav, "samson_kubernetes"
+Samson::Hooks.view :deploy_changeset_tab_body, "samson_kubernetes"
 Samson::Hooks.view :deploy_form, "samson_kubernetes"
 Samson::Hooks.view :deploy_group_show, "samson_kubernetes"
 Samson::Hooks.view :deploy_group_form, "samson_kubernetes"
@@ -37,15 +37,23 @@ Samson::Hooks.view :deploy_group_table_header, "samson_kubernetes"
 Samson::Hooks.view :deploy_group_table_cell, "samson_kubernetes"
 
 Samson::Hooks.callback :deploy_group_permitted_params do
-  {cluster_deploy_group_attributes: [:kubernetes_cluster_id, :namespace]}
+  {cluster_deploy_group_attributes: [:id, :kubernetes_cluster_id, :namespace]}
 end
 Samson::Hooks.callback(:stage_permitted_params) do
   [
     :kubernetes,
+    :kubernetes_sample_logs_on_success,
+    :kubernetes_hide_error_logs,
     {kubernetes_stage_roles_attributes: [:kubernetes_role_id, :ignored, :_destroy, :id]}
   ]
 end
-Samson::Hooks.callback(:deploy_permitted_params) { [:kubernetes_rollback, :kubernetes_reuse_build] }
+Samson::Hooks.callback(:deploy_permitted_params) do
+  [
+    :kubernetes_rollback,
+    :kubernetes_reuse_build,
+    :kubernetes_ignore_kritis_vulnerabilities
+  ]
+end
 Samson::Hooks.callback(:project_permitted_params) { [:kubernetes_rollout_timeout] }
 Samson::Hooks.callback(:link_parts_for_resource) do
   [
@@ -57,7 +65,10 @@ end
 Samson::Hooks.callback(:link_parts_for_resource) do
   [
     "Kubernetes::DeployGroupRole",
-    ->(dgr) { ["#{dgr.project&.name} role #{dgr.kubernetes_role&.name} for #{dgr.deploy_group&.name}", dgr] }
+    ->(dgr) do
+      name = "#{dgr.project&.name} role #{dgr.kubernetes_role&.name} for #{dgr.deploy_group&.name}"
+      [name, [dgr.project, dgr]]
+    end
   ]
 end
 Samson::Hooks.callback(:link_parts_for_resource) do
@@ -81,6 +92,8 @@ end
 
 Samson::Hooks.callback(:deploy_group_includes) { :kubernetes_cluster }
 
+# when doing mass stage rollout, prefill stage deploy groups
+# won't work for manual clone since new_stage groups are not set yet
 Samson::Hooks.callback(:stage_clone) do |old_stage, new_stage|
   roles_to_copy = Kubernetes::DeployGroupRole.where(
     project: old_stage.project,
@@ -96,4 +109,10 @@ Samson::Hooks.callback(:stage_clone) do |old_stage, new_stage|
       )
     end
   end
+end
+
+Samson::Hooks.callback(:stage_clone) do |old_stage, new_stage|
+  new_stage.kubernetes_stage_roles.build(
+    old_stage.kubernetes_stage_roles.map { |f| f.attributes.except("id", "created_at", "updated_at") }
+  )
 end

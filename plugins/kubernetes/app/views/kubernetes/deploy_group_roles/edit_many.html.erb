@@ -2,15 +2,19 @@
 
 <section>
   <%= form_tag update_many_project_kubernetes_deploy_group_roles_path(@project), method: :put, class: "form-horizontal" do %>
-    <% rows = [
+    <%
+      rows = [
         [:delete_resource, "Delete resource", :boolean],
         [:replicas, "Replicas"],
         [:requests_cpu, 'Requests CPU Cores'],
-        [:requests_memory, 'Requests Memory in MB'],
+        [:requests_memory, 'Requests Memory in MiB'],
         [:limits_cpu, 'Limits CPU Cores'],
-        [:limits_memory, 'Limits Memory in MB']
-    ] %>
-    <% row_builder = -> (field, type, attribute) { type == :boolean ? field.check_box(attribute) : field.text_field(attribute, size: 10) } %>
+        [:limits_memory, 'Limits Memory in MiB']
+      ]
+      rows << [:inject_istio_annotation, 'Istio sidecar', :boolean] if show_istio_sidecar_ui?
+
+      row_builder = -> (field, type, attribute) { type == :boolean ? field.check_box(attribute) : field.text_field(attribute, size: 10) }
+    %>
     <table class="table table-hover table-condensed">
       <thead>
         <tr>
@@ -22,7 +26,7 @@
         </tr>
       </thead>
 
-      <% @deploy_group_roles.each do |deploy_group_role| %>
+      <% @kubernetes_deploy_group_roles.each do |deploy_group_role| %>
         <% if deploy_group_role.errors.any? %>
           <tr>
             <td colspan="<%= 2 + rows.size %>"><%= render 'shared/errors', object: deploy_group_role %></td>

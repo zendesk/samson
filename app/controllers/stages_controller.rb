@@ -20,9 +20,7 @@ class StagesController < ResourceController
         @pagy, @deploys = pagy(@stage.deploys, page: params[:page], items: 15)
       end
       format.json do
-        render_as_json :stage, @stage, nil, allowed_includes: [
-          :last_deploy, :last_succeeded_deploy, :active_deploy, :lock
-        ] do |reply|
+        render_as_json :stage, @stage, nil, allowed_includes: allowed_includes do |reply|
           # deprecated way of inclusion, do not add more
           if params[:include] == "kubernetes_matrix"
             reply[:stage][:kubernetes_matrix] = Kubernetes::DeployGroupRole.matrix(@stage)
@@ -49,7 +47,7 @@ class StagesController < ResourceController
   def clone
     @stage = Stage.build_clone(@stage)
     if request.post?
-      @stage.update_attributes! resource_params
+      @stage.update! resource_params
       render json: {stage: @stage}
     else
       render :new
@@ -57,6 +55,16 @@ class StagesController < ResourceController
   end
 
   private
+
+  def allowed_includes
+    [
+      :last_deploy,
+      :last_succeeded_deploy,
+      :active_deploy,
+      :lock,
+      :deploy_groups
+    ]
+  end
 
   def search_resources
     @project.stages
@@ -90,7 +98,7 @@ class StagesController < ResourceController
   end
 
   def resource_params
-    super.permit(stage_permitted_params).merge(project: current_project)
+    super.permit(stage_permitted_params).reverse_merge(project: current_project)
   end
 
   def set_resource

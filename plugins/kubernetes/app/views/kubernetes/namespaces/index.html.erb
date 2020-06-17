@@ -28,7 +28,14 @@
     <div class="pull-right">
       <%= link_to "New", new_kubernetes_namespace_path, class: "btn btn-default" %>
       <%= link_to "Sync All", sync_all_kubernetes_namespaces_path, class: "btn btn-default", data: {method: :post} %>
-    </div>
+      <%= link_to "Validate", "#", data: {target: "#validate_dialog"}, class: "btn btn-default toggle" %>
+      <div id="validate_dialog" style="display: none">
+        <%= form_tag preview_kubernetes_namespaces_path, class: "form-horizontal", method: :get do %>
+          <p>Make sure namespace assignment does not change resource names.</p>
+          <%= live_select_tag :project_id, options_for_select(Project.pluck(:name, :id)) %>
+          <%= submit_tag "Validate", class: "btn btn-primary" %>
+        <% end %>
+      </div>
   </div>
 </section>
 

@@ -33,7 +33,10 @@
 
   function copyRow($row, callback) {
     var $new_row = $row.clone();
-    $new_row.find(':input').val('');
+
+    // clear out values except for checkboxes and their hidden counterparts (1/0 value mostly)
+    // (this might get weird if we end up copying a regular hidden field)
+    $new_row.find(':input[type!=hidden][type!=checkbox]').val('');
 
     // each row needs a new unique name and id to make rails do the update logic correctly for environment_variables
     $new_row.find(':input').each(function(i, input){
@@ -53,26 +56,23 @@
     return $new_row;
   }
 
-  // Update the query string of the associated preview link
-  // with the given group ID, and toggle its visibility
-  function formatEnvGroupPreviewLink($preview, val) {
-    $preview[0].search = $.param({ group_id: val });
-    $preview.toggle(!!val);
+  // Update the query string of the link with the given group ID, and toggle its visibility
+  function formatEnvGroupLinks($links, id) {
+    $.each($links, function(_, a){
+      a.href = a.href.replace(/\d+$/, id || 0);
+    });
+    $links.toggle(!!id);
   }
 
-  // Select the pair of env group input and preview link to:
-  // - Format the query string of the preview link
+  // Select env group input and links to:
+  // - Initially add the query string to the links
   // - Update the query string when the env group input changes
   function setupEnvGroupPreview($input) {
     var $select = $input.find('select');
-    var $preview = $input.find('.checkbox a');
-
     $select.on('change', function(e) {
       e.preventDefault();
-      formatEnvGroupPreviewLink($preview, $select.val());
-    });
-
-    $select.trigger('change');
+      formatEnvGroupLinks($input.find('.checkbox a'), $select.val());
+    }).trigger('change');
   }
 
   function withoutSelectpicker($row, callback){

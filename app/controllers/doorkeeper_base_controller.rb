@@ -4,8 +4,6 @@ class DoorkeeperBaseController < ActionController::Base
   layout 'application'
   protect_from_forgery with: :exception
 
-  before_action :authorize_super_admin!
-
   def self.layout(_x)
     # This is a hack to prevent doorkeeper from overriding templates.
     # There is a builtin way to do this but it involves preloading models

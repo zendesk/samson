@@ -105,7 +105,8 @@ describe SamsonEnv do
       project.environment_variables.create!(name: "WORLD1", value: "hello", scope: environments(:staging))
       project.environment_variables.create!(name: "WORLD2", value: "hello", scope: deploy_group)
       project.environment_variables.create!(name: "WORLD3", value: "hello")
-      all = Samson::Hooks.fire(:deploy_env, Deploy.new(project: project), deploy_group).inject({}, :merge!)
+      deploy = Deploy.new(project: project)
+      all = Samson::Hooks.fire(:deploy_env, deploy, deploy_group, resolve_secrets: false).inject({}, :merge!)
 
       refute all["WORLD1"]
       all["WORLD2"].must_equal "hello"
@@ -113,17 +114,20 @@ describe SamsonEnv do
     end
 
     it "is empty" do
-      Samson::Hooks.fire(:deploy_env, deploy, deploy_groups(:pod1)).must_equal [{}]
+      Samson::Hooks.fire(:deploy_env, deploy, deploy_groups(:pod1), resolve_secrets: false).
+        must_equal [{}]
     end
 
     it "adds stage env variables" do
       deploy.stage.environment_variables.build(name: "Foo", value: "bar")
-      Samson::Hooks.fire(:deploy_env, deploy, deploy_groups(:pod1)).must_equal [{"Foo" => "bar"}]
+      Samson::Hooks.fire(:deploy_env, deploy, deploy_groups(:pod1), resolve_secrets: false).
+        must_equal [{"Foo" => "bar"}]
     end
 
     it "adds deploy env variables" do
       deploy.environment_variables.build(name: "Foo", value: "bar")
-      Samson::Hooks.fire(:deploy_env, deploy, deploy_groups(:pod1)).must_equal [{"Foo" => "bar"}]
+      Samson::Hooks.fire(:deploy_env, deploy, deploy_groups(:pod1), resolve_secrets: false).
+        must_equal [{"Foo" => "bar"}]
     end
   end
 
@@ -136,6 +140,18 @@ describe SamsonEnv do
     it "links to env var" do
       var = project.environment_variables.create!(name: "WORLD3", value: "hello")
       fire(var).must_equal ["WORLD3 on Foo", EnvironmentVariable]
+    end
+
+    it "links to external env var group" do
+      group = ExternalEnvironmentVariableGroup.new(
+          name: "A",
+          description: "B",
+          url: "https://a-bucket.s3.amazonaws.com/key?versionId=version_id",
+          project: project
+        )
+      group.expects(:read).returns(true)
+      group.save!
+      fire(group).must_equal ["A", ""]
     end
 
     it "links to scoped env var" do
@@ -151,6 +167,12 @@ describe SamsonEnv do
     it "links to env var group" do
       group = EnvironmentVariableGroup.create!(name: "FOO")
       fire(group).must_equal ["FOO", group]
+    end
+
+    it "links to deploy" do
+      deploy = deploys(:succeeded_test)
+      var = deploy.environment_variables.create!(name: "WORLD3", value: "hello")
+      fire(var).must_equal ["WORLD3 on Deploy ##{deploy.id}", EnvironmentVariable]
     end
 
     it "does not crash with deleted parent" do
@@ -190,7 +212,7 @@ describe SamsonEnv do
     end
 
     it "can write groups not used by any projet" do
-      group.update_attributes!(projects: [])
+      group.update!(projects: [])
       assert call(users(:project_admin), :write, group)
     end
   end
@@ -198,23 +220,6 @@ describe SamsonEnv do
   describe 'view callbacks' do
     before do
       view_context.instance_variable_set(:@project, project)
-    end
-
-    let(:view_context) do
-      view_context = ActionView::Base.new(ActionController::Base.view_paths)
-
-      class << view_context
-        include Rails.application.routes.url_helpers
-        include ApplicationHelper
-      end
-
-      view_context.instance_eval do
-        # stub for testing render
-        def protect_against_forgery?
-        end
-      end
-
-      view_context
     end
 
     # see plugins/env/app/views/samson_env/_fields.html.erb

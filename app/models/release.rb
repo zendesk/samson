@@ -4,7 +4,7 @@ class Release < ActiveRecord::Base
   VERSION_REGEX = /\Av(#{Samson::RELEASE_NUMBER})\z/.freeze
 
   belongs_to :project, touch: true, inverse_of: :releases
-  belongs_to :author, class_name: "User", inverse_of: nil
+  belongs_to :author, class_name: "User", inverse_of: false
 
   before_validation :assign_release_number
   before_validation :covert_ref_to_sha
@@ -97,3 +97,4 @@ class Release < ActiveRecord::Base
     self.commit = project.repository.commit_from_ref(commit)
   end
 end
+Samson::Hooks.load_decorators(Release)

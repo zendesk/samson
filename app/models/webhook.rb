@@ -6,12 +6,15 @@ class Webhook < ActiveRecord::Base
   validates :branch, uniqueness: {
     scope: [:stage_id],
     conditions: -> { where("deleted_at IS NULL") },
-    message: "one webhook per (stage, branch) combination."
+    message: "one webhook per (stage, branch) combination.",
+    case_sensitive: false
   }
   validate :validate_not_auto_deploying_without_buddy
 
   belongs_to :project, inverse_of: :webhooks
   belongs_to :stage, inverse_of: :webhooks
+
+  scope :active, -> { where(disabled: false) }
 
   def self.for_branch(branch)
     where(branch: ['', branch])
@@ -33,3 +36,4 @@ class Webhook < ActiveRecord::Base
     end
   end
 end
+Samson::Hooks.load_decorators(Webhook)

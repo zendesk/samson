@@ -1,5 +1,5 @@
 <% form.object.cluster_deploy_group || form.object.build_cluster_deploy_group %>
-<%= form.fields_for :cluster_deploy_group, include_id: false do |cluster_form| %>
+<%= form.fields_for :cluster_deploy_group do |cluster_form| %>
   <%= cluster_form.input :kubernetes_cluster_id, label: "Kubernetes Cluster" do %>
     <%= cluster_form.collection_select(:kubernetes_cluster_id, Kubernetes::Cluster.all, :id, :name, { include_blank: true }, { class: 'form-control' }) %>
   <% end %>

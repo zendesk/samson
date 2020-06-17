@@ -39,7 +39,9 @@
   <%= form.input :full_checkout, as: :check_box, label: "Use a full checkout", help: "Samson usually uses a worktree which is a lot faster, pick this option if you want to switch branches during deploy." %>
 
   <% if interval = Samson::Periodical.interval(:periodical_deploy) %>
-    <%= form.input :periodical_deploy, as: :check_box, help: "Deploy every #{distance_of_time_in_words(interval)} if last deploy succeeded, enable automated deploy failure email to be alerted. " %>
+    <% next_execution_in = Samson::Periodical.next_execution_in(:periodical_deploy) %>
+    <%= form.input :periodical_deploy, as: :check_box,
+          help: "Deploy every #{distance_of_time_in_words(interval)} if last deploy succeeded.<br/>Next execution in #{distance_of_time_in_words(next_execution_in)}.<br/>Enable automated deploy failure email to be alerted.".html_safe %>
   <% end %>
 
   <% if @project.release_branch? %>
@@ -65,29 +67,3 @@
 <%= render 'deploy_failure_emails', form: form %>
 <%= Samson::Hooks.render_views(:stage_form, self, form: form) %>
 
-<script>
-  // fold empty fieldsets and let users unfold them to reduce clutter
-  // except for the attributes and command fieldsets
-  $(function(){
-    $("fieldset").not(".unfoldable").each(function(_, fieldset){
-      var fieldset = $(fieldset);
-
-      var filled = fieldset.find(':input').filter(function(_, el){
-        if(el.type == "checkbox" || el.type == "radio") {
-          return $(el).is(':checked');
-        } else if(el.type == "hidden") {
-          return false;
-        } else {
-          return $(el).val() != "";
-        }
-      });
-
-      if(filled.size() == 0) {
-        fieldset.find('legend').
-          click(function(){ fieldset.find('> *').not('legend').toggle() }).click().
-          css('cursor', 'pointer').
-          append(' &#x2304;');
-      }
-    });
-  });
-</script>

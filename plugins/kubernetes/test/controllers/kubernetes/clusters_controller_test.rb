@@ -65,7 +65,7 @@ describe Kubernetes::ClustersController do
       let(:secrets_url) { "http://foobar.server/api/v1/namespaces/foobar/secrets" }
 
       before do
-        SamsonAwsEcr::Engine.expects(:refresh_credentials)
+        SamsonAwsEcr::SamsonPlugin.expects(:refresh_credentials)
         DockerRegistry.first.username = 'user'
         DockerRegistry.first.password = 'pass'
       end
@@ -99,7 +99,7 @@ describe Kubernetes::ClustersController do
       end
 
       it "renders when ECR plugin is active" do
-        SamsonAwsEcr::Engine.expects(:active?).returns(true)
+        SamsonAwsEcr::SamsonPlugin.expects(:active?).returns(true)
         get :new
         assert_template :new
       end

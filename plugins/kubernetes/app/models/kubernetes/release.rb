@@ -3,7 +3,7 @@ module Kubernetes
   class Release < ActiveRecord::Base
     self.table_name = 'kubernetes_releases'
 
-    belongs_to :user, inverse_of: nil
+    belongs_to :user, inverse_of: false
     belongs_to :project, inverse_of: :kubernetes_releases
     belongs_to :deploy, inverse_of: :kubernetes_release
     has_many :release_docs,
@@ -11,7 +11,7 @@ module Kubernetes
       foreign_key: 'kubernetes_release_id',
       dependent: :destroy,
       inverse_of: :kubernetes_release
-    has_many :deploy_groups, through: :release_docs, inverse_of: nil
+    has_many :deploy_groups, through: :release_docs, inverse_of: false
 
     attr_accessor :builds
 
@@ -22,19 +22,17 @@ module Kubernetes
     end
 
     # Creates a new Kubernetes Release and corresponding ReleaseDocs
-    def self.create_release(params)
-      Kubernetes::Release.transaction do
-        roles = params.delete(:grouped_deploy_group_roles).to_a
-        release = create(params) do |release|
-          if roles.flatten(1).any? { |dgr| dgr.kubernetes_role.blue_green? }
-            release.blue_green_color = begin
-              release.previous_succeeded_release&.blue_green_color == "blue" ? "green" : "blue"
-            end
+    def self.build_release_with_docs(params)
+      roles = params.delete(:grouped_deploy_group_roles).to_a
+      release = new(params) do |release|
+        if roles.flatten(1).any? { |dgr| dgr.kubernetes_role.blue_green? }
+          release.blue_green_color = begin
+            release.previous_succeeded_release&.blue_green_color == "blue" ? "green" : "blue"
           end
         end
-        release.send :create_release_docs, roles if release.persisted?
-        release
       end
+      release.send :build_release_docs, roles if release.valid?
+      release
     end
 
     # simple method to tie all selector logic together
@@ -52,22 +50,18 @@ module Kubernetes
     # ... supports that the same namespace might exist on different clusters
     def clients
       scopes = release_docs.map do |release_doc|
-        release_id = resource_release_id(release_doc)
         deploy_group = DeployGroup.with_deleted { release_doc.deploy_group }
         [
           deploy_group,
           {
             namespace: release_doc.resources.first.namespace,
-            label_selector: self.class.pod_selector(release_id, deploy_group.id, query: true)
+            label_selector: self.class.pod_selector(id, deploy_group.id, query: true)
           }
         ]
       end
-      # avoiding doing a .uniq on clients which might do weird stuff
-      scopes.uniq.map { |group, query| [group.kubernetes_cluster.client('v1'), query] }
-    end
 
-    def url
-      Rails.application.routes.url_helpers.project_kubernetes_release_url(project, self)
+      # avoiding doing a .uniq on clients which might trigger api calls
+      scopes.uniq.map { |group, query| [group.kubernetes_cluster.client('v1'), query] }
     end
 
     def previous_succeeded_release
@@ -76,31 +70,16 @@ module Kubernetes
 
     private
 
-    # StatefulSet does not update the labels when using patch_replace, so find by old label
-    def resource_release_id(release_doc)
-      stateful_set = release_doc.resources.detect do |r|
-        r.is_a?(Kubernetes::Resource::StatefulSet) && r.patch_replace?
-      end
-      return id unless stateful_set
-
-      stateful_set.resource.dig(:spec, :template, :metadata, :labels, :release_id) ||
-        raise(KeyError, "Unable to find previous release_id")
-    end
-
     # Creates a ReleaseDoc per DeployGroupRole
-    def create_release_docs(grouped_deploy_group_roles)
+    def build_release_docs(grouped_deploy_group_roles)
       grouped_deploy_group_roles.each do |dgrs|
         dgrs.each do |dgr|
-          release_docs.create!(
+          release_docs.build(
+            deploy_group_role: dgr,
             deploy_group: dgr.deploy_group,
             kubernetes_release: self,
             kubernetes_role: dgr.kubernetes_role,
             replica_target: dgr.replicas,
-            requests_cpu: dgr.requests_cpu,
-            requests_memory: dgr.requests_memory,
-            limits_cpu: dgr.limits_cpu,
-            limits_memory: dgr.limits_memory,
-            no_cpu_limit: dgr.no_cpu_limit,
             delete_resource: dgr.delete_resource
           )
         end

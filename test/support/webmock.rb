@@ -29,14 +29,18 @@ ActiveSupport::TestCase.class_eval do
     end
   end
 
+  def request_with_json(json)
+    ->(r) { JSON.parse(r.body, symbolize_names: true) == json }
+  end
+
   # TODO: prevent this getting called twice in the same test ... leads to weird bugs
   def self.assert_requests
     before { @assert_requests = [] } # set here so we can check that users did not forget to set the block
     after { @assert_requests.each { |assert_args| assert_requested(*assert_args) } }
   end
 
-  def stub_github_api(url, response = {}, status = 200)
-    url = 'https://api.github.com/' + url
+  def stub_github_api(path, response = {}, status = 200)
+    url = "https://api.github.com/" + path
     stub_request(:get, url).to_return(
       status: status,
       body: JSON.dump(response),

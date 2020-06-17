@@ -12,7 +12,7 @@ describe 'Unauthorized' do
 
   describe '#respond' do
     def request(params: {})
-      get path, {controller: "ping", action: "show"}.merge(params), headers
+      get path, {controller: "ping", action: "show"}.merge(params), headers # rubocop:disable Rails/HttpPositionalArguments
     end
 
     describe 'as html' do
@@ -31,20 +31,39 @@ describe 'Unauthorized' do
 
       it 'sets the flash' do
         request
-        flash[:authorization_error].must_equal('You are not logged in')
+        flash[:alert].must_equal 'You are not logged in. '
       end
 
       describe 'when user is not authorized' do
-        let(:headers) { {'warden' => stub(user: 111)} }
+        let(:headers) { {'warden' => stub(user: User.new)} }
 
         it 'uses a custom flash message for viewing' do
           request
-          flash[:authorization_error].must_equal('You are not authorized to view this page')
+          flash[:alert].must_equal 'You are not authorized to view this page. '
         end
 
         it 'uses a custom flash message for changes' do
           request(params: {_method: "patch"})
-          flash[:authorization_error].must_equal('You are not authorized to make this change')
+          flash[:alert].must_equal "You are not authorized to make this change. "
+        end
+
+        describe "with request access" do
+          with_env REQUEST_ACCESS_FEATURE: 'true'
+
+          it "adds link" do
+            request(params: {_method: "patch"})
+            flash[:alert].must_equal(
+              "You are not authorized to make this change." \
+              " <a href=\"/access_requests/new\">Request additional access rights</a>"
+            )
+            assert flash[:alert].html_safe?
+          end
+
+          it "does not add link when user already requested" do
+            headers['warden'].user.access_request_pending = true
+            request(params: {_method: "patch"})
+            flash[:alert].must_equal "You are not authorized to make this change. Access request pending."
+          end
         end
       end
 

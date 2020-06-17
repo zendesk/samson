@@ -13,22 +13,20 @@ module Samson
       :build_button,
       :build_new,
       :build_show,
-      :deploy_confirmation_tab_nav,
-      :deploy_confirmation_tab_body,
+      :deploy_changeset_tab_nav,
+      :deploy_changeset_tab_body,
       :deploy_group_show,
       :deploy_group_form,
       :deploy_group_table_header,
       :deploy_group_table_cell,
       :deploys_header,
       :deploy_show_view,
-      :deploy_tab_nav,
-      :deploy_tab_body,
       :deploy_view,
       :deploy_form, # for external plugin, so they can add extra form fields
       :admin_menu,
       :manage_menu,
-      :project_tabs_view,
-      :project_view
+      :project_dashboard,
+      :project_tabs_view
     ].freeze
 
     EVENT_HOOKS = [
@@ -45,9 +43,7 @@ module Samson
       :deploy_group_includes,
       :deploy_group_permitted_params,
       :deploy_permitted_params,
-      :ensure_build_is_succeeded,
       :error,
-      :ensure_docker_image_has_no_vulnerabilities,
       :ignore_error,
       :deploy_env,
       :deploy_execution_env,
@@ -63,7 +59,8 @@ module Samson
       :trace_scope,
       :asynchronous_performance_tracer,
       :repo_provider_status,
-      :changeset_api_request,
+      :repo_commit_from_ref,
+      :repo_compare,
       :validate_deploy
     ].freeze
 
@@ -75,7 +72,6 @@ module Samson
       :before_deploy,
       :before_docker_build,
       :before_docker_repository_usage,
-      :ensure_build_is_succeeded,
       :ref_status,
       :stage_clone
     ].freeze
@@ -117,13 +113,13 @@ module Samson
       end
 
       def engine
-        @engine ||= Kernel.const_get("::Samson#{@name.camelize}::Engine")
+        @engine ||= Kernel.const_get("::Samson#{@name.camelize}::SamsonPlugin")
       end
 
       private
 
       def decorators_root
-        @decorators_root ||= Pathname("#{@folder}/app/decorators")
+        @decorators_root ||= Pathname("#{@folder}/decorators")
       end
 
       # {root}/xyz_decorator.rb -> Xyz
@@ -137,7 +133,7 @@ module Samson
     class << self
       def plugins
         @plugins ||= begin
-          Gem.find_files("*/samson_plugin.rb").
+          Gem.find_files("samson_*/samson_plugin.rb").
             map { |path| Plugin.new(path) }.
             select { |p| active_plugin?(p.name) }.
             sort_by(&:name)
@@ -194,8 +190,8 @@ module Samson
         end
       end
 
-      def load_decorators(class_name)
-        @class_decorators[class_name].each { |path| require_dependency(path) }
+      def load_decorators(klass)
+        @class_decorators[klass.name].each { |path| require_dependency(path) }
       end
 
       def plugin_setup
@@ -265,19 +261,4 @@ module Samson
   end
 end
 
-module Samson::LoadDecorators
-  # TODO: should call decorator after subclass is done being defined, see https://stackoverflow.com/questions/7093992
-  def inherited(subclass)
-    super
-    Samson::Hooks.load_decorators(subclass.name)
-  end
-end
-
 Samson::Hooks.plugin_setup
-
-class << ActiveRecord::Base
-  prepend Samson::LoadDecorators
-end
-class << ActionController::Base
-  prepend Samson::LoadDecorators
-end

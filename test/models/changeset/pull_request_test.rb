@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../../test_helper'
 
-SingleCov.covered! uncovered: 1
+SingleCov.covered!
 
 describe Changeset::PullRequest do
   def add_risks
@@ -31,16 +31,24 @@ describe Changeset::PullRequest do
       data.title = "Make it bigger!"
 
       pr = Changeset::PullRequest.find("foo/bar", 42)
-
       pr.title.must_equal "Make it bigger!"
     end
 
     it "returns nil if the pull request could not be found" do
       GITHUB.stubs(:pull_request).with("foo/bar", 42).raises(Octokit::NotFound)
+      refute Changeset::PullRequest.find("foo/bar", 42)
+    end
+  end
 
-      pr = Changeset::PullRequest.find("foo/bar", 42)
+  describe ".cache" do
+    it "overrides find cache" do
+      GITHUB.expects(:pull_request).with("foo/bar", 42).
+        returns(Sawyer::Resource.new(Octokit.agent, title: "X"))
 
-      pr.must_be_nil
+      2.times { Changeset::PullRequest.find("foo/bar", 42).title.must_equal "X" }
+
+      Changeset::PullRequest.cache("foo/bar", "pull_request" => {"number" => 42, "title" => "C"})
+      Changeset::PullRequest.find("foo/bar", 42).title.must_equal "C"
     end
   end
 
@@ -70,13 +78,15 @@ describe Changeset::PullRequest do
       {
         "number" => 1,
         "pull_request" => {
-          "state" => 'open',
-          "body" => 'pr description [samson review]'
+          "state" => "open",
+          "body" => "pr description [samson review]"
         },
-        "github" => {
-          "action" => 'opened'
-        }
+        "action" => "opened"
       }
+    end
+
+    it "is valid" do
+      Changeset::PullRequest.valid_webhook?(webhook_data).must_equal true
     end
 
     it "is invalid for PRs that had its label changed" do
@@ -378,13 +388,13 @@ describe Changeset::PullRequest do
     before { add_risks }
 
     it "finds risks" do
-      pr.risks.must_equal "- Explosions"
+      pr.risks.must_equal " - Explosions"
     end
 
     it "caches risks" do
       pr.risks
       no_risks
-      pr.risks.must_equal "- Explosions"
+      pr.risks.must_equal " - Explosions"
     end
 
     it "does not find - None" do
@@ -408,7 +418,7 @@ describe Changeset::PullRequest do
         # risks
           - Planes
       BODY
-      pr.risks.must_equal "- Planes"
+      pr.risks.must_equal "  - Planes"
     end
 
     it "finds risks with new lines" do
@@ -431,7 +441,7 @@ describe Changeset::PullRequest do
         =====
           - Snakes
       BODY
-      pr.risks.must_equal "- Snakes"
+      pr.risks.must_equal "  - Snakes"
     end
 
     it "finds risks with closing hashes in atx style markdown headers" do
@@ -439,7 +449,7 @@ describe Changeset::PullRequest do
         ## Risks ##
           - Planes
       BODY
-      pr.risks.must_equal "- Planes"
+      pr.risks.must_equal "  - Planes"
     end
 
     it "finds risks and skips html tags" do
@@ -448,18 +458,28 @@ describe Changeset::PullRequest do
           <!-- This is a temporary risk -->
           - Planes
       BODY
-      pr.risks.must_equal "- Planes"
+      pr.risks.must_equal "  - Planes"
     end
 
     it "ends the risks section if there are subsequent sections" do
       body.replace(+<<~BODY)
         # Risks
           - Planes
-
         # Notes
         This is a great PR!
       BODY
-      pr.risks.must_equal "- Planes"
+      pr.risks.must_equal "  - Planes"
+    end
+
+    it "preserves list indentation by not stripping the content" do
+      body.replace(+<<~BODY)
+        # Risks
+          - Planes
+          - Snek
+        # Notes
+        This is a great PR!
+      BODY
+      pr.risks.must_equal "  - Planes\n  - Snek"
     end
 
     it "ends the risks section if there are subsequent underline style sections" do
@@ -472,7 +492,7 @@ describe Changeset::PullRequest do
         =====
         This is a great PR!
       BODY
-      pr.risks.must_equal "- Planes"
+      pr.risks.must_equal "  - Planes"
     end
 
     context "with nothing risky" do

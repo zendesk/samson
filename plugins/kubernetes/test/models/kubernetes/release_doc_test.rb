@@ -85,8 +85,8 @@ describe Kubernetes::ReleaseDoc do
       end
 
       it "adds valid relative PodDisruptionBudget when sometimes invalid is requested" do
-        template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '90%'}
-        create!.resource_template[2][:spec][:minAvailable].must_equal 1
+        template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '99%'}
+        create!.resource_template[2][:spec][:minAvailable].must_equal '50%'
       end
 
       it "fails when completely invalid is requested" do
@@ -105,7 +105,7 @@ describe Kubernetes::ReleaseDoc do
         it "adds relative PodDisruptionBudget" do
           Time.stubs(:now).returns(Time.parse("2018-01-01"))
           budget = create!.resource_template[2]
-          budget[:spec][:minAvailable].must_equal 1
+          budget[:spec][:minAvailable].must_equal '30%'
           budget[:metadata][:annotations][:"samson/updateTimestamp"].must_equal "2018-01-01T00:00:00Z"
           refute budget.key?(:delete)
         end
@@ -131,12 +131,12 @@ describe Kubernetes::ReleaseDoc do
         end
 
         it "adds when first is not a Deployment" do
-          template.unshift(kind: "ConfigMap", metadata: {})
+          template.unshift(apiVersion: "v1", kind: "ConfigMap", metadata: {})
           create!.resource_template[3][:spec][:minAvailable].must_equal 1
         end
 
         it "ignores when there is no deployment" do
-          template.replace([{kind: "ConfigMap", metadata: {}}])
+          template.replace([{apiVersion: "v1", kind: "ConfigMap", metadata: {}}])
           refute create!.resource_template[1]
         end
 
@@ -159,7 +159,7 @@ describe Kubernetes::ReleaseDoc do
       end
 
       it "keeps name when using custom namespace" do
-        doc.kubernetes_release.project.create_kubernetes_namespace!(name: "foo")
+        doc.kubernetes_release.project.kubernetes_namespace = kubernetes_namespaces(:test)
         template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '30%'}
         create!.resource_template[2][:metadata][:name].must_equal 'some-project-rc'
       end
@@ -205,6 +205,39 @@ describe Kubernetes::ReleaseDoc do
         create!
         create!.resource_template[2][:spec][:minAvailable].must_equal 1
       end
+
+      it "does not add a second PDB" do
+        template[1][:apiVersion] = "policy/v1beta1"
+        template[1][:kind] = "PodDisruptionBudget"
+        create!
+        create!.resource_template.size.must_equal 2
+      end
+    end
+  end
+
+  describe "#raw_template" do
+    it "can read from dynamic olders" do
+      doc.kubernetes_role.config_file = "kubernetes/$deploy_group/server.yml"
+      GitRepository.any_instance.expects(:file_content).with("kubernetes/pod1/server.yml", anything, anything).
+        returns(read_kubernetes_sample_file('kubernetes_deployment.yml'))
+      doc.send(:raw_template).dig(0, :kind).must_equal "Deployment"
+    end
+  end
+
+  describe "#custom_resource_definitions" do
+    it "creates a map that the template_filler can use" do
+      doc.resource_template.replace(
+        [
+          {kind: "Pod"},
+          {kind: "CustomResourceDefinition", spec: {scope: "Namespaced", names: {kind: "Foo"}}},
+          {kind: "CustomResourceDefinition", spec: {scope: "Cluster", names: {kind: "Bar"}}},
+        ]
+      )
+
+      doc.custom_resource_definitions.must_equal(
+        "Foo" => {"namespaced" => true},
+        "Bar" => {"namespaced" => false}
+      )
     end
   end
 
@@ -342,6 +375,17 @@ describe Kubernetes::ReleaseDoc do
 
     it "is nil when not blue-green" do
       refute doc.blue_green_color
+    end
+  end
+
+  describe '#deploy_group_role' do
+    it "returns an instance of a DeployGroupRole" do
+      doc.deploy_group_role.must_be_instance_of Kubernetes::DeployGroupRole
+    end
+
+    it "can be set" do
+      doc.deploy_group_role = Kubernetes::DeployGroupRole.first
+      assert_sql_queries(0) { assert doc.deploy_group_role }
     end
   end
 end

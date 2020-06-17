@@ -51,6 +51,8 @@ class JobExecution
       end
     end
 
+    success = Samson::Hooks.fire(:validate_deploy, @job.deploy, self).all? if @job.deploy && success
+
     if success
       @job.succeeded!
     else
@@ -84,10 +86,10 @@ class JobExecution
     @finish_callbacks << -> do
       begin
         yield
-      rescue => exception
-        message = "Finish hook failed: #{exception.message}"
+      rescue => e
+        message = "Finish hook failed: #{e.message}"
         output.puts message
-        Samson::ErrorNotifier.notify(exception, error_message: message, parameters: {job_url: job.url})
+        Samson::ErrorNotifier.notify(e, error_message: message, parameters: {job_url: job.url})
       end
     end
   end
@@ -154,7 +156,7 @@ class JobExecution
 
   # ideally the plugin should handle this, but that was even hackier
   def kubernetes?
-    defined?(SamsonKubernetes::Engine) && @stage&.kubernetes
+    defined?(SamsonKubernetes::SamsonPlugin) && @stage&.kubernetes
   end
 
   def setup(dir)
@@ -210,7 +212,7 @@ class JobExecution
 
   def make_builds_available
     # wait for builds to finish
-    builds = build_finder.ensure_succeeded_builds
+    builds = deploy.builds = build_finder.ensure_succeeded_builds
 
     # pre-download the necessary images in case they are not public
     ImageBuilder.local_docker_login do |login_commands|

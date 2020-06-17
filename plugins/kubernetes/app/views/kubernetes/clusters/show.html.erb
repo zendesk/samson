@@ -22,6 +22,7 @@
     </div>
   </div>
 
+  <% if ENV["KRITIS_BREAKGLASS_SUPPORTED"] %>
   <div class="form-group">
     <label class="col-lg-2 control-label">
       Kritis Breakglass
@@ -30,6 +31,7 @@
       <p class="form-control-static"><%= @kubernetes_cluster.kritis_breakglass ? "YES" : "NO" %></p>
     </div>
   </div>
+  <% end %>
 
   <% case @kubernetes_cluster.auth_method %>
   <% when "context" %>

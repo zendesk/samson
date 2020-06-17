@@ -1,6 +1,5 @@
 <% links = [
-  ["Roles", project_kubernetes_roles_path],
-  ["Releases", project_kubernetes_releases_path],
+  ["Roles", project_kubernetes_roles_path(@project)],
   ["Resources", project_kubernetes_deploy_group_roles_path(@project)],
   ["Limits", project_kubernetes_usage_limits_path(@project)],
 ] %>

@@ -3,7 +3,7 @@ class CreateOutboundWebhooks < ActiveRecord::Migration[4.2]
   def change
     create_table :outbound_webhooks do |t|
       t.timestamps null: false
-      t.timestamp :deleted_at
+      t.datetime :deleted_at
 
       t.integer :project_id, null: false
       t.integer :stage_id, null: false

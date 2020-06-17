@@ -12,6 +12,7 @@ describe Kubernetes::DeployExecutor do
   let(:job) { jobs(:succeeded_test) }
   let(:project) { job.project }
   let(:build) { builds(:docker_build) }
+  let(:cluster) { create_kubernetes_cluster }
   let(:deploy_group) { stage.deploy_groups.first }
   let(:executor) { Kubernetes::DeployExecutor.new(job, output) }
   let(:log_url) { "http://foobar.server/api/v1/namespaces/staging/pods/pod-resque-worker/log?container=container1" }
@@ -22,6 +23,60 @@ describe Kubernetes::DeployExecutor do
   before do
     stage.update_column :kubernetes, true
     deploy.update_column :kubernetes, true
+    deploy_group.update kubernetes_cluster: cluster
+  end
+
+  describe "#preview_release_docs" do
+    let(:worker_role) { Kubernetes::Role.find_by(name: "resque-worker") }
+
+    before do
+      job.update_column(:commit, build.git_sha) # this is normally done by JobExecution
+
+      stage.update(deploy_groups: [deploy_group])
+      stage.kubernetes_stage_roles.create(kubernetes_role: worker_role, ignored: true)
+
+      GitRepository.any_instance.stubs(:file_content).
+        with(any_of('kubernetes/app_server.yml', 'kubernetes/resque_worker.yml'), commit, anything).
+        returns(read_kubernetes_sample_file('kubernetes_deployment.yml'))
+    end
+
+    it "returns built release docs" do
+      release_docs = assert_no_difference [
+        'Deploy.count',
+        'Job.count',
+        'Kubernetes::Release.count',
+        'Kubernetes::ReleaseDoc.count'
+      ] do
+        executor.preview_release_docs
+      end
+
+      release_docs.size.must_equal 1
+      release_docs.first.persisted?.must_equal false
+    end
+
+    it "skips looking up build when resolve_build is false" do
+      Samson::BuildFinder.any_instance.expects(:ensure_succeeded_builds).never
+
+      release_docs = assert_no_difference [
+        'Deploy.count',
+        'Job.count',
+        'Kubernetes::Release.count',
+        'Kubernetes::ReleaseDoc.count'
+      ] do
+        executor.preview_release_docs(resolve_build: false)
+      end
+
+      release_docs.size.must_equal 1
+      release_docs.first.persisted?.must_equal false
+    end
+
+    it "raises when release is invalid" do
+      Kubernetes::Release.any_instance.expects(:valid?).at_least_once.returns(false)
+
+      assert_raises Samson::Hooks::UserError do
+        executor.preview_release_docs
+      end
+    end
   end
 
   describe "#execute" do
@@ -113,6 +168,7 @@ describe Kubernetes::DeployExecutor do
       out.must_include "SUCCESS"
       out.must_include waiting_message
       out.wont_include "BigDecimal" # properly serialized configs
+      deploy.builds.must_equal [build]
     end
 
     it "watches resources until they are stable" do
@@ -161,7 +217,7 @@ describe Kubernetes::DeployExecutor do
       end
 
       it "does limited amounts of queries" do
-        assert_sql_queries(16) do
+        assert_sql_queries(17) do
           assert execute, out
         end
       end
@@ -182,16 +238,24 @@ describe Kubernetes::DeployExecutor do
           pod_reply[:items] << copy
         end
 
-        assert_nplus1_queries(1) do
+        assert_nplus1_queries 0 do
           assert execute, out
         end
       end
     end
 
-    it "show logs after succeeded deploy when requested" do
+    it "show logs after succeeded deploy when requested via annotation" do
       pod_reply[:items][0][:metadata][:annotations] = {'samson/show_logs_on_deploy' => 'true'}
       assert execute, out
       out.scan("logs:").size.must_equal 1 # shows for first but not for second pod
+    end
+
+    it "show logs after succeeded deploy when requested via stage" do
+      assert_request(:get, /pod-app-server\/log/) do
+        stage.kubernetes_sample_logs_on_success = true
+        assert execute, out
+        out.scan("logs:").size.must_equal 2 # shows for 1 per role
+      end
     end
 
     it "can delete resources" do
@@ -214,6 +278,16 @@ describe Kubernetes::DeployExecutor do
       assert execute, out
     end
 
+    it "can use dynamic folders" do
+      GitRepository.any_instance.expects(:file_content).with('kubernetes/pod100/resque_worker.yml', commit, anything).
+        returns(read_kubernetes_sample_file('kubernetes_deployment.yml'))
+      GitRepository.any_instance.expects(:file_content).with('kubernetes/pod100/app_server.yml', commit, anything).
+        returns(read_kubernetes_sample_file('kubernetes_deployment.yml').gsub(/some-role/, 'other-role'))
+      kubernetes_roles(:app_server).update_column(:config_file, 'kubernetes/$deploy_group/app_server.yml')
+      kubernetes_roles(:resque_worker).update_column(:config_file, 'kubernetes/$deploy_group/resque_worker.yml')
+      assert execute, out
+    end
+
     describe "invalid configs" do
       before { build.delete } # build needs to be created -> assertion fails
       around { |test| refute_difference('Build.count') { refute_difference('Release.count', &test) } }
@@ -226,7 +300,7 @@ describe Kubernetes::DeployExecutor do
         e = assert_raises Samson::Hooks::UserError do
           refute execute
         end
-        e.message.must_include "Error parsing kubernetes/" # order is random so we check prefix
+        e.message.must_include "Error found when validating kubernetes/" # order is random so we check prefix
       end
 
       it "fails before building when roles as a group are invalid" do
@@ -237,7 +311,7 @@ describe Kubernetes::DeployExecutor do
         e = assert_raises Samson::Hooks::UserError do
           refute execute
         end
-        e.message.must_equal "metadata.labels.role must be set and unique"
+        e.message.must_equal "metadata.labels.role must be set and different in each role"
       end
 
       it "fails before building when secrets are not configured in the backend" do
@@ -271,7 +345,7 @@ describe Kubernetes::DeployExecutor do
         e = assert_raises Samson::Hooks::UserError do
           refute execute
         end
-        e.message.must_include "Error parsing kubernetes/resque_worker.yml"
+        e.message.must_equal "does not contain config file 'kubernetes/resque_worker.yml'"
       end
     end
 
@@ -281,8 +355,6 @@ describe Kubernetes::DeployExecutor do
         doc = Kubernetes::Release.last.release_docs.max_by(&:kubernetes_role)
         config = server_role
         doc.replica_target.must_equal config.replicas
-        doc.limits_cpu.must_equal config.limits_cpu
-        doc.limits_memory.must_equal config.limits_memory
       end
 
       describe "with missing role" do
@@ -318,12 +390,13 @@ describe Kubernetes::DeployExecutor do
         # we need multiple different templates here
         # make the worker a job and keep the app server
         Kubernetes::ReleaseDoc.any_instance.unstub(:raw_template)
-        GitRepository.any_instance.stubs(:file_content).with('kubernetes/resque_worker.yml', commit).returns({
+        GitRepository.any_instance.unstub(:file_content)
+        GitRepository.any_instance.stubs(:file_content).with('kubernetes/resque_worker.yml', commit, anything).returns({
           'kind' => 'Job',
           'apiVersion' => 'batch/v1',
           'spec' => {
             'template' => {
-              'metadata' => {'labels' => {'project' => 'foobar', 'role' => 'migrate'}},
+              'metadata' => {'labels' => {'project' => 'some-project', 'role' => 'migrate'}},
               'spec' => {
                 'containers' => [{'name' => 'job', 'image' => 'docker-registry.zende.sk/truth_service:latest'}],
                 'restartPolicy' => 'Never'
@@ -332,11 +405,11 @@ describe Kubernetes::DeployExecutor do
           },
           'metadata' => {
             'name' => 'test',
-            'labels' => {'project' => 'foobar', 'role' => 'migrate'},
+            'labels' => {'project' => 'some-project', 'role' => 'migrate'},
             'annotations' => {'samson/prerequisite' => 'true'}
           }
         }.to_yaml)
-        GitRepository.any_instance.stubs(:file_content).with('kubernetes/app_server.yml', commit).
+        GitRepository.any_instance.stubs(:file_content).with('kubernetes/app_server.yml', commit, anything).
           returns(read_kubernetes_sample_file('kubernetes_deployment.yml'))
 
         # check if the job already exists ... it does not
@@ -382,9 +455,9 @@ describe Kubernetes::DeployExecutor do
     end
 
     it "fails when release has errors" do
-      Kubernetes::Release.any_instance.expects(:persisted?).at_least_once.returns(false)
+      Kubernetes::Release.any_instance.expects(:save).at_least_once.returns(false)
       e = assert_raises(Samson::Hooks::UserError) { execute }
-      e.message.must_equal "Failed to create release: []" # inspected errors
+      e.message.must_equal "Failed to store manifests: []" # inspected errors
     end
 
     it "shows status of each individual pod when there is more than 1 per deploy group" do
@@ -409,7 +482,7 @@ describe Kubernetes::DeployExecutor do
 
       refute execute
 
-      out.must_include "resque-worker Pod pod-resque-worker: Restarted\n"
+      out.must_include "resque-worker Pod pod-resque-worker: Restarted"
       out.must_include "UNSTABLE"
     end
 
@@ -420,7 +493,7 @@ describe Kubernetes::DeployExecutor do
 
       refute execute
 
-      out.must_include "Pod 100 resque-worker Pod: Restarted\n"
+      out.must_include "Pod 100 resque-worker Pod: Restarted"
       out.must_include "UNSTABLE"
     end
 
@@ -534,17 +607,29 @@ describe Kubernetes::DeployExecutor do
       out.must_include "resque-worker Pod: Missing\n"
     end
 
-    it "fails when resource has error events" do
-      assert_request(
-        :get,
-        %r{http://foobar.server/api/v1/namespaces/staging/events.*Deployment},
-        to_return: {body: {items: [{type: 'Warning', reason: 'NO', lastTimestamp: 1.minute.from_now.iso8601}]}.to_json},
-        times: 4
-      )
+    describe "with non-pod failures" do
+      before do
+        assert_request(
+          :get,
+          %r{http://foobar.server/api/v1/namespaces/staging/events.*Deployment},
+          to_return: {
+            body: {items: [{type: 'Warning', reason: 'NO', lastTimestamp: 1.minute.from_now.iso8601}]}.to_json
+          },
+          times: 4
+        )
+      end
 
-      refute execute
+      it "fails when non-pods have error events" do
+        refute execute
+        out.must_include "Deployment test-app-server events:\n  Warning NO"
+      end
 
-      out.must_include "Deployment test-app-server events:\n  Warning NO"
+      it "does not count non-pods into allowed-not-ready" do
+        with_env KUBERNETES_ALLOW_NOT_READY_PERCENT: "100" do
+          refute execute
+          out.must_include "Deployment test-app-server events:\n  Warning NO"
+        end
+      end
     end
 
     describe "an autoscaled role" do
@@ -588,6 +673,7 @@ describe Kubernetes::DeployExecutor do
 
     describe "when rollback is needed" do
       let(:rollback_indicator) { "Rolling back" }
+      let(:rollback_instructions) { "Rollback on failure" }
 
       before { worker_is_unstable }
 
@@ -603,9 +689,10 @@ describe Kubernetes::DeployExecutor do
 
         refute execute
 
-        out.must_include "resque-worker Pod: Restarted\n"
+        out.must_include "resque-worker Pod: Restarted"
         out.must_include "UNSTABLE"
         out.must_include rollback_indicator
+        out.must_include rollback_instructions
         out.must_include "DONE" # DONE is shown ... we got past the rollback
         out.wont_include "SUCCESS"
         out.wont_include "FAILED"
@@ -614,7 +701,7 @@ describe Kubernetes::DeployExecutor do
       it "deletes when there was no previous deployed resource" do
         refute execute
 
-        out.must_include "resque-worker Pod: Restarted\n"
+        out.must_include "resque-worker Pod: Restarted"
         out.must_include "UNSTABLE"
         out.must_include "Deleting"
         out.wont_include rollback_indicator
@@ -628,7 +715,7 @@ describe Kubernetes::DeployExecutor do
 
         refute execute
 
-        out.must_include "resque-worker Pod: Restarted\n"
+        out.must_include "resque-worker Pod: Restarted"
         out.must_include "UNSTABLE"
         out.must_include "DONE" # DONE is shown ... we got past the rollback
         out.must_include "FAILED: Weird error" # rollback error cause is shown
@@ -640,9 +727,10 @@ describe Kubernetes::DeployExecutor do
 
         refute execute
 
-        out.must_include "resque-worker Pod: Restarted\n"
+        out.must_include "resque-worker Pod: Restarted"
         out.must_include "UNSTABLE"
         out.must_include "DONE" # DONE is shown ... we got past the rollback
+        out.wont_include rollback_instructions
       end
     end
 
@@ -681,7 +769,7 @@ describe Kubernetes::DeployExecutor do
         refute execute
 
         # failed
-        out.must_include "resque-worker Pod: Restarted\n"
+        out.must_include "resque-worker Pod: Restarted"
         out.must_include "UNSTABLE"
 
         # correct debugging output
@@ -693,6 +781,12 @@ describe Kubernetes::DeployExecutor do
         out.must_match /logs:\s+LOG-1/
         out.must_include "events:\n  Warning FailedScheduling"
         out.must_include "Pod 100 resque-worker Service some-project events:\n  Warning FailedScheduling:"
+      end
+
+      it "hides logs when requested" do
+        stage.update_column :kubernetes_hide_error_logs, true
+        refute execute
+        out.wont_include "logs"
       end
 
       it "displays events without message" do
@@ -877,8 +971,36 @@ describe Kubernetes::DeployExecutor do
     end
   end
 
+  describe "#sum_event_group" do
+    context "when counts are present" do
+      let(:events) do
+        [
+          {count: 1},
+          {count: 2}
+        ]
+      end
+
+      it "sums the counts in the event_group" do
+        executor.send(:sum_event_group, events).must_equal 3
+      end
+    end
+
+    context "when counts are missing" do
+      let(:events) do
+        [
+          {},
+          {}
+        ]
+      end
+
+      it "returns 0" do
+        executor.send(:sum_event_group, events).must_equal 0
+      end
+    end
+  end
+
   describe "#show_logs_on_deploy_if_requested" do
-    it "prints erros but continues to not block the deploy" do
+    it "prints errors but continues to not block the deploy" do
       Kubernetes::DeployExecutor.any_instance.stubs(:build_selectors).returns([])
       Samson::ErrorNotifier.expects(:notify).returns("Details")
       executor.send(:show_logs_on_deploy_if_requested, 123)

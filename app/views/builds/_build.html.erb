@@ -1,11 +1,11 @@
 <tr>
   <td><%= link_to build.nice_name, project_build_path(build.project, build) %></td>
   <% if @project %>
-    <td><%= deployed_or_running_list @project.stages, build.git_sha %></td>
+    <td><%= deployed_or_running_builds @project.stages, build %></td>
   <% else %>
     <td><%= link_to build.project.name, build.project %></td>
   <% end %>
-  <td><%= relative_time(build.created_at) %></td>
+  <td><%= render_time(build.created_at) %></td>
   <td><%= duration_text build.duration if build.duration %></td>
   <td><%= git_ref_and_sha_for(build) %></td>
   <td><%= build.image_name.presence || build.dockerfile %></td>

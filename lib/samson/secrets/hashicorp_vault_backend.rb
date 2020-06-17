@@ -31,8 +31,8 @@ module Samson
           return history unless resolve
           history.fetch(:versions).each do |version, metadata|
             metadata.replace(metadata: metadata.dup)
-            next if metadata.dig(:metadata, :destroyed)
-            metadata.merge!(read(id, version))
+            next if metadata.dig(:metadata, :destroyed) || metadata.dig(:metadata, :deletion_time).present?
+            metadata.merge!(read(id, version) || {}) # don't blow up when version can't be read.
           end
           history
         end
@@ -48,8 +48,8 @@ module Samson
               if value = read(id)
                 found[id] = value
               end
-            rescue # deploy group has no vault server or deploy group no longer exists
-              nil
+            rescue VaultClientManager::VaultServerNotConfigured
+              nil # ignore if deploy group has no vault server or deploy group no longer exists
             end
           end
           found
@@ -80,7 +80,7 @@ module Samson
             begin
               vault_path(secret_path, :decode)
             rescue ActiveRecord::RecordNotFound => e
-              Samson::ErrorNotifier.notify(e, notice: true)
+              Samson::ErrorNotifier.notify(e)
               nil
             end
           end

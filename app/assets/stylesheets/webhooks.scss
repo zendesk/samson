@@ -3,3 +3,7 @@
 #latest_response pre {
   max-width: $container-lg - 170px; // body size minus some room for labels
 }
+
+li.disabled {
+  color: gray;
+}

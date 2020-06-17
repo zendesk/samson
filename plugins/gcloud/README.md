@@ -12,12 +12,9 @@ Images will be built using `gcloud container build submit`, which can be slow fo
 If the file upload takes too long or you have a custom cloudbuild.yaml, use build triggers instead and
 notify samson of the finished builds via the build api.
 
-## Image scanning
+## Image tag resolution
 
-If a project opts in to "Show GCR Vulnerabilities", show GCR build vulnerabilities scan result on the build page and during deploy.
-If the stage opts in to "Block deploy of vulnerable images", then deploys will fail when vulnerabilities are found.
-
-Note: because of a bug in gcloud api vulnerability scans results are only available 10 minutes after the build completes.
+On deploy resolve the images tag to a sha so it is static and scanable with [kritis](https://github.com/grafeas/kritis).
 
 ## Setup
 
@@ -32,6 +29,5 @@ Note: because of a bug in gcloud api vulnerability scans results are only availa
   - `GCLOUD_PROJECT` - project to use
   - `GCLOUD_ACCOUNT` - account to use
   - `GCLOUD_OPTIONS` - additional commandline options
-  - `GCLOUD_IMAGE_TAGGER` - set to `true` to enable tagging on deploy
-  - `GCLOUD_IMAGE_SCANNER` - set to `true` to enable build scanning 
+  - `GCLOUD_IMAGE_TAGGER` - set to `true` to enable tagging on deploy 
   - `GCLOUD_GKE_CLUSTERS_FOLDER` - set to folder where gke clusters config should be stored to enable gke cluster UI

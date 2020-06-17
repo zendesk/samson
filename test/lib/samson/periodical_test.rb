@@ -89,6 +89,14 @@ describe Samson::Periodical do
         with(instance_of(custom_error), error_message: "Samson::Periodical remove_expired_locks failed")
       Samson::Periodical.run_once(:remove_expired_locks)
     end
+
+    it "uses distinct user in audits" do
+      assert_difference "Audited::Audit.count", +1 do
+        Samson::Periodical.run_once(:global_command_cleanup)
+      end
+      Audited::Audit.last.username.must_equal "Samson::Periodical"
+      Audited.store[:audited_user].must_be_nil # unsets after
+    end
   end
 
   # starts background threads and should always shut them down
@@ -193,6 +201,21 @@ describe Samson::Periodical do
 
     it "is disabled when a flag is not set" do
       refute Samson::Periodical.interval(:periodical_deploy)
+    end
+  end
+
+  describe ".next_execution_in" do
+    before { freeze_time }
+
+    it "shows next execution time" do
+      with_registered do
+        Samson::Periodical.next_execution_in(:periodical_deploy).must_equal 71694
+      end
+    end
+
+    it "fails when next time would be wrong because it randomly starts" do
+      Samson::Periodical.register(:foo, 'bar') {}
+      assert_raises(RuntimeError) { Samson::Periodical.next_execution_in(:foo) }
     end
   end
 

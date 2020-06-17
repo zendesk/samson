@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 module SamsonDatadogTracer
-  class Engine < Rails::Engine
+  class SamsonPlugin < Rails::Engine
   end
 
   class << self
@@ -25,7 +25,7 @@ module SamsonDatadogTracer
       end
       klass.alias_method without, method
       klass.define_method(method) do |*args, &block|
-        callback.call { send(without, *args, &block) } # rubocop:disable Performance/RedundantBlockCall
+        callback.call { send(without, *args, &block) }
       end
       klass.send visibility, method
       klass.send visibility, without

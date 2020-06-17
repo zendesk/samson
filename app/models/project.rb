@@ -15,7 +15,7 @@ class Project < ActiveRecord::Base
     }
   ] + Samson::Hooks.fire(:project_docker_build_method_options).flatten(1)
 
-  has_soft_deletion default_scope: true unless self < SoftDeletion::Core # uncovered
+  has_soft_deletion default_scope: true
   audited
 
   include Lockable
@@ -39,9 +39,8 @@ class Project < ActiveRecord::Base
   has_many :releases, dependent: :destroy
   has_many :stages, dependent: :destroy
   has_many :deploys, dependent: nil
-  has_many :jobs, -> { order(id: :desc) }, dependent: nil
+  has_many :jobs, -> { order(id: :desc) }, dependent: nil, inverse_of: :project
   has_many :webhooks, dependent: :destroy
-  has_many :outbound_webhooks, dependent: :destroy
   has_many :commands, dependent: :destroy
   has_many :user_project_roles, dependent: :destroy
   has_many :users, through: :user_project_roles, inverse_of: :projects
@@ -131,9 +130,16 @@ class Project < ActiveRecord::Base
 
   # The user/repo part of the repository URL.
   def repository_path
-    # GitHub allows underscores, hyphens and dots in repo names
-    # but only hyphens in user/organisation names (as well as alphanumeric).
-    repository_url.scan(%r{[:/]([A-Za-z0-9-]+/[\w.-]+?)(?:\.git)?$}).join
+    if gitlab?
+      # This is GitLab, which allows similar characters in repository names, but
+      # also follows a subgroup convention which can contain an n-number of paths
+      # underneath the organization group.
+      repository_url.scan(%r{[:/]([A-Za-z0-9-/]+/[\w.-]+?)(?:\.git)?$}).join
+    else
+      # GitHub allows underscores, hyphens and dots in repo names
+      # but only hyphens in user/organisation names (as well as alphanumeric).
+      repository_url.scan(%r{[:/]([A-Za-z0-9-]+/[\w.-]+?)(?:\.git)?$}).join
+    end
   end
 
   def repository_directory
@@ -141,7 +147,7 @@ class Project < ActiveRecord::Base
   end
 
   def webhook_stages_for(branch, service_type, service_name)
-    webhooks.for_source(service_type, service_name).for_branch(branch).map(&:stage)
+    webhooks.active.for_source(service_type, service_name).for_branch(branch).map(&:stage)
   end
 
   def repository_homepage
@@ -174,6 +180,14 @@ class Project < ActiveRecord::Base
     )
   end
 
+  # quick commit from reference without pulling the repository ... unless we have no remote
+  def repo_commit_from_ref(ref)
+    Samson::Hooks.fire(:repo_commit_from_ref, self, ref).compact.first ||
+      repository.commit_from_ref(ref)
+  rescue StandardError
+    nil
+  end
+
   def last_deploy_by_group(before_time, include_failed_deploys: false)
     releases = deploys_by_group(before_time, include_failed_deploys)
     releases.map { |group_id, deploys| [group_id, deploys.max_by(&:updated_at)] }.to_h
@@ -184,9 +198,7 @@ class Project < ActiveRecord::Base
     Deploy.find(found.map(&:id)).select(&:stage).sort_by { |d| d.stage.order }.presence
   end
 
-  def deployed_reference_to_non_production_stage?(reference)
-    return false unless commit = repository.commit_from_ref(reference)
-
+  def deployed_to_non_production_stage?(commit)
     stages.joins(deploys: :job).where(
       jobs: {status: 'succeeded', commit: commit}
     ).distinct.any? { |stage| !stage.production? }
@@ -235,7 +247,7 @@ class Project < ActiveRecord::Base
   def deploys_by_group(before, include_failed_deploys = false)
     stages.each_with_object({}) do |stage, result|
       stage_filter = include_failed_deploys ? stage.deploys : stage.deploys.succeeded.where(release: true)
-      deploy = stage_filter.where("deploys.updated_at <= ?", before.to_s(:db)).first
+      deploy = stage_filter.find_by("deploys.updated_at <= ?", before.to_s(:db))
       next unless deploy
       stage.deploy_groups.pluck(:id).each { |id| (result[id] ||= []) << deploy }
     end
@@ -328,7 +340,7 @@ class Project < ActiveRecord::Base
   # https://foo.com/bar/baz.git -> git@foo.com:bar/baz.git
   def private_repository_url
     uri = URI.parse(repository_url)
-    uri.path.slice!(0, 1)
+    uri.path&.slice!(0, 1)
     "git@#{uri.host}:#{uri.path}"
   end
 
@@ -338,3 +350,4 @@ class Project < ActiveRecord::Base
     end
   end
 end
+Samson::Hooks.load_decorators(Project)

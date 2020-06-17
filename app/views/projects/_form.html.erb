@@ -1,4 +1,4 @@
-<%= form_for @project, html: { class: "form-horizontal" } do |form| %>
+<%= form_for @project, html: { class: "form-horizontal collapse_fieldsets" } do |form| %>
   <div class="pull-right">
     <%= link_to_history @project %>
   </div>
@@ -15,6 +15,7 @@
     <%= form.input :release_source, help: 'Selects which type of webhook will create a release' do %>
       <%= form.collection_select :release_source, webhook_sources_for_select(Samson::Integration::SOURCES, none: true), :second, :first, {}, class: "form-control" %>
     <% end %>
+    <%= form.input :ignore_pending_checks, help: 'Github checks to ignore if they are pending, comma separated, "Codecov,Travis CI" etc' %>
     <% if DeployGroup.enabled? %>
       <%= form.input :include_new_deploy_groups, as: :check_box, label: 'Include in New Deploy Groups', help: 'The "Create all stages" button for a deploy group will create a stage for this project.' %>
     <% end %>

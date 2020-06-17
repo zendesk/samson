@@ -86,19 +86,33 @@ describe Integrations::GithubController do
     it_does_not_deploy 'without "[samson review]" in the body' do
       payload.deep_merge!(pull_request: {body: 'imafixwolves'})
     end
+
+    it "refreshes PR cache" do
+      repo = project.repository_path
+      request = stub_github_api("repos/#{repo}/pulls/123", {})
+      2.times { assert Changeset::PullRequest.find(repo, 123) }
+      post :create, params: {token: project.token, pull_request: {number: 123}}
+      assert Changeset::PullRequest.find(repo, 123)
+      assert_requested request, times: 1
+    end
   end
 
   describe 'with a commit status event' do
-    before { request.headers['X-Github-Event'] = 'status' }
+    let(:commit) { 'dc395381e650f3bac18457909880829fc20e34ba' }
+
+    before do
+      request.headers['X-Github-Event'] = 'status'
+      Project.any_instance.stubs(:repo_commit_from_ref).returns(commit)
+    end
 
     it 'expires github status' do
-      Rails.cache.expects(:delete).with(['commit-status', project.id, 'dc395381e650f3bac18457909880829fc20e34ba'])
-      post :create, params: {token: project.token, sha: "dc395381e650f3bac18457909880829fc20e34ba"}
+      Rails.cache.expects(:delete).with(['commit-status', project.id, commit])
+      post :create, params: {token: project.token, sha: commit}
       assert_response :success
     end
   end
 
-  describe 'with a pull issue comment' do
+  describe 'with a pull/issue comment' do
     let(:payload) do
       {
         action: 'created',

@@ -7,7 +7,7 @@ Vault::KV.prepend(Samson::Secrets::Shared::ListRecursive)
 
 module Samson
   module Secrets
-    class VaultKVWrapper < Vault::KV
+    class VaultKvWrapper < Vault::KV
       def list
         super(prefix_id(''))
       end

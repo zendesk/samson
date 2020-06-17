@@ -47,8 +47,7 @@ Samson::Application.routes.draw do
 
     resource :changelog, only: [:show]
     resource :stars, only: [:create]
-    resources :webhooks, only: [:index, :create, :update, :destroy]
-    resources :outbound_webhooks, only: [:index, :create, :update, :destroy]
+    resources :webhooks, only: [:index, :show, :create, :update, :destroy]
     resources :references, only: [:index]
     resources :user_project_roles, only: [:index]
 
@@ -57,6 +56,11 @@ Samson::Application.routes.draw do
     end
   end
 
+  resources :outbound_webhooks, only: [:index, :create, :show, :update, :destroy] do
+    collection do
+      post :connect
+    end
+  end
   resources :user_project_roles, only: [:index, :create]
   resources :locks, only: [:index, :create, :destroy]
 
@@ -98,6 +102,8 @@ Samson::Application.routes.draw do
   resources :secrets, except: [:edit] do
     collection do
       get :duplicates
+      get :resolve
+      post :resolve
     end
     member do
       get :history

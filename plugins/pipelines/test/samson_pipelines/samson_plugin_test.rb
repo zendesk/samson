@@ -11,7 +11,7 @@ describe SamsonPipelines do
   let(:deploy) { deploys(:succeeded_test) }
   let(:next_deploy) { deploys(:succeeded_production_test) }
   let(:stage) { deploy.stage }
-  let(:next_stages) { [stages(:test_production), stages(:test_production_pod)] }
+  let(:pipeline_next_stages) { [stages(:test_production), stages(:test_production_pod)] }
   let(:output) { StringIO.new }
   let(:job) do
     Job.create(
@@ -24,7 +24,7 @@ describe SamsonPipelines do
   end
 
   describe :after_deploy do
-    before { stage.update!(next_stage_ids: next_stages.map(&:id)) }
+    before { stage.update!(next_stage_ids: pipeline_next_stages.map(&:id)) }
 
     it 'kicks off the next stages in the deploy' do
       DeployService.any_instance.expects(:deploy).
@@ -85,24 +85,14 @@ describe SamsonPipelines do
   end
 
   describe 'view callbacks' do
-    let(:view_context) do
-      view_context = ActionView::Base.new(ActionController::Base.view_paths)
-
-      class << view_context
-        include Rails.application.routes.url_helpers
-      end
-
-      view_context.instance_variable_set(:@project, Project.first)
-
-      view_context
-    end
-
     describe 'deploys_header callback' do
       def render_view
         Samson::Hooks.render_views(:deploys_header, view_context, deploy: deploy)
       end
 
       let(:deploy) { deploys(:succeeded_test) }
+
+      before { view_context.instance_variable_set(:@project, Project.first) }
 
       it 'renders alert if there is a triggering deploy' do
         other_deploy = deploys(:succeeded_production_test)

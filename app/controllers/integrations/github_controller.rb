@@ -13,14 +13,18 @@ class Integrations::GithubController < Integrations::BaseController
 
   def create
     expire_commit_status if github_event_type == "status"
+    cache_pull_request if github_event_type == "pull_request"
     super
   end
 
   protected
 
   def expire_commit_status
-    commit = params[:sha].to_s
-    CommitStatus.new(project, commit).expire_cache(commit)
+    CommitStatus.new(project, params[:sha].to_s).expire_cache
+  end
+
+  def cache_pull_request
+    Changeset::PullRequest.cache(project.repository_path, payload)
   end
 
   def payload

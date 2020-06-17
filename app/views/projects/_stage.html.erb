@@ -1,31 +1,27 @@
 <tr>
-  <% cache [@project.permalink, stage, Lock.cache_key] do %>
-    <td>
-      <%= link_to stage.name, [@project, stage] %>
-      <%= resource_lock_icon stage %>
-      <%= stage.is_template ? stage_template_icon : '' %>
+  <td>
+    <%= link_to stage.name, [@project, stage] %>
+    <%= resource_lock_icon stage %>
+    <%= stage.is_template ? stage_template_icon : '' %>
 
-      <% if DeployGroup.enabled? %>
-        <br/>
-        <%= stage.deploy_groups.pluck(:name).join(', ') %>
-      <% end %>
-    </td>
-
-    <% if deploy = stage.last_deploy %>
-      <td>
-        <%= link_to deploy.short_reference, [@project, deploy], title: "#{deploy.reference} at #{deploy.updated_at.to_s(:db)}" %>
-        by
-        <%= deploy.user.name %>
-        <%= status_badge deploy.job.status %>
-      </td>
-    <% else %>
-      <td>-</td>
+    <% if DeployGroup.enabled? %>
+      <br/>
+      <%= stage.deploy_groups.pluck(:name).join(', ') %>
     <% end %>
+  </td>
+
+  <% if deploy = stage.last_deploy %>
+    <td>
+      <%= link_to deploy.short_reference, [@project, deploy], title: "#{deploy.reference} at #{deploy.updated_at.to_s(:db)}" %>
+      by
+      <%= deploy.user.name %>
+      <%= status_badge deploy.job.status %>
+    </td>
+  <% else %>
+    <td>-</td>
   <% end %>
 
   <td align="right">
-    <% if deployer_for_project? %>
-      <%= deploy_link @project, stage %>
-    <% end %>
+    <%= deploy_link @project, stage %>
   </td>
 </tr>

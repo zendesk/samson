@@ -232,47 +232,24 @@ describe ApplicationHelper do
     end
   end
 
-  describe "#flash_messages" do
-    let(:flash) { {} }
-
-    it "returns empty" do
-      flash_messages.must_equal []
-    end
-
-    it "fails on unknown" do
-      flash[:foo] = "bar"
-      assert_raises(KeyError) { flash_messages }
-    end
-
-    it "translates bootstrap classes" do
-      flash[:notice] = "N"
-      flash_messages.must_equal [[:notice, :info, "N"]]
-    end
-
-    it "returns arrays of messages" do
-      flash[:notice] = ["bar", "baz"]
-      flash_messages.must_equal [[:notice, :info, "bar"], [:notice, :info, "baz"]]
-    end
-  end
-
   describe "#link_to_delete" do
     it "builds a link" do
       link_to_delete("/foo").must_include ">Delete</a>"
     end
 
     it "shows common message for paths" do
-      link_to_delete("/foo").must_include "Really delete ?"
+      link_to_delete("/foo").must_include "Really delete?"
     end
 
     it "shows detailed message for resource given as array" do
       link = link_to_delete([projects(:test), stages(:test_staging)])
-      link.must_include "Delete this Stage ?"
+      link.must_include "Delete this Stage?"
       link.must_include "/projects/foo/stages/staging"
     end
 
     it "can link directly to a resource" do
       link = link_to_delete(stages(:test_staging))
-      link.must_include "Delete Stage Staging ?"
+      link.must_include "Delete Stage Staging?"
       link.must_include "/projects/foo/stages/staging"
     end
 
@@ -297,8 +274,38 @@ describe ApplicationHelper do
 
     it "can ask to type" do
       link_to_delete("/foo", type_to_delete: true).must_equal(
-        "<a data-method=\"delete\" data-type-to-delete=\"Really delete ?\" href=\"/foo\">Delete</a>"
+        "<a data-method=\"delete\" data-type-to-delete=\"Really delete?\" href=\"/foo\">Delete</a>"
       )
+    end
+
+    it "does not show html in confirm windows" do
+      stage = stages(:test_staging)
+      Lock.create!(resource: stage, user: User.first)
+      link_to_delete(stage, type_to_delete: true).must_include "Delete Stage Staging?"
+    end
+
+    describe "redirect_back" do
+      before { params[:redirect_to] = "/foo" }
+
+      it "can redirect back with url" do
+        link_to_delete("/foo", redirect_back: true).must_equal(
+          "<a data-method=\"delete\" data-confirm=\"Really delete?\" href=\"/foo?redirect_to=%2Ffoo\">Delete</a>"
+        )
+      end
+
+      it "can redirect back with AR" do
+        params[:redirect_to] = "/foo"
+        link_to_delete(User.first, redirect_back: true).must_equal(
+          "<a data-method=\"delete\" data-confirm=\"Delete User Viewer?\" href=\"/users/56405077?redirect_to=%2Ffoo\">Delete</a>"
+        )
+      end
+
+      it "ignores redirect without param" do
+        params.delete :redirect_to
+        link_to_delete("/foo", redirect_back: true).must_equal(
+          "<a data-method=\"delete\" data-confirm=\"Really delete?\" href=\"/foo\">Delete</a>"
+        )
+      end
     end
   end
 
@@ -468,8 +475,8 @@ describe ApplicationHelper do
     end
 
     it "shows number of entries" do
-      user.update_attributes!(name: "Foo")
-      user.update_attributes!(name: "Bar")
+      user.update!(name: "Foo")
+      user.update!(name: "Bar")
       link_to_history(user).must_include "History (2)"
     end
 
@@ -521,7 +528,7 @@ describe ApplicationHelper do
   describe "#redirect_to_field" do
     let(:root_url) { 'http://foobar.com/' }
 
-    before { stubs(request: stub(referrer: "#{root_url}referrer"), params: {redirect_to: '/params'}) }
+    before { stubs(request: stub(referer: "#{root_url}referer"), params: {redirect_to: '/params'}) }
 
     it "stores current parameter" do
       redirect_to_field.must_include "value=\"/params\""
@@ -529,23 +536,23 @@ describe ApplicationHelper do
 
     it "does not store empty parameter" do
       params[:redirect_to] = ""
-      redirect_to_field.must_include "value=\"/referrer\""
+      redirect_to_field.must_include "value=\"/referer\""
     end
 
     describe "without param" do
       before { params.delete(:redirect_to) }
 
-      it "uses referrer when param is missing" do
-        redirect_to_field.must_include "value=\"/referrer\""
+      it "uses referer when param is missing" do
+        redirect_to_field.must_include "value=\"/referer\""
       end
 
-      it "does not use referrer from other page since redirect_back_or would not work" do
-        assert request.stubs(:referrer, request.referrer.sub(root_url, 'http://hacky.com/'))
+      it "does not use referer from other page since redirect_back_or would not work" do
+        assert request.stubs(:referer, request.referer.sub(root_url, 'http://hacky.com/'))
         redirect_to_field.must_be_nil
       end
 
       it "is empty when nothing is known" do
-        request.stubs(:referrer).returns(nil)
+        request.stubs(:referer).returns(nil)
         redirect_to_field.must_be_nil
       end
     end
@@ -635,53 +642,39 @@ describe ApplicationHelper do
     let(:items) { %w[foo bar baz] }
 
     it 'only shows `display_limit` records' do
-      tag = unordered_list(items, display_limit: 2, show_more_tag: content_tag(:li, 'More')) do |item|
-        item
-      end
-
+      tag = unordered_list(items, display_limit: 2, show_more_tag: content_tag(:li, 'More')) { |item| item }
       tag.must_equal '<ul><li>foo</li><li>bar</li><li>More</li></ul>'
-    end
-
-    it 'shows all records if there is no display limit' do
-      tag = unordered_list(items) do |item|
-        item
-      end
-
-      tag.must_equal '<ul><li>foo</li><li>bar</li><li>baz</li></ul>'
     end
 
     it 'passes through any HTML options' do
       tag = unordered_list(
         items,
-        display_limit: 2,
+        display_limit: 4,
         show_more_tag: content_tag(:li, 'More'),
         ul_options: {class: 'show-more'},
         li_options: {class: 'sparkles'}
-      ) do |item|
-        item
-      end
+      ) { |item| item }
 
-      expected_html = '<ul class="show-more"><li class="sparkles">foo</li><li class="sparkles">bar</li>' \
-        '<li>More</li></ul>'
-      tag.must_equal expected_html
+      tag.must_equal '<ul class="show-more"><li class="sparkles">foo</li><li class="sparkles">bar</li>' \
+        '<li class="sparkles">baz</li></ul>'
     end
   end
 
   describe "#link_to_chart" do
     it "renders" do
-      chart = link_to_chart("Hello world", [200, 3, 4, 100, 500])
+      chart = link_to_chart("Hello world", [200, 3, 4, 100, 500], title: "Hello")
       chart.must_include "https://chart.googleapis.com/chart"
     end
 
     it "renders all 0" do
-      chart = link_to_chart("Hello world", [0, 0, 0, 0, 0])
+      chart = link_to_chart("Hello world", [0, 0, 0, 0, 0], title: "Hello")
       chart.must_include "https://chart.googleapis.com/chart"
     end
 
     it "does not render for useless data" do
-      link_to_chart("Hello world", []).must_equal nil
-      link_to_chart("Hello world", [1]).must_equal nil
-      link_to_chart("Hello world", [1, 2]).must_equal nil
+      link_to_chart("Hello world", [], title: "Hello").must_equal nil
+      link_to_chart("Hello world", [1], title: "Hello").must_equal nil
+      link_to_chart("Hello world", [1, 2], title: "Hello").must_equal nil
     end
   end
 
@@ -706,6 +699,7 @@ describe ApplicationHelper do
 
   describe "#deployed_or_running_list" do
     let(:stage_list) { [stages(:test_staging)] }
+    let(:deploy) { deploys(:succeeded_test) }
 
     it "produces safe output" do
       html = deployed_or_running_list([], "foo")
@@ -715,51 +709,80 @@ describe ApplicationHelper do
 
     it "renders succeeded deploys" do
       html = deployed_or_running_list(stage_list, "staging")
-      html.must_equal "<span class=\"label label-success release-stage\">Staging</span> "
+      html.must_equal "<a href=\"/projects/foo/deploys/#{Deploy.last.id}\"><span class=\"label label-success release-stage\">Staging</span></a> "
     end
 
     it "ignores failed deploys" do
-      deploys(:succeeded_test).job.update_column(:status, 'failed')
+      deploy.job.update_column(:status, 'failed')
       html = deployed_or_running_list(stage_list, "staging")
       html.must_equal ""
     end
 
     it "ignores non-matching deploys" do
-      deploys(:succeeded_test).update_column(:reference, 'nope')
+      deploy.update_column(:reference, 'nope')
       html = deployed_or_running_list(stage_list, "staging")
       html.must_equal ""
     end
 
     it "shows active deploys" do
-      deploys(:succeeded_test).job.update_column(:status, 'running')
+      deploy.job.update_column(:status, 'running')
       html = deployed_or_running_list(stage_list, "staging")
-      html.must_equal "<span class=\"label label-warning release-stage\">Staging</span> "
+      html.must_equal "<a href=\"/projects/foo/deploys/#{deploy.id}\"><span class=\"label label-warning release-stage\">Staging</span></a> "
     end
   end
 
-  describe "#check_box_section" do
+  describe "#deployed_or_running_builds" do
+    let(:build) { builds(:docker_build) }
+    let(:deploy) { deploys(:succeeded_test) }
+    let(:stage_list) { [stages(:test_staging)] }
+
+    it "ignores non-matching deploys" do
+      html = deployed_or_running_builds(stage_list, build)
+      html.must_equal ""
+    end
+
+    it "ignores failed deploys" do
+      deploy.job.update_column(:status, 'failed')
+      html = deployed_or_running_builds(stage_list, build)
+      html.must_equal ""
+    end
+
+    it "shows active deploys" do
+      deploy.job.update_column(:status, 'running')
+      deploy.builds = [build]
+      html = deployed_or_running_builds(stage_list, build)
+      html.must_equal "<a href=\"/projects/foo/deploys/#{deploy.id}\"><span class=\"label label-warning release-stage\">Staging</span></a> "
+    end
+  end
+
+  describe "#render_collection_check_boxes" do
     let(:project) { projects(:test) }
+
     it 'creates a section of checkboxes from a collection' do
       project.stages.each_with_index { |s, i| s.stubs(:id).returns(i) }
 
-      expected_result = <<~HTML.gsub /^\s+|\n/, ""
-        <fieldset>
-          <legend>Project Stages</legend>
-          <p class="col-lg-offset-2">Pick some of them stages!</p>
-          <div class="col-lg-4 col-lg-offset-2">
-            <input type="hidden" name="project[stages][]" value="" />
-            <input type="checkbox" value="0" name="project[stages][]" id="project_stages_0" /> <label for="project_stages_0">Staging</label>
-            <br />
-            <input type="checkbox" value="1" name="project[stages][]" id="project_stages_1" /> <label for="project_stages_1">Production</label>
-            <br />
-            <input type="checkbox" value="2" name="project[stages][]" id="project_stages_2" /> <label for="project_stages_2">Production Pod</label>
-            <br />
-          </div>
-        </fieldset>
+      html = render_collection_check_boxes(:project, :stages, project.stages)
+      html.must_equal <<~HTML.gsub /^\s+|\n/, ""
+        <div class="col-lg-4 col-lg-offset-2">
+          <input type="hidden" name="project[stages][]" value="" />
+          <input type="checkbox" value="0" name="project[stages][]" id="project_stages_0" /> <label for="project_stages_0">Staging</label>
+          <br />
+          <input type="checkbox" value="1" name="project[stages][]" id="project_stages_1" /> <label for="project_stages_1">Production</label>
+          <br />
+          <input type="checkbox" value="2" name="project[stages][]" id="project_stages_2" /> <label for="project_stages_2">Production Pod</label>
+          <br />
+        </div>
       HTML
+    end
+  end
 
-      result = check_box_section 'Project Stages', 'Pick some of them stages!', :project, :stages, project.stages
-      result.must_equal expected_result
+  describe "#add_to_url" do
+    it "adds to ?" do
+      add_to_url("foo?a", "b").must_equal "foo?a&b"
+    end
+
+    it "adds to plain" do
+      add_to_url("foo", "b").must_equal "foo?b"
     end
   end
 end

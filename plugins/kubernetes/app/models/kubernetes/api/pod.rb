@@ -3,13 +3,13 @@ module Kubernetes
   module Api
     class Pod
       INIT_CONTAINER_KEY = :'pod.beta.kubernetes.io/init-containers'
-      INGORED_AUTOSCALE_EVENT_REASONS = %w[FailedGetMetrics FailedRescale].freeze
       WAITING_FOR_RESOURCES = ["FailedScheduling", "FailedCreatePodSandBox", "FailedAttachVolume"].freeze
 
       attr_writer :events
 
       def self.init_containers(pod)
         containers = pod.dig(:spec, :initContainers) || []
+        # TODO: remove this deprecated support
         if json = pod.dig(:metadata, :annotations, Kubernetes::Api::Pod::INIT_CONTAINER_KEY)
           containers += JSON.parse(json, symbolize_names: true)
         end
@@ -19,6 +19,10 @@ module Kubernetes
       def initialize(api_pod, client: nil)
         @pod = api_pod
         @client = client
+      end
+
+      def uid
+        @pod.dig(:metadata, :uid)
       end
 
       def live?
@@ -33,8 +37,13 @@ module Kubernetes
         phase == 'Failed'
       end
 
-      def restarted?
-        @pod.dig(:status, :containerStatuses)&.any? { |s| s.fetch(:restartCount) > 0 }
+      def restart_details
+        statuses = (@pod.dig(:status, :containerStatuses) || []) + (@pod.dig(:status, :initContainerStatuses) || [])
+        statuses.detect do |s|
+          next unless s.fetch(:restartCount) > 0
+          reason = s.dig(:lastState, :terminated, :reason) || s.dig(:state, :terminated, :reason) || "Unknown"
+          return "Restarted (#{s[:name]} #{reason})"
+        end
       end
 
       def phase
@@ -58,10 +67,10 @@ module Kubernetes
       # tries to get logs from current or previous pod depending on if it restarted
       # TODO: move into resource_status.rb
       def logs(container, end_time)
-        fetch_logs(container, end_time, previous: restarted?)
+        fetch_logs(container, end_time, previous: !!restart_details)
       rescue *SamsonKubernetes.connection_errors # not found or pod is initializing
         begin
-          fetch_logs(container, end_time, previous: !restarted?)
+          fetch_logs(container, end_time, previous: !restart_details)
         rescue *SamsonKubernetes.connection_errors
           nil
         end
@@ -81,16 +90,11 @@ module Kubernetes
       def events_indicating_failure
         @events_indicating_failure ||= begin
           bad = @events.dup
-          bad.reject! { |e| ignorable_hpa_event?(e) }
           bad.reject! do |e|
             e[:reason] == "Unhealthy" && e[:message] =~ /\A\S+ness probe failed/ && !probe_failed_to_often?(e)
           end
           bad
         end
-      end
-
-      def ignorable_hpa_event?(event)
-        event[:kind] == 'HorizontalPodAutoscaler' && INGORED_AUTOSCALE_EVENT_REASONS.include?(event[:reason])
       end
 
       # if the pod is still running we stream the logs until it times out to get as much info as possible

@@ -16,6 +16,25 @@ describe DeployGroup do
       group = DeployGroup.new(cluster_deploy_group_attributes: {namespace: 'Foo'})
       refute group.cluster_deploy_group
     end
+
+    describe "with existing group" do
+      let(:deploy_group) { deploy_groups(:pod1) }
+      let(:cdg) { deploy_group.create_cluster_deploy_group!(namespace: 'foo', kubernetes_cluster_id: 1) }
+
+      before { Kubernetes::ClusterDeployGroup.any_instance.stubs(:valid?).returns(true) }
+
+      it "deletes connection when user sets cluster to empty" do
+        deploy_group.cluster_deploy_group_attributes = {id: cdg.id, namespace: 'Foo'}
+        deploy_group.save!
+        assert_raises(ActiveRecord::RecordNotFound) { deploy_group.cluster_deploy_group.reload }
+      end
+
+      it "can update" do
+        deploy_group.cluster_deploy_group_attributes = {id: cdg.id, kubernetes_cluster_id: 2, namespace: 'Foo'}
+        deploy_group.save!
+        deploy_group.reload.cluster_deploy_group.kubernetes_cluster_id.must_equal 2
+      end
+    end
   end
 
   describe "#kubernetes_namespace" do

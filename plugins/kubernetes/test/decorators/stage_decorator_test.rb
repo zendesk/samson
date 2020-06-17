@@ -60,6 +60,8 @@ describe Stage do
       stage
     end
 
+    before { Kubernetes::Role.delete_all }
+
     it "does nothing" do
       Kubernetes::Role.expects(:seed!).never
       stage.save!
@@ -70,6 +72,17 @@ describe Stage do
 
       it "calls seed to fill in missing roles (most useful for new projects)" do
         Kubernetes::Role.expects(:seed!)
+        stage.save!
+      end
+
+      it "does not add new roles when project was already configured" do
+        Kubernetes::Role.create!(
+          project: stage.project,
+          name: "foo",
+          config_file: 'kubernetes/foo.yml',
+          resource_name: "foo"
+        )
+        Kubernetes::Role.expects(:seed!).never
         stage.save!
       end
 

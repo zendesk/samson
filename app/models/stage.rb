@@ -4,7 +4,7 @@ class Stage < ActiveRecord::Base
   AUTOMATED_NAME = 'Automated Deploys'
   NON_CLONEABLE_ATTRIBUTES = %w[id next_stage_ids prerequisite_stage_ids is_template permalink].freeze
 
-  has_soft_deletion default_scope: true unless self < SoftDeletion::Core
+  has_soft_deletion default_scope: true
 
   include Lockable
   include Permalinkable
@@ -16,7 +16,8 @@ class Stage < ActiveRecord::Base
 
   has_many :deploys, dependent: :destroy
   has_many :webhooks, dependent: :destroy
-  has_many :outbound_webhooks, dependent: :destroy
+  has_many :outbound_webhook_stages, dependent: :destroy
+  has_many :outbound_webhooks, through: :outbound_webhook_stages, dependent: nil, inverse_of: :stages
 
   belongs_to :template_stage, class_name: "Stage", optional: true, inverse_of: :clones
   has_many :clones, class_name: "Stage", foreign_key: "template_stage_id", dependent: nil, inverse_of: :template_stage
@@ -30,7 +31,7 @@ class Stage < ActiveRecord::Base
 
   default_scope { order(:order) }
 
-  validates :name, presence: true, uniqueness: {scope: [:project, :deleted_at]}
+  validates :name, presence: true, uniqueness: {scope: [:project, :deleted_at], case_sensitive: false}
 
   # n emails separated by ;
   email = '([^\s;]+@[^\s;]+)'
@@ -86,7 +87,7 @@ class Stage < ActiveRecord::Base
 
   # last active or succeeded deploy
   def deployed_or_running_deploy
-    deploys.joins(:job).where("jobs.status" => Job::ACTIVE_STATUSES + ["succeeded"]).first
+    deploys.joins(:job).find_by("jobs.status" => Job::ACTIVE_STATUSES + ["succeeded"])
   end
 
   def create_deploy(user, attributes = {})
@@ -147,7 +148,7 @@ class Stage < ActiveRecord::Base
     commands.map(&:command).join("\n")
   end
 
-  def destroy
+  def destroy # rubocop:disable Rails/ActiveRecordOverride try using before_destroy or document why we need it
     mark_for_destruction
     super
   end
@@ -268,3 +269,4 @@ class Stage < ActiveRecord::Base
     end.tap { |stage_command| stage_command.position = position }
   end
 end
+Samson::Hooks.load_decorators(Stage)

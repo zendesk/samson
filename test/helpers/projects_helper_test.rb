@@ -70,10 +70,11 @@ describe ProjectsHelper do
 
   describe "#repository_web_link" do
     let(:current_user) { users(:admin) }
+    let(:project) { projects(:test) }
 
     def config_mock
       Rails.application.config.samson.github.stub(:web_url, "github.com") do
-        Rails.application.config.samson.gitlab.stub(:web_url, "localhost") do
+        Rails.application.config.samson.gitlab.stub(:web_url, "gitlab.com") do
           yield
         end
       end
@@ -81,10 +82,6 @@ describe ProjectsHelper do
 
     it "makes github repository web link" do
       config_mock do
-        project = projects(:test)
-        project.name = "Github Project"
-        project.repository_url = "https://github.com/bar/foo.git"
-
         link = repository_web_link(project)
         assert_includes link, "View repository on GitHub"
       end
@@ -92,18 +89,15 @@ describe ProjectsHelper do
 
     it "makes gitlab repository web link" do
       config_mock do
-        project = projects(:test)
-        project.name = "Gitlab Project"
-        project.repository_url = "http://localhost/bar/foo.git"
-
+        project.repository_url = "http://gitlab.com/bar/foo.git"
         link = repository_web_link(project)
         assert_includes link, "View repository on Gitlab"
       end
     end
 
-    it "makes github repository web link" do
+    it "makes no local web link" do
       config_mock do
-        project = projects(:test)
+        project.repository_url = "http://localhost/bar/foo.git"
         link = repository_web_link(project)
         assert_equal link, ""
       end

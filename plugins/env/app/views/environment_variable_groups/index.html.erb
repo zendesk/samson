@@ -30,7 +30,7 @@
         <td>
           <%= link_to group.name, group %>
           <%= unordered_list(sorted_vars, display_limit: max_display_variables, show_more_tag: link_to("+ #{sorted_vars.count - max_display_variables} More", group)) do |name| %>
-            <%= name %>
+            <code><%= name %></code>
           <% end %>
         </td>
         <td><%= render 'projects', group: group, display_limit: max_display_projects %></td>

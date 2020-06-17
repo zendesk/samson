@@ -20,43 +20,65 @@ class Changeset::PullRequest
   # Docs on the pull request event: https://developer.github.com/v3/activity/events/types/#pullrequestevent
   VALID_ACTIONS = ['opened', 'edited', 'synchronize'].freeze
 
-  # Finds the pull request with the given number.
-  #
-  # repo   - The String repository name, e.g. "zendesk/samson".
-  # number - The Integer pull request number.
-  #
-  # Returns a ChangeSet::PullRequest describing the PR or nil if it couldn't
-  #   be found.
-  def self.find(repo, number)
-    data = Rails.cache.fetch([self, repo, number].join("-")) do
-      GITHUB.pull_request(repo, number)
+  class << self
+    # Finds the pull request with the given number.
+    #
+    # @param [String] repository name, e.g. "zendesk/samson".
+    # @param [Integer] pull request number
+    # @return [ChangeSet::PullRequest, nil]
+    def find(repo, number)
+      data = Rails.cache.fetch(cache_key(repo, number)) do
+        GITHUB.pull_request(repo, number)
+      end
+      new repo, data
+    rescue Octokit::NotFound
+      nil
     end
 
-    new(repo, data)
-  rescue Octokit::NotFound
-    nil
-  end
-
-  def self.changeset_from_webhook(project, payload)
-    data = Sawyer::Resource.new(Octokit.agent, payload.fetch('pull_request'))
-    new(project.repository_path, data)
-  end
-
-  # Webhook events that are valid should be related to a pr code push or someone adding [samson review]
-  # to the description. The actions related to a code push are 'opened' and 'synchronized'
-  # The 'edited' action gets sent when the PR description is edited. To trigger a deploy from an edit - it
-  # should only be when the edit is related to adding the text [samson review]
-  def self.valid_webhook?(payload)
-    data = payload['pull_request'] || {}
-    action = payload['action']
-    return false if data['state'] != 'open' || !VALID_ACTIONS.include?(action)
-
-    if action == 'edited'
-      previous_desc = payload.dig('changes', 'body', 'from')
-      return false if !previous_desc || (previous_desc =~ WEBHOOK_FILTER && data['body'] =~ WEBHOOK_FILTER)
+    # store a PR in the cache for later use and wrap it in ChangeSet::PullRequest, mirroring .find
+    #
+    # @param [String] repository name, e.g. "zendesk/samson".
+    # @param [Hash, Sawyer::Resource] repository name, e.g. "zendesk/samson".
+    # @return [ChangeSet::PullRequest]
+    def cache(repo, payload)
+      data = fake_api_response(payload)
+      Rails.cache.write cache_key(repo, data.number), data
+      new repo, data
     end
 
-    !!(data['body'] =~ WEBHOOK_FILTER)
+    def changeset_from_webhook(project, payload)
+      new project.repository_path, fake_api_response(payload)
+    end
+
+    # Webhook events that are valid should be related to a pr code push or someone adding [samson review]
+    # to the description. The actions related to a code push are 'opened' and 'synchronized'
+    # The 'edited' action gets sent when the PR description is edited. To trigger a deploy from an edit - it
+    # should only be when the edit is related to adding the text [samson review]
+    def valid_webhook?(payload)
+      data = payload['pull_request'] || {}
+      action = payload['action']
+      return false if data['state'] != 'open' || !VALID_ACTIONS.include?(action)
+
+      if action == 'edited'
+        previous_desc = payload.dig('changes', 'body', 'from')
+        return false if !previous_desc || (previous_desc =~ WEBHOOK_FILTER && data['body'] =~ WEBHOOK_FILTER)
+      end
+
+      data['body'].match? WEBHOOK_FILTER
+    end
+
+    private
+
+    def fake_api_response(payload)
+      Sawyer::Resource.new(
+        Octokit.agent,
+        payload.deep_symbolize_keys.fetch(:pull_request) # need to symbolize or caching breaks
+      )
+    end
+
+    def cache_key(repo, number)
+      [self, repo, number].join("-")
+    end
   end
 
   attr_reader :repo
@@ -134,8 +156,9 @@ class Changeset::PullRequest
   private
 
   def section_content(section_title, text)
+    # ### Risks or Risks followed by === / ---
     desired_header_regexp = "^(?:\\s*#+\\s*#{section_title}.*|\\s*#{section_title}.*\\n\\s*(?:-{2,}|={2,}))\\n"
-    content_regexp = '([\W\w]*?)' # capture all section content, including new lines
+    content_regexp = '([\W\w]*?)' # capture all section content, including new lines, but not next header
     next_header_regexp = '(?=^(?:\s*#+|.*\n\s*(?:-{2,}|={2,}\s*\n))|\z)'
 
     text[/#{desired_header_regexp}#{content_regexp}#{next_header_regexp}/i, 1]
@@ -143,9 +166,10 @@ class Changeset::PullRequest
 
   def parse_risks(body)
     body_stripped = ActionController::Base.helpers.strip_tags(body)
-    section_content('Risks', body_stripped).to_s.strip.presence
+    section_content('Risks', body_stripped).to_s.rstrip.sub(/\A\s*\n/, "").presence
   end
 
+  # @return [Array<Changeset::JiraIssue>]
   def parse_jira_issues
     custom_jira_url = ENV['JIRA_BASE_URL']
     title_and_body = "#{title} #{body}"

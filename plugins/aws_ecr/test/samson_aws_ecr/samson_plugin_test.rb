@@ -3,9 +3,9 @@ require_relative '../test_helper'
 
 SingleCov.covered! uncovered: 2
 
-describe SamsonAwsEcr::Engine do
+describe SamsonAwsEcr::SamsonPlugin do
   def clear_client
-    SamsonAwsEcr::Engine.instance_variable_set(:@ecr_clients, nil)
+    SamsonAwsEcr::SamsonPlugin.instance_variable_set(:@ecr_clients, nil)
   end
 
   let(:stage) { stages(:test_staging) }
@@ -15,10 +15,10 @@ describe SamsonAwsEcr::Engine do
   let(:base64_authorization_token)     { Base64.encode64(username + ":" + password) }
   let(:old_base64_authorization_token) { Base64.encode64("old #{username}:old #{password}") }
   let(:fresh_response) do
-    {authorization_data: [{authorization_token: base64_authorization_token, expires_at: 2.hour.from_now}]}
+    {authorization_data: [{authorization_token: base64_authorization_token, expires_at: 2.hours.from_now}]}
   end
   let(:expired_response) do
-    {authorization_data: [{authorization_token: old_base64_authorization_token, expires_at: 2.hour.ago}]}
+    {authorization_data: [{authorization_token: old_base64_authorization_token, expires_at: 2.hours.ago}]}
   end
 
   with_registries ['12322323232323.dkr.ecr.us-west-1.amazonaws.com']
@@ -42,7 +42,7 @@ describe SamsonAwsEcr::Engine do
 
     run_inside_of_temp_directory
 
-    before { SamsonAwsEcr::Engine.stubs(:ecr_client).returns(ecr_client) }
+    before { SamsonAwsEcr::SamsonPlugin.stubs(:ecr_client).returns(ecr_client) }
 
     describe '.refresh_credentials' do
       it "changes the username and password" do
@@ -87,7 +87,7 @@ describe SamsonAwsEcr::Engine do
     describe '.ensure_repositories' do
       before do
         ENV.stubs(fetch: 'x')
-        DockerRegistry.first.credentials_expire_at = 2.hour.from_now
+        DockerRegistry.first.credentials_expire_at = 2.hours.from_now
       end
 
       it 'creates missing repository' do
@@ -138,7 +138,7 @@ describe SamsonAwsEcr::Engine do
     it 'is caches' do
       assert_request(:get, %r{/latest/meta-data/iam/security-credentials/}, times: 3) do
         Array.new(2).map do
-          SamsonAwsEcr::Engine.send(:ecr_client, DockerRegistry.first).object_id
+          SamsonAwsEcr::SamsonPlugin.send(:ecr_client, DockerRegistry.first).object_id
         end.uniq.size.must_equal 1
       end
     end
@@ -147,12 +147,12 @@ describe SamsonAwsEcr::Engine do
   describe '.active?' do
     it "is inactive when not on ecr" do
       DockerRegistry.first.instance_variable_get(:@uri).host = 'xyz.com'
-      refute SamsonAwsEcr::Engine.active?
+      refute SamsonAwsEcr::SamsonPlugin.active?
     end
 
     it "is active when on ecr" do
       assert_request(:get, "http://169.254.169.254/latest/meta-data/iam/security-credentials/", times: 3) do
-        assert SamsonAwsEcr::Engine.active?
+        assert SamsonAwsEcr::SamsonPlugin.active?
       end
     end
   end

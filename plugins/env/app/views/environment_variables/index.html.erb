@@ -15,6 +15,9 @@
 <% end %>
 
 <section class="clearfix">
+  <div class="pull-right">
+    <%= link_to "Download as CSV", environment_variables_path(format: :csv) %>
+  </div>
   <table class="table table-hover table-condensed">
     <thead>
     <tr>
@@ -27,8 +30,8 @@
     </thead>
     <% @environment_variables.each do |variable| %>
       <tr>
-        <td><%= variable.name %></td>
-        <td><%= variable.value %></td>
+        <td><code><%= variable.name %></code></td>
+        <td><pre style="max-width: 450px"><%= variable.value %></pre></td>
         <td><%= variable.scope_type ? (variable.scope&.name || "Deleted #{variable.scope_type} ##{variable.scope_id}") : 'All' %></td>
         <td>
           <% if parent = variable.parent %>

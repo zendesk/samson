@@ -60,7 +60,7 @@ module Samson
       conf = Rails.cache.fetch(
         jenkins_job_cache_key,
         expires_in: JENKINS_JOB_CACHE_TIME,
-        race_condition_ttl: 5.minute
+        race_condition_ttl: 5.minutes
       ) do
         client.job.get_config(job_name)
       end
@@ -231,8 +231,8 @@ module Samson
       @response ||=
         begin
           client.job.get_build_details(job_name, jenkins_job_id)
-        rescue JenkinsApi::Exceptions::NotFound => error
-          {'result' => error.message, 'url' => '#'}
+        rescue JenkinsApi::Exceptions::NotFound => e
+          {'result' => e.message, 'url' => '#'}
         end
     end
 

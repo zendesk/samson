@@ -92,17 +92,6 @@ describe Samson::BuildFinder do
       out.wont_include "Creating Build"
     end
 
-    it "fails when plugin checks fail" do
-      build.update_column :docker_repo_digest, 'foo'
-      Samson::Hooks.with_callback(:ensure_build_is_succeeded, ->(*) { false }) do
-        e = assert_raises Samson::Hooks::UserError do
-          execute
-        end
-        e.message.must_equal "Plugin build checks for #{build.url} failed."
-        out.wont_include "Creating Build"
-      end
-    end
-
     describe "when build needs to be created" do
       let(:build_selectors) { [["Dockerfile", nil]] }
 
@@ -330,6 +319,16 @@ describe Samson::BuildFinder do
       finder.send(:possible_builds).must_equal [build]
     end
 
+    it "find builds ordered by most recent first" do
+      attrs = build.attributes.except("id")
+      build1 = Build.new(attrs.merge(git_sha: job.commit, updated_at: Time.now + 30))
+      build2 = Build.new(attrs.merge(git_sha: job.commit, updated_at: Time.now + 0))
+      expected = [build1, build2]
+      expected.map { |b| b.save! validate: false }
+
+      finder.send(:possible_builds).must_equal expected
+    end
+
     it "find builds from previous deploy when requested" do
       job.deploy.update_column(:kubernetes_reuse_build, true)
       build.update_column(:git_sha, previous_deploy.job.commit)
@@ -337,14 +336,36 @@ describe Samson::BuildFinder do
     end
 
     it "find builds from previous real deploy when previous on was also reusing" do
+      build.update_column(:git_sha, job.commit)
+      job.deploy.update_column(:kubernetes_reuse_build, true)
+      previous_deploy.update_column(:kubernetes_reuse_build, true)
+
+      pre_previous = deploys(:succeeded_production_test)
+      pre_previous.update_columns(stage_id: job.deploy.stage_id, id: previous_deploy.id - 1)
+      pre_previous_build = Build.new(build.attributes.except("id").merge(git_sha: pre_previous.job.commit))
+      pre_previous_build.save! validate: false
+
+      finder.send(:possible_builds).must_equal [pre_previous_build, build]
+    end
+
+    it "find builds ordered by oldest succeeded deploy, then most recent" do
+      # yes this order is weird, but changing the behaviour is a separate PR
+
       job.deploy.update_column(:kubernetes_reuse_build, true)
       previous_deploy.update_column(:kubernetes_reuse_build, true)
 
       pre_previous = deploys(:succeeded_production_test)
       pre_previous.update_columns(stage_id: job.deploy.stage_id, id: previous_deploy.id - 1)
 
-      build.update_column(:git_sha, pre_previous.job.commit)
-      finder.send(:possible_builds).must_equal [build]
+      attrs = build.attributes.except("id")
+      build1 = Build.new(attrs.merge(git_sha: job.commit, updated_at: Time.now + 30))
+      build2 = Build.new(attrs.merge(git_sha: job.commit, updated_at: Time.now + 0))
+      build3 = Build.new(attrs.merge(git_sha: pre_previous.job.commit, updated_at: Time.now + 40))
+      build4 = Build.new(attrs.merge(git_sha: pre_previous.job.commit, updated_at: Time.now + 20))
+
+      expected = [build3, build4, build1, build2]
+      expected.each { |b| b.save! validate: false }
+      finder.send(:possible_builds).must_equal expected
     end
   end
 

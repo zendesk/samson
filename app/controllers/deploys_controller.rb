@@ -37,7 +37,7 @@ class DeploysController < ApplicationController
 
     respond_to do |format|
       format.json do
-        render_as_json :deploys, @deploys, @pagy, allowed_includes: [:job, :project, :user, :stage]
+        render_as_json :deploys, @deploys, @pagy, allowed_includes: [:job, :project, :user, :stage, :builds]
       end
       format.csv do
         datetime = Time.now.strftime "%Y%m%d_%H%M"
@@ -76,7 +76,8 @@ class DeploysController < ApplicationController
   end
 
   def confirm
-    @changeset = stage.deploys.new(deploy_params).changeset
+    @deploy = stage.deploys.build(deploy_params)
+    @changeset = @deploy.changeset
     render 'changeset', layout: false
   end
 
@@ -166,7 +167,7 @@ class DeploysController < ApplicationController
         stages = stages.where(project: projects)
       end
       unless code_deployed.nil?
-        stages = stages.where(no_code_deployed: param_to_bool(code_deployed))
+        stages = stages.where.not(no_code_deployed: param_to_bool(code_deployed))
       end
       unless production.nil?
         production = param_to_bool(production)

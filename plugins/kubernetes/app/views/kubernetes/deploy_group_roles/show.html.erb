@@ -1,57 +1,8 @@
-<%= page_title "Kubernetes Deploy Group Role" %>
+<%= render 'projects/header', project: @project, tab: 'kubernetes' %>
 
-<section class="form-horizontal">
-  <div class="form-group">
-    <label class="col-lg-2 control-label">Role</label>
-    <div class="col-lg-4">
-      <p class="form-control-static"><%= link_to @kubernetes_deploy_group_role.kubernetes_role.name, [@kubernetes_deploy_group_role.project, @kubernetes_deploy_group_role.kubernetes_role] %></p>
-    </div>
-  </div>
-
-  <div class="form-group">
-    <label class="col-lg-2 control-label">Project</label>
-    <div class="col-lg-4">
-      <p class="form-control-static"><%= link_to @kubernetes_deploy_group_role.project.name, project_path(@kubernetes_deploy_group_role.project) %></p>
-    </div>
-  </div>
-
-  <div class="form-group">
-    <label class="col-lg-2 control-label">Deploy Group</label>
-    <div class="col-lg-4">
-      <p class="form-control-static"><%= link_to @kubernetes_deploy_group_role.deploy_group.name, deploy_group_path(@kubernetes_deploy_group_role.deploy_group) %></p>
-    </div>
-  </div>
-
-  <div class="form-group">
-    <label class="col-lg-2 control-label">Replicas</label>
-    <div class="col-lg-4">
-      <p class="form-control-static"><%= @kubernetes_deploy_group_role.replicas %></p>
-    </div>
-  </div>
-
-  <div class="form-group">
-    <label class="col-lg-2 control-label">CPU</label>
-    <div class="col-lg-4">
-      <p class="form-control-static">
-        <%= @kubernetes_deploy_group_role.requests_cpu %> to <%= @kubernetes_deploy_group_role.limits_cpu %>
-        <%= "(Not enforced)" if @kubernetes_deploy_group_role.no_cpu_limit?  %>
-      </p>
-    </div>
-  </div>
-
-  <div class="form-group">
-    <label class="col-lg-2 control-label">Memory Request</label>
-    <div class="col-lg-4">
-      <p class="form-control-static"><%= @kubernetes_deploy_group_role.requests_memory %> to <%= @kubernetes_deploy_group_role.limits_memory %> MB</p>
-    </div>
-  </div>
-
-  <div class="form-group">
-    <div class="col-lg-offset-2 col-lg-10">
-      <% if current_user.admin_for?(@kubernetes_deploy_group_role.project) %>
-        <%= link_to "Edit", edit_kubernetes_deploy_group_role_path(@kubernetes_deploy_group_role), class: "btn btn-primary" %>
-      <% end %>
-      <%= link_to "Back", kubernetes_deploy_group_roles_path, class: "btn btn-default" %>
-    </div>
-  </div>
+<section class="tabs kubernetes-section clearfix">
+  <%= render 'samson_kubernetes/role_navigation' %>
+  <% title = (@kubernetes_deploy_group_role.new_record? ? "New Kubernetes Deploy Group Role" : "Kubernetes Deploy Group Role") %>
+  <%= page_title title, in_tab: true %>
+  <%= render 'form' %>
 </section>

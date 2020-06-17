@@ -1,0 +1,37 @@
+<%= render 'shared/errors', object: form.object %>
+
+<%= form.input :name, help: "For global webhooks" %>
+<%= form.input :url, required: true %>
+<%= form.input :status_path, help: "Json parse the response and poll the returned status url from this path" %>
+<%= form.input :before_deploy, as: :check_box %>
+<%= form.input :insecure, as: :check_box, help: "Do not verify SSL" %>
+<%= form.input :global, as: :check_box, help: "Can be reused by other stages" if form.object.new_record? %>
+<%= form.input :disabled, as: :check_box %>
+
+<%= form.input :auth_type do %>
+  <%= form.select :auth_type, OutboundWebhook::AUTH_TYPES, {}, class: "form-control" %>
+<% end %>
+<%= form.input :username %>
+<%= form.input :password, as: :password_field, input_html: {placeholder: ("--hidden--" if form.object.password?) } %>
+
+<script>
+  // show auth fields as necessary
+  $("#outbound_webhook_auth_type").change(function () {
+    var type = $(this).val();
+    var username = $("#outbound_webhook_username").parent().parent();
+    var password = $("#outbound_webhook_password").parent().parent();
+
+    // reset
+    username.show();
+    password.show();
+    password.find("label").text("Password");
+
+    if(type == "None") {
+      username.hide();
+      password.hide();
+    } else if(type == "Bearer" || type == "Token") {
+      username.hide();
+      password.find("label").text("Token");
+    }
+  }).trigger("change");
+</script>

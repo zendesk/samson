@@ -24,7 +24,7 @@ module Samson
       attribute :token
       attr_encrypted :token
 
-      validates :name, presence: true, uniqueness: true
+      validates :name, presence: true, uniqueness: {case_sensitive: false}
       validates :address, presence: true, format: ADDRESS_PATTERN
       validate :validate_cert
       validate :validate_connection
@@ -33,7 +33,7 @@ module Samson
       after_commit :expire_secrets_cache
 
       def cert_store
-        return unless ca_cert.present?
+        return unless ca_cert?
         cert_store = OpenSSL::X509::Store.new
         cert_store.add_cert(OpenSSL::X509::Certificate.new(ca_cert))
         cert_store

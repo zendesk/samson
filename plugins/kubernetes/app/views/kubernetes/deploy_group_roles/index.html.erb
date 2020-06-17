@@ -26,42 +26,61 @@
         <th>Deploy Group</th>
         <th>Role</th>
         <th>CPU<%= additional_info "Requested to Limit" %></th>
-        <th>Memory<%= additional_info "Requested to Limit in MB" %></th>
+        <th>Memory<%= additional_info "Requested to Limit in MiB" %></th>
         <th>Replicas</th>
+        <% if show_istio_sidecar_ui? %>
+          <th>Istio Sidecar</th>
+        <% end %>
         <th>Actions</th>
       </tr>
 
-      <% @deploy_group_roles.each do |deploy_group_role| %>
+      <% @kubernetes_deploy_group_roles.each do |deploy_group_role| %>
         <tr>
           <% unless @project %>
-            <td><%= link_to deploy_group_role.project.name, deploy_group_role.project %></td>
+            <td><%= link_to_resource deploy_group_role.project %></td>
           <% end %>
           <td><%= link_to deploy_group_role.deploy_group.name, deploy_group_role.deploy_group %></td>
           <td><%= link_to deploy_group_role.kubernetes_role.name, [deploy_group_role.project, deploy_group_role.kubernetes_role] %></td>
           <td><%= deploy_group_role.requests_cpu %> to <%= deploy_group_role.limits_cpu %></td>
           <td><%= deploy_group_role.requests_memory %> to <%= deploy_group_role.limits_memory %></td>
           <td><%= kubernetes_deploy_group_role_replica deploy_group_role.kubernetes_role, deploy_group_role %></td>
+          <% if show_istio_sidecar_ui? %>
+            <td><%= deploy_group_role.inject_istio_annotation? ? 'Yes' : '-' %></td>
+          <% end %>
           <td>
             <% if current_user.admin_for?(deploy_group_role.project) %>
-              <%= link_to 'Edit', edit_kubernetes_deploy_group_role_path(deploy_group_role) %>
+              <%= link_to 'Edit', edit_project_kubernetes_deploy_group_role_path(deploy_group_role.project, deploy_group_role, redirect_to: request.fullpath) %>
             <% end %>
           </td>
         </tr>
       <% end %>
 
-      <tr>
-        <td colspan="<%= @project ? 2 : 3 %>">Total</td>
-        <td><%= @deploy_group_roles.sum { |d| d.requests_cpu * d.replicas } %> to <%= @deploy_group_roles.sum { |d| d.limits_cpu * d.replicas } %></td>
-        <td><%= @deploy_group_roles.sum { |d| d.requests_memory * d.replicas } %> to <%= @deploy_group_roles.sum { |d| d.limits_memory * d.replicas } %></td>
-        <td><%= @deploy_group_roles.sum(&:replicas) %></td>
-        <td><%= link_to "Edit all", edit_many_project_kubernetes_deploy_group_roles_path(@project) if @project && current_user.admin_for?(@project) %></td>
-      </tr>
+      <% if @project %>
+        <tr>
+          <td colspan="2">Total</td>
+          <td><%= @kubernetes_deploy_group_roles.sum { |d| d.requests_cpu * d.replicas } %> to <%= @kubernetes_deploy_group_roles.sum { |d| d.limits_cpu * d.replicas } %></td>
+          <td><%= @kubernetes_deploy_group_roles.sum { |d| d.requests_memory * d.replicas } %> to <%= @kubernetes_deploy_group_roles.sum { |d| d.limits_memory * d.replicas } %></td>
+          <td><%= @kubernetes_deploy_group_roles.sum(&:replicas) %></td>
+          <% if show_istio_sidecar_ui? %>
+            <td></td>
+          <% end %>
+          <td>
+            <% if current_user.admin_for?(@project) && @kubernetes_deploy_group_roles.any? %>
+              <%= link_to "Edit all", edit_many_project_kubernetes_deploy_group_roles_path(@project) %>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
     </table>
   </div>
 
   <div class="admin-actions">
-    <div class="pull-right">
-      <%= link_to "New", new_kubernetes_deploy_group_role_path, class: "btn btn-default" %>
-    </div>
+    <% if @project %>
+      <div class="pull-right">
+        <%= link_to "New", new_project_kubernetes_deploy_group_role_path(@project), class: "btn btn-default" %>
+      </div>
+    <% else %>
+      <%= paginate @pagy %>
+    <% end %>
   </div>
 </section>

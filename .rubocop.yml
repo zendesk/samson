@@ -1,10 +1,13 @@
+require:
+- rubocop-rails
+
 AllCops:
   DisplayCopNames: true
   Exclude:
-    - db/schema.rb
-    - vendor/**/*
-    - tmp/**/*
-    - node_modules/**/*
+  - db/schema.rb
+  - vendor/**/*
+  - tmp/**/*
+  - node_modules/**/*
 
 Metrics/LineLength:
   Max: 120
@@ -54,10 +57,10 @@ Style/NumericLiterals:
 Style/NumericPredicate:
   EnforcedStyle: comparison
 
-Layout/FirstParameterIndentation:
+Layout/IndentFirstArgument:
   Enabled: false
 
-Layout/IndentHash:
+Layout/IndentFirstHashElement:
   EnforcedStyle: consistent
 
 Layout/AlignParameters:
@@ -85,7 +88,7 @@ Style/Next:
   Enabled: false
 
 Layout/MultilineMethodCallIndentation:
-  Enabled: false # none of the EnforcedStyle options allow for consistent 2-space indent
+  EnforcedStyle: indented
 
 Lint/AmbiguousRegexpLiteral:
   Enabled: false
@@ -190,6 +193,9 @@ Style/IfInsideElse:
 Layout/AlignHash:
   Enabled: false
 
+Layout/AlignArguments:
+  EnforcedStyle: with_fixed_indentation
+
 # Opt-in
 Layout/FirstHashElementLineBreak:
   Enabled: true
@@ -201,3 +207,54 @@ Layout/FirstMethodArgumentLineBreak:
 # Opt-in
 Layout/FirstMethodParameterLineBreak:
   Enabled: true
+
+# refute and assert are nice opposites
+Rails/RefuteMethods:
+  Enabled: false
+
+# we enforce UTC for Time.now, so no harm done
+Rails/TimeZone:
+  Enabled: false
+
+Rails/Date:
+  Enabled: false
+
+# we use this a lot in tests/db and sometimes want to skip side-effects
+Rails/SkipsModelValidations:
+  Enabled: false
+
+# works the same, so no harm done and sometimes we override the methods
+Rails/DynamicFindBy:
+  Enabled: false
+
+# we inherit a lot, so it complains about missing actions
+Rails/LexicallyScopedActionFilter:
+  Enabled: false
+
+# we don't use ApplicationRecord
+Rails/ApplicationRecord:
+  Enabled: false
+
+# Not helpful
+Rails/OutputSafety:
+  Enabled: false
+
+# Not helpful
+Rails/ReversibleMigration:
+  Enabled: false
+
+# Not helpful
+Rails/Output:
+  Enabled: false
+
+# Broken see https://github.com/rubocop-hq/rubocop-rails/issues/147
+Rails/HasManyOrHasOneDependent:
+  Enabled: false
+
+# We use that a lot
+Rails/HelperInstanceVariable:
+  Enabled: false
+
+# Not helpful
+Rails/FilePath:
+  Enabled: false

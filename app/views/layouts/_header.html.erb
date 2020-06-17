@@ -52,6 +52,7 @@
             <li><%= link_to "Deploy Groups", deploy_groups_path %></li>
           <% end %>
           <li><%= link_to "Commands", Command %></li>
+          <li><%= link_to "Outbound Webhooks", OutboundWebhook %></li>
           <% if current_user&.admin? %>
             <li><%= link_to "Users", users_path %></li>
             <%= Samson::Hooks.render_views(:admin_menu, self) %>

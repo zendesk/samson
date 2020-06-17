@@ -108,14 +108,14 @@ Kubernetes::Release
 
 ### Docker Images
 
-(To opt out of this feature set `containers[].samson/dockerfile: none` or `metadata.annotations.container-nameofcontainer-samson/dockerfile: none`)
+(To opt out of this feature set `metadata.annotations.container-nameofcontainer-samson/dockerfile: none`)
 
 For each container (including init containers) Samson finds or creates a matching Docker image for the Git SHA that is being deployed.
 Samson always sets the Docker digest, and not a tag, to make deployments immutable.
 
 If `KUBERNETES_ADDITIONAL_CONTAINERS_WITHOUT_DOCKERFILE=true` is set, it will only enforce builds for the first container.
 
-Samson matches builds to containers by looking at the `containers[].samson/dockerfile` attribute or the
+Samson matches builds to containers by looking at the `metadata.annotations.container-nameofcontainer-samson/dockerfile` attribute or the
 base image name (part after the last `/`), if the project has enabled `Docker images built externally`.
 
 Images can be built locally via `docker build`, or via `gcloud` CLI (see Gcloud plugin), or externally and then sent to Samson via the
@@ -133,8 +133,8 @@ Via [Template filler](/plugins/kubernetes/app/models/kubernetes/template_filler.
 
 ### Migrations / Prerequisite
 
-Should be added as a separate role with the annotation  `samson/prerequisite: 'true'` set on the `Job`/`Deployment`/`Pod`
-(annotation should be added to the 'root' object, not the template).
+Should be added as a separate role with `metadata.annotations.samson/prerequisite: 'true'` set on the `Job`/`Deployment`/`Pod`
+(annotation should be added to the 'root' object, not the `spec.template`).
 This role will be deployed/executed before any other role is deployed.
 By default it waits for 10 minutes before timeout, change the timeout using
 `KUBERNETES_WAIT_FOR_PREREQUISITES` env variable (specified in seconds).
@@ -151,19 +151,24 @@ These can be configured (in seconds) using `KUBERNETES_STABILITY_CHECK_DURATION`
 
 ### StatefulSet
 
-On kubernetes <1.7 they can only be updated with `OnDelete` updateStrategy,
-which is supported by updating only the pod containers and replica count (not set metadata/annotations).
-Prefer `RollingUpdate` if possible instead.
+Prefer `spec.updateStrategy.type=RollingUpdate`
+
+### Server-side apply
+
+Set `metadata.annotation.samson/server_side_apply='true'` and use a valid template.
+This only works for kubernetes 1.16+ clusters, but will soon be the default way samson works,
+see [kubernetes docs](https://kubernetes.io/docs/reference/using-api/api-concepts/#server-side-apply) for details.
 
 ### Duplicate deployments
 
 To deploy the same repository multiple times, create separate projects and then set `metadata.annotations.samson/override_project_label: "true"`,
 samson will then override the `project` labels and keep deployments/services unique.
 
-### Service updates
+### Updates without overriding
 
-Too keep fields/labels that are manually managed persistent during updates, use `KUBERNETES_SERVICE_PERSISTENT_FIELDS`, see .env.example
-or set `metadata.annotations.samson/persistent_fields`
+Too keep fields/labels that are managed outside of samson during updates
+- for everything set `metadata.annotations.samson/persistent_fields`
+- for `Service` also use `KUBERNETES_SERVICE_PERSISTENT_FIELDS`, see .env.example
 
 ### PodDisruptionBudget
 
@@ -205,11 +210,16 @@ To make Samson leave your resource name alone, set `metadata.annotations.samson/
 
 ### Preventing request loss with preStop
 
-To enable the following functionality you need to set `KUBERNETES_ADD_PRESTOP=true`.
+When not using kubernetes servives to route requests, requests can be lost during a deployment,
+since old pods shut down before everyone all clients are refreshed.
 
-Samson automatically adds `container[].lifecycle.preStop` `sleep 3` if a preStop hook is not set and
-`container[].samson/preStop` is not set to `disabled`, to prevent in-flight requests from getting lost when taking a pod
-out of rotation (alternatively set `metadata.annoations.container-nameofcontainer-samson/preStop: disabled`).
+To prevent this, samson can automatically add `container[].lifecycle.preStop` `/bin/sleep <INT>`
+and increase the `spec.terminationGracePeriodSeconds` if necessary.
+
+(will only add if `preStop` hook is not set and `metadata.annotations.container-nameofcontainer-samson/preStop` is not set to `disabled` and container has ports)
+
+- Set `KUBERNETES_ADD_PRESTOP=true` to enable
+- Set `KUBERNETES_PRESTOP_SLEEP_DURATION=30` in seconds to override default sleep duration (3 seconds)
 
 ### Showing logs on succeeded deploys
 
@@ -258,3 +268,47 @@ If you still want to change a matchLabel, for example project/role:
  - deploy with renamed project/role
  - manually delete pods from old Deployment (`kubectl delete pods -l project=old-name,role=old-role`)
  - unset annotations from step 1
+
+### Blocking Ingress Nginx annotations
+
+Annotations like `nginx.ingress.kubernetes.io/whitelist-source-range` can make apps publicly accessible.
+To block them except for allowed projects, use:
+
+```
+KUBERNETES_INGRESS_NGINX_ANNOTATION_ALLOWED=project-permalink,[project-permalink,...]
+```
+
+### Kritis
+
+Allow users to set kritis breakglass per deploy-group or deploy by setting environment variable `KRITIS_BREAKGLASS_SUPPORTED=true`
+
+### Setting environment variables on init containers
+
+Environment variables do not get set on init container by default, but it can be opted in with:
+`metadata.annotations.container-nameofcontainer-samson/set_env_vars: "true"`
+
+### Istio sidecar injection via annotation
+
+[Istio](https://istio.io) comes with a Mutating Webhook Admission Controller that will inject an
+Envoy proxy sidecar. See Istio's docs on [sidecar injection](https://istio.io/docs/setup/additional-setup/sidecar-injection/)
+for more info. The injection is triggered by adding a `sidecar.istio.io/inject: "true"`
+annotation on a Pod.
+
+You can configure a Kubernetes Role to tell Samson to inject that annotation to a Pod template
+of a Deployment, DaemonSet, or StatefulSet. Assuming you have Istio configured to use the
+MutatingWebhook in the target namespace, that should trigger Istio to inject the sidecar.
+
+To enable this functionality, set the environment variable `ISTIO_INJECTION_SUPPORTED=true`.
+
+### Forcing updates when kubernetes cannot change a resource
+
+Delete old resource and create new when an update fails because it `cannot change` a resources.
+(Should not be used with `persistentVolumeReclaimPolicy` set to `Delete`)
+
+```
+metadata.annotation.samson/force_update: "true"
+```
+
+### Static config per deploy group
+
+Set the kubernetes roles to `kubernetes/$deploy_group/server.yml`

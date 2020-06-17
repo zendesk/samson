@@ -1,5 +1,3 @@
-<%= breadcrumb Kubernetes::Namespace, (@kubernetes_namespace.new_record? ? "New" : @kubernetes_namespace) %>
-
 <section>
   <%= form_for @kubernetes_namespace, html: { class: "form-horizontal" } do |form| %>
     <%= render 'shared/errors', object: form.object %>
@@ -7,6 +5,7 @@
     <fieldset>
       <%= form.input :name, required: true, pattern: Kubernetes::Namespace::NAME_PATTERN, input_html: {disabled: form.object.persisted?} %>
       <%= form.input :comment, as: :text_area %>
+      <%= form.input :template, as: :text_area, help: "YAML template to patch into the namespace", input_html: {class: "form-control monospace"} %>
 
       <%= form.input :projects, help: "Adding a projects will remove it's kubernetes roles resource and service names AND move it from it's current namespace" do %>
         <% projects = Project.pluck(:name, :id) %>

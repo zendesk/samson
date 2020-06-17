@@ -1,0 +1,52 @@
+<div class="form-group">
+  <h3>Datadog monitors</h3>
+
+  <div class="col-lg-12">
+    <% Samson::Parallelizer.map(form.object.datadog_monitor_queries) { |q| q.monitors.each(&:name) }  # trigger parallel preload %>
+    <%= form.fields_for :datadog_monitor_queries, form.object.datadog_monitor_queries + [DatadogMonitorQuery.new] do |fields| %>
+      <div>
+        <% if fields.object.persisted? && example = fields.object.monitors.first %>
+          <% name = truncate(example.name, to: 30) %>
+          <% name += "+#{fields.object.monitors.size - 1}" if fields.object.monitors.size > 1 %>
+          <h3><%= link_to name, fields.object.url %></h3>
+        <% end %>
+
+        <div class="form-group">
+          <div class="col-lg-5">
+            <%= fields.text_field :query, class: "form-control", placeholder: "ID or comma separated tags" %>
+          </div>
+
+          <div class="col-lg-4 inline-errors">
+            On Alert <%= fields.select :failure_behavior, options_for_select(DatadogMonitorQuery::FAILURE_BEHAVIORS, fields.object.failure_behavior), include_blank: true %>
+            <%= additional_info "Action to take when monitors alerts after a deploy, but did not alert before." %>
+          </div>
+
+          <div class="col-lg-3 inline-errors">
+            Check for <%= fields.select :check_duration, options_for_select([1, 5, 15, 30].map { |m| ["#{m} Min", m.minutes] }, fields.object.check_duration), include_blank: true %>
+            <%= additional_info "How long to check the monitor after the deploy is done." %>
+          </div>
+        </div>
+
+        <div class="form-group inline-errors">
+          <div class="col-lg-9">
+            Match
+            <%= fields.select :match_source, options_for_select(DatadogMonitorQuery::MATCH_SOURCES, fields.object.match_source), include_blank: true %>
+            to
+            <%= fields.text_field :match_target, placeholder: "tag" %>
+          </div>
+
+          <% if fields.object.persisted? %>
+            <div class="col-lg-1 checkbox">
+              <%= fields.label :_destroy do %>
+                <%= fields.check_box :_destroy if fields.object.persisted? %>
+                Delete
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+        <hr/>
+      </div>
+    <% end %>
+    <%= link_to "Add row", "#", class: "duplicate_previous_row" %>
+  </div>
+</div>

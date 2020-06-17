@@ -41,16 +41,17 @@ class CsvExport < ActiveRecord::Base
 
   def filters_project
     if id = filters['stages.project_id']
-      proj = Project.with_deleted { Project.where(id: id).first&.permalink }
+      proj = Project.with_deleted { Project.find_by(id: id)&.permalink }
       proj + '_' if proj
     end
   end
 
   def status!(status)
-    update_attributes!(status: status)
+    update!(status: status)
   end
 
   def delete_file
     File.delete(path_file) if File.exist?(path_file)
   end
 end
+Samson::Hooks.load_decorators(CsvExport)

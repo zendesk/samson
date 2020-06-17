@@ -50,10 +50,22 @@ a.btn.disabled[title] {
   pointer-events: auto;
 }
 
-#command_command {
+#command_command,
+.form-control.monospace {
   font-family: monospace;
 }
 
 .github-user-avatar {
   border-radius: .2em
+}
+
+summary {
+  display: list-item;
+}
+
+// form elements not built by the form-builder have has-error divs directly around the form elements
+// color is same as `.has-error .form-control` from bootstrap
+.inline-errors .has-error {
+  border: 1px solid #a94442;
+  display: inline-block;
 }

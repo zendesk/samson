@@ -7,8 +7,11 @@
       <% end %>
       <th>Started</th>
       <th>
-        Duration
-        <%= link_to_chart "#{@project&.name || @stage&.name} Deploy duration", @deploys.map(&:duration) %>
+        <% if @project || @stage %>
+          <%= link_to_chart "Duration", @deploys.map(&:duration), title: "#{@project&.name || @stage&.name} Deploy duration" %>
+        <% else %>
+          Duration
+        <% end %>
       </th>
       <th>Deploy</th>
       <% unless @stage %>
@@ -18,7 +21,7 @@
     </tr>
     </thead>
     <tbody>
-    <%= render partial: "deploys/deploy", collection: @deploys %>
+    <%= render partial: "deploys/deploy", collection: @deploys, cached: ->(deploy) { [@project, !!@stage, deploy, params[:time_format].presence || current_user.time_format  ] } %>
     </tbody>
   </table>
   <%= paginate @pagy if @pagy %>

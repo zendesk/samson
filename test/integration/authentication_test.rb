@@ -8,9 +8,9 @@ describe 'Authentication Integration' do
   let(:user) { users(:admin) }
 
   it "lets 401s get out to inform users of real error causes" do
-    post "/oauth/token"
+    get "/oauth/applications.json"
     assert_response :unauthorized
-    response.body.must_include "{\"error\":\"invalid_request\""
+    response.body.must_include "{\"error\":\"You are not logged in"
   end
 
   describe 'session request' do
@@ -135,10 +135,8 @@ describe 'Authentication Integration' do
 
           it 'has an access token' do
             post "/oauth/token", params: new_params
-            response.content_type.must_equal 'application/json'
-            pending "this broke when switching to doorkeeper 4.3 and we do not really need the oauth flow" do
-              JSON.parse(response.body)['access_token'].must_equal oauth_app.access_tokens.first.token
-            end
+            response.media_type.must_equal 'application/json'
+            JSON.parse(response.body)['access_token'].must_equal oauth_app.access_tokens.first.token
           end
         end
       end

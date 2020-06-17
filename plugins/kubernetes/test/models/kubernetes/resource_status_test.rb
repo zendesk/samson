@@ -32,8 +32,8 @@ describe Kubernetes::ResourceStatus do
     end
 
     it "is restarted when pod is restarted" do
-      resource[:status][:containerStatuses] = [{restartCount: 1}]
-      details.must_equal "Restarted"
+      resource[:status][:containerStatuses] = [{restartCount: 1, name: "foo", state: {terminated: {reason: "Backoff"}}}]
+      details.must_equal "Restarted (foo Backoff)"
     end
 
     it "is failed when pod is failed" do
@@ -64,7 +64,10 @@ describe Kubernetes::ResourceStatus do
 
     it "errors when bad events happen" do
       events[0].merge!(type: "Warning", reason: "Boom")
-      expect_event_request { details.must_equal "Error event" }
+      expect_event_request do
+        details.must_equal "Error event"
+        assert status.finished
+      end
     end
 
     describe "non-pods" do
@@ -78,6 +81,12 @@ describe Kubernetes::ResourceStatus do
       it "knows failed non-pods" do
         events[0].merge!(type: "Warning", reason: "Boom")
         expect_event_request { details.must_equal "Error event" }
+      end
+
+      it "ignores known bad events" do
+        resource[:kind] = "HorizontalPodAutoscaler"
+        events[0].merge!(type: "Warning", reason: "FailedGetMetrics")
+        expect_event_request { details.must_equal "Live" }
       end
     end
   end
@@ -94,11 +103,26 @@ describe Kubernetes::ResourceStatus do
       result.size.must_equal 0
     end
 
+    it "does not fail when missing lastTimestamp" do
+      events[0][:lastTimestamp] = nil
+      events[0][:metadata] = {creationTimestamp: 30.seconds.from_now.utc.iso8601}
+      result.size.must_equal 1
+    end
+
     it "sorts" do
       new = 60.seconds.from_now.utc.iso8601
       events.unshift lastTimestamp: new
       events.push lastTimestamp: new
       result.first.must_equal events[1]
+    end
+
+    it "shows which cluster the error came from when something goes wrong" do
+      e = assert_raises Samson::Hooks::UserError do
+        assert_request :get, /events/, to_timeout: [] do
+          status.events
+        end
+      end
+      e.message.must_equal "Kubernetes error foo default Pod1: Timed out connecting to server"
     end
   end
 end

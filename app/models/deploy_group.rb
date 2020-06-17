@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 class DeployGroup < ActiveRecord::Base
-  has_soft_deletion default_scope: true unless self < SoftDeletion::Core # uncovered
+  has_soft_deletion default_scope: true
   audited
 
   include Permalinkable
@@ -14,13 +14,13 @@ class DeployGroup < ActiveRecord::Base
   has_many :deploy_groups_stages, dependent: :destroy
   has_many :stages, through: :deploy_groups_stages, inverse_of: :deploy_groups
   has_many :template_stages, -> { where(is_template: true) },
-    through: :deploy_groups_stages, source: :stage, inverse_of: nil
+    through: :deploy_groups_stages, source: :stage, inverse_of: false
 
   delegate :production?, to: :environment
 
-  validates_presence_of :name, :environment_id
-  validates_uniqueness_of :name, :env_value
-  validates_format_of :env_value, with: /\A\w[-:\w]*\w\z/
+  validates :name, :environment_id, presence: true
+  validates :name, :env_value, uniqueness: {case_sensitive: false}
+  validates :env_value, format: {with: /\A\w[-:\w]*\w\z/}
   before_validation :initialize_env_value, on: :create
   before_validation :generated_name_sortable, if: :name_changed?
   validate :validate_vault_server_has_same_environment
@@ -77,3 +77,4 @@ class DeployGroup < ActiveRecord::Base
     end
   end
 end
+Samson::Hooks.load_decorators(DeployGroup)

@@ -23,6 +23,61 @@ describe Kubernetes::NamespacesController do
         assert_template :show
       end
     end
+
+    describe "#preview" do
+      let(:template) do
+        {
+          apiVersion: "v1",
+          kind: "Pod",
+          metadata: {
+            name: "test-app-server",
+            labels: {
+              team: "t",
+              project: "p",
+              role: "r"
+            }
+          },
+          annotation: {"samson/keep_name": "false"}
+        }.to_yaml
+      end
+      before do
+        GitRepository.any_instance.stubs(:file_content).returns template
+        # kubernetes_roles(:app_server).update_column(:resource_name, "foo")
+        kubernetes_roles(:resque_worker).delete # 1 is enough
+      end
+
+      it "shows when there are no changes" do
+        get :preview, params: {project_id: projects(:test).id}
+        assert_redirected_to "/kubernetes/namespaces"
+        assert flash[:notice]
+      end
+
+      it "warns when config file cannot be read" do
+        GitRepository.any_instance.stubs(:file_content).returns nil
+        get :preview, params: {project_id: projects(:test).id}
+        flash[:alert].must_equal "<p>Unable to read kubernetes/app_server.yml</p>"
+      end
+
+      it "can validate against services" do
+        raise unless template.sub!('Pod', 'Service')
+        get :preview, params: {project_id: projects(:test).id}
+        assert flash[:alert]
+      end
+
+      it "ignores immutable because their name cannot change" do
+        raise unless template.sub!('Pod', 'APIService')
+        get :preview, params: {project_id: projects(:test).id}
+        assert flash[:notice]
+      end
+
+      it "shows when there are changes" do
+        raise unless template.sub!('test-app-server', 'nope')
+        get :preview, params: {project_id: projects(:test).id}
+        flash[:alert].must_equal(
+          "<p>Project config kubernetes/app_server.yml Pod nope would be duplicated with name test-app-server</p>"
+        )
+      end
+    end
   end
 
   as_a :deployer do
@@ -46,7 +101,7 @@ describe Kubernetes::NamespacesController do
 
       it "redirects on success" do
         @controller.expects(:create_callback)
-        post :create, params: {kubernetes_namespace: {name: "foo"}}
+        post :create, params: {kubernetes_namespace: {name: "foo", template: "metadata:\n  labels:\n    team: foo"}}
         namespace = Kubernetes::Namespace.find_by_name!("foo")
         assert_redirected_to "http://test.host/kubernetes/namespaces/#{namespace.id}"
       end
@@ -73,7 +128,19 @@ describe Kubernetes::NamespacesController do
       it "shows errors when it fails to update" do
         Kubernetes::Namespace.any_instance.expects(:valid?).returns(false) # no validation that can fail
         patch :update, params: {id: namespace.id, kubernetes_namespace: {comment: ""}}
-        assert_template :edit
+        assert_template :show
+      end
+
+      it "updates namespace when template was changed" do
+        assert_request(:get, "http://foobar.server/api/v1/namespaces/test", to_return: {body: '{}'}) do
+          assert_request(:patch, "http://foobar.server/api/v1/namespaces/test", to_return: {body: '{}'}) do
+            patch(
+              :update,
+              params: {id: namespace.id, kubernetes_namespace: {template: "metadata:\n  labels:\n    team: bar"}}
+            )
+            assert_redirected_to namespace
+          end
+        end
       end
     end
 
@@ -95,7 +162,7 @@ describe Kubernetes::NamespacesController do
           end
         end
         assert_redirected_to "http://test.host/kubernetes/namespaces/#{namespace.id}"
-        refute flash[:alert]
+        refute flash[:warn]
       end
     end
 
@@ -107,7 +174,7 @@ describe Kubernetes::NamespacesController do
           end
         end
         assert_redirected_to "http://test.host/kubernetes/namespaces"
-        refute flash[:alert]
+        refute flash[:warn]
       end
 
       it "shows errors" do
@@ -117,11 +184,11 @@ describe Kubernetes::NamespacesController do
           end
         end
         assert_redirected_to "http://test.host/kubernetes/namespaces"
-        flash[:alert].must_include "Failed to create namespace test in cluster test: 404"
+        flash[:warn].must_include "Failed to upsert namespace test in cluster test: 404"
       end
     end
 
-    describe "#create_callback" do
+    describe "#sync_namespace" do
       before { @controller.instance_variable_set(:@kubernetes_namespace, namespace) }
 
       it "creates a namespace" do
@@ -130,7 +197,7 @@ describe Kubernetes::NamespacesController do
             @controller.send(:create_callback)
           end
         end
-        refute flash[:alert]
+        refute flash[:warn]
       end
 
       it "shows creation errors" do
@@ -140,9 +207,9 @@ describe Kubernetes::NamespacesController do
             @controller.send(:create_callback)
           end
         end
-        flash[:alert].must_equal <<~TEXT.rstrip
+        flash[:warn].must_equal <<~TEXT.rstrip
           <p>Error upserting namespace in some clusters:
-          <br />Failed to create namespace test in cluster test: Timed out connecting to server</p>
+          <br />Failed to upsert namespace test in cluster test: Timed out connecting to server</p>
         TEXT
       end
 
@@ -152,7 +219,7 @@ describe Kubernetes::NamespacesController do
             @controller.send(:create_callback)
           end
         end
-        refute flash[:alert]
+        refute flash[:warn]
       end
     end
   end

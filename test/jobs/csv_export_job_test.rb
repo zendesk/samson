@@ -21,7 +21,7 @@ describe CsvExportJob do
 
   it "cleans up old jobs" do
     old = CsvExport.create!(user: deployer, filters: {})
-    old.update_attributes(created_at: Time.now - 1.year, updated_at: Time.now - 1.year)
+    old.update(created_at: Time.now - 1.year, updated_at: Time.now - 1.year)
     old_id = old.id
 
     CsvExportJob.new(deploy_export).perform

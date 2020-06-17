@@ -9,12 +9,12 @@ module SamsonEnv
     </ul>
   TEXT
 
-  class Engine < Rails::Engine
+  class SamsonPlugin < Rails::Engine
   end
 
   class << self
     def write_env_files(dir, deploy, deploy_groups)
-      return unless groups = env_groups(deploy, deploy_groups)
+      return unless groups = env_groups(deploy, deploy_groups, resolve_secrets: true)
       write_dotenv("#{dir}/.env", groups)
     end
 
@@ -56,17 +56,15 @@ end
 # TODO: lazy load environment variables via changeset to make preview for new deploy show entered deploy env vars
 Samson::Hooks.view :project_form, "samson_env"
 Samson::Hooks.view :manage_menu, "samson_env"
-Samson::Hooks.view :deploy_confirmation_tab_nav, "samson_env/deploy_tab_nav"
-Samson::Hooks.view :deploy_confirmation_tab_body, "samson_env/deploy_tab_body"
-Samson::Hooks.view :deploy_tab_nav, "samson_env"
-Samson::Hooks.view :deploy_tab_body, "samson_env"
+Samson::Hooks.view :deploy_changeset_tab_nav, "samson_env"
+Samson::Hooks.view :deploy_changeset_tab_body, "samson_env"
 Samson::Hooks.callback :project_permitted_params do
   [
     AcceptsEnvironmentVariables::ASSIGNABLE_ATTRIBUTES.merge(
       environment_variable_group_ids: []
     ),
     :use_env_repo,
-    :config_service
+    external_environment_variable_groups_attributes: [:name, :description, :url, :_destroy, :id]
   ]
 end
 
@@ -89,7 +87,7 @@ Samson::Hooks.callback(:link_parts_for_resource) do
     "EnvironmentVariable",
     ->(env) do
       scope = " for #{env.scope.name}" if env.scope
-      parent = " on #{env.parent&.name || "Deleted"}"
+      parent = " on #{env.parent.is_a?(Deploy) ? "Deploy ##{env.parent_id}" : env.parent&.name || "Deleted"}"
       ["#{env.name}#{scope}#{parent}", EnvironmentVariable]
     end
   ]
@@ -98,6 +96,13 @@ Samson::Hooks.callback(:link_parts_for_resource) do
   [
     "EnvironmentVariableGroup",
     ->(env_group) { [env_group.name, env_group] }
+  ]
+end
+
+Samson::Hooks.callback(:link_parts_for_resource) do
+  [
+    "ExternalEnvironmentVariableGroup",
+    ->(env_group) { [env_group.name, ""] }
   ]
 end
 
@@ -134,16 +139,10 @@ Samson::Hooks.callback :deploy_execution_env do |deploy|
   deploy.stage.environment_variables.each_with_object({}) { |var, h| h[var.name] = var.value }
 end
 
-env_vars_flag = ENV["DEPLOY_ENV_VARS"]
-if env_vars_flag != "false" # uncovered
-  if env_vars_flag != 'api_only' # uncovered
-    # Adds the deploy env vars view to the deploy form in order to add
-    # specific environment vars per deploy
-    Samson::Hooks.view :deploy_form, 'samson_env'
-  end
+# Adds the deploy env vars view to the deploy form in order to add specific environment vars per deploy
+Samson::Hooks.view :deploy_form, 'samson_env'
 
-  # Allows environment vars as valid parameters for the deploy model
-  Samson::Hooks.callback :deploy_permitted_params do
-    AcceptsEnvironmentVariables::ASSIGNABLE_ATTRIBUTES
-  end
+# Allows environment vars as valid parameters for the deploy model
+Samson::Hooks.callback :deploy_permitted_params do
+  AcceptsEnvironmentVariables::ASSIGNABLE_ATTRIBUTES
 end

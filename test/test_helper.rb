@@ -5,7 +5,8 @@ require 'bundler/setup'
 
 # anything loaded before coverage will be uncovered
 require 'single_cov'
-SingleCov::APP_FOLDERS << 'decorators' << 'presenters'
+SingleCov::APP_FOLDERS << 'presenters'
+SingleCov.rewrite { |path| path.sub("/lib/decorators/", "/decorators/") }
 SingleCov.setup :minitest, branches: true unless defined?(Spring)
 
 # rake adds these, but we don't need them / want to be consistent with using `ruby x_test.rb`
@@ -26,6 +27,15 @@ require 'mocha/setup'
 # Use ActiveSupport::TestCase for everything that was not matched before
 MiniTest::Spec::DSL::TYPES[-1] = [//, ActiveSupport::TestCase]
 
+# Use ActionController::TestCase for Controllers
+MiniTest::Spec::DSL::TYPES.unshift [/Controller$/, ActionController::TestCase]
+
+# Use ActionDispatch::IntegrationTest for everything that is marked Integration
+MiniTest::Spec::DSL::TYPES.unshift [/Integration$/, ActionDispatch::IntegrationTest]
+
+# Use ActionView::TestCase for Helpers
+MiniTest::Spec::DSL::TYPES.unshift [/Helper$/, ActionView::TestCase]
+
 Mocha::Expectation.class_eval do
   def capture(into)
     with { |*args| into << args }
@@ -40,6 +50,23 @@ ActiveRecord::Base.logger.level = 1
 WebMock.disable_net_connect!(allow: 'codeclimate.com')
 
 Dir["test/support/*"].each { |f| require File.expand_path(f) }
+
+# global view-context so templates are cached, to prevent undefined method errors
+# TODO: find a better workaround so plugins/env/test/samson_env/samson_plugin_test.rb passes but without global variable
+TEST_VIEW_CONTEXT ||= begin
+  lookup_context = ActionView::Base.build_lookup_context(ActionController::Base.view_paths)
+  view_context = ActionView::Base.with_empty_template_cache.new(lookup_context)
+  class << view_context
+    include Rails.application.routes.url_helpers
+    include ApplicationHelper
+  end
+  view_context.instance_eval do
+    # stub for testing render
+    def protect_against_forgery?
+    end
+  end
+  view_context
+end
 
 # Helpers for all tests
 ActiveSupport::TestCase.class_eval do
@@ -216,13 +243,18 @@ ActiveSupport::TestCase.class_eval do
   end
 
   def self.only_callbacks_for_plugin(callback)
-    plugin_name = caller(1..1).first[/\/plugins\/([^\/]+)/, 1] || raise("not called from a plugin")
+    line = caller(1..1).first
+    plugin_name = line[/\/plugins\/([^\/]+)/, 1] || raise("not called from a plugin not #{line}")
     around { |t| Samson::Hooks.only_callbacks_for_plugin(plugin_name, callback, &t) }
   end
 
   def self.before_and_after(&block)
     before(&block)
     after(&block)
+  end
+
+  def view_context
+    TEST_VIEW_CONTEXT
   end
 end
 

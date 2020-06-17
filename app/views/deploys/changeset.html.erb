@@ -5,3 +5,5 @@
     <%= render "changeset/#{tab}", changeset: @changeset, type: 'deploy' %>
   </div>
 <% end %>
+
+<%= Samson::Hooks.render_views(:deploy_changeset_tab_body, self) %>

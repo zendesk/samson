@@ -56,10 +56,15 @@ describe Build do
     it "validates git sha uniqueness with dockerfile" do
       stub_commit_from_ref(current_commit, current_commit)
       build.update_column(:git_sha, current_commit)
-      refute_valid(valid_build(git_ref: nil, git_sha: current_commit)) # not unique
-      refute_valid(valid_build) # not unique since ref resolves to sha
+
+      # duplicates are allowed
+      assert_valid(valid_build(git_ref: nil, git_sha: current_commit))
       assert_valid(valid_build(git_ref: nil, git_sha: current_commit, dockerfile: 'Other'))
       assert_valid(valid_build(git_ref: nil, git_sha: current_commit, dockerfile: nil, external_status: 'pending'))
+
+      # duplicates using the same external url are not allowed
+      build.update_column(:external_url, 'http://mybuilds.io/1234')
+      refute_valid(valid_build(git_ref: nil, git_sha: current_commit, external_url: 'http://mybuilds.io/1234'))
     end
 
     it "validates git sha uniqueness with image_name" do
@@ -71,9 +76,13 @@ describe Build do
 
       base = {git_ref: nil, git_sha: current_commit, external_status: 'pending'}
       assert_valid(valid_build(base))
-      refute_valid(valid_build(base.merge(image_name: 'hello'))) # not unique
+      assert_valid(valid_build(base.merge(image_name: 'hello'))) # not unique
       assert_valid(valid_build(base.merge(image_name: 'world'))) # unique
       assert_valid(valid_build(base.merge(image_name: '')))
+
+      # duplicates using the same external url are not allowed
+      build.update_column(:external_url, 'http://mybuilds.io/1234')
+      refute_valid(valid_build(base.merge(image_name: 'hello', external_url: 'http://mybuilds.io/1234')))
     end
 
     it 'validates git_ref' do
@@ -171,12 +180,12 @@ describe Build do
 
   describe "#commit_url" do
     it "builds a path when the url is unknown" do
+      build.project.repository_url = 'git@example.com:foo/bar.git'
       build.commit_url.must_equal "/tree/da39a3ee5e6b4b0d3255bfef95601890afd80709"
     end
 
     it "builds a full url when host is known" do
-      build.project.repository_url = 'git@github.com:foo/bar.git'
-      build.commit_url.must_equal "https://github.com/foo/bar/tree/da39a3ee5e6b4b0d3255bfef95601890afd80709"
+      build.commit_url.must_equal "https://github.com/bar/foo/tree/da39a3ee5e6b4b0d3255bfef95601890afd80709"
     end
   end
 
@@ -188,7 +197,7 @@ describe Build do
 
   describe "#nil_out_blanks" do
     it "nils out dockerfile so it stays unique" do
-      build.update_attributes!(image_name: '   ')
+      build.update!(image_name: '   ')
       build.image_name.must_be_nil
     end
   end

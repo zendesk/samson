@@ -15,19 +15,18 @@
     %>
   <% end %>
 
-  <% if defined?(EnvironmentVariable) && folder = EnvironmentVariable.config_service_folder(@project, required: false) %>
-    <%= form.input(
-        :config_service,
-        label: "Use Config service",
-        help: "Use config service to manage deployment environment variables, base url is #{folder}"
-      )
-    %>
-  <% end %>
-
   <% scopes = Environment.env_deploy_group_array %>
   <% sorted_env_vars = EnvironmentVariable.sort_by_scopes(form.object.environment_variables, scopes) %>
   <% sorted_env_vars << EnvironmentVariable.new %>
   <%= render "samson_env/environment_variables", form: form, environment_variables: sorted_env_vars %>
+
+  <% if ExternalEnvironmentVariableGroup.configured? %>
+    <h4>
+      External Groups
+      <%= additional_info ExternalEnvironmentVariableGroup::HELP_TEXT %>
+    </h4>
+    <%= render "external_environment_variable_groups/fields", form: form %>
+  <% end %>
 
   <h4>Groups</h4>
   <% project = form.object %>
@@ -42,8 +41,9 @@
           %>
         </div>
         <div class="col-lg-2 checkbox">
-          <%# updated dynammically in the client-side JS %>
-          <%= link_to "Preview", preview_environment_variable_groups_path %>
+          <%# linked to selected group in env/app/assets/javascripts/env/application.js %>
+          <%= link_to "Edit", environment_variable_group_path(0) %> |
+          <%= link_to "Preview", preview_environment_variable_groups_path(group_id: 0) %>
         </div>
       </div>
     <% end %>

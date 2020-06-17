@@ -13,6 +13,8 @@ class SlackMessage
     Faraday.post url do |request|
       request.headers['Content-Type'] = 'application/json'
       request.body = JSON.unparse message_body
+      request.options.open_timeout = 2
+      request.options.timeout = 5
     end
   end
 

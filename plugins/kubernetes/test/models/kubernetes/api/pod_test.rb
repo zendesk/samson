@@ -14,12 +14,14 @@ describe Kubernetes::Api::Pod do
         labels: {
           deploy_group_id: '123',
           role_id: '234',
-        }
+        },
+        uid: '123'
       },
       status: {
         phase: "Running",
         conditions: [{type: "Ready", status: "True"}],
         containerStatuses: [{
+          name: "foo",
           restartCount: 0,
           state: {}
         }],
@@ -45,6 +47,12 @@ describe Kubernetes::Api::Pod do
   end
   let(:event) { {metadata: {creationTimestamp: start_time}, type: 'Normal'} }
   let(:events) { [event] }
+
+  describe "#uid" do
+    it "returns" do
+      pod.uid.must_equal '123'
+    end
+  end
 
   describe "#live?" do
     it "is done" do
@@ -100,24 +108,42 @@ describe Kubernetes::Api::Pod do
     end
   end
 
-  describe "#restarted?" do
+  describe "#restart_details" do
     it "is not restarted" do
-      refute pod.restarted?
+      refute pod.restart_details
     end
 
     it "is not restarted without statuses" do
       pod_attributes[:status][:containerStatuses].clear
-      refute pod.restarted?
+      refute pod.restart_details
     end
 
     it "is not restarted when pending and not having conditions yet" do
       pod_attributes[:status].delete :containerStatuses
-      refute pod.restarted?
+      refute pod.restart_details
     end
 
-    it "is restarted when restarting" do
-      pod_attributes[:status][:containerStatuses][0][:restartCount] = 1
-      assert pod.restarted?
+    it "shows restarted for init containers" do
+      pod_attributes[:status][:initContainerStatuses] = [{name: "foo", restartCount: 1}]
+      pod.restart_details.must_equal "Restarted (foo Unknown)"
+    end
+
+    describe "when restarted" do
+      before { pod_attributes[:status][:containerStatuses][0][:restartCount] = 1 }
+
+      it "shows restarted" do
+        pod.restart_details.must_equal "Restarted (foo Unknown)"
+      end
+
+      it "shows reason from state" do
+        pod_attributes[:status][:containerStatuses][0][:state] = {terminated: {reason: "OOMKilled"}}
+        pod.restart_details.must_equal "Restarted (foo OOMKilled)"
+      end
+
+      it "shows reason from last state" do
+        pod_attributes[:status][:containerStatuses][0][:lastState] = {terminated: {reason: "OOMKilled"}}
+        pod.restart_details.must_equal "Restarted (foo OOMKilled)"
+      end
     end
   end
 
@@ -235,7 +261,7 @@ describe Kubernetes::Api::Pod do
       pod_with_client.expects(:timeout_logs).never
       stub_request(:get, log_url).
         and_return(body: "HELLO\n")
-      pod_with_client.logs('some-container', 1.seconds.from_now).must_equal "HELLO\n"
+      pod_with_client.logs('some-container', 1.second.from_now).must_equal "HELLO\n"
     end
   end
 
@@ -286,30 +312,6 @@ describe Kubernetes::Api::Pod do
         assert event[:message].sub!('Readiness', 'Liveness')
         event[:count] = 20
         assert events_indicate_failure?
-      end
-    end
-
-    describe "HorizontalPodAutoscaler with failures we don't care about" do
-      before do
-        event.merge!(kind: 'HorizontalPodAutoscaler', type: 'Warning')
-      end
-
-      it "ignores failing to get metrics" do
-        event[:reason] = 'FailedGetMetrics'
-
-        refute events_indicate_failure?, 'FailedGetMetrics must not be recognized as failures'
-      end
-
-      it "ingores failures to scale" do
-        event[:reason] = 'FailedRescale'
-
-        refute events_indicate_failure?, 'FailedRescale must not be recognized as failures'
-      end
-
-      it "does not ignore an unknown HPA event" do
-        event[:reason] = 'SomeOtherFailure'
-
-        assert events_indicate_failure?, 'Events we dont explicitly ignore must be recognized as failures'
       end
     end
   end

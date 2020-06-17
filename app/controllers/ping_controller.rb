@@ -9,10 +9,4 @@ class PingController < ApplicationController
   def error
     raise('ping#error')
   end
-
-  private
-
-  def force_ssl?
-    false
-  end
 end

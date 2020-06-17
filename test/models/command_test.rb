@@ -67,6 +67,39 @@ describe Command do
     end
   end
 
+  describe ".cleanup_global" do
+    let(:global) { commands(:global) }
+
+    before do
+      StageCommand.create! stage: stages(:test_staging), command: global
+      StageCommand.create! stage: stages(:test_production), command: global
+    end
+
+    it "does nothing when all is good" do
+      assert_difference("Command.count", 0) { Command.cleanup_global }
+      refute global.reload.project
+    end
+
+    it "assigns global commands only used by a single stage" do
+      StageCommand.last.destroy!
+      assert_difference("Command.count", 0) { Command.cleanup_global }
+      assert global.reload.project
+    end
+
+    it "assigns global commands only used by a single project" do
+      global.stage_commands.destroy_all
+      projects(:test).update_column(:build_command_id, global.id)
+      assert_difference("Command.count", 0) { Command.cleanup_global }
+      assert global.reload.project
+    end
+
+    it "deletes unused global commands with audit" do
+      global.stage_commands.destroy_all
+      assert_difference("Command.count", -1) { Command.cleanup_global }
+      global.audits.size.must_equal 1
+    end
+  end
+
   describe "#usage_ids" do
     it "is empty for new" do
       Command.new.usage_ids.must_equal []

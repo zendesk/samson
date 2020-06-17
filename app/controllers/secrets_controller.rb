@@ -15,8 +15,13 @@ class SecretsController < ApplicationController
       [id, Samson::Secrets::Manager.parse_id(id), secret_stub]
     end
 
+    @project_permalinks =
+      @secrets.map { |_, parts, _| parts.fetch(:project_permalink) }.uniq.sort - ['global'] + ['global']
+    @deploy_group_permalinks =
+      @secrets.map { |_, parts, _| parts.fetch(:deploy_group_permalink) }.uniq.sort - ['global'] + ['global']
+    @environment_permalinks =
+      @secrets.map { |_, parts, _| parts.fetch(:environment_permalink) }.uniq.sort - ['global'] + ['global']
     @keys = @secrets.map { |_, parts, _| parts.fetch(:key) }.uniq.sort
-    @project_permalinks = @secrets.map { |_, parts, _| parts.fetch(:project_permalink) }.uniq.sort
 
     Samson::Secrets::Manager::ID_PARTS.each do |part|
       if value = params.dig(:search, part).presence
@@ -35,6 +40,13 @@ class SecretsController < ApplicationController
       @secrets.select! { |id, _, _| matching.include?(id) }
     end
     @pagy, @secrets = pagy_array(@secrets, page: params[:page], items: 50)
+
+    respond_to do |format|
+      format.html
+      format.json do
+        render_as_json :secrets, @secrets, @pagy
+      end
+    end
   rescue Samson::Secrets::BackendError => e
     flash[:alert] = e.message
     render html: "", layout: true
@@ -45,6 +57,39 @@ class SecretsController < ApplicationController
       group_by { |_, v| v.fetch(:value_hashed) }.
       select { |_, v| v.size >= 2 }.
       sort_by { |_, v| -v.size }
+  end
+
+  def resolve
+    if params[:project_id].present?
+      project = Project.find(params[:project_id])
+    elsif params[:project_permalink].present?
+      project = Project.find_by_permalink!(params[:project_permalink])
+    else
+      render_json_error 400, "Neither project_id or project_permalink given as parameters"
+      return
+    end
+
+    deploy_group = DeployGroup.find_by_permalink!(params.require(:deploy_group))
+    keys_param = params.require(:keys)
+    keys = keys_param.is_a?(Array) ? keys_param : keys_param.split(/, ?/)
+
+    resolver = Samson::Secrets::KeyResolver.new(project, [deploy_group])
+
+    resolved = {}
+    keys.each do |key|
+      expanded = resolver.expand(key, key)
+      if expanded.any?
+        expanded.each { |k, r| resolved[k] = r }
+      else
+        resolved[key] = nil
+      end
+    end
+
+    respond_to do |format|
+      format.json do
+        render json: {resolved: resolved}
+      end
+    end
   end
 
   def history

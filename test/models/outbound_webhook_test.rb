@@ -4,113 +4,251 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe OutboundWebhook do
-  let(:webhook_attributes) do
-    {
-      stage: stages(:test_staging),
-      project: projects(:test),
-      url: "https://testing.com/deploys"
-    }
-  end
-  let(:webhook) { OutboundWebhook.create(webhook_attributes) }
+  let(:webhook_attributes) { {url: "https://testing.com/deploys", auth_type: "None"} }
+  let(:webhook) { OutboundWebhook.new(webhook_attributes) }
 
-  describe '#create' do
-    it 'creates the webhook' do
-      assert OutboundWebhook.create(webhook_attributes)
-    end
-
-    it 'refuses to create a duplicate webhook' do
-      OutboundWebhook.create!(webhook_attributes)
-
-      refute_valid OutboundWebhook.new(webhook_attributes)
+  describe '#validations' do
+    it 'is valid' do
+      assert_valid webhook
     end
 
     it "validates that url begins with http:// or https://" do
-      refute_valid OutboundWebhook.new(webhook_attributes.merge(url: "/foobar"))
+      webhook.url = "/foobar"
+      refute_valid webhook
     end
 
-    it 'recreates a webhook after soft_delete' do
-      webhook = OutboundWebhook.create!(webhook_attributes)
+    it "validates user+password for basic auth" do
+      webhook.auth_type = "Basic"
+      refute_valid webhook
 
-      assert_difference 'OutboundWebhook.count', -1 do
-        webhook.soft_delete!(validate: false)
-      end
+      webhook.username = "U"
+      refute_valid webhook
 
-      assert_difference 'OutboundWebhook.count', +1 do
-        OutboundWebhook.create!(webhook_attributes)
-      end
+      webhook.password = "P"
+      assert_valid webhook
+    end
+
+    it "validates password for token auth" do
+      webhook.auth_type = "Token"
+      refute_valid webhook
+
+      webhook.password = "P"
+      assert_valid webhook
+    end
+
+    it "validates auth type" do
+      webhook.auth_type = "Wut"
+      refute_valid webhook
+    end
+
+    it "needs a name when global" do
+      webhook.global = true
+      refute_valid webhook, :name
+    end
+
+    it "allows multiple blank names" do
+      webhook.name = ""
+      webhook.save!
+      OutboundWebhook.create!(webhook_attributes.merge(name: ""))
+    end
+
+    it "does not allow names for non-global since that leads to duplication" do
+      webhook.name = "foo"
+      refute_valid webhook, :name
     end
   end
 
-  describe '#soft_delete!' do
-    let(:webhook) { OutboundWebhook.create!(webhook_attributes) }
-
-    before { webhook }
-
-    it 'deletes the webhook' do
-      assert_difference 'OutboundWebhook.count', -1 do
-        webhook.soft_delete!(validate: false)
-      end
+  describe "#ssl?" do
+    it "is ssl with https" do
+      assert webhook.ssl?
     end
 
-    it 'soft deletes the webhook' do
-      assert_difference  'OutboundWebhook.with_deleted { OutboundWebhook.count} ', 0 do
-        webhook.soft_delete!(validate: false)
-      end
+    it "is not ssl with http" do
+      webhook.url = "http://sdfsf.com"
+      refute webhook.ssl?
     end
 
-    # We have validation to stop us from having multiple of the same webhook active.
-    # lets ensure that same validation doesn't stop us from having multiple of the same webhook soft-deleted.
-    it 'can soft delete duplicate webhooks' do
-      assert_difference 'OutboundWebhook.count', -1 do
-        webhook.soft_delete!(validate: false)
-      end
+    it "is not ssl with insecure" do
+      webhook.insecure = true
+      refute webhook.ssl?
+    end
+  end
 
-      webhook2 = OutboundWebhook.create!(webhook_attributes)
-      assert_difference 'OutboundWebhook.count', -1 do
-        webhook2.soft_delete!(validate: false)
-      end
+  describe "#ensure_unused" do
+    it "allows deletion when unused" do
+      webhook.save!
+      webhook.destroy!
+    end
+
+    it "does not allow deletion when used" do
+      webhook.save!
+      webhook.stages = [stages(:test_staging)]
+      refute webhook.destroy
     end
   end
 
   describe "#connection" do
-    before do
-      @webhook = OutboundWebhook.create!(selected_webhook)
-      @connection = @webhook.send(:connection)
+    let(:connection) { webhook.send(:connection) }
+
+    it "does not add auth when not configured" do
+      refute_includes connection.headers, 'Authorization'
     end
 
-    describe "with no authorization" do
-      let(:selected_webhook) { webhook_attributes }
-
-      it "builds a connection with the correct params" do
-        refute_includes @connection.headers, 'Authorization'
-      end
+    it "adds basic auth" do
+      webhook.auth_type = "Basic"
+      webhook.username = "adminuser"
+      webhook.password = "abc123"
+      assert_equal connection.headers['Authorization'], 'Basic YWRtaW51c2VyOmFiYzEyMw=='
     end
 
-    describe "with authorization" do
-      let(:selected_webhook) { webhook_attributes.merge(username: "adminuser", password: "abc123") }
+    it "adds token auth" do
+      webhook.auth_type = "Token"
+      webhook.username = "adminuser"
+      webhook.password = "abc123"
+      assert_equal connection.headers['Authorization'], 'Token abc123'
+    end
 
-      it "builds a connection with the correct params" do
-        assert_equal @connection.headers['Authorization'], 'Basic YWRtaW51c2VyOmFiYzEyMw=='
-      end
+    it "fails on unsupported type" do
+      webhook.auth_type = "Wut"
+      assert_raises(ArgumentError) { connection }
     end
   end
 
   describe "#deliver" do
     let(:webhook) { OutboundWebhook.create!(webhook_attributes) }
+    let(:deploy) { deploys(:succeeded_test) }
+    let(:output) { StringIO.new }
 
+    # Make sure most paths don't sleep unexpectedly
     before do
-      OutboundWebhook.stubs(:deploy_as_json).returns({})
+      webhook.unstub(:sleep)
+      webhook.expects(:sleep).with { raise "Unexpected sleep poll" }.never
     end
 
     it "posts" do
-      assert_request :post, "https://testing.com/deploys", with: {body: "{}"} do
-        assert webhook.deliver(Deploy.new)
+      assert_request :post, "https://testing.com/deploys" do
+        webhook.deliver(deploy, output)
       end
+      output.string.must_equal <<~TEXT
+        Webhook notification: sending to https://testing.com/deploys ...
+        Webhook notification: succeeded
+      TEXT
     end
 
     it "fails on bad response" do
-      assert_request :post, "https://testing.com/deploys", to_return: {status: 400} do
-        refute webhook.deliver(Deploy.new)
+      e = assert_raises Samson::Hooks::UserError do
+        assert_request :post, "https://testing.com/deploys", to_return: {status: 400, body: "a" * 200} do
+          webhook.deliver(deploy, output)
+        end
+      end
+      output.string.must_equal "Webhook notification: sending to https://testing.com/deploys ...\n"
+
+      # this will go into the job-execution log via the error catcher
+      e.message.must_equal <<~TEXT.rstrip
+        Webhook notification: failed 400
+        aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...
+      TEXT
+    end
+
+    it "fails on internal error" do
+      e = assert_raises Samson::Hooks::UserError do
+        assert_request :post, "https://testing.com/deploys", to_timeout: [] do
+          webhook.deliver(deploy, output)
+        end
+      end
+      e.message.must_equal "Webhook notification: failed Faraday::ConnectionFailed"
+      output.string.must_equal "Webhook notification: sending to https://testing.com/deploys ...\n"
+    end
+
+    describe "status_path" do
+      def assert_webhook_fired(&block)
+        assert_request :post, "https://testing.com/deploys", to_return: polling_target, &block
+      end
+
+      with_env OUTBOUND_WEBHOOK_POLL_PERIOD: '1'
+
+      let(:polling_target) { {body: {foo: "http://foo.com/bar"}.to_json} }
+
+      before { webhook.status_path = 'foo' }
+
+      it "polls status url until it succeeds" do
+        replies = [
+          {status: 202, body: "HELLO"},
+          {status: 202, body: "WORLD"},
+          {status: 200, body: "DONE"}
+        ]
+        assert_webhook_fired do
+          webhook.unstub(:sleep)
+          webhook.expects(:sleep).with(1).times(2)
+          assert_request :get, "http://foo.com/bar", to_return: replies do
+            webhook.deliver(deploy, output)
+          end
+        end
+        output.string.must_equal <<~TEXT
+          Webhook notification: sending to https://testing.com/deploys ...
+          Webhook notification: polling http://foo.com/bar ...
+          Webhook notification: HELLO
+          Webhook notification: WORLD
+          Webhook notification: DONE
+          Webhook notification: succeeded
+        TEXT
+      end
+
+      it "fails on non successful status code" do
+        e = assert_raises Samson::Hooks::UserError do
+          assert_webhook_fired do
+            assert_request :get, "http://foo.com/bar", to_return: {status: 500, body: "SERVER_ERROR"} do
+              webhook.deliver(deploy, output)
+            end
+          end
+        end
+        e.message.must_equal "error polling status endpoint"
+        output.string.must_equal <<~TEXT
+          Webhook notification: sending to https://testing.com/deploys ...
+          Webhook notification: polling http://foo.com/bar ...
+          Webhook notification: SERVER_ERROR
+        TEXT
+      end
+
+      it "fails on parse error" do
+        polling_target[:body] = "<html>wtf</html>"
+        e = assert_raises Samson::Hooks::UserError do
+          assert_webhook_fired do
+            webhook.deliver(deploy, output)
+          end
+        end
+        e.message.must_equal "Webhook notification: failed JSON::ParserError"
+        output.string.must_equal <<~TEXT
+          Webhook notification: sending to https://testing.com/deploys ...
+        TEXT
+      end
+
+      it "fails when status url is missing" do
+        polling_target[:body] = "{}"
+        e = assert_raises Samson::Hooks::UserError do
+          assert_webhook_fired do
+            webhook.deliver(deploy, output)
+          end
+        end
+        e.message.must_equal "Webhook notification: response did not include status url at foo"
+        output.string.must_equal <<~TEXT
+          Webhook notification: sending to https://testing.com/deploys ...
+        TEXT
+      end
+
+      it "fails when status polling fails" do
+        e = assert_raises Samson::Hooks::UserError do
+          assert_webhook_fired do
+            assert_request :get, "http://foo.com/bar", to_timeout: [] do
+              webhook.deliver(deploy, output)
+            end
+          end
+        end
+        e.message.must_equal "Webhook notification: failed Faraday::ConnectionFailed"
+        output.string.must_equal <<~TEXT
+          Webhook notification: sending to https://testing.com/deploys ...
+          Webhook notification: polling http://foo.com/bar ...
+        TEXT
       end
     end
   end
@@ -129,6 +267,15 @@ describe OutboundWebhook do
       json.keys.must_include 'user'
       json.keys.must_include 'project'
       json.keys.must_include 'stage'
+      json.keys.must_include 'deploy_groups'
+    end
+  end
+
+  describe '.active' do
+    it 'returns only active webhooks' do
+      active_webhook = OutboundWebhook.create!(webhook_attributes)
+      OutboundWebhook.create!(webhook_attributes.merge(disabled: true))
+      OutboundWebhook.active.must_equal([active_webhook])
     end
   end
 end

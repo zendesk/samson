@@ -45,6 +45,10 @@ Samson::Periodical.register :repo_provider_status, "Refresh repo provider status
   Samson::RepoProviderStatus.refresh
 end
 
+Samson::Periodical.register :global_command_cleanup, "Scope global commands to projects and delete unused" do
+  Command.cleanup_global
+end
+
 if ENV['SERVER_MODE']
   Rails.application.config.after_initialize do
     Samson::Periodical.enabled = true

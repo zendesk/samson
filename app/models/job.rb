@@ -3,7 +3,7 @@ class Job < ActiveRecord::Base
   belongs_to :project, inverse_of: :jobs
   belongs_to :user, -> { unscope(where: :deleted_at) }, inverse_of: :jobs
   belongs_to :canceller, -> { unscope(where: "deleted_at") },
-    class_name: 'User', optional: true, inverse_of: nil
+    class_name: 'User', optional: true, inverse_of: false
 
   has_one :deploy, dependent: nil
   has_one :build, dependent: nil, inverse_of: :docker_build_job
@@ -145,9 +145,17 @@ class Job < ActiveRecord::Base
   end
 
   def status!(status)
-    success = update_attribute(:status, status)
+    hacky_update_attribute(:status, status)
     report_state if finished?
-    success
+    true
+  end
+
+  # TODO: use update_attribute instead if this hack once we figure out why it causes nil errors see #3662 + #3664
+  def hacky_update_attribute(key, value)
+    update_columns(key => value, updated_at: Time.now)
+    # same as after_update where touch cascades to stage
+    deploy&.update_column(:updated_at, Time.now)
+    deploy&.stage&.update_column(:updated_at, Time.now)
   end
 
   def short_reference
@@ -169,3 +177,4 @@ class Job < ActiveRecord::Base
     ActiveSupport::Notifications.instrument('job_status.samson', payload)
   end
 end
+Samson::Hooks.load_decorators(Job)

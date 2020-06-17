@@ -88,7 +88,7 @@ describe SlackWebhookNotification do
     it "renders" do
       notification = stub_notification
       message = notification.default_buddy_request_message
-      message.must_equal ":pray: <!here> _Super Admin_ is requesting approval to deploy " \
+      message.must_equal ":ship: <!here> _Super Admin_ is requesting approval to deploy " \
         "<http://www.test-url.com/projects/foo/deploys/178003093|*staging* to Foo / Staging>."
     end
   end
@@ -136,6 +136,11 @@ describe SlackWebhookNotification do
         :white_check_mark: *[Foo] Super Admin deployed staging to Staging* (<http://sams.on/url|view the deploy>)
         _<https://github.com/url|3 commits> and 2 pull requests by author1 and author2._
       TEXT
+    end
+
+    it "does not use links with ports that do not work in slack" do
+      deploy.stubs(:url).returns("http://sams.on:123/url")
+      render.must_include "Staging* (http://sams.on:123/url)"
     end
 
     it "alerts users when pull requests were not used" do

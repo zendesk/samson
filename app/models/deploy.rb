@@ -8,14 +8,15 @@ class Deploy < ActiveRecord::Base
   extend Inlinable
 
   belongs_to :stage, touch: true, inverse_of: :deploys
-  belongs_to :build, optional: true, inverse_of: :deploys
   belongs_to :project, inverse_of: :deploys
   belongs_to :job, inverse_of: :deploy
-  belongs_to :buddy, -> { unscope(where: "deleted_at") }, class_name: 'User', optional: true, inverse_of: nil
+  belongs_to :buddy, -> { unscope(where: "deleted_at") }, class_name: 'User', optional: true, inverse_of: false
+  has_many :deploy_builds, dependent: :destroy
+  has_many :builds, through: :deploy_builds, inverse_of: :deploys
 
   default_scope { order(id: :desc) }
 
-  validates_presence_of :reference
+  validates :reference, presence: true
   validate :validate_stage_is_unlocked, on: :create
   validate :validate_stage_uses_deploy_groups_properly, on: :create
 
@@ -130,7 +131,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def confirm_buddy!(buddy)
-    update_attributes!(buddy: buddy, started_at: Time.now)
+    update!(buddy: buddy, started_at: Time.now)
     start
   end
 
@@ -276,3 +277,4 @@ class Deploy < ActiveRecord::Base
     self.reference = reference.strip if reference.present?
   end
 end
+Samson::Hooks.load_decorators(Deploy)

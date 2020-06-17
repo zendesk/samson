@@ -24,7 +24,7 @@ class SlackWebhookNotification
   # https://api.slack.com/docs/message-formatting
   def default_buddy_request_message
     project = @deploy.project
-    ":pray: <!here> _#{@deploy.user.name}_ is requesting approval to deploy " \
+    ":ship: <!here> _#{@deploy.user.name}_ is requesting approval to deploy " \
       "<#{Rails.application.routes.url_helpers.project_deploy_url(project, @deploy)}|" \
       "*#{@deploy.reference}* to #{@deploy.stage.unique_name}>."
   end
@@ -73,8 +73,9 @@ class SlackWebhookNotification
 
   def deploy_callback_content
     subject = "[#{@project.name}] #{@deploy.summary}"
-    controller = ActionController::Base.new
-    view = ActionView::Base.new(File.expand_path('../views/samson_slack_webhooks', __dir__), {}, controller)
+    lookup_context = ActionView::Base.
+      build_lookup_context([File.expand_path('../views/samson_slack_webhooks', __dir__)])
+    view = ActionView::Base.with_empty_template_cache.new(lookup_context)
     show_prs = @deploy.pending? || @deploy.running?
     status_emoji =
       case @deploy.status

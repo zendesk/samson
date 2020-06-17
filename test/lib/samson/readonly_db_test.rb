@@ -16,8 +16,28 @@ describe Samson::ReadonlyDb do
     it "blocks write queries when enabled" do
       Samson::ReadonlyDb.enable
       assert_difference "User.count", 0 do
-        assert_raises(ActiveRecord::ReadOnlyRecord) { User.create!(name: "Foo") }
+        e = assert_raises(ActiveRecord::ReadOnlyError) { User.create!(name: "Foo") }
+        e.message.must_include "Samson::ReadonlyDb.disable"
       end
+    end
+
+    it "does not add our warnings when disabled" do
+      Samson::ReadonlyDb.enable
+      Samson::ReadonlyDb.disable
+      e = assert_raises(ActiveRecord::ReadOnlyError) do
+        User.connection_handler.while_preventing_writes do
+          User.create!(name: "Foo")
+        end
+      end
+      e.message.wont_include "Samson::ReadonlyDb"
+    end
+
+    it "blocks low-level write when enabled" do
+      Samson::ReadonlyDb.enable
+      assert_raises(ActiveRecord::ReadOnlyError) do
+        User.first.update_column :name, "Nope"
+      end
+      User.first.name.must_equal "Viewer"
     end
 
     it "allows read queries when enable" do
@@ -26,8 +46,10 @@ describe Samson::ReadonlyDb do
     end
 
     it "does not add 2 hooks when enabling twice" do
-      ActiveSupport::Notifications.expects(:subscribe).times(1).returns(1)
-      2.times { Samson::ReadonlyDb.enable }
+      Samson::ReadonlyDb.enable
+      refute_difference "ActiveRecord::Base.connection.class.ancestors.size" do
+        Samson::ReadonlyDb.enable
+      end
     end
 
     it "changes the prompt by in-place modifying" do

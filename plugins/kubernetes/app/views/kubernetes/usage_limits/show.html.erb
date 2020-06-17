@@ -1,2 +1,15 @@
-<%= page_title "Edit Kubernetes Limit" %>
-<%= render 'form' %>
+<% @project = @kubernetes_usage_limit.project %>
+<% title = (@kubernetes_usage_limit.new_record? ? "New Kubernetes Limit" : "Kubernetes Limit") %>
+<% if @project %>
+  <%= render 'projects/header', project: @project, tab: 'kubernetes' %>
+<% else %>
+  <%= page_title title %>
+<% end %>
+
+<section class="tabs kubernetes-section clearfix">
+  <% if @project %>
+    <%= render 'samson_kubernetes/role_navigation' %>
+    <%= page_title title, in_tab: true %>
+  <% end %>
+  <%= render 'form' %>
+</section>

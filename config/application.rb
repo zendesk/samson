@@ -8,6 +8,12 @@ require 'action_cable/engine'
 require 'rails/test_unit/railtie'
 require 'sprockets/railtie'
 
+begin
+  require 'pry-rails'
+rescue LoadError # rubocop:disable Lint/HandleExceptions
+  # ignore if pry-rails is not included in bundle
+end
+
 if (google_domain = ENV["GOOGLE_DOMAIN"]) && !ENV['EMAIL_DOMAIN']
   Rails.logger.warn "Stop using deprecated GOOGLE_DOMAIN"
   ENV["EMAIL_DOMAIN"] = google_domain.sub('@', '')
@@ -18,6 +24,9 @@ Bundler.require(:assets) if Rails.env.development? || ENV["PRECOMPILE"]
 
 ###
 # Railties need to be loaded before the application is initialized
+require 'omniauth'
+require 'omniauth/rails_csrf_protection'
+
 if ['development', 'staging'].include?(Rails.env) && ENV["SERVER_MODE"]
   require 'rack-mini-profiler' # side effect: removes expires headers
   Rack::MiniProfiler.config.authorization_mode = :allow_all
@@ -32,20 +41,25 @@ module Samson
   class Application < Rails::Application
     # Settings in config/environments/* take precedence over those specified here.
     # Application configuration should go into files in config/initializers
-    # -- all .rb files in that directory are automatically loaded.
-    config.load_defaults 5.2
+    config.load_defaults 6.0
 
-    deprecated_url = ->(var) do
-      url = ENV[var].presence
-      return url if !url || url.start_with?('http')
-      raise "Using deprecated url without protocol for #{var}"
+    # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
+    config.force_ssl = (ENV["FORCE_SSL"] == "1")
+    config.ssl_options = {redirect: {exclude: ->(request) { request.path.match?(/^\/ping(\/|$)/) }}}
+
+    class ApplicationConfiguration
+      def self.deprecated_url(var)
+        url = ENV[var].presence
+        return url if !url || url.start_with?('http')
+        raise "Using deprecated url without protocol for #{var}"
+      end
     end
 
     config.eager_load_paths << "#{config.root}/lib"
 
     case ENV["CACHE_STORE"]
     when "memory"
-      config.cache_store = :memory_store
+      config.cache_store = :memory_store # to debug cache keys, bundle open activesupport -> active_support/cache.rb#log
     when "memcached"
       options = {
         value_max_bytes: 3000000,
@@ -78,6 +92,9 @@ module Samson
     config.preload_frameworks = true
     config.allow_concurrency = true
 
+    # TODO: allow ping-controller to not need ssl
+    config.force_ssl = (ENV['FORCE_SSL'] == '1')
+
     # Used for all Samson specific configuration.
     config.samson = ActiveSupport::OrderedOptions.new
 
@@ -97,8 +114,8 @@ module Samson
     config.samson.github.organization = ENV["GITHUB_ORGANIZATION"].presence
     config.samson.github.admin_team = ENV["GITHUB_ADMIN_TEAM"].presence
     config.samson.github.deploy_team = ENV["GITHUB_DEPLOY_TEAM"].presence
-    config.samson.github.web_url = deprecated_url.call("GITHUB_WEB_URL") || 'https://github.com'
-    config.samson.github.api_url = deprecated_url.call("GITHUB_API_URL") || 'https://api.github.com'
+    config.samson.github.web_url = ApplicationConfiguration.deprecated_url("GITHUB_WEB_URL") || 'https://github.com'
+    config.samson.github.api_url = ApplicationConfiguration.deprecated_url("GITHUB_API_URL") || 'https://api.github.com'
 
     # Configuration for LDAP
     config.samson.ldap = ActiveSupport::OrderedOptions.new
@@ -111,7 +128,7 @@ module Samson
     config.samson.ldap.password = ENV["LDAP_PASSWORD"].presence
 
     config.samson.gitlab = ActiveSupport::OrderedOptions.new
-    config.samson.gitlab.web_url = deprecated_url.call("GITLAB_URL") || 'https://gitlab.com'
+    config.samson.gitlab.web_url = ApplicationConfiguration.deprecated_url("GITLAB_URL") || 'https://gitlab.com'
 
     config.samson.auth = ActiveSupport::OrderedOptions.new
     config.samson.auth.github = Samson::EnvCheck.set?("AUTH_GITHUB")
@@ -187,8 +204,9 @@ if ["test", "development"].include?(Rails.env)
 end
 
 require 'samson/hooks'
-
-require_relative "../lib/samson/syslog_formatters"
-require_relative "../lib/samson/logging"
-require_relative "../lib/samson/initializer_logging"
+require_relative "logging"
 require_relative "../app/models/job_queue" # need to load early or dev reload will lose the .enabled
+
+# prevents `Unknown validator: 'Doorkeeper::RedirectUriValidator'`
+# https://github.com/doorkeeper-gem/doorkeeper/pull/1331
+require 'doorkeeper/orm/active_record/redirect_uri_validator'

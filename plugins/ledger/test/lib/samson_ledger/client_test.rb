@@ -26,8 +26,7 @@ describe SamsonLedger::Client do
     let(:github_user) { nil }
 
     before do
-      Project.any_instance.stubs(:github?).returns(true)
-      stub_github_api("repos/bar/foo/compare/abcabcaaabcabcaaabcabcaaabcabcaaabcabca1...staging", "x" => "y")
+      stub_github_api("repos/bar/foo/commits/staging", sha: "staging")
       GITHUB.stubs(:compare).with("bar/foo", "abcabcaaabcabcaaabcabcaaabcabcaaabcabca1", "staging").returns(comparison)
       Changeset::PullRequest.stubs(:find).with("bar/foo", 42).returns(pull_request)
       GITHUB.stubs(:pull_requests).with("bar/foo", head: "bar:staging").returns([])

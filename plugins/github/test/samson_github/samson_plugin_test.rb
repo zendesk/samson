@@ -102,38 +102,49 @@ describe SamsonDatadog do
     end
   end
 
-  describe :changeset_api_request do
+  describe :repo_commit_from_ref do
     let(:project) { Project.new(repository_url: 'ssh://git@github.com:foo/bar.git') }
-    let(:changeset) { Changeset.new(project, "a", "b") }
 
-    def fire(method)
-      Samson::Hooks.fire(:changeset_api_request, changeset, method)
+    def fire(reference)
+      Samson::Hooks.fire(:repo_commit_from_ref, project, reference)
     end
 
-    only_callbacks_for_plugin :changeset_api_request
+    only_callbacks_for_plugin :repo_commit_from_ref
 
-    it "skips non-gitlab" do
+    it "skips non-github" do
       project.stubs(:github?).returns(false)
-      fire(:branch).must_equal [nil]
+      fire("master").must_equal [nil]
     end
 
-    it "calls branch api endpoint" do
-      stub_github_api("repos/foo/bar/branches/b", commit: {sha: "foo"})
-      fire(:branch).must_equal ["foo"]
+    it "resolves a refernece" do
+      stub_github_api("repos/foo/bar/commits/master", sha: "foo")
+      fire("master").must_equal ["foo"]
+    end
+  end
+
+  describe :repo_compare do
+    let(:project) { Project.new(repository_url: 'ssh://git@github.com:foo/bar.git') }
+
+    def fire(a, b)
+      Samson::Hooks.fire(:repo_compare, project, a, b)
     end
 
-    it "calls compare api endpoint" do
+    only_callbacks_for_plugin :repo_compare
+
+    it "skips non-github" do
+      project.stubs(:github?).returns(false)
+      fire("a", "b").must_equal [nil]
+    end
+
+    it "resolves a refernece" do
       stub_github_api("repos/foo/bar/compare/a...b", "x" => "y")
-      fire(:compare).first.to_h.must_equal x: "y"
+      fire("a", "b").map(&:to_h).must_equal [{x: "y"}]
     end
 
-    it "requires a valid method" do
-      assert_raises(NoMethodError) { fire(:bad) }
-    end
-
+    # tests config/initializers/octokit.rb patch
     it "catches exception and returns NullComparison" do
       stub_github_api("repos/foo/bar/compare/a...b", {}, 301)
-      assert_raises(RuntimeError) { fire(:compare).first }.message.must_include "GitHub: Get https://"
+      assert_raises(Octokit::RepositoryUnavailable) { fire("a", "b") }.message.must_include "GET https://api.github"
     end
   end
 end

@@ -3,18 +3,24 @@
   @projects = Project.all.order(:name)
   @roles = Role.all
 %>
-<section>
-  <%= form_for @access_request, html: { class: "form-horizontal" } do |form| %>
-    <%= redirect_to_field %>
-    <%= form.input :manager_email, as: :email_field, required: true %>
-    <%= form.input :reason, as: :text_area, required: true %>
-    <%= form.input :project_ids, label: 'Projects', required: true do %>
-      <%= form.select :project_ids, @projects.pluck(:name, :id), {include_hidden: false}, multiple: true, **Samson::FormBuilder::LIVE_SELECT_OPTIONS %>
+
+<% if text = ENV['ACCESS_REQUEST_ALTERNATIVE_INSTRUCTION'] %>
+  <div class="alert alert-info">
+    <%= text %>
+  </div>
+<% else %>
+  <section>
+    <%= form_for @access_request, html: { class: "form-horizontal" } do |form| %>
+      <%= redirect_to_field %>
+      <%= form.input :manager_email, as: :email_field, required: true %>
+      <%= form.input :reason, as: :text_area, required: true %>
+      <%= form.input :project_ids, label: 'Projects', required: true do %>
+        <%= form.select :project_ids, @projects.pluck(:name, :id), {include_hidden: false}, multiple: true, **Samson::FormBuilder::LIVE_SELECT_OPTIONS %>
+      <% end %>
+      <%= form.input :role_id, required: true do %>
+        <%= select_tag 'access_request[role_id]', options_from_collection_for_select(@roles, :id, :display_name), class: 'form-control' %>
+      <% end %>
+      <%= form.actions %>
     <% end %>
-    <%= form.input :role_id, required: true do %>
-      <%= select_tag 'access_request[role_id]', options_from_collection_for_select(@roles, :id, :display_name),
-          class: 'form-control' %>
-    <% end %>
-    <%= form.actions %>
-  <% end %>
-</section>
+  </section>
+<% end %>

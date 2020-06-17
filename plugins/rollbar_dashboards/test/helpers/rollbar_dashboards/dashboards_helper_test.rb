@@ -8,46 +8,41 @@ describe RollbarDashboards::DashboardsHelper do
   describe '#rollbar_dashboard_placeholder_size' do
     it 'reports correct size' do
       settings = mock(size: 2)
-      rollbar_dashboard_placeholder_size(settings).must_equal 44
+      rollbar_dashboard_placeholder_size(settings).must_equal 36
     end
   end
 
-  describe '#rollbar_dashboard_container' do
+  describe '#rollbar_lazy_load_dashboard_container' do
     let(:path) { 'dummy/path' }
     let(:settings) { mock('RollbarDashboards::Setting', size: 1) }
 
     it 'renders containter div' do
-      rollbar_dashboard_container(path, settings).must_equal <<~HTML.delete("\n")
-        <div class="lazy-load dashboard-container" style="min-height: 22em;" data-url="dummy/path" data-delay="1000">
+      rollbar_lazy_load_dashboard_container(path, settings).must_equal <<~HTML.delete("\n")
+        <div class="lazy-load dashboard-container" style="min-height: 18em;" data-url="dummy/path" data-delay="1000">
         </div>
       HTML
     end
   end
 
-  describe '#item_link' do
-    def setting(stubs = {account_and_project_name: 'Account/Cool-Project', base_url: 'https://rollbar-us.com/api/1'})
-      @setting ||= mock(stubs)
+  describe '#rollbar_item_link' do
+    let(:setting) do
+      RollbarDashboards::Setting.new(
+        project: projects(:test),
+        base_url: 'http://thegurn.org',
+        account_and_project_name: "Foo/Bar",
+        read_token: '1234'
+      )
     end
 
     it 'generates item link' do
-      item_link('title', '123', setting).must_equal <<~HTML.delete("\n")
-        <a href="https://rollbar-us.com/Account/Cool-Project/items/123">title</a>
+      rollbar_item_link('title', '123', setting).must_equal <<~HTML.delete("\n")
+        <a href="http://thegurn.org/Foo/Bar/items/123">title</a>
       HTML
     end
 
-    it 'returns item title if account_and_project_name is nil' do
-      item_link('title', '123', setting(account_and_project_name: nil)).must_equal 'title'
-    end
-
-    it 'returns item title if account_and_project_name is empty string' do
-      item_link('title', '123', setting(account_and_project_name: '')).must_equal 'title'
-    end
-
-    it 'handles api subdomain' do
-      setting(account_and_project_name: 'Account/Cool-Project', base_url: 'https://api.rollbar.com')
-      item_link('title', '123', setting).must_equal <<~HTML.delete("\n")
-        <a href="https://rollbar.com/Account/Cool-Project/items/123">title</a>
-      HTML
+    it 'returns item title if account_and_project_name is blank' do
+      setting.account_and_project_name = nil
+      rollbar_item_link('title', '123', setting).must_equal 'title'
     end
   end
 end

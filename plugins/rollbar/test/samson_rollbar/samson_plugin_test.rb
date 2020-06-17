@@ -11,13 +11,13 @@ describe SamsonRollbar do
     only_callbacks_for_plugin :error
 
     it 'reports error' do
-      Rollbar.expects(:error).with(exception, foo: 'bar').returns(123)
+      Rollbar.expects(:warn).with(exception, foo: 'bar').returns(123)
       Samson::Hooks.fire(:error, exception, foo: 'bar').must_equal [123]
     end
 
     describe "with sync" do
       it 'returns url' do
-        Rollbar.expects(:error).with(exception, foo: 'bar').returns(uuid: '123')
+        Rollbar.expects(:warn).with(exception, foo: 'bar').returns(uuid: '123')
         Samson::Hooks.fire(:error, exception, foo: 'bar', sync: true).must_equal(
           ["https://rollbar.com/instance/uuid?uuid=123"]
         )

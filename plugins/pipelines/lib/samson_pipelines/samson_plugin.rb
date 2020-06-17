@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 module SamsonPipelines
-  class Engine < Rails::Engine
+  class SamsonPlugin < Rails::Engine
   end
 
   class << self
     def start_pipelined_stages(deploy, output)
       return unless deploy.succeeded?
 
-      deploy.stage.next_stages.each do |next_stage|
+      deploy.stage.pipeline_next_stages.each do |next_stage|
         deploy_to_stage(next_stage, deploy, output)
       end
     end
@@ -25,8 +25,8 @@ module SamsonPipelines
       raise deploy.errors.full_messages.join(", ") unless deploy.persisted?
 
       output.puts "# Pipeline: Started stage: '#{stage.name}' - #{deploy.url}\n"
-    rescue => ex
-      output.puts "# Pipeline: Failed to start stage '#{stage.name}': #{ex.message}\n"
+    rescue => e
+      output.puts "# Pipeline: Failed to start stage '#{stage.name}': #{e.message}\n"
     end
   end
 end

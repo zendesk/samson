@@ -1,4 +1,4 @@
-<%= status_emoji %> *<%= subject %>* (<<%= deploy.url %>|view the deploy>)
+<%= status_emoji %> *<%= subject %>* (<%= deploy.url.match?(/:\d+/) ? deploy.url : "<#{deploy.url}|view the deploy>" %>)
 <% if changeset.commits.count == 0 %>
 There are no new commits since last time.
 <% else %>
@@ -6,7 +6,7 @@ _<<%= changeset.commit_range_url %>|<%= pluralize changeset.commits.count, "comm
 <% if show_prs %>
 
 <% if changeset.pull_requests.empty? %>
-  <!channel> :bangbang: Warning. There are commits going live that did not go through a pull request. Please ensure this is what you really want. :bangbang:
+  :bangbang: Warning. There are commits going live that did not go through a pull request. Please ensure this is what you really want. :bangbang:
 <% else %>
 *Pull Requests*
 

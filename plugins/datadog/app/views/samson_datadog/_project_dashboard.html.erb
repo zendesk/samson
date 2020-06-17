@@ -1,0 +1,6 @@
+<% if @project.datadog_monitors? %>
+  <h2>Datadog Monitors</h2>
+  <%# show monitors without blocking the page, leaving room for 1 row of monitors to pop in %>
+  <div class="lazy-load" style="min-height: 20px" data-url="<%= datadog_monitors_path(project_id: @project) %>" data-delay="1000">
+  </div>
+<% end %>

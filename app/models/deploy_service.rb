@@ -39,16 +39,14 @@ class DeployService
 
     job_execution.on_start { Samson::Hooks.fire(:before_deploy, deploy, job_execution) }
     job_execution.on_start { send_before_notifications(deploy) }
+    job_execution.on_start { notify_outbound_webhooks(deploy, job_execution.output, before: true) }
 
     # independent so each one can fail and report errors
-    job_execution.on_finish do
-      deploy.job.failed! unless Samson::Hooks.fire(:validate_deploy, deploy, job_execution).all?
-    end
     job_execution.on_finish { update_average_deploy_time(deploy) }
     job_execution.on_finish { send_deploy_update finished: true }
     job_execution.on_finish { send_deploy_email(deploy) }
     job_execution.on_finish { send_failed_deploy_email(deploy) }
-    job_execution.on_finish { notify_outbound_webhooks(deploy) }
+    job_execution.on_finish { notify_outbound_webhooks(deploy, job_execution.output, before: false) }
     job_execution.on_finish do
       if deploy.redeploy_previous_when_failed? && deploy.status == "failed"
         redeploy_previous(deploy, job_execution.output)
@@ -146,8 +144,13 @@ class DeployService
     end
   end
 
-  def notify_outbound_webhooks(deploy)
-    deploy.stage.outbound_webhooks.each { |webhook| webhook.deliver(deploy) }
+  def notify_outbound_webhooks(deploy, output, before:)
+    return unless hooks = deploy.stage.outbound_webhooks.active.select { |w| w.before_deploy == before }.presence
+
+    # TODO: remove this once we make the job resolve the commit before setup
+    deploy.job.commit = deploy.stage.project.repo_commit_from_ref(deploy.reference)
+
+    hooks.each { |webhook| webhook.deliver(deploy, output) }
   end
 
   def send_deploy_update(finished: false)

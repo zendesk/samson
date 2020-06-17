@@ -2,15 +2,15 @@
 # of editing this file, please use the migrations feature of Active Record to
 # incrementally modify your database, and then regenerate this schema definition.
 #
-# Note that this schema.rb definition is the authoritative source for your
-# database schema. If you need to create the application database on another
-# system, you should be using db:schema:load, not running all the migrations
-# from scratch. The latter is a flawed and unsustainable approach (the more migrations
-# you'll amass, the slower it'll run and the greater likelihood for issues).
+# This file is the source Rails uses to define your schema when running `rails
+# db:schema:load`. When creating a new database, `rails db:schema:load` tends to
+# be faster and is potentially less error prone than running all of your
+# migrations from scratch. Old migrations may fail to apply correctly if those
+# migrations use external dependencies or application code.
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_06_27_154835) do
+ActiveRecord::Schema.define(version: 2020_01_10_213328) do
 
   create_table "audits" do |t|
     t.integer "auditable_id", null: false
@@ -21,7 +21,7 @@ ActiveRecord::Schema.define(version: 2019_06_27_154835) do
     t.string "user_type"
     t.string "username"
     t.string "action", null: false
-    t.text "audited_changes", limit: 1073741823
+    t.text "audited_changes", size: :long
     t.integer "version", default: 0, null: false
     t.string "comment"
     t.string "remote_address"
@@ -37,7 +37,7 @@ ActiveRecord::Schema.define(version: 2019_06_27_154835) do
   create_table "builds", id: :integer do |t|
     t.integer "project_id", null: false
     t.integer "number"
-    t.string "git_sha", null: false
+    t.string "git_sha", limit: 128, null: false
     t.string "git_ref", null: false
     t.string "docker_tag"
     t.string "docker_repo_digest"
@@ -54,13 +54,13 @@ ActiveRecord::Schema.define(version: 2019_06_27_154835) do
     t.string "external_status"
     t.string "image_name"
     t.index ["created_by"], name: "index_builds_on_created_by"
-    t.index ["git_sha", "dockerfile"], name: "index_builds_on_git_sha_and_dockerfile", unique: true
-    t.index ["git_sha", "image_name"], name: "index_builds_on_git_sha_and_image_name", unique: true, length: 80
+    t.index ["git_sha", "dockerfile", "external_url"], name: "index_builds_on_git_sha_and_dockerfile_and_external_url", unique: true, length: { git_sha: 80, dockerfile: 80, external_url: 191 }
+    t.index ["git_sha", "image_name", "external_url"], name: "index_builds_on_git_sha_and_image_name_and_external_url", unique: true, length: { git_sha: 80, image_name: 80, external_url: 191 }
     t.index ["project_id"], name: "index_builds_on_project_id"
   end
 
   create_table "commands", id: :integer do |t|
-    t.text "command", limit: 16777215
+    t.text "command", size: :medium
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer "project_id"
@@ -76,11 +76,24 @@ ActiveRecord::Schema.define(version: 2019_06_27_154835) do
 
   create_table "datadog_monitor_queries" do |t|
     t.string "query", null: false
-    t.integer "stage_id", null: false
     t.string "match_target"
     t.string "match_source"
     t.string "failure_behavior"
-    t.index ["stage_id"], name: "index_datadog_monitor_queries_on_stage_id"
+    t.integer "check_duration"
+    t.integer "scope_id", null: false
+    t.string "scope_type", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["scope_id", "scope_type"], name: "index_datadog_monitor_queries_on_scope_id_and_scope_type", length: { scope_type: 100 }
+  end
+
+  create_table "deploy_builds" do |t|
+    t.bigint "build_id", null: false
+    t.bigint "deploy_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["build_id"], name: "index_deploy_builds_on_build_id"
+    t.index ["deploy_id"], name: "index_deploy_builds_on_deploy_id"
   end
 
   create_table "deploy_groups", id: :integer do |t|
@@ -121,16 +134,15 @@ ActiveRecord::Schema.define(version: 2019_06_27_154835) do
     t.integer "buddy_id"
     t.datetime "started_at"
     t.datetime "deleted_at"
-    t.integer "build_id"
     t.boolean "release", default: false, null: false
     t.boolean "kubernetes", default: false, null: false
     t.integer "project_id", null: false
     t.boolean "kubernetes_rollback", default: true, null: false
     t.boolean "kubernetes_reuse_build", default: false, null: false
-    t.text "env_state", limit: 16777215
+    t.text "env_state", size: :medium
     t.integer "triggering_deploy_id"
     t.boolean "redeploy_previous_when_failed", default: false, null: false
-    t.index ["build_id"], name: "index_deploys_on_build_id"
+    t.boolean "kubernetes_ignore_kritis_vulnerabilities", default: false, null: false
     t.index ["deleted_at"], name: "index_deploys_on_deleted_at"
     t.index ["job_id", "deleted_at"], name: "index_deploys_on_job_id_and_deleted_at"
     t.index ["project_id", "deleted_at"], name: "index_deploys_on_project_id_and_deleted_at"
@@ -141,7 +153,8 @@ ActiveRecord::Schema.define(version: 2019_06_27_154835) do
   create_table "environment_variable_groups", id: :integer do |t|
     t.string "name", null: false
     t.text "comment"
-    t.index ["name"], name: "index_environment_variable_groups_on_name", unique: true
+    t.string "owners"
+    t.index ["name"], name: "index_environment_variable_groups_on_name", unique: true, length: 191
   end
 
   create_table "environment_variables", id: :integer do |t|
@@ -161,7 +174,17 @@ ActiveRecord::Schema.define(version: 2019_06_27_154835) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "permalink", null: false
-    t.index ["permalink"], name: "index_environments_on_permalink", unique: true
+    t.index ["permalink"], name: "index_environments_on_permalink", unique: true, length: 191
+  end
+
+  create_table "external_environment_variable_groups" do |t|
+    t.string "name", null: false
+    t.string "description", limit: 1024
+    t.string "url", null: false
+    t.bigint "project_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["project_id"], name: "index_external_environment_variable_groups_on_project_id"
   end
 
   create_table "flowdock_flows", id: :integer do |t|
@@ -190,14 +213,14 @@ ActiveRecord::Schema.define(version: 2019_06_27_154835) do
     t.integer "user_id", null: false
     t.integer "project_id", null: false
     t.string "status", default: "pending"
-    t.text "output", limit: 268435455
+    t.text "output", size: :long
     t.datetime "created_at"
     t.datetime "updated_at"
     t.string "commit"
     t.string "tag"
     t.integer "canceller_id"
     t.index ["project_id"], name: "index_jobs_on_project_id"
-    t.index ["status"], name: "index_jobs_on_status"
+    t.index ["status"], name: "index_jobs_on_status", length: 191
     t.index ["user_id"], name: "index_jobs_on_user_id"
   end
 
@@ -241,6 +264,7 @@ ActiveRecord::Schema.define(version: 2019_06_27_154835) do
     t.integer "requests_memory", null: false
     t.boolean "delete_resource", default: false, null: false
     t.boolean "no_cpu_limit", default: false, null: false
+    t.boolean "inject_istio_annotation", default: false, null: false
     t.index ["deploy_group_id"], name: "index_kubernetes_deploy_group_roles_on_deploy_group_id"
     t.index ["project_id", "deploy_group_id", "kubernetes_role_id"], name: "index_kubernetes_deploy_group_roles_on_project_dg_kr", unique: true
   end
@@ -250,6 +274,7 @@ ActiveRecord::Schema.define(version: 2019_06_27_154835) do
     t.string "comment", limit: 512
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.text "template"
     t.index ["name"], name: "index_kubernetes_namespaces_on_name", unique: true, length: 191
   end
 
@@ -260,13 +285,8 @@ ActiveRecord::Schema.define(version: 2019_06_27_154835) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer "deploy_group_id"
-    t.decimal "limits_cpu", precision: 6, scale: 2, null: false
-    t.integer "limits_memory", null: false
-    t.text "resource_template", limit: 1073741823
-    t.decimal "requests_cpu", precision: 6, scale: 2, null: false
-    t.integer "requests_memory", null: false
+    t.text "resource_template", size: :long
     t.boolean "delete_resource", default: false, null: false
-    t.boolean "no_cpu_limit", default: false, null: false
     t.index ["kubernetes_release_id"], name: "index_kubernetes_release_docs_on_kubernetes_release_id"
     t.index ["kubernetes_role_id"], name: "index_kubernetes_release_docs_on_kubernetes_role_id"
   end
@@ -333,7 +353,7 @@ ActiveRecord::Schema.define(version: 2019_06_27_154835) do
   create_table "new_relic_applications", id: :integer do |t|
     t.string "name"
     t.integer "stage_id"
-    t.index ["stage_id", "name"], name: "index_new_relic_applications_on_stage_id_and_name", unique: true
+    t.index ["stage_id", "name"], name: "index_new_relic_applications_on_stage_id_and_name", unique: true, length: { name: 191 }
   end
 
   create_table "oauth_access_grants", id: :integer do |t|
@@ -379,17 +399,29 @@ ActiveRecord::Schema.define(version: 2019_06_27_154835) do
     t.index ["uid"], name: "index_oauth_applications_on_uid", unique: true, length: 191
   end
 
+  create_table "outbound_webhook_stages" do |t|
+    t.integer "stage_id", null: false
+    t.integer "outbound_webhook_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["outbound_webhook_id", "stage_id"], name: "index_on_outbound_webhook_id", unique: true
+    t.index ["stage_id"], name: "index_outbound_webhook_stages_on_stage_id"
+  end
+
   create_table "outbound_webhooks", id: :integer do |t|
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.datetime "deleted_at"
-    t.integer "project_id", null: false
-    t.integer "stage_id", null: false
     t.string "url", null: false
     t.string "username"
     t.string "password"
-    t.index ["deleted_at"], name: "index_outbound_webhooks_on_deleted_at"
-    t.index ["project_id"], name: "index_outbound_webhooks_on_project_id"
+    t.boolean "global", default: false, null: false
+    t.string "auth_type", null: false
+    t.boolean "insecure", default: false, null: false
+    t.boolean "before_deploy", default: false, null: false
+    t.string "status_path"
+    t.boolean "disabled", default: false, null: false
+    t.string "name"
+    t.index ["name"], name: "index_outbound_webhooks_on_name", unique: true, length: 191
   end
 
   create_table "project_environment_variable_groups", id: :integer do |t|
@@ -419,12 +451,12 @@ ActiveRecord::Schema.define(version: 2019_06_27_154835) do
     t.string "dockerfiles"
     t.boolean "build_with_gcb", default: false, null: false
     t.boolean "show_gcr_vulnerabilities", default: false, null: false
-    t.boolean "kubernetes_allow_writing_to_root_filesystem", default: false, null: false
     t.boolean "jenkins_status_checker", default: false, null: false
     t.boolean "use_env_repo", default: false, null: false
     t.integer "kubernetes_rollout_timeout"
     t.integer "kubernetes_namespace_id"
-    t.boolean "config_service", default: false, null: false
+    t.string "jira_issue_prefix"
+    t.string "ignore_pending_checks"
     t.index ["build_command_id"], name: "index_projects_on_build_command_id"
     t.index ["kubernetes_namespace_id"], name: "index_projects_on_kubernetes_namespace_id"
     t.index ["permalink"], name: "index_projects_on_permalink", unique: true, length: 191
@@ -470,8 +502,7 @@ ActiveRecord::Schema.define(version: 2019_06_27_154835) do
     t.index ["project_id", "key"], name: "index_secret_sharing_grants_on_project_id_and_key", unique: true, length: { key: 160 }
   end
 
-  create_table "secrets", id: false do |t|
-    t.string "id"
+  create_table "secrets", id: :string do |t|
     t.string "encrypted_value", null: false
     t.string "encrypted_value_iv", null: false
     t.string "encryption_key_sha", null: false
@@ -483,15 +514,6 @@ ActiveRecord::Schema.define(version: 2019_06_27_154835) do
     t.string "comment"
     t.timestamp "deprecated_at"
     t.index ["id"], name: "index_secrets_on_id", unique: true, length: 191
-  end
-
-  create_table "slack_channels", id: :integer do |t|
-    t.string "name", null: false
-    t.string "channel_id", null: false
-    t.integer "stage_id", null: false
-    t.datetime "created_at"
-    t.datetime "updated_at"
-    t.index ["stage_id"], name: "index_slack_channels_on_stage_id"
   end
 
   create_table "slack_identifiers", id: :integer do |t|
@@ -533,6 +555,7 @@ ActiveRecord::Schema.define(version: 2019_06_27_154835) do
     t.integer "project_id", null: false
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.string "notify_email_address"
     t.integer "order", null: false
     t.datetime "deleted_at"
     t.boolean "confirm", default: true, null: false
@@ -541,19 +564,19 @@ ActiveRecord::Schema.define(version: 2019_06_27_154835) do
     t.boolean "deploy_on_release", default: false, null: false
     t.boolean "comment_on_zendesk_tickets", default: false, null: false
     t.boolean "production", default: false, null: false
-    t.string "permalink", null: false
     t.boolean "use_github_deployment_api", default: false, null: false
+    t.string "permalink", null: false
     t.text "dashboard"
     t.boolean "email_committers_on_automated_deploy_failure", default: false, null: false
     t.string "static_emails_on_automated_deploy_failure"
     t.string "jenkins_job_names"
     t.string "next_stage_ids"
     t.boolean "no_code_deployed", default: false, null: false
+    t.boolean "kubernetes", default: false, null: false
     t.boolean "is_template", default: false, null: false
     t.boolean "notify_airbrake", default: false, null: false
     t.integer "template_stage_id"
     t.boolean "jenkins_email_committers", default: false, null: false
-    t.boolean "kubernetes", default: false, null: false
     t.boolean "run_in_parallel", default: false, null: false
     t.boolean "jenkins_build_params", default: false, null: false
     t.boolean "cancel_queued_deploys", default: false, null: false
@@ -562,15 +585,17 @@ ActiveRecord::Schema.define(version: 2019_06_27_154835) do
     t.boolean "builds_in_environment", default: false, null: false
     t.boolean "block_on_gcr_vulnerabilities", default: false, null: false
     t.boolean "notify_assertible", default: false, null: false
-    t.string "notify_email_address"
     t.float "average_deploy_time"
     t.string "prerequisite_stage_ids"
     t.string "default_reference"
-    t.boolean "full_checkout", default: false, null: false
     t.string "aws_sts_iam_role_arn"
     t.integer "aws_sts_iam_role_session_duration"
+    t.boolean "full_checkout", default: false, null: false
     t.boolean "allow_redeploy_previous_when_failed", default: false, null: false
     t.string "github_pull_request_comment"
+    t.boolean "kubernetes_sample_logs_on_success", default: false, null: false
+    t.string "jira_transition_id"
+    t.boolean "kubernetes_hide_error_logs", default: false, null: false
     t.index ["project_id", "permalink"], name: "index_stages_on_project_id_and_permalink", unique: true, length: { permalink: 191 }
     t.index ["template_stage_id"], name: "index_stages_on_template_stage_id"
   end
@@ -631,7 +656,7 @@ ActiveRecord::Schema.define(version: 2019_06_27_154835) do
     t.integer "item_id", null: false
     t.string "event", null: false
     t.string "whodunnit"
-    t.text "object", limit: 1073741823
+    t.text "object", size: :long
     t.datetime "created_at"
     t.index ["item_type", "item_id"], name: "index_versions_on_item_type_and_item_id", length: { item_type: 191 }
   end
@@ -644,11 +669,11 @@ ActiveRecord::Schema.define(version: 2019_06_27_154835) do
     t.datetime "updated_at"
     t.datetime "deleted_at"
     t.string "source", null: false
-    t.index ["project_id", "branch"], name: "index_webhooks_on_project_id_and_branch"
-    t.index ["stage_id", "branch"], name: "index_webhooks_on_stage_id_and_branch"
+    t.boolean "disabled", default: false, null: false
+    t.index ["project_id", "branch"], name: "index_webhooks_on_project_id_and_branch", length: { branch: 191 }
+    t.index ["stage_id", "branch"], name: "index_webhooks_on_stage_id_and_branch", length: { branch: 191 }
   end
 
-  add_foreign_key "deploy_groups", "environments"
   add_foreign_key "deploys", "deploys", column: "triggering_deploy_id"
   add_foreign_key "oauth_access_grants", "oauth_applications", column: "application_id"
   add_foreign_key "oauth_access_tokens", "oauth_applications", column: "application_id"

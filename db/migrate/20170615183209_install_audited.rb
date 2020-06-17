@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 class InstallAudited < ActiveRecord::Migration[5.1]
   def self.up
-    create_table :audits, force: true do |t|
+    create_table :audits, force: true do |t| # rubocop:disable Rails/CreateTableWithTimestamps
       t.column :auditable_id, :integer, null: false
       t.column :auditable_type, :string, null: false
       t.column :associated_id, :integer

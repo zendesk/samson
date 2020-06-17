@@ -12,10 +12,10 @@
         <th>Deploy Group</th>
         <th>Replicas</th>
         <th>CPU<%= additional_info "Requested to Limit" %></th>
-        <th>Memory<%= additional_info "Requested to Limit in MB" %></th>
+        <th>Memory<%= additional_info "Requested to Limit in MiB" %></th>
         <th>
           <% if missing %>
-            <%= link_to 'Seed Missing', seed_kubernetes_deploy_group_roles_path(stage_id: @stage.id), data: {method: :post}, class: 'btn btn-default' %>
+            <%= link_to 'Seed Missing', seed_project_kubernetes_deploy_group_roles_path(stage_id: @stage.id), data: {method: :post}, class: 'btn btn-default' %>
           <% end %>
           <%= link_to "Edit all", edit_many_project_kubernetes_deploy_group_roles_path(@project) if current_user.admin_for?(@project) %>
         </th>
@@ -36,16 +36,16 @@
               </td>
               <td><%= dg_role.requests_memory %> to <%= dg_role.limits_memory %></td>
               <td>
-                <% if current_user.admin_for?(@stage.project) %>
-                  <%= link_to 'Edit', edit_kubernetes_deploy_group_role_path(dg_role) %>
+                <% if current_user.admin_for?(@project) %>
+                  <%= link_to 'Edit', edit_project_kubernetes_deploy_group_role_path(@project, dg_role) %>
                 <% end %>
               </td>
             <% else %>
               <td colspan="3" style="text-align: center">----- Missing -----</td>
               <td>
                 <% if current_user.admin_for?(@stage.project) %>
-                  <% attributes = {kubernetes_role_id: role.id, project_id: @stage.project_id, deploy_group_id: deploy_group.id} %>
-                  <%= link_to "Create", new_kubernetes_deploy_group_role_path(kubernetes_deploy_group_role: attributes) %>
+                  <% attributes = {kubernetes_role_id: role.id, deploy_group_id: deploy_group.id} %>
+                  <%= link_to "Create", new_project_kubernetes_deploy_group_role_path(@project, kubernetes_deploy_group_role: attributes) %>
                 <% end %>
               </td>
             <% end %>

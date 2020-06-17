@@ -1,10 +1,9 @@
 # Plugins
 
-Plugins enable the core of samson to stay clean, they can add UI elements to pages that support it,
-and hook into events such as before and after deploys see
-[supported hooks](https://github.com/zendesk/samson/blob/master/lib/samson/hooks.rb#L7-L43).
+Plugins keep the core of samson clean. 
 
-Each plugin is a rails engine.
+They are rails engines that can use [supported hooks](https://github.com/zendesk/samson/blob/master/lib/samson/hooks.rb#L7-L67)
+to add custom logic / UI and decorators to enhance supported models/controllers (without eager loading them in development).
 
 Available plugins:
 
@@ -20,6 +19,7 @@ Available plugins:
  - [Gcloud](https://github.com/zendesk/samson/tree/master/plugins/gcloud)
  - [Jenkins jobs management](https://github.com/zendesk/samson/tree/master/plugins/jenkins)
  - [Jenkins Status Checker](https://github.com/zendesk/samson/tree/master/plugins/jenkins_status_checker)
+ - [JIRA](https://github.com/zendesk/samson/tree/master/plugins/jira)
  - [Hipchat notification](https://github.com/listia/samson_hipchat)
  - [Kubernetes](https://github.com/zendesk/samson/tree/master/plugins/kubernetes)
  - [Ledger](https://github.com/zendesk/samson/tree/master/plugins/ledger)

@@ -9,7 +9,7 @@ describe Kubernetes::Role do
   def write_config(file, content)
     Dir.chdir(repo_temp_dir) do
       dir = File.dirname(file)
-      Dir.mkdir(dir) if file.include?("/") && !File.exist?(dir)
+      FileUtils.mkdir_p(dir) if file.include?("/") && !File.exist?(dir)
       File.write(file, content)
     end
     commit
@@ -29,7 +29,7 @@ describe Kubernetes::Role do
       kind: 'Pod',
       apiVersion: 'v1',
       metadata: {name: 'foo', labels: {role: 'migrate', project: 'bar'}},
-      spec: {containers: [{name: 'foo', resources: {limits: {cpu: '0.5', memory: '300M'}}}]}
+      spec: {containers: [{name: 'foo', resources: {limits: {cpu: '0.5', memory: '300Mi'}}}]}
     }
   end
   let(:config_content) do
@@ -241,7 +241,7 @@ describe Kubernetes::Role do
     end
 
     it "does not see service or resource when using manual naming" do
-      project.create_kubernetes_namespace!(name: "foo")
+      project.kubernetes_namespace = kubernetes_namespaces(:test)
       write_config 'kubernetes/a.json', config_content.to_json
       Kubernetes::Role.seed! project, 'HEAD'
       project.kubernetes_roles.map(&:resource_name).must_equal [nil]
@@ -362,14 +362,14 @@ describe Kubernetes::Role do
       '10000000' => 10,
       '10000K' => 10,
       '10000Ki' => 10,
-      '10M' => 10,
+      '10M' => 10, # rounded down
       '10Mi' => 10,
-      '10G' => 10 * 1000,
-      '10.5G' => 10.5 * 1000,
-      '10Gi' => 10737,
+      '10G' => 9537,
+      '10.5G' => 10_014,
+      '10Gi' => 10_240,
     }.each do |ram, expected|
       it "converts memory units #{ram}" do
-        assert config_content_yml.sub!('100M', ram)
+        assert config_content_yml.sub!('100Mi', ram)
         role.defaults.try(:[], :limits_memory).must_equal expected
       end
     end
@@ -454,6 +454,16 @@ describe Kubernetes::Role do
     it "required when removing" do
       role.resource_name = nil
       assert role.manual_deletion_required?
+    end
+  end
+
+  describe "#role_config_file" do
+    it "can read from dynamic folders" do
+      GitRepository.any_instance.
+        expects(:file_content).with('kubernetes/pod100/foo.yaml', "master", anything).
+        returns(read_kubernetes_sample_file('kubernetes_job.yml'))
+      role.config_file = "kubernetes/$deploy_group/foo.yaml"
+      assert role.role_config_file("master", deploy_group: deploy_groups(:pod100), ignore_errors: false)
     end
   end
 end

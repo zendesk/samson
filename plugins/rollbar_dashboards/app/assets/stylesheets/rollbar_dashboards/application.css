@@ -15,10 +15,6 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
-  width:75%;
-  max-width:75%;
-}
-
-.rollbar-table__env {
-  width: 15%;
+  width: 90%;
+  max-width: 90%;
 }

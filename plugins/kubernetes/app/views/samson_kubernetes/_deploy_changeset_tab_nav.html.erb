@@ -1,0 +1,3 @@
+<% if @deploy&.persisted? ? @deploy.kubernetes? : @stage&.kubernetes? %>
+  <li><a href="#manifests" data-toggle="tab">Manifests</a></li>
+<% end %>

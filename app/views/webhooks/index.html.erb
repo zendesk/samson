@@ -106,20 +106,24 @@
         <li>No inbound rules configured</li>
       <% else %>
         <% inbound_webhooks.each do |webhook| %>
-          <li>
+          <% disabled = webhook.disabled? %>
+          <li class="<%= 'disabled' if disabled %>">
             <strong><%= webhook.branch.blank? ? 'Any' : webhook.branch %></strong>
             branch &rarr;
             <strong><%= webhook.stage&.name || "Deleted stage" %></strong>
             stage for:
             <%= webhook.source.humanize %>
-            (<%= link_to_delete [@project, webhook] %>)
+            (
+            <%= link_to disabled ? 'Enable' : 'Disable', project_webhook_path(@project, webhook, webhook: { disabled: !disabled }), method: :patch %>,
+            <%= link_to_delete [@project, webhook] %>
+            )
           </li>
         <% end %>
       <% end %>
     </ul>
   </p>
 
-  <%= form_for [:project, ((@resource.is_a?(Webhook) && @resource) || Webhook.new)], html: { class: "form-inline" } do |form| %>
+  <%= form_for [@project, ((@resource.is_a?(Webhook) && @resource) || Webhook.new)], html: { class: "form-inline" } do |form| %>
     <%= render 'shared/errors', object: form.object %>
     <div class="form-group">
       <%= form.text_field :branch, class: "form-control", placeholder: "Branch (Blank for any)" %>
@@ -138,60 +142,95 @@
     <%= form.submit "Add", class: "btn btn-primary" %>
   <% end %>
 
-  <% outbound_webhooks = @project.outbound_webhooks %>
+  <% outbound_webhook_stages = OutboundWebhookStage.where(stage_id: @project.stages.map(&:id)) %>
   <h2>
     Outbound Webhooks
     <%= additional_info "POST to an external url after a deploy has finished. The request body will contain deploy, stage, and project information." %>
   </h2>
-  <% if @project.deploys.last %>
+  <% if latest_deploy = @project.deploys.first %>
     <details>
       <summary>Example payload</summary>
-      <pre><%= JSON.pretty_generate(OutboundWebhook.deploy_as_json(@project.deploys.last)) %></pre>
+      <pre><%= JSON.pretty_generate(OutboundWebhook.deploy_as_json(latest_deploy)) %></pre>
     </details>
   <% else %>
     <p>Deploy this project at least once to see a sample payload.</p>
   <% end %>
 
   <p>
-    <% if outbound_webhooks.empty? %>
+    <% if outbound_webhook_stages.empty? %>
       No outbound rules configured
     <% else %>
       <ul>
-        <% outbound_webhooks.each do |outbound_webhook| %>
-          <li>
+        <% outbound_webhook_stages.each do |outbound_webhook_stage| %>
+          <% outbound_webhook = outbound_webhook_stage.outbound_webhook %>
+          <% disabled = outbound_webhook.disabled? %>
+          <li class="<%= 'disabled' if disabled %>">
+            <%= "#{outbound_webhook.name}: " if outbound_webhook.name? %>
             POST to
             <strong><%= outbound_webhook.url %></strong>
+            <%= "(no SSL)" unless outbound_webhook.ssl? %>
             on the
-            <strong><%= outbound_webhook.stage.name %></strong>
+            <%= link_to_resource outbound_webhook_stage.stage %>
             stage
             <strong>
-            <% if outbound_webhook.username.present? %>
+            <% case outbound_webhook.auth_type %>
+            <% when "Basic" %>
               <%= "with Basic Auth as #{outbound_webhook.username}" %>
+            <% when "Bearer", "Token" %>
+              <%= "with #{outbound_webhook.auth_type} Auth" %>
             <% end %>
             </strong>
-            <%= link_to_delete [@project, outbound_webhook] %>
+            (
+            <%# Disabling a global webhook affects all projects using it %>
+            <% if outbound_webhook.global? %>
+              <%= link_to_delete outbound_webhook_path(outbound_webhook, stage_id: outbound_webhook_stage.stage_id), text: 'Unlink' %>
+            <% else %>
+              <%= link_to disabled ? 'Enable' : 'Disable', outbound_webhook_path(outbound_webhook, stage_id: outbound_webhook_stage.stage_id, outbound_webhook: { disabled: !disabled }), method: :patch %>,
+              <%= link_to_delete outbound_webhook_path(outbound_webhook, stage_id: outbound_webhook_stage.stage_id) %>
+            <% end %>
+            )
           </li>
         <% end %>
       </ul>
     <% end %>
   </p>
 
-  <%= form_for [:project, ((@resource.is_a?(OutboundWebhook) && @resource) || OutboundWebhook.new)], html: { class: 'form-inline' } do |form| %>
-    <%= render 'shared/errors', object: form.object %>
-    <div class="form-group">
-      <%= form.text_field :url, class: "form-control", placeholder: "Full Url" %>
-    </div>
-    <div class="form-group">
-      <%= form.collection_select :stage_id, @project.stages, :id, :name, {}, class: "form-control" %>
-    </div>
-    <div class="form-group">
-      <%= form.text_field :username, class: "form-control", placeholder: "Username (optional)" %>
-    </div>
-    <div class="form-group">
-      <%= form.text_field :password, class: "form-control", placeholder: "Password (optional)", type: "password" %>
-    </div>
-    <div class="form-group">
+  <details>
+    <summary>Add</summary>
+    <%= form_for ((@resource.is_a?(OutboundWebhook) && @resource) || OutboundWebhook.new), html: {class: "form-horizontal"} do |form| %>
+      <div class="form-group">
+        <%= form.label "Stage", class: "col-lg-2 control-label" %>
+        <div class="col-lg-4">
+          <%= select_tag "stage_id", options_from_collection_for_select(@project.stages, :id, :name, form.object.outbound_webhook_stages.first&.stage_id), class: "form-control" %>
+        </div>
+      </div>
+
+      <%= render "outbound_webhooks/fields", form: form %>
+
       <%= form.submit "Add", class: "btn btn-primary" %>
-    </div>
-  <% end %>
+    <% end %>
+  </details>
+
+  <% if global_webhooks = OutboundWebhook.where(global: true).pluck(:name, :id).presence %>
+    <details>
+      <summary>Link global</summary>
+      <%= form_for OutboundWebhook.new, url: connect_outbound_webhooks_path, html: {class: "form-horizontal"} do |form| %>
+        <div class="form-group">
+          <%= form.label "Global Webhook", class: "col-lg-2 control-label" %>
+          <div class="col-lg-4">
+            <%= select_tag "id", options_for_select(global_webhooks), class: "form-control" %>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <%= form.label "Stage", class: "col-lg-2 control-label" %>
+          <div class="col-lg-4">
+            <%= select_tag "stage_id", options_from_collection_for_select(@project.stages, :id, :name), class: "form-control" %>
+          </div>
+        </div>
+
+        <%= form.submit "Add", class: "btn btn-primary" %>
+      <% end %>
+    <% end %>
+  </details>
 </section>

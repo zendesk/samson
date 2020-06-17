@@ -15,7 +15,7 @@ describe "cleanliness" do
   end
 
   def assert_content(files)
-    files -= [File.expand_path(__FILE__).sub("#{Rails.root}/", '')]
+    files -= [File.expand_path(__FILE__).sub("#{Bundler.root}/", '')]
     bad = files.map do |f|
       error = yield File.read(f)
       "#{f}: #{error}" if error
@@ -33,57 +33,6 @@ describe "cleanliness" do
     code = Dir["{,plugins/*/}{app,lib}/**/*.rb"]
     code.size.must_be :>, 50
     code
-  end
-
-  it "does not have boolean limit 1 in schema since this breaks mysql" do
-    File.read("db/schema.rb").wont_match /\st\.boolean.*limit: 1/
-  end
-
-  it "does not have limits too big for postgres in schema" do
-    File.readlines("db/schema.rb").each do |line|
-      if line[/limit: (\d+)/, 1].to_i > 1073741823
-        raise "Line >#{line}< has a too big limit ... use 1073741823 or lower"
-      end
-    end
-  end
-
-  it "does not have string index without limit since that breaks our mysql migrations" do
-    table_definitions = File.read("db/schema.rb").scan(/  create_table "(\S+)"(.*?)\n  end/m)
-    table_definitions.size.must_be :>, 10
-
-    bad = table_definitions.flat_map do |table, definition|
-      strings = definition.scan(/\.string "(\S+)"/).map!(&:first)
-      indexes = definition.scan(/t.index (\[(.*?)\].*$)/)
-      strings.map do |string|
-        # it is bad when a string is used in the index but no length is declared
-        if indexes.any? { |i| i[1].include?(%("#{string}")) && i[0] !~ /length: .*#{string}|length: \d+/ }
-          [table, string]
-        end
-      end.compact
-    end
-
-    # old tables that somehow worked
-    bad -= [
-      ["builds", "git_sha"],
-      ["builds", "dockerfile"],
-      ["environment_variable_groups", "name"],
-      ["environments", "permalink"],
-      ["jobs", "status"],
-      ["kubernetes_roles", "name"],
-      ["kubernetes_roles", "service_name"],
-      ["new_relic_applications", "name"],
-      ["releases", "number"],
-      ["users", "external_id"],
-      ["webhooks", "branch"]
-    ]
-
-    bad.map! { |table, string| "#{table} #{string} has a string index without length" }.join("\n")
-    assert bad.empty?, bad
-  end
-
-  it "does not have 3-state booleans (nil/false/true)" do
-    bad = File.read("db/schema.rb").scan(/\st\.boolean.*/).reject { |l| l .include?(" null: false") }
-    assert bad.empty?, "Boolean columns missing a default or null: false\n#{bad.join("\n")}"
   end
 
   it "does not include rails-assets-bootstrap" do
@@ -264,7 +213,8 @@ describe "cleanliness" do
       # check if all actions were tested
       missing = controller_actions - unauthorized_actions - viewer_actions - public_actions
       if missing.any?
-        "#{f} is missing unauthorized, viewer accessible, or public accessible test for #{missing.join(', ')}"
+        "#{f} is missing unauthorized, viewer accessible, or public accessible test for #{missing.join(', ')}\n" \
+        "actions (if these are helpers and not actions, make them private)"
       end
     end.compact
 
@@ -321,7 +271,7 @@ describe "cleanliness" do
       model.reflect_on_all_associations.map do |association|
         next if association.name == :audits # should not be cleaned up and added by external helper
         next if association.options[:polymorphic] # TODO: should verify all possible types have a cleanup association
-        next if association.options.fetch(:inverse_of, false).nil? # disabled on purpose
+        next if association.options[:inverse_of] == false # disabled on purpose
         next if association.inverse_of
         "#{model.name} #{association.name}"
       end
@@ -332,7 +282,7 @@ describe "cleanliness" do
         These associations need an inverse association.
         For example project has stages and stage has project.
         If automatic connection does not work, use `:inverse_of` option on the association.
-        If inverse association is missing AND the inverse should not destroyed when dependency is destroyed, use `inverse_of: nil`.
+        If inverse association is missing AND the inverse should not destroyed when dependency is destroyed, use `inverse_of: false`.
         #{bad.join("\n")}
       TEXT
     )

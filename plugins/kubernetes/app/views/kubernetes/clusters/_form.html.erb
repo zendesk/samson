@@ -13,7 +13,7 @@
           help: "First 1 to 3 sections of an IPv4 address to replace Service clusterIP, for example 123.231"
       %>
 
-      <%= form.input :kritis_breakglass, as: :check_box, help: "Make all resources skip kritis" %>
+      <%= form.input :kritis_breakglass, as: :check_box, help: "Make all resources skip kritis" if ENV["KRITIS_BREAKGLASS_SUPPORTED"] %>
 
       <%= form.input :auth_method do %>
         <%= form.select :auth_method, ["context", "database"] %>
@@ -39,7 +39,7 @@
       </div>
 
       <%= form.actions delete: true do %>
-        <% if Samson::Hooks.active_plugin?('aws_ecr') && SamsonAwsEcr::Engine.active? && @kubernetes_cluster.persisted? %>
+        <% if Samson::Hooks.active_plugin?('aws_ecr') && SamsonAwsEcr::SamsonPlugin.active? && @kubernetes_cluster.persisted? %>
           <%= link_to "Seed ECR", seed_ecr_kubernetes_cluster_path(@kubernetes_cluster), class: "btn btn-default", data: {method: :post} %>
         <% end %>
       <% end %>

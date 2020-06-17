@@ -81,8 +81,7 @@ describe Project do
 
   describe "#repository_homepage" do
     it "is github when using github" do
-      project.repository_url = "git://github.com/foo/bar"
-      project.repository_homepage.must_equal "https://github.com/foo/bar"
+      project.repository_homepage.must_equal "https://github.com/bar/foo"
     end
 
     it "is gitlab when using gitlab" do
@@ -91,7 +90,31 @@ describe Project do
     end
 
     it "is nothing when unknown" do
+      project.repository_url = "git://example.com/foo/bar"
       project.repository_homepage.must_equal ""
+    end
+  end
+
+  describe "#repo_commit_from_ref" do
+    it "asks github" do
+      stub_github_api "repos/bar/foo/commits/master", sha: "abc"
+      project.repo_commit_from_ref("master").must_equal "abc"
+    end
+
+    it "does not crash when commit was not found" do
+      stub_github_api "repos/bar/foo/commits/master", {}, 404
+      project.repo_commit_from_ref("master").must_be_nil
+    end
+
+    it "does not crash when github is down" do
+      stub_request(:get, "https://api.github.com/repos/bar/foo/commits/master").to_timeout
+      project.repo_commit_from_ref("master").must_be_nil
+    end
+
+    it "resolves locally when repo is not remote" do
+      project.repository_url = "git://example.com/foo/bar"
+      project.repository.expects(:commit_from_ref).returns "X"
+      project.repo_commit_from_ref("master").must_equal "X"
     end
   end
 
@@ -105,6 +128,16 @@ describe Project do
 
       project.webhook_stages_for("master", "ci", "jenkins").must_equal [master_stage]
       project.webhook_stages_for("production", "ci", "travis").must_equal [production_stage]
+    end
+
+    it 'returns only stages with active webhooks' do
+      active_stage = project.stages.create!(name: 'stage 1')
+      inactive_stage = project.stages.create!(name: 'stage 2')
+
+      project.webhooks.create!(branch: 'master', stage: active_stage, source: 'any')
+      project.webhooks.create!(branch: 'master', stage: inactive_stage, source: 'any', disabled: true)
+
+      project.webhook_stages_for('master', 'ci', 'jenkins').must_equal [active_stage]
     end
   end
 
@@ -135,6 +168,11 @@ describe Project do
     it "works if '.git' is not at the end" do
       project = Project.new(repository_url: "https://github.com/foo/bar")
       project.repository_path.must_equal "foo/bar"
+    end
+
+    it "handles gitlab ssh URLs that nest projects under organization groups" do
+      project = Project.new(repository_url: "git@gitlab.com:foo/bar/baz.git")
+      project.repository_path.must_equal "foo/bar/baz"
     end
   end
 
@@ -253,6 +291,13 @@ describe Project do
       project.errors.messages.must_equal repository_url: ["is not valid or accessible"]
     end
 
+    it 'is invalid with repo url without path' do
+      project = Project.new(id: 9999, name: 'demo_apps', repository_url: 'https:.//github.com/samson-test-org/example-project.git')
+      GitRepository.any_instance.stubs(:valid_url?).returns(false) # avoid git-clones
+      refute_valid project
+      project.errors.messages.must_equal repository_url: ["is not valid or accessible"]
+    end
+
     it 'is invalid without repo url' do
       project = Project.new(id: 9999, name: 'demo_apps', repository_url: '')
       refute_valid project
@@ -340,36 +385,22 @@ describe Project do
   end
 
   describe "#deployed_reference_to_non_production_stage?" do
-    def stub_commit(found = true)
-      result = found ? deploy.job.commit : nil
-      project.repository.expects(:commit_from_ref).with(deploy.reference).returns(result)
-    end
-
     let(:deploy) { deploys(:succeeded_test) }
 
-    it 'returns true if non production stage exists that deployed ref' do
-      stub_commit
-      project.deployed_reference_to_non_production_stage?(deploy.reference).must_equal true
+    it 'returns true if non production stage exists that deployed commit' do
+      project.deployed_to_non_production_stage?(deploy.commit).must_equal true
     end
 
     it 'filters by job status' do
-      stub_commit
       deploy.job.update_column(:status, 'failed')
 
-      project.deployed_reference_to_non_production_stage?(deploy.reference).must_equal false
+      project.deployed_to_non_production_stage?(deploy.commit).must_equal false
     end
 
     it 'filters out production stages' do
-      stub_commit
       deploy.update_column(:stage_id, stages(:test_production).id)
 
-      project.deployed_reference_to_non_production_stage?(deploy.reference).must_equal false
-    end
-
-    it 'returns false when reference cant be resolved' do
-      stub_commit(false)
-
-      project.deployed_reference_to_non_production_stage?(deploy.reference).must_equal false
+      project.deployed_to_non_production_stage?(deploy.commit).must_equal false
     end
   end
 

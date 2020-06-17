@@ -7,7 +7,8 @@ class Build < ActiveRecord::Base
   belongs_to :project, inverse_of: :builds
   belongs_to :docker_build_job, class_name: 'Job', optional: true
   belongs_to :creator, class_name: 'User', foreign_key: 'created_by', inverse_of: :builds
-  has_many :deploys, dependent: nil
+  has_many :deploy_builds, dependent: :destroy
+  has_many :deploys, through: :deploy_builds, inverse_of: :builds
 
   before_validation :nil_out_blanks
   before_validation :make_default_dockerfile_and_image_name_not_collide, on: :create
@@ -17,13 +18,19 @@ class Build < ActiveRecord::Base
   validates :project, presence: true
   validates :git_sha, allow_nil: true, format: SHA1_REGEX
   validates :dockerfile, presence: true, unless: :external?
-  [:dockerfile, :image_name].each do |attribute|
-    validates(
-      :git_sha,
-      allow_nil: true,
-      uniqueness: {scope: attribute, message: "already exists with this #{attribute}"},
-      if: attribute
-    )
+  [:git_sha, :external_url].each do |attribute|
+    [:dockerfile, :image_name].each do |scope|
+      validates(
+        attribute,
+        allow_nil: true,
+        uniqueness: {
+          scope: [:git_sha, scope, :external_url].without(attribute),
+          message: "already exists with this #{attribute} and #{scope}",
+          case_sensitive: false
+        },
+        if: ->(build) { build.send(scope).present? && build.external_url.present? }
+      )
+    end
   end
   validates :docker_repo_digest, format: DIGEST_REGEX, allow_nil: true
   validates :external_url, format: /\Ahttps?:\/\/\S+\z/, allow_nil: true
@@ -34,7 +41,7 @@ class Build < ActiveRecord::Base
   def self.cancel_stalled_builds
     builds_to_cancel = where('created_at < ?', Rails.application.config.samson.deploy_timeout.seconds.ago).
       where(external_status: Job::ACTIVE_STATUSES)
-    builds_to_cancel.find_each { |b| b.update_attributes(external_status: 'cancelled') }
+    builds_to_cancel.find_each { |b| b.update(external_status: 'cancelled') }
   end
 
   def nice_name
@@ -83,7 +90,7 @@ class Build < ActiveRecord::Base
 
   def nil_out_blanks
     [:docker_repo_digest, :image_name, :dockerfile].each do |attribute|
-      send("#{attribute}=", send(attribute).presence) if changes_include? attribute
+      send("#{attribute}=", send(attribute).presence) if attribute_changed? attribute
     end
   end
 
@@ -101,22 +108,15 @@ class Build < ActiveRecord::Base
     return errors.add(:git_ref, 'must be specified') if git_ref.blank? && git_sha.blank?
     return if errors.include?(:git_ref) || errors.include?(:git_sha)
     return validate_git_sha if git_ref.blank?
-    commit = commit_from_ref(git_ref)
+    commit = project.repo_commit_from_ref(git_ref)
     return errors.add(:git_ref, 'is not a valid reference') unless commit
     return validate_git_sha if git_sha.present? && git_sha != commit
     self.git_sha = commit
   end
 
   def validate_git_sha
-    return if commit_from_ref(git_sha)
+    return if project.repo_commit_from_ref(git_sha)
     errors.add(:git_sha, 'is not a valid SHA for this project')
-  end
-
-  # TODO: support local / github / gitlab ?
-  def commit_from_ref(ref)
-    GITHUB.commit(project.repository_path, ref).sha
-  rescue StandardError
-    nil
   end
 
   def assign_number
@@ -124,3 +124,4 @@ class Build < ActiveRecord::Base
     self.number = biggest_number + 1
   end
 end
+Samson::Hooks.load_decorators(Build)

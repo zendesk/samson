@@ -1,36 +1,40 @@
 # frozen_string_literal: true
 
 # Make Activerecord readonly by blocking write requests
-# NOTE: not perfect and can be circumvented with multiline sql statements or `;`
 module Samson
   module ReadonlyDb
-    ALLOWED = ["SELECT ", "SHOW ", "SET  @@SESSION.", "SET NAMES", "EXPLAIN ", "PRAGMA "].freeze
     PROMPT_CHANGE = ["(", "(readonly "].freeze
     PROMPTS = [:PROMPT_I, :PROMPT_N].freeze
 
+    module ErrorInformer
+      def initialize(message)
+        message += "\nSwitch off readonly with Samson::ReadonlyDb.disable" if Samson::ReadonlyDb.enabled?
+        super
+      end
+    end
+
     class << self
       def enable
-        return if @subscriber
-        @subscriber = ActiveSupport::Notifications.subscribe("sql.active_record") do |*, payload|
-          sql = payload.fetch(:sql)
-          next if sql.lstrip.start_with?(*ALLOWED)
-          raise ActiveRecord::ReadOnlyRecord, <<~MSG
-            Database is in readonly mode, cannot execute query
-            Switch off readonly with #{self}.#{method(:disable).name}
-            #{sql}
-          MSG
-        end
-        update_prompt
+        ActiveRecord::ReadOnlyError.prepend ErrorInformer if @enabled.nil?
+        toggle true
       end
 
       def disable
-        return unless @subscriber
-        ActiveSupport::Notifications.unsubscribe @subscriber
-        @subscriber = nil
-        update_prompt
+        toggle false
+      end
+
+      def enabled?
+        @enabled
       end
 
       private
+
+      def toggle(to)
+        return if !!@enabled == to
+        @enabled = to
+        ActiveRecord::Base.connection_handler.prevent_writes = to
+        update_prompt
+      end
 
       # TODO: modify normal prompt when marco-polo is not enabled
       # TODO: pry support
@@ -40,7 +44,7 @@ module Samson
 
         PROMPTS.each do |prompt_key|
           value = prompt.fetch(prompt_key) # change marco-polo prompt
-          change = (@subscriber ? PROMPT_CHANGE : PROMPT_CHANGE.reverse)
+          change = (@enabled ? PROMPT_CHANGE : PROMPT_CHANGE.reverse)
           value.sub!(*change) || raise("Unable to change prompt #{prompt_key} #{value.inspect}")
         end
         nil

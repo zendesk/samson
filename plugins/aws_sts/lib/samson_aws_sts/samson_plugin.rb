@@ -5,7 +5,7 @@ module SamsonAwsSts
   SESSION_DURATION_MIN = 900 # 15 minutes
   SESSION_DURATION_MAX = [SESSION_DURATION_MIN, Rails.application.config.samson.deploy_timeout].max
 
-  class Engine < Rails::Engine
+  class SamsonPlugin < Rails::Engine
   end
 
   def self.sts_client

@@ -3,14 +3,14 @@ module Kubernetes
   class ReleaseDoc < ActiveRecord::Base
     self.table_name = 'kubernetes_release_docs'
 
-    belongs_to :kubernetes_role, class_name: 'Kubernetes::Role', inverse_of: nil
+    belongs_to :kubernetes_role, class_name: 'Kubernetes::Role', inverse_of: false
     belongs_to :kubernetes_release, class_name: 'Kubernetes::Release', inverse_of: :release_docs
-    belongs_to :deploy_group, inverse_of: nil
+    belongs_to :deploy_group, inverse_of: false
 
     serialize :resource_template, JSON
     delegate :build_selectors, to: :verification_template
 
-    validates :deploy_group, presence: true, inverse_of: nil
+    validates :deploy_group, presence: true, inverse_of: false
     validates :kubernetes_role, presence: true
     validates :kubernetes_release, presence: true
     validate :validate_config_file, on: :create
@@ -18,10 +18,16 @@ module Kubernetes
     before_create :store_resource_template
 
     attr_reader :previous_resources
+    attr_writer :deploy_group_role
 
     def deploy
       @previous_resources = resources.map(&:resource)
       resources.each(&:deploy)
+    end
+
+    # not used when deploying, just as fallback when building things from the console
+    def deploy_group_role
+      @deploy_group_role ||= DeployGroupRole.where(kubernetes_role: kubernetes_role, deploy_group: deploy_group).first!
     end
 
     def revert
@@ -44,9 +50,10 @@ module Kubernetes
 
     def resources
       @resources ||= begin
-        resources = resource_template.map do |t|
+        resources = resource_template.map do |template|
           Kubernetes::Resource.build(
-            t, deploy_group,
+            template,
+            deploy_group,
             autoscaled: kubernetes_role.autoscaled,
             delete_resource: delete_resource
           )
@@ -56,6 +63,12 @@ module Kubernetes
             Kubernetes::RoleConfigFile::DEPLOY_SORT_ORDER.size # default to maximum value
         end
       end
+    end
+
+    def custom_resource_definitions
+      resource_template.select { |t| t[:kind] == "CustomResourceDefinition" }.map do |t|
+        [t.dig(:spec, :names, :kind), {"namespaced" => t.dig(:spec, :scope) == "Namespaced"}]
+      end.to_h
     end
 
     # Temporary template we run validations on ... so can be cheap / not fully fleshed out
@@ -96,6 +109,7 @@ module Kubernetes
 
     def add_pod_disruption_budget
       return unless deployment = raw_template.detect { |r| ["Deployment", "StatefulSet"].include? r[:kind] }
+      return if raw_template.any? { |r| r[:kind] == "PodDisruptionBudget" }
       return unless target = disruption_budget_target(deployment)
 
       annotations = (deployment.dig(:metadata, :annotations) || {}).slice(
@@ -132,18 +146,19 @@ module Kubernetes
       min_available ||= ENV["KUBERNETES_AUTO_MIN_AVAILABLE"]
       return unless min_available
 
-      target = if percent = min_available.to_s[/\A(\d+)\s*%\z/, 1] # "30%" -> 30 / "30 %" -> 30
+      non_blocking = replica_target - 1
+      return 0 if non_blocking <= 0
+
+      if percent = min_available.to_s[/\A(\d+)\s*%\z/, 1] # "30%" -> 30 / "30 %" -> 30
         percent = Integer(percent)
         if percent >= 100
           raise Samson::Hooks::UserError, "minAvailable of >= 100% would result in eviction deadlock, pick lower"
         else
-          [((replica_target.to_f / 100) * percent).ceil, replica_target - 1].min
+          "#{[percent, non_blocking.to_f / replica_target * 100].min.to_i}%"
         end
       else
-        [replica_target - 1, Integer(min_available)].min
+        [non_blocking, Integer(min_available)].min
       end
-      target = 0 if target < 0
-      target
     end
 
     def validate_config_file
@@ -154,11 +169,11 @@ module Kubernetes
     end
 
     def raw_template
-      @raw_template ||= begin
-        file = kubernetes_role.config_file
-        content = kubernetes_release.project.repository.file_content(file, kubernetes_release.git_sha)
-        RoleConfigFile.new(content, file, project: kubernetes_release.project).elements
-      end
+      @raw_template ||=
+        kubernetes_role.role_config_file(
+          kubernetes_release.git_sha,
+          project: kubernetes_release.project, pull: true, ignore_errors: false, deploy_group: deploy_group
+        ).elements
     end
   end
 end

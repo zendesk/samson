@@ -155,12 +155,12 @@ describe Samson::Secrets::VaultServer do
 
     it "expires the secrets cache so keys from the new server get added/removed" do
       Samson::Secrets::Manager.expects(:expire_lookup_cache)
-      server.update_attributes!(address: "http://foo")
+      server.update!(address: "http://foo")
     end
 
     it "does not expire when unimportant attributes changes" do
       Samson::Secrets::Manager.expects(:expire_lookup_cache).never
-      server.update_attributes!(name: "Foo")
+      server.update!(name: "Foo")
     end
   end
 end

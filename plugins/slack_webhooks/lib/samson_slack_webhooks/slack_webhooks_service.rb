@@ -37,12 +37,14 @@ module SamsonSlackWebhooks
         username: 'Samson',
         icon_url: "https://github.com/zendesk/samson/blob/master/app/assets/images/favicons/32x32_light.png?raw=true"
       }
-      payload[:channel] = webhook.channel unless webhook.channel.blank?
+      payload[:channel] = webhook.channel if webhook.channel?
       payload[:attachments] = attachments if attachments.present?
 
       begin
         response = Faraday.post(webhook.webhook_url, payload: payload.to_json)
-        raise "Error #{response.status} #{response.body.to_s[0..100]}" if response.status >= 300
+        if response.status >= 300
+          raise "Error: channel #{webhook.channel.inspect} #{response.status} #{response.body.to_s[0..100]}"
+        end
       rescue Faraday::ClientError, RuntimeError => e
         Samson::ErrorNotifier.notify(
           e,

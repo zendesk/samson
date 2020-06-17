@@ -16,12 +16,13 @@ class DatadogMonitorQuery < ActiveRecord::Base
     "Fail deploy" => "fail_deploy"
   }.freeze
 
-  belongs_to :stage, inverse_of: :datadog_monitor_queries
+  belongs_to :scope, inverse_of: :datadog_monitor_queries, polymorphic: true
   validates :query, format: /\A\d+\z|\A[a-z:,\d_-]+\z/
   validates :match_source, inclusion: MATCH_SOURCES.values, allow_blank: true
   validates :failure_behavior, inclusion: FAILURE_BEHAVIORS.values, allow_blank: true
-  validate :validate_query_works, if: :query_changed?
+  validate :validate_query_works
   validate :validate_source_and_target
+  validate :validate_duration_used_with_failure
 
   def monitors
     @monitors ||= begin
@@ -29,18 +30,15 @@ class DatadogMonitorQuery < ActiveRecord::Base
         [DatadogMonitor.new(query)]
       else
         DatadogMonitor.list(query)
-      end.each do |m|
-        # TODO: pass the whole query object
-        m.match_target = match_target
-        m.match_source = match_source
-        m.failure_behavior = failure_behavior
-      end
+      end.each { |m| m.query = self }
     end
   end
 
   def url
     if single_monitor?
-      DatadogMonitor.new(query).url
+      monitor = DatadogMonitor.new(query)
+      monitor.query = self
+      monitor.url([])
     else
       q = URI.encode query.tr(",", " ") # rubocop:disable Lint/UriEscapeUnescape .to_query/CGI.escape do not work here
       "#{DatadogMonitor::BASE_URL}/monitors/manage?q=#{q}"
@@ -48,6 +46,10 @@ class DatadogMonitorQuery < ActiveRecord::Base
   end
 
   private
+
+  def validate_duration_used_with_failure
+    errors.add :check_duration, "only set when also using 'On Alert'." if check_duration? && !failure_behavior?
+  end
 
   def validate_source_and_target
     errors.add :match_source, "cannot be set when target is not set." if match_source? ^ match_target?
@@ -58,8 +60,26 @@ class DatadogMonitorQuery < ActiveRecord::Base
   end
 
   def validate_query_works
+    return if !query_changed? && !match_target_changed?
     return if errors[:query].any? # do not add to the pile
-    return if monitors.any? && monitors.all? { |m| m.state([]) } # tag search failed or id search returned a bad monitor
-    errors.add :query, "#{query} did not find monitors"
+
+    # tag search failed or id search returned a bad monitor
+    if monitors.none? || monitors.any? { |m| !m.state([]) }
+      return errors.add :query, "did not find monitors"
+    end
+
+    # match_tag is not in monitors grouping so it will never alert
+    if match_target?
+      monitors.each do |m|
+        groups = (m.response[:query][/\.by\(([^)]*)\)/, 1] || m.response[:query][/ by {([^}]*)}/, 1])
+        next if groups.to_s.tr('"\'', '').split(",").include?(match_target)
+
+        errors.add(
+          :match_target,
+          "#{match_target} must appear in #{m.url([])} grouping so it can trigger alerts for this tag, " \
+          "or ignored by adding ',-#{m.id}' to the tag query"
+        )
+      end
+    end
   end
 end

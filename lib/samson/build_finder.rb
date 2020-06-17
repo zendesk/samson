@@ -90,7 +90,7 @@ module Samson
         commits.unshift previous if previous
       end
 
-      Build.where(git_sha: commits).sort_by { |build| commits.index(build.git_sha) }
+      Build.where(git_sha: commits).sort_by { |build| [commits.index(build.git_sha), -build.updated_at.to_i] }
     end
 
     # we only wait once no matter how many builds are missing since build creation is fast
@@ -163,9 +163,6 @@ module Samson
 
     def ensure_build_is_succeeded(build)
       if build.docker_repo_digest
-        unless Samson::Hooks.fire(:ensure_build_is_succeeded, build, @job, @output).all?
-          raise Samson::Hooks::UserError, "Plugin build checks for #{build.url} failed."
-        end
         @output.puts "Build #{build.url} is looking good!"
       elsif build_job = build.docker_build_job
         raise Samson::Hooks::UserError, "Build #{build.url} is #{build_job.status}, rerun it."

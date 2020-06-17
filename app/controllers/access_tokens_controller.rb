@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 class AccessTokensController < ResourceController
   before_action :set_resource, except: [:index]
 

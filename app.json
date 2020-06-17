@@ -64,7 +64,7 @@
     },
     "PERIODICAL": {
       "description": "Tasks to run periodically inside the server process",
-      "value": "stop_expired_deploys:60,remove_expired_locks:60,report_system_stats:60,report_process_stats:60,periodical_deploy:86400,cancel_stalled_builds:3600,repo_provider_status:60"
+      "value": "stop_expired_deploys:60,remove_expired_locks:60,report_system_stats:60,report_process_stats:60,periodical_deploy:86400,cancel_stalled_builds:3600,repo_provider_status:60,global_command_cleanup:86400"
     }
   },
   "scripts": {

@@ -243,6 +243,27 @@ describe DeployService do
         job_execution.perform
       end.map(&:first).must_equal [deploy]
     end
+
+    describe "with before-deploy outbound webhook" do
+      before do
+        GITHUB.expects(:commit).returns(stub(sha: "abc"))
+        OutboundWebhook.create!(url: "http://foo", auth_type: "None", stages: [stage], before_deploy: true)
+      end
+
+      it "sends" do
+        service.deploy(stage, reference: reference)
+        job_execution.expects(:finish) # do not run finish hooks so we know we got the right oubound hook
+        job_execution.expects(:setup) # executes
+        assert_request(:post, "http://foo/") { job_execution.perform }
+      end
+
+      it "stops the deploy when it fails" do
+        service.deploy(stage, reference: reference)
+        job_execution.expects(:setup).never # stops the execution
+        assert_request(:post, "http://foo/", to_return: {status: 422}) { job_execution.perform }
+        job_execution.output.messages.must_include "JobExecution failed: Webhook notification: failed"
+      end
+    end
   end
 
   describe "finish callbacks" do
@@ -291,11 +312,25 @@ describe DeployService do
       run_deploy
     end
 
-    it "fails a deploy when verification fails" do
-      Samson::Hooks.with_callback(:validate_deploy, ->(*) { false }) do
-        run_deploy
-      end
-      deploy.reload.status.must_equal "failed"
+    it "runs after deploy outbound webhooks" do
+      GITHUB.expects(:commit).returns(stub(sha: "abc"))
+      OutboundWebhook.create!(url: "http://foo", auth_type: "None", stages: [stage], before_deploy: false)
+      service.deploy(stage, reference: reference)
+      assert_request(:post, "http://foo/") { job_execution.perform }
+    end
+
+    it 'runs only active outbound webhooks' do
+      GITHUB.expects(:commit).returns(stub(sha: "abc"))
+      OutboundWebhook.create!(url: "http://foo", auth_type: "None", stages: [stage], disabled: true)
+      OutboundWebhook.create!(url: "http://bar", auth_type: "None", stages: [stage])
+      foo_request = stub_request(:post, "http://foo/")
+      bar_request = stub_request(:post, "http://bar/")
+
+      service.deploy(stage, reference: reference)
+      job_execution.perform
+
+      assert_not_requested(foo_request)
+      assert_requested(bar_request, times: 1)
     end
 
     describe "with redeploy_previous_when_failed" do

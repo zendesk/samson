@@ -3,7 +3,7 @@ require_relative '../test_helper'
 
 SingleCov.covered!
 
-describe SamsonAirbrakeHook::Engine do
+describe SamsonAirbrakeHook::SamsonPlugin do
   describe :after_deploy do
     def notify
       Samson::Hooks.fire :after_deploy, deploy, stub(output: nil)
@@ -27,7 +27,7 @@ describe SamsonAirbrakeHook::Engine do
               "rails_env" => "staging",
               "scm_revision" => "abcabcaaabcabcaaabcabcaaabcabcaaabcabca1",
               "local_username" => "Super Admin",
-              "scm_repository" => "https://example.com/bar/foo",
+              "scm_repository" => "https://github.com/bar/foo",
             }
           }
         }

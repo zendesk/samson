@@ -4,11 +4,11 @@ module Kubernetes
   class TemplateFiller
     attr_reader :template
 
-    CUSTOM_UNIQUE_LABEL_KEY = 'rc_unique_identifier'
     SECRET_PULLER_IMAGE = ENV['SECRET_PULLER_IMAGE'].presence
     KUBERNETES_ADD_PRESTOP = Samson::EnvCheck.set?('KUBERNETES_ADD_PRESTOP')
     SECRET_PREFIX = "secret/"
     DOCKERFILE_NONE = 'none'
+    DEFAULT_TERMINATION_GRACE_PERIOD = 30
 
     def initialize(release_doc, template, index:)
       @doc = release_doc
@@ -21,12 +21,13 @@ module Kubernetes
         kind = template[:kind]
 
         set_via_env_json
-        set_namespace unless Kubernetes::RoleValidator::NAMESPACELESS_KINDS.include? kind
+        set_namespace
         set_project_labels if template.dig(:metadata, :annotations, :"samson/override_project_label")
         set_deploy_url
 
         if RoleValidator::IMMUTABLE_NAME_KINDS.include?(kind)
           # names have a fixed pattern so we cannot override them
+          # TODO: move this into keep_name? and remove this case
         elsif kind == 'HorizontalPodAutoscaler'
           set_name
           set_hpa_scale_target_name
@@ -35,8 +36,7 @@ module Kubernetes
           prefix_service_cluster_ip
           set_service_blue_green if blue_green_color
         elsif Kubernetes::RoleConfigFile.primary?(template)
-          if kind != 'Pod'
-            set_rc_unique_label_key
+          if kind == 'Deployment'
             set_history_limit
           end
 
@@ -48,12 +48,13 @@ module Kubernetes
           set_spec_template_metadata
           set_docker_image unless verification
           set_resource_usage
-          set_env
-          set_secrets
+          set_env unless @doc.delete_resource
+          set_secrets unless @doc.delete_resource
           set_image_pull_secrets
           set_resource_blue_green if blue_green_color
           set_init_containers
           set_kritis_breakglass
+          set_istio_sidecar_injection
         elsif kind == 'PodDisruptionBudget'
           set_name
           set_match_labels_blue_green if blue_green_color
@@ -74,7 +75,35 @@ module Kubernetes
       all_containers.each_with_index.map { |c, i| build_selector_for_container(c, first: i == 0) }.compact
     end
 
+    def self.dig_path(path)
+      path = path.split(/\.(labels|annotations)\./) # make sure we do not split inside of labels or annotations
+      path[0..0] = path[0].split(".")
+      path.map! { |k| k.match?(/^\d+$/) ? Integer(k) : k.to_sym }
+    end
+
     private
+
+    def namespaced_kind?(kind)
+      cluster = @doc.deploy_group.kubernetes_cluster
+      api_version = template.fetch(:apiVersion)
+
+      resources =
+        Rails.cache.fetch(["template-filler-resources", api_version, cluster], expires_in: 1.hour) do
+          # TODO: don't use private API - https://github.com/abonas/kubeclient/issues/428
+          cluster.client(api_version).send(:fetch_entities)
+        rescue Kubeclient::ResourceNotFoundError # api version not defined
+          {"resources" => []}
+        end
+
+      resource =
+        resources["resources"].find { |r| r["kind"] == kind } || # in cluster
+        @doc.custom_resource_definitions[kind] || # in this deploy
+        raise(
+          Samson::Hooks::UserError,
+          "Cluster \"#{cluster.name}\" does not support #{api_version} #{kind} (cached 1h)"
+        )
+      resource.fetch("namespaced")
+    end
 
     def set_via_env_json
       data = {}
@@ -92,9 +121,7 @@ module Kubernetes
 
       # set values
       data.each do |path, v|
-        path = path.split(/\.(labels|annotations)\./) # make sure we do not split inside of labels or annotations
-        path[0..0] = path[0].split(".")
-        path.map! { |k| k.match?(/^\d+$/) ? Integer(k) : k.to_sym }
+        path = self.class.dig_path(path)
 
         begin
           template.dig_set(path, JSON.parse(static_env.fetch(v), symbolize_names: true))
@@ -124,8 +151,13 @@ module Kubernetes
       end
     end
 
-    # samson/ keys in containers trigger validation warnings in kubectl, so we allow using annotations too
+    # read container config from pod annotation
+    # (or deprecated fallback to container key, which makes kubectl validation fail)
+    #
     # NOTE: containers always have a name see role_validator.rb
+    #
+    # @param [Hash] container
+    # @param [Symbol] key
     def samson_container_config(container, key)
       pod_annotations[samson_container_config_key(container, key)] || container[key]
     end
@@ -135,6 +167,7 @@ module Kubernetes
     end
 
     def set_deploy_url
+      return unless @doc.kubernetes_release.deploy&.persisted?
       [template, pod_template].compact.each do |t|
         annotations = (t[:metadata][:annotations] ||= {})
         annotations[:"samson/deploy_url"] = @doc.kubernetes_release.deploy&.url
@@ -207,7 +240,13 @@ module Kubernetes
 
     # assumed to be validated by role_validator
     def set_namespace
-      return if template[:metadata].key?(:namespace)
+      namespace_needed = !!namespaced_kind?(template[:kind])
+      namespace_set = !!template.dig(:metadata, :namespace)
+      return if namespace_set == namespace_needed
+
+      if namespace_set && !namespace_needed
+        raise Samson::Hooks::UserError, "#{template[:kind]} should not have a namespace"
+      end
       template[:metadata][:namespace] = project.kubernetes_namespace&.name || @doc.deploy_group.kubernetes_namespace
     end
 
@@ -277,14 +316,14 @@ module Kubernetes
           {name: "VAULT_PREFIX", value: Samson::Secrets::VaultClientManager::PREFIX}
         ],
         resources: {
-          requests: {cpu: "100m", memory: "100M"},
-          limits: {cpu: "500m", memory: "256M"}
+          requests: {cpu: "100m", memory: "100Mi"},
+          limits: {cpu: "500m", memory: "256Mi"}
         }
       }
       init_containers.unshift container
 
       # mark the container as not needing a dockerfile without making the pod invalid for kubelet
-      pod_annotations[samson_container_config_key(container, "samson/dockerfile")] = DOCKERFILE_NONE
+      pod_annotations[samson_container_config_key(container, :"samson/dockerfile")] = DOCKERFILE_NONE
 
       # share secrets volume between all pod containers
       pod_containers.each do |container|
@@ -304,28 +343,10 @@ module Kubernetes
       ]
     end
 
-    # Init containers are stored as a json annotation
-    # see http://kubernetes.io/docs/user-guide/production-pods/#handling-initialization
     def set_init_containers
       return if init_containers.empty?
-      key = Kubernetes::Api::Pod::INIT_CONTAINER_KEY
-      if init_containers_in_beta?
-        pod_template.dig_set([:spec, :initContainers], init_containers)
-        pod_annotations.delete(key)
-      else
-        pod_annotations[key] = JSON.pretty_generate(init_containers)
-        pod_template[:spec].delete(:initContainers)
-      end
-    end
-
-    def init_containers_in_beta?
-      @doc.deploy_group.kubernetes_cluster.server_version >= Gem::Version.new('1.6.0')
-    end
-
-    # This key replaces the default kubernetes key: 'deployment.kubernetes.io/podTemplateHash'
-    # This label is used by kubernetes to identify a RC and corresponding Pods
-    def set_rc_unique_label_key
-      template.dig_set [:spec, :uniqueLabelKey], CUSTOM_UNIQUE_LABEL_KEY
+      pod_template.dig_set [:spec, :initContainers], init_containers
+      pod_annotations.delete Kubernetes::Api::Pod::INIT_CONTAINER_KEY # clear deprecated annotation to avoid duplicates
     end
 
     def set_replica_target
@@ -343,7 +364,7 @@ module Kubernetes
     end
 
     def validate_replica_target_is_supported
-      return if @doc.replica_target == 1 || (@doc.replica_target == 0 && @doc.delete_resource)
+      return if @doc.replica_target == 1 || @doc.delete_resource
       raise(
         Samson::Hooks::UserError,
         "#{template[:kind]} #{template.dig(:metadata, :name)} is set to #{@doc.replica_target} replicas, " \
@@ -375,7 +396,7 @@ module Kubernetes
     # Adding the Release ID to allow us to track the progress of a new release from the UI.
     def set_spec_template_metadata
       release_doc_metadata.each do |key, value|
-        pod_template.dig_fetch(:metadata, :labels)[key] ||= value.to_s
+        pod_template.dig_fetch(:metadata, :labels)[key] ||= value.to_s.parameterize.tr('_', '-').slice(0, 63)
       end
     end
 
@@ -389,9 +410,9 @@ module Kubernetes
           deploy_id: release.deploy_id,
           project_id: release.project_id,
           role_id: role.id,
-          deploy_group: deploy_group.env_value.parameterize.tr('_', '-'),
+          deploy_group: deploy_group.env_value,
           revision: release.git_sha,
-          tag: release.git_ref.parameterize.tr('_', '-')
+          tag: release.git_ref
         )
       end
     end
@@ -400,10 +421,16 @@ module Kubernetes
     def set_resource_usage
       container = pod_containers.first
       container[:resources] = {
-        requests: {cpu: @doc.requests_cpu.to_f, memory: "#{@doc.requests_memory}M"},
-        limits: {cpu: @doc.limits_cpu.to_f, memory: "#{@doc.limits_memory}M"}
+        requests: {
+          cpu: @doc.deploy_group_role.requests_cpu.to_f.to_s,
+          memory: "#{@doc.deploy_group_role.requests_memory}Mi"
+        },
+        limits: {
+          cpu: @doc.deploy_group_role.limits_cpu.to_f.to_s,
+          memory: "#{@doc.deploy_group_role.limits_memory}Mi"
+        }
       }
-      container[:resources][:limits].delete(:cpu) if @doc.no_cpu_limit
+      container[:resources][:limits].delete(:cpu) if @doc.deploy_group_role.no_cpu_limit
     end
 
     def set_docker_image
@@ -419,10 +446,6 @@ module Kubernetes
         elsif resolved = Samson::Hooks.fire(:resolve_docker_image_tag, container.fetch(:image)).compact.first
           container[:image] = resolved
         end
-
-        # verify there are no vulnerabilities
-        stage = @doc.kubernetes_release.deploy.stage
-        Samson::Hooks.fire(:ensure_docker_image_has_no_vulnerabilities, stage, container.fetch(:image))
       end
     end
 
@@ -431,14 +454,30 @@ module Kubernetes
     end
 
     def set_kritis_breakglass
-      return unless @doc.deploy_group.kubernetes_cluster.kritis_breakglass
-      template.dig_fetch(:metadata, :labels)[:"kritis.grafeas.io/tutorial"] = ""
+      return unless ENV["KRITIS_BREAKGLASS_SUPPORTED"]
+      return if !@doc.deploy_group.kubernetes_cluster.kritis_breakglass &&
+        !@doc.kubernetes_release.deploy.kubernetes_ignore_kritis_vulnerabilities
       template.dig_fetch(:metadata, :annotations)[:"kritis.grafeas.io/breakglass"] = "true"
+    end
+
+    def set_istio_sidecar_injection
+      return unless Samson::EnvCheck.set?('ISTIO_INJECTION_SUPPORTED')
+      return unless @doc.deploy_group_role.inject_istio_annotation?
+
+      # https://istio.io/docs/setup/additional-setup/sidecar-injection/#policy
+      annotation_name = 'sidecar.istio.io/inject'.to_sym
+      pod_template.dig_set [:metadata, :annotations, annotation_name], "true"
+
+      # Also add labels to the resource and to the Pod template.
+      # This is not necessary for Istio, but makes it easier for us to select and see
+      # which resources should have sidecars injected.
+      pod_template.dig_set([:metadata, :labels, annotation_name], "true")
+      template.dig_set([:metadata, :labels, annotation_name], "true")
     end
 
     # custom annotation we support here and in kucodiff
     def missing_env
-      test_env = pod_containers.flat_map { |c| c[:env] ||= [] }
+      test_env = env_containers.flat_map { |c| c[:env] ||= [] }
       (required_env - test_env.map { |e| e.fetch(:name) }).presence
     end
 
@@ -471,7 +510,7 @@ module Kubernetes
         }
       end
 
-      pod_containers.each do |c|
+      env_containers.each do |c|
         env = (c[:env] ||= [])
         env.concat all
 
@@ -482,13 +521,18 @@ module Kubernetes
       end
     end
 
+    # containers we will set env for
+    def env_containers
+      pod_containers + init_containers.select { |c| samson_container_config(c, :"samson/set_env_vars") }
+    end
+
     def static_env
       @static_env ||= begin
         env = {}
 
         metadata = release_doc_metadata
         [:REVISION, :TAG, :DEPLOY_ID, :DEPLOY_GROUP].each do |k|
-          env[k] = metadata.fetch(k.downcase)
+          env[k] = metadata.fetch(k.downcase).to_s
         end
 
         [:PROJECT, :ROLE].each do |k|
@@ -569,11 +613,31 @@ module Kubernetes
       pod_template.fetch(:spec)[:imagePullSecrets] = docker_credentials
     end
 
+    # add preStop sleep to allow for DNS TTL to expire
+    # we only do this for main containers and not sidecars
     def set_pre_stop
       return unless KUBERNETES_ADD_PRESTOP
-      pod_containers.each do |container|
-        next if samson_container_config(container, :"samson/preStop") == "disabled"
-        (container[:lifecycle] ||= {})[:preStop] ||= {exec: {command: ["sleep", "3"]}}
+
+      # do nothing if all containers of the app opted out
+      containers = pod_containers.select do |container|
+        samson_container_config(container, :"samson/preStop") != "disabled" &&
+        container[:ports] && # no ports = no bugs
+        !container.dig(:lifecycle, :preStop) && # nothing to do
+        template[:kind] != "DaemonSet" # stable ips
+      end
+      return if containers.empty?
+
+      # add prestop sleep
+      sleep_time = Integer(ENV['KUBERNETES_PRESTOP_SLEEP_DURATION'] || '3')
+      containers.each do |container|
+        (container[:lifecycle] ||= {})[:preStop] = {exec: {command: ["/bin/sleep", sleep_time.to_s]}}
+      end
+
+      # shut down after prestop sleeping is done
+      buffer = 3
+      grace_period = pod_template[:spec][:terminationGracePeriodSeconds] || DEFAULT_TERMINATION_GRACE_PERIOD
+      if sleep_time + buffer > grace_period
+        pod_template[:spec][:terminationGracePeriodSeconds] = sleep_time + buffer
       end
     end
 

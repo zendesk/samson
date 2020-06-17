@@ -1,5 +1,4 @@
 <tr>
-  <td class="rollbar-table__count"><span class="badge"><%= item[:occurrences] %></span></td>
-  <td class="rollbar-table__title"><%= item_link(item[:title], item[:counter], dashboard_setting) %></td>
-  <td class="rollbar-table__env"><%= item[:environment] %></td>
+  <td class="rollbar-table__count"><%= item[:occurrences] %> x</td>
+  <td class="rollbar-table__title"><%= rollbar_item_link(item[:title], item[:counter], dashboard_setting) %></td>
 </tr>

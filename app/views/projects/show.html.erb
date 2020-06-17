@@ -7,6 +7,8 @@
 <section class="clearfix tabs">
   <%= render 'shared/dashboard', resource: @project %>
 
+  <%= Samson::Hooks.render_views(:project_dashboard, self) %>
+
   <table class="project-stages table table-condensed">
     <thead>
       <tr>
@@ -21,9 +23,7 @@
     </thead>
     <tbody>
       <% if @project.stages.to_a.any? %>
-        <% cache [@project, 'stages', Lock.cache_key] do %>
-          <%= render partial: "stage", collection: @project.stages %>
-        <% end %>
+        <%= render partial: "stage", collection: @project.stages, cached: ->(stage) { [@project.permalink, stage, Lock.cache_key, deployer_for_project?] } %>
       <% else %>
         <tr>
           <td colspan="3">
