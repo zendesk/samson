@@ -19,7 +19,7 @@ env:
     - TASK='bundle_audit'
     - PLUGINS='' DATABASE_URL=mysql2://travis@127.0.0.1/samson_test?reconnect=true BUNDLE_WITHOUT=postgres:sqlite USE_UTF8MB4=1 SILENCE_MIGRATIONS=1 TASK='db:create test:migrate_without_plugins'
     - DATABASE_URL=mysql2://travis@127.0.0.1/samson_test?reconnect=true BUNDLE_WITHOUT=postgres:sqlite USE_UTF8MB4=1 SILENCE_MIGRATIONS=1 TASK='db:create db:migrate default'
-    - DATABASE_URL=postgresql://postgres@127.0.0.1/samson_test BUNDLE_WITHOUT=mysql:sqlite SILENCE_MIGRATIONS=1 TASK='db:create db:migrate default'
+    # - DATABASE_URL=postgresql://postgres@127.0.0.1/samson_test BUNDLE_WITHOUT=mysql:sqlite SILENCE_MIGRATIONS=1 TASK='db:create db:migrate default'
     - DATABASE_URL=sqlite3://null$PWD/db/test.sqlite3 BUNDLE_WITHOUT=postgres:mysql SILENCE_MIGRATIONS=1 TASK='db:create db:migrate default'
 before_script:
   - mysql -u root -e 'set GLOBAL innodb_large_prefix = true'

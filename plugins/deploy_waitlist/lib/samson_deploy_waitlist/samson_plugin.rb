@@ -1,5 +1,5 @@
 module SamsonDeployWaitlist
-  class Engine < Rails::Engine
+  class SamsonPlugin < Rails::Engine
   end
 end
 

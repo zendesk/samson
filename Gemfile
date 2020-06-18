@@ -59,9 +59,9 @@ group :mysql do
   gem 'mysql2'
 end
 
-group :postgres do
-  gem 'pg'
-end
+# group :postgres do
+#   gem 'pg'
+# end
 
 group :sqlite do
   gem "sqlite3"
