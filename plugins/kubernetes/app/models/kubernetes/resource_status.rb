@@ -20,6 +20,9 @@ module Kubernetes
       PodDisruptionBudget: [
         "CalculateExpectedPodCountFailed",
         "NoControllers"
+      ],
+      Service: [
+        "FailedToUpdateEndpointSlices"
       ]
     }.freeze
 

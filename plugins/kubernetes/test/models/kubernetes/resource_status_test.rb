@@ -71,7 +71,7 @@ describe Kubernetes::ResourceStatus do
     end
 
     describe "non-pods" do
-      before { resource[:kind] = "Service" }
+      before { resource[:kind] = "NonIgnoredKind" }
 
       it "knows created non-pods" do
         events.clear
@@ -81,6 +81,12 @@ describe Kubernetes::ResourceStatus do
       it "ignores known bad events" do
         resource[:kind] = "HorizontalPodAutoscaler"
         events[0].merge!(type: "Warning", reason: "FailedGetMetrics")
+        expect_event_request { details.must_equal "Live" }
+      end
+
+      it "ignores known bad events for service" do
+        resource[:kind] = "Service"
+        events[0].merge!(type: "Warning", reason: "FailedToUpdateEndpointSlices")
         expect_event_request { details.must_equal "Live" }
       end
 
