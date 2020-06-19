@@ -17,6 +17,10 @@ class NullUser
     user&.name || 'Deleted User'
   end
 
+  def email
+    "deleted-user-#{id}"
+  end
+
   def marked_for_destruction?
     false
   end
