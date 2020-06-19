@@ -141,9 +141,9 @@ describe Samson::Periodical do
     it "sends errors to error notifier" do
       Samson::ErrorNotifier.expects(:notify).
         with(instance_of(ArgumentError), error_message: "Samson::Periodical foo failed")
-      Samson::Periodical.register(:foo, 'bar', execution_interval: 0.02) { raise ArgumentError }
+      Samson::Periodical.register(:foo, 'bar', execution_interval: 0.05) { raise ArgumentError }
       tasks = with_enabled(false) { Samson::Periodical.run }
-      sleep 0.03 # let task execute
+      sleep 0.08 # let task execute once
       tasks.first.shutdown
     end
 
