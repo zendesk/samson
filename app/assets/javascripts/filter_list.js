@@ -19,7 +19,7 @@ $(document).on('keyup', 'input.filter-list', function(e){
     selectable.eq((index + direction) % selectable.length).addClass(selected_class);
   } else if (e.keyCode == 13) { // enter
     e.preventDefault();
-    if(selected.size() === 0) {
+    if(selected.length === 0) {
       window.location.href = $(this).data('default'); // nothing selected ... go to default
     } else {
       selected.find('a').get(0).click();
