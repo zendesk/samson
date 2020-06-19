@@ -10,7 +10,7 @@
           <% environments.each do |environment| %>
             <th>
               <%= label_tag do %>
-                <%= check_box_tag '', nil, false, class: "env-toggle-all", data: {target: "#{environment.permalink}_checkbox" } %>
+                <%= check_box_tag nil, nil, false, id: nil, class: "env-toggle-all", data: {target: "#{environment.permalink}_checkbox" } %>
                 <%= environment.name %>
               <% end %>
             </th>
@@ -26,7 +26,7 @@
                 <td>
                   <%= label_tag do %>
                     <% checked = form.object.deploy_group_ids.include?(group.id) %>
-                    <%= check_box_tag "#{form.object_name}[deploy_group_ids][]", group.id, checked, class: "#{environment.permalink}_checkbox" %>
+                    <%= check_box_tag "#{form.object_name}[deploy_group_ids][]", group.id, checked, id: nil, class: "#{environment.permalink}_checkbox" %>
                     <%= group.name %>
                   <% end %>
                 </td>

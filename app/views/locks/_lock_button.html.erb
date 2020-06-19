@@ -1,20 +1,20 @@
 <span class="dropdown lock-dialog">
   <button class="btn btn-default want-lock dropdown-toggle" data-toggle="dropdown" <%= "disabled" if disabled %>><%= icon %> <%= text %></button>
   <div class="dropdown-menu lock-dropdown-menu">
-    <%= form_for Lock.new(resource: resource, warning: warning), html: {class: 'form-horizontal'} do |f| %>
-      <%= f.hidden_field :resource_id %>
-        <%= f.hidden_field :resource_type %>
-        <%= f.hidden_field :warning %>
-        <%= f.text_field :description, class: "lock-input", placeholder: "Description", required: warning %>
+    <%= form_for Lock.new(resource: resource, warning: warning), html: {class: 'form-horizontal', id: nil} do |f| %>
+      <%= f.hidden_field :resource_id, id: nil %>
+        <%= f.hidden_field :resource_type, id: nil %>
+        <%= f.hidden_field :warning, id: nil %>
+        <%= f.text_field :description, class: "lock-input", placeholder: "Description", required: warning, id: nil %>
         <div class="btn-group lock-times" role="group">
           <% delete_lock_options.each do |(label, num, unit)| %>
-            <%= button_tag(label, type: 'button', class: 'btn btn-default', data: { num: num, unit: unit }) %>
+            <%= button_tag(label, type: 'button', class: 'btn btn-default', data: { num: num, unit: unit }, id: nil) %>
           <% end %>
         </div>
         <span class="datetimepicker-container">
-          <%= f.text_field :delete_at, placeholder: "Expiration date", class: 'datetimepicker lock-input' %>
+          <%= f.text_field :delete_at, placeholder: "Expiration date", class: 'datetimepicker lock-input', id: nil %>
         </span>
-      <%= f.submit text, class: "lock-submit btn btn-warning lock-input" %>
+      <%= f.submit text, class: "lock-submit btn btn-warning lock-input", id: nil %>
     <% end %>
   </div>
 </span>

@@ -44,12 +44,12 @@
 
         <div class="col-md-2">
           <%= label_tag 'Started from' %>
-          <%= text_field_tag 'search[created_at][]', params.dig(:search, :created_at, 0), placeholder: "YYYY-MM-DD HH:MM:SS" %>
+          <%= text_field_tag 'search[created_at][]', params.dig(:search, :created_at, 0), placeholder: "YYYY-MM-DD HH:MM:SS", id: nil %>
         </div>
 
         <div class="col-md-2">
           <%= label_tag 'Started to' %>
-          <%= text_field_tag 'search[created_at][]', params.dig(:search, :created_at, 1), placeholder: "YYYY-MM-DD HH:MM:SS" %>
+          <%= text_field_tag 'search[created_at][]', params.dig(:search, :created_at, 1), placeholder: "YYYY-MM-DD HH:MM:SS", id: nil %>
         </div>
       </details>
     <% end %>
