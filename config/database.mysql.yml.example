@@ -12,3 +12,10 @@ test:
   <% uri.path = "/samson_test#{ENV['TEST_ENV_NUMBER']}"%>
   url: <%= uri %>
   pool: <%= ENV['RAILS_MAX_THREADS'] %>
+
+  adapter: mysql2
+  password: 'password'
+  database: 'samson_test'
+  username: 'root'
+  host: '127.0.0.1'
+  encoding: utf8

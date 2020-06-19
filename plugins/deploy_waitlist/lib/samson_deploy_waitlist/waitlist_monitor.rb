@@ -1,6 +1,6 @@
+# frozen_string_literal: true
 module SamsonDeployWaitlist
   class WaitlistMonitor
-
     TIME_TO_LOCK_QUEUE = 10
 
     def self.check_your_head

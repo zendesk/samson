@@ -1,5 +1,5 @@
+# frozen_string_literal: true
 class DeployWaitlistController < ApplicationController
-
   def show
     respond_to do |format|
       format.html
@@ -9,7 +9,7 @@ class DeployWaitlistController < ApplicationController
 
   def add
     Rails.logger.warn("current_waitlist: #{current_waitlist.list}")
-    current_waitlist.add({ email: deployer, added: now })
+    current_waitlist.add(email: deployer, added: now)
     render json: current_waitlist.to_json
   end
 

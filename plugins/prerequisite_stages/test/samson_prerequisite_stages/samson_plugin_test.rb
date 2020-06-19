@@ -10,8 +10,10 @@ describe SamsonPrerequisiteStages do
   let(:deploy) { stage1.deploys.first }
   let(:staging_commit) { "0000000000000000000000000000000000000002" }
   let(:production_commit) { "0000000000000000000000000000000000000001" }
+  let(:user) { users(:viewer) }
 
   before do
+    # stub_session_auth
     stage1.update!(prerequisite_stage_ids: [stage2.id])
     deploy.project.stubs(:repo_commit_from_ref).with(stage1.deploys.first.reference).returns(staging_commit)
     deploy.project.stubs(:repo_commit_from_ref).with(stage2.deploys.first.reference).returns(production_commit)
