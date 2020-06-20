@@ -146,7 +146,9 @@ td.status {
   border: 2px dashed gray;
 }
 
+// same style as `.has-error .form-control` but for success
 .has-success #deploy_reference {
-  border: 2px dashed limegreen;
+  border-color: limegreen;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
 }
 
