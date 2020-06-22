@@ -37,6 +37,12 @@ describe NullUser do
     end
   end
 
+  describe "email" do
+    it "has a placeholder" do
+      NullUser.new(1).email.must_equal 'deleted-user-1'
+    end
+  end
+
   describe "#attributes" do
     it "returns a limited list" do
       NullUser.new(11211212).attributes.must_equal("name" => "Deleted User")
