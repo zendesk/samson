@@ -12,7 +12,7 @@ class Changeset::CheckSuite
   end
 
   def self.valid_webhook?(payload)
-    payload['action'] == 'completed' && payload['check_suite']['status'] == 'completed' && payload['check_suite']['conclusion'] == 'success'
+    payload['check_suite']['status'] == 'completed' && payload['check_suite']['conclusion'] == 'success'
   end
 
   def sha
