@@ -10,6 +10,7 @@ describe Changeset::CheckSuite do
       "check_suite" => {
         "head_branch" => "master",
         "status" => "completed",
+        "head_sha" => "1234",
         "conclusion" => "success"
       }
     }
@@ -32,6 +33,18 @@ describe Changeset::CheckSuite do
     it "passes data on" do
       check_suite = Changeset::CheckSuite.changeset_from_webhook(projects(:test), data)
       check_suite.repo.must_equal "bar/foo"
+    end
+  end
+
+  describe "#service_type" do
+    it "is check_suite" do
+      check_suite.service_type.must_equal "check_suite"
+    end
+  end
+
+  describe "#sha" do
+    it "returns a sha" do
+      check_suite.sha.must_equal "1234"
     end
   end
 end
