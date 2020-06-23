@@ -138,4 +138,30 @@ describe Integrations::GithubController do
 
     it_deploys
   end
+
+  describe 'with a check_suite event' do
+    before do
+      Deploy.delete_all
+      request.headers['X-Github-Event'] = 'check_suite'
+      project.webhooks.create!(stage: stages(:test_staging), branch: "master", source: 'any')
+    end
+
+    let(:payload) do
+      {
+        action: 'completed',
+        check_suite: {
+          head_branch: 'master',
+          head_sha: '31b148e19a8ef2a033cb4ff485949c3f3d689140',
+          status: 'completed',
+          conclusion: 'success'
+        }
+      }.with_indifferent_access
+    end
+
+    it_deploys "when conclusion is success"
+
+    it_does_not_deploy 'when conclusion is failure' do
+      payload.deep_merge!(check_suite: {conclusion: 'failure'})
+    end
+  end
 end
