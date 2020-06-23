@@ -143,7 +143,7 @@ describe Integrations::GithubController do
     before do
       Deploy.delete_all
       request.headers['X-Github-Event'] = 'check_suite'
-      project.webhooks.create!(stage: stages(:test_staging), branch: "master", source: 'check_suite')
+      project.webhooks.create!(stage: stages(:test_staging), branch: "master", source: 'any')
     end
 
     let(:payload) do
