@@ -163,6 +163,5 @@ describe Integrations::GithubController do
     it_does_not_deploy 'when conclusion is failure' do
       payload.deep_merge!(check_suite: {conclusion: 'failure'})
     end
-
   end
 end
