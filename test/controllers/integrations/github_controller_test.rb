@@ -148,13 +148,13 @@ describe Integrations::GithubController do
 
     let(:payload) do
       {
-          action: 'completed',
-          check_suite: {
-              head_branch: 'master',
-              head_sha: '31b148e19a8ef2a033cb4ff485949c3f3d689140',
-              status: 'completed',
-              conclusion: 'success'
-          }
+        action: 'completed',
+        check_suite: {
+          head_branch: 'master',
+          head_sha: '31b148e19a8ef2a033cb4ff485949c3f3d689140',
+          status: 'completed',
+          conclusion: 'success'
+        }
       }.with_indifferent_access
     end
 
