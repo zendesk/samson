@@ -455,7 +455,10 @@ describe Kubernetes::TemplateFiller do
 
         it "allows selecting dockerfile for init containers" do
           with_init_container "samson/dockerfile": 'Dockerfile', name: 'foo'
-          init_containers[0].must_equal("samson/dockerfile": "Dockerfile", image: image, name: "foo")
+          init_containers[0].must_equal(image: image, name: "foo")
+          template.to_hash.
+            dig(:spec, :template, :metadata, :annotations, :"container-foo-samson/dockerfile").
+            must_equal "Dockerfile"
         end
 
         it "raises if an init container does not specify a dockerfile" do
@@ -863,10 +866,14 @@ describe Kubernetes::TemplateFiller do
     end
 
     describe "preStop" do
+      def lifecycle_defined?
+        template.to_hash.dig_fetch(:spec, :template, :spec, :containers, 0).key?(:lifecycle)
+      end
+
       before { raw_template[:spec][:template][:spec][:ports] = [{name: "foo"}] }
 
-      it "does not add preStop" do
-        refute template.to_hash.dig_fetch(:spec, :template, :spec, :containers, 0).key?(:lifecycle)
+      it "does not add preStop when not enabled" do
+        refute lifecycle_defined?
       end
 
       describe "with preStop enabled" do
@@ -894,6 +901,18 @@ describe Kubernetes::TemplateFiller do
             raw_template.dig_fetch(:spec, :template, :spec, :containers, 0)[:"samson/preStop"] = "disabled"
             refute template.to_hash.dig(:spec, :template, :spec, :terminationGracePeriodSeconds)
           end
+
+          it "prefers annotation over deprecated container config" do
+            raw_template[:spec][:template][:metadata][:annotations] =
+              {'container-some-project-samson/preStop': 'disabled'}
+            raw_template.dig_fetch(:spec, :template, :spec, :containers, 0)[:"samson/preStop"] = "nope"
+            refute template.to_hash.dig(:spec, :template, :spec, :terminationGracePeriodSeconds)
+          end
+        end
+
+        it "does not add preStop to DaemonSet" do
+          raw_template[:kind] = 'DaemonSet'
+          refute lifecycle_defined?
         end
 
         it "does not add preStop when it was already defined" do
@@ -906,12 +925,12 @@ describe Kubernetes::TemplateFiller do
 
         it "does not add preStop when opted out" do
           raw_template.dig_fetch(:spec, :template, :spec, :containers, 0)[:"samson/preStop"] = "disabled"
-          refute template.to_hash.dig_fetch(:spec, :template, :spec, :containers, 0).key?(:lifecycle)
+          refute lifecycle_defined?
         end
 
         it "does not add preStop when there are no ports that could create problems" do
           raw_template.dig_fetch(:spec, :template, :spec, :containers, 0).delete(:ports)
-          refute template.to_hash.dig_fetch(:spec, :template, :spec, :containers, 0).key?(:lifecycle)
+          refute lifecycle_defined?
         end
       end
     end
@@ -1213,12 +1232,12 @@ describe Kubernetes::TemplateFiller do
     end
 
     it "allows selecting a dockerfile" do
-      raw_template[:spec][:template][:spec][:containers][0][:'samson/dockerfile'] = 'Bar'
+      raw_template[:spec][:template][:metadata][:annotations] = {'container-some-project-samson/dockerfile': 'Bar'}
       template.build_selectors.must_equal [["Bar", nil]]
     end
 
     it "ignores images that should not be built" do
-      raw_template[:spec][:template][:spec][:containers][0][:'samson/dockerfile'] = 'none'
+      raw_template[:spec][:template][:metadata][:annotations] = {'container-some-project-samson/dockerfile': 'none'}
       template.build_selectors.must_equal []
     end
 
@@ -1242,6 +1261,7 @@ describe Kubernetes::TemplateFiller do
 
       it "still allows selecting a dockerfile" do
         raw_template[:spec][:template][:spec][:containers] << {'samson/dockerfile': 'bar', image: 'baz', name: 'foo'}
+        raw_template[:spec][:template][:metadata][:annotations] = {'container-foo-samson/dockerfile': 'bar'}
         template.build_selectors.must_equal [["Dockerfile", nil], ["bar", nil]]
       end
     end
@@ -1261,8 +1281,11 @@ describe Kubernetes::TemplateFiller do
       end
 
       it "does not include images that should not be built" do
-        raw_template[:spec][:template][:spec][:containers][0][:'samson/dockerfile'] = 'none'
-        raw_template[:spec][:template][:spec][:containers] << {'samson/dockerfile': 'bar', image: 'baz', name: 'baz'}
+        raw_template[:spec][:template][:metadata][:annotations] = {
+          'container-some-project-samson/dockerfile': 'none',
+          'container-baz-samson/dockerfile': 'bar'
+        }
+        raw_template[:spec][:template][:spec][:containers] << {image: 'baz', name: 'baz'}
 
         template.build_selectors.must_equal [[nil, 'baz']]
       end

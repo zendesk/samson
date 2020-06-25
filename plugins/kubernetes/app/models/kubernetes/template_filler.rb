@@ -36,13 +36,10 @@ module Kubernetes
           prefix_service_cluster_ip
           set_service_blue_green if blue_green_color
         elsif Kubernetes::RoleConfigFile.primary?(template)
-          if kind == 'Deployment'
-            set_history_limit
-          end
-
+          migrate_container_annotations
+          set_history_limit if kind == 'Deployment'
           make_stateful_set_match_service if kind == 'StatefulSet'
           set_pre_stop if kind == 'Deployment'
-
           set_name
           set_replica_target || validate_replica_target_is_supported
           set_spec_template_metadata
@@ -152,14 +149,26 @@ module Kubernetes
     end
 
     # read container config from pod annotation
-    # (or deprecated fallback to container key, which makes kubectl validation fail)
-    #
-    # NOTE: containers always have a name see role_validator.rb
     #
     # @param [Hash] container
     # @param [Symbol] key
     def samson_container_config(container, key)
-      pod_annotations[samson_container_config_key(container, key)] || container[key]
+      pod_annotations[samson_container_config_key(container, key)]
+    end
+
+    # deprecated container keys need to be migrated or the container will be invalid
+    def migrate_container_annotations
+      all_containers.each do |container|
+        container.keys.grep(/^samson\//).each do |key|
+          value = container.delete(key)
+          set_container_annotation container, key, value unless samson_container_config(container, key)
+        end
+      end
+    end
+
+    # NOTE: containers always have a name see role_validator.rb
+    def set_container_annotation(container, key, value)
+      pod_annotations[samson_container_config_key(container, key)] = value
     end
 
     def samson_container_config_key(container, key)
@@ -322,8 +331,8 @@ module Kubernetes
       }
       init_containers.unshift container
 
-      # mark the container as not needing a dockerfile without making the pod invalid for kubelet
-      pod_annotations[samson_container_config_key(container, :"samson/dockerfile")] = DOCKERFILE_NONE
+      # mark the container as not needing a dockerfile
+      set_container_annotation container, :"samson/dockerfile", DOCKERFILE_NONE
 
       # share secrets volume between all pod containers
       pod_containers.each do |container|
@@ -634,12 +643,11 @@ module Kubernetes
     def set_pre_stop
       return unless KUBERNETES_ADD_PRESTOP
 
-      # do nothing if all containers of the app opted out
+      # do nothing if none if the containers need it
       containers = pod_containers.select do |container|
         samson_container_config(container, :"samson/preStop") != "disabled" &&
         container[:ports] && # no ports = no bugs
-        !container.dig(:lifecycle, :preStop) && # nothing to do
-        template[:kind] != "DaemonSet" # stable ips
+        !container.dig(:lifecycle, :preStop) # nothing to do
       end
       return if containers.empty?
 
