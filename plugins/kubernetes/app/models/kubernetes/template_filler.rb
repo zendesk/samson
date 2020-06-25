@@ -14,6 +14,7 @@ module Kubernetes
       @doc = release_doc
       @template = template.deep_dup
       @index = index
+      migrate_container_annotations
     end
 
     def to_hash(verification: false)
@@ -36,7 +37,6 @@ module Kubernetes
           prefix_service_cluster_ip
           set_service_blue_green if blue_green_color
         elsif Kubernetes::RoleConfigFile.primary?(template)
-          migrate_container_annotations
           set_history_limit if kind == 'Deployment'
           make_stateful_set_match_service if kind == 'StatefulSet'
           set_pre_stop if kind == 'Deployment'
