@@ -160,7 +160,7 @@ module Kubernetes
     def migrate_container_annotations
       all_containers.each do |container|
         container.keys.grep(/^samson\//).each do |key|
-          value = container.delete(key)
+          value = container[key]
           set_container_annotation container, key, value unless samson_container_config(container, key)
         end
       end
