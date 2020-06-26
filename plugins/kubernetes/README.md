@@ -276,15 +276,6 @@ If you still want to change a matchLabel, for example project/role:
  - manually delete pods from old Deployment (`kubectl delete pods -l project=old-name,role=old-role`)
  - unset annotations from step 1
 
-### Blocking Ingress Nginx annotations
-
-Annotations like `nginx.ingress.kubernetes.io/whitelist-source-range` can make apps publicly accessible.
-To block them except for allowed projects, use:
-
-```
-KUBERNETES_INGRESS_NGINX_ANNOTATION_ALLOWED=project-permalink,[project-permalink,...]
-```
-
 ### Kritis
 
 Allow users to set kritis breakglass per deploy-group or deploy by setting environment variable `KRITIS_BREAKGLASS_SUPPORTED=true`

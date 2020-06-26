@@ -47,7 +47,6 @@ module Kubernetes
         validate_prerequisites_kinds
         validate_prerequisites_consistency
         validate_datadog_annotations
-        validate_ingress_annotations_allowed
       end
       validate_env_values
       validate_host_volume_paths
@@ -179,21 +178,6 @@ module Kubernetes
       templates.each do |template|
         next unless template.dig(:spec, :securityContext, :readOnlyRootFilesystem)
         @errors << "securityContext.readOnlyRootFilesystem can only be set at the container level"
-      end
-    end
-
-    def validate_ingress_annotations_allowed
-      flag = "KUBERNETES_INGRESS_NGINX_ANNOTATION_ALLOWED"
-      return unless permalink = @project&.permalink
-      return unless allowed = ENV[flag].to_s.split(",").presence
-      return if allowed.include? permalink
-
-      @elements.each do |e|
-        next unless e[:kind] == "Ingress"
-        (e.dig(:metadata, :annotations) || {}).each_key do |key|
-          next unless key.to_s.start_with?("nginx.ingress.kubernetes.io/")
-          @errors << "Annotation #{key} is not allowed on Ingress unless #{permalink} is in #{flag}"
-        end
       end
     end
 
