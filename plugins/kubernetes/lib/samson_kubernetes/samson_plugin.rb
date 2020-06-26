@@ -51,7 +51,8 @@ Samson::Hooks.callback(:deploy_permitted_params) do
   [
     :kubernetes_rollback,
     :kubernetes_reuse_build,
-    :kubernetes_ignore_kritis_vulnerabilities
+    :kubernetes_ignore_kritis_vulnerabilities,
+    :kubernetes_skip_validations
   ]
 end
 Samson::Hooks.callback(:project_permitted_params) { [:kubernetes_rollout_timeout] }

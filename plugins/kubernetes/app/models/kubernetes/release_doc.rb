@@ -55,7 +55,8 @@ module Kubernetes
             template,
             deploy_group,
             autoscaled: kubernetes_role.autoscaled,
-            delete_resource: delete_resource
+            delete_resource: delete_resource,
+            skip_validations: kubernetes_release.deploy.kubernetes_skip_validations
           )
         end
         resources.sort_by do |r|

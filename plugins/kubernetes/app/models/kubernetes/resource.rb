@@ -37,11 +37,12 @@ module Kubernetes
       UNSETTABLE_METADATA = [:selfLink, :uid, :resourceVersion, :generation, :creationTimestamp, :managedFields].freeze
       attr_reader :template, :deploy_group
 
-      def initialize(template, deploy_group, autoscaled:, delete_resource:)
+      def initialize(template, deploy_group, autoscaled:, delete_resource:, skip_validations: false)
         @template = template
         @deploy_group = deploy_group
         @autoscaled = autoscaled
         @delete_resource = delete_resource
+        @skip_validations = skip_validations
       end
 
       def name
@@ -161,6 +162,7 @@ module Kubernetes
           if server_side_apply?
             server_side_apply @template
           else
+            server_side_validate @template unless @skip_validations
             request :create, @template
           end
         end
@@ -175,6 +177,7 @@ module Kubernetes
         if server_side_apply?
           server_side_apply template_for_update
         else
+          server_side_validate @template unless @skip_validations
           request :update, template_for_update
         end
         expire_resource_cache
@@ -191,10 +194,14 @@ module Kubernetes
       end
 
       # TODO: remove name hack https://github.com/abonas/kubeclient/issues/427
-      def server_side_apply(template)
+      def server_side_apply(template, dry_run: false)
         with_header 'application/apply-patch+yaml' do # NOTE: we send json but say +yaml since +json gives a 415
-          request(:patch, "#{name}?fieldManager=samson&force=true", template, namespace)
+          request(:patch, "#{name}?fieldManager=samson#{dry_run ? "&dryRun=All" : "&force=true"}", template, namespace)
         end
+      end
+
+      def server_side_validate(template)
+        server_side_apply template, dry_run: true
       end
 
       # https://github.com/abonas/kubeclient/issues/268
@@ -297,7 +304,7 @@ module Kubernetes
             end
           rescue Kubeclient::HttpError => e
             message = e.message.to_s
-            if [:patch, :update].include?(verb) && e.error_code == 409
+            if [:update].include?(verb) && e.error_code == 409
               # Update version and retry if we ran into a conflict from VersionedUpdate
               args[0][:metadata][:resourceVersion] = fetch_resource.dig(:metadata, :resourceVersion)
               raise # retry
