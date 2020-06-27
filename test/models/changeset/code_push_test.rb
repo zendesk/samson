@@ -52,7 +52,11 @@ describe Changeset::CodePush do
 
   describe ".valid_webhook?" do
     it "is true" do
-      Changeset::CodePush.valid_webhook?(1).must_equal true
+      Changeset::CodePush.valid_webhook?({}).must_equal true
+    end
+
+    it "does not deploy deleted branches" do
+      Changeset::CodePush.valid_webhook?('deleted' => true).must_equal false
     end
   end
 
