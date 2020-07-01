@@ -10,7 +10,7 @@ describe ReleaseService do
   describe "#release" do
     def assert_failed_ref_find(count)
       GITHUB.unstub(:release_for_tag)
-      project.repository.expects(:commit_from_ref).times(count).returns(nil)
+      project.expects(:repo_commit_from_ref).times(count).returns(nil)
       Samson::Retry.expects(:sleep).times(count - 1)
       assert_raises RuntimeError do
         service.release(commit: commit, author: author)
@@ -23,8 +23,7 @@ describe ReleaseService do
 
     before do
       GITHUB.stubs(:create_release).capture(release_params_used)
-      project.repository.stubs(:commit_from_ref).returns("abc")
-      project.repository.stubs(:commit_from_ref).returns("abc")
+      project.stubs(:repo_commit_from_ref).returns("abc")
       GitRepository.any_instance.expects(:fuzzy_tag_from_ref).returns(nil)
     end
 

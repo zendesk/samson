@@ -250,11 +250,17 @@ describe JobExecution do
     job.output.must_include "Could not find commit for nope"
   end
 
-  it 'errors if job commit resultion fails, but checkout works' do
-    GitRepository.any_instance.expects(:commit_from_ref).returns nil
+  it 'errors if job commit resolution fails' do
+    GitRepository.any_instance.expects(:commit_from_ref).times(4).returns nil
     execute_job
     assert_equal 'errored', job.status
     job.output.must_include "Could not find commit for master"
+  end
+
+  it 'succeeds if job commit resolution fails for a bit' do
+    GitRepository.any_instance.expects(:commit_from_ref).times(4).returns nil, nil, nil, "master"
+    execute_job
+    assert_equal 'succeeded', job.status
   end
 
   it 'cannot setup project if project is locked' do

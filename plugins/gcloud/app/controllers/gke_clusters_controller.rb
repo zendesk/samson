@@ -34,16 +34,16 @@ class GkeClustersController < ApplicationController
       "gcloud", "container", "clusters", "get-credentials", "--zone", zone, cluster,
       *SamsonGcloud.cli_options(project: project)
     ]
-    success, content = Samson::CommandExecutor.execute(
+    result = Samson::CommandExecutor.execute(
       *command,
       whitelist_env: ["PATH"],
       timeout: 10,
       env: {"KUBECONFIG" => path, "CLOUDSDK_CONTAINER_USE_CLIENT_CERTIFICATE" => "True"}
     )
 
-    unless success
+    unless result.status
       flash.now[:alert] = "Failed to execute (make sure container.cluster.getCredentials permissions are granted): " \
-        "#{command.join(" ")} #{content}"
+        "#{command.join(" ")} #{result.output}"
       return render :new
     end
 

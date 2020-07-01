@@ -12,13 +12,13 @@ describe SamsonGcloud::TagResolver do
 
     it "resolves latest" do
       Samson::CommandExecutor.expects(:execute).
-        returns([true, {image_summary: {digest: digest}}.to_json])
+        returns(OpenStruct.new(status: true, output: {image_summary: {digest: digest}}.to_json))
       SamsonGcloud::TagResolver.resolve_docker_image_tag(image).must_equal "#{image}@#{digest}"
     end
 
     it "resolves custom tag" do
       Samson::CommandExecutor.expects(:execute).
-        returns([true, {image_summary: {digest: digest}}.to_json])
+        returns(OpenStruct.new(status: true, output: {image_summary: {digest: digest}}.to_json))
       SamsonGcloud::TagResolver.resolve_docker_image_tag("#{image}:foo").must_equal "#{image}@#{digest}"
     end
 
@@ -32,7 +32,7 @@ describe SamsonGcloud::TagResolver do
 
     it "raises on gcloud error" do
       Samson::CommandExecutor.expects(:execute).
-        returns([false, ""])
+        returns(OpenStruct.new(status: false, output: ""))
       assert_raises RuntimeError do
         SamsonGcloud::TagResolver.resolve_docker_image_tag(image)
       end

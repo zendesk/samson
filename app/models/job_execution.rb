@@ -167,7 +167,11 @@ class JobExecution
   end
 
   def resolve_ref_to_commit
-    commit = @repository.commit_from_ref(@reference)
+    commit = Samson::Retry.until_result tries: 4, wait_time: 1, error: nil do
+      found = @repository.commit_from_ref(@reference)
+      @repository.update_mirror unless found # next try will find it ...
+      found
+    end
     tag = @repository.fuzzy_tag_from_ref(@reference)
     if commit
       @job.update_git_references!(commit: commit, tag: tag)

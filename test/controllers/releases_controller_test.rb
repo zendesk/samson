@@ -35,8 +35,10 @@ describe ReleasesController do
       ]
     }
 
-    stub_github_api "repos/bar/foo/commits/abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd",
+    stub_github_api(
+      "repos/bar/foo/commits/abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd",
       sha: "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"
+    )
     stub_github_api "repos/bar/foo/commits/abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd/status", status_response
     stub_github_api "repos/bar/foo/commits/abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd/check-suites", check_suite_response
     stub_github_api "repos/bar/foo/commits/abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd/check-runs", check_run_response
@@ -82,13 +84,13 @@ describe ReleasesController do
     describe "#create" do
       let(:release_params) { {commit: "abcd"} }
       before do
-        GitRepository.any_instance.expects(:commit_from_ref).with('abcd').returns('a' * 40)
+        GITHUB.expects(:commit).with("bar/foo", "abcd").returns(stub(sha: 'a' * 40))
         GITHUB.stubs(:create_release)
       end
 
       it "creates a new release" do
         GitRepository.any_instance.expects(:fuzzy_tag_from_ref).with('abcd').returns("v2")
-        GitRepository.any_instance.expects(:commit_from_ref).with('v124').returns('a' * 40)
+        GITHUB.expects(:commit).with("bar/foo", "v124").returns(stub(sha: 'a' * 40))
 
         assert_difference "Release.count", +1 do
           post :create, params: {project_id: project.to_param, release: release_params}

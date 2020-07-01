@@ -25,7 +25,7 @@ describe Integrations::BaseController do
     Project.any_instance.stubs(:create_release?).returns(true)
     Build.any_instance.stubs(:validate_git_reference).returns(true)
     GitRepository.any_instance.stubs(:fuzzy_tag_from_ref).returns(nil)
-    GitRepository.any_instance.stubs(:commit_from_ref).returns('v1')
+    GITHUB.stubs(:commit).returns(stub(sha: "abcdef"))
     stub_request(:post, "https://api.github.com/repos/bar/foo/releases")
     stub_request(:get, "https://api.github.com/repos/bar/foo/releases/tags/v1")
   end

@@ -246,10 +246,6 @@ describe "cleanliness" do
     values.uniq.size.must_equal 1, "Expected all places to use consistent PERIODICAL value, but found #{values.inspect}"
   end
 
-  it "has gitignore and dockerignore in sync" do
-    File.read(".dockerignore").must_include File.read(".gitignore")
-  end
-
   it "explicity defines what should happen to dependencies" do
     bad = all_models.flat_map do |model|
       model.reflect_on_all_associations.map do |association|
