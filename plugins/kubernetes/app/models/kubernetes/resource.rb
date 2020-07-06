@@ -190,11 +190,8 @@ module Kubernetes
         end
       end
 
-      # TODO: remove name hack https://github.com/abonas/kubeclient/issues/427
       def server_side_apply(template)
-        with_header 'application/apply-patch+yaml' do # NOTE: we send json but say +yaml since +json gives a 415
-          request(:patch, "#{name}?fieldManager=samson&force=true", template, namespace)
-        end
+        request :apply, template, field_manager: "samson", force: true
       end
 
       # https://github.com/abonas/kubeclient/issues/268
