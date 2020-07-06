@@ -48,6 +48,11 @@ end
   end
 end
 
+ActiveSupport::Notifications.subscribe("external_build.samson") do |*, payload|
+  tags = ["new:#{payload.fetch(:new)}", "saved:#{payload.fetch(:saved)}"]
+  Samson.statsd.increment "builds.external", tags: tags
+end
+
 ActiveSupport::Notifications.subscribe("job_queue.samson") do |*, payload|
   [[:deploys, true], [:jobs, false]].each do |(type, is_deploy)|
     metrics = payload.fetch(type)

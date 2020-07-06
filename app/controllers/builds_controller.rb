@@ -63,6 +63,10 @@ class BuildsController < ApplicationController
 
     start_docker_build if saved && !registering_external_build?
 
+    # Emit a metric to help users assess condition of integration between
+    # Samson and any external build system.
+    ActiveSupport::Notifications.instrument('external_build.samson', new: new, saved: saved)
+
     status = new ? :created : :ok
     respond_to_save saved, status, :new
   end
