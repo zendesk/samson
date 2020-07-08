@@ -23,6 +23,6 @@ that same project. This is done through the "Users" tab on the Project settings 
 
 Project Role | Description
 ------------ | ---
-Viewer       | Can be used to remove Deployer or Admin Project Role and rely on his system level role.
-Deployer     | Can deploy a project, regardless if his system level role.
-Admin        | Deployer + can setup and configure the project, regardless of his system level role.
+Viewer       | Can be used to remove Deployer or Admin Project Role and rely on their system level role.
+Deployer     | Can deploy a project, regardless of their system level role.
+Admin        | Deployer + can setup and configure the project, regardless of their system level role.
