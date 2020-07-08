@@ -285,6 +285,12 @@ describe CommitStatus do
         status.state.must_equal 'pending'
       end
 
+      it 'returns error if github stale the check suites' do
+        stub_github_api(check_suite_url, check_suites: [{conclusion: 'stale', id: 1}])
+
+        status.state.must_equal 'error'
+      end
+
       it 'maps check status to state equivalent' do
         stub_github_api(check_suite_url, check_suites: [{conclusion: 'action_required', id: 1}])
 
