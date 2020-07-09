@@ -8,7 +8,7 @@ on:
 jobs:
   main:
     name: ruby-matrix-mysql
-    runs-on: [ self-hosted, zendesk-stable ]
+    runs-on: ubuntu-latest
     env:
       FOSSA_API_KEY: ${{ secrets.FOSSA_API_KEY }}
       RAILS_ENV: test
