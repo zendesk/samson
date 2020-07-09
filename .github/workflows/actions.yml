@@ -91,7 +91,7 @@ jobs:
         mysql --host 127.0.0.1 --port 3306 -u root -e 'set GLOBAL innodb_large_prefix = true'
         mysql --host 127.0.0.1 --port 3306 -u root -e 'set GLOBAL innodb_file_per_table = true'
         mysql --host 127.0.0.1 --port 3306 -u root -e 'set GLOBAL innodb_file_format = "barracuda"'
-        mysql --host 127.0.0.1 --port 3306 -u root -e 'GRANT ALL ON *.* TO 'travis'@'127.0.0.1';'
+        mysql --host 127.0.0.1 --port 3306 -u root -e 'GRANT ALL ON *.* TO '%'@'%';'
     - name: ${{ matrix.task }}
       env:
         TASK: ${{ matrix.task }} ${{ matrix.db }}
