@@ -13,6 +13,7 @@ jobs:
       FOSSA_API_KEY: ${{ secrets.FOSSA_API_KEY }}
       RAILS_ENV: test
       POSTGRES_PORT: 5432
+      PGPASSWORD: postgres
     services:
       # Label used to access the service container
       postgres:
