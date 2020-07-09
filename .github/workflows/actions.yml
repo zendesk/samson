@@ -72,7 +72,9 @@ jobs:
             db: sqlite3
           - task: fossa
             run: |
+              export FOSSA_API_KEY=${{ secrets.FOSSA_API_KEY }}
               echo FOSSA_API_KEY should have been set already
+              echo string length of 
               echo $FOSSA_API_KEY | wc -c
               export BINDIR=$(pwd) && curl -H 'Cache-Control:no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install.sh | bash
               ([[ -z "$FOSSA_API_KEY" ]] && [[ "$GITHUB_EVENT_NAME" != "pull_request" ]]) || (./fossa init && ./fossa analyze)
