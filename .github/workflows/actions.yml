@@ -46,7 +46,7 @@ jobs:
           - 'rubocop'
           - 'flay'
           - 'bundle_audit'
-        run: bundle exec rake $TASK
+        run: [ 'bundle exec rake $TASK' ]
         db: ['']
         include:
           - task: 'db:create test:migrate_without_plugins'
