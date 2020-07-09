@@ -83,6 +83,8 @@ jobs:
         key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
     - name: before_install
       run: |
+        sudo apt update
+        sudo apt-get install -y libsqlite3-dev
         bundle config path vendor/bundle
         bundle config set deployment 'true'
         bundle install --jobs=3 --retry=3
