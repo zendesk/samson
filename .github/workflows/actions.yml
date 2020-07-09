@@ -11,7 +11,6 @@ jobs:
     name: ruby-matrix-mysql
     runs-on: ubuntu-latest
     env:
-      FOSSA_API_KEY: ${{ secrets.FOSSA_API_KEY }}
       RAILS_ENV: test
       POSTGRES_PORT: 5432
       PGPASSWORD: postgres
@@ -72,7 +71,6 @@ jobs:
             db: sqlite3
           - task: fossa
             run: |
-              export FOSSA_API_KEY=${{ secrets.FOSSA_API_KEY }}
               echo FOSSA_API_KEY should have been set already
               echo string length of 
               echo $FOSSA_API_KEY | wc -c
@@ -99,8 +97,9 @@ jobs:
         mysql --host 127.0.0.1 --port 3306 -u root -e 'set GLOBAL innodb_file_format = "barracuda"'
         mysql --host 127.0.0.1 --port 3306 -u root -e "create user 'travis'@'%'"
         mysql --host 127.0.0.1 --port 3306 -u root -e "GRANT ALL ON *.* TO 'travis'@'%';"
-    - name: ${{ matrix.task }}
+    - name: ${{ matrix.task }} ${{ matrix.db }}
       env:
-        TASK: ${{ matrix.task }} ${{ matrix.db }}
+        FOSSA_API_KEY: ${{ secrets.FOSSA_API_KEY }}
+        TASK: ${{ matrix.task }}
       run: |
         ${{ matrix.run }}
