@@ -15,8 +15,7 @@ module Kubernetes
 
       # Some kinds can be updated only using PATCH requests.
       def deploy
-        return super unless patch_replace?
-        patch_replace
+        patch_replace? ? patch_replace : super
       end
 
       private
@@ -26,9 +25,7 @@ module Kubernetes
         patch_paths.each do |keys|
           update.dig_set keys, @template.dig_fetch(*keys)
         end
-        with_header 'application/json-patch+json' do
-          request :patch, name, [{op: "replace", path: "/spec", value: update.fetch(:spec)}], namespace
-        end
+        request :json_patch, name, [{op: "replace", path: "/spec", value: update.fetch(:spec)}], namespace
       end
     end
 
@@ -192,16 +189,6 @@ module Kubernetes
 
       def server_side_apply(template)
         request :apply, template, field_manager: "samson", force: true
-      end
-
-      # https://github.com/abonas/kubeclient/issues/268
-      def with_header(header)
-        kubeclient = client
-        old = kubeclient.headers['Content-Type']
-        kubeclient.headers['Content-Type'] = header
-        yield
-      ensure
-        kubeclient.headers['Content-Type'] = old
       end
 
       def ensure_not_updating_match_labels
