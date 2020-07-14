@@ -1,4 +1,4 @@
-name: repo-checks
+name: CI
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
 
 jobs:
   main:
-    name: ruby-matrix-mysql
+    name: CI
     runs-on: ubuntu-latest
     env:
       RAILS_ENV: test
@@ -36,43 +36,39 @@ jobs:
           MYSQL_ALLOW_EMPTY_PASSWORD: yes
           MYSQL_DATABASE: test
         ports:
-          - 3306:3306
+        - 3306:3306
         options: --health-cmd "mysqladmin ping" --health-interval 10s --health-timeout 5s --health-retries 10
     strategy:
       fail-fast: true
       matrix:
-        task:
-          - 'assets:precompile'
-          - 'brakeman'
-          - 'rubocop'
-          - 'flay'
-          - 'bundle_audit'
-        run: [ 'bundle exec rake $TASK' ]
-        db: ['']
+        name:
+        - "assets:precompile"
+        - "brakeman"
+        - "rubocop"
+        - "flay"
+        - "bundle_audit"
+        run: ["bundle exec rake $NAME"]
         include:
-          - task: 'db:create test:migrate_without_plugins'
-            run: |
-              export PLUGINS='' DATABASE_URL=mysql2://travis@127.0.0.1/samson_test?reconnect=true BUNDLE_WITHOUT=postgres:sqlite USE_UTF8MB4=1 SILENCE_MIGRATIONS=1
-            db: mysql no plugin
-          - task: 'db:create db:migrate default'
-            run: |
-              export DATABASE_URL=mysql2://travis@127.0.0.1/samson_test?reconnect=true BUNDLE_WITHOUT=postgres:sqlite USE_UTF8MB4=1 SILENCE_MIGRATIONS=1
-              bundle exec rake $TASK
-            db: mysql
-          - task: 'db:create db:migrate default'
-            run: |
-              export DATABASE_URL=postgresql://postgres@127.0.0.1/samson_test BUNDLE_WITHOUT=mysql:sqlite SILENCE_MIGRATIONS=1
-              bundle exec rake $TASK
-            db: postgres
-          - task: 'db:create db:migrate default'
-            run: |
-              export DATABASE_URL=sqlite3://null$PWD/db/test.sqlite3 BUNDLE_WITHOUT=postgres:mysql SILENCE_MIGRATIONS=1
-              bundle exec rake $TASK
-            db: sqlite3
-          - task: fossa
-            run: |
-              export BINDIR=$(pwd) && curl -H 'Cache-Control:no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install.sh | bash
-              ([[ -z "$FOSSA_API_KEY" ]] && [[ "$GITHUB_EVENT_NAME" != "pull_request" ]]) || (./fossa init && ./fossa analyze)
+        - name: test mysql w/o plugins
+          run: |
+            export PLUGINS='' DATABASE_URL=mysql2://travis@127.0.0.1/samson_test?reconnect=true BUNDLE_WITHOUT=postgres:sqlite USE_UTF8MB4=1 SILENCE_MIGRATIONS=1
+            bundle exec rake db:create test:migrate_without_plugins
+        - name: test mysql
+          run: |
+            export DATABASE_URL=mysql2://travis@127.0.0.1/samson_test?reconnect=true BUNDLE_WITHOUT=postgres:sqlite USE_UTF8MB4=1 SILENCE_MIGRATIONS=1
+            bundle exec rake db:create db:migrate default
+        - name: test postgres
+          run: |
+            export DATABASE_URL=postgresql://postgres@127.0.0.1/samson_test BUNDLE_WITHOUT=mysql:sqlite SILENCE_MIGRATIONS=1
+            bundle exec rake db:create db:migrate default
+        - name: test sqlite
+          run: |
+            export DATABASE_URL=sqlite3://null$PWD/db/test.sqlite3 BUNDLE_WITHOUT=postgres:mysql SILENCE_MIGRATIONS=1
+            bundle exec rake db:create db:migrate default
+        - name: fossa
+          run: |
+            export BINDIR=$(pwd) && curl -H 'Cache-Control:no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install.sh | bash
+            ([[ -z "$FOSSA_API_KEY" ]] && [[ "$GITHUB_EVENT_NAME" != "pull_request" ]]) || (./fossa init && ./fossa analyze)
     steps:
     - uses: zendesk/checkout@v2
     - uses: zendesk/setup-ruby@v1
@@ -94,9 +90,8 @@ jobs:
         mysql --host 127.0.0.1 --port 3306 -u root -e 'set GLOBAL innodb_file_format = "barracuda"'
         mysql --host 127.0.0.1 --port 3306 -u root -e "create user 'travis'@'%'"
         mysql --host 127.0.0.1 --port 3306 -u root -e "GRANT ALL ON *.* TO 'travis'@'%';"
-    - name: ${{ matrix.task }} ${{ matrix.db }}
+    - name: ${{ matrix.name }}
       env:
+        NAME: ${{ matrix.name }}
         FOSSA_API_KEY: ${{ secrets.FOSSA_API_KEY }}
-        TASK: ${{ matrix.task }}
-      run: |
-        ${{ matrix.run }}
+      run: ${{ matrix.run }}
