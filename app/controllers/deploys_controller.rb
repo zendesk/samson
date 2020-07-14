@@ -97,6 +97,7 @@ class DeploysController < ApplicationController
           type: 'text/plain'
       end
       format.json do
+        @deploy.job.serialize_execution_output if params[:serialize_execution_output] # show live job output
         render_as_json :deploy, @deploy, nil, allowed_includes: [:job, :user, :project, :stage]
       end
     end
