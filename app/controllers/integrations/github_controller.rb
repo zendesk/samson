@@ -4,8 +4,7 @@ class Integrations::GithubController < Integrations::BaseController
   WEBHOOK_HANDLERS = {
     'push' => Changeset::CodePush,
     'pull_request' => Changeset::PullRequest,
-    'issue_comment' => Changeset::IssueComment,
-    'check_suite' => Changeset::CheckSuite
+    'issue_comment' => Changeset::IssueComment
   }.freeze
 
   def self.secret_token
