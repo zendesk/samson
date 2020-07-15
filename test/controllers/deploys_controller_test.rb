@@ -162,6 +162,16 @@ describe DeploysController do
           get :show, params: {format: :json, id: deploy.to_param, includes: 'project,stage'}
           json.keys.must_equal ['deploy', 'projects', 'stages']
         end
+
+        it "can request execution output" do
+          freeze_time
+          execution = JobExecution.new("master", deploy.job)
+          execution.output.puts "X"
+          Job.any_instance.expects(:execution).returns(execution)
+          params = {project_id: project, id: deploy, includes: "job", serialize_execution_output: true}
+          get :show, params: params, format: :json
+          json.dig("jobs", 0, "output").must_equal "[04:05:06] X\n"
+        end
       end
     end
 

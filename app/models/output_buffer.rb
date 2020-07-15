@@ -91,6 +91,14 @@ class OutputBuffer
     @mutex.synchronize { @listeners.delete(queue) }
   end
 
+  # make a shallow copy of the buffer so we can close and serialize it
+  def closed_copy
+    copy = OutputBuffer.new
+    copy.instance_variable_set(:@previous, @previous)
+    copy.close
+    copy
+  end
+
   private
 
   # TODO: ideally the TerminalOutputScanner should handle this, but that would require us to record the timestamp

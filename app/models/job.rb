@@ -76,7 +76,7 @@ class Job < ActiveRecord::Base
     !JobQueue.dequeue(id) && ex = execution # is executing
     return true if !ex && !active?
 
-    update_attribute(:canceller, canceller) unless self.canceller
+    update_attribute(:canceller, canceller) unless self.canceller # uncovered
 
     if ex
       JobQueue.cancel(id) # switches job status in the runner thread for consistent status in after_deploy hooks
@@ -130,6 +130,13 @@ class Job < ActiveRecord::Base
 
   def pid
     execution&.pid
+  end
+
+  # set current incomplete output
+  def serialize_execution_output
+    return unless ex = execution
+    out = ex.output.closed_copy
+    self.output = TerminalOutputScanner.new(out).to_s
   end
 
   private

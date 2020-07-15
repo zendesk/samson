@@ -2,7 +2,7 @@
 require_relative '../test_helper'
 require 'ar_multi_threaded_transactional_tests'
 
-SingleCov.covered! uncovered: 1
+SingleCov.covered!
 
 describe Job do
   include GitRepoTestHelper
@@ -403,6 +403,24 @@ describe Job do
       )
 
       job.send(:report_state)
+    end
+  end
+
+  describe "#serialize_execution_output" do
+    before { freeze_time }
+
+    it "does nothing when finished" do
+      job.output = "X"
+      job.serialize_execution_output
+      job.output.must_equal "X"
+    end
+
+    it "serialized execution" do
+      execution = JobExecution.new("master", job)
+      job.stubs(:execution).returns(execution)
+      execution.output.puts "X"
+      job.serialize_execution_output
+      job.output.must_equal "[04:05:06] X\n"
     end
   end
 end
