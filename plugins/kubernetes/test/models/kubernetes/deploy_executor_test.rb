@@ -502,12 +502,22 @@ describe Kubernetes::DeployExecutor do
     end
 
     it "stops when detecting a failure" do
+      pod_reply.dig_set([:items, 0, :spec, :restartPolicy], 'Never')
       pod_status[:phase] = "Failed"
 
       refute execute
 
       out.must_include "resque-worker Pod: Failed\n"
       out.must_include "UNSTABLE"
+    end
+
+    it "waits for new pods when scheduling fails" do
+      pod_status[:phase] = "Failed"
+
+      refute execute
+
+      out.must_include "resque-worker Pod: Missing\n"
+      out.must_include "TIMEOUT, pods took too long to get live"
     end
 
     describe "replica sets" do

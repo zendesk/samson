@@ -147,6 +147,11 @@ module Kubernetes
       end
 
       pods = fetch_grouped(:pods, 'v1')
+
+      # Pods that get OutOfcpu/OutOfmemory will be marked as Failed.
+      # Scheduler will create a replacement pod. Need to ignore Failed pods when reporting statuses.
+      pods.reject! { |p| p.dig(:status, :phase) == 'Failed' && p.dig(:spec, :restartPolicy) != 'Never' }
+
       replica_sets = fetch_replica_sets(release_docs)
       non_pod_statuses +
         release_docs.flat_map do |release_doc|
