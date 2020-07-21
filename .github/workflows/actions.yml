@@ -8,7 +8,7 @@ on:
 
 jobs:
   main:
-    name: CI
+    name: ${{ matrix.name }}
     runs-on: ubuntu-latest
     env:
       RAILS_ENV: test
@@ -90,8 +90,7 @@ jobs:
         mysql --host 127.0.0.1 --port 3306 -u root -e 'set GLOBAL innodb_file_format = "barracuda"'
         mysql --host 127.0.0.1 --port 3306 -u root -e "create user 'travis'@'%'"
         mysql --host 127.0.0.1 --port 3306 -u root -e "GRANT ALL ON *.* TO 'travis'@'%';"
-    - name: ${{ matrix.name }}
-      env:
+    - env:
         NAME: ${{ matrix.name }}
         FOSSA_API_KEY: ${{ secrets.FOSSA_API_KEY }}
       run: ${{ matrix.run }}
