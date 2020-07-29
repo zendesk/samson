@@ -319,6 +319,10 @@ module Kubernetes
           {mountPath: "/secretkeys", name: "secretkeys"},
           secret_vol
         ],
+        securityContext: {
+          readOnlyRootFilesystem: true,
+          runAsNonRoot: true
+        },
         env: [
           {name: "VAULT_TLS_VERIFY", value: vault_client.options.fetch(:ssl_verify).to_s},
           {name: "VAULT_MOUNT", value: Samson::Secrets::VaultClientManager::MOUNT},
