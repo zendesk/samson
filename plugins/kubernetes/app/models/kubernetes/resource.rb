@@ -362,9 +362,11 @@ module Kubernetes
     class Deployment < Base
       def request_delete
         # Make kubernetes kill all the pods by scaling down
-        restore_template do
-          @template.dig_set [:spec, :replicas], 0
-          update
+        unless resource.dig(:status, :replicas) == 0
+          restore_template do
+            @template.dig_set [:spec, :replicas], 0
+            update
+          end
         end
 
         # Wait for there to be zero pods
