@@ -501,6 +501,14 @@ describe Kubernetes::Resource do
         end
       end
 
+      it "does nothing when deployment has 0 replicas" do
+        client = resource.send(:client)
+        client.expects(:get_deployment).raises(Kubeclient::ResourceNotFoundError.new(404, 'Not Found', {}))
+        client.expects(:get_deployment).times(3).returns(deployment_stub(0))
+        client.expects(:delete_deployment)
+        resource.delete
+      end
+
       it "waits for pods to terminate before deleting" do
         client = resource.send(:client)
         client.expects(:update_deployment).with do |template|
@@ -523,8 +531,10 @@ describe Kubernetes::Resource do
         client.expects(:update_deployment).with do |template|
           template[:spec][:replicas].must_equal 0
         end
-        client.expects(:get_deployment).raises(Kubeclient::ResourceNotFoundError.new(404, 'Not Found', {}))
-        client.expects(:get_deployment).times(3).returns(deployment_stub(0))
+        client.expects(:get_deployment).
+          raises(Kubeclient::ResourceNotFoundError.new(404, 'Not Found', {})) # final: it is gone
+        client.expects(:get_deployment).times(2).returns(deployment_stub(0)) # checking it is down
+        client.expects(:get_deployment).returns(deployment_stub(1)) # first
         client.expects(:delete_deployment)
         resource.delete
       end
