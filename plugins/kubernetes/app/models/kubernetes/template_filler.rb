@@ -340,11 +340,14 @@ module Kubernetes
 
       # share secrets volume between all pod containers
       pod_containers.each do |container|
-        (container[:volumeMounts] ||= []).push secret_vol
+        mounts = (container[:volumeMounts] ||= [])
+        mounts.push secret_vol
+        mounts.uniq!
       end
 
       # define the shared volumes in the pod
-      (pod_template[:spec][:volumes] ||= []).concat [
+      volumes = (pod_template[:spec][:volumes] ||= [])
+      volumes.concat [
         {name: secret_vol.fetch(:name), emptyDir: {medium: 'Memory'}},
         {name: "vaultauth", secret: {secretName: "vaultauth"}},
         {
@@ -354,6 +357,7 @@ module Kubernetes
           }
         }
       ]
+      volumes.uniq!
     end
 
     def set_init_containers
