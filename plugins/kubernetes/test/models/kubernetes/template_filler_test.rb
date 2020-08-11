@@ -703,8 +703,13 @@ describe Kubernetes::TemplateFiller do
       end
 
       it "adds to existing volume definitions in the puller" do
-        raw_template[:spec][:template][:spec][:volumes] = [{}, {}]
-        template.to_hash[:spec][:template][:spec][:volumes].count.must_equal 5
+        raw_template[:spec][:template][:spec][:volumes] = [{}]
+        template.to_hash[:spec][:template][:spec][:volumes].count.must_equal 4
+      end
+
+      it "does not duplicate definitions" do
+        raw_template[:spec][:template][:spec][:volumes] = [{name: "vaultauth", secret: {secretName: "vaultauth"}}]
+        template.to_hash[:spec][:template][:spec][:volumes].count.must_equal 3
       end
 
       it "adds to existing volume definitions in the primary container" do
