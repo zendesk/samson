@@ -19,10 +19,10 @@ class Command < ActiveRecord::Base
     where(project_id: nil)
   end
 
-  # used commands in front then all available
+  # stage commands, then project commands by usage, then global commands by usage
   def self.for_stage(stage)
     usages = usage_ids
-    available = Command.for_project(stage.project).sort_by { |c| -usages.count(c.id) }
+    available = Command.for_project(stage.project).sort_by { |c| [c.global? ? 1 : 0, -usages.count(c.id)] }
     (stage.commands + available).uniq
   end
 
