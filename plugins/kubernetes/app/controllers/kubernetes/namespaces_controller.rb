@@ -53,10 +53,7 @@ class Kubernetes::NamespacesController < ResourceController
   end
 
   def sync_all
-    clusters = Kubernetes::Cluster.all.to_a
-    warnings = Samson::Parallelizer.map(Kubernetes::Namespace.all.to_a) do |namespace|
-      upsert_namespace clusters, namespace
-    end.flatten(1)
+    warnings = apply_namespaces Kubernetes::Cluster.all, Kubernetes::Namespace.all
     show_namespace_warnings warnings
     redirect_to action: :index
   end
@@ -69,7 +66,7 @@ class Kubernetes::NamespacesController < ResourceController
   private
 
   def create_callback
-    warnings = upsert_namespace(Kubernetes::Cluster.all, @kubernetes_namespace)
+    warnings = apply_namespaces Kubernetes::Cluster.all, [@kubernetes_namespace]
     warnings += copy_secrets(
       ENV['KUBERNETES_COPY_SECRETS_TO_NEW_NAMESPACE'].to_s.split(","),
       from: 'default',
@@ -100,34 +97,29 @@ class Kubernetes::NamespacesController < ResourceController
   end
 
   def sync_namespace
-    warnings = upsert_namespace Kubernetes::Cluster.all, @kubernetes_namespace
+    warnings = apply_namespaces Kubernetes::Cluster.all, [@kubernetes_namespace]
     show_namespace_warnings warnings
   end
 
   # @return [Array<String>] errors
-  def upsert_namespace(clusters, namespace)
-    clusters.map do |cluster|
+  def apply_namespaces(clusters, namespaces)
+    Samson::Parallelizer.map clusters.to_a.product(namespaces) do |cluster, namespace|
       begin
-        client = cluster.client('v1')
-
-        begin
-          SamsonKubernetes.retry_on_connection_errors { client.get_namespace(namespace.name) }
-        rescue Kubeclient::ResourceNotFoundError
-          SamsonKubernetes.retry_on_connection_errors { client.create_namespace(namespace.manifest) }
-        else
-          # add configuration, but do not override labels/annotations set by other tools
-          SamsonKubernetes.retry_on_connection_errors { client.patch_namespace(namespace.name, namespace.manifest) }
+        SamsonKubernetes.retry_on_connection_errors do
+          cluster.client('v1').apply_namespace(
+            Kubeclient::Resource.new(namespace.manifest), field_manager: "samson", force: true
+          )
         end
         nil
       rescue StandardError => e
-        "Failed to upsert namespace #{namespace.name} in cluster #{cluster.name}: #{e.message}"
+        "Failed to apply namespace #{namespace.name} in cluster #{cluster.name}: #{e.message}"
       end
     end.compact
   end
 
   def show_namespace_warnings(warnings)
     return if warnings.empty?
-    flash[:warn] = helpers.simple_format("Error upserting namespace in some clusters:\n" + warnings.join("\n"))
+    flash[:warn] = helpers.simple_format("Error applying namespace in some clusters:\n" + warnings.join("\n"))
   end
 
   def resource_params

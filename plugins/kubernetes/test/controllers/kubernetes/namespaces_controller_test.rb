@@ -89,6 +89,8 @@ describe Kubernetes::NamespacesController do
   end
 
   as_a :admin do
+    let(:apply_url) { "http://foobar.server/api/v1/namespaces/test?fieldManager=samson&force=true" }
+
     describe "#new" do
       it "renders" do
         get :new
@@ -132,14 +134,12 @@ describe Kubernetes::NamespacesController do
       end
 
       it "updates namespace when template was changed" do
-        assert_request(:get, "http://foobar.server/api/v1/namespaces/test", to_return: {body: '{}'}) do
-          assert_request(:patch, "http://foobar.server/api/v1/namespaces/test", to_return: {body: '{}'}) do
-            patch(
-              :update,
-              params: {id: namespace.id, kubernetes_namespace: {template: "metadata:\n  labels:\n    team: bar"}}
-            )
-            assert_redirected_to namespace
-          end
+        assert_request(:patch, apply_url, to_return: {body: '{}'}) do
+          patch(
+            :update,
+            params: {id: namespace.id, kubernetes_namespace: {template: "metadata:\n  labels:\n    team: bar"}}
+          )
+          assert_redirected_to namespace
         end
       end
     end
@@ -156,10 +156,8 @@ describe Kubernetes::NamespacesController do
 
     describe "#sync" do
       it "syncs namespaces/clusters" do
-        assert_request(:get, "http://foobar.server/api/v1/namespaces/test", to_return: {status: 404}) do
-          assert_request(:post, "http://foobar.server/api/v1/namespaces", to_return: {body: '{}'}) do
-            post :sync, params: {id: namespace.id}
-          end
+        assert_request(:patch, apply_url, to_return: {body: '{}'}) do
+          post :sync, params: {id: namespace.id}
         end
         assert_redirected_to "http://test.host/kubernetes/namespaces/#{namespace.id}"
         refute flash[:warn]
@@ -168,23 +166,19 @@ describe Kubernetes::NamespacesController do
 
     describe "#sync_all" do
       it "syncs namespaces/clusters" do
-        assert_request(:get, "http://foobar.server/api/v1/namespaces/test", to_return: {status: 404}) do
-          assert_request(:post, "http://foobar.server/api/v1/namespaces", to_return: {body: '{}'}) do
-            post :sync_all
-          end
+        assert_request(:patch, apply_url, to_return: {body: '{}'}) do
+          post :sync_all
         end
         assert_redirected_to "http://test.host/kubernetes/namespaces"
         refute flash[:warn]
       end
 
       it "shows errors" do
-        assert_request(:get, "http://foobar.server/api/v1/namespaces/test", to_return: {status: 404}) do
-          assert_request(:post, "http://foobar.server/api/v1/namespaces", to_return: {status: 404}) do
-            post :sync_all
-          end
+        assert_request(:patch, apply_url, to_return: {status: 404}) do
+          post :sync_all
         end
         assert_redirected_to "http://test.host/kubernetes/namespaces"
-        flash[:warn].must_include "Failed to upsert namespace test in cluster test: 404"
+        flash[:warn].must_include "Failed to apply namespace test in cluster test: 404 Not Found"
       end
     end
 
@@ -192,34 +186,21 @@ describe Kubernetes::NamespacesController do
       before { @controller.instance_variable_set(:@kubernetes_namespace, namespace) }
 
       it "creates a namespace" do
-        assert_request(:get, "http://foobar.server/api/v1/namespaces/test", to_return: {status: 404}) do
-          assert_request(:post, "http://foobar.server/api/v1/namespaces", to_return: {body: "{}"}) do
-            @controller.send(:create_callback)
-          end
+        assert_request(:patch, apply_url, to_return: {body: '{}'}) do
+          @controller.send(:create_callback)
         end
         refute flash[:warn]
       end
 
       it "shows creation errors" do
-        assert_request(:get, "http://foobar.server/api/v1/namespaces/test", to_return: {status: 404}) do
-          retries = SamsonKubernetes::API_RETRIES
-          assert_request(:post, "http://foobar.server/api/v1/namespaces", to_timeout: [], times: retries + 1) do
-            @controller.send(:create_callback)
-          end
+        retries = SamsonKubernetes::API_RETRIES
+        assert_request(:patch, apply_url, to_timeout: [], times: retries + 1) do
+          @controller.send(:create_callback)
         end
         flash[:warn].must_equal <<~TEXT.rstrip
-          <p>Error upserting namespace in some clusters:
-          <br />Failed to upsert namespace test in cluster test: Timed out connecting to server</p>
+          <p>Error applying namespace in some clusters:
+          <br />Failed to apply namespace test in cluster test: Timed out connecting to server</p>
         TEXT
-      end
-
-      it "adds annotation if namespace exists" do
-        assert_request(:get, "http://foobar.server/api/v1/namespaces/test", to_return: {body: "{}"}) do
-          assert_request(:patch, "http://foobar.server/api/v1/namespaces/test", to_return: {body: "{}"}) do
-            @controller.send(:create_callback)
-          end
-        end
-        refute flash[:warn]
       end
     end
 
