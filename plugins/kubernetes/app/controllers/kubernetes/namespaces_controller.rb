@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 class Kubernetes::NamespacesController < ResourceController
   before_action :authorize_admin!, except: [:show, :index, :preview]
   before_action :set_resource, only: [:show, :update, :destroy, :new, :create, :sync]
@@ -53,10 +54,7 @@ class Kubernetes::NamespacesController < ResourceController
   end
 
   def sync_all
-    clusters = Kubernetes::Cluster.all.to_a
-    warnings = Samson::Parallelizer.map(Kubernetes::Namespace.all.to_a) do |namespace|
-      upsert_namespace clusters, namespace
-    end.flatten(1)
+    warnings = apply_namespaces Kubernetes::Cluster.all.to_a, Kubernetes::Namespace.all.to_a
     show_namespace_warnings warnings
     redirect_to action: :index
   end
@@ -69,7 +67,7 @@ class Kubernetes::NamespacesController < ResourceController
   private
 
   def create_callback
-    warnings = upsert_namespace(Kubernetes::Cluster.all, @kubernetes_namespace)
+    warnings = apply_namespaces Kubernetes::Cluster.all.to_a, [@kubernetes_namespace]
     warnings += copy_secrets(
       ENV['KUBERNETES_COPY_SECRETS_TO_NEW_NAMESPACE'].to_s.split(","),
       from: 'default',
@@ -100,34 +98,50 @@ class Kubernetes::NamespacesController < ResourceController
   end
 
   def sync_namespace
-    warnings = upsert_namespace Kubernetes::Cluster.all, @kubernetes_namespace
+    warnings = apply_namespaces Kubernetes::Cluster.all.to_a, [@kubernetes_namespace]
     show_namespace_warnings warnings
   end
 
+  # update namespace only if required to be efficient and even if it the samson request times out to eventually complete
   # @return [Array<String>] errors
-  def upsert_namespace(clusters, namespace)
-    clusters.map do |cluster|
-      begin
-        client = cluster.client('v1')
+  def apply_namespaces(clusters, namespaces)
+    Samson::Parallelizer.map clusters do |cluster|
+      client = cluster.client("v1")
+      existing_namespaces = client.get_namespaces.fetch(:items).each_with_object({}) do |ns, h|
+        h[ns.dig(:metadata, :name)] = ns
+      end
+      namespaces.map do |namespace|
+        manifest = namespace.manifest
+        next unless apply_needed?(existing_namespaces[namespace.name], manifest)
 
         begin
-          SamsonKubernetes.retry_on_connection_errors { client.get_namespace(namespace.name) }
-        rescue Kubeclient::ResourceNotFoundError
-          SamsonKubernetes.retry_on_connection_errors { client.create_namespace(namespace.manifest) }
-        else
-          # add configuration, but do not override labels/annotations set by other tools
-          SamsonKubernetes.retry_on_connection_errors { client.patch_namespace(namespace.name, namespace.manifest) }
+          SamsonKubernetes.retry_on_connection_errors do
+            client.apply_namespace(Kubeclient::Resource.new(manifest), field_manager: "samson", force: true)
+          end
+          nil
+        rescue StandardError => e
+          "Failed to apply namespace #{namespace.name} in cluster #{cluster.name}: #{e.message}"
         end
-        nil
-      rescue StandardError => e
-        "Failed to upsert namespace #{namespace.name} in cluster #{cluster.name}: #{e.message}"
       end
-    end.compact
+    end.flatten(1).compact
+  end
+
+  # Only update if we change or add anything.
+  # This breaks the ability to remove a label that was added earlier, but it allows full sync to work efficiently
+  # and eventually succeed even if a single samson request times out.
+  # Compares annotations and labels, since nothing else makes sense to change (not spec, managedFields, uid etc)
+  def apply_needed?(existing_namespace, manifest)
+    return true unless existing_namespace
+    [[:metadata, :annotations], [:metadata, :labels]].any? do |path|
+      actual = existing_namespace.dig(*path) || {}
+      expected = manifest.dig(*path) || (next false)
+      !(expected <= actual) # rubocop:disable Style/InverseMethods
+    end
   end
 
   def show_namespace_warnings(warnings)
     return if warnings.empty?
-    flash[:warn] = helpers.simple_format("Error upserting namespace in some clusters:\n" + warnings.join("\n"))
+    flash[:warn] = helpers.simple_format("Error applying namespace in some clusters:\n" + warnings.join("\n"))
   end
 
   def resource_params

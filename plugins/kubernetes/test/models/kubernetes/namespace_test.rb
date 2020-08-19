@@ -75,12 +75,20 @@ describe Kubernetes::Namespace do
     let(:url) { "http://www.test-url.com/kubernetes/namespaces/#{namespace.id}" }
 
     it "is a hash" do
-      namespace.manifest.must_equal metadata: {name: "test", annotations: {"samson/url": url}, labels: {team: "foo"}}
+      namespace.manifest.must_equal(
+        apiVersion: "v1",
+        kind: "Namespace",
+        metadata: {name: "test", annotations: {"samson/url": url}, labels: {team: "foo"}}
+      )
     end
 
     it "merges template" do
       namespace.template = {"metadata" => {"name" => "no", "foo" => "bar"}}.to_yaml
-      namespace.manifest.must_equal metadata: {name: "test", foo: "bar", annotations: {"samson/url": url}}
+      namespace.manifest.must_equal(
+        apiVersion: "v1",
+        kind: "Namespace",
+        metadata: {name: "test", foo: "bar", annotations: {"samson/url": url}}
+      )
     end
   end
 end

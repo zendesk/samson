@@ -18,6 +18,8 @@ module Kubernetes
 
     def manifest
       parsed_template.deep_symbolize_keys.deep_merge(
+        apiVersion: "v1",
+        kind: "Namespace",
         metadata: {
           name: name,
           annotations: {
