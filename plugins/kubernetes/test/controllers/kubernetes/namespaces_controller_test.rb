@@ -134,13 +134,15 @@ describe Kubernetes::NamespacesController do
       end
 
       it "updates namespace when template was changed" do
-        assert_request(:patch, apply_url, to_return: {body: '{}'}) do
-          patch(
-            :update,
-            params: {id: namespace.id, kubernetes_namespace: {template: "metadata:\n  labels:\n    team: bar"}}
-          )
-          assert_redirected_to namespace
+        assert_request(:get, "http://foobar.server/api/v1/namespaces", to_return: {body: {items: []}.to_json}) do
+          assert_request(:patch, apply_url, to_return: {body: '{}'}) do
+            patch(
+              :update,
+              params: {id: namespace.id, kubernetes_namespace: {template: "metadata:\n  labels:\n    team: bar"}}
+            )
+          end
         end
+        assert_redirected_to namespace
       end
     end
 
@@ -156,8 +158,10 @@ describe Kubernetes::NamespacesController do
 
     describe "#sync" do
       it "syncs namespaces/clusters" do
-        assert_request(:patch, apply_url, to_return: {body: '{}'}) do
-          post :sync, params: {id: namespace.id}
+        assert_request(:get, "http://foobar.server/api/v1/namespaces", to_return: {body: {items: []}.to_json}) do
+          assert_request(:patch, apply_url, to_return: {body: '{}'}) do
+            post :sync, params: {id: namespace.id}
+          end
         end
         assert_redirected_to "http://test.host/kubernetes/namespaces/#{namespace.id}"
         refute flash[:warn]
@@ -166,16 +170,20 @@ describe Kubernetes::NamespacesController do
 
     describe "#sync_all" do
       it "syncs namespaces/clusters" do
-        assert_request(:patch, apply_url, to_return: {body: '{}'}) do
-          post :sync_all
+        assert_request(:get, "http://foobar.server/api/v1/namespaces", to_return: {body: {items: []}.to_json}) do
+          assert_request(:patch, apply_url, to_return: {body: '{}'}) do
+            post :sync_all
+          end
         end
         assert_redirected_to "http://test.host/kubernetes/namespaces"
         refute flash[:warn]
       end
 
       it "shows errors" do
-        assert_request(:patch, apply_url, to_return: {status: 404}) do
-          post :sync_all
+        assert_request(:get, "http://foobar.server/api/v1/namespaces", to_return: {body: {items: []}.to_json}) do
+          assert_request(:patch, apply_url, to_return: {status: 404}) do
+            post :sync_all
+          end
         end
         assert_redirected_to "http://test.host/kubernetes/namespaces"
         flash[:warn].must_include "Failed to apply namespace test in cluster test: 404 Not Found"
@@ -183,19 +191,71 @@ describe Kubernetes::NamespacesController do
     end
 
     describe "#sync_namespace" do
+      def expect_namespaces_request(&block)
+        assert_request(
+          :get,
+          "http://foobar.server/api/v1/namespaces",
+          to_return: {body: {items: existing}.to_json},
+          &block
+        )
+      end
+
+      let(:existing) do
+        [
+          {
+            metadata: {
+              name: "test",
+              labels: {team: "foo", project: "bar"},
+              annotations: {"samson/url": "http://www.test-url.com/kubernetes/namespaces/411008527"}
+            }
+          }
+        ]
+      end
+
       before { @controller.instance_variable_set(:@kubernetes_namespace, namespace) }
 
       it "creates a namespace" do
-        assert_request(:patch, apply_url, to_return: {body: '{}'}) do
+        existing.clear
+        expect_namespaces_request do
+          assert_request(:patch, apply_url, to_return: {body: '{}'}) do
+            @controller.send(:create_callback)
+          end
+        end
+        refute flash[:warn]
+      end
+
+      it "avoids work when nothing changed to allow efficient full cluster sync" do
+        expect_namespaces_request do
           @controller.send(:create_callback)
         end
         refute flash[:warn]
       end
 
+      it "updates when something was added" do
+        existing[0][:metadata][:labels].delete :team
+        expect_namespaces_request do
+          assert_request(:patch, apply_url, to_return: {body: '{}'}) do
+            @controller.send(:create_callback)
+          end
+        end
+      end
+
+      it "updates when something was changed" do
+        existing[0][:metadata][:labels][:team] = "baz"
+        expect_namespaces_request do
+          assert_request(:patch, apply_url, to_return: {body: '{}'}) do
+            @controller.send(:create_callback)
+          end
+        end
+      end
+
       it "shows creation errors" do
         retries = SamsonKubernetes::API_RETRIES
-        assert_request(:patch, apply_url, to_timeout: [], times: retries + 1) do
-          @controller.send(:create_callback)
+        existing.clear
+        expect_namespaces_request do
+          assert_request(:patch, apply_url, to_timeout: [], times: retries + 1) do
+            @controller.send(:create_callback)
+          end
         end
         flash[:warn].must_equal <<~TEXT.rstrip
           <p>Error applying namespace in some clusters:
