@@ -166,62 +166,6 @@ describe Kubernetes::Resource do
         end
       end
 
-      describe "updating matchLabels" do
-        before { template[:spec][:selector] = {matchLabels: {foo: "bar"}} }
-
-        it "explains why it is a bad idea" do
-          old = {spec: {selector: {matchLabels: {foo: "baz"}}}}
-          assert_request(:get, url, to_return: {body: old.to_json}) do
-            e = assert_raises(Samson::Hooks::UserError) { resource.deploy }
-            e.message.must_equal(
-              "Updating spec.selector.matchLabels from {:foo=>\"baz\"} to {:foo=>\"bar\"} " \
-              "can only be done by deleting and redeploying or old pods would not be deleted."
-            )
-          end
-        end
-
-        it "allows updating when opting out" do
-          old = {spec: {selector: {matchLabels: {foo: "baz"}}}}
-          resource.template[:metadata][:annotations] = {"samson/allow_updating_match_labels": "true"}
-          assert_request(:get, url, to_return: {body: old.to_json}) do
-            assert_request(:put, url, to_return: {body: "{}"}) do
-              resource.deploy
-            end
-          end
-        end
-
-        it "allows removing a label" do
-          old = {spec: {selector: {matchLabels: {foo: "bar", bar: "baz"}}}}
-          assert_request(:get, url, to_return: {body: old.to_json}) do
-            assert_request(:put, url, to_return: {body: "{}"}) do
-              resource.deploy
-            end
-          end
-        end
-
-        it "allows for blue-green deploys" do
-          template[:spec][:selector][:matchLabels][:blue_green] = "blue"
-          assert_request(:get, url, to_return: {body: "{}"}) do
-            assert_request(:put, url, to_return: {body: "{}"}) do
-              resource.deploy
-            end
-          end
-        end
-
-        it "allows when deleting (which causes update for deployment)" do
-          old = {spec: {selector: {matchLabels: {foo: "baz"}}}}
-          replies = [{body: old.to_json}, {body: {spec: {replicas: 0}}.to_json}, {status: 404}]
-          assert_request(:get, url, to_return: replies) do
-            assert_request(:put, url, to_return: {body: "{}"}) do
-              assert_request(:delete, url, to_return: {body: "{}"}) do
-                resource.instance_variable_set(:@delete_resource, true)
-                resource.deploy
-              end
-            end
-          end
-        end
-      end
-
       describe "delete_resource" do
         before { delete_resource! }
 

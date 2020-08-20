@@ -168,7 +168,6 @@ module Kubernetes
 
       # TODO: remove the expire_cache and assign @resource but that breaks a bunch of deploy_executor tests
       def update
-        ensure_not_updating_match_labels
         if server_side_apply?
           server_side_apply template_for_update
         else
@@ -189,29 +188,6 @@ module Kubernetes
 
       def server_side_apply(template)
         request :apply, template, field_manager: "samson", force: true
-      end
-
-      def ensure_not_updating_match_labels
-        return if @delete_resource # deployments do an update when deleting
-
-        # blue-green deploy is allowed to do this, see template_filler.rb + deploy_executor.rb
-        return if @template.dig(:spec, :selector, :matchLabels, :blue_green)
-
-        # allow manual migration when user is aware of the issue and wants to do manual cleanup
-        return if @template.dig(:metadata, :annotations, :"samson/allow_updating_match_labels") == "true"
-
-        static = [:spec, :selector, :matchLabels]
-        # fallback is only for tests that use simple replies
-        old_labels = @resource.dig(*static) || {}
-        new_labels = @template.dig(*static) || {}
-
-        if new_labels.any? { |k, v| old_labels[k] != v }
-          raise(
-            Samson::Hooks::UserError,
-            "Updating #{static.join(".")} from #{old_labels.inspect} to #{new_labels.inspect} " \
-            "can only be done by deleting and redeploying or old pods would not be deleted."
-          )
-        end
       end
 
       def template_for_update
