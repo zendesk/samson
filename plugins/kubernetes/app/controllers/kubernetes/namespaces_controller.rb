@@ -112,11 +112,18 @@ class Kubernetes::NamespacesController < ResourceController
       end
       namespaces.map do |namespace|
         manifest = namespace.manifest
-        next unless apply_needed?(existing_namespaces[namespace.name], manifest)
+        existing = existing_namespaces[namespace.name]
+        next unless apply_needed?(existing, manifest)
 
         begin
           SamsonKubernetes.retry_on_connection_errors do
-            client.apply_namespace(Kubeclient::Resource.new(manifest), field_manager: "samson", force: true)
+            if existing
+              client.apply_namespace(Kubeclient::Resource.new(manifest), field_manager: "samson", force: true)
+            else
+              # fixes bug with validating webhooks, can be changed to also apply once
+              # https://github.com/open-policy-agent/gatekeeper/issues/792 is resolved
+              client.create_namespace(manifest)
+            end
           end
           nil
         rescue StandardError => e
