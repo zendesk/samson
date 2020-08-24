@@ -135,7 +135,7 @@ describe Kubernetes::NamespacesController do
 
       it "updates namespace when template was changed" do
         assert_request(:get, "http://foobar.server/api/v1/namespaces", to_return: {body: {items: []}.to_json}) do
-          assert_request(:post, "http://foobar.server/api/v1/namespaces", to_return: {body: '{}'}) do
+          assert_request(:patch, apply_url, to_return: {body: '{}'}) do
             patch(
               :update,
               params: {id: namespace.id, kubernetes_namespace: {template: "metadata:\n  labels:\n    team: bar"}}
@@ -159,7 +159,7 @@ describe Kubernetes::NamespacesController do
     describe "#sync" do
       it "syncs namespaces/clusters" do
         assert_request(:get, "http://foobar.server/api/v1/namespaces", to_return: {body: {items: []}.to_json}) do
-          assert_request(:post, "http://foobar.server/api/v1/namespaces", to_return: {body: '{}'}) do
+          assert_request(:patch, apply_url, to_return: {body: '{}'}) do
             post :sync, params: {id: namespace.id}
           end
         end
@@ -171,7 +171,7 @@ describe Kubernetes::NamespacesController do
     describe "#sync_all" do
       it "syncs namespaces/clusters" do
         assert_request(:get, "http://foobar.server/api/v1/namespaces", to_return: {body: {items: []}.to_json}) do
-          assert_request(:post, "http://foobar.server/api/v1/namespaces", to_return: {body: '{}'}) do
+          assert_request(:patch, apply_url, to_return: {body: '{}'}) do
             post :sync_all
           end
         end
@@ -181,7 +181,7 @@ describe Kubernetes::NamespacesController do
 
       it "shows errors" do
         assert_request(:get, "http://foobar.server/api/v1/namespaces", to_return: {body: {items: []}.to_json}) do
-          assert_request(:post, "http://foobar.server/api/v1/namespaces", to_return: {status: 404}) do
+          assert_request(:patch, apply_url, to_return: {status: 404}) do
             post :sync_all
           end
         end
@@ -217,7 +217,7 @@ describe Kubernetes::NamespacesController do
       it "creates a namespace" do
         existing.clear
         expect_namespaces_request do
-          assert_request(:post, "http://foobar.server/api/v1/namespaces", to_return: {body: '{}'}) do
+          assert_request(:patch, apply_url, to_return: {body: '{}'}) do
             @controller.send(:create_callback)
           end
         end
@@ -253,7 +253,7 @@ describe Kubernetes::NamespacesController do
         retries = SamsonKubernetes::API_RETRIES
         existing.clear
         expect_namespaces_request do
-          assert_request(:post, "http://foobar.server/api/v1/namespaces", to_timeout: [], times: retries + 1) do
+          assert_request(:patch, apply_url, to_timeout: [], times: retries + 1) do
             @controller.send(:create_callback)
           end
         end
