@@ -38,7 +38,7 @@ class Kubernetes::ClustersController < ResourceController
 
   def resource_params
     params = super.permit(
-      :name, :config_filepath, :config_context, :description, :ip_prefix,
+      :name, :config_filepath, :config_context, :description,
       :auth_method, :api_endpoint, :verify_ssl, :client_cert, :client_key,
       :kritis_breakglass,
       deploy_group_ids: []

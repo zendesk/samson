@@ -216,7 +216,7 @@ describe Kubernetes::Cluster do
     it "does not leak secrets" do
       cluster.as_json.keys.must_equal(
         [
-          "id", "name", "description", "config_filepath", "config_context", "created_at", "updated_at", "ip_prefix",
+          "id", "name", "description", "config_filepath", "config_context", "created_at", "updated_at",
           "auth_method", "api_endpoint", "verify_ssl", "kritis_breakglass"
         ]
       )
