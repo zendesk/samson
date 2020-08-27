@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_04_02_195119) do
+ActiveRecord::Schema.define(version: 2020_08_27_172257) do
 
   create_table "audits" do |t|
     t.integer "auditable_id", null: false
@@ -242,7 +242,6 @@ ActiveRecord::Schema.define(version: 2020_04_02_195119) do
     t.string "config_context"
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.string "ip_prefix"
     t.string "auth_method", default: "context", null: false
     t.string "api_endpoint"
     t.text "encrypted_client_cert"
