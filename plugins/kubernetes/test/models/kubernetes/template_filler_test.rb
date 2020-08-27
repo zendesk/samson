@@ -334,39 +334,6 @@ describe Kubernetes::TemplateFiller do
           template.to_hash[:metadata][:name].must_equal 'foo-2'
         end
       end
-
-      describe "clusterIP" do
-        let(:ip) { template.to_hash[:spec][:clusterIP] }
-
-        before do
-          doc.deploy_group.kubernetes_cluster.update_column(:ip_prefix, '123.34')
-          raw_template[:spec][:clusterIP] = "1.2.3.4"
-        end
-
-        it "replaces ip prefix" do
-          ip.must_equal '123.34.3.4'
-        end
-
-        it "replaces with trailing ." do
-          doc.deploy_group.kubernetes_cluster.update_column(:ip_prefix, '123.34.')
-          ip.must_equal '123.34.3.4'
-        end
-
-        it "does nothing when service has no clusterIP" do
-          raw_template[:spec].delete(:clusterIP)
-          ip.must_be_nil
-        end
-
-        it "does nothing when ip prefix is blank" do
-          doc.deploy_group.kubernetes_cluster.update_column(:ip_prefix, '')
-          ip.must_equal '1.2.3.4'
-        end
-
-        it "leaves None alone" do
-          raw_template[:spec][:clusterIP] = "None"
-          ip.must_equal 'None'
-        end
-      end
     end
 
     describe "statefulset" do
