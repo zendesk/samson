@@ -16,7 +16,7 @@ class Integrations::BaseController < ApplicationController
 
     if branch
       create_release = project.create_release?(branch, service_type, service_name)
-      record_log :info, "Branch #{branch} is release branch: #{create_release}"
+      record_log :info, "Create release for branch [#{branch}], service_type [#{service_type}], service_name [#{service_name}]: #{create_release}"
       release = find_or_create_release if create_release
     else
       record_log :info, "No branch found, assuming this is a tag and not creating a release"
