@@ -34,7 +34,6 @@ module Kubernetes
           set_hpa_scale_target_name
         elsif Kubernetes::RoleConfigFile::SERVICE_KINDS.include?(kind)
           set_service_name
-          prefix_service_cluster_ip
           set_service_blue_green if blue_green_color
         elsif Kubernetes::RoleConfigFile.primary?(template)
           set_history_limit if kind == 'Deployment'
@@ -234,17 +233,6 @@ module Kubernetes
 
       name += "-#{@index + 1}" if @index > 0
       name
-    end
-
-    # no ipv6 support
-    def prefix_service_cluster_ip
-      return unless ip = template[:spec][:clusterIP]
-      return if ip == "None"
-      return unless prefix = @doc.deploy_group.kubernetes_cluster.ip_prefix.presence
-      ip = ip.split('.')
-      prefix = prefix.split('.')
-      ip[0...prefix.size] = prefix
-      template[:spec][:clusterIP] = ip.join('.')
     end
 
     # assumed to be validated by role_validator

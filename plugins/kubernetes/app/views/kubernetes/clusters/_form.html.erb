@@ -7,12 +7,6 @@
     <fieldset>
       <%= form.input :name, required: true %>
       <%= form.input :description %>
-      <%= form.input :ip_prefix,
-          label: "IP prefix",
-          pattern: Kubernetes::Cluster::IP_PREFIX_PATTERN,
-          help: "First 1 to 3 sections of an IPv4 address to replace Service clusterIP, for example 123.231"
-      %>
-
       <%= form.input :kritis_breakglass, as: :check_box, help: "Make all resources skip kritis" if ENV["KRITIS_BREAKGLASS_SUPPORTED"] %>
 
       <%= form.input :auth_method do %>
