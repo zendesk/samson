@@ -99,7 +99,7 @@ describe Integrations::BaseController do
       post :create, params: {test_route: true, token: token, foo: "bar"}
       assert_response :success
       result = WebhookRecorder.read(project)
-      log = "INFO: Branch master is release branch: true\n"
+      log = "INFO: Create release for branch [master], service_type [ci], service_name [base_test]: true\n"
 
       result.fetch(:log).must_equal log
       result.fetch(:response_code).must_equal 200
@@ -169,7 +169,7 @@ describe Integrations::BaseController do
         post :create, params: {test_route: true, token: token}
 
         expected_messages = <<~MESSAGES
-          INFO: Branch master is release branch: true
+          INFO: Create release for branch [master], service_type [ci], service_name [base_test]: true
           INFO: Deploying to Staging
           INFO: Deploying to Production
         MESSAGES
@@ -183,7 +183,7 @@ describe Integrations::BaseController do
         post :create, params: {test_route: true, token: token}
 
         message = <<~MSG
-          INFO: Branch master is release branch: true
+          INFO: Create release for branch [master], service_type [ci], service_name [base_test]: true
           ERROR: Failed deploying to Staging: Stage is locked
           INFO: Deploying to Production
         MSG

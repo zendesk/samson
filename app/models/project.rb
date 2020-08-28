@@ -113,6 +113,8 @@ class Project < ActiveRecord::Base
   # Whether to create new releases when the branch is updated.
   #
   # branch - The String name of the branch in question.
+  # service_type - The Samson webhook category which triggered this request.
+  # service_name - The service which called the Samson webhook, e.g. generic
   #
   # Returns true if new releases should be created, false otherwise.
   def create_release?(branch, service_type, service_name)
