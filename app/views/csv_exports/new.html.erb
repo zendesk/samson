@@ -27,7 +27,7 @@
       <div class="form-group">
         <%= label_tag :status, "Status:", class: "col-lg-2 control-label" %>
         <div class="col-lg-2">
-          <%= select_tag :status, options_for_select([['All', 'all'], ['Succeeded', 'succeeded'], ['Failed', 'failed]']], 'all'), class: "form-control" %>
+          <%= select_tag :status, options_for_select([['All', 'all'], ['Succeeded', 'succeeded'], ['Failed', 'failed']], 'all'), class: "form-control" %>
         </div>
       </div>
 
@@ -54,6 +54,7 @@
           <%= submit_tag "Create Deploys CSV Report", class: 'btn btn-default' %>
         </div>
       </div>
+      <%= hidden_field_tag :project_permalinks, params["project_permalinks"] %>
     <% end %>
   </div>
   <div class="clearfix">
