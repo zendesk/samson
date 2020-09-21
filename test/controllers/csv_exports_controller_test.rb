@@ -341,6 +341,11 @@ describe CsvExportsController do
         post :create, params: {bypassed: "true"}
         CsvExport.last.filters.must_equal("deploys.buddy_id" => nil, "stages.no_code_deployed" => false)
       end
+
+      it "with project_permalinks" do
+        post :create, params: { project_permalinks: Project.first.permalink }
+        CsvExport.last.filters.must_equal("stages.project_id" => [Project.first.id])
+      end
     end
   end
 
