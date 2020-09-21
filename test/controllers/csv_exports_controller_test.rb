@@ -343,7 +343,7 @@ describe CsvExportsController do
       end
 
       it "with project_permalinks" do
-        post :create, params: { project_permalinks: Project.first.permalink }
+        post :create, params: {project_permalinks: Project.first.permalink}
         CsvExport.last.filters.must_equal("stages.project_id" => [Project.first.id])
       end
     end
