@@ -122,7 +122,10 @@ class CsvExportsController < ApplicationController
       end
     end
 
-    if project = params[:project]&.to_i
+    if project_permalinks = params[:project_permalinks].to_s.split(",").presence
+      project_ids_from_permalinks = Project.where(permalink: project_permalinks).pluck(:id)
+      filter['stages.project_id'] = project_ids_from_permalinks
+    elsif project = params[:project]&.to_i
       if project > 0
         filter['stages.project_id'] = project
       elsif project.to_s != params[:project]
