@@ -63,7 +63,7 @@ describe EnvironmentVariable do
       end
 
       it "add to env hash" do
-        response = {deploy_group.name.parameterize => {"FOO" => +"one"}}
+        response = {deploy_group.permalink => {"FOO" => +"one"}}
         ExternalEnvironmentVariableGroup.any_instance.expects(:read).returns(response)
         EnvironmentVariable.env(deploy, deploy_group, resolve_secrets: false).must_equal "FOO" => "one"
       end
@@ -88,7 +88,7 @@ describe EnvironmentVariable do
         project.environment_variable_groups << EnvironmentVariableGroup.first
         project.environment_variable_groups.first.update_column(:external_url, "https://foo.com")
 
-        response = {deploy_group.name.parameterize => {"FOO" => +"one"}}
+        response = {deploy_group.permalink => {"FOO" => +"one"}}
 
         ExternalEnvironmentVariableGroup.any_instance.expects(:read).returns(response)
         EnvironmentVariable.env(deploy, deploy_group, resolve_secrets: false).must_equal(
