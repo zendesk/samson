@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_08_27_172257) do
+ActiveRecord::Schema.define(version: 2020_09_23_223936) do
 
   create_table "audits" do |t|
     t.integer "auditable_id", null: false
@@ -70,7 +70,7 @@ ActiveRecord::Schema.define(version: 2020_08_27_172257) do
     t.integer "user_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.string "filters", default: "{}", null: false
+    t.text "filters"
     t.string "status", default: "pending", null: false
   end
 
