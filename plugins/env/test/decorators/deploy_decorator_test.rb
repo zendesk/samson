@@ -33,7 +33,7 @@ describe Deploy do
     it 'serializes env vars to string with deploy groups' do
       deploy.stage.update_attribute(:deploy_groups, [deploy_group, other_deploy_group])
 
-      expected = %(# Pod 100\nFOO="bar"\nBAZ="baz"\nBAR="secret://baz"\n\n# Pod2\nFOO="bar"\nBAR="secret://baz"\n)
+      expected = %(# Pod100\nFOO="bar"\nBAZ="baz"\nBAR="secret://baz"\n\n# Pod2\nFOO="bar"\nBAR="secret://baz"\n)
       deploy.send(:serialized_environment_variables).must_equal expected
     end
 

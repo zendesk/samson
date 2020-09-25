@@ -32,8 +32,8 @@ describe SamsonEnv do
 
     it "writes group .env files" do
       fire
-      Dir[".env*"].sort.must_equal [".env.pod-100"]
-      File.read(".env.pod-100").must_equal "HELLO=\"world\"\nWORLD=\"hello\"\n"
+      Dir[".env*"].sort.must_equal [".env.pod100"]
+      File.read(".env.pod100").must_equal "HELLO=\"world\"\nWORLD=\"hello\"\n"
     end
 
     it "removes base .env  file if it exists" do # not sure why we do this

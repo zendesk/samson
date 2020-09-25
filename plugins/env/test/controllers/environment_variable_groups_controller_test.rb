@@ -173,8 +173,8 @@ describe EnvironmentVariableGroupsController do
         assert_response :success
         json_response = JSON.parse response.body
         json_response['groups'].sort.must_equal [
-          [".pod-100", {"X" => "Y", "Y" => "Z"}],
           [".pod1", {"X" => "Y", "Y" => "Z"}],
+          [".pod100", {"X" => "Y", "Y" => "Z"}],
           [".pod2", {"X" => "Y", "Y" => "Z"}]
         ]
       end
@@ -199,13 +199,14 @@ describe EnvironmentVariableGroupsController do
           EnvironmentVariable.create!(parent: project, name: 'B', value: 'b')
           ProjectEnvironmentVariableGroup.create!(environment_variable_group: other_env_group, project: project)
         end
+
         it "renders only project env" do
           get :preview, params: {project_id: project.id, project_specific: true}, format: :json
           assert_response :success
           json_response = JSON.parse response.body
           json_response['groups'].sort.must_equal [
-            [".pod-100", {"B" => "b"}],
             [".pod1", {"B" => "b"}],
+            [".pod100", {"B" => "b"}],
             [".pod2", {"B" => "b"}]
           ]
         end
@@ -215,8 +216,8 @@ describe EnvironmentVariableGroupsController do
           assert_response :success
           json_response = JSON.parse response.body
           json_response['groups'].sort.must_equal [
-            [".pod-100", {"Y" => "Z", "X" => "Y"}],
             [".pod1", {"X" => "Y"}],
+            [".pod100", {"Y" => "Z", "X" => "Y"}],
             [".pod2", {"X" => "Y"}]
           ]
         end
@@ -226,8 +227,8 @@ describe EnvironmentVariableGroupsController do
           assert_response :success
           json_response = JSON.parse response.body
           json_response['groups'].sort.must_equal [
-            [".pod-100", {"B" => "b", "Y" => "Z", "X" => "Y"}],
             [".pod1", {"B" => "b", "X" => "Y"}],
+            [".pod100", {"B" => "b", "Y" => "Z", "X" => "Y"}],
             [".pod2", {"B" => "b", "X" => "Y"}]
           ]
         end

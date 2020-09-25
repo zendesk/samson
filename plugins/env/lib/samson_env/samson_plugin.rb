@@ -23,7 +23,7 @@ module SamsonEnv
         if deploy_groups.any?
           deploy_groups.map do |deploy_group|
             [
-              ".#{deploy_group.name.parameterize}",
+              ".#{deploy_group.permalink}",
               EnvironmentVariable.env(deploy, deploy_group, **kwargs)
             ]
           end
