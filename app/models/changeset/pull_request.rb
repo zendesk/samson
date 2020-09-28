@@ -131,8 +131,12 @@ class Changeset::PullRequest
   def risks
     return @risks if defined?(@risks)
     @risks = parse_risks(@data.body.to_s)
-    @missing_risks = @risks.nil?
-    @risks = nil if @risks&.match?(/\A\s*\-?\s*None\Z/i)
+    if @risks&.match?(/\A\s*\-?\s*None\Z/i)
+      @risks = nil
+      @missing_risks = false
+    else
+      @missing_risks = @risks.nil?
+    end
     @risks
   end
 
