@@ -15,6 +15,8 @@ class Job < ActiveRecord::Base
 
   validate :validate_globally_unlocked
 
+  attr_accessor :bypass_global_lock_check
+
   ACTIVE_STATUSES = %w[pending running cancelling].freeze
   VALID_STATUSES = ACTIVE_STATUSES + %w[failed errored succeeded cancelled].freeze
   SUMMARY_ACTION = {
@@ -142,6 +144,7 @@ class Job < ActiveRecord::Base
   private
 
   def validate_globally_unlocked
+    return if bypass_global_lock_check
     return unless lock = Lock.global.first
     return if lock.warning?
     errors.add(:base, 'all stages are locked')

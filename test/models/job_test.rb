@@ -188,13 +188,20 @@ describe Job do
   end
 
   describe "#validate_globally_unlocked" do
-    def create
-      Job.create(command: "", user: user, project: project)
+    def create(**args)
+      Job.create(command: "", user: user, project: project, **args)
     end
 
-    it 'does not allow a job to be created when locked' do
-      Lock.create!(user: users(:admin))
-      create.errors.to_h.must_equal(base: 'all stages are locked')
+    describe "when globally locked" do
+      before { Lock.create!(user: users(:admin)) }
+
+      it 'does not allow a job to be created' do
+        create.errors.to_h.must_equal(base: 'all stages are locked')
+      end
+
+      it 'allows deploys from the lock owner to bypass the lock' do
+        create(bypass_global_lock_check: true).errors.to_h.must_equal({})
+      end
     end
 
     it 'allows a job to be created when warning' do
