@@ -248,7 +248,7 @@ module Kubernetes
       return unless ENV["KUBERNETES_ENFORCE_TEAMS"]
       @elements.each do |element|
         metadata_paths(element).map { |p| p + [:labels, :team] }.each do |path|
-          @errors << "#{path.join(".")} must be set" unless element.dig(*path)
+          @errors << "#{element[:kind]} #{path.join(".")} must be set" unless element.dig(*path)
         end
       end
     end
