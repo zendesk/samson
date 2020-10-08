@@ -401,7 +401,10 @@ describe Kubernetes::RoleValidator do
         end
 
         it "fails" do
-          errors.must_equal ["metadata.labels.team must be set", "spec.template.metadata.labels.team must be set"]
+          errors.must_equal [
+            "Deployment metadata.labels.team must be set",
+            "Deployment spec.template.metadata.labels.team must be set"
+          ]
         end
 
         it "does not fail when disabled" do
