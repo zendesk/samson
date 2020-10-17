@@ -84,7 +84,7 @@ describe 'Warden::Strategies::DoorkeeperStrategy Integration' do
   end
 
   it "does not check and fails with non matching header" do
-    assert_sql_queries(0) { perform_get "oops" + valid_header }
+    assert_sql_queries(0) { perform_get "oops#{valid_header}" }
     error.must_equal "You are not logged in, see docs/api.md on how to authenticate"
     assert_response :unauthorized
   end

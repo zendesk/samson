@@ -9,7 +9,7 @@ describe Samson::ConsoleExtensions do
   with_forgery_protection
 
   describe "#login" do
-    class ConsoleExtensionTestController < ApplicationController
+    class ConsoleExtensionTestController < ApplicationController # rubocop:disable Lint/ConstantDefinitionInBlock
       include CurrentUser
       before_action :authorize_super_admin!
 

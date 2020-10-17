@@ -4,7 +4,7 @@ config = Rails.application.config
 
 if Samson::EnvCheck.set?("RAILS_LOG_TO_STDOUT")
   # good for heroku or docker
-  config.logger = ActiveSupport::TaggedLogging.new(ActiveSupport::Logger.new(STDOUT))
+  config.logger = ActiveSupport::TaggedLogging.new(ActiveSupport::Logger.new($stdout))
 elsif Samson::EnvCheck.set?("RAILS_LOG_TO_SYSLOG")
   # good for production hosts with syslog
   # TODO: add Syslog::Logger#silence to support dev mode

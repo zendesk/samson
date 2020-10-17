@@ -196,7 +196,7 @@ module Kubernetes
         paths = project.repository.
           file_content(folder, git_ref).
           to_s. # nil when not found
-          split("\n")[2..-1] || []
+          split("\n")[2..] || []
         paths.map! { |f| "#{folder}/#{f}" }
 
         files = paths.grep(/\.(yml|yaml|json)$/)

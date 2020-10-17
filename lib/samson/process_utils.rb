@@ -9,7 +9,7 @@ module Samson
         whitelists = ENV.fetch('PROCESS_WHITELIST', '').split(',')
         IO.popen("ps -eo #{ATTRIBUTES.join(',')}") do |pipe|
           # Ignore known long-running processes so report is meaningful
-          filtered_processes = pipe.readlines[1..-1].reject do |lines|
+          filtered_processes = pipe.readlines[1..].reject do |lines|
             whitelists.any? { |key| lines.include?(key) }
           end
           filtered_processes.map do |line|

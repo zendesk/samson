@@ -9,7 +9,7 @@ class MakeExternalIdUnique < ActiveRecord::Migration[5.1]
     bad = scope.group(:external_id).count.select { |_, count| count.size >= 2 }
     bad.each_key do |id|
       duplicates = scope.where(external_id: id)
-      duplicates[1..-1].each_with_index do |u, i|
+      duplicates[1..].each_with_index do |u, i|
         write "Updating user #{u.id} external_id"
         u.update_column :external_id, "#{id}-#{i}"
       end

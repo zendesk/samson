@@ -178,7 +178,7 @@ module Samson
 
         # Token used to request badges
         config.samson.badge_token = \
-          Digest::MD5.hexdigest('badge_token' + (ENV['BADGE_TOKEN_BASE'] || Samson::Application.config.secret_key_base))
+          Digest::MD5.hexdigest("badge_token#{(ENV['BADGE_TOKEN_BASE'] || Samson::Application.config.secret_key_base)}")
       end
     end
 

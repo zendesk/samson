@@ -33,7 +33,7 @@ describe NewRelicController do
       describe "success" do
         before do
           SamsonNewRelic::Api.expects(:metrics).
-            with([new_relic_applications(:production).name], initial).
+            with([new_relic_applications(:production).name], initial: initial).
             returns('test_project' => true)
 
           get :show, params: {

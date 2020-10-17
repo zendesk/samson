@@ -19,19 +19,21 @@ class CsvExportsController < ApplicationController
   def new
     respond_to do |format|
       format.html do
-        if params[:type] == "users"
+        case params[:type]
+        when "users"
           render :new_users
-        elsif params[:type] == "deploy_group_usage"
+        when "deploy_group_usage"
           render :new_deploy_group_usage
         else
           @csv_export = CsvExport.new
         end
       end
       format.csv do
-        if params[:type] == "users"
+        case params[:type]
+        when "users"
           options = user_filter
           send_data UserCsvPresenter.to_csv(options), type: :csv, filename: "Users_#{options[:datetime]}.csv"
-        elsif params[:type] == "deploy_group_usage"
+        when "deploy_group_usage"
           date_time_now = Time.now.strftime "%Y%m%d_%H%M"
           send_data DeployGroupUsageCsvPresenter.to_csv, type: :csv, filename: "DeployGroupUsage_#{date_time_now}.csv"
         else

@@ -18,7 +18,7 @@ module Samson
           base.alias_method :original_list_recursive, :list_recursive
         end
 
-        def list_recursive(path, root = true)
+        def list_recursive(path, root = true) # rubocop:disable Style/OptionalBooleanParameter
           keys = original_list(path).flat_map do |p|
             full = +"#{path}#{p}"
             if full.end_with?("/")

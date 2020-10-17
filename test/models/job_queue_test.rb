@@ -170,16 +170,14 @@ describe JobQueue do
     end
 
     describe 'queue length' do
-      def assert_queue_length_notifications
+      def assert_queue_length_notifications(&block)
         states = [
           [1, 0], # add active
           [1, 1], # add queued
           [1, 0], # done active ... enqueue queued
           [0, 0], # done queued
         ]
-        states.each do |t, q|
-          yield(t, q)
-        end
+        states.each(&block)
         with_a_queued_job {} # noop
       end
 

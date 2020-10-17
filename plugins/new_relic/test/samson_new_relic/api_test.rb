@@ -39,7 +39,7 @@ describe SamsonNewRelic::Api do
       apps = applications.map { |a| [a.fetch('name'), SamsonNewRelic::Api::Application.new(a)] }.to_h
       SamsonNewRelic::Api.stubs(applications: apps)
     end
-    subject { SamsonNewRelic::Api.metrics(['Production', 'Staging'], initial) }
+    subject { SamsonNewRelic::Api.metrics(['Production', 'Staging'], initial: initial) }
 
     describe 'initial' do
       let(:initial) { true }

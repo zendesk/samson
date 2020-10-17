@@ -10,7 +10,7 @@ module SamsonNewRelic
         end
       end
 
-      def metrics(application_names, initial = false)
+      def metrics(application_names, initial:)
         if initial
           response(historic_metrics(application_names)).merge(historic_times: historic_times)
         else

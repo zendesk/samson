@@ -231,7 +231,7 @@ module Kubernetes
       name = meta[:name]
       namespace = meta[:namespace]
       return name unless namespace
-      namespace + "/" + name
+      "#{namespace}/#{name}"
     end
 
     def validate_not_matching_team
@@ -263,7 +263,7 @@ module Kubernetes
     def validate_daemon_set_supported
       return unless daemon_set = @elements.detect { |t| t[:kind] == "DaemonSet" }
 
-      if daemon_set.dig(:apiVersion) != "apps/v1"
+      if daemon_set[:apiVersion] != "apps/v1"
         @errors << "set DaemonSet apiVersion to apps/v1"
         return
       end
@@ -296,7 +296,7 @@ module Kubernetes
 
     # keep in sync with TemplateFiller#set_resource_usage
     def validate_container_resources
-      (pod_containers.map { |c| c[1..-1] || [] } + init_containers).flatten(1).each do |container|
+      (pod_containers.map { |c| c[1..] || [] } + init_containers).flatten(1).each do |container|
         [
           [:resources, :requests, :cpu],
           [:resources, :requests, :memory],
@@ -423,7 +423,7 @@ module Kubernetes
         path.each_with_index.inject(e) do |el, (p, i)|
           el = el[p]
           if el.is_a?(Array)
-            break map_attributes(path[(i + 1)..-1], elements: el).flatten(1)
+            break map_attributes(path[(i + 1)..], elements: el).flatten(1)
           else
             el || break
           end

@@ -98,10 +98,8 @@ describe SamsonPrerequisiteStages do
     end
 
     describe 'stage_form callback' do
-      def with_form
-        view_context.form_for [stage1.project, stage1] do |form|
-          yield form
-        end
+      def with_form(&block)
+        view_context.form_for [stage1.project, stage1], &block
       end
 
       def render_view

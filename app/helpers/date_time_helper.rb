@@ -11,10 +11,11 @@ module DateTimeHelper
   def render_time(time, format = params[:time_format])
     # grab the time format that the user has in their profile
     format ||= current_user.time_format
-    if format == 'local'
+    case format
+    when 'local'
       local_time = time.in_time_zone(cookies[:timezone] || 'UTC').to_s
       content_tag(:time, local_time, datetime: local_time)
-    elsif format == 'utc'
+    when 'utc'
       utc_time = time.in_time_zone('UTC')
       content_tag(:time, utc_time.to_s, datetime: utc_time)
     else

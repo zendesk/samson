@@ -4,7 +4,7 @@ require_relative '../../test_helper'
 SingleCov.covered!
 
 describe Inlinable do
-  class Foo < ActiveRecord::Base
+  foo = Class.new(ActiveRecord::Base) do
     extend Inlinable
 
     allow_inline def bar1
@@ -17,6 +17,6 @@ describe Inlinable do
   end
 
   it "allows inline" do
-    Foo.allowed_inlines.count.must_equal 2
+    foo.allowed_inlines.count.must_equal 2
   end
 end
