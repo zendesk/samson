@@ -3,7 +3,7 @@ require 'diffy'
 
 module AuditsHelper
   def readable_ruby_value(v)
-    v.class == BigDecimal ? v : v.inspect
+    v.instance_of?(BigDecimal) ? v : v.inspect
   end
 
   def audit_author(audit)

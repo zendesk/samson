@@ -835,7 +835,7 @@ describe Kubernetes::DeployExecutor do
         out.scan(/pod-(\S+).*(?:events|logs)/).flatten.uniq.
           must_equal ["resque-worker"], out # logs+events only for bad pod
         out.must_match(
-          /events:\s+Warning FailedScheduling: fit failure on node \(ip-1-2-3-4\)\s+fit failure on node \(ip-2-3-4-5\) x5\n\n/ # rubocop:disable Metrics/LineLength
+          /events:\s+Warning FailedScheduling: fit failure on node \(ip-1-2-3-4\)\s+fit failure on node \(ip-2-3-4-5\) x5\n\n/ # rubocop:disable Layout/LineLength
         ) # combined repeated events
         out.must_match /logs:\s+LOG-1/
         out.must_include "events:\n  Warning FailedScheduling"

@@ -8,6 +8,7 @@ SingleCov.covered!
 describe JobQueue do
   fake_job = Class.new do
     attr_reader :deploy
+
     def initialize(deploy)
       @deploy = deploy
     end
@@ -17,6 +18,7 @@ describe JobQueue do
   fake_execution = Class.new do
     attr_reader :id, :job
     attr_writer :thread
+
     def initialize(id, job)
       @id = id
       @job = job

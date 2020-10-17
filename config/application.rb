@@ -12,7 +12,7 @@ abort "Do not run server with PRECOMPILE env var set" if ENV["SERVER_MODE"] && E
 
 begin
   require 'pry-rails'
-rescue LoadError # rubocop:disable Lint/HandleExceptions
+rescue LoadError
   # ignore if pry-rails is not included in bundle
 end
 

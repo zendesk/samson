@@ -7,7 +7,7 @@ class Changeset::PullRequest
   WEBHOOK_FILTER = /(^|\s)\[samson review\]($|\s)/i.freeze
 
   # Matches URLs to JIRA issues.
-  JIRA_ISSUE_URL = %r[https?:\/\/[\da-z\.\-]+\.[a-z\.]{2,6}\/browse\/#{CODE_ONLY}(?=#{PUNCT}|$)].freeze
+  JIRA_ISSUE_URL = %r[https?://[\da-z.\-]+\.[a-z.]{2,6}/browse/#{CODE_ONLY}(?=#{PUNCT}|$)].freeze
 
   # Matches "VOICE-1234" or "[VOICE-1234]"
   JIRA_CODE_TITLE = /(\[)*(#{CODE_ONLY})(\])*/.freeze
@@ -131,7 +131,7 @@ class Changeset::PullRequest
   def risks
     return @risks if defined?(@risks)
     @risks = parse_risks(@data.body.to_s)
-    if @risks&.match?(/\A\s*\-?\s*None\Z/i)
+    if @risks&.match?(/\A\s*-?\s*None\Z/i)
       @risks = nil
       @missing_risks = false
     else

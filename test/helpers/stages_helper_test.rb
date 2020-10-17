@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-# rubocop:disable Metrics/LineLength
+# rubocop:disable Layout/LineLength
 require_relative '../test_helper'
 
 SingleCov.covered!
@@ -29,4 +29,4 @@ describe StagesHelper do
     end
   end
 end
-# rubocop:enable Metrics/LineLength
+# rubocop:enable Layout/LineLength

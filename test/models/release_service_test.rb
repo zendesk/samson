@@ -43,7 +43,7 @@ describe ReleaseService do
 
     it "tags the release" do
       service.release(commit: commit, author: author)
-      assert_equal [[project.repository_path, 'v124', target_commitish: commit]], release_params_used
+      assert_equal [[project.repository_path, 'v124', {target_commitish: commit}]], release_params_used
     end
 
     it "stops when release cannot be found" do

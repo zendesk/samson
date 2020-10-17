@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-# rubocop:disable Metrics/LineLength
+# rubocop:disable Layout/LineLength
 class ChangeEnvDeployGroupToScope < ActiveRecord::Migration[4.2]
   def change
     remove_index :environment_variables, name: "environment_variables_unique_deploy_group_id"
@@ -13,4 +13,4 @@ class ChangeEnvDeployGroupToScope < ActiveRecord::Migration[4.2]
     add_column :environment_variable_groups, :comment, :text
   end
 end
-# rubocop:enable Metrics/LineLength
+# rubocop:enable Layout/LineLength

@@ -63,7 +63,7 @@ describe "cleanliness" do
 
   it "does not use setup/teardown" do
     assert_content all_tests do |content|
-      if content.match?(/^\s+(setup|teardown)[\s\{]/)
+      if content.match?(/^\s+(setup|teardown)[\s{]/)
         "uses setup or teardown, but should use before or after"
       end
     end
@@ -72,7 +72,7 @@ describe "cleanliness" do
   # rails does not run validations on :destroy, so we should not run them on soft-delete (which is an update)
   it 'discourages use of soft_delete without validate: false' do
     assert_content all_code do |content|
-      if content.match?(/[\. ]soft_delete\!?$/)
+      if content.match?(/[. ]soft_delete!?$/)
         'prefer soft_delete(validate: false)'
       end
     end

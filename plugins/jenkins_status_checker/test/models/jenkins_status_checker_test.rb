@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-# rubocop:disable Metrics/LineLength
+# rubocop:disable Layout/LineLength
 require_relative '../../test/test_helper'
 
 SingleCov.covered!
@@ -65,4 +65,4 @@ describe JenkinsStatusChecker do
     end
   end
 end
-# rubocop:enable Metrics/LineLength
+# rubocop:enable Layout/LineLength
