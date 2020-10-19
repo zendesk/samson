@@ -62,7 +62,7 @@ describe TerminalExecutor do
     end
 
     it "removes rbenv from PATH" do
-      with_env RBENV_DIR: 'XYZ', PATH: ENV["PATH"] + ":/foo/rbenv/versions/1.2.3/bin" do
+      with_env RBENV_DIR: 'XYZ', PATH: "#{ENV["PATH"]}:/foo/rbenv/versions/1.2.3/bin" do
         subject.execute('env')
         output.string.wont_include("RBENV_DIR")
         output.string.wont_include("/rbenv/versions")

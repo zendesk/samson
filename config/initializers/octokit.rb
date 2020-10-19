@@ -30,9 +30,7 @@ Octokit.connection_options[:request] = {open_timeout: 2}
 
 token = ENV['GITHUB_TOKEN']
 
-unless Rails.env.test? || ENV['PRECOMPILE']
-  raise "No GitHub token available" if token.blank?
-end
+raise "No GitHub token available" if !Rails.env.test? && !ENV['PRECOMPILE'] && token.blank?
 
 Octokit.api_endpoint = Rails.application.config.samson.github.api_url
 Octokit.web_endpoint = Rails.application.config.samson.github.web_url

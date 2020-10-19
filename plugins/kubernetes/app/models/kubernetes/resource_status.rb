@@ -29,7 +29,7 @@ module Kubernetes
 
     attr_reader :resource, :role, :deploy_group, :kind, :details, :live, :finished, :pod
 
-    def initialize(resource:, role: nil, deploy_group:, prerequisite: false, start:, kind:)
+    def initialize(resource:, deploy_group:, start:, kind:, role: nil, prerequisite: false)
       @resource = resource
       @kind = kind
       @role = role

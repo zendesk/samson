@@ -85,6 +85,7 @@ module Samson
 
     class Plugin
       attr_reader :name, :folder
+
       def initialize(path)
         @path = path
         @folder = File.expand_path('../../../', @path)

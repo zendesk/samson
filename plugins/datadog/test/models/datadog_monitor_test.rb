@@ -226,13 +226,13 @@ describe DatadogMonitor do
 
     it "can ignore by id" do
       body = [{id: 1, name: "foo"}, {id: 12345, name: "bar"}].to_json
-      assert_request(:get, url + "foo,bar", to_return: {body: body}) do
+      assert_request(:get, "#{url}foo,bar", to_return: {body: body}) do
         DatadogMonitor.list("foo,-12345,bar").map(&:name).must_equal ["foo"]
       end
     end
 
     it "adds tags" do
-      assert_request(:get, url + "foo,bar", to_return: {body: [{id: 1, name: "foo"}].to_json}) do
+      assert_request(:get, "#{url}foo,bar", to_return: {body: [{id: 1, name: "foo"}].to_json}) do
         DatadogMonitor.list("foo,bar").map(&:id).must_equal [1]
       end
     end

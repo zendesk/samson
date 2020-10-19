@@ -63,7 +63,7 @@ Samson::Hooks.callback :project_permitted_params do
     AcceptsEnvironmentVariables::ASSIGNABLE_ATTRIBUTES.merge(
       environment_variable_group_ids: []
     ),
-    external_environment_variable_groups_attributes: [:name, :description, :url, :_destroy, :id]
+    {external_environment_variable_groups_attributes: [:name, :description, :url, :_destroy, :id]}
   ]
 end
 

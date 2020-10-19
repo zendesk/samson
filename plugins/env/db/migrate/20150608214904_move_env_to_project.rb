@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-# rubocop:disable Metrics/LineLength
+# rubocop:disable Layout/LineLength
 class MoveEnvToProject < ActiveRecord::Migration[4.2]
   def change
     rename_table :stage_environment_variable_groups, :project_environment_variable_groups
@@ -22,4 +22,4 @@ class MoveEnvToProject < ActiveRecord::Migration[4.2]
     end
   end
 end
-# rubocop:enable Metrics/LineLength
+# rubocop:enable Layout/LineLength

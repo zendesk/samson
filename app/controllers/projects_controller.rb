@@ -42,9 +42,7 @@ class ProjectsController < ResourceController
 
   def deploy_group_versions
     before = params[:before] ? Time.parse(params[:before]) : Time.now
-    deploy_group_versions = @project.last_deploy_by_group(before).each_with_object({}) do |(id, deploy), hash|
-      hash[id] = deploy.as_json
-    end
+    deploy_group_versions = @project.last_deploy_by_group(before).transform_values(&:as_json)
     render json: deploy_group_versions
   end
 
@@ -101,7 +99,7 @@ class ProjectsController < ResourceController
   # TODO: rename ... not user anymore
   def projects_for_user
     scope =
-      if search = params.dig(:search).presence
+      if search = params[:search].presence
         scope = Project
         if query = search[:query]
           scope = scope.search(query)
@@ -109,7 +107,7 @@ class ProjectsController < ResourceController
         if url = search[:url]
           # users can pass in git@ or https:// with or without .git
           # database has git@ or https:// urls with or without .git
-          uri = URI.parse("https://" + url.gsub(/(^https?:\/\/|\.git|git@|ssh:\/\/)/, '').sub(':', '/'))
+          uri = URI.parse("https://#{url.gsub(/(^https?:\/\/|\.git|git@|ssh:\/\/)/, '').sub(':', '/')}")
           git = "git@#{uri.host}#{uri.path.sub('/', ':')}"
           git_http = "https://#{uri.host}#{uri.path}"
           urls = [

@@ -75,7 +75,7 @@ module Kubernetes
     def server_version
       version = Rails.cache.fetch(cache_key, expires_in: 1.hour) do
         Samson::Retry.with_retries [StandardError], 3, wait_time: 1 do
-          JSON.parse(client('v1').create_rest_client('version').get.body).fetch('gitVersion')[1..-1]
+          JSON.parse(client('v1').create_rest_client('version').get.body).fetch('gitVersion')[1..]
         end
       end
       Gem::Version.new(version)

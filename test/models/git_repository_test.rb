@@ -74,7 +74,7 @@ describe GitRepository do
     it "is called from all public methods" do
       file = File.read("app/models/git_repository.rb")
       public = file.split(/^  private$/).first
-      methods = public.scan(/^  def ([a-z_\?\!]+)(.*?)^  end/m)
+      methods = public.scan(/^  def ([a-z_?!]+)(.*?)^  end/m)
       methods.size.must_be :>, 5 # making sure the logic is sound
       methods.delete_if { |method, _| ["update_mirror", "prune_worktree"].include?(method) }
       methods.each do |name, body|

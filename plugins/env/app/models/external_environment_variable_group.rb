@@ -73,7 +73,7 @@ class ExternalEnvironmentVariableGroup < ActiveRecord::Base
   def resolve_s3_url
     parsed_url = URI.parse url.to_s
 
-    key = parsed_url.path.to_s[1..-1]
+    key = parsed_url.path.to_s[1..]
     bucket = parsed_url.host.to_s.chomp ".s3.amazonaws.com"
 
     params = (URI.decode_www_form parsed_url.query.to_s).to_h

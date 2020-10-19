@@ -130,7 +130,7 @@ describe CsvExport do
 
     it "converts date list to range" do
       @csv_export.update_attribute(:filters, 'deploys.created_at': Date.new(1900, 1, 1)..Date.today)
-      expected_range = Time.new(1900, 1, 1)..Time.parse(Date.today.to_s + "T23:59:59Z")
+      expected_range = Time.new(1900, 1, 1)..Time.parse("#{Date.today}T23:59:59Z")
       @csv_export.filters['deploys.created_at'].class.must_equal((1..2).class)
       @csv_export.filters['deploys.created_at'].must_equal expected_range
     end

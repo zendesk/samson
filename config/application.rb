@@ -12,7 +12,7 @@ abort "Do not run server with PRECOMPILE env var set" if ENV["SERVER_MODE"] && E
 
 begin
   require 'pry-rails'
-rescue LoadError # rubocop:disable Lint/HandleExceptions
+rescue LoadError
   # ignore if pry-rails is not included in bundle
 end
 
@@ -178,7 +178,7 @@ module Samson
 
         # Token used to request badges
         config.samson.badge_token = \
-          Digest::MD5.hexdigest('badge_token' + (ENV['BADGE_TOKEN_BASE'] || Samson::Application.config.secret_key_base))
+          Digest::MD5.hexdigest("badge_token#{(ENV['BADGE_TOKEN_BASE'] || Samson::Application.config.secret_key_base)}")
       end
     end
 

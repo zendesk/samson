@@ -3,7 +3,7 @@
 Object.prepend(Module.new do
   def must_equal(*args)
     if args.first.nil?
-      must_be_nil(*args[1..-1])
+      must_be_nil(*args[1..])
     else
       super
     end

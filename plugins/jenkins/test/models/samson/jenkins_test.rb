@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-# rubocop:disable Metrics/LineLength
+# rubocop:disable Layout/LineLength
 require_relative '../../test_helper'
 
 SingleCov.covered! uncovered: 2
@@ -893,4 +893,4 @@ describe Samson::Jenkins do
     end
   end
 end
-# rubocop:enable Metrics/LineLength
+# rubocop:enable Layout/LineLength

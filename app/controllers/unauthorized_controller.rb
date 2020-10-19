@@ -22,7 +22,7 @@ class UnauthorizedController < ActionController::Metal
     message = "You are not #{current_user ? "authorized to #{action}" : "logged in"}"
     respond_to do |format|
       format.json do
-        render json: {error: message + ", see docs/api.md on how to authenticate"}, status: :unauthorized
+        render json: {error: "#{message}, see docs/api.md on how to authenticate"}, status: :unauthorized
       end
       format.html do
         attempted_path = "/#{url_for(params).split("/", 4).last}" # request.fullpath is /unauthenticated

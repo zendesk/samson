@@ -3,13 +3,14 @@ require:
 
 AllCops:
   DisplayCopNames: true
+  NewCops: enable
   Exclude:
   - db/schema.rb
   - vendor/**/*
   - tmp/**/*
   - node_modules/**/*
 
-Metrics/LineLength:
+Layout/LineLength:
   Max: 120
 
 Metrics/ClassLength:
@@ -57,13 +58,13 @@ Style/NumericLiterals:
 Style/NumericPredicate:
   EnforcedStyle: comparison
 
-Layout/IndentFirstArgument:
+Layout/FirstArgumentIndentation:
   Enabled: false
 
-Layout/IndentFirstHashElement:
+Layout/FirstHashElementIndentation:
   EnforcedStyle: consistent
 
-Layout/AlignParameters:
+Layout/ParameterAlignment:
   EnforcedStyle: with_fixed_indentation
 
 Layout/MultilineOperationIndentation:
@@ -180,7 +181,7 @@ Style/FormatStringToken:
 Style/RedundantBegin:
   Enabled: false
 
-Naming/UncommunicativeMethodParamName:
+Naming/MethodParameterName:
   Enabled: false
 
 Layout/EmptyLineAfterGuardClause:
@@ -190,10 +191,10 @@ Style/IfInsideElse:
   Enabled: false
 
 # Enable this once https://github.com/rubocop-hq/rubocop/issues/6410 is fixed
-Layout/AlignHash:
+Layout/HashAlignment:
   Enabled: false
 
-Layout/AlignArguments:
+Layout/ArgumentAlignment:
   EnforcedStyle: with_fixed_indentation
 
 # Opt-in
@@ -257,4 +258,14 @@ Rails/HelperInstanceVariable:
 
 # Not helpful
 Rails/FilePath:
+  Enabled: false
+
+Gemspec/RequiredRubyVersion:
+  Enabled: false
+
+Style/AccessorGrouping:
+  Enabled: false
+
+# produces false-positives with html-safe, see app/helpers/application_helper.rb
+Style/StringConcatenation:
   Enabled: false

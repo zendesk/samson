@@ -14,7 +14,7 @@ describe EnvironmentVariable do
 
   describe "validations" do
     # postgres and sqlite do not have string limits defined
-    if ActiveRecord::Base.connection.class.name == "ActiveRecord::ConnectionAdapters::Mysql2Adapter"
+    if ActiveRecord::Base.connection.class.name == "ActiveRecord::ConnectionAdapters::Mysql2Adapter" # rubocop:disable Style/ClassEqualityComparison
       it "validates value length" do
         environment_variable.value = "a" * 1_000_000
         refute_valid environment_variable

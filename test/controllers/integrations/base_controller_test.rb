@@ -4,7 +4,7 @@ require_relative '../../test_helper'
 SingleCov.covered!
 
 describe Integrations::BaseController do
-  class BaseTestController < Integrations::BaseController
+  class BaseTestController < Integrations::BaseController # rubocop:disable Lint/ConstantDefinitionInBlock
   end
 
   tests BaseTestController
@@ -132,7 +132,7 @@ describe Integrations::BaseController do
     end
 
     it "fails with invalid token" do
-      post :create, params: {test_route: true, token: token + 'x'}
+      post :create, params: {test_route: true, token: "#{token}x"}
       assert_response :unauthorized
       json.must_equal(deploy_ids: [], messages: 'Invalid token')
     end

@@ -12,7 +12,7 @@ describe SamsonAwsEcr::SamsonPlugin do
   let(:ecr_client) { Aws::ECR::Client.new(stub_responses: true, region: 'us-west-2') }
   let(:username) { "AWS" }
   let(:password) { "Some password" }
-  let(:base64_authorization_token)     { Base64.encode64(username + ":" + password) }
+  let(:base64_authorization_token)     { Base64.encode64("#{username}:#{password}") }
   let(:old_base64_authorization_token) { Base64.encode64("old #{username}:old #{password}") }
   let(:fresh_response) do
     {authorization_data: [{authorization_token: base64_authorization_token, expires_at: 2.hours.from_now}]}

@@ -101,7 +101,7 @@ describe SamsonNewRelic do
     end
   end
 
-  class Klass
+  klass = Class.new do
     extend ::Samson::PerformanceTracer::Tracers
     def with_role
     end
@@ -111,15 +111,15 @@ describe SamsonNewRelic do
   describe "#performance_tracer" do
     it "triggers method tracer when enabled" do
       with_env NEW_RELIC_LICENSE_KEY: "1" do
-        Klass.expects(:add_method_tracer)
-        Samson::Hooks.fire :trace_method, Klass, [:with_role]
+        klass.expects(:add_method_tracer)
+        Samson::Hooks.fire :trace_method, klass, [:with_role]
       end
     end
 
     it "skips method tracer when disabled" do
       with_env NEW_RELIC_LICENSE_KEY: nil do
-        Klass.expects(:add_method_tracer).never
-        Samson::Hooks.fire :trace_method, Klass, [:with_role]
+        klass.expects(:add_method_tracer).never
+        Samson::Hooks.fire :trace_method, klass, [:with_role]
       end
     end
   end
@@ -127,15 +127,15 @@ describe SamsonNewRelic do
   describe "asynchronous_performance_tracer hook" do
     it "triggers asynchronous tracer when enabled" do
       with_env NEW_RELIC_LICENSE_KEY: "1" do
-        Klass.expects(:add_transaction_tracer)
-        Samson::Hooks.fire :asynchronous_performance_tracer, Klass, [:with_role]
+        klass.expects(:add_transaction_tracer)
+        Samson::Hooks.fire :asynchronous_performance_tracer, klass, [:with_role]
       end
     end
 
     it "skips asynchronous tracer when disabled" do
       with_env NEW_RELIC_LICENSE_KEY: nil do
-        Klass.expects(:add_transaction_tracer).never
-        Samson::Hooks.fire :asynchronous_performance_tracer, Klass, [:with_role]
+        klass.expects(:add_transaction_tracer).never
+        Samson::Hooks.fire :asynchronous_performance_tracer, klass, [:with_role]
       end
     end
   end

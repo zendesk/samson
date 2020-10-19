@@ -155,7 +155,7 @@ module Kubernetes
     end
 
     # allows passing the project to reuse the repository cache when doing multiple lookups
-    def role_config_file(reference, project: project(), deploy_group:, ignore_errors:, **args) # rubocop:disable Style/MethodCallWithoutArgsParentheses
+    def role_config_file(reference, deploy_group:, ignore_errors:, project: project(), **args) # rubocop:disable Style/MethodCallWithoutArgsParentheses
       file = config_file
       file = file.sub('$deploy_group', deploy_group.env_value) if deploy_group && dynamic_folders?
       self.class.role_config_file(project, file, reference, **args)
@@ -196,7 +196,7 @@ module Kubernetes
         paths = project.repository.
           file_content(folder, git_ref).
           to_s. # nil when not found
-          split("\n")[2..-1] || []
+          split("\n")[2..] || []
         paths.map! { |f| "#{folder}/#{f}" }
 
         files = paths.grep(/\.(yml|yaml|json)$/)

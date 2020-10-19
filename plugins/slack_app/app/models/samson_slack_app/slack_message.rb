@@ -62,13 +62,13 @@ module SamsonSlackApp
 
     def failed_body
       {
-        text: ':x: ' + title('failed to deploy'),
+        text: ":x: #{title('failed to deploy')}",
       }
     end
 
     def succeeded_body
       {
-        text: ':tada: ' + title('successfully deployed')
+        text: ":tada: #{title('successfully deployed')}"
       }
     end
 

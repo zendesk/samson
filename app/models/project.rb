@@ -190,9 +190,9 @@ class Project < ActiveRecord::Base
     nil
   end
 
-  def last_deploy_by_group(before_time, include_failed_deploys: false)
-    releases = deploys_by_group(before_time, include_failed_deploys)
-    releases.map { |group_id, deploys| [group_id, deploys.max_by(&:updated_at)] }.to_h
+  def last_deploy_by_group(before_time, **args)
+    releases = deploys_by_group(before_time, **args)
+    releases.transform_values { |deploys| deploys.max_by(&:updated_at) }
   end
 
   def last_deploy_by_stage
@@ -246,7 +246,7 @@ class Project < ActiveRecord::Base
     "#{Rails.application.config.samson.gitlab.web_url}/#{repository_path}"
   end
 
-  def deploys_by_group(before, include_failed_deploys = false)
+  def deploys_by_group(before, include_failed_deploys: false)
     stages.each_with_object({}) do |stage, result|
       stage_filter = include_failed_deploys ? stage.deploys : stage.deploys.succeeded.where(release: true)
       deploy = stage_filter.find_by("deploys.updated_at <= ?", before.to_s(:db))

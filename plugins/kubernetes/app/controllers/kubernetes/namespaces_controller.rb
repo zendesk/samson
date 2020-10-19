@@ -141,7 +141,7 @@ class Kubernetes::NamespacesController < ResourceController
 
   def show_namespace_warnings(warnings)
     return if warnings.empty?
-    flash[:warn] = helpers.simple_format("Error applying namespace in some clusters:\n" + warnings.join("\n"))
+    flash[:warn] = helpers.simple_format("Error applying namespace in some clusters:\n#{warnings.join("\n")}")
   end
 
   def resource_params

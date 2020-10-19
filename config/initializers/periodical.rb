@@ -21,7 +21,7 @@ Samson::Periodical.register :report_system_stats, "Report system stats" do
   # https://api.rubyonrails.org/classes/ActiveRecord/ConnectionAdapters/ConnectionPool.html#method-i-stat
   conn_pool_stats = ActiveRecord::Base.connection_pool.stat
   memcached_available =
-    if Rails.cache.class == ActiveSupport::Cache::MemoryStore
+    if Rails.cache.instance_of?(ActiveSupport::Cache::MemoryStore)
       1
     else
       Rails.cache.instance_variable_get(:@data).with { |c| c.send(:ring).servers.count(&:alive?) }

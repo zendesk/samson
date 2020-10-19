@@ -7,7 +7,7 @@ class NewRelicController < ApplicationController
 
   def show
     applications = stage.new_relic_applications.map(&:name)
-    render json: SamsonNewRelic::Api.metrics(applications, initial?)
+    render json: SamsonNewRelic::Api.metrics(applications, initial: initial?)
   end
 
   private

@@ -25,7 +25,7 @@ describe SamsonGitlab do
     end
 
     it "resolves a reference" do
-      stub_request(:get, api_path + "branches/master").to_return(body: JSON.dump(commit: {id: 'foo'}))
+      stub_request(:get, "#{api_path}branches/master").to_return(body: JSON.dump(commit: {id: 'foo'}))
       fire("master").must_equal ["foo"]
     end
   end
@@ -43,7 +43,7 @@ describe SamsonGitlab do
     end
 
     it "builds a fake comparisson" do
-      stub_request(:get, api_path + "compare?from=a&to=b").to_return(body: JSON.dump(diffs: [], commits: []))
+      stub_request(:get, "#{api_path}compare?from=a&to=b").to_return(body: JSON.dump(diffs: [], commits: []))
       result = fire("a", "b")
       assert result.first.respond_to?(:commits)
       result.map(&:to_h).must_equal [{files: [], commits: []}]

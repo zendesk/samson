@@ -302,7 +302,7 @@ describe CsvExportsController do
         csv_filter.keys.must_include "jobs.status"
         csv_filter.keys.must_include "stages.project_id"
         start_date = Time.parse(filter[:start_date])
-        end_date = Time.parse(filter[:end_date] + "T23:59:59Z")
+        end_date = Time.parse("#{filter[:end_date]}T23:59:59Z")
         csv_filter["deploys.created_at"].must_equal start_date..end_date
         csv_filter["stages.production"].must_equal true
         csv_filter["jobs.status"].must_equal "succeeded"

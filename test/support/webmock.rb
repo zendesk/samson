@@ -40,7 +40,7 @@ ActiveSupport::TestCase.class_eval do
   end
 
   def stub_github_api(path, response = {}, status = 200)
-    url = "https://api.github.com/" + path
+    url = "https://api.github.com/#{path}"
     stub_request(:get, url).to_return(
       status: status,
       body: JSON.dump(response),

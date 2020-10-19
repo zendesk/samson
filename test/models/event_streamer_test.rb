@@ -4,7 +4,7 @@ require_relative '../test_helper'
 SingleCov.covered! uncovered: 2
 
 describe EventStreamer do
-  class FakeStream
+  fake_stream = Class.new do
     attr_reader :lines
 
     def initialize
@@ -25,7 +25,7 @@ describe EventStreamer do
     end
   end
 
-  class FakeOutput
+  fake_output = Class.new do
     def initialize(content)
       @content = content
     end
@@ -35,8 +35,8 @@ describe EventStreamer do
     end
   end
 
-  let(:output) { FakeOutput.new([[:message, "hello\n"], [:message, "world\n"]]) }
-  let(:stream) { FakeStream.new }
+  let(:output) { fake_output.new([[:message, "hello\n"], [:message, "world\n"]]) }
+  let(:stream) { fake_stream.new }
   let(:streamer) { EventStreamer.new(stream) }
 
   after { maxitest_kill_extra_threads } # heartbeat never finishes
@@ -48,14 +48,14 @@ describe EventStreamer do
   end
 
   it "overwrites the previous lines if a carriage return or clear line code is present" do
-    output = FakeOutput.new([[:message, "hello\rworld\n"]])
+    output = fake_output.new([[:message, "hello\rworld\n"]])
     streamer.start(output)
     stream.lines.must_include %(event: append\ndata: {"msg":"hello"}\n\n)
     stream.lines.must_include %(event: replace\ndata: {"msg":"world\\n"}\n\n)
   end
 
   it "splits by newlines and carriage returns" do
-    output = FakeOutput.new([[:message, "hel"], [:message, "lo\rwo"], [:message, "rld\n"]])
+    output = fake_output.new([[:message, "hel"], [:message, "lo\rwo"], [:message, "rld\n"]])
     streamer.start(output)
     stream.lines.must_include %(event: append\ndata: {"msg":"hello"}\n\n)
     stream.lines.must_include %(event: replace\ndata: {"msg":"world\\n"}\n\n)
