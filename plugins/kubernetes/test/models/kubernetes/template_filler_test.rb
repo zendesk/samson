@@ -786,6 +786,30 @@ describe Kubernetes::TemplateFiller do
       end
     end
 
+    describe "podtemplate" do
+      let(:result) { template.to_hash }
+      let(:containers) { result.dig_fetch(:template, :spec, :containers) }
+      let(:container) { containers.first }
+      let(:build) { builds(:docker_build) }
+      let(:image) { build.docker_repo_digest }
+
+      before do
+        raw_template.replace(
+          YAML.safe_load(
+            read_kubernetes_sample_file('kubernetes_podtemplate.yml')
+          ).deep_symbolize_keys
+        )
+      end
+
+      it "does not populate spec attribute" do
+        result.fetch(:spec, nil).must_be_nil
+      end
+
+      it "overrides image" do
+        container.fetch(:image).must_equal image
+      end
+    end
+
     describe "pod" do
       before do
         original_metadata = raw_template.fetch(:metadata)
