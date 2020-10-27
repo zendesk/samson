@@ -40,7 +40,7 @@ module Kubernetes
           make_stateful_set_match_service if kind == 'StatefulSet'
           set_pre_stop if kind == 'Deployment'
           set_name
-          set_replica_target || validate_replica_target_is_supported
+          (set_replica_target || validate_replica_target_is_supported) if kind != 'PodTemplate'
           set_spec_template_metadata
           set_docker_image unless verification
           set_resource_usage

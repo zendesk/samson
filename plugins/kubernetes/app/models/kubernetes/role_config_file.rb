@@ -54,7 +54,9 @@ module Kubernetes
 
     def self.templates(resource)
       spec = resource[:spec]
-      if !spec
+      if resource[:kind] == 'PodTemplate'
+        [resource[:template]]
+      elsif !spec
         []
       elsif spec[:containers]
         [resource]

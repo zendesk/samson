@@ -6,6 +6,8 @@ SingleCov.covered!
 describe Kubernetes::RoleConfigFile do
   let(:content) { read_kubernetes_sample_file('kubernetes_deployment.yml') }
   let(:config_file) { Kubernetes::RoleConfigFile.new(content, 'some-file.yml', project: projects(:test)) }
+  let(:content_template) { read_kubernetes_sample_file('kubernetes_podtemplate.yml') }
+  let(:config_file_template) { Kubernetes::RoleConfigFile.new(content_template, 'file.yml', project: projects(:test)) }
 
   describe "#initialize" do
     it "fails with a message that points to the broken file" do
@@ -33,6 +35,10 @@ describe Kubernetes::RoleConfigFile do
       Kubernetes::RoleValidator.any_instance.expects(:validate)
       assert content.sub!(/\n---.*/m, '')
       config_file.primary[:kind].must_equal 'DaemonSet'
+    end
+
+    it "finds a PodTemplate" do
+      config_file_template.primary[:kind].must_equal 'PodTemplate'
     end
 
     it "blows up on unsupported" do
