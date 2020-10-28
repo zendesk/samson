@@ -446,6 +446,12 @@ module Kubernetes
       end
     end
 
+    class PodTemplate < VersionedUpdate
+      def desired_pod_count
+        0 # PodTemplates don't actually create pods
+      end
+    end
+
     class Pod < Immutable
     end
 
