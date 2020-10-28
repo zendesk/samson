@@ -314,6 +314,11 @@ describe Kubernetes::Resource do
         delete_resource!
         resource.desired_pod_count.must_equal 0
       end
+
+      it "is 0 when resource is a PodTemplate" do
+        template[:kind] = "PodTemplate"
+        resource.desired_pod_count.must_equal 0
+      end
     end
 
     describe "#request" do
