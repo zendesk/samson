@@ -33,7 +33,7 @@ class ImageBuilder
         credentials = DockerRegistry.all.select { |r| r.password && r.username }.map do |r|
           username = r.username.shellescape
           password = r.password.shellescape
-          "docker login --username #{username} --password #{password}"
+          "docker login --username #{username} --password #{password} #{r.host.shellescape}"
         end
 
         # run commands and then cleanup after
