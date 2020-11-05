@@ -16,8 +16,11 @@ class Integrations::BaseController < ApplicationController
 
     if branch
       create_release = project.create_release?(branch, service_type, service_name)
-      record_log :info, "Create release for "\
-        "branch [#{branch}], service_type [#{service_type}], service_name [#{service_name}]: #{create_release}"
+      record_log(
+        :info,
+        "Create release for branch [#{branch}], service_type [#{service_type}], service_name [#{service_name}]: " \
+        "#{create_release}"
+      )
       release = find_or_create_release if create_release
     else
       record_log :info, "No branch found, assuming this is a tag and not creating a release"
@@ -29,7 +32,15 @@ class Integrations::BaseController < ApplicationController
 
     stages = project.webhook_stages_for(branch, service_type, service_name)
     deploy_service = DeployService.new(user)
-    deploys = stages.map { |stage| deploy_service.deploy(stage, reference: release&.version || commit) }
+    deploys = stages.map do |stage|
+      options =
+        if params[:deploy_branch_with_commit]
+          {reference: branch, commit: commit} # nice display and exact commit
+        else
+          {reference: release&.version || commit} # exact display and commit
+        end
+      deploy_service.deploy(stage, options)
+    end
     deploys.each do |deploy|
       if deploy.persisted?
         record_log :info, "Deploying to #{deploy.stage.name}"

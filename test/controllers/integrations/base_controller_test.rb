@@ -154,6 +154,16 @@ describe Integrations::BaseController do
       @controller.request.env["PATH_INFO"].must_equal "/test/hidden-project-not-found-token"
     end
 
+    it "can deploy branch and commit" do
+      Project.any_instance.expects(:webhook_stages_for).returns([stages(:test_staging)])
+      assert_difference 'Deploy.count', +1 do
+        post :create, params: {test_route: true, token: token, deploy_branch_with_commit: "true"}
+        assert_response :success
+      end
+      Deploy.first.reference.must_equal "master"
+      Deploy.first.job.commit.must_equal sha
+    end
+
     describe "when deploy hooks are setup" do
       let(:deploy1) { deploys(:succeeded_test) }
       let(:deploy2) { deploys(:succeeded_production_test) }
