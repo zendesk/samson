@@ -72,10 +72,9 @@ module Kubernetes
     end
 
     # Temporary template we run validations on ... so can be cheap / not fully fleshed out
-    # and only be the primary since services/configmaps are not very interesting anyway
     def verification_template
       primary_config = raw_template.detect { |e| Kubernetes::RoleConfigFile.primary?(e) } || raw_template.first
-      Kubernetes::TemplateFiller.new(self, primary_config, index: 0)
+      Kubernetes::TemplateFiller.new(self, primary_config, index:)
     end
 
     def blue_green_color
