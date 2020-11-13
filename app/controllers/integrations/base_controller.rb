@@ -43,7 +43,7 @@ class Integrations::BaseController < ApplicationController
     end
     deploys.each do |deploy|
       if deploy.persisted?
-        record_log :info, "Deploying to #{deploy.stage.name}"
+        record_log :info, "Deploying #{deploy.id} to #{deploy.stage.name}"
       else
         record_log :error, "Failed deploying to #{deploy.stage.name}: #{deploy.errors.full_messages.to_sentence}"
       end
