@@ -170,8 +170,8 @@ describe Integrations::BaseController do
 
         expected_messages = <<~MESSAGES
           INFO: Create release for branch [master], service_type [ci], service_name [base_test]: true
-          INFO: Deploying to Staging
-          INFO: Deploying to Production
+          INFO: Deploying #{deploy1.id} to Staging
+          INFO: Deploying #{deploy2.id} to Production
         MESSAGES
 
         assert_response :success
@@ -185,7 +185,7 @@ describe Integrations::BaseController do
         message = <<~MSG
           INFO: Create release for branch [master], service_type [ci], service_name [base_test]: true
           ERROR: Failed deploying to Staging: Stage is locked
-          INFO: Deploying to Production
+          INFO: Deploying #{Deploy.first.id} to Production
         MSG
 
         assert_response :unprocessable_entity

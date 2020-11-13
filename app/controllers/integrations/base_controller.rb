@@ -32,7 +32,7 @@ class Integrations::BaseController < ApplicationController
     deploys = stages.map { |stage| deploy_service.deploy(stage, reference: release&.version || commit) }
     deploys.each do |deploy|
       if deploy.persisted?
-        record_log :info, "Deploying to #{deploy.stage.name}"
+        record_log :info, "Deploying #{deploy.id} to #{deploy.stage.name}"
       else
         record_log :error, "Failed deploying to #{deploy.stage.name}: #{deploy.errors.full_messages.to_sentence}"
       end
