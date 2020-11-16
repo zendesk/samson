@@ -6,11 +6,8 @@ if Samson::EnvCheck.set?("RAILS_LOG_TO_STDOUT")
   # good for heroku or docker
   config.logger = ActiveSupport::TaggedLogging.new(ActiveSupport::Logger.new($stdout))
 elsif Samson::EnvCheck.set?("RAILS_LOG_TO_SYSLOG")
-  # good for production hosts with syslog
-  # TODO: add Syslog::Logger#silence to support dev mode
-  # TODO: add tagged logging so we get request-ids
   require_relative "../lib/samson/syslog_formatter"
-  config.logger = Syslog::Logger.new('samson')
+  config.logger = ActiveSupport::TaggedLogging.new(Syslog::Logger.new('samson'))
   config.logger.formatter = Samson::SyslogFormatter.new
 elsif ENV["SERVER_MODE"]
   # good for development or servers without syslog
@@ -32,6 +29,12 @@ elsif ENV["SERVER_MODE"]
     end
   end
 end
+
+# TODO: log user id too ... doing in current_user does not work because request logs after that is done
+config.log_tags = [
+  ->(request) { "id:#{request.request_id}" },
+  ->(request) { "ip:#{request.remote_ip}" }
+]
 
 # log 1 message per request to in json/syslog format
 if ENV["RAILS_LOG_WITH_LOGRAGE"]
