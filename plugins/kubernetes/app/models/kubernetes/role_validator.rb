@@ -36,7 +36,6 @@ module Kubernetes
       validate_container_resources
       validate_job_restart_policy
       validate_pod_disruption_budget
-      validate_numeric_cpu_limits
       validate_security_context
       validate_project_and_role_consistent
       validate_team_labels
@@ -159,17 +158,6 @@ module Kubernetes
 
         unless invalid.empty?
           @errors << "Datadog annotation specified for non-existent container name: #{invalid.join(',')}"
-        end
-      end
-    end
-
-    # spec actually allows this, but blows up when used
-    def validate_numeric_cpu_limits
-      (pod_containers + init_containers).flatten(1).each do |container|
-        [:requests, :limits].each do |scope|
-          path = [:resources, scope, :cpu]
-          next if [NilClass, String].include?(container.dig(*path).class)
-          @errors << "Numeric cpu resources are not supported"
         end
       end
     end

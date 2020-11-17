@@ -192,11 +192,6 @@ describe Kubernetes::RoleValidator do
       errors.must_be_nil
     end
 
-    it "reports numeric cpu" do
-      role.first[:spec][:template][:spec][:containers].first[:resources] = {limits: {cpu: 1}}
-      errors.must_include "Numeric cpu resources are not supported"
-    end
-
     it "does not fail on missing containers" do
       role.first[:spec][:template][:spec].delete(:containers)
       errors.must_be_nil
