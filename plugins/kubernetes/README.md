@@ -285,6 +285,11 @@ Allow users to set kritis breakglass per deploy-group or deploy by setting envir
 Environment variables do not get set on init container by default, but it can be opted in with:
 `metadata.annotations.container-nameofcontainer-samson/set_env_vars: "true"`
 
+### Not setting environment variables in sidecars
+
+Environment variables get set on sidecar container by default, but it can be opted out with:
+`metadata.annotations.container-nameofcontainer-samson/set_env_vars: "false"`
+
 ### Istio sidecar injection via annotation
 
 [Istio](https://istio.io) comes with a Mutating Webhook Admission Controller that will inject an

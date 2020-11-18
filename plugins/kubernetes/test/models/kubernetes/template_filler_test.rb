@@ -572,6 +572,13 @@ describe Kubernetes::TemplateFiller do
         end
       end
 
+      it "does not add env when requested" do
+        pod = raw_template[:spec][:template]
+        pod[:spec][:containers][0][:"samson/set_env_vars"] = "false"
+        pod[:spec][:containers][0][:env] = [{foo: "bar"}]
+        container[:env].must_equal [{foo: "bar"}]
+      end
+
       it "overrides container env with deploy_env so samson can modify env variables" do
         raw_template[:spec][:template][:spec][:containers].first[:env] = [{name: 'FromEnv', value: 'THIS-IS-BAD'}]
         # plugins can return string or symbol keys, we should be prepared for both

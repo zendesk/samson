@@ -544,7 +544,8 @@ module Kubernetes
 
     # containers we will set env for
     def env_containers
-      pod_containers + init_containers.select { |c| samson_container_config(c, :"samson/set_env_vars") }
+      pod_containers.reject { |c| samson_container_config(c, :"samson/set_env_vars") == "false" } +
+        init_containers.select { |c| samson_container_config(c, :"samson/set_env_vars") }
     end
 
     def static_env
