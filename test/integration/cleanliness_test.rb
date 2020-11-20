@@ -287,4 +287,16 @@ describe "cleanliness" do
       TEXT
     )
   end
+
+  it "does not override default routes from plugins" do
+    core = File.read("config/routes.rb").scan(/^  resources :([^\s,]+)/).flatten
+    core.size.must_be :>, 10
+
+    routes = Dir["{#{Samson::Hooks.plugins.map(&:folder).join(",")}}/config/routes.rb"]
+    bad = routes.flat_map do |route|
+      redeclared = File.read(route).scan(/^  resources :(\S+) do/).flatten & core
+      redeclared.map { |b| "#{route} do not re-declare core object routes #{b}, use `only: []`" }
+    end
+    assert bad.empty?, bad.join("\n")
+  end
 end

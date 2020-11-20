@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 Samson::Application.routes.draw do
-  resources :projects do
+  resources :projects, only: [] do
     namespace :rollbar_dashboards do
       resources :dashboards, only: [] do
         collection do
@@ -11,7 +11,7 @@ Samson::Application.routes.draw do
     end
   end
 
-  resources :deploys do
+  resources :deploys, only: [] do
     namespace :rollbar_dashboards do
       resources :dashboards, only: [] do
         collection do
