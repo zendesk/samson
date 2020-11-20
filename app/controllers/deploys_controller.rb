@@ -207,7 +207,7 @@ class DeploysController < ApplicationController
   end
 
   def find_deploy
-    @deploy = Deploy.find(params[:id])
+    @deploy = (current_project&.deploys || Deploy).find(params[:id])
   end
 
   def deploys_scope

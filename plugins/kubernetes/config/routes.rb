@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 Samson::Application.routes.draw do
-  resources :projects do
+  resources :projects, only: [] do
     namespace :kubernetes do
       resources :deploy_group_roles do
         collection do
