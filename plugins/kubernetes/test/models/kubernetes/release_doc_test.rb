@@ -365,6 +365,18 @@ describe Kubernetes::ReleaseDoc do
     end
   end
 
+  describe "#verification_templates" do
+    it "returns all by default" do
+      kubernetes_fake_raw_template
+      doc.verification_templates.size.must_equal 2
+    end
+
+    it "returns primary when asked" do
+      kubernetes_fake_raw_template
+      doc.verification_templates(main_only: true).size.must_equal 1
+    end
+  end
+
   describe "#blue_green_color" do
     before { doc.kubernetes_release.blue_green_color = "green" }
 
@@ -378,7 +390,7 @@ describe Kubernetes::ReleaseDoc do
     end
   end
 
-  describe '#deploy_group_role' do
+  describe "#deploy_group_role" do
     it "returns an instance of a DeployGroupRole" do
       doc.deploy_group_role.must_be_instance_of Kubernetes::DeployGroupRole
     end
@@ -386,6 +398,13 @@ describe Kubernetes::ReleaseDoc do
     it "can be set" do
       doc.deploy_group_role = Kubernetes::DeployGroupRole.first
       assert_sql_queries(0) { assert doc.deploy_group_role }
+    end
+  end
+
+  describe "#build_selectors" do
+    it "delegates" do
+      kubernetes_fake_raw_template
+      doc.build_selectors.must_equal [["Dockerfile", nil]]
     end
   end
 end

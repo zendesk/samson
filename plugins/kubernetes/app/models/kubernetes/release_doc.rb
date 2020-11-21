@@ -8,7 +8,6 @@ module Kubernetes
     belongs_to :deploy_group, inverse_of: false
 
     serialize :resource_template, JSON
-    delegate :build_selectors, to: :verification_template
 
     validates :deploy_group, presence: true, inverse_of: false
     validates :kubernetes_role, presence: true
@@ -40,7 +39,7 @@ module Kubernetes
     # run on unsaved mock ReleaseDoc to test template and secrets before we save or create a build
     # this create a bit of duplicated work, but fails the deploy fast
     def verify_template
-      verification_template.verify
+      verification_templates(main_only: true).each(&:verify)
     end
 
     # kubeclient needs pure symbol hash ... not indifferent access
@@ -71,11 +70,12 @@ module Kubernetes
       end.to_h
     end
 
-    # Temporary template we run validations on ... so can be cheap / not fully fleshed out
-    # and only be the primary since services/configmaps are not very interesting anyway
-    def verification_template
-      primary_config = raw_template.detect { |e| Kubernetes::RoleConfigFile.primary?(e) } || raw_template.first
-      Kubernetes::TemplateFiller.new(self, primary_config, index: 0)
+    # Temporary templates to run validations on ... so can be cheap / not fully fleshed out
+    # we check main_only in here to avoid generating all the extra fillers just to throw them away
+    def verification_templates(main_only: false)
+      templates = raw_template
+      templates = [templates.detect { |t| Kubernetes::RoleConfigFile.primary?(t) } || templates.first] if main_only
+      templates.each_with_index.map { |c, i| Kubernetes::TemplateFiller.new(self, c, index: i) }
     end
 
     def blue_green_color
@@ -88,6 +88,10 @@ module Kubernetes
 
     def desired_pod_count
       resources.sum(&:desired_pod_count)
+    end
+
+    def build_selectors
+      verification_templates(main_only: false).first.build_selectors
     end
 
     private

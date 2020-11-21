@@ -46,9 +46,10 @@ describe Kubernetes::StagesController do
 
         get :manifest_preview, params: {project_id: project.id, id: stage.id}
         assert_response 200
-        yaml = YAML.safe_load(response.body, symbolize_names: true)
-        yaml.dig(:metadata, :name).must_equal "test-app-server"
-        yaml.dig(:metadata, :namespace).must_equal "pod1"
+        yaml = YAML.load_stream(response.body)
+        yaml.dig(0, "metadata", "name").must_equal "test-app-server"
+        yaml.dig(0, "metadata", "namespace").must_equal "pod1"
+        yaml.size.must_equal 2
       end
     end
   end

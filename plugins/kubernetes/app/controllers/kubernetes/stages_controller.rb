@@ -26,7 +26,7 @@ class Kubernetes::StagesController < ResourceController
     output = OutputBuffer.new
     deploy_executor = Kubernetes::DeployExecutor.new(job, output)
     release_docs = deploy_executor.preview_release_docs(resolve_build: resolve_build)
-    template_fillers = release_docs.map(&:verification_template)
+    template_fillers = release_docs.flat_map(&:verification_templates)
 
     # build yaml file with comment header for debugging
     log = "# Manifest preview for #{current_project.name} - #{current_stage.name}. Git ref: #{git_ref} (#{git_sha})\n" +
