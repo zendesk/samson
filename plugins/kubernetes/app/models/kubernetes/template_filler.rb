@@ -10,10 +10,11 @@ module Kubernetes
     DOCKERFILE_NONE = 'none'
     DEFAULT_TERMINATION_GRACE_PERIOD = 30
 
-    def initialize(release_doc, template, index:)
+    def initialize(release_doc, template, index:, env_config_map: false)
       @doc = release_doc
       @template = template.deep_dup
       @index = index
+      @env_config_map = env_config_map
       migrate_container_annotations
     end
 
@@ -482,12 +483,10 @@ module Kubernetes
 
     # helpful env vars, also useful for log tagging
     def set_env
-      all = []
-
-      @doc.static_env.each { |k, v| all << {name: k.to_s, value: v.to_s} }
+      static_vars = @doc.static_env.map { |k, v| {name: k.to_s, value: v.to_s} }
 
       # dynamic lookups for unknown things during deploy
-      dynamic_vars = {
+      dynamic_env = {
         POD_NAME: 'metadata.name',
         POD_NAMESPACE: 'metadata.namespace',
         POD_IP: 'status.podIP'
@@ -496,15 +495,18 @@ module Kubernetes
       if @doc.deploy_group_role.inject_istio_annotation?
         # Set the ISTIO_STATUS env var so that the container(s) know that an Istio
         # sidecar has been injected.
-        dynamic_vars['ISTIO_STATUS'] = "metadata.annotations['sidecar.istio.io/status']"
+        dynamic_env['ISTIO_STATUS'] = "metadata.annotations['sidecar.istio.io/status']"
       end
 
-      dynamic_vars.each do |k, v|
-        all << {
+      dynamic_vars = dynamic_env.map do |k, v|
+        {
           name: k.to_s,
           valueFrom: {fieldRef: {fieldPath: v}}
         }
       end
+
+      all = dynamic_vars
+      all += static_vars unless @env_config_map
 
       env_containers.each do |c|
         extra = all
@@ -522,6 +524,11 @@ module Kubernetes
         env.reverse!
         env.uniq! { |h| h[:name] }
         env.reverse!
+
+        if @env_config_map
+          # Source env from config map, not directly on resource definition
+          (c[:envFrom] ||= []) << {configMapRef: {name: @env_config_map, optional: false}}
+        end
       end
     end
 

@@ -134,6 +134,45 @@ module Kubernetes
       end
     end
 
+    def metadata
+      @metadata ||=
+        Kubernetes::Release.pod_selector(kubernetes_release.id, deploy_group.id, query: false).merge(
+          deploy_id: kubernetes_release.deploy_id,
+          project_id: kubernetes_release.project_id,
+          role_id: kubernetes_role.id,
+          deploy_group: deploy_group.env_value,
+          revision: kubernetes_release.git_sha,
+          tag: kubernetes_release.git_ref
+        )
+    end
+
+    def static_env
+      @static_env ||= begin
+        env = {}
+
+        [:REVISION, :TAG, :DEPLOY_ID, :DEPLOY_GROUP].each do |k|
+          env[k.to_s] = metadata.fetch(k.downcase).to_s
+        end
+
+        if reference_resource
+          [:PROJECT, :ROLE].each do |k|
+            env[k.to_s] = reference_resource.dig_fetch(:metadata, :labels, k.downcase).dup
+          end
+        end
+
+        # name of the cluster
+        env["KUBERNETES_CLUSTER_NAME"] = deploy_group.kubernetes_cluster.name.to_s
+
+        # blue-green phase
+        env["BLUE_GREEN"] = blue_green_color.dup if blue_green_color
+
+        # env from plugins
+        deploy = kubernetes_release.deploy || Deploy.new(project: kubernetes_release.project)
+        plugin_envs = Samson::Hooks.fire(:deploy_env, deploy, deploy_group, resolve_secrets: false, base: env)
+        plugin_envs.compact.inject({}, :merge!)
+      end
+    end
+
     private
 
     def resource_template=(value)
@@ -144,19 +183,46 @@ module Kubernetes
     # dynamically fill out the templates and store the result
     def store_resource_template
       add_pod_disruption_budget
+      add_env_config_map
+
       counter = Hash.new(-1)
+
       self.resource_template = raw_template.map do |resource|
         index = (counter[resource.fetch(:kind)] += 1)
-        TemplateFiller.new(self, resource, index: index).to_hash
+        opts = {index: index}
+        opts[:env_config_map] = env_config_map_name if env_from_config_map?
+        TemplateFiller.new(self, resource, **opts).to_hash
       end
     end
 
-    def add_pod_disruption_budget
-      return unless deployment = raw_template.detect { |r| ["Deployment", "StatefulSet"].include? r[:kind] }
-      return if raw_template.any? { |r| r[:kind] == "PodDisruptionBudget" }
-      return unless target = disruption_budget_target(deployment)
+    # The resource we want to copy things from, like name, labels, and annotations
+    def reference_resource
+      return @reference_resource if defined?(@reference_resource)
+      @reference_resource = raw_template.find { |r| %w[Deployment StatefulSet].include?(r[:kind]) }
+    end
 
-      annotations = (deployment.dig(:metadata, :annotations) || {}).slice(
+    def reference_name
+      reference_resource&.dig(:metadata, :name)
+    end
+
+    def reference_namespace
+      reference_resource&.dig(:metadata, :namespace)
+    end
+
+    def reference_labels
+      reference_resource&.dig(:metadata, :labels) || {}
+    end
+
+    def reference_annotations
+      reference_resource&.dig(:metadata, :annotations) || {}
+    end
+
+    def add_pod_disruption_budget
+      return unless reference_resource
+      return if raw_template.any? { |r| r[:kind] == "PodDisruptionBudget" }
+      return unless target = disruption_budget_target(reference_resource)
+
+      annotations = reference_annotations.slice(
         :"samson/override_project_label",
         :"samson/keep_name"
       )
@@ -166,17 +232,17 @@ module Kubernetes
         apiVersion: "policy/v1beta1",
         kind: "PodDisruptionBudget",
         metadata: {
-          name: deployment.dig(:metadata, :name),
-          labels: deployment.dig_fetch(:metadata, :labels).dup,
+          name: reference_name,
+          labels: reference_labels.dup,
           annotations: annotations
         },
         spec: {
           minAvailable: target,
-          selector: {matchLabels: deployment.dig_fetch(:spec, :selector, :matchLabels).dup}
+          selector: {matchLabels: reference_resource.dig_fetch(:spec, :selector, :matchLabels).dup}
         }
       }
-      if deployment[:metadata].key? :namespace
-        budget[:metadata][:namespace] = deployment.dig(:metadata, :namespace)
+      if ns = reference_namespace
+        budget[:metadata][:namespace] = ns
       end
       budget[:delete] = true if target == 0
       raw_template << budget
@@ -203,6 +269,49 @@ module Kubernetes
       else
         [non_blocking, Integer(min_available)].min
       end
+    end
+
+    def add_env_config_map
+      return unless env_from_config_map?
+      return if env_config_map_exists?
+
+      annotations = reference_annotations.
+        slice(:"samson/override_project_label").
+        merge(
+          "samson/updateTimestamp": Time.now.utc.iso8601,
+          "samson/envConfigMap": true
+        )
+
+      cm = {
+        apiVersion: "v1",
+        kind: "ConfigMap",
+        metadata: {
+          name: env_config_map_name,
+          labels: reference_labels,
+          annotations: annotations
+        },
+        immutable: true,
+        data: static_env
+      }
+
+      if ns = reference_namespace
+        cm[:metadata][:namespace] = ns
+      end
+
+      raw_template << cm
+    end
+
+    def env_config_map_exists?
+      raw_template.any? { |r| r[:kind] == "ConfigMap" && r.dig(:metadata, :annotations, :"samson/envConfigMap") }
+    end
+
+    def env_from_config_map?
+      !!reference_resource&.dig(:metadata, :annotations, :"samson/env_from_config_map")
+    end
+
+    def env_config_map_name
+      version = kubernetes_release.blue_green_color || "blue"
+      "#{reference_name}-#{version}-env"
     end
 
     def validate_config_file

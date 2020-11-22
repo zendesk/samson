@@ -506,7 +506,7 @@ describe Kubernetes::TemplateFiller do
 
         it "adds env vars to init containers when requested" do
           with_init_container name: 'foo', "samson/set_env_vars": "true"
-          spec_init_containers.dig(0, :env, 0, :name).must_equal "REVISION"
+          assert spec_init_containers.dig(0, :env).any? { |v| v[:name] == "REVISION" }
         end
       end
 
@@ -596,6 +596,14 @@ describe Kubernetes::TemplateFiller do
         container.fetch(:env).select { |e| e[:name] == 'TAG' }.must_equal(
           [{name: 'TAG', value: 'OVERRIDE'}]
         )
+      end
+
+      describe "env from configmap" do
+        let(:template) { Kubernetes::TemplateFiller.new(doc, raw_template, index: 0, env_config_map: "project-env") }
+
+        it "adds an envFrom reference" do
+          container.fetch(:envFrom).must_include(configMapRef: {name: "project-env", optional: false})
+        end
       end
 
       describe "with multiple containers" do
