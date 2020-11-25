@@ -113,6 +113,23 @@ describe JobExecution do
     assert_includes 'annotated_tag', job.tag
   end
 
+  it 'keeps hardcoded commit' do
+    result = execute_on_remote_repo <<-SHELL
+      git commit -m a --allow-empty
+      git commit -m b --allow-empty
+      git show HEAD^
+    SHELL
+
+    old = result[/commit (\S+)/, 1] || raise
+    job.commit = old
+    execute_job
+
+    assert job.succeeded?
+    job.tag.must_match /^v1-1-/ # 1 commit behind
+    job.commit.must_equal old # not changed
+    job.output.must_include "Commit: #{old}"
+  end
+
   it "updates the branch to match what's in the remote repository" do
     execute_on_remote_repo <<-SHELL
       git checkout -b safari
@@ -128,6 +145,7 @@ describe JobExecution do
 
     # pretend we are in a new request
     project.repository.instance_variable_set(:@mirror_current, nil)
+    job.update_column(:commit, nil)
 
     execute_on_remote_repo <<-SHELL
       git checkout safari

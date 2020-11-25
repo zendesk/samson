@@ -160,8 +160,9 @@ describe Integrations::BaseController do
         post :create, params: {test_route: true, token: token, deploy_branch_with_commit: "true"}
         assert_response :success
       end
-      Deploy.first.reference.must_equal "master"
-      Deploy.first.job.commit.must_equal sha
+      deploy = Deploy.first
+      deploy.reference.must_equal "master"
+      deploy.job.commit.must_equal sha
     end
 
     describe "when deploy hooks are setup" do
