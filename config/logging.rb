@@ -49,8 +49,7 @@ if ENV["RAILS_LOG_WITH_LOGRAGE"]
     request = event.payload[:headers].instance_variable_get(:@req)
     {
       params: params,
-      user_id: request.env['warden']&.user&.id,
-      client_ip: request.remote_ip
+      user_id: request.env['warden']&.user&.id
     }
   end
   config.lograge.formatter = Lograge::Formatters::Logstash.new
