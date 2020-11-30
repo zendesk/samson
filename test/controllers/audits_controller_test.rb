@@ -57,6 +57,24 @@ describe AuditsController do
           response.body.wont_include user.email
         end
       end
+
+      it "can filter by changed key" do
+        get :index, params: {search: {key: "name"}}
+        assert_template :index
+        assigns(:audits).size.must_equal 1
+      end
+
+      it "can filter by changed value" do
+        get :index, params: {search: {value: "Staging"}}
+        assert_template :index
+        assigns(:audits).size.must_equal 1
+      end
+
+      it "can filter by changed key+value" do
+        get :index, params: {search: {key: "name", value: "Staging"}}
+        assert_template :index
+        assigns(:audits).size.must_equal 1
+      end
     end
 
     describe "#show" do

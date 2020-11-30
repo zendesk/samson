@@ -9,6 +9,14 @@
   <%= search_select :action, ["create", "update", "destroy"] %>
   <%= search_select :auditable_type, audited_classes.sort, label: "Resource" %>
   <%= search_select :user_id, User.pluck(:name, :id), live: true, label: "By" %>
+  <div class="col-sm-2">
+    <%= label_tag 'Changed Key' %>
+    <%= text_field_tag 'search[key]', params.dig(:search, :key), class: "form-control" %>
+  </div>
+  <div class="col-sm-2">
+    <%= label_tag 'Changed Value' %>
+    <%= text_field_tag 'search[value]', params.dig(:search, :value), class: "form-control" %>
+  </div>
 <% end %>
 
 <%= render 'table', audits: @audits, global: global %>
