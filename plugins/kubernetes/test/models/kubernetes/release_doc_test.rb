@@ -406,5 +406,11 @@ describe Kubernetes::ReleaseDoc do
       kubernetes_fake_raw_template
       doc.build_selectors.must_equal [["Dockerfile", nil]]
     end
+
+    it "picks main template" do
+      kubernetes_fake_raw_template
+      doc.send(:raw_template).unshift({})
+      doc.build_selectors.must_equal [["Dockerfile", nil]]
+    end
   end
 end
