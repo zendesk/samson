@@ -91,7 +91,7 @@ module Kubernetes
     end
 
     def build_selectors
-      verification_templates(main_only: false).first.build_selectors
+      verification_templates(main_only: true).first.build_selectors
     end
 
     private
