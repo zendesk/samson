@@ -12,6 +12,10 @@
       <% end %>
     </span>
   <% else %>
+    <% if form_obj.new_record? && method = ENV['DOCKER_NEW_PROJECT_BUILD_METHOD'].presence %>
+      <% form_obj.docker_build_method = method %>
+    <% end %>
+
     <%= form.input :docker_build_method, help: docker_build_methods_help_text do %>
       <%= form.select :docker_build_method,
           Project::DOCKER_BUILD_METHODS.map { |method| [method[:label], method[:method]] },

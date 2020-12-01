@@ -229,7 +229,7 @@ class Project < ActiveRecord::Base
   end
 
   def docker_image_building_disabled?
-    force_external_build? ? true : docker_image_building_disabled
+    force_external_build? || docker_image_building_disabled
   end
 
   def force_external_build?
