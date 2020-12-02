@@ -102,17 +102,6 @@ describe Kubernetes::ReleaseDoc do
         env.fetch("BLUE_GREEN").must_equal "green"
       end
     end
-
-    describe "with no deployment or stateful set objects" do
-      before do
-        Kubernetes::ReleaseDoc.any_instance.stubs(:primary_resource).returns(nil)
-      end
-
-      it "does not include PROJECT or ROLE" do
-        env.wont_include "PROJECT"
-        env.wont_include "ROLE"
-      end
-    end
   end
 
   describe "#store_resource_template" do

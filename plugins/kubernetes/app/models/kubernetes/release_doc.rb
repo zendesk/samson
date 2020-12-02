@@ -115,10 +115,8 @@ module Kubernetes
           env[k.to_s] = deploy_metadata.fetch(k.downcase).to_s
         end
 
-        if primary_resource
-          [:PROJECT, :ROLE].each do |k|
-            env[k.to_s] = primary_resource.dig_fetch(:metadata, :labels, k.downcase).dup
-          end
+        [:PROJECT, :ROLE].each do |k|
+          env[k.to_s] = raw_template.first.dig_fetch(:metadata, :labels, k.downcase).dup
         end
 
         # name of the cluster
@@ -136,11 +134,6 @@ module Kubernetes
 
     private
 
-    def primary_resource
-      return @primary_resource if defined?(@primary_resource)
-      @primary_resource = raw_template.detect { |r| ["Deployment", "StatefulSet"].include? r[:kind] }
-    end
-
     def resource_template=(value)
       @resource_template = nil
       super
@@ -157,11 +150,11 @@ module Kubernetes
     end
 
     def add_pod_disruption_budget
-      return unless primary_resource
+      return unless deployment = raw_template.detect { |r| ["Deployment", "StatefulSet"].include? r[:kind] }
       return if raw_template.any? { |r| r[:kind] == "PodDisruptionBudget" }
-      return unless target = disruption_budget_target(primary_resource)
+      return unless target = disruption_budget_target(deployment)
 
-      annotations = (primary_resource.dig(:metadata, :annotations) || {}).slice(
+      annotations = (deployment.dig(:metadata, :annotations) || {}).slice(
         :"samson/override_project_label",
         :"samson/keep_name"
       )
@@ -171,17 +164,17 @@ module Kubernetes
         apiVersion: "policy/v1beta1",
         kind: "PodDisruptionBudget",
         metadata: {
-          name: primary_resource.dig(:metadata, :name),
-          labels: primary_resource.dig_fetch(:metadata, :labels).dup,
+          name: deployment.dig(:metadata, :name),
+          labels: deployment.dig_fetch(:metadata, :labels).dup,
           annotations: annotations
         },
         spec: {
           minAvailable: target,
-          selector: {matchLabels: primary_resource.dig_fetch(:spec, :selector, :matchLabels).dup}
+          selector: {matchLabels: deployment.dig_fetch(:spec, :selector, :matchLabels).dup}
         }
       }
-      if primary_resource[:metadata].key? :namespace
-        budget[:metadata][:namespace] = primary_resource.dig(:metadata, :namespace)
+      if deployment[:metadata].key? :namespace
+        budget[:metadata][:namespace] = deployment.dig(:metadata, :namespace)
       end
       budget[:delete] = true if target == 0
       raw_template << budget
