@@ -25,11 +25,10 @@ module Kubernetes
     def self.build_release_with_docs(params)
       roles = params.delete(:grouped_deploy_group_roles).to_a
       release = new(params) do |release|
-        if roles.flatten(1).any? { |dgr| dgr.kubernetes_role.blue_green? }
-          release.blue_green_color = begin
-            release.previous_succeeded_release&.blue_green_color == "blue" ? "green" : "blue"
-          end
-        end
+        # We always set the blue green color but the template filler might not always use it.
+        # This allows us to support deploy-specific features like env vars from config maps.
+        release.blue_green_color =
+          release.previous_succeeded_release&.blue_green_color == "blue" ? "green" : "blue"
       end
       release.send :build_release_docs, roles if release.valid?
       release
