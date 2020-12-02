@@ -94,7 +94,52 @@ module Kubernetes
       verification_templates(main_only: true).first.build_selectors
     end
 
+    def deploy_metadata
+      @deploy_metadata ||= Kubernetes::Release.
+        pod_selector(kubernetes_release.id, deploy_group.id, query: false).
+        merge(
+          deploy_id: kubernetes_release.deploy_id,
+          project_id: kubernetes_release.project_id,
+          role_id: kubernetes_role.id,
+          deploy_group: deploy_group.env_value,
+          revision: kubernetes_release.git_sha,
+          tag: kubernetes_release.git_ref
+        )
+    end
+
+    def static_env
+      @static_env ||= begin
+        env = {}
+
+        [:REVISION, :TAG, :DEPLOY_ID, :DEPLOY_GROUP].each do |k|
+          env[k.to_s] = deploy_metadata.fetch(k.downcase).to_s
+        end
+
+        if primary_resource
+          [:PROJECT, :ROLE].each do |k|
+            env[k.to_s] = primary_resource.dig_fetch(:metadata, :labels, k.downcase).dup
+          end
+        end
+
+        # name of the cluster
+        env["KUBERNETES_CLUSTER_NAME"] = deploy_group.kubernetes_cluster.name.to_s
+
+        # blue-green phase
+        env["BLUE_GREEN"] = blue_green_color.dup if blue_green_color
+
+        # env from plugins
+        deploy = kubernetes_release.deploy || Deploy.new(project: kubernetes_release.project)
+        plugin_envs = Samson::Hooks.fire(:deploy_env, deploy, deploy_group, resolve_secrets: false, base: env)
+        plugin_envs.compact.inject({}, :merge!)
+      end
+    end
+
     private
+
+    def primary_resource
+      return @primary_resource if defined?(@primary_resource)
+      @primary_resource = raw_template.detect { |r| ["Deployment", "StatefulSet"].include? r[:kind] }
+    end
 
     def resource_template=(value)
       @resource_template = nil
@@ -112,11 +157,11 @@ module Kubernetes
     end
 
     def add_pod_disruption_budget
-      return unless deployment = raw_template.detect { |r| ["Deployment", "StatefulSet"].include? r[:kind] }
+      return unless primary_resource
       return if raw_template.any? { |r| r[:kind] == "PodDisruptionBudget" }
-      return unless target = disruption_budget_target(deployment)
+      return unless target = disruption_budget_target(primary_resource)
 
-      annotations = (deployment.dig(:metadata, :annotations) || {}).slice(
+      annotations = (primary_resource.dig(:metadata, :annotations) || {}).slice(
         :"samson/override_project_label",
         :"samson/keep_name"
       )
@@ -126,17 +171,17 @@ module Kubernetes
         apiVersion: "policy/v1beta1",
         kind: "PodDisruptionBudget",
         metadata: {
-          name: deployment.dig(:metadata, :name),
-          labels: deployment.dig_fetch(:metadata, :labels).dup,
+          name: primary_resource.dig(:metadata, :name),
+          labels: primary_resource.dig_fetch(:metadata, :labels).dup,
           annotations: annotations
         },
         spec: {
           minAvailable: target,
-          selector: {matchLabels: deployment.dig_fetch(:spec, :selector, :matchLabels).dup}
+          selector: {matchLabels: primary_resource.dig_fetch(:spec, :selector, :matchLabels).dup}
         }
       }
-      if deployment[:metadata].key? :namespace
-        budget[:metadata][:namespace] = deployment.dig(:metadata, :namespace)
+      if primary_resource[:metadata].key? :namespace
+        budget[:metadata][:namespace] = primary_resource.dig(:metadata, :namespace)
       end
       budget[:delete] = true if target == 0
       raw_template << budget
