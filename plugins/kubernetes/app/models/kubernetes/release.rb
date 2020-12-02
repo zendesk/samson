@@ -67,14 +67,6 @@ module Kubernetes
       deploy.previous_succeeded_deploy&.kubernetes_release
     end
 
-    def blue_green?
-      roles.flatten(1).any? { |dgr| dgr.kubernetes_role.blue_green? }
-    end
-
-    def blue_green_color
-      super || "blue"
-    end
-
     private
 
     # Creates a ReleaseDoc per DeployGroupRole

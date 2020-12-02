@@ -90,7 +90,7 @@ describe Kubernetes::Release do
       Kubernetes::Release.build_release_with_docs(release_params).release_docs.must_be :empty?
     end
 
-    describe "blue green" do
+    describe "#blue_green_color" do
       before { app_server.blue_green = true }
 
       it 'defaults to blue when not using blue_green' do

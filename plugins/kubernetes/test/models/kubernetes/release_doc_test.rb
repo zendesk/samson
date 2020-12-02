@@ -273,7 +273,6 @@ describe Kubernetes::ReleaseDoc do
 
         before do
           template.dig(0, :metadata)[:annotations] = {"samson/env_from_config_map": true}
-          create!
         end
 
         it "adds a configmap of static env" do
@@ -288,8 +287,16 @@ describe Kubernetes::ReleaseDoc do
           filled_container[:envFrom].must_include(configMapRef: {name: config_map_name, optional: false})
         end
 
+        it "only inserts the configmap once" do
+          # Add a fake configmap to ensure we don't insert another one
+          template.push(apiVersion: "v1", kind: "ConfigMap", metadata: {annotations: {"samson/envConfigMap": true}})
+
+          create!.resource_template.size.must_equal 3
+        end
+
         it "copies the namespace" do
-          template[0][:metadata][:namespace] = "custom"
+          template.dig(0, :metadata)[:namespace] = "custom"
+
           map = create!.resource_template[2]
           map.dig(:metadata, :namespace).must_equal "custom"
         end
