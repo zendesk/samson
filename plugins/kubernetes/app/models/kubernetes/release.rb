@@ -30,7 +30,7 @@ module Kubernetes
         release.blue_green_color =
           release.previous_succeeded_release&.blue_green_color == "blue" ? "green" : "blue"
       end
-      release.send :build_release_docs, roles if release.valid?
+      release.send(:build_release_docs, roles) if release.valid?
       release
     end
 

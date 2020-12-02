@@ -134,8 +134,8 @@ module Kubernetes
       end
     end
 
-    def metadata
-      @metadata ||=
+    def deploy_meta
+      @deploy_meta ||=
         Kubernetes::Release.pod_selector(kubernetes_release.id, deploy_group.id, query: false).merge(
           deploy_id: kubernetes_release.deploy_id,
           project_id: kubernetes_release.project_id,
@@ -151,7 +151,7 @@ module Kubernetes
         env = {}
 
         [:REVISION, :TAG, :DEPLOY_ID, :DEPLOY_GROUP].each do |k|
-          env[k.to_s] = metadata.fetch(k.downcase).to_s
+          env[k.to_s] = deploy_meta.fetch(k.downcase).to_s
         end
 
         if reference_resource
@@ -232,7 +232,7 @@ module Kubernetes
         apiVersion: "policy/v1beta1",
         kind: "PodDisruptionBudget",
         metadata: {
-          name: reference_name,
+          name: reference_resource.dig(:metadata, :name),
           labels: reference_labels.dup,
           annotations: annotations
         },
@@ -273,7 +273,7 @@ module Kubernetes
 
     def add_env_config_map
       return unless env_from_config_map?
-      return if env_config_map_exists?
+      return if env_config_map_given?
 
       annotations = reference_annotations.
         slice(:"samson/override_project_label").
@@ -301,7 +301,7 @@ module Kubernetes
       raw_template << cm
     end
 
-    def env_config_map_exists?
+    def env_config_map_given?
       raw_template.any? { |r| r[:kind] == "ConfigMap" && r.dig(:metadata, :annotations, :"samson/envConfigMap") }
     end
 
@@ -311,7 +311,8 @@ module Kubernetes
 
     def env_config_map_name
       version = kubernetes_release.blue_green_color || "blue"
-      "#{reference_name}-#{version}-env"
+      name = reference_resource.dig(:metadata, :name)
+      "#{name}-#{version}-env"
     end
 
     def validate_config_file
