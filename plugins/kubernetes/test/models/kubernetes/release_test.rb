@@ -93,10 +93,10 @@ describe Kubernetes::Release do
     describe "blue green" do
       before { app_server.blue_green = true }
 
-      it 'does not set when not using blue_green' do
+      it 'defaults to blue when not using blue_green' do
         app_server.blue_green = false
         subject = Kubernetes::Release.build_release_with_docs(release_params)
-        subject.blue_green_color.must_be_nil
+        subject.blue_green_color.must_equal "blue"
       end
 
       it 'creates first as blue' do

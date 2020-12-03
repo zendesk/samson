@@ -34,7 +34,7 @@ module Kubernetes
           set_hpa_scale_target_name
         elsif Kubernetes::RoleConfigFile::SERVICE_KINDS.include?(kind)
           set_service_name
-          set_service_blue_green if blue_green_color
+          set_service_blue_green if @doc.blue_green?
         elsif Kubernetes::RoleConfigFile.primary?(template)
           set_history_limit if kind == 'Deployment'
           make_stateful_set_match_service if kind == 'StatefulSet'
@@ -47,13 +47,13 @@ module Kubernetes
           set_env unless @doc.delete_resource
           set_secrets unless @doc.delete_resource
           set_image_pull_secrets
-          set_resource_blue_green if blue_green_color
+          set_resource_blue_green if @doc.blue_green?
           set_init_containers
           set_kritis_breakglass
           set_istio_sidecar_injection
         elsif kind == 'PodDisruptionBudget'
           set_name
-          set_match_labels_blue_green if blue_green_color
+          set_match_labels_blue_green if @doc.blue_green?
         else
           set_name
         end
@@ -384,7 +384,7 @@ module Kubernetes
         else
           @doc.kubernetes_role.resource_name
         end
-      name += "-#{blue_green_color}" if blue_green_color
+      name += "-#{blue_green_color}" if @doc.blue_green?
       template.dig_set [:metadata, :name], name
     end
 

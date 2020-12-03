@@ -95,7 +95,8 @@ describe Kubernetes::ReleaseDoc do
 
     describe "with blue/green enabled" do
       before do
-        Kubernetes::ReleaseDoc.any_instance.stubs(:blue_green_color).returns("green")
+        Kubernetes::Role.any_instance.stubs(:blue_green?).returns(true)
+        Kubernetes::Release.any_instance.stubs(:blue_green_color).returns("green")
       end
 
       it "sets BLUE_GREEN in the env" do
