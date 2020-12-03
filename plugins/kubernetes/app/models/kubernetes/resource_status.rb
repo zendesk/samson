@@ -22,8 +22,7 @@ module Kubernetes
         "NoControllers"
       ],
       Service: [
-        "FailedToUpdateEndpointSlices",
-        "ClusterIPOutOfRange"
+        "FailedToUpdateEndpointSlices"
       ]
     }.freeze
 
