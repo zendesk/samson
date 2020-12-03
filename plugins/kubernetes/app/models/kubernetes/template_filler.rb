@@ -120,7 +120,7 @@ module Kubernetes
         path = self.class.dig_path(path)
 
         begin
-          template.dig_set(path, JSON.parse(static_env.fetch(v), symbolize_names: true))
+          template.dig_set(path, JSON.parse(@doc.static_env.fetch(v), symbolize_names: true))
         rescue KeyError, JSON::ParserError => e
           raise(
             Samson::Hooks::UserError,
@@ -400,25 +400,8 @@ module Kubernetes
     # Sets the labels for each new Pod.
     # Adding the Release ID to allow us to track the progress of a new release from the UI.
     def set_spec_template_metadata
-      release_doc_metadata.each do |key, value|
+      @doc.deploy_metadata.each do |key, value|
         pod_template.dig_fetch(:metadata, :labels)[key] ||= value.to_s.parameterize.tr('_', '-').slice(0, 63)
-      end
-    end
-
-    def release_doc_metadata
-      @release_doc_metadata ||= begin
-        release = @doc.kubernetes_release
-        role = @doc.kubernetes_role
-        deploy_group = @doc.deploy_group
-
-        Kubernetes::Release.pod_selector(release.id, deploy_group.id, query: false).merge(
-          deploy_id: release.deploy_id,
-          project_id: release.project_id,
-          role_id: role.id,
-          deploy_group: deploy_group.env_value,
-          revision: release.git_sha,
-          tag: release.git_ref
-        )
       end
     end
 
@@ -501,7 +484,7 @@ module Kubernetes
     def set_env
       all = []
 
-      static_env.each { |k, v| all << {name: k.to_s, value: v.to_s} }
+      @doc.static_env.each { |k, v| all << {name: k.to_s, value: v.to_s} }
 
       # dynamic lookups for unknown things during deploy
       dynamic_vars = {
@@ -546,32 +529,6 @@ module Kubernetes
     def env_containers
       pod_containers.reject { |c| samson_container_config(c, :"samson/set_env_vars") == "false" } +
         init_containers.select { |c| samson_container_config(c, :"samson/set_env_vars") }
-    end
-
-    def static_env
-      @static_env ||= begin
-        env = {}
-
-        metadata = release_doc_metadata
-        [:REVISION, :TAG, :DEPLOY_ID, :DEPLOY_GROUP].each do |k|
-          env[k.to_s] = metadata.fetch(k.downcase).to_s
-        end
-
-        [:PROJECT, :ROLE].each do |k|
-          env[k.to_s] = template.dig_fetch(:metadata, :labels, k.downcase)
-        end
-
-        # name of the cluster
-        env["KUBERNETES_CLUSTER_NAME"] = @doc.deploy_group.kubernetes_cluster.name.to_s
-
-        # blue-green phase
-        env["BLUE_GREEN"] = blue_green_color if blue_green_color
-
-        # env from plugins
-        deploy = @doc.kubernetes_release.deploy || Deploy.new(project: project)
-        plugin_envs = Samson::Hooks.fire(:deploy_env, deploy, @doc.deploy_group, resolve_secrets: false, base: env)
-        plugin_envs.compact.inject({}, :merge!)
-      end
     end
 
     def set_secrets

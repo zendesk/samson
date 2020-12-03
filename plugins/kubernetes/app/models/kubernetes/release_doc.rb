@@ -94,6 +94,44 @@ module Kubernetes
       verification_templates(main_only: true).first.build_selectors
     end
 
+    def deploy_metadata
+      @deploy_metadata ||= Kubernetes::Release.
+        pod_selector(kubernetes_release.id, deploy_group.id, query: false).
+        merge(
+          deploy_id: kubernetes_release.deploy_id,
+          project_id: kubernetes_release.project_id,
+          role_id: kubernetes_role.id,
+          deploy_group: deploy_group.env_value,
+          revision: kubernetes_release.git_sha,
+          tag: kubernetes_release.git_ref
+        )
+    end
+
+    def static_env
+      @static_env ||= begin
+        env = {}
+
+        [:REVISION, :TAG, :DEPLOY_ID, :DEPLOY_GROUP].each do |k|
+          env[k.to_s] = deploy_metadata.fetch(k.downcase).to_s
+        end
+
+        [:PROJECT, :ROLE].each do |k|
+          env[k.to_s] = raw_template.first.dig_fetch(:metadata, :labels, k.downcase).dup
+        end
+
+        # name of the cluster
+        env["KUBERNETES_CLUSTER_NAME"] = deploy_group.kubernetes_cluster.name.to_s
+
+        # blue-green phase
+        env["BLUE_GREEN"] = blue_green_color.dup if blue_green_color
+
+        # env from plugins
+        deploy = kubernetes_release.deploy || Deploy.new(project: kubernetes_release.project)
+        plugin_envs = Samson::Hooks.fire(:deploy_env, deploy, deploy_group, resolve_secrets: false, base: env)
+        plugin_envs.compact.inject({}, :merge!)
+      end
+    end
+
     private
 
     def resource_template=(value)

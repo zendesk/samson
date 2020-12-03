@@ -40,6 +40,14 @@ describe Kubernetes::ReleaseDoc do
   let(:primary_template) { doc.resource_template[0] }
   let(:kube_404) { Kubeclient::ResourceNotFoundError.new(404, 2, 3) }
   let(:service_url) { "http://foobar.server/api/v1/namespaces/pod1/services/some-project" }
+  let(:template) { Kubernetes::ReleaseDoc.new.send(:raw_template) } # makes all docs share the stubbed template
+
+  def create!
+    doc.kubernetes_release.builds = [builds(:docker_build)]
+    Kubernetes::ReleaseDoc.create!(
+      doc.attributes.except('id', 'resource_template').merge(kubernetes_release: doc.kubernetes_release)
+    )
+  end
 
   before do
     configs = YAML.load_stream(read_kubernetes_sample_file('kubernetes_deployment.yml'))
@@ -47,16 +55,56 @@ describe Kubernetes::ReleaseDoc do
     doc.send(:resource_template=, configs)
   end
 
-  describe "#store_resource_template" do
-    def create!
-      doc.kubernetes_release.builds = [builds(:docker_build)]
-      Kubernetes::ReleaseDoc.create!(
-        doc.attributes.except('id', 'resource_template').merge(kubernetes_release: doc.kubernetes_release)
-      )
+  describe "#deploy_metadata" do
+    let(:release_doc) { create! }
+
+    before do
+      kubernetes_fake_raw_template
+      Kubernetes::TemplateFiller.any_instance.stubs(:set_image_pull_secrets) # makes an extra request we ignore
     end
 
-    let(:template) { Kubernetes::ReleaseDoc.new.send(:raw_template) } # makes all docs share the stubbed template
+    it "memoizes it" do
+      Kubernetes::Release.expects(:pod_selector).once.returns({})
 
+      3.times { release_doc.deploy_metadata }
+    end
+  end
+
+  describe "#static_env" do
+    let(:release_doc) { create! }
+    let(:env) { release_doc.static_env }
+
+    before do
+      kubernetes_fake_raw_template
+      Kubernetes::TemplateFiller.any_instance.stubs(:set_image_pull_secrets) # makes an extra request we ignore
+    end
+
+    %w[REVISION TAG DEPLOY_ID DEPLOY_GROUP].each do |var|
+      it "copies #{var} from the metadata" do
+        env.fetch(var).must_equal release_doc.deploy_metadata.fetch(var.downcase.to_sym).to_s
+      end
+    end
+
+    it "sets KUBERNETES_CLUSTER_NAME in the env" do
+      env.must_include "KUBERNETES_CLUSTER_NAME"
+    end
+
+    it "does not include BLUE_GREEN by default" do
+      env.wont_include "BLUE_GREEN"
+    end
+
+    describe "with blue/green enabled" do
+      before do
+        Kubernetes::ReleaseDoc.any_instance.stubs(:blue_green_color).returns("green")
+      end
+
+      it "sets BLUE_GREEN in the env" do
+        env.fetch("BLUE_GREEN").must_equal "green"
+      end
+    end
+  end
+
+  describe "#store_resource_template" do
     before do
       kubernetes_fake_raw_template
       Kubernetes::TemplateFiller.any_instance.stubs(:set_image_pull_secrets) # makes an extra request we ignore
@@ -216,7 +264,7 @@ describe Kubernetes::ReleaseDoc do
   end
 
   describe "#raw_template" do
-    it "can read from dynamic olders" do
+    it "can read from dynamic folders" do
       doc.kubernetes_role.config_file = "kubernetes/$deploy_group/server.yml"
       GitRepository.any_instance.expects(:file_content).with("kubernetes/pod1/server.yml", anything, anything).
         returns(read_kubernetes_sample_file('kubernetes_deployment.yml'))

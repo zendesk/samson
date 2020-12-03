@@ -20,6 +20,7 @@ describe Kubernetes::TemplateFiller do
   let(:project) { doc.kubernetes_release.project }
 
   before do
+    kubernetes_fake_raw_template
     doc.send(:resource_template=, YAML.load_stream(read_kubernetes_sample_file('kubernetes_deployment.yml')))
     doc.kubernetes_release.builds = [builds(:docker_build)]
 
