@@ -19,6 +19,8 @@ module Kubernetes
     attr_reader :previous_resources
     attr_writer :deploy_group_role
 
+    delegate :blue_green?, to: :kubernetes_role
+
     def deploy
       @previous_resources = resources.map(&:resource)
       resources.each(&:deploy)
@@ -79,7 +81,7 @@ module Kubernetes
     end
 
     def blue_green_color
-      kubernetes_release.blue_green_color if kubernetes_role.blue_green?
+      kubernetes_release.blue_green_color if blue_green?
     end
 
     def prerequisite?
@@ -123,7 +125,7 @@ module Kubernetes
         env["KUBERNETES_CLUSTER_NAME"] = deploy_group.kubernetes_cluster.name.to_s
 
         # blue-green phase
-        env["BLUE_GREEN"] = blue_green_color.dup if blue_green_color
+        env["BLUE_GREEN"] = blue_green_color.dup if blue_green?
 
         # env from plugins
         deploy = kubernetes_release.deploy || Deploy.new(project: kubernetes_release.project)
