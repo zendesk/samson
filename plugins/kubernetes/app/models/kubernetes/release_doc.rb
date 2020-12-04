@@ -144,10 +144,11 @@ module Kubernetes
     # dynamically fill out the templates and store the result
     def store_resource_template
       add_pod_disruption_budget
+      env_config_map = create_env_config_map
       counter = Hash.new(-1)
       self.resource_template = raw_template.map do |resource|
         index = (counter[resource.fetch(:kind)] += 1)
-        TemplateFiller.new(self, resource, index: index).to_hash
+        TemplateFiller.new(self, resource, index: index, env_config_map: env_config_map&.dig(:metadata, :name)).to_hash
       end
     end
 
@@ -203,6 +204,48 @@ module Kubernetes
       else
         [non_blocking, Integer(min_available)].min
       end
+    end
+
+    def create_env_config_map
+      return unless deployment = raw_template.detect { |r| ["Deployment", "StatefulSet"].include? r[:kind] }
+      return if raw_template.any? do |r|
+        r[:kind] == "ConfigMap" && r.dig(:metadata, :annotations, :"samson/envConfigMap")
+      end
+      return unless deployment.dig(:metadata, :annotations, :"samson/env_from_config_map")
+
+      name = [
+        deployment.dig_fetch(:metadata, :name),
+        # We always inject the blue-green color to ensure we only have previous and current without
+        # leaving old configmaps around or creating a race during deploys.
+        kubernetes_release.blue_green_color,
+        "env"
+      ].join('-')
+
+      annotations = (deployment.dig(:metadata, :annotations) || {}).slice(
+        :"samson/override_project_label"
+      ).merge!(
+        "samson/updateTimestamp": Time.now.utc.iso8601,
+        "samson/envConfigMap": true
+      )
+
+      cm = {
+        apiVersion: "v1",
+        kind: "ConfigMap",
+        metadata: {
+          name: name,
+          labels: deployment.dig_fetch(:metadata, :labels).dup,
+          annotations: annotations
+        },
+        immutable: true,
+        data: static_env
+      }
+
+      if deployment[:metadata].key?(:namespace)
+        cm[:metadata][:namespace] = deployment.dig(:metadata, :namespace)
+      end
+
+      raw_template << cm
+      cm
     end
 
     def validate_config_file

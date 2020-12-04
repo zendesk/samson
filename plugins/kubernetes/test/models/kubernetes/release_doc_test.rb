@@ -262,6 +262,46 @@ describe Kubernetes::ReleaseDoc do
         create!.resource_template.size.must_equal 2
       end
     end
+
+    describe "env ConfigMap" do
+      it "does not add one by default" do
+        assert create!.resource_template.none? { |t| t[:kind] == "ConfigMap" }
+      end
+
+      describe "when requested" do
+        let(:container) { template.dig(0, :spec, :template, :spec, :containers, 0) }
+
+        before do
+          template.dig(0, :metadata)[:annotations] = {"samson/env_from_config_map": true}
+        end
+
+        it "adds a configmap of static env" do
+          # deployment, service, configmap
+          create!.resource_template.size.must_equal 3
+        end
+
+        it "adds envFrom for the correct container" do
+          config_map_name = "#{template.dig(0, :metadata, :name)}-blue-env"
+          filled_container = create!.resource_template.dig(0, :spec, :template, :spec, :containers, 0)
+
+          filled_container[:envFrom].must_include(configMapRef: {name: config_map_name, optional: false})
+        end
+
+        it "only inserts the configmap once" do
+          # Add a fake configmap to ensure we don't insert another one
+          template.push(apiVersion: "v1", kind: "ConfigMap", metadata: {annotations: {"samson/envConfigMap": true}})
+
+          create!.resource_template.size.must_equal 3
+        end
+
+        it "copies the namespace" do
+          template.dig(0, :metadata)[:namespace] = "custom"
+
+          map = create!.resource_template[2]
+          map.dig(:metadata, :namespace).must_equal "custom"
+        end
+      end
+    end
   end
 
   describe "#raw_template" do

@@ -598,6 +598,14 @@ describe Kubernetes::TemplateFiller do
         )
       end
 
+      describe "env from configmap" do
+        let(:template) { Kubernetes::TemplateFiller.new(doc, raw_template, index: 0, env_config_map: "project-env") }
+
+        it "adds an envFrom reference" do
+          container.fetch(:envFrom).must_include(configMapRef: {name: "project-env", optional: false})
+        end
+      end
+
       describe "with multiple containers" do
         before { raw_template[:spec][:template][:spec][:containers] = [{name: 'foo'}, {name: 'bar'}] }
 

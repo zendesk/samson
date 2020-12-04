@@ -21,6 +21,10 @@ module Kubernetes
       super || NullUser.new(user_id)
     end
 
+    def blue_green_color
+      super || "blue"
+    end
+
     # Creates a new Kubernetes Release and corresponding ReleaseDocs
     def self.build_release_with_docs(params)
       roles = params.delete(:grouped_deploy_group_roles).to_a

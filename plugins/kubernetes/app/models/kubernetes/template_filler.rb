@@ -10,10 +10,11 @@ module Kubernetes
     DOCKERFILE_NONE = 'none'
     DEFAULT_TERMINATION_GRACE_PERIOD = 30
 
-    def initialize(release_doc, template, index:)
+    def initialize(release_doc, template, index:, env_config_map: nil)
       @doc = release_doc
       @template = template.deep_dup
       @index = index
+      @env_config_map = env_config_map
       migrate_container_annotations
     end
 
@@ -484,7 +485,7 @@ module Kubernetes
     def set_env
       all = []
 
-      @doc.static_env.each { |k, v| all << {name: k.to_s, value: v.to_s} }
+      @doc.static_env.each { |k, v| all << {name: k.to_s, value: v.to_s} } unless @env_config_map
 
       # dynamic lookups for unknown things during deploy
       dynamic_vars = {
@@ -522,6 +523,11 @@ module Kubernetes
         env.reverse!
         env.uniq! { |h| h[:name] }
         env.reverse!
+
+        if @env_config_map
+          # Source env from config map, not directly on resource definition
+          (c[:envFrom] ||= []) << {configMapRef: {name: @env_config_map, optional: false}}
+        end
       end
     end
 
