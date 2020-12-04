@@ -171,37 +171,34 @@ module Kubernetes
           annotations: annotations
         },
         spec: {
-          minAvailable: target,
+          maxUnavailable: target,
           selector: {matchLabels: deployment.dig_fetch(:spec, :selector, :matchLabels).dup}
         }
       }
+
       if deployment[:metadata].key? :namespace
         budget[:metadata][:namespace] = deployment.dig(:metadata, :namespace)
       end
-      budget[:delete] = true if target == 0
+
+      # not HA: don't bother, overhead for 0 or 1 replica deployments, but we don't know if a bad budget existed before
+      budget[:delete] = true if replica_target <= 1
+
       raw_template << budget
     end
 
+    # covert minAvailable to maxUnavailable because that never results in blocking the cluster from draining nodes
+    # (math can go wrong and PDBs cannot be drained for example because HPA scaled the deployment down)
     def disruption_budget_target(deployment)
       min_available = deployment.dig(:metadata, :annotations, :"samson/minAvailable")
       return if min_available == "disabled"
 
-      # NOTE: overhead for 0 or 1 replica deployments, but we don't know if a bad budget existed before
       min_available ||= ENV["KUBERNETES_AUTO_MIN_AVAILABLE"]
       return unless min_available
 
-      non_blocking = replica_target - 1
-      return 0 if non_blocking <= 0
-
       if percent = min_available.to_s[/\A(\d+)\s*%\z/, 1] # "30%" -> 30 / "30 %" -> 30
-        percent = Integer(percent)
-        if percent >= 100
-          raise Samson::Hooks::UserError, "minAvailable of >= 100% would result in eviction deadlock, pick lower"
-        else
-          "#{[percent, non_blocking.to_f / replica_target * 100].min.to_i}%"
-        end
+        "#{[100 - Integer(percent), 1].max}%"
       else
-        [non_blocking, Integer(min_available)].min
+        [replica_target - Integer(min_available), 1].max
       end
     end
 

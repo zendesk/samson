@@ -133,55 +133,35 @@ describe Kubernetes::ReleaseDoc do
         refute create!.resource_template[2]
       end
 
-      it "adds valid relative PodDisruptionBudget when sometimes invalid is requested" do
-        template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '99%'}
-        create!.resource_template[2][:spec][:minAvailable].must_equal '50%'
-      end
-
-      it "fails when completely invalid is requested" do
+      it "adds valid PodDisruptionBudget when sometimes invalid is requested" do
         template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '100%'}
-        assert_raises(Samson::Hooks::UserError) { create! }
+        create!.resource_template[2][:spec][:maxUnavailable].must_equal '1%'
       end
 
       it "adds absolute PodDisruptionBudget when requested" do
         template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '1'}
-        create!.resource_template[2][:spec][:minAvailable].must_equal 1
+        create!.resource_template[2][:spec][:maxUnavailable].must_equal 1
       end
 
-      describe "with relative budget" do
-        before { template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '30%'} }
-
-        it "adds relative PodDisruptionBudget" do
-          Time.stubs(:now).returns(Time.parse("2018-01-01"))
-          budget = create!.resource_template[2]
-          budget[:spec][:minAvailable].must_equal '30%'
-          budget[:metadata][:annotations][:"samson/updateTimestamp"].must_equal "2018-01-01T00:00:00Z"
-          refute budget.key?(:delete)
-        end
-
-        it "can use deploy group default namespace via template filler" do
-          template.dig(0, :metadata).delete :namespace
-          budget = create!.resource_template[2]
-          budget[:metadata][:namespace].must_equal "pod1"
-        end
-
-        it "can use custom namespace" do
-          template[0][:metadata][:namespace] = "custom"
-          budget = create!.resource_template[2]
-          budget[:metadata][:namespace].must_equal "custom"
-        end
+      it "adds relative PodDisruptionBudget" do
+        template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '30%'}
+        Time.stubs(:now).returns(Time.parse("2018-01-01"))
+        budget = create!.resource_template[2]
+        budget[:spec][:maxUnavailable].must_equal '70%'
+        budget[:metadata][:annotations][:"samson/updateTimestamp"].must_equal "2018-01-01T00:00:00Z"
+        refute budget.key?(:delete)
       end
 
       describe "with auto-add" do
         with_env KUBERNETES_AUTO_MIN_AVAILABLE: "1"
 
         it "add default" do
-          create!.resource_template[2][:spec][:minAvailable].must_equal 1
+          create!.resource_template[2][:spec][:maxUnavailable].must_equal 1
         end
 
         it "adds when first is not a Deployment" do
           template.unshift(apiVersion: "v1", kind: "ConfigMap", metadata: {labels: {project: "foo", role: "bar"}})
-          create!.resource_template[3][:spec][:minAvailable].must_equal 1
+          create!.resource_template[3][:spec][:maxUnavailable].must_equal 1
         end
 
         it "ignores when there is no deployment" do
@@ -232,9 +212,9 @@ describe Kubernetes::ReleaseDoc do
         assert create!.resource_template[2][:metadata][:annotations].key?(:"samson/keep_name")
       end
 
-      it "deletes when set to 0" do
+      it "allows full disruption when set to 0" do
         template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '0'}
-        create!.resource_template[2][:delete].must_equal true
+        create!.resource_template[2][:spec][:maxUnavailable].must_equal 2
       end
 
       it "deletes when set to 0 via relative" do
@@ -252,7 +232,7 @@ describe Kubernetes::ReleaseDoc do
       it "fixes when creating a deadlock by setting a absolute value" do
         template.dig(0, :metadata)[:annotations] = {"samson/minAvailable": '2'}
         create!
-        create!.resource_template[2][:spec][:minAvailable].must_equal 1
+        create!.resource_template[2][:spec][:maxUnavailable].must_equal 1
       end
 
       it "does not add a second PDB" do
