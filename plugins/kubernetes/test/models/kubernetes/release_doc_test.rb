@@ -317,9 +317,9 @@ describe Kubernetes::ReleaseDoc do
       stub_request(:put, service_url).to_return(body: '{"RE":"SOURCE"}')
 
       # check and update deployment
-      Kubernetes::Resource::Deployment.any_instance.stubs(:ensure_not_updating_match_labels)
+      Kubernetes::Resource::Base.any_instance.stubs(:ensure_not_updating_match_labels)
       client.expects(:get_deployment).returns(DE: "PLOY")
-      client.expects(:update_deployment).returns("Rest client resonse")
+      client.expects(:update_deployment).returns("Rest client response")
 
       doc.deploy
       doc.instance_variable_get(:@previous_resources).must_equal([{SER: "VICE"}, {DE: "PLOY"}])
@@ -330,9 +330,9 @@ describe Kubernetes::ReleaseDoc do
     it "reverts all resources" do
       doc.instance_variable_set(:@previous_resources, [{SER: "VICE"}, {DE: "PLOY"}])
       resources = doc.send(:resources)
-      resources.detect { |r| r.is_a? Kubernetes::Resource::Deployment }.
+      resources.detect { |r| r.kind == "Deployment" }.
         expects(:revert).with(DE: "PLOY")
-      resources.detect { |r| r.is_a? Kubernetes::Resource::Service }.
+      resources.detect { |r| r.kind == "Service" }.
         expects(:revert).with(SER: "VICE")
       doc.revert
     end
