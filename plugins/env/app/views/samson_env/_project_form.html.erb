@@ -25,8 +25,11 @@
     <% ids.each do |id| %>
       <div class="form-group env_group_inputs">
         <div class="col-lg-3">
-          <%= live_select_tag "project[environment_variable_group_ids][]",
-            options_for_select([[nil, nil]] + environment_variable_groups, id), placeholder: "Name"
+          <%= live_select_tag(
+                "project[environment_variable_group_ids][]",
+                options_for_select([[nil, nil]] + environment_variable_groups, id),
+                placeholder: "Name", id: nil
+              )
           %>
         </div>
         <div class="col-lg-2 checkbox">
