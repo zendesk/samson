@@ -142,8 +142,10 @@ module Kubernetes
         raise "Unable to #{reason} (#{error_location})"
       end
 
+      # ensure deletion of child resources like pods before the method completes,
+      # to not run into conflicts when deploying the same resource right after
       def request_delete
-        request(:delete, name, namespace)
+        request(:delete, name, namespace, delete_options: {propagationPolicy: "Foreground"})
         expire_resource_cache
       end
 
@@ -220,27 +222,6 @@ module Kubernetes
         end
       end
 
-      def pods(res)
-        labels = res.dig_fetch(:metadata, :labels).slice(:release_id, :deploy_group_id, :project, :role)
-        selector = labels.map { |k, v| "#{k}=#{v}" }.join(",")
-        client_request(pod_client, :get_pods, label_selector: selector, namespace: namespace).fetch(:items)
-      end
-
-      def delete_pods
-        old_pods = pods(resource)
-        yield
-        old_pods.each do |pod|
-          ignore_404 do
-            client_request(
-              pod_client,
-              :delete_pod,
-              pod.dig_fetch(:metadata, :name),
-              pod.dig_fetch(:metadata, :namespace)
-            )
-          end
-        end
-      end
-
       def request(verb, *args)
         SamsonKubernetes.retry_on_connection_errors do
           begin
@@ -283,10 +264,6 @@ module Kubernetes
 
       def client
         @deploy_group.kubernetes_cluster.client(@template.fetch(:apiVersion))
-      end
-
-      def pod_client
-        @deploy_group.kubernetes_cluster.client('v1')
       end
 
       def restore_template
@@ -332,32 +309,6 @@ module Kubernetes
           *(@template.dig(:spec, :ports) || []).each_with_index.map { |_, i| "spec.ports.#{i}.nodePort" },
           *ENV["KUBERNETES_SERVICE_PERSISTENT_FIELDS"].to_s.split(/\s,/)
         ]
-      end
-    end
-
-    class Deployment < Base
-      def request_delete
-        # Make kubernetes kill all the pods by scaling down
-        unless resource.dig(:status, :replicas) == 0
-          restore_template do
-            @template.dig_set [:spec, :replicas], 0
-            update
-          end
-        end
-
-        # Wait for there to be zero pods
-        loop do
-          sleep TICK
-          # prevent cases when status.replicas are missing
-          # e.g. running locally on Minikube, after scale replicas to zero
-          # $ kubectl scale deployment {DEPLOYMENT_NAME} --replicas 0
-          # "replicas" key is actually removed from "status" map
-          # $ {"status":{"conditions":[...],"observedGeneration":2}}
-          break if fetch_resource.dig(:status, :replicas).to_i == 0
-        end
-
-        # delete the actual deployment
-        super
       end
     end
 
@@ -414,29 +365,6 @@ module Kubernetes
         end
 
         super
-      end
-
-      def delete
-        res = resource
-        super
-        # wait for pods to die, before we create new pods, since they would error if they have the same name
-        backoff_wait([0.0, 0.1, 0.2, 0.5, 1, 2, 4, 8, 16], "delete pods") do
-          return true if pods(res).empty?
-        end
-      end
-    end
-
-    class Job < Immutable
-      def revert(_previous)
-        delete
-      end
-
-      private
-
-      # deleting the job leaves the pods running, so we have to delete them manually
-      # kubernetes is a little more careful with running pods, but we just want to get rid of them
-      def request_delete
-        delete_pods { super }
       end
     end
 

@@ -243,28 +243,38 @@ describe Kubernetes::Resource do
     end
 
     describe "#delete" do
-      around { |t| assert_request(:delete, url, to_return: {body: "{}"}, &t) }
-
       it "deletes" do
-        assert_request(:get, url, to_return: [{body: "{}"}, {status: 404}]) do
+        assert_request(:delete, url, to_return: {body: "{}"}) do
+          assert_request(:get, url, to_return: [{body: "{}"}, {status: 404}]) do
+            resource.delete
+          end
+        end
+      end
+
+      it "does nothing when deleted" do
+        assert_request(:get, url, to_return: [{status: 404}]) do
           resource.delete
         end
       end
 
       it "fetches after deleting" do
-        assert_request(:get, url, to_return: [{body: "{}"}, {status: 404}]) do
-          resource.delete
-          refute resource.exist?
+        assert_request(:delete, url, to_return: {body: "{}"}) do
+          assert_request(:get, url, to_return: [{body: "{}"}, {status: 404}]) do
+            resource.delete
+            refute resource.exist?
+          end
         end
       end
 
       it "fails when deletion fails" do
-        tries = 9
-        assert_request(:get, url, to_return: {body: "{}"}, times: tries + 1) do
-          resource.expects(:sleep).times(tries)
+        assert_request(:delete, url, to_return: {body: "{}"}) do
+          tries = 9
+          assert_request(:get, url, to_return: {body: "{}"}, times: tries + 1) do
+            resource.expects(:sleep).times(tries)
 
-          e = assert_raises(RuntimeError) { resource.delete }
-          e.message.must_equal "Unable to delete resource (ConfigMap some-project pod1 Pod1)"
+            e = assert_raises(RuntimeError) { resource.delete }
+            e.message.must_equal "Unable to delete resource (ConfigMap some-project pod1 Pod1)"
+          end
         end
       end
     end
@@ -361,15 +371,6 @@ describe Kubernetes::Resource do
         resource.send(:request, :update, metadata: {resourceVersion: "old"})
       end
     end
-
-    describe "#pods" do
-      it "raises a descriptive error when it fails" do
-        assert_request(:get, /pod1\/pods/, to_timeout: []) do
-          e = assert_raises(Kubeclient::HttpError) { resource.send(:pods, metadata: {labels: {}}) }
-          e.message.must_equal "Kubernetes error ConfigMap some-project pod1 Pod1: Timed out connecting to server"
-        end
-      end
-    end
   end
 
   describe Kubernetes::Resource::DaemonSet do
@@ -379,7 +380,7 @@ describe Kubernetes::Resource do
     describe "#desired_pod_count" do
       before { template[:spec] = {replicas: 2} }
 
-      it "reads the value from the server since it is comlicated" do
+      it "reads the value from the server since it is complicated" do
         assert_request(:get, url, to_return: {body: {status: {desiredNumberScheduled: 5}}.to_json}) do
           resource.desired_pod_count.must_equal 5
         end
@@ -432,92 +433,6 @@ describe Kubernetes::Resource do
     end
   end
 
-  describe Kubernetes::Resource::Deployment do
-    def deployment_stub(replica_count)
-      {
-        spec: {},
-        status: {replicas: replica_count}
-      }
-    end
-
-    let(:kind) { 'Deployment' }
-    let(:api_version) { 'apps/v1' }
-
-    describe "#delete" do
-      it "does nothing when deployment is deleted" do
-        assert_request(:get, url, to_return: {status: 404}) do
-          resource.delete
-        end
-      end
-
-      it "does nothing when deployment has 0 replicas" do
-        client = resource.send(:client)
-        client.expects(:get_deployment).raises(Kubeclient::ResourceNotFoundError.new(404, 'Not Found', {}))
-        client.expects(:get_deployment).times(3).returns(deployment_stub(0))
-        client.expects(:delete_deployment)
-        resource.delete
-      end
-
-      it "waits for pods to terminate before deleting" do
-        client = resource.send(:client)
-        client.expects(:update_deployment).with do |template|
-          template[:spec][:replicas].must_equal 0
-        end
-        client.expects(:get_deployment).raises(Kubeclient::ResourceNotFoundError.new(404, 'Not Found', {}))
-        client.expects(:get_deployment).times(3).returns(
-          deployment_stub(3),
-          deployment_stub(3),
-          deployment_stub(0)
-        )
-
-        client.expects(:delete_deployment)
-        resource.delete
-      end
-
-      it "can delete when using autoscaling" do
-        resource.instance_variable_set(:@autoscaling, true)
-        client = resource.send(:client)
-        client.expects(:update_deployment).with do |template|
-          template[:spec][:replicas].must_equal 0
-        end
-        client.expects(:get_deployment).
-          raises(Kubeclient::ResourceNotFoundError.new(404, 'Not Found', {})) # final: it is gone
-        client.expects(:get_deployment).times(2).returns(deployment_stub(0)) # checking it is down
-        client.expects(:get_deployment).returns(deployment_stub(1)) # first
-        client.expects(:delete_deployment)
-        resource.delete
-      end
-
-      it "does not fail on unset replicas" do
-        client = resource.send(:client)
-        client.expects(:update_deployment)
-        client.expects(:get_deployment).raises(Kubeclient::ResourceNotFoundError.new(404, 'Not Found', {}))
-        client.expects(:get_deployment).times(2).returns(deployment_stub(nil))
-        client.expects(:delete_deployment)
-        resource.delete
-      end
-    end
-
-    describe "#revert" do
-      it "reverts to previous version" do
-        basic = {kind: 'Deployment', apiVersion: api_version, metadata: {name: 'some-project', namespace: 'pod1'}}
-        previous = basic.deep_merge(metadata: {uid: 'UID'}).freeze
-
-        with = ->(request) { request.body.must_equal basic.to_json }
-        assert_request(:get, url, to_return: {body: "{}"}) do
-          assert_request(:put, url, with: with, to_return: {body: "{}"}) do
-            resource.revert(previous)
-          end
-        end
-      end
-
-      it "deletes when there was no previous version" do
-        resource.expects(:delete)
-        resource.revert(nil)
-      end
-    end
-  end
-
   describe Kubernetes::Resource::StatefulSet do
     def deployment_stub(replica_count)
       {
@@ -543,78 +458,6 @@ describe Kubernetes::Resource do
         assert_raises Samson::Hooks::UserError do
           resource.deploy
         end
-      end
-    end
-
-    describe "#delete" do
-      it "waits for pods to be gone before allowing a new deploy" do
-        existing = {metadata: {labels: {release_id: 1, deploy_group_id: 2}}}
-        assert_request(:get, url, to_return: [{body: existing.to_json}, {status: 404}]) do
-          assert_request(:delete, url, to_return: {body: "{}"}) do
-            pods_url = "http://foobar.server/api/v1/namespaces/pod1/pods?labelSelector=release_id=1,deploy_group_id=2"
-            assert_request(:get, pods_url, to_return: [{body: {items: [{}]}.to_json}, {body: {items: []}.to_json}]) do
-              resource.delete
-            end
-          end
-        end
-      end
-    end
-  end
-
-  describe Kubernetes::Resource::Job do
-    let(:kind) { 'Job' }
-    let(:api_version) { 'batch/v1' }
-
-    describe "#deploy" do
-      it "creates when missing" do
-        assert_request(:get, url, to_return: {status: 404}) do
-          assert_request(:post, base_url, to_return: {body: "{}"}) do
-            resource.deploy
-          end
-        end
-      end
-
-      it "replaces existing" do
-        job = {metadata: {labels: {release_id: 123, deploy_group_id: 234}}}
-        assert_request(:get, url, to_return: [{body: job.to_json}, {status: 404}]) do
-          assert_request(:delete, url, to_return: {body: '{}'}) do
-            assert_pods_lookup do
-              assert_pod_deletion do
-                assert_request(:post, base_url, to_return: {body: "{}"}) do
-                  resource.deploy
-                end
-              end
-            end
-          end
-        end
-      end
-    end
-
-    describe "#delete" do
-      it "deletes pods" do
-        replies = [{body: {metadata: {labels: {}}}.to_json}, {status: 404}]
-        assert_request(:get, url, to_return: replies) do
-          pod = {metadata: {name: "a", namespace: "b"}}
-          assert_request(:get, /pod1\/pods\?/, to_return: {body: {items: [pod]}.to_json}) do
-            assert_request(:delete, url, to_return: {body: {}.to_json}) do
-              assert_request(:delete, /b\/pods\/a/, to_return: {body: {}.to_json}) do
-                resource.delete
-              end
-            end
-          end
-        end
-      end
-    end
-
-    describe "#revert" do
-      it "deletes with previous version since job is already done" do
-        resource.expects(:delete)
-        resource.revert(foo: :bar)
-      end
-
-      it "deletes when there was no previous version" do
-        resource.expects(:delete)
-        resource.revert(nil)
       end
     end
   end

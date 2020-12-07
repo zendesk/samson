@@ -770,7 +770,7 @@ describe Kubernetes::DeployExecutor do
       end
 
       it "does not crash when rollback fails" do
-        Kubernetes::Resource::Deployment.any_instance.stubs(:revert).raises("Weird error")
+        Kubernetes::Resource::Base.any_instance.stubs(:revert).raises("Weird error")
 
         refute execute, out
 
@@ -782,7 +782,7 @@ describe Kubernetes::DeployExecutor do
 
       it "does not rollback when deploy disabled it" do
         deploy.update_column(:kubernetes_rollback, false)
-        Kubernetes::Resource::Deployment.any_instance.expects(:revert).never
+        Kubernetes::Resource::Base.any_instance.expects(:revert).never
 
         refute execute, out
 
@@ -1227,7 +1227,6 @@ describe Kubernetes::DeployExecutor do
         :get, "#{deployments_url}/test-app-server-green",
         to_return: [{body: "{}"}, {body: "{}"}, {status: 404}] # green did exist and gets deleted
       )
-      assert_request(:put, "#{deployments_url}/test-app-server-green", to_return: {body: "{}"}) # set green to 0
       assert_request(:delete, "#{deployments_url}/test-app-server-green", to_return: {body: "{}"}) # delete green
 
       executor.expects(:wait_for_resources_to_complete).returns([true, []])
@@ -1250,7 +1249,6 @@ describe Kubernetes::DeployExecutor do
         ]
       )
       assert_request(:post, deployments_url, to_return: {body: "{}"}) # blue was created
-      assert_request(:put, "#{deployments_url}/test-app-server-blue", to_return: {body: "{}"}) # set blue to 0
       assert_request(:delete, "#{deployments_url}/test-app-server-blue", to_return: {body: "{}"}) # delete blue
 
       executor.expects(:wait_for_resources_to_complete).returns([false, []])
