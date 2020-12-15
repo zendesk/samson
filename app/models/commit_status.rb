@@ -8,7 +8,7 @@ class CommitStatus
   STATE_PRIORITY = [:success, :pending, :missing, :failure, :error, :fatal].freeze
   UNDETERMINED = ["pending", "missing"].freeze
   CHECK_STATE = {
-    error: ['action_required', 'cancelled', 'timed_out', 'stale'],
+    error: ['action_required', 'cancelled', 'timed_out', 'stale', 'startup_failure'],
     failure: ['failure'],
     success: ['success', 'neutral', 'skipped']
   }.freeze
