@@ -92,7 +92,7 @@ module Samson
         @name = File.basename(@folder).sub(/-[^-]*\z/, '').sub(/\Asamson_/, "")
       end
 
-      def load
+      def setup_and_require
         lib = "#{@folder}/lib"
         $LOAD_PATH << lib
         require @path
@@ -193,12 +193,12 @@ module Samson
       end
 
       def load_decorators(klass)
-        @class_decorators[klass.name].each { |path| require_dependency(path) }
+        @class_decorators[klass.name].each { |path| load(path) }
       end
 
       def plugin_setup
         Samson::Hooks.plugins.
-          each(&:load).
+          each(&:setup_and_require).
           each(&:add_migrations).
           each(&:add_assets_to_precompile).
           each(&:add_decorators)
