@@ -3,11 +3,11 @@ require_relative '../test_helper'
 
 SingleCov.covered!
 
-def fire
-  Samson::Hooks.fire(:after_deploy, deploy, stub(output: output))
-end
+describe "SamsonPipelines Helper" do
+  def fire
+    Samson::Hooks.fire(:after_deploy, deploy, stub(output: output))
+  end
 
-describe SamsonPipelines do
   let(:deploy) { deploys(:succeeded_test) }
   let(:next_deploy) { deploys(:succeeded_production_test) }
   let(:stage) { deploy.stage }
@@ -87,12 +87,12 @@ describe SamsonPipelines do
   describe 'view callbacks' do
     describe 'deploys_header callback' do
       def render_view
-        Samson::Hooks.render_views(:deploys_header, view_context, deploy: deploy)
+        Samson::Hooks.render_views(:deploys_header, self, deploy: deploy)
       end
 
       let(:deploy) { deploys(:succeeded_test) }
 
-      before { view_context.instance_variable_set(:@project, Project.first) }
+      before { @project = Project.first }
 
       it 'renders alert if there is a triggering deploy' do
         other_deploy = deploys(:succeeded_production_test)
