@@ -51,23 +51,6 @@ WebMock.disable_net_connect!(allow: 'codeclimate.com')
 
 Dir["test/support/*"].each { |f| require File.expand_path(f) }
 
-# global view-context so templates are cached, to prevent undefined method errors
-# TODO: find a better workaround so plugins/env/test/samson_env/samson_plugin_test.rb passes but without global variable
-TEST_VIEW_CONTEXT ||= begin
-  lookup_context = ActionView::Base.build_lookup_context(ActionController::Base.view_paths)
-  view_context = ActionView::Base.with_empty_template_cache.new(lookup_context)
-  class << view_context
-    include Rails.application.routes.url_helpers
-    include ApplicationHelper
-  end
-  view_context.instance_eval do
-    # stub for testing render
-    def protect_against_forgery?
-    end
-  end
-  view_context
-end
-
 # Helpers for all tests
 ActiveSupport::TestCase.class_eval do
   include ApplicationHelper
@@ -251,10 +234,6 @@ ActiveSupport::TestCase.class_eval do
   def self.before_and_after(&block)
     before(&block)
     after(&block)
-  end
-
-  def view_context
-    TEST_VIEW_CONTEXT
   end
 end
 
