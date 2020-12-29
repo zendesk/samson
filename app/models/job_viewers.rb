@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 class JobViewers
   def initialize(output)
-    @list = ThreadSafe::Array.new
+    @list = Concurrent::Array.new
     @output = output
   end
 

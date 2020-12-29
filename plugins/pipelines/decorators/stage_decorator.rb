@@ -48,13 +48,13 @@ Stage.class_eval do
     next_stage_ids.map!(&:to_i)
 
     if next_stage_ids.include?(origin_id)
-      errors[:base] << "Stage #{name} causes a circular pipeline with this stage"
+      errors.add :base, "Stage #{name} causes a circular pipeline with this stage"
       return false
     end
 
     pipeline_next_stages.each do |stage|
       unless stage.valid_pipeline?(origin_id)
-        errors[:base] << "Stage #{stage.name} causes a circular pipeline with this stage"
+        errors.add :base, "Stage #{stage.name} causes a circular pipeline with this stage"
         return false
       end
     end

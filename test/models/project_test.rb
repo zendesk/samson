@@ -531,7 +531,7 @@ describe Project do
 
     it "creates an audit" do
       assert project.soft_delete!(validate: false)
-      project.audits.last.audited_changes.keys.must_equal ["permalink", "deleted_at"]
+      project.audits.last.audited_changes.keys.sort.must_equal ["permalink", "deleted_at"].sort
     end
   end
 

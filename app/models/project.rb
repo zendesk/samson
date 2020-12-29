@@ -48,7 +48,7 @@ class Project < ActiveRecord::Base
   has_many :jobs, dependent: nil
   has_many :stars, dependent: :destroy
 
-  belongs_to :build_command, class_name: 'Command', optional: true
+  belongs_to :build_command, class_name: 'Command', optional: true, inverse_of: false
 
   # For permission checks on callbacks. Currently used in private plugins.
   attr_accessor :current_user

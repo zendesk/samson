@@ -32,7 +32,7 @@ Stage.class_eval do
     end
 
     if deadlock_stages.any?
-      errors[:base] << "Stage(s) #{deadlock_stages.join(', ')} already list this stage as a prerequisite."
+      errors.add :base, "Stage(s) #{deadlock_stages.join(', ')} already list this stage as a prerequisite."
       false
     else
       true

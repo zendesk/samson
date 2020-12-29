@@ -193,11 +193,11 @@ module ApplicationHelper
     return "" if object.errors.empty?
 
     content_tag :ul do
-      lis = object.errors.map do |attribute, message|
+      lis = object.errors.map do |error|
         content_tag(:li) do
           content = "".html_safe
-          content << object.errors.full_message(attribute, message)
-          values = (object.respond_to?(attribute) ? Array.wrap(object.send(attribute)) : [])
+          content << object.errors.full_message(error.attribute, error.message)
+          values = (object.respond_to?(error.attribute) ? Array.wrap(object.send(error.attribute)) : [])
           if values.first.is_a?(ActiveRecord::Base)
             values.each do |value|
               content << render_nested_errors(value, seen)

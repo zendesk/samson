@@ -8,7 +8,7 @@ class AccessTokensController < ResourceController
   def owner
     @owner ||= begin
       id = params[:doorkeeper_access_token]&.delete(:resource_owner_id).presence || current_user.id
-      token = current_user.access_tokens.new(resource_owner_id: id)
+      token = current_user.access_tokens.new { |t| t.resource_owner_id = id }
       if can? :write, :access_tokens, token
         User.find(id)
       else

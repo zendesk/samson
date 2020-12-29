@@ -196,21 +196,21 @@ describe Job do
       before { Lock.create!(user: users(:admin)) }
 
       it 'does not allow a job to be created' do
-        create.errors.to_h.must_equal(base: 'all stages are locked')
+        create.errors.to_hash.must_equal(base: ['all stages are locked'])
       end
 
       it 'allows deploys from the lock owner to bypass the lock' do
-        create(bypass_global_lock_check: true).errors.to_h.must_equal({})
+        create(bypass_global_lock_check: true).errors.to_hash.must_equal({})
       end
     end
 
     it 'allows a job to be created when warning' do
       Lock.create!(user: users(:admin), warning: true, description: "X")
-      create.errors.to_h.must_equal({})
+      create.errors.to_hash.must_equal({})
     end
 
     it 'allows a job to be created when no locks exist' do
-      create.errors.to_h.must_equal({})
+      create.errors.to_hash.must_equal({})
     end
   end
 
