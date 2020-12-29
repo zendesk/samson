@@ -182,6 +182,13 @@ module Samson
       end
     end
 
+    # remove initializers that use the database
+    if ENV["PRECOMPILE"]
+      bad = ["active_record.check_schema_cache_dump", "active_record.set_configs"]
+      Rails.application.initializers.find { |a| bad.include?(a.name) }.
+        context_class.instance.initializers.reject! { |a| bad.include?(a.name) }
+    end
+
     config.active_support.deprecation = :raise
 
     # avoid permission errors in production and cleanliness test failures in test

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'airbrake'
+require 'airbrake' unless ENV['PRECOMPILE']
 
 module SamsonAirbrake
   class SamsonPlugin < Rails::Engine

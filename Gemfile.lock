@@ -644,7 +644,6 @@ DEPENDENCIES
   bootstrap-sass (>= 3.4.1)
   bootstrap3-datetimepicker-rails
   brakeman
-  bundler
   bundler-audit
   coderay
   concurrent-ruby

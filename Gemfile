@@ -18,7 +18,6 @@ group :preload do
   gem 'doorkeeper'
 end
 
-gem 'bundler'
 gem 'dogstatsd-ruby'
 gem 'puma'
 gem 'attr_encrypted'
