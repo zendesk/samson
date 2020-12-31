@@ -43,7 +43,7 @@ Metrics/AbcSize:
   Enabled: false
 
 Style/WordArray:
-  Enabled: false
+  EnforcedStyle: brackets
 
 Layout/EndAlignment:
   EnforcedStyleAlignWith: variable
@@ -157,7 +157,7 @@ Style/TernaryParentheses:
   Enabled: false
 
 Style/SymbolArray:
-  Enabled: false
+  EnforcedStyle: brackets
 
 Layout/EmptyLineAfterMagicComment:
   Enabled: false

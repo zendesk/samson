@@ -111,7 +111,7 @@ describe ProjectsController do
         all_projects = Project.order(:id).to_a
 
         csv.each_with_index do |row, idx|
-          %w[Id Name Url].each do |attr|
+          ['Id', 'Name', 'Url'].each do |attr|
             row.headers.must_include attr
           end
           row['Id'].must_equal all_projects[idx].id.to_s

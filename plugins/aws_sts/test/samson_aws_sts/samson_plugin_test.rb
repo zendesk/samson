@@ -57,10 +57,7 @@ describe SamsonAwsSts do
     it 'returns attributes used by the plugin' do
       Samson::Hooks.only_callbacks_for_plugin('samson_aws_sts', :stage_permitted_params) do
         Samson::Hooks.fire(:stage_permitted_params).must_equal(
-          [%i[
-            aws_sts_iam_role_arn
-            aws_sts_iam_role_session_duration
-          ]]
+          [[:aws_sts_iam_role_arn, :aws_sts_iam_role_session_duration]]
         )
       end
     end

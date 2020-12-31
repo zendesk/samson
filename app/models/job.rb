@@ -17,8 +17,8 @@ class Job < ActiveRecord::Base
 
   attr_accessor :bypass_global_lock_check
 
-  ACTIVE_STATUSES = %w[pending running cancelling].freeze
-  VALID_STATUSES = ACTIVE_STATUSES + %w[failed errored succeeded cancelled].freeze
+  ACTIVE_STATUSES = ['pending', 'running', 'cancelling'].freeze
+  VALID_STATUSES = ACTIVE_STATUSES + ['failed', 'errored', 'succeeded', 'cancelled'].freeze
   SUMMARY_ACTION = {
     "pending"    => "is about to execute",
     "running"    => "is executing",

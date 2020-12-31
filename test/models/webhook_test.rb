@@ -88,7 +88,7 @@ describe Webhook do
 
   describe '.for_source' do
     before do
-      %w[any_ci any_code github travis tddium any].each_with_index do |source, index|
+      ['any_ci', 'any_code', 'github', 'travis', 'tddium', 'any'].each_with_index do |source, index|
         Webhook.create!(webhook_attributes.merge(branch: "master#{index}", source: source))
       end
     end

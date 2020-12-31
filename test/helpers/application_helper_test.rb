@@ -644,7 +644,7 @@ describe ApplicationHelper do
   end
 
   describe '#list_with_show_more' do
-    let(:items) { %w[foo bar baz] }
+    let(:items) { ['foo', 'bar', 'baz'] }
 
     it 'only shows `display_limit` records' do
       tag = unordered_list(items, display_limit: 2, show_more_tag: content_tag(:li, 'More')) { |item| item }

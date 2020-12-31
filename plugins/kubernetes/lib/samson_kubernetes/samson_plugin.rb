@@ -3,7 +3,7 @@
 module SamsonKubernetes
   class SamsonPlugin < Rails::Engine
     initializer "refinery.assets.precompile" do |app|
-      app.config.assets.precompile.append %w[kubernetes/icon.png]
+      app.config.assets.precompile.append ['kubernetes/icon.png']
     end
   end
 

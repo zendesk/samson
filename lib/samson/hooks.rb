@@ -111,7 +111,7 @@ module Samson
       end
 
       def add_assets_to_precompile
-        engine.config.assets.precompile += %W[#{name}/application.css #{name}/application.js]
+        engine.config.assets.precompile += ["#{name}/application.css", "#{name}/application.js"]
       end
 
       def engine

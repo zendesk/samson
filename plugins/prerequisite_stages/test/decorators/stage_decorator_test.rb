@@ -63,7 +63,7 @@ describe Stage do
     end
 
     it 'converts ids to integers' do
-      stage1.prerequisite_stage_ids = %w[1 2]
+      stage1.prerequisite_stage_ids = ['1', '2']
 
       stage1.send(:validate_prerequisites)
 

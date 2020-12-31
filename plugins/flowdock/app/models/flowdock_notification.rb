@@ -16,7 +16,7 @@ class FlowdockNotification
   # TODO: delete this dead code
   def buddy_request_completed(buddy, **args)
     buddy_request_content = buddy_request_completed_message(buddy, **args)
-    flowdock_service.notify_chat(buddy_request_content, %w[buddy-request completed])
+    flowdock_service.notify_chat(buddy_request_content, ['buddy-request', 'completed'])
   end
 
   def deliver
