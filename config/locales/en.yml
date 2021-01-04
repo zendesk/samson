@@ -24,3 +24,5 @@ en:
     applications:
       help:
         scopes: "Separate scopes with spaces. Possible: any controller path (for example stages deploy_groups ...) or default (everything, avoid using this)"
+      buttons:
+        destroy: "Delete application and ALL tokens ALL users created"
