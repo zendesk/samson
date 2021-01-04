@@ -16,7 +16,7 @@ module Searchable
     end
 
     def sort_direction(direction)
-      %w[asc desc].include?(direction) ? direction : 'asc'
+      ['asc', 'desc'].include?(direction) ? direction : 'asc'
     end
   end
 end

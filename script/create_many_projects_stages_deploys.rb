@@ -49,7 +49,7 @@ NUM_PROJECTS.times do |i|
     Deploy.create!(
       stage: project.stages.sample,
       job: job,
-      reference: %w[master v1 v2 v4 v7 v9 v11 v12 v10 v6].sample,
+      reference: ['master', 'v1', 'v2', 'v4', 'v7', 'v9', 'v11', 'v12', 'v10', 'v6'].sample,
       created_at: start_time,
       started_at: start_time,
       updated_at: (start_time + 10.minutes)

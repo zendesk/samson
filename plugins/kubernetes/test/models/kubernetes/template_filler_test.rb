@@ -539,17 +539,9 @@ describe Kubernetes::TemplateFiller do
       it "fills then environment with string values" do
         env = container.fetch(:env)
         env.map { |x| x.fetch(:name) }.sort.must_equal(
-          %w[
-            REVISION
-            TAG
-            PROJECT
-            ROLE
-            DEPLOY_ID
-            DEPLOY_GROUP
-            POD_NAME
-            POD_NAMESPACE
-            POD_IP
-            KUBERNETES_CLUSTER_NAME
+          [
+            'REVISION', 'TAG', 'PROJECT', 'ROLE', 'DEPLOY_ID', 'DEPLOY_GROUP',
+            'POD_NAME', 'POD_NAMESPACE', 'POD_IP', 'KUBERNETES_CLUSTER_NAME'
           ].sort
         )
         env.map { |x| x.key?(:value) && x[:value].class.must_equal(String, "#{x.inspect} needs a String value") }

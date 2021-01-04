@@ -4,7 +4,8 @@ OmniAuth.config.logger = Rails.logger
 Rails.application.config.middleware.use OmniAuth::Builder do
   if Rails.application.config.samson.auth.github
     require 'omniauth-github'
-    provider :github,
+    provider(
+      :github,
       ENV.fetch("GITHUB_CLIENT_ID"),
       ENV.fetch("GITHUB_SECRET"),
       scope: "user:email",
@@ -13,6 +14,7 @@ Rails.application.config.middleware.use OmniAuth::Builder do
         authorize_url: "#{Rails.application.config.samson.github.web_url}/login/oauth/authorize",
         token_url:     "#{Rails.application.config.samson.github.web_url}/login/oauth/access_token"
       }
+    )
   end
 
   if Rails.application.config.samson.auth.google
@@ -30,7 +32,8 @@ Rails.application.config.middleware.use OmniAuth::Builder do
 
   if Rails.application.config.samson.auth.gitlab
     require 'omniauth-gitlab'
-    provider :gitlab,
+    provider(
+      :gitlab,
       ENV.fetch("GITLAB_APPLICATION_ID"),
       ENV.fetch("GITLAB_SECRET"),
       client_options: {
@@ -38,12 +41,14 @@ Rails.application.config.middleware.use OmniAuth::Builder do
         authorize_url: '/oauth/authorize',
         token_url: '/oauth/token'
       }
+    )
   end
 
   if Rails.application.config.samson.auth.ldap
     require 'omniauth-ldap'
 
-    provider OmniAuth::Strategies::LDAP,
+    provider(
+      OmniAuth::Strategies::LDAP,
       title: Rails.application.config.samson.ldap.title,
       host: Rails.application.config.samson.ldap.host,
       port: Rails.application.config.samson.ldap.port,
@@ -52,12 +57,15 @@ Rails.application.config.middleware.use OmniAuth::Builder do
       uid: Rails.application.config.samson.ldap.uid,
       bind_dn: Rails.application.config.samson.ldap.bind_dn,
       password: Rails.application.config.samson.ldap.password
+    )
   end
 
   if Rails.application.config.samson.auth.bitbucket
     require 'omniauth-bitbucket'
-    provider :bitbucket,
+    provider(
+      :bitbucket,
       ENV.fetch('BITBUCKET_KEY'),
       ENV.fetch('BITBUCKET_SECRET')
+    )
   end
 end

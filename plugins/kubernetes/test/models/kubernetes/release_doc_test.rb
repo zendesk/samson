@@ -79,7 +79,7 @@ describe Kubernetes::ReleaseDoc do
       Kubernetes::TemplateFiller.any_instance.stubs(:set_image_pull_secrets) # makes an extra request we ignore
     end
 
-    %w[REVISION TAG DEPLOY_ID DEPLOY_GROUP].each do |var|
+    ['REVISION', 'TAG', 'DEPLOY_ID', 'DEPLOY_GROUP'].each do |var|
       it "copies #{var} from the metadata" do
         env.fetch(var).must_equal release_doc.deploy_metadata.fetch(var.downcase.to_sym).to_s
       end

@@ -299,7 +299,7 @@ describe User do
   describe 'soft delete!' do
     let(:user) { User.create!(name: 'to_delete', email: 'to_delete@test.com', external_id: 'xyz') }
     let!(:locks) do
-      %i[test_staging test_production].map { |stage| user.locks.create!(resource: stages(stage)) }
+      [:test_staging, :test_production].map { |stage| user.locks.create!(resource: stages(stage)) }
     end
 
     it 'soft deletes all the user locks when the user is soft deleted' do

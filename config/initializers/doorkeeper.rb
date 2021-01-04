@@ -31,6 +31,6 @@ Doorkeeper.configure do
 
   default_scopes :default
   base_controller 'DoorkeeperBaseController'
-  force_ssl_in_redirect_uri !%w[development test].include?(Rails.env)
+  force_ssl_in_redirect_uri !['development', 'test'].include?(Rails.env)
   admin_authenticator { authorize_super_admin! }
 end

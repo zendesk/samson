@@ -191,7 +191,7 @@ describe GitRepository do
   describe "#branches" do
     it 'returns the branches of the repository' do
       create_repo_with_an_additional_branch
-      repository.branches.to_a.must_equal %w[master test_user/test_branch]
+      repository.branches.to_a.must_equal ['master', 'test_user/test_branch']
     end
 
     it 'fails when repo is not updateable' do

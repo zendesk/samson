@@ -7,7 +7,7 @@ class Integrations::CircleciController < Integrations::BaseController
   end
 
   def deploy?
-    project && %w[success fixed].include?(status)
+    project && ['success', 'fixed'].include?(status)
   end
 
   def status
