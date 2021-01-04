@@ -208,7 +208,3 @@ end
 require 'samson/hooks'
 require_relative "logging"
 require_relative "../app/models/job_queue" # need to load early or dev reload will lose the .enabled
-
-# prevents `Unknown validator: 'Doorkeeper::RedirectUriValidator'`
-# https://github.com/doorkeeper-gem/doorkeeper/pull/1331
-require 'doorkeeper/orm/active_record/redirect_uri_validator'
