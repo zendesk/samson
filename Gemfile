@@ -112,7 +112,7 @@ group :development, :test do
 end
 
 group :test do
-  gem 'minitest-rails', git: "https://github.com/blowmage/minitest-rails.git", branch: "master" # need >v6.0.0
+  gem 'minitest-rails'
   gem 'rails-controller-testing'
   gem 'maxitest'
   gem 'mocha'

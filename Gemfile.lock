@@ -1,13 +1,4 @@
 GIT
-  remote: https://github.com/blowmage/minitest-rails.git
-  revision: 8927079974b55ef84f5e3fa08d5ed54979c003f8
-  branch: master
-  specs:
-    minitest-rails (6.0.1)
-      minitest (~> 5.10)
-      railties (~> 6.0.0)
-
-GIT
   remote: https://github.com/omniauth/omniauth-github.git
   revision: 5afe8aee3baccd84ce6f265a3e62efbb55ac14b9
   specs:
@@ -236,18 +227,18 @@ GEM
       zeitwerk (~> 2.2, >= 2.2.2)
     addressable (2.7.0)
       public_suffix (>= 2.0.2, < 5.0)
-    airbrake (9.5.0)
-      airbrake-ruby (~> 4.8)
-    airbrake-ruby (4.8.0)
+    airbrake (11.0.1)
+      airbrake-ruby (~> 5.1)
+    airbrake-ruby (5.2.0)
       rbtree3 (~> 0.5)
     ansible (0.2.2)
-    ar_multi_threaded_transactional_tests (0.4.0)
-      activerecord (>= 4.2.0, < 6.1.0)
+    ar_multi_threaded_transactional_tests (0.5.0)
+      activerecord (>= 4.2.0, < 6.2.0)
     ast (2.4.1)
     attr_encrypted (3.1.0)
       encryptor (~> 3.0.0)
-    audited (4.9.0)
-      activerecord (>= 4.2, < 6.1)
+    audited (4.10.0)
+      activerecord (>= 4.2, < 6.2)
     autoprefixer-rails (9.4.8)
       execjs
     awesome_print (1.6.1)
@@ -281,9 +272,9 @@ GEM
       momentjs-rails (>= 2.8.1)
     brakeman (4.10.1)
     builder (3.2.4)
-    bundler-audit (0.6.1)
+    bundler-audit (0.7.0.1)
       bundler (>= 1.2.0, < 3)
-      thor (~> 0.18)
+      thor (>= 0.18, < 2)
     byebug (8.2.2)
     coderay (1.1.1)
     concurrent-ruby (1.1.7)
@@ -331,9 +322,9 @@ GEM
       terminal-table (~> 1.5, >= 1.5.1)
     globalid (0.4.2)
       activesupport (>= 4.2.0)
-    goldiloader (3.1.1)
-      activerecord (>= 4.2, < 6.1)
-      activesupport (>= 4.2, < 6.1)
+    goldiloader (3.2.0)
+      activerecord (>= 4.2, < 6.3)
+      activesupport (>= 4.2, < 6.3)
     hashdiff (0.3.4)
     hashie (3.6.0)
     http (4.4.1)
@@ -396,8 +387,11 @@ GEM
     mime-types-data (3.2020.0512)
     mimemagic (0.3.5)
     mini_mime (1.0.2)
-    mini_portile2 (2.4.0)
+    mini_portile2 (2.5.0)
     minitest (5.11.3)
+    minitest-rails (6.0.1)
+      minitest (~> 5.10)
+      railties (~> 6.0.0)
     mixlib-shellout (2.2.7)
     mocha (1.2.1)
       metaclass (~> 0.0.1)
@@ -413,8 +407,11 @@ GEM
     netrc (0.11.0)
     newrelic_rpm (6.7.0.359)
     nio4r (2.5.4)
-    nokogiri (1.10.10)
-      mini_portile2 (~> 2.4.0)
+    nokogiri (1.11.1)
+      mini_portile2 (~> 2.5.0)
+      racc (~> 1.4)
+    nokogiri (1.11.1-x86_64-darwin)
+      racc (~> 1.4)
     oauth (0.5.3)
     oauth2 (1.4.4)
       faraday (>= 0.8, < 2.0)
@@ -480,6 +477,7 @@ GEM
     puma (4.3.5)
       nio4r (~> 2.0)
     pyu-ruby-sasl (0.0.3.3)
+    racc (1.5.2)
     rack (2.2.3)
     rack-mini-profiler (1.1.4)
       rack (>= 1.2.0)
@@ -533,7 +531,7 @@ GEM
       thor (>= 0.20.3, < 2.0)
     rainbow (3.0.0)
     rake (13.0.3)
-    rbtree3 (0.5.0)
+    rbtree3 (0.6.0)
     recursive-open-struct (1.1.2)
     regexp_parser (1.8.2)
     request_store (1.4.0)
@@ -584,8 +582,8 @@ GEM
     single_cov (1.3.2)
     slop (3.6.0)
     socksify (1.7.1)
-    soft_deletion (1.5.0)
-      activerecord (>= 4.2.0, < 6.1.0)
+    soft_deletion (1.6.0)
+      activerecord (>= 4.2.0, < 6.2.0)
     sprockets (3.7.2)
       concurrent-ruby (~> 1.0)
       rack (> 1, < 3)
@@ -597,7 +595,7 @@ GEM
     stackprof (0.2.12)
     terminal-table (1.8.0)
       unicode-display_width (~> 1.1, >= 1.1.1)
-    thor (0.20.3)
+    thor (1.0.1)
     thread_safe (0.3.6)
     tilt (2.0.10)
     to_regexp (0.2.1)
@@ -665,7 +663,7 @@ DEPENDENCIES
   logstash-event
   marco-polo
   maxitest
-  minitest-rails!
+  minitest-rails
   mocha
   momentjs-rails
   mysql2
