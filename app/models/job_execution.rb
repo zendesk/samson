@@ -89,8 +89,8 @@ class JobExecution
         yield
       rescue => e
         message = "Finish hook failed: #{e.message}"
-        output.puts message
-        Samson::ErrorNotifier.notify(e, error_message: message, parameters: {job_url: job.url})
+        url = Samson::ErrorNotifier.notify(e, error_message: message, parameters: {job_url: job.url}, sync: true)
+        output.puts "#{message}\n#{url}"
       end
     end
   end
