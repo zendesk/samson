@@ -250,8 +250,15 @@ module Samson
       end
 
       emails.compact!
-      emails.select! { |e| e.include?('@') }
-      emails.map! { |x| Mail::Address.new(x) }
+      emails.map! do |a|
+        begin
+          Mail::Address.new(a)
+        rescue
+          nil
+        end
+      end
+      emails.compact!
+      emails.select!(&:domain)
       if restricted_domain = ENV["EMAIL_DOMAIN"]
         emails.select! { |x| x.domain.casecmp(restricted_domain) == 0 }
       end
