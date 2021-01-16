@@ -5,9 +5,11 @@ class DeploysController < ApplicationController
   include WrapInWithDeleted
   include CurrentProject
 
+  skip_before_action :login_user, only: [:status]
+  skip_before_action :verify_authenticity_token, only: [:status]
   skip_before_action :require_project, only: [:active, :active_count, :changeset]
 
-  before_action :authorize_project_deployer!, except: [:index, :show, :active, :active_count, :changeset]
+  before_action :authorize_project_deployer!, except: [:index, :show, :active, :active_count, :changeset, :status]
   before_action :find_deploy, except: [:index, :active, :active_count, :new, :create, :confirm]
   before_action :stage, only: :new
 
@@ -113,6 +115,10 @@ class DeploysController < ApplicationController
   def destroy
     @deploy.cancel(current_user)
     redirect_to [current_project, @deploy]
+  end
+
+  def status
+    render json: { status: @deploy.status }
   end
 
   def self.deploy_permitted_params

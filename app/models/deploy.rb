@@ -211,6 +211,10 @@ class Deploy < ActiveRecord::Base
     Rails.application.routes.url_helpers.project_deploy_url(project, self)
   end
 
+  def status_url
+    Rails.application.routes.url_helpers.status_project_deploy_url(project, self, format: :json)
+  end
+
   def self.csv_header
     [
       "Deploy Number", "Project Name", "Deploy Summary", "Deploy Commit", "Deploy Status", "Deploy Updated",
@@ -228,7 +232,7 @@ class Deploy < ActiveRecord::Base
   end
 
   def as_json(methods: [])
-    hash = super(methods: [:status, :url, :production, :commit] + methods)
+    hash = super(methods: [:status, :status_url, :url, :production, :commit] + methods)
     hash["summary"] = summary_for_timeline
     hash
   end
