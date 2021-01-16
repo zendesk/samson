@@ -118,7 +118,7 @@ class DeploysController < ApplicationController
   end
 
   def status
-    render json: { status: @deploy.status }
+    render json: {status: @deploy.status}
   end
 
   def self.deploy_permitted_params
