@@ -688,12 +688,15 @@ describe Deploy do
     it "includes simple methods status" do
       deploy.as_json.fetch("status").must_equal "succeeded"
       deploy.as_json.must_include "url"
-      deploy.as_json.must_include "status_url"
       deploy.as_json.must_include "production"
     end
 
     it "includes the summary" do
       deploy.as_json.fetch("summary").must_equal deploy.summary_for_timeline
+    end
+
+    it "does not include the status_url" do
+      deploy.as_json.wont_include "status_url"
     end
   end
 

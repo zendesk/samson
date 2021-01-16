@@ -49,11 +49,17 @@ class Integrations::BaseController < ApplicationController
       end
     end
 
+    json = {
+      deploy_ids: deploys.map(&:id).compact,
+      messages: @recorded_log.to_s
+    }
+
+    if params[:includes].to_s.split(',').include?('status_urls')
+      json[:status_urls] = deploys.map(&:status_url).compact
+    end
+
     render(
-      json: {
-        deploy_ids: deploys.map(&:id).compact,
-        messages: @recorded_log.to_s
-      },
+      json: json,
       status: (deploys.all?(&:persisted?) ? :ok : :unprocessable_entity)
     )
   end

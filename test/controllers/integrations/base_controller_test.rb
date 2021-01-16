@@ -189,6 +189,34 @@ describe Integrations::BaseController do
         json.must_equal(deploy_ids: [deploy1.id, deploy2.id], messages: expected_messages)
       end
 
+      it 'does not include status_urls by default' do
+        DeployService.any_instance.expects(:deploy).times(2).returns(deploy1, deploy2)
+
+        post :create, params: {test_route: true, token: token}
+
+        assert_response :success
+        json.wont_include :status_urls
+      end
+
+      it 'returns the status URLs if they are asked for' do
+        DeployService.any_instance.expects(:deploy).times(2).returns(deploy1, deploy2)
+
+        post :create, params: {test_route: true, token: token, includes: 'status_urls'}
+
+        expected_messages = <<~MESSAGES
+          INFO: Create release for branch [master], service_type [ci], service_name [base_test]: true
+          INFO: Deploying #{deploy1.id} to Staging
+          INFO: Deploying #{deploy2.id} to Production
+        MESSAGES
+
+        assert_response :success
+        json.must_equal(
+          deploy_ids: [deploy1.id, deploy2.id],
+          messages: expected_messages,
+          status_urls: [deploy1.status_url, deploy2.status_url]
+        )
+      end
+
       it 'records deploy failures but continues' do
         stage.create_lock!(description: "foo", user: users(:admin))
         post :create, params: {test_route: true, token: token}
