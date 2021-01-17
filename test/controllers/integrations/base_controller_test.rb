@@ -8,7 +8,17 @@ describe Integrations::BaseController do
   end
 
   tests BaseTestController
-  use_test_routes BaseTestController
+
+  # We need to keep the `status_project_deploy_url` route around for the `?includes=status_url` test
+  use_test_routes BaseTestController do
+    resources :projects do
+      resources :deploys do
+        member do
+          get :status
+        end
+      end
+    end
+  end
 
   let(:sha) { "dc395381e650f3bac18457909880829fc20e34ba" }
   let(:project) { projects(:test) }

@@ -281,7 +281,7 @@ ActionController::TestCase.class_eval do
       end
     end
 
-    def use_test_routes(controller)
+    def use_test_routes(controller, &block)
       controller_name = controller.name.underscore.sub('_controller', '')
       before do
         Rails.application.routes.draw do
@@ -293,6 +293,8 @@ ActionController::TestCase.class_eval do
               action: action
             )
           end
+
+          instance_eval(&block) if block_given?
         end
       end
 
