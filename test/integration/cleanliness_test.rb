@@ -41,16 +41,6 @@ describe "cleanliness" do
     File.read('Gemfile.lock').wont_include 'rails-assets-bootstrap '
   end
 
-  if ENV['USE_UTF8MB4'] && ActiveRecord::Base.connection.adapter_name =~ /mysql/i
-    it "uses the right row format in mysql" do
-      status = ActiveRecord::Base.connection.execute('show table status').to_a
-      refute_empty status
-      status.each do |table|
-        table[3].must_equal "Dynamic", "#{table[0]} is not Dynamic"
-      end
-    end
-  end
-
   it "does not have public actions on base controller" do
     found = ApplicationController.action_methods.to_a
     found.reject! { |a| a =~ /^(_conditional_callback_around_|_callback_before_)/ }
