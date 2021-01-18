@@ -438,6 +438,13 @@ describe DeploysController do
       end
     end
 
+    describe "#status" do
+      it "renders with format .json" do
+        get :status, params: {project_id: project, id: deploy}
+        json.fetch('status').must_equal deploy.status
+      end
+    end
+
     unauthorized :get, :new, project_id: :foo, stage_id: 2
     unauthorized :post, :create, project_id: :foo, stage_id: 2
     unauthorized :post, :buddy_check, project_id: :foo, id: 1

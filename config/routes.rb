@@ -21,6 +21,7 @@ Samson::Application.routes.draw do
       member do
         post :buddy_check
         get :changeset
+        get :status
       end
     end
 
