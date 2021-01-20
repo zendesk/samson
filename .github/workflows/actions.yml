@@ -51,11 +51,11 @@ jobs:
         include:
         - name: test mysql w/o plugins
           run: |
-            export PLUGINS='' DATABASE_URL=mysql2://travis@127.0.0.1/samson_test?reconnect=true BUNDLE_WITHOUT=postgres:sqlite USE_UTF8MB4=1 SILENCE_MIGRATIONS=1
+            export PLUGINS='' DATABASE_URL=mysql2://travis@127.0.0.1/samson_test?reconnect=true BUNDLE_WITHOUT=postgres:sqlite SILENCE_MIGRATIONS=1
             bundle exec rake db:create test:migrate_without_plugins
         - name: test mysql
           run: |
-            export DATABASE_URL=mysql2://travis@127.0.0.1/samson_test?reconnect=true BUNDLE_WITHOUT=postgres:sqlite USE_UTF8MB4=1 SILENCE_MIGRATIONS=1
+            export DATABASE_URL=mysql2://travis@127.0.0.1/samson_test?reconnect=true BUNDLE_WITHOUT=postgres:sqlite SILENCE_MIGRATIONS=1
             bundle exec rake db:create db:migrate default
         - name: test postgres
           run: |
