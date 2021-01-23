@@ -8,6 +8,8 @@ module Kubernetes
   # run an example file through `kubectl create/replace/delete -f test.yml -v8`
   # and see what it does internally ... simple create/update/delete requests or special magic ?
   module Resource
+    DELETE_BACKOFF = [0.0, 0.1, 0.2, 0.5, 1, 2, 4, 8, 16, 32].freeze # seconds
+
     module PatchReplace
       def patch_replace?
         !@delete_resource && !server_side_apply? && exist?
@@ -85,11 +87,11 @@ module Kubernetes
 
       # wait for delete to finish before doing further work so we don't run into duplication errors
       # - first wait is 0 since the request itself already took a few ms
-      # - sum of waits should be ~30s which is the default delete timeout
+      # - we wait long because deleting a deployment will wait for all its' pods to go away which can take time
       def delete
         return true unless exist?
         request_delete
-        backoff_wait([0.0, 0.1, 0.2, 0.5, 1, 2, 4, 8, 16], "delete resource") do
+        backoff_wait(DELETE_BACKOFF, "delete resource") do
           expire_resource_cache
           return true unless exist?
         end

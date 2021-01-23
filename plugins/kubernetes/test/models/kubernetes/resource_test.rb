@@ -268,7 +268,7 @@ describe Kubernetes::Resource do
 
       it "fails when deletion fails" do
         assert_request(:delete, url, to_return: {body: "{}"}) do
-          tries = 9
+          tries = Kubernetes::Resource::DELETE_BACKOFF.size
           assert_request(:get, url, to_return: {body: "{}"}, times: tries + 1) do
             resource.expects(:sleep).times(tries)
 
