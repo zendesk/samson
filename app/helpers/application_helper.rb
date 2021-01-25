@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 require 'ansible'
-require 'github/markdown'
+require 'github/markup'
 
 module ApplicationHelper
   BOOTSTRAP_FLASH_MAPPINGS = {
@@ -27,7 +27,7 @@ module ApplicationHelper
 
   # https://github.com/showdownjs/showdown/wiki/Markdown's-XSS-Vulnerability-(and-how-to-mitigate-it)
   def markdown(str)
-    sanitize GitHub::Markdown.render_gfm(str)
+    sanitize GitHub::Markup.render_s(GitHub::Markups::MARKUP_MARKDOWN, str)
   end
 
   def deploy_link(project, stage)

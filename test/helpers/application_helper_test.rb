@@ -72,8 +72,14 @@ describe ApplicationHelper do
     end
 
     it "does not allow XSS" do
-      result = markdown("<script>alert(1)</script>")
-      result.must_equal "alert(1)\n"
+      result = markdown("foo <script>alert(1)</script> ")
+      result.must_equal "<p>foo alert(1)</p>\n"
+      assert result.html_safe?
+    end
+
+    it "does not allow XSS, strips entire tag" do
+      result = markdown("<script>alert(1)</script> ")
+      result.must_equal "\n"
       assert result.html_safe?
     end
   end
