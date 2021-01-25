@@ -111,10 +111,12 @@ describe Integrations::BaseController do
       result = WebhookRecorder.read(project)
       log = "INFO: Create release for branch [master], service_type [ci], service_name [base_test]: true\n"
 
+      project.reload
       result.fetch(:log).must_equal log
       result.fetch(:response_code).must_equal 200
       JSON.parse(result.fetch(:response_body), symbolize_names: true).must_equal(
-        deploy_ids: [], messages: log
+        deploy_ids: [], messages: log,
+        release: JSON.parse(project.releases.first.to_json, symbolize_names: true)
       )
       result.fetch(:request_params).must_equal("token" => "[FILTERED]", "foo" => "bar")
     end
@@ -195,8 +197,13 @@ describe Integrations::BaseController do
           INFO: Deploying #{deploy2.id} to Production
         MESSAGES
 
+        project.reload
         assert_response :success
-        json.must_equal(deploy_ids: [deploy1.id, deploy2.id], messages: expected_messages)
+        json.must_equal(
+          deploy_ids: [deploy1.id, deploy2.id],
+          messages: expected_messages,
+          release: JSON.parse(project.releases.first.to_json, symbolize_names: true)
+        )
       end
 
       it 'does not include status_urls by default' do
@@ -219,11 +226,13 @@ describe Integrations::BaseController do
           INFO: Deploying #{deploy2.id} to Production
         MESSAGES
 
+        project.reload
         assert_response :success
         json.must_equal(
           deploy_ids: [deploy1.id, deploy2.id],
           messages: expected_messages,
-          status_urls: [deploy1.status_url, deploy2.status_url]
+          status_urls: [deploy1.status_url, deploy2.status_url],
+          release: JSON.parse(project.releases.first.to_json, symbolize_names: true)
         )
       end
 
@@ -237,8 +246,13 @@ describe Integrations::BaseController do
           INFO: Deploying #{Deploy.first.id} to Production
         MSG
 
+        project.reload
         assert_response :unprocessable_entity
-        json.must_equal(deploy_ids: [Deploy.first.id], messages: message)
+        json.must_equal(
+          deploy_ids: [Deploy.first.id],
+          messages: message,
+          release: JSON.parse(project.releases.first.to_json, symbolize_names: true)
+        )
       end
 
       it 'uses the release version to make the deploy easy to understand' do

@@ -53,6 +53,7 @@ class Integrations::BaseController < ApplicationController
       deploy_ids: deploys.map(&:id).compact,
       messages: @recorded_log.to_s
     }
+    json[:release] = release if release
 
     if params[:includes].to_s.split(',').include?('status_urls')
       json[:status_urls] = deploys.map(&:status_url).compact
