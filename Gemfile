@@ -20,7 +20,7 @@ end
 
 gem 'bundler'
 gem 'dogstatsd-ruby'
-gem 'puma', '= 4.3.6'
+gem 'puma'
 gem 'attr_encrypted'
 gem 'sawyer'
 gem 'dalli'
