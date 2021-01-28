@@ -146,6 +146,11 @@ h3 {
 
 }
 
+// lower vertical padding that we inherit from bootstrap so it does not get too big for tab nav
+.badge {
+  padding: 2px 7px;
+}
+
 .nav-tabs {
   border-bottom: none;
 
