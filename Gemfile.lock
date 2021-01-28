@@ -685,7 +685,7 @@ DEPENDENCIES
   pry-rails
   pry-rescue
   pry-stack_explorer
-  puma (= 4.3.6)
+  puma
   rack-mini-profiler
   rails (~> 6.0.3)
   rails-assets-bootstrap-select!
