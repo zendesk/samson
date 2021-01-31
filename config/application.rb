@@ -43,7 +43,10 @@ module Samson
   class Application < Rails::Application
     # Settings in config/environments/* take precedence over those specified here.
     # Application configuration should go into files in config/initializers
-    config.load_defaults 6.0
+    config.load_defaults 6.1
+
+    # the new default of `true` breaks test/models/user_test.rb see https://github.com/rails/rails/issues/40867
+    config.active_record.has_many_inversing = false
 
     # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
     config.force_ssl = (ENV["FORCE_SSL"] == "1")
