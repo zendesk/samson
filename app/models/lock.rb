@@ -13,7 +13,7 @@ class Lock < ActiveRecord::Base
 
   belongs_to :resource, polymorphic: true, optional: true
   belongs_to :user, inverse_of: :locks
-  belongs_to :environment, optional: true
+  belongs_to :environment, optional: true, inverse_of: false
 
   before_validation :nil_out_blank_resource_type
 

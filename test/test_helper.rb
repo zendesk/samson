@@ -68,7 +68,7 @@ ActiveSupport::TestCase.class_eval do
     refute record.valid?, "Expected record of type #{record.class.name} to be invalid"
 
     Array.wrap(error_keys).compact.each do |key|
-      record.errors.keys.must_include key
+      record.errors.attribute_names.must_include key
     end
   end
 
@@ -105,7 +105,6 @@ ActiveSupport::TestCase.class_eval do
     $stdout = old
   end
 
-  undef :assert_nothing_raised
   class << self
     undef :test
   end

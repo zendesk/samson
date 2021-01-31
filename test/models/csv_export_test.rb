@@ -5,7 +5,7 @@ SingleCov.covered!
 
 describe CsvExport do
   let(:user) { users(:deployer) }
-  before { @csv_export = CsvExport.create(user: user) }
+  before { @csv_export = CsvExport.create!(user: user) }
 
   describe ".old" do
     before do
@@ -125,7 +125,8 @@ describe CsvExport do
 
   describe "#filters" do
     it "returns a ruby object" do
-      @csv_export.filters.class.must_equal Hash
+      @csv_export.save!
+      @csv_export.reload.filters.class.must_equal Hash
     end
 
     it "converts date list to range" do

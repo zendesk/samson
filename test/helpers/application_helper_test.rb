@@ -81,6 +81,7 @@ describe ApplicationHelper do
   describe "#controller_action" do
     it "works" do
       stubs(action_name: "foo")
+      stubs(controller_name: "test")
       controller_action.must_equal "test foo"
     end
   end

@@ -165,7 +165,7 @@ describe Permalinkable do
 
     it "creates an audit that points to the new permalink" do
       project.soft_delete!(validate: false)
-      project.audits.last.audited_changes.keys.must_equal ["permalink", "deleted_at"]
+      project.audits.last.audited_changes.keys.sort.must_equal ["permalink", "deleted_at"].sort
     end
 
     it "does not change the permalink when before_soft_delete fail" do

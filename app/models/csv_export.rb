@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 class CsvExport < ActiveRecord::Base
   belongs_to :user, inverse_of: :csv_exports
-  serialize :filters, JSON
+
   attribute :filters, :text, default: {}
+  serialize :filters, JSON
 
   STATUS_VALUES = ['pending', 'started', 'finished', 'downloaded', 'failed', 'deleted'].freeze
 

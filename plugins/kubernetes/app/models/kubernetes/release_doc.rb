@@ -9,7 +9,7 @@ module Kubernetes
 
     serialize :resource_template, JSON
 
-    validates :deploy_group, presence: true, inverse_of: false
+    validates :deploy_group, presence: true
     validates :kubernetes_role, presence: true
     validates :kubernetes_release, presence: true
     validate :validate_config_file, on: :create
