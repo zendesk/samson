@@ -25,7 +25,7 @@ describe Samson::ReadonlyDb do
       Samson::ReadonlyDb.enable
       Samson::ReadonlyDb.disable
       e = assert_raises(ActiveRecord::ReadOnlyError) do
-        User.connection_handler.while_preventing_writes do
+        ActiveRecord::Base.connected_to(role: :writing, prevent_writes: true) do
           User.create!(name: "Foo")
         end
       end
