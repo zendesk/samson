@@ -95,6 +95,11 @@ describe EnvironmentVariable do
           "FOO" => "one", "Z" => "A", "X" => "Y"
         )
       end
+
+      it "caches aws calls" do
+        ExternalEnvironmentVariableGroup.any_instance.expects(:read).returns({})
+        2.times { EnvironmentVariable.env(deploy, deploy_group, resolve_secrets: false) }
+      end
     end
 
     describe "with an assigned group and variables" do

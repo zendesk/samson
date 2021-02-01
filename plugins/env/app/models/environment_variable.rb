@@ -4,6 +4,7 @@ require 'validates_lengths_from_database'
 class EnvironmentVariable < ActiveRecord::Base
   FAILED_LOOKUP_MARK = ' X' # SpaceX
   PARENT_PRIORITY = ["Deploy", "Stage", "Project", "EnvironmentVariableGroup"].freeze
+  EXTERNAL_VARIABLE_CACHE_DURATION = 5.minutes
 
   include GroupScope
   extend Inlinable
@@ -74,8 +75,11 @@ class EnvironmentVariable < ActiveRecord::Base
       end)
 
       external_groups.each_with_object({}) do |group, envs|
-        group_env = group.read[deploy_group.permalink]
-        envs.merge! group_env if group_env
+        all_groups = Rails.cache.fetch("env-#{group.url}-read", expires_in: EXTERNAL_VARIABLE_CACHE_DURATION) do
+          group.read
+        end
+        next unless group_env = all_groups[deploy_group.permalink]
+        envs.merge! group_env
       end
     rescue StandardError => e
       raise Samson::Hooks::UserError, "Error reading env vars from external env-groups: #{e.message}"

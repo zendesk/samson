@@ -29,7 +29,7 @@
       <%= form.input :comment, as: :text_area, input_html: {size: "80x4"} %>
       <%= form.input :owners, help: "Github team names or email to contact with questions (comma separated)" %>
       <% if ExternalEnvironmentVariableGroup.configured? %>
-        <%= form.input :external_url do %>
+        <%= form.input :external_url, help: "Cached for #{distance_of_time_in_words(EnvironmentVariable::EXTERNAL_VARIABLE_CACHE_DURATION)}" do %>
           <%= form.text_field :external_url, class: "form-control", placeholder: ExternalEnvironmentVariableGroup::S3_URL_FORMAT %>
           <%= link_to 'Preview', preview_external_environment_variable_group_path("fake", url: @group.external_url) if @group.external_url? %>
         <% end %>
