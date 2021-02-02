@@ -128,12 +128,16 @@ module Kubernetes
     # TODO: support dynamic folders
     def defaults
       return unless resource = role_config_file('HEAD', deploy_group: nil, ignore_errors: true)&.primary
-      spec = resource.fetch(:spec)
-      if resource[:kind] == "Pod"
+      case resource[:kind]
+      when "Pod"
         replicas = 0 # these are one-off tasks most of the time, so we should not count them in totals
+        spec = resource.fetch(:spec)
+      when "PodTemplate"
+        replicas = 1
+        spec = resource.dig(:template, :spec) || {}
       else
-        replicas = spec[:replicas] || 1
-        spec = spec.dig(:template, :spec) || {}
+        replicas = resource.dig(:spec, :replicas) || 1
+        spec = resource.dig(:spec, :template, :spec) || {}
       end
 
       return unless limits = spec.dig(:containers, 0, :resources, :limits)

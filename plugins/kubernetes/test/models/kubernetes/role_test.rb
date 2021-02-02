@@ -32,6 +32,16 @@ describe Kubernetes::Role do
       spec: {containers: [{name: 'foo', resources: {limits: {cpu: '0.5', memory: '300Mi'}}}]}
     }
   end
+  let(:pod_template) do
+    {
+      kind: 'PodTemplate',
+      apiVersion: 'v1',
+      metadata: {name: 'foo', labels: {role: 'migrate', project: 'bar'}},
+      template: {
+        spec: {containers: [{name: 'foo', resources: {limits: {cpu: '0.5', memory: '300Mi'}}}]}
+      }
+    }
+  end
   let(:config_content) do
     YAML.load_stream(read_kubernetes_sample_file('kubernetes_deployment.yml'))
   end
@@ -332,7 +342,7 @@ describe Kubernetes::Role do
       role.defaults[:replicas].must_equal 1
     end
 
-    it "does not fail without spec" do
+    it "does not fail without primary kind" do
       labels = {project: 'some-project', role: 'some-role'}
       map = {
         kind: 'ConfigMap',
@@ -340,14 +350,19 @@ describe Kubernetes::Role do
         metadata: {name: 'datadog', labels: labels},
         namespace: 'default',
         labels: labels
-      }.to_yaml
-      config_content_yml.prepend("#{map}\n---\n")
+      }
+      config_content_yml.replace(map.to_yaml)
+      assert_nil(role.defaults)
+    end
+
+    it "finds in pod template" do
+      config_content_yml.replace(pod_template.to_yaml)
       role.defaults.must_equal(
-        replicas: 2,
-        requests_cpu: 0.25,
-        requests_memory: 50,
+        replicas: 1,
+        requests_cpu: 0.5,
+        requests_memory: 300,
         limits_cpu: 0.5,
-        limits_memory: 100
+        limits_memory: 300
       )
     end
 
