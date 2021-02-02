@@ -84,7 +84,7 @@
   <div class="form-group">
     <div class="col-lg-offset-2 col-lg-10" style="margin-top: 10px;">
       <%= link_to "Edit", edit_deploy_group_path(@deploy_group), class: "btn btn-primary" %>
-      <%= render "locks/button", lock: @deploy_group.lock, resource: @deploy_group %>
+      <%= render "locks/button", resource: @deploy_group %>
       | <%= link_to_history @deploy_group %>
       | <%= link_to "Deploys", deploys_path(search: {group: "DeployGroup-#{@deploy_group.id}"}) %>
       | <%= link_to "Mass stage creation", "#", data: {target: "#mass_stage_creation"}, class: 'toggle' if DeployGroup.enabled? %>

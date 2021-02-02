@@ -185,6 +185,16 @@ describe ApplicationHelper do
       breadcrumb.must_equal "<ul class=\"breadcrumb\"><li class=\"active\">Home</li></ul>"
     end
 
+    it "renders all stages locked" do
+      stubs(global_locks: [Lock.new])
+      breadcrumb.must_equal "<ul class=\"breadcrumb\"><li class=\"active\"><i class=\"glyphicon glyphicon-lock\"></i> Home</li></ul>"
+    end
+
+    it "renders all stages warning" do
+      stubs(global_locks: [Lock.new(warning: true)])
+      breadcrumb.must_equal "<ul class=\"breadcrumb\"><li class=\"active\"><i class=\"glyphicon glyphicon-warning-sign\"></i> Home</li></ul>"
+    end
+
     it "renders stage" do
       breadcrumb(stage).must_equal "<ul class=\"breadcrumb\"><li class=\"\"><a href=\"/\">Home</a></li><li class=\"active\">Staging</li></ul>"
     end
@@ -203,8 +213,13 @@ describe ApplicationHelper do
       breadcrumb(project).must_equal "<ul class=\"breadcrumb\"><li class=\"\"><a href=\"/\">Home</a></li><li class=\"active\">Foo</li></ul>"
     end
 
+    it "renders locked project" do
+      project.stubs(lock: Lock.new)
+      breadcrumb(project).must_equal "<ul class=\"breadcrumb\"><li class=\"\"><a href=\"/\">Home</a></li><li class=\"active\"><i class=\"glyphicon glyphicon-lock\"></i> Foo</li></ul>"
+    end
+
     it "renders environment" do
-      breadcrumb(environment).must_equal "<ul class=\"breadcrumb\"><li class=\"\"><a href=\"/\">Home</a></li><li class=\"active\">Production</li></ul>"
+      breadcrumb(environment).must_equal "<ul class=\"breadcrumb\"><li class=\"\"><a href=\"/\">Home</a></li><li class=\"active\">Environment Production</li></ul>"
     end
 
     it "renders deploy_group" do
@@ -335,7 +350,7 @@ describe ApplicationHelper do
     end
 
     it "links to environments" do
-      link_to_resource(environments(:production)).must_equal "<a href=\"/environments/production\">Production</a>"
+      link_to_resource(environments(:production)).must_equal "<a href=\"/environments/production\">Environment Production</a>"
     end
 
     it "links to deploy_groups" do

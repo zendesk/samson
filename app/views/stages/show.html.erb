@@ -2,19 +2,19 @@
 
 <%= breadcrumb @project, @stage %>
 
-<%= render_locks @stage %>
-
 <h1>
   <%= @stage.name %>
   <%= image_tag project_stage_path(@project, @stage, format: :svg, token: Rails.application.config.samson.badge_token), title: "Deploy badge" %>
 </h1>
+
+<%= render_locks @stage %>
 
 <section>
   <h2>Actions</h2>
   <div>
     <%= deploy_link @project, @stage %>
 
-    <%= render "locks/button", lock: @stage.lock, resource: @stage %>
+    <%= render "locks/button", resource: @stage %>
 
     <% if admin_for_project? %>
       <%= link_to "Edit", edit_project_stage_path(@project, @stage), class: "btn btn-default" %>

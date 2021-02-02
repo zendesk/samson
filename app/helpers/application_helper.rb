@@ -76,15 +76,16 @@ module ApplicationHelper
   end
 
   # tested via link_to_resource
-  def link_parts_for_resource(resource)
+  def link_parts_for_resource(resource, with_locks: true)
     case resource
-    when Project, DeployGroup, Environment, User, Samson::Secrets::VaultServer then [resource.name, resource]
+    when DeployGroup, User, Samson::Secrets::VaultServer then [resource.name, resource]
+    when Environment then ["Environment #{resource.name}", resource]
     when Command then ["Command ##{resource.id}", resource]
     when UserProjectRole then ["Role for ##{resource.user.name}", resource.user]
-    when Stage
+    when Project, Stage
       name = resource.name
-      name = (resource.lock.warning? ? warning_icon : lock_icon) + " " + name if resource.lock
-      [name, [resource.project, resource]]
+      name = (resource.lock.warning? ? warning_icon : lock_icon) + " " + name if with_locks && resource.lock
+      [name, resource.is_a?(Project) ? resource : [resource.project, resource]]
     when Deploy then ["Deploy ##{resource.id}", [resource.project, resource]]
     when SecretSharingGrant then [resource.key, resource]
     when OutboundWebhook then [resource.url, resource]
@@ -96,8 +97,8 @@ module ApplicationHelper
     end
   end
 
-  def link_to_resource(resource)
-    name, path = link_parts_for_resource(resource)
+  def link_to_resource(resource, with_locks: true)
+    name, path = link_parts_for_resource(resource, with_locks: with_locks)
     if Array(path).any?(&:nil?)
       name
     else
@@ -106,7 +107,9 @@ module ApplicationHelper
   end
 
   def manual_breadcrumb(items)
-    items.unshift ["Home", root_path]
+    home_text = "Home"
+    home_text = (global_locks.all?(&:warning?) ? warning_icon : lock_icon) + " " + home_text if global_locks.present?
+    items.unshift [home_text, root_path]
     items.last << true # mark last as active
 
     content_tag :ul, class: "breadcrumb" do

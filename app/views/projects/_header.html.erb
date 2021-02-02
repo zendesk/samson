@@ -4,8 +4,10 @@
   <%= repository_web_link(project) %>
 </h1>
 
+<%= render_locks @project %>
+
 <div class="project-lock-buttons">
-  <%= render "locks/button", lock: project.lock, resource: @project %>
+  <%= render "locks/button", resource: @project %>
 </div>
 
 <%= render "shared/project_tabs", project: project, active: tab %>
