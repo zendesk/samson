@@ -14,7 +14,7 @@ module SamsonGcloud
         # build would fail on image that does not exist, so we check before pulling
         if cache_from
           if image_exists_in_gcloud?(cache_from)
-            cache_pull = "\n" + <<~YAML.strip
+            cache_pull = "\n#{<<~YAML.strip}"
               - name: 'gcr.io/cloud-builders/docker'
                 args: ['pull', '#{cache_from}']
             YAML

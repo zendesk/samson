@@ -10,7 +10,7 @@ $(function () {
   // user opens the a dropdown via bootstrap.js for the first time: initialize it
   $(document).one('shown.bs.dropdown', dialog, function () {
     var form = $(this, 'form');
-    var deleteAtInput = form.find('#lock_delete_at');
+    var deleteAtInput = form.find("input[name='lock[delete_at]']");
 
     // initialize date-picker UI
     $('.datetimepicker', this).datetimepicker();

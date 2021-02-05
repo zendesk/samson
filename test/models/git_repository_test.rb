@@ -74,7 +74,7 @@ describe GitRepository do
     it "is called from all public methods" do
       file = File.read("app/models/git_repository.rb")
       public = file.split(/^  private$/).first
-      methods = public.scan(/^  def ([a-z_\?\!]+)(.*?)^  end/m)
+      methods = public.scan(/^  def ([a-z_?!]+)(.*?)^  end/m)
       methods.size.must_be :>, 5 # making sure the logic is sound
       methods.delete_if { |method, _| ["update_mirror", "prune_worktree"].include?(method) }
       methods.each do |name, body|
@@ -191,7 +191,7 @@ describe GitRepository do
   describe "#branches" do
     it 'returns the branches of the repository' do
       create_repo_with_an_additional_branch
-      repository.branches.to_a.must_equal %w[master test_user/test_branch]
+      repository.branches.to_a.must_equal ['master', 'test_user/test_branch']
     end
 
     it 'fails when repo is not updateable' do

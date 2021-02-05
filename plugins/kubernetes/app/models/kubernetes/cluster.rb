@@ -10,8 +10,6 @@ module Kubernetes
     attr_encrypted :client_cert
     attr_encrypted :client_key
 
-    IP_PREFIX_PATTERN = /\A(?:[\d]{1,3}\.){0,2}[\d]{1,3}\z/.freeze # also used in js
-
     has_many :cluster_deploy_groups,
       class_name: 'Kubernetes::ClusterDeployGroup',
       foreign_key: :kubernetes_cluster_id,
@@ -20,7 +18,6 @@ module Kubernetes
     has_many :deploy_groups, through: :cluster_deploy_groups, inverse_of: :kubernetes_cluster
 
     validates :name, presence: true, uniqueness: {case_sensitive: false}
-    validates :ip_prefix, format: IP_PREFIX_PATTERN, allow_blank: true
     validate :test_client_connection
 
     before_destroy :ensure_unused
@@ -78,7 +75,7 @@ module Kubernetes
     def server_version
       version = Rails.cache.fetch(cache_key, expires_in: 1.hour) do
         Samson::Retry.with_retries [StandardError], 3, wait_time: 1 do
-          JSON.parse(client('v1').create_rest_client('version').get.body).fetch('gitVersion')[1..-1]
+          JSON.parse(client('v1').create_rest_client('version').get.body).fetch('gitVersion')[1..]
         end
       end
       Gem::Version.new(version)

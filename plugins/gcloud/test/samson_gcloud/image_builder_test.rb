@@ -4,6 +4,7 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe SamsonGcloud::ImageBuilder do
+  let(:maxitest_timeout) { 10 }
   let(:build) { builds(:docker_build) }
 
   describe ".build_image" do

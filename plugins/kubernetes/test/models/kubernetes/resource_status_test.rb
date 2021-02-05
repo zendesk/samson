@@ -71,22 +71,45 @@ describe Kubernetes::ResourceStatus do
     end
 
     describe "non-pods" do
-      before { resource[:kind] = "Service" }
+      before { resource[:kind] = "NonIgnoredKind" }
 
       it "knows created non-pods" do
         events.clear
         expect_event_request { details.must_equal "Live" }
       end
 
-      it "knows failed non-pods" do
-        events[0].merge!(type: "Warning", reason: "Boom")
-        expect_event_request { details.must_equal "Error event" }
-      end
-
       it "ignores known bad events" do
         resource[:kind] = "HorizontalPodAutoscaler"
         events[0].merge!(type: "Warning", reason: "FailedGetMetrics")
         expect_event_request { details.must_equal "Live" }
+      end
+
+      it "ignores known bad events for service" do
+        resource[:kind] = "Service"
+        events[0].merge!(type: "Warning", reason: "FailedToUpdateEndpointSlices")
+        expect_event_request { details.must_equal "Live" }
+      end
+
+      describe "with bad event" do
+        before { events[0].merge!(type: "Warning", reason: "Boom") }
+
+        it "fails" do
+          expect_event_request { details.must_equal "Error event" }
+        end
+
+        it "ignores custom known bad events" do
+          resource[:metadata][:annotations] = {
+            "samson/ignore_events": "Boom"
+          }
+          expect_event_request { details.must_equal "Live" }
+        end
+
+        it "ignores non-matching custom known bad events" do
+          resource[:metadata][:annotations] = {
+            "samson/ignore_events": "Boing"
+          }
+          expect_event_request { details.must_equal "Error event" }
+        end
       end
     end
   end

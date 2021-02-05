@@ -7,7 +7,7 @@
 
 <section class="tabs deploy-search">
   <div class="row">
-    <%= search_form do %>
+    <%= search_form top_pad: false do %>
       <div class="col-sm-2">
         <%= label_tag 'Deployer name' %>
         <%= text_field_tag 'search[deployer]', params.dig(:search, :deployer), class: "form-control" %>
@@ -30,10 +30,28 @@
       <%= search_select :status, Job::VALID_STATUSES, size: 1 %>
       <%= search_select :group, Environment.env_deploy_group_array %>
       <%= search_select :time_format, User::TIME_FORMATS, selected: params.dig(:search, :time_format) || current_user.time_format, label: 'Time', size: 1 %>
-      <div class="col-sm-1">
-        <%= label_tag :Deleted %>
-        <%= check_box_tag 'search[deleted]', "Project,Stage,Deploy", params.dig(:search, :deleted) %>
-      </div>
+
+      <details>
+        <summary><%= label_tag :more %></summary>
+        <br/>
+        <br/>
+        <br/>
+
+        <div class="col-sm-1">
+          <%= label_tag :deleted %>
+          <%= check_box_tag 'search[deleted]', "Project,Stage,Deploy", params.dig(:search, :deleted) %>
+        </div>
+
+        <div class="col-md-2">
+          <%= label_tag 'Started from' %>
+          <%= text_field_tag 'search[created_at][]', params.dig(:search, :created_at, 0), placeholder: "YYYY-MM-DD HH:MM:SS", id: nil %>
+        </div>
+
+        <div class="col-md-2">
+          <%= label_tag 'Started to' %>
+          <%= text_field_tag 'search[created_at][]', params.dig(:search, :created_at, 1), placeholder: "YYYY-MM-DD HH:MM:SS", id: nil %>
+        </div>
+      </details>
     <% end %>
   </div>
 

@@ -520,5 +520,13 @@ describe Changeset::PullRequest do
       add_risks
       pr.missing_risks?.must_equal false
     end
+
+    it "does not consider None a missing risk" do
+      body.replace(+<<~BODY)
+        # Risks
+        None
+      BODY
+      pr.missing_risks?.must_equal false
+    end
   end
 end

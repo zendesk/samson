@@ -6,9 +6,10 @@ module DashboardsHelper
 
   def dashboard_project_row_style(project_id)
     project_versions = @versions[project_id].values.map(&:reference).uniq.count
-    if project_versions == 0
+    case project_versions
+    when 0
       'class=no-deploys'
-    elsif project_versions == 1
+    when 1
       ''
     else
       'class=warning'

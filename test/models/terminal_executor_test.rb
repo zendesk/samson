@@ -39,7 +39,9 @@ describe TerminalExecutor do
     end
 
     it 'shows a nice message when child could not be found' do
-      Process.expects(:wait2).raises(Errno::ECHILD) # No child processes found
+      Process.expects(:wait2).
+        with { sleep 0.1; true }. # so we get 'not found' output
+        raises(Errno::ECHILD) # No child processes found
       subject.execute('blah').must_equal(false)
       out = output.string.sub(/.*blah: /, '').sub('command ', '') # linux has a different message
       out.must_equal "not found\r\nErrno::ECHILD: No child processes\n"
@@ -60,7 +62,7 @@ describe TerminalExecutor do
     end
 
     it "removes rbenv from PATH" do
-      with_env RBENV_DIR: 'XYZ', PATH: ENV["PATH"] + ":/foo/rbenv/versions/1.2.3/bin" do
+      with_env RBENV_DIR: 'XYZ', PATH: "#{ENV["PATH"]}:/foo/rbenv/versions/1.2.3/bin" do
         subject.execute('env')
         output.string.wont_include("RBENV_DIR")
         output.string.wont_include("/rbenv/versions")
@@ -299,6 +301,11 @@ describe TerminalExecutor do
 
       it 'terminates hanging processes with -9' do
         execute_and_cancel("trap #{sleep_command.shellescape} 2; #{sleep_command}").must_equal ""
+      end
+
+      it 'shows output after trap' do
+        execute_and_cancel("ruby -e 'begin; sleep; rescue Interrupt; puts 123; STDOUT.flush; sleep 1;end'")
+        output.string.must_equal "123\r\n"
       end
     end
   end

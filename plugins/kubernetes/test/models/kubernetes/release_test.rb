@@ -93,10 +93,10 @@ describe Kubernetes::Release do
     describe "blue green" do
       before { app_server.blue_green = true }
 
-      it 'does not set when not using blue_green' do
+      it 'defaults to blue when not using blue_green' do
         app_server.blue_green = false
         subject = Kubernetes::Release.build_release_with_docs(release_params)
-        subject.blue_green_color.must_be_nil
+        subject.blue_green_color.must_equal "blue"
       end
 
       it 'creates first as blue' do
@@ -115,7 +115,7 @@ describe Kubernetes::Release do
 
   describe "#clients" do
     it "is empty when there are no deploy groups" do
-      release.clients.must_equal []
+      release.clients("v1").must_equal []
     end
 
     it "returns scoped queries" do
@@ -124,17 +124,17 @@ describe Kubernetes::Release do
         resourceVersion: "1",
         items: [{}, {}]
       }.to_json)
-      release.clients.map { |c, q| c.get_pods(q).fetch(:items) }.first.size.must_equal 2
+      release.clients("v1").map { |c, q| c.get_pods(q).fetch(:items) }.first.size.must_equal 2
     end
 
     it "can scope queries by resource namespace" do
       release = kubernetes_releases(:test_release)
-      Kubernetes::Resource::Deployment.any_instance.stubs(namespace: "default")
+      Kubernetes::Resource::Base.any_instance.stubs(namespace: "default")
       stub_request(:get, %r{http://foobar.server/api/v1/namespaces/default/pods}).to_return(body: {
         resourceVersion: "1",
         items: [{}, {}]
       }.to_json)
-      release.clients.map { |c, q| c.get_pods(q).fetch(:items) }.first.size.must_equal 2
+      release.clients("v1").map { |c, q| c.get_pods(q).fetch(:items) }.first.size.must_equal 2
     end
   end
 

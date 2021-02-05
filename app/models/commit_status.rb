@@ -8,9 +8,9 @@ class CommitStatus
   STATE_PRIORITY = [:success, :pending, :missing, :failure, :error, :fatal].freeze
   UNDETERMINED = ["pending", "missing"].freeze
   CHECK_STATE = {
-    error: ['action_required', 'cancelled', 'timed_out'],
+    error: ['action_required', 'cancelled', 'timed_out', 'stale', 'startup_failure'],
     failure: ['failure'],
-    success: ['success', 'neutral']
+    success: ['success', 'neutral', 'skipped']
   }.freeze
   NO_STATUSES_REPORTED_RESULT = {
     state: 'pending',
@@ -150,7 +150,7 @@ class CommitStatus
   # @return [String]
   def github_pr_checks_url(suite)
     return unless pr = suite.fetch(:pull_requests).first
-    pr.dig(:url).sub('://api.', '://').sub('/repos/', '/').sub('/pulls/', '/pull/') + "/checks"
+    "#{pr[:url].sub('://api.', '://').sub('/repos/', '/').sub('/pulls/', '/pull/')}/checks"
   end
 
   # @return [Hash]
@@ -185,7 +185,7 @@ class CommitStatus
   # merges multiple statuses into a single status
   # @return [Hash]
   def merge_statuses(statuses)
-    statuses[1..-1].each_with_object(statuses[0].dup) do |status, merged|
+    statuses[1..].each_with_object(statuses[0].dup) do |status, merged|
       merged[:state] = [merged.fetch(:state), status.fetch(:state)].max_by { |s| STATE_PRIORITY.index(s.to_sym) }
       merged.fetch(:statuses).concat(status.fetch(:statuses))
     end

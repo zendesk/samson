@@ -4,13 +4,10 @@ config = Rails.application.config
 
 if Samson::EnvCheck.set?("RAILS_LOG_TO_STDOUT")
   # good for heroku or docker
-  config.logger = ActiveSupport::TaggedLogging.new(ActiveSupport::Logger.new(STDOUT))
+  config.logger = ActiveSupport::TaggedLogging.new(ActiveSupport::Logger.new($stdout))
 elsif Samson::EnvCheck.set?("RAILS_LOG_TO_SYSLOG")
-  # good for production hosts with syslog
-  # TODO: add Syslog::Logger#silence to support dev mode
-  # TODO: add tagged logging so we get request-ids
   require_relative "../lib/samson/syslog_formatter"
-  config.logger = Syslog::Logger.new('samson')
+  config.logger = ActiveSupport::TaggedLogging.new(Syslog::Logger.new('samson'))
   config.logger.formatter = Samson::SyslogFormatter.new
 elsif ENV["SERVER_MODE"]
   # good for development or servers without syslog
@@ -33,6 +30,12 @@ elsif ENV["SERVER_MODE"]
   end
 end
 
+# TODO: log user id too ... doing in current_user does not work because request logs after that is done
+config.log_tags = [
+  ->(request) { "id:#{request.request_id}" },
+  ->(request) { "ip:#{request.remote_ip}" }
+]
+
 # log 1 message per request to in json/syslog format
 if ENV["RAILS_LOG_WITH_LOGRAGE"]
   require 'lograge'
@@ -40,14 +43,13 @@ if ENV["RAILS_LOG_WITH_LOGRAGE"]
   config.lograge.enabled = true
   config.lograge.custom_options = ->(event) do
     # show params for every request
-    unwanted_keys = %w[format action controller]
+    unwanted_keys = ['format', 'action', 'controller']
     params = event.payload[:params].reject { |key, _| unwanted_keys.include? key }
     params['commits'] = '... truncated ...' if params['commits'] # lots of metadata from github we don't need
     request = event.payload[:headers].instance_variable_get(:@req)
     {
       params: params,
-      user_id: request.env['warden']&.user&.id,
-      client_ip: request.remote_ip
+      user_id: request.env['warden']&.user&.id
     }
   end
   config.lograge.formatter = Lograge::Formatters::Logstash.new

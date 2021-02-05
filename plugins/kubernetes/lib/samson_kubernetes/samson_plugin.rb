@@ -3,7 +3,7 @@
 module SamsonKubernetes
   class SamsonPlugin < Rails::Engine
     initializer "refinery.assets.precompile" do |app|
-      app.config.assets.precompile.append %w[kubernetes/icon.png]
+      app.config.assets.precompile.append ['kubernetes/icon.png']
     end
   end
 
@@ -15,7 +15,7 @@ module SamsonKubernetes
   # see https://github.com/abonas/kubeclient/issues/240
   # using a method to avoid loading kubeclient on every boot ~0.1s
   def self.connection_errors
-    [OpenSSL::SSL::SSLError, Kubeclient::HttpError, Errno::ECONNREFUSED, Errno::ECONNRESET, SocketError].freeze
+    [OpenSSL::SSL::SSLError, Kubeclient::HttpError, SystemCallError, SocketError].freeze
   end
 
   def self.retry_on_connection_errors(&block)

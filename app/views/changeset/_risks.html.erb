@@ -1,7 +1,3 @@
-<div class="alert alert-info">
-  To display risks from pull request, add a "Risks" heading in the pull request description
-</div>
-
 <% if changeset.pull_requests.any? %>
   <% changeset.pull_requests.each do |pr| %>
     <% if pr.risky? %>
@@ -10,9 +6,9 @@
     <% elsif pr.missing_risks? %>
       <div>
         <% help_icon = additional_info(
-              "Missing 'Risks' section or failed to parse risks",
-              class: 'glyphicon glyphicon-alert deployment-alert'
-            )
+            "Missing 'Risks' section or failed to parse risks (explicitly say 'None' to silence this warning)",
+            class: 'glyphicon glyphicon-alert deployment-alert'
+          )
         %>
         <h5><strong>#<%= pr.number %></strong> <%= link_to pr.title, pr.url %> <%= github_users(pr.users) %><%= help_icon %></h5>
       </div>

@@ -1,3 +1,7 @@
+<% if !JobQueue.enabled && JobQueue.executing.empty? %>
+  <h2>Failed restart detected (Job-queue is disabled and there are no jobs running). Might need a hard restart.</h2>
+<% end %>
+
 <div class="timeline">
   <table class="timeline-content table">
     <thead>

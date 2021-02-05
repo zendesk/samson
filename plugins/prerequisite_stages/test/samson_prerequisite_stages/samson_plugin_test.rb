@@ -4,7 +4,7 @@ require_relative '../test_helper'
 
 SingleCov.covered!
 
-describe SamsonPrerequisiteStages do
+describe "SamsonPrerequisiteStages Helper" do
   let(:stage1) { stages(:test_staging) }
   let(:stage2) { stages(:test_production) }
   let(:deploy) { stage1.deploys.first }
@@ -93,20 +93,18 @@ describe SamsonPrerequisiteStages do
 
   describe 'view callbacks' do
     before do
-      view_context.instance_variable_set(:@project, stage1.project)
-      view_context.instance_variable_set(:@stage, stage1)
+      @project = stage1.project
+      @stage = stage1
     end
 
     describe 'stage_form callback' do
-      def with_form
-        view_context.form_for [stage1.project, stage1] do |form|
-          yield form
-        end
+      def with_form(&block)
+        form_for [stage1.project, stage1], &block
       end
 
       def render_view
         with_form do |form|
-          Samson::Hooks.render_views(:stage_form, view_context, form: form)
+          Samson::Hooks.render_views(:stage_form, self, form: form)
         end
       end
 
@@ -120,7 +118,7 @@ describe SamsonPrerequisiteStages do
 
     describe 'stage_show callback' do
       def render_view
-        Samson::Hooks.render_views(:stage_show, view_context)
+        Samson::Hooks.render_views(:stage_show, self)
       end
 
       it 'shows prerequisite stages' do

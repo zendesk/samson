@@ -28,7 +28,7 @@ module Samson
       input_html[:rows] ||= object.send(attribute).to_s.count("\n") + 2 if as == :text_area
 
       label ||= attribute.to_s.humanize
-      label = "* " + label if required
+      label = "* #{label}" if required
 
       help = (help ? SPACER + @template.additional_info(help) : "".html_safe)
       block ||= -> { public_send(as, attribute, input_html) }

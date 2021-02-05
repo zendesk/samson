@@ -23,7 +23,7 @@ module SamsonEnv
         if deploy_groups.any?
           deploy_groups.map do |deploy_group|
             [
-              ".#{deploy_group.name.parameterize}",
+              ".#{deploy_group.permalink}",
               EnvironmentVariable.env(deploy, deploy_group, **kwargs)
             ]
           end
@@ -63,8 +63,7 @@ Samson::Hooks.callback :project_permitted_params do
     AcceptsEnvironmentVariables::ASSIGNABLE_ATTRIBUTES.merge(
       environment_variable_group_ids: []
     ),
-    :use_env_repo,
-    external_environment_variable_groups_attributes: [:name, :description, :url, :_destroy, :id]
+    {external_environment_variable_groups_attributes: [:name, :description, :url, :_destroy, :id]}
   ]
 end
 
@@ -77,7 +76,7 @@ Samson::Hooks.callback :before_docker_build do |tmp_dir, build, _|
   SamsonEnv.write_env_files(tmp_dir, Deploy.new(project: build.project), [])
 end
 
-# TODO: not used for write_env_files
+# TODO: use for write_env_files
 Samson::Hooks.callback :deploy_env do |*args|
   EnvironmentVariable.env(*args)
 end
@@ -145,4 +144,8 @@ Samson::Hooks.view :deploy_form, 'samson_env'
 # Allows environment vars as valid parameters for the deploy model
 Samson::Hooks.callback :deploy_permitted_params do
   AcceptsEnvironmentVariables::ASSIGNABLE_ATTRIBUTES
+end
+
+Samson::Hooks.callback :project_allowed_includes do
+  ExternalEnvironmentVariableGroup.configured? ? [:external_environment_variable_groups] : []
 end

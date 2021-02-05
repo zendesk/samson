@@ -11,8 +11,9 @@ class Changeset::CodePush
     new(project.repository_path, payload)
   end
 
-  def self.valid_webhook?(_)
-    true
+  # skip pushes that delete the branch, we can't deploy these
+  def self.valid_webhook?(payload)
+    !payload['deleted']
   end
 
   def sha

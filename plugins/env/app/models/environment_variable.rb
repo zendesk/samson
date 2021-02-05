@@ -24,20 +24,17 @@ class EnvironmentVariable < ActiveRecord::Base
     # preview parameter can be used to not raise an error,
     # but return a value with a helpful message
     # also used by an external plugin
-    def env(deploy, deploy_group, resolve_secrets:, project_specific: nil)
-      env = {}
+    def env(deploy, deploy_group, resolve_secrets:, project_specific: nil, base: {})
+      env = base.dup
 
       if deploy_group
         env.merge! env_vars_from_external_groups(deploy.project, deploy_group)
       end
 
-      if deploy_group && (env_repo_name = ENV["DEPLOYMENT_ENV_REPO"]) && deploy.project.use_env_repo
-        env.merge! env_vars_from_repo(env_repo_name, deploy.project, deploy_group)
-      end
-
       env.merge! env_vars_from_db(deploy, deploy_group, project_specific: project_specific)
 
-      resolve_dollar_variables(env)
+      # TODO: these should be handled outside of the env plugin so other plugins can get their env var resolved too
+      resolve_dollar_variables!(env)
       resolve_secrets(deploy.project, deploy_group, env, preview: resolve_secrets == :preview) if resolve_secrets
 
       env
@@ -65,20 +62,18 @@ class EnvironmentVariable < ActiveRecord::Base
         deploy.project.nested_environment_variables(**args)
       variables.sort_by!(&:priority)
       variables.each_with_object({}) do |ev, all|
-        all[ev.name] = ev.value if !all[ev.name] && ev.matches_scope?(deploy_group)
+        all[ev.name] = ev.value.dup if !all[ev.name] && ev.matches_scope?(deploy_group)
       end
     end
 
-    def env_vars_from_repo(env_repo_name, project, deploy_group)
-      path = "generated/#{project.permalink}/#{deploy_group.permalink}.env"
-      content = GITHUB.contents(env_repo_name, path: path, headers: {Accept: 'applications/vnd.github.v3.raw'})
-      Dotenv::Parser.call(content)
-    rescue StandardError => e
-      raise Samson::Hooks::UserError, "Cannot download env file #{path} from #{env_repo_name} (#{e.message})"
-    end
-
     def env_vars_from_external_groups(project, deploy_group)
-      project.external_environment_variable_groups.each_with_object({}) do |group, envs|
+      external_groups = project.external_environment_variable_groups
+
+      external_groups += (project.environment_variable_groups.select(&:external_url?).map do |env_group|
+        ExternalEnvironmentVariableGroup.new(url: env_group.external_url)
+      end)
+
+      external_groups.each_with_object({}) do |group, envs|
         group_env = group.read[deploy_group.permalink]
         envs.merge! group_env if group_env
       end
@@ -86,9 +81,11 @@ class EnvironmentVariable < ActiveRecord::Base
       raise Samson::Hooks::UserError, "Error reading env vars from external env-groups: #{e.message}"
     end
 
-    def resolve_dollar_variables(env)
-      env.each do |k, value|
-        env[k] = value.gsub(/\$\{(\w+)\}|\$(\w+)/) { |original| env[$1 || $2] || original }
+    def resolve_dollar_variables!(env)
+      env.each_value do |value|
+        3.times do
+          break unless value.gsub!(/\$\{(\w+)\}|\$(\w+)/) { |original| env[$1 || $2] || original }
+        end
       end
     end
 

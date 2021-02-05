@@ -2,7 +2,7 @@
 require_relative '../test_helper'
 require 'ar_multi_threaded_transactional_tests'
 
-SingleCov.covered! uncovered: 1
+SingleCov.covered!
 
 describe Job do
   include GitRepoTestHelper
@@ -188,22 +188,29 @@ describe Job do
   end
 
   describe "#validate_globally_unlocked" do
-    def create
-      Job.create(command: "", user: user, project: project)
+    def create(**args)
+      Job.create(command: "", user: user, project: project, **args)
     end
 
-    it 'does not allow a job to be created when locked' do
-      Lock.create!(user: users(:admin))
-      create.errors.to_h.must_equal(base: 'all stages are locked')
+    describe "when globally locked" do
+      before { Lock.create!(user: users(:admin)) }
+
+      it 'does not allow a job to be created' do
+        create.errors.to_hash.must_equal(base: ['all stages are locked'])
+      end
+
+      it 'allows deploys from the lock owner to bypass the lock' do
+        create(bypass_global_lock_check: true).errors.to_hash.must_equal({})
+      end
     end
 
     it 'allows a job to be created when warning' do
       Lock.create!(user: users(:admin), warning: true, description: "X")
-      create.errors.to_h.must_equal({})
+      create.errors.to_hash.must_equal({})
     end
 
     it 'allows a job to be created when no locks exist' do
-      create.errors.to_h.must_equal({})
+      create.errors.to_hash.must_equal({})
     end
   end
 
@@ -265,7 +272,7 @@ describe Job do
 
     it "cancels an executing job" do
       # get the job running
-      ex = JobExecution.new('master', job) { sleep 10 }
+      ex = JobExecution.new('master', Job.find(job.id)) { sleep 10 }
       JobQueue.perform_later(ex)
       sleep 0.1 # make the job spin up properly
       assert JobQueue.executing?(ex.id)
@@ -275,8 +282,8 @@ describe Job do
       maxitest_wait_for_extra_threads
 
       # it is cancelled ?
-      assert job.cancelled? # job execution callbacks sets it to cancelled
-      job.canceller.must_equal user
+      assert ex.job.cancelled? # job execution callbacks sets it to cancelled
+      ex.job.canceller.must_equal user
     end
 
     it "cancels an stopped job" do
@@ -403,6 +410,24 @@ describe Job do
       )
 
       job.send(:report_state)
+    end
+  end
+
+  describe "#serialize_execution_output" do
+    before { freeze_time }
+
+    it "does nothing when finished" do
+      job.output = "X"
+      job.serialize_execution_output
+      job.output.must_equal "X"
+    end
+
+    it "serialized execution" do
+      execution = JobExecution.new("master", job)
+      job.stubs(:execution).returns(execution)
+      execution.output.puts "X"
+      job.serialize_execution_output
+      job.output.must_equal "[04:05:06] X\n"
     end
   end
 end

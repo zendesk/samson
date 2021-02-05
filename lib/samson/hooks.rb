@@ -61,7 +61,8 @@ module Samson
       :repo_provider_status,
       :repo_commit_from_ref,
       :repo_compare,
-      :validate_deploy
+      :validate_deploy,
+      :project_allowed_includes
     ].freeze
 
     # Hooks that are slow and we want performance info on
@@ -84,13 +85,14 @@ module Samson
 
     class Plugin
       attr_reader :name, :folder
+
       def initialize(path)
         @path = path
         @folder = File.expand_path('../../../', @path)
         @name = File.basename(@folder).sub(/-[^-]*\z/, '').sub(/\Asamson_/, "")
       end
 
-      def load
+      def setup_and_require
         lib = "#{@folder}/lib"
         $LOAD_PATH << lib
         require @path
@@ -109,7 +111,7 @@ module Samson
       end
 
       def add_assets_to_precompile
-        engine.config.assets.precompile += %W[#{name}/application.css #{name}/application.js]
+        engine.config.assets.precompile += ["#{name}/application.css", "#{name}/application.js"]
       end
 
       def engine
@@ -191,12 +193,12 @@ module Samson
       end
 
       def load_decorators(klass)
-        @class_decorators[klass.name].each { |path| require_dependency(path) }
+        @class_decorators[klass.name].each { |path| load(path) }
       end
 
       def plugin_setup
         Samson::Hooks.plugins.
-          each(&:load).
+          each(&:setup_and_require).
           each(&:add_migrations).
           each(&:add_assets_to_precompile).
           each(&:add_decorators)

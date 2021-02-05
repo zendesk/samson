@@ -251,14 +251,14 @@ describe Kubernetes::DeployGroupRole do
       deploy_group_role.requests_memory = nil
       deploy_group_role.replicas = nil
       refute_valid deploy_group_role
-      deploy_group_role.errors.full_messages.must_equal(
+      deploy_group_role.errors.full_messages.sort.must_equal(
         [
           "Requests cpu can't be blank",
           "Requests cpu is not a number",
           "Requests memory can't be blank",
           "Requests memory is not a number",
           "Replicas can't be blank"
-        ]
+        ].sort
       )
     end
 

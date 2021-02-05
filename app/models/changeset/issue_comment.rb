@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 class Changeset::IssueComment
   attr_reader :repo, :data, :comment
+
   delegate :sha, :branch, to: :pull_request
   VALID_ACTIONS = ['created'].freeze
 

@@ -93,7 +93,7 @@
   function parseAndAdd(pasted) {
     var env = parseEnv(pasted);
 
-    var $row = $(".paste_env_variables").prev().prev();
+    var $row = $(".paste_env_variables").prev().prev().prev();
     var selectedEnv = $row.find("select").val();
 
 

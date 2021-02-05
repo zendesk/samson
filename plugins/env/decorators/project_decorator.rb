@@ -32,9 +32,10 @@ Project.class_eval do
     # nil           => project env + groups env
     # true/"true"   => project env
     # false/"false" => groups env
-    if project_specific.to_s == "true"
+    case project_specific.to_s
+    when "true"
       environment_variables
-    elsif project_specific.to_s == "false"
+    when "false"
       environment_variable_groups.flat_map(&:environment_variables)
     else
       [self, *environment_variable_groups].flat_map(&:environment_variables)

@@ -4,9 +4,8 @@ class DoorkeeperBaseController < ActionController::Base
   layout 'application'
   protect_from_forgery with: :exception
 
+  # This is a hack to prevent doorkeeper from overriding templates.
+  # There is a builtin way to do this but it involves preloading models, which we are trying to avoid
   def self.layout(_x)
-    # This is a hack to prevent doorkeeper from overriding templates.
-    # There is a builtin way to do this but it involves preloading models
-    # which we don't want to do.
   end
 end

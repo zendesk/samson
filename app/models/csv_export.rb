@@ -1,7 +1,10 @@
 # frozen_string_literal: true
 class CsvExport < ActiveRecord::Base
   belongs_to :user, inverse_of: :csv_exports
+
+  attribute :filters, :text, default: {}
   serialize :filters, JSON
+
   STATUS_VALUES = ['pending', 'started', 'finished', 'downloaded', 'failed', 'deleted'].freeze
 
   before_destroy :delete_file
@@ -34,7 +37,7 @@ class CsvExport < ActiveRecord::Base
     filter = super.clone
     if filter['deploys.created_at']
       dates = filter['deploys.created_at'].scan(/-?\d+-\d+-\d+/)
-      filter['deploys.created_at'] = (Time.parse(dates[0] + "T00:00:00Z")..Time.parse(dates[1] + "T23:59:59Z"))
+      filter['deploys.created_at'] = (Time.parse("#{dates[0]}T00:00:00Z")..Time.parse("#{dates[1]}T23:59:59Z"))
     end
     filter
   end
@@ -42,7 +45,7 @@ class CsvExport < ActiveRecord::Base
   def filters_project
     if id = filters['stages.project_id']
       proj = Project.with_deleted { Project.find_by(id: id)&.permalink }
-      proj + '_' if proj
+      "#{proj}_" if proj
     end
   end
 

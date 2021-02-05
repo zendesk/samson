@@ -14,6 +14,7 @@ module Kubernetes
       @doc = release_doc
       @template = template.deep_dup
       @index = index
+      migrate_container_annotations
     end
 
     def to_hash(verification: false)
@@ -33,31 +34,26 @@ module Kubernetes
           set_hpa_scale_target_name
         elsif Kubernetes::RoleConfigFile::SERVICE_KINDS.include?(kind)
           set_service_name
-          prefix_service_cluster_ip
-          set_service_blue_green if blue_green_color
+          set_service_blue_green if @doc.blue_green?
         elsif Kubernetes::RoleConfigFile.primary?(template)
-          if kind == 'Deployment'
-            set_history_limit
-          end
-
+          set_history_limit if kind == 'Deployment'
           make_stateful_set_match_service if kind == 'StatefulSet'
           set_pre_stop if kind == 'Deployment'
-
           set_name
-          set_replica_target || validate_replica_target_is_supported
+          (set_replica_target || validate_replica_target_is_supported) if kind != 'PodTemplate'
           set_spec_template_metadata
           set_docker_image unless verification
           set_resource_usage
           set_env unless @doc.delete_resource
           set_secrets unless @doc.delete_resource
           set_image_pull_secrets
-          set_resource_blue_green if blue_green_color
+          set_resource_blue_green if @doc.blue_green?
           set_init_containers
           set_kritis_breakglass
           set_istio_sidecar_injection
         elsif kind == 'PodDisruptionBudget'
           set_name
-          set_match_labels_blue_green if blue_green_color
+          set_match_labels_blue_green if @doc.blue_green?
         else
           set_name
         end
@@ -124,7 +120,7 @@ module Kubernetes
         path = self.class.dig_path(path)
 
         begin
-          template.dig_set(path, JSON.parse(static_env.fetch(v), symbolize_names: true))
+          template.dig_set(path, JSON.parse(@doc.static_env.fetch(v), symbolize_names: true))
         rescue KeyError, JSON::ParserError => e
           raise(
             Samson::Hooks::UserError,
@@ -152,14 +148,26 @@ module Kubernetes
     end
 
     # read container config from pod annotation
-    # (or deprecated fallback to container key, which makes kubectl validation fail)
-    #
-    # NOTE: containers always have a name see role_validator.rb
     #
     # @param [Hash] container
     # @param [Symbol] key
     def samson_container_config(container, key)
-      pod_annotations[samson_container_config_key(container, key)] || container[key]
+      pod_annotations[samson_container_config_key(container, key)]
+    end
+
+    # deprecated container keys need to be migrated or the container will be invalid
+    def migrate_container_annotations
+      all_containers.each do |container|
+        container.keys.grep(/^samson\//).each do |key|
+          value = container.delete(key)
+          set_container_annotation container, key, value unless samson_container_config(container, key)
+        end
+      end
+    end
+
+    # NOTE: containers always have a name see role_validator.rb
+    def set_container_annotation(container, key, value)
+      pod_annotations[samson_container_config_key(container, key)] = value
     end
 
     def samson_container_config_key(container, key)
@@ -225,17 +233,6 @@ module Kubernetes
 
       name += "-#{@index + 1}" if @index > 0
       name
-    end
-
-    # no ipv6 support
-    def prefix_service_cluster_ip
-      return unless ip = template[:spec][:clusterIP]
-      return if ip == "None"
-      return unless prefix = @doc.deploy_group.kubernetes_cluster.ip_prefix.presence
-      ip = ip.split('.')
-      prefix = prefix.split('.')
-      ip[0...prefix.size] = prefix
-      template[:spec][:clusterIP] = ip.join('.')
     end
 
     # assumed to be validated by role_validator
@@ -310,28 +307,35 @@ module Kubernetes
           {mountPath: "/secretkeys", name: "secretkeys"},
           secret_vol
         ],
+        securityContext: {
+          readOnlyRootFilesystem: true,
+          runAsNonRoot: true
+        },
         env: [
           {name: "VAULT_TLS_VERIFY", value: vault_client.options.fetch(:ssl_verify).to_s},
           {name: "VAULT_MOUNT", value: Samson::Secrets::VaultClientManager::MOUNT},
           {name: "VAULT_PREFIX", value: Samson::Secrets::VaultClientManager::PREFIX}
         ],
         resources: {
-          requests: {cpu: "100m", memory: "100Mi"},
-          limits: {cpu: "500m", memory: "256Mi"}
+          requests: {cpu: "100m", memory: "64Mi"},
+          limits: {cpu: "100m", memory: "64Mi"}
         }
       }
       init_containers.unshift container
 
-      # mark the container as not needing a dockerfile without making the pod invalid for kubelet
-      pod_annotations[samson_container_config_key(container, :"samson/dockerfile")] = DOCKERFILE_NONE
+      # mark the container as not needing a dockerfile
+      set_container_annotation container, :"samson/dockerfile", DOCKERFILE_NONE
 
       # share secrets volume between all pod containers
       pod_containers.each do |container|
-        (container[:volumeMounts] ||= []).push secret_vol
+        mounts = (container[:volumeMounts] ||= [])
+        mounts.push secret_vol
+        mounts.uniq!
       end
 
       # define the shared volumes in the pod
-      (pod_template[:spec][:volumes] ||= []).concat [
+      volumes = (pod_template[:spec][:volumes] ||= [])
+      volumes.concat [
         {name: secret_vol.fetch(:name), emptyDir: {medium: 'Memory'}},
         {name: "vaultauth", secret: {secretName: "vaultauth"}},
         {
@@ -341,6 +345,7 @@ module Kubernetes
           }
         }
       ]
+      volumes.uniq!
     end
 
     def set_init_containers
@@ -379,7 +384,7 @@ module Kubernetes
         else
           @doc.kubernetes_role.resource_name
         end
-      name += "-#{blue_green_color}" if blue_green_color
+      name += "-#{blue_green_color}" if @doc.blue_green?
       template.dig_set [:metadata, :name], name
     end
 
@@ -395,25 +400,8 @@ module Kubernetes
     # Sets the labels for each new Pod.
     # Adding the Release ID to allow us to track the progress of a new release from the UI.
     def set_spec_template_metadata
-      release_doc_metadata.each do |key, value|
+      @doc.deploy_metadata.each do |key, value|
         pod_template.dig_fetch(:metadata, :labels)[key] ||= value.to_s.parameterize.tr('_', '-').slice(0, 63)
-      end
-    end
-
-    def release_doc_metadata
-      @release_doc_metadata ||= begin
-        release = @doc.kubernetes_release
-        role = @doc.kubernetes_role
-        deploy_group = @doc.deploy_group
-
-        Kubernetes::Release.pod_selector(release.id, deploy_group.id, query: false).merge(
-          deploy_id: release.deploy_id,
-          project_id: release.project_id,
-          role_id: role.id,
-          deploy_group: deploy_group.env_value,
-          revision: release.git_sha,
-          tag: release.git_ref
-        )
       end
     end
 
@@ -496,14 +484,22 @@ module Kubernetes
     def set_env
       all = []
 
-      static_env.each { |k, v| all << {name: k.to_s, value: v.to_s} }
+      @doc.static_env.each { |k, v| all << {name: k.to_s, value: v.to_s} }
 
       # dynamic lookups for unknown things during deploy
-      {
+      dynamic_vars = {
         POD_NAME: 'metadata.name',
         POD_NAMESPACE: 'metadata.namespace',
         POD_IP: 'status.podIP'
-      }.each do |k, v|
+      }
+
+      if @doc.deploy_group_role.inject_istio_annotation?
+        # Set the ISTIO_STATUS env var so that the container(s) know that an Istio
+        # sidecar has been injected.
+        dynamic_vars['ISTIO_STATUS'] = "metadata.annotations['sidecar.istio.io/status']"
+      end
+
+      dynamic_vars.each do |k, v|
         all << {
           name: k.to_s,
           valueFrom: {fieldRef: {fieldPath: v}}
@@ -511,10 +507,18 @@ module Kubernetes
       end
 
       env_containers.each do |c|
+        extra = all
         env = (c[:env] ||= [])
-        env.concat all
 
-        # unique, but keep last elements
+        # keep container env var if requested, so static+plugin env can be overwritten
+        if keep = samson_container_config(c, :"samson/keep_env_var").to_s.split(/, ?| /).presence
+          extra = all.dup
+          keep.each { |var| extra.delete_if { |e| e[:name] == var } }
+        end
+
+        env.concat extra
+
+        # unique, but keep user configured overrides
         env.reverse!
         env.uniq! { |h| h[:name] }
         env.reverse!
@@ -523,33 +527,8 @@ module Kubernetes
 
     # containers we will set env for
     def env_containers
-      pod_containers + init_containers.select { |c| samson_container_config(c, :"samson/set_env_vars") }
-    end
-
-    def static_env
-      @static_env ||= begin
-        env = {}
-
-        metadata = release_doc_metadata
-        [:REVISION, :TAG, :DEPLOY_ID, :DEPLOY_GROUP].each do |k|
-          env[k] = metadata.fetch(k.downcase).to_s
-        end
-
-        [:PROJECT, :ROLE].each do |k|
-          env[k] = template.dig_fetch(:metadata, :labels, k.downcase)
-        end
-
-        # name of the cluster
-        env[:KUBERNETES_CLUSTER_NAME] = @doc.deploy_group.kubernetes_cluster.name.to_s
-
-        # blue-green phase
-        env[:BLUE_GREEN] = blue_green_color if blue_green_color
-
-        # env from plugins
-        deploy = @doc.kubernetes_release.deploy || Deploy.new(project: project)
-        plugin_envs = Samson::Hooks.fire(:deploy_env, deploy, @doc.deploy_group, resolve_secrets: false)
-        plugin_envs.compact.inject(env, :merge!)
-      end
+      pod_containers.reject { |c| samson_container_config(c, :"samson/set_env_vars") == "false" } +
+        init_containers.select { |c| samson_container_config(c, :"samson/set_env_vars") }
     end
 
     def set_secrets
@@ -618,12 +597,11 @@ module Kubernetes
     def set_pre_stop
       return unless KUBERNETES_ADD_PRESTOP
 
-      # do nothing if all containers of the app opted out
+      # do nothing if none if the containers need it
       containers = pod_containers.select do |container|
         samson_container_config(container, :"samson/preStop") != "disabled" &&
         container[:ports] && # no ports = no bugs
-        !container.dig(:lifecycle, :preStop) && # nothing to do
-        template[:kind] != "DaemonSet" # stable ips
+        !container.dig(:lifecycle, :preStop) # nothing to do
       end
       return if containers.empty?
 

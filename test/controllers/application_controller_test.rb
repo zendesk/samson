@@ -4,7 +4,7 @@ require_relative '../test_helper'
 SingleCov.covered!
 
 describe ApplicationController do
-  class ApplicationTestController < ApplicationController
+  class ApplicationTestController < ApplicationController # rubocop:disable Lint/ConstantDefinitionInBlock
     def test_render
       head :ok
     end

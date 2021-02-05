@@ -8,10 +8,10 @@ describe SlackAppController do
   let(:buddy) { users(:deployer_buddy) }
   let(:github_viewer) { users(:github_viewer) }
   let(:admin) { users(:super_admin) }
-  let(:deployer_identifier) { slack_identifiers(:deployer) }
-  let(:buddy_identifier) { slack_identifiers(:deployer_buddy) }
-  let(:viewer_identifier) { slack_identifiers(:github_viewer) }
-  let(:admin_identifier) { slack_identifiers(:super_admin) }
+  let(:deployer_identifier) { samson_slack_app_slack_identifiers(:deployer) }
+  let(:buddy_identifier) { samson_slack_app_slack_identifiers(:deployer_buddy) }
+  let(:viewer_identifier) { samson_slack_app_slack_identifiers(:github_viewer) }
+  let(:admin_identifier) { samson_slack_app_slack_identifiers(:super_admin) }
   let(:body) { JSON.parse @response.body }
   let(:deploy) { deploys(:succeeded_test) }
   let(:project) { projects(:test) }
@@ -64,17 +64,17 @@ describe SlackAppController do
         with_env SLACK_CLIENT_ID: 'client-id', SLACK_CLIENT_SECRET: 'client-secret' do
           get :oauth, params: {code: 'iamaslackcode'}
         end
-        assert SlackIdentifier.app_token.present?
-        identifier = SlackIdentifier.find_by_user_id users(:github_viewer).id
+        assert SamsonSlackApp::SlackIdentifier.app_token.present?
+        identifier = SamsonSlackApp::SlackIdentifier.find_by_user_id users(:github_viewer).id
         identifier.identifier.must_equal 'Ugithubviewer'
       end
 
       it 'accepts a user token from Slack' do
-        SlackIdentifier.create! identifier: 'i-am-an-app-token'
+        SamsonSlackApp::SlackIdentifier.create! identifier: 'i-am-an-app-token'
         with_env SLACK_CLIENT_ID: 'client-id', SLACK_CLIENT_SECRET: 'client-secret' do
           get :oauth, params: {code: 'iamaslackcode'}
         end
-        identifier = SlackIdentifier.find_by_user_id users(:github_viewer).id
+        identifier = SamsonSlackApp::SlackIdentifier.find_by_user_id users(:github_viewer).id
         identifier.identifier.must_equal 'Ugithubviewer'
       end
     end

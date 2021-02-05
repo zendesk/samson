@@ -4,17 +4,17 @@ require_relative '../../../../test_helper'
 SingleCov.covered!
 
 describe Samson::Secrets::Shared::ListRecursive do
-  class DummyVaultClient
+  dummy_vault_client = Class.new do
     def list(_path)
     end
   end
 
   describe '#list_recursive' do
     it 'can recursively return secrets' do
-      DummyVaultClient.prepend(Samson::Secrets::Shared::ListRecursive)
+      dummy_vault_client.prepend(Samson::Secrets::Shared::ListRecursive)
       expected_arguments = ['secrets/apps/', 'secrets/apps/bar/']
 
-      client_instance = DummyVaultClient.new
+      client_instance = dummy_vault_client.new
       client_instance.expects(:original_list).
         twice.
         with { |arg| arg == expected_arguments.shift }.

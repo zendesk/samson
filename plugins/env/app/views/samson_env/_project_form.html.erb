@@ -4,17 +4,6 @@
     <%= additional_info SamsonEnv::HELP_TEXT %>
   </legend>
 
-  <% if repo = ENV['DEPLOYMENT_ENV_REPO'] %>
-    <% url = "https://github.com/#{repo}" %>
-    <% path = "/projects/#{@project.permalink}.env.erb" %>
-    <%= form.input(
-          :use_env_repo,
-          label: "Use #{link_to(repo, url)} to manage deployment environment variables in #{link_to(path, "#{url}#{path}")}".html_safe,
-          as: :check_box
-        )
-    %>
-  <% end %>
-
   <% scopes = Environment.env_deploy_group_array %>
   <% sorted_env_vars = EnvironmentVariable.sort_by_scopes(form.object.environment_variables, scopes) %>
   <% sorted_env_vars << EnvironmentVariable.new %>
@@ -36,8 +25,11 @@
     <% ids.each do |id| %>
       <div class="form-group env_group_inputs">
         <div class="col-lg-3">
-          <%= live_select_tag "project[environment_variable_group_ids][]",
-            options_for_select([[nil, nil]] + environment_variable_groups, id), placeholder: "Name"
+          <%= live_select_tag(
+                "project[environment_variable_group_ids][]",
+                options_for_select([[nil, nil]] + environment_variable_groups, id),
+                placeholder: "Name", id: nil
+              )
           %>
         </div>
         <div class="col-lg-2 checkbox">

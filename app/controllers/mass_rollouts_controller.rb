@@ -24,7 +24,7 @@ class MassRolloutsController < ApplicationController
       @stages = deploy_group.stages.to_a
 
       case params[:status].presence
-      when nil # rubocop:disable Lint/EmptyWhen
+      when nil
         # all
       when 'succeeded'
         @stages.select!(&:last_succeeded_deploy)
@@ -35,14 +35,14 @@ class MassRolloutsController < ApplicationController
       end
 
       case params[:kubernetes].to_s.presence
-      when nil # rubocop:disable Lint/EmptyWhen
+      when nil
         # all
       when 'true'
         @stages.select!(&:kubernetes?)
       when 'false'
         @stages.reject!(&:kubernetes?)
       else
-        return unsupported_option(:kubernetes)
+        unsupported_option(:kubernetes)
       end
     end
   end

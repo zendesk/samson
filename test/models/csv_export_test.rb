@@ -5,7 +5,7 @@ SingleCov.covered!
 
 describe CsvExport do
   let(:user) { users(:deployer) }
-  before { @csv_export = CsvExport.create(user: user) }
+  before { @csv_export = CsvExport.create!(user: user) }
 
   describe ".old" do
     before do
@@ -125,12 +125,13 @@ describe CsvExport do
 
   describe "#filters" do
     it "returns a ruby object" do
-      @csv_export.filters.class.must_equal Hash
+      @csv_export.save!
+      @csv_export.reload.filters.class.must_equal Hash
     end
 
     it "converts date list to range" do
       @csv_export.update_attribute(:filters, 'deploys.created_at': Date.new(1900, 1, 1)..Date.today)
-      expected_range = Time.new(1900, 1, 1)..Time.parse(Date.today.to_s + "T23:59:59Z")
+      expected_range = Time.new(1900, 1, 1)..Time.parse("#{Date.today}T23:59:59Z")
       @csv_export.filters['deploys.created_at'].class.must_equal((1..2).class)
       @csv_export.filters['deploys.created_at'].must_equal expected_range
     end

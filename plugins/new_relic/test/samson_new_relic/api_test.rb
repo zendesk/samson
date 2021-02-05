@@ -6,7 +6,7 @@ SingleCov.covered! uncovered: 1
 describe SamsonNewRelic::Api do
   def stub_metric_api(field, value)
     Time.stubs(now: Time.parse('2016-01-01 00:00:00'))
-    stub_request(:get, "https://api.newrelic.com/v2/applications/14/metrics/data.json?begin=2015-12-31T23:30:00Z&end=2016-01-01T00:00:00Z&field=#{field}&names%5B%5D=HttpDispatcher"). # rubocop:disable Metrics/LineLength
+    stub_request(:get, "https://api.newrelic.com/v2/applications/14/metrics/data.json?begin=2015-12-31T23:30:00Z&end=2016-01-01T00:00:00Z&field=#{field}&names%5B%5D=HttpDispatcher"). # rubocop:disable Layout/LineLength
       to_return(body: {
         metric_data: {metrics: [{timeslices: [{from: '2016-01-01 00:00:00', values: {field => value}}]}]}
       }.to_json)
@@ -39,7 +39,7 @@ describe SamsonNewRelic::Api do
       apps = applications.map { |a| [a.fetch('name'), SamsonNewRelic::Api::Application.new(a)] }.to_h
       SamsonNewRelic::Api.stubs(applications: apps)
     end
-    subject { SamsonNewRelic::Api.metrics(['Production', 'Staging'], initial) }
+    subject { SamsonNewRelic::Api.metrics(['Production', 'Staging'], initial: initial) }
 
     describe 'initial' do
       let(:initial) { true }

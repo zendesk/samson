@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 class DeployMailer < ApplicationMailer
-  add_template_helper(DeploysHelper)
-  add_template_helper(ApplicationHelper)
+  helper DeploysHelper
+  helper ApplicationHelper
 
   def deploy_email(deploy, emails)
     prepare_mail(deploy)

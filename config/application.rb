@@ -8,9 +8,11 @@ require 'action_cable/engine'
 require 'rails/test_unit/railtie'
 require 'sprockets/railtie'
 
+abort "Do not run server with PRECOMPILE env var set" if ENV["SERVER_MODE"] && ENV["PRECOMPILE"]
+
 begin
   require 'pry-rails'
-rescue LoadError # rubocop:disable Lint/HandleExceptions
+rescue LoadError
   # ignore if pry-rails is not included in bundle
 end
 
@@ -176,8 +178,15 @@ module Samson
 
         # Token used to request badges
         config.samson.badge_token = \
-          Digest::MD5.hexdigest('badge_token' + (ENV['BADGE_TOKEN_BASE'] || Samson::Application.config.secret_key_base))
+          Digest::MD5.hexdigest("badge_token#{(ENV['BADGE_TOKEN_BASE'] || Samson::Application.config.secret_key_base)}")
       end
+    end
+
+    # remove initializers that use the database
+    if ENV["PRECOMPILE"]
+      bad = ["active_record.check_schema_cache_dump", "active_record.set_configs"]
+      Rails.application.initializers.find { |a| bad.include?(a.name) }.
+        context_class.instance.initializers.reject! { |a| bad.include?(a.name) }
     end
 
     config.active_support.deprecation = :raise
@@ -206,7 +215,3 @@ end
 require 'samson/hooks'
 require_relative "logging"
 require_relative "../app/models/job_queue" # need to load early or dev reload will lose the .enabled
-
-# prevents `Unknown validator: 'Doorkeeper::RedirectUriValidator'`
-# https://github.com/doorkeeper-gem/doorkeeper/pull/1331
-require 'doorkeeper/orm/active_record/redirect_uri_validator'

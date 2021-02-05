@@ -14,7 +14,7 @@ describe EnvironmentVariable do
 
   describe "validations" do
     # postgres and sqlite do not have string limits defined
-    if ActiveRecord::Base.connection.class.name == "ActiveRecord::ConnectionAdapters::Mysql2Adapter"
+    if ActiveRecord::Base.connection.class.name == "ActiveRecord::ConnectionAdapters::Mysql2Adapter" # rubocop:disable Style/ClassEqualityComparison
       it "validates value length" do
         environment_variable.value = "a" * 1_000_000
         refute_valid environment_variable
@@ -44,75 +44,9 @@ describe EnvironmentVariable do
       EnvironmentVariable.env(Deploy.new(project: Project.new), 123, resolve_secrets: false).must_equal({})
     end
 
-    describe "env vars from GitHub" do
-      with_env DEPLOYMENT_ENV_REPO: "organization/repo_name"
-
-      before do
-        project.use_env_repo = true
-      end
-
-      it "returns a processed env hash" do
-        stub_github_api(
-          "repos/organization/repo_name/contents/generated/foo/pod100.env",
-          "FROM_REPO_VAR_ONE=one\nVAR_TWO=two\n"
-        )
-        expected_result = {"FROM_REPO_VAR_ONE" => "one", "VAR_TWO" => "two"}
-        EnvironmentVariable.env(deploy, deploy_group, resolve_secrets: false).must_equal expected_result
-      end
-
-      it "ignores without deploy group" do
-        EnvironmentVariable.env(deploy, nil, resolve_secrets: false).must_equal({})
-      end
-
-      it "merges repo env into db env" do
-        project.environment_variable_groups = EnvironmentVariableGroup.all
-        project.environment_variables.create!(name: "PROJECT", value: "PROJECT")
-        stub_github_api(
-          "repos/organization/repo_name/contents/generated/foo/pod100.env",
-          "FROM_REPO_VAR_ONE=one\nVAR_TWO=two\n"
-        )
-        expected_result = {
-          "FROM_REPO_VAR_ONE" => "one", "VAR_TWO" => "two",
-          "PROJECT" => "PROJECT", "Z" => "A", "X" => "Y", "Y" => "Z"
-        }
-        EnvironmentVariable.env(deploy, deploy_group, resolve_secrets: false).must_equal expected_result
-      end
-
-      it "returns the env first deploy env then db env then repo env" do
-        project.environment_variable_groups = EnvironmentVariableGroup.all
-        project.environment_variables.create!(name: "PROJECT", value: "DEPLOY", scope: deploy_group)
-        project.environment_variables.create!(name: "PROJECT", value: "PROJECT")
-        project.environment_variables.create!(name: "VAR_TWO", value: "db_two")
-        stub_github_api(
-          "repos/organization/repo_name/contents/generated/foo/pod100.env",
-          "FROM_REPO_VAR_ONE=one\nVAR_TWO=two\nPROJECT=NOT_PROJECT"
-        )
-        expected_result = {
-          "FROM_REPO_VAR_ONE" => "one", "VAR_TWO" => "db_two",
-          "PROJECT" => "DEPLOY", "Z" => "A", "X" => "Y", "Y" => "Z"
-        }
-        EnvironmentVariable.env(deploy, deploy_group, resolve_secrets: false).must_equal expected_result
-      end
-
-      it "shows error when repo env file does not exist" do
-        stub_github_api("repos/organization/repo_name/contents/generated/foo/pod100.env", "No content", 404)
-        assert_raises(Samson::Hooks::UserError) do
-          EnvironmentVariable.env(deploy, deploy_group, resolve_secrets: false)
-        end
-      end
-
-      it "does not read env vars from repo when project is not opted in" do
-        project.use_env_repo = false
-        stub_github_api(
-          "repos/organization/repo_name/contents/generated/foo/pod100.env",
-          "VAR_THREE=three\nVAR_FOUR=four\n"
-        )
-        expected_result = {"VAR_THREE" => "three", "VAR_FOUR" => "four"}
-        EnvironmentVariable.env(deploy, deploy_group, resolve_secrets: false).wont_equal expected_result
-      end
-    end
-
     describe "env vars from external env groups" do
+      with_env EXTERNAL_ENV_GROUP_S3_REGION: "us-east-1", EXTERNAL_ENV_GROUP_S3_BUCKET: "a-bucket"
+
       before do
         group = ExternalEnvironmentVariableGroup.new(
           name: "A",
@@ -129,7 +63,7 @@ describe EnvironmentVariable do
       end
 
       it "add to env hash" do
-        response = {deploy_group.permalink => {"FOO" => "one"}}
+        response = {deploy_group.permalink => {"FOO" => +"one"}}
         ExternalEnvironmentVariableGroup.any_instance.expects(:read).returns(response)
         EnvironmentVariable.env(deploy, deploy_group, resolve_secrets: false).must_equal "FOO" => "one"
       end
@@ -147,6 +81,19 @@ describe EnvironmentVariable do
         response = {"ABC" => {"FOO" => "one"}}
         ExternalEnvironmentVariableGroup.any_instance.expects(:read).returns(response)
         EnvironmentVariable.env(deploy, deploy_group, resolve_secrets: false).must_equal({})
+      end
+
+      it "adds via env groups" do
+        ExternalEnvironmentVariableGroup.delete_all
+        project.environment_variable_groups << EnvironmentVariableGroup.first
+        project.environment_variable_groups.first.update_column(:external_url, "https://foo.com")
+
+        response = {deploy_group.permalink => {"FOO" => +"one"}}
+
+        ExternalEnvironmentVariableGroup.any_instance.expects(:read).returns(response)
+        EnvironmentVariable.env(deploy, deploy_group, resolve_secrets: false).must_equal(
+          "FOO" => "one", "Z" => "A", "X" => "Y"
+        )
       end
     end
 
@@ -202,6 +149,15 @@ describe EnvironmentVariable do
         project.environment_variables.create!(name: "POD_ID", value: "1")
         EnvironmentVariable.env(deploy, nil, resolve_secrets: false).must_equal(
           "PROJECT" => "PROJECT--1--$POD_ID_NOT--1", "POD_ID" => "1", "X" => "Y", "Y" => "Z"
+        )
+      end
+
+      it "can resolve nested references" do
+        project.environment_variables.last.update_column(:value, "PROJECT--$POD_ID")
+        project.environment_variables.create!(name: "POD_ID", value: "HEY $FOO")
+        project.environment_variables.create!(name: "FOO", value: "BAR")
+        EnvironmentVariable.env(deploy, nil, resolve_secrets: false).must_equal(
+          "FOO" => "BAR", "POD_ID" => "HEY BAR", "PROJECT" => "PROJECT--HEY BAR", "X" => "Y", "Y" => "Z"
         )
       end
 

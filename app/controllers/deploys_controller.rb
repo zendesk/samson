@@ -5,9 +5,11 @@ class DeploysController < ApplicationController
   include WrapInWithDeleted
   include CurrentProject
 
+  skip_before_action :login_user, only: [:status]
+  skip_before_action :verify_authenticity_token, only: [:status]
   skip_before_action :require_project, only: [:active, :active_count, :changeset]
 
-  before_action :authorize_project_deployer!, except: [:index, :show, :active, :active_count, :changeset]
+  before_action :authorize_project_deployer!, except: [:index, :show, :active, :active_count, :changeset, :status]
   before_action :find_deploy, except: [:index, :active, :active_count, :new, :create, :confirm]
   before_action :stage, only: :new
 
@@ -97,6 +99,7 @@ class DeploysController < ApplicationController
           type: 'text/plain'
       end
       format.json do
+        @deploy.job.serialize_execution_output if params[:serialize_execution_output] # show live job output
         render_as_json :deploy, @deploy, nil, allowed_includes: [:job, :user, :project, :stage]
       end
     end
@@ -112,6 +115,10 @@ class DeploysController < ApplicationController
   def destroy
     @deploy.cancel(current_user)
     redirect_to [current_project, @deploy]
+  end
+
+  def status
+    render json: {status: @deploy.status}
   end
 
   def self.deploy_permitted_params
@@ -175,11 +182,23 @@ class DeploysController < ApplicationController
       end
     end
 
+    if stage_param = search[:stage_id].presence
+      raise Samson::Hooks::UserError, "Finding stages by permalink needs project route" unless current_project
+      raise Samson::Hooks::UserError, "Exact stage and other stage queries don't combine" if stages
+      stages = [current_project.stages.find_by_param!(stage_param)]
+    end
+
     deploys = deploys_scope
     deploys = deploys.where(stage: stages) if stages
     deploys = deploys.where(job: jobs) if jobs
-    if updated_at = search[:updated_at].presence
-      deploys = deploys.where("updated_at between ? AND ?", *updated_at)
+    [:updated_at, :created_at].each do |column|
+      next unless value = search[column].presence
+      case value.count(&:present?)
+      when 0 then nil
+      when 1 then flash.now[:alert] = "Fill 'from' and 'to' date"
+      when 2 then deploys = deploys.where("#{column} between ? AND ?", *value)
+      else raise ArgumentError
+      end
     end
     deploys = deploys.where.not(deleted_at: nil) if search_deleted
     pagy(deploys, page: params[:page], items: 30)
@@ -194,7 +213,7 @@ class DeploysController < ApplicationController
   end
 
   def find_deploy
-    @deploy = Deploy.find(params[:id])
+    @deploy = (current_project&.deploys || Deploy).find(params[:id])
   end
 
   def deploys_scope

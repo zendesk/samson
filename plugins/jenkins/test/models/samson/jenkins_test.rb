@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-# rubocop:disable Metrics/LineLength
+# rubocop:disable Layout/LineLength
 require_relative '../../test_helper'
 
 SingleCov.covered! uncovered: 2
@@ -203,7 +203,7 @@ describe Samson::Jenkins do
         jenkins.build.must_equal 1
       end
 
-      it "does not send invalid emails that can come from comitters" do
+      it "does not send emails to addresses without domain that can come from committers" do
         with_env EMAIL_DOMAIN: 'example.com' do
           deploy.user.email = 'invalid'
           deploy.stubs(:buddy).returns(buddy)
@@ -211,6 +211,14 @@ describe Samson::Jenkins do
           stub_get_build_id_from_queue(1)
           jenkins.build.must_equal 1
         end
+      end
+
+      it "does not send emails to invalid addresses that can come from committers" do
+        deploy.user.email = '49699333+dependabot[bot]@users.noreply.github.com'
+        deploy.stubs(:buddy).returns(buddy)
+        stub_build_with_parameters("emails": "deployerbuddy@example.com")
+        stub_get_build_id_from_queue(1)
+        jenkins.build.must_equal 1
       end
 
       it "includes committer emails when jenkins_email_committers flag is set" do
@@ -893,4 +901,4 @@ describe Samson::Jenkins do
     end
   end
 end
-# rubocop:enable Metrics/LineLength
+# rubocop:enable Layout/LineLength

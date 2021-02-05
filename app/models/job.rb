@@ -15,8 +15,10 @@ class Job < ActiveRecord::Base
 
   validate :validate_globally_unlocked
 
-  ACTIVE_STATUSES = %w[pending running cancelling].freeze
-  VALID_STATUSES = ACTIVE_STATUSES + %w[failed errored succeeded cancelled].freeze
+  attr_accessor :bypass_global_lock_check
+
+  ACTIVE_STATUSES = ['pending', 'running', 'cancelling'].freeze
+  VALID_STATUSES = ACTIVE_STATUSES + ['failed', 'errored', 'succeeded', 'cancelled'].freeze
   SUMMARY_ACTION = {
     "pending"    => "is about to execute",
     "running"    => "is executing",
@@ -76,7 +78,7 @@ class Job < ActiveRecord::Base
     !JobQueue.dequeue(id) && ex = execution # is executing
     return true if !ex && !active?
 
-    update_attribute(:canceller, canceller) unless self.canceller
+    update_attribute(:canceller, canceller) unless self.canceller # uncovered
 
     if ex
       JobQueue.cancel(id) # switches job status in the runner thread for consistent status in after_deploy hooks
@@ -132,9 +134,17 @@ class Job < ActiveRecord::Base
     execution&.pid
   end
 
+  # set current incomplete output
+  def serialize_execution_output
+    return unless ex = execution
+    out = ex.output.closed_copy
+    self.output = TerminalOutputScanner.new(out).to_s
+  end
+
   private
 
   def validate_globally_unlocked
+    return if bypass_global_lock_check
     return unless lock = Lock.global.first
     return if lock.warning?
     errors.add(:base, 'all stages are locked')

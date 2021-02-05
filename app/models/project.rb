@@ -48,7 +48,7 @@ class Project < ActiveRecord::Base
   has_many :jobs, dependent: nil
   has_many :stars, dependent: :destroy
 
-  belongs_to :build_command, class_name: 'Command', optional: true
+  belongs_to :build_command, class_name: 'Command', optional: true, inverse_of: false
 
   # For permission checks on callbacks. Currently used in private plugins.
   attr_accessor :current_user
@@ -113,6 +113,8 @@ class Project < ActiveRecord::Base
   # Whether to create new releases when the branch is updated.
   #
   # branch - The String name of the branch in question.
+  # service_type - The Samson webhook category which triggered this request.
+  # service_name - The service which called the Samson webhook, e.g. generic
   #
   # Returns true if new releases should be created, false otherwise.
   def create_release?(branch, service_type, service_name)
@@ -130,9 +132,16 @@ class Project < ActiveRecord::Base
 
   # The user/repo part of the repository URL.
   def repository_path
-    # GitHub allows underscores, hyphens and dots in repo names
-    # but only hyphens in user/organisation names (as well as alphanumeric).
-    repository_url.scan(%r{[:/]([A-Za-z0-9-]+/[\w.-]+?)(?:\.git)?$}).join
+    if gitlab?
+      # This is GitLab, which allows similar characters in repository names, but
+      # also follows a subgroup convention which can contain an n-number of paths
+      # underneath the organization group.
+      repository_url.scan(%r{[:/]([A-Za-z0-9\-/]+/[\w.-]+?)(?:\.git)?$}).join
+    else
+      # GitHub allows underscores, hyphens and dots in repo names
+      # but only hyphens in user/organisation names (as well as alphanumeric).
+      repository_url.scan(%r{[:/]([A-Za-z0-9-]+/[\w.-]+?)(?:\.git)?$}).join
+    end
   end
 
   def repository_directory
@@ -181,9 +190,9 @@ class Project < ActiveRecord::Base
     nil
   end
 
-  def last_deploy_by_group(before_time, include_failed_deploys: false)
-    releases = deploys_by_group(before_time, include_failed_deploys)
-    releases.map { |group_id, deploys| [group_id, deploys.max_by(&:updated_at)] }.to_h
+  def last_deploy_by_group(before_time, **args)
+    releases = deploys_by_group(before_time, **args)
+    releases.transform_values { |deploys| deploys.max_by(&:updated_at) }
   end
 
   def last_deploy_by_stage
@@ -220,7 +229,7 @@ class Project < ActiveRecord::Base
   end
 
   def docker_image_building_disabled?
-    force_external_build? ? true : docker_image_building_disabled
+    force_external_build? || docker_image_building_disabled
   end
 
   def force_external_build?
@@ -237,7 +246,7 @@ class Project < ActiveRecord::Base
     "#{Rails.application.config.samson.gitlab.web_url}/#{repository_path}"
   end
 
-  def deploys_by_group(before, include_failed_deploys = false)
+  def deploys_by_group(before, include_failed_deploys: false)
     stages.each_with_object({}) do |stage, result|
       stage_filter = include_failed_deploys ? stage.deploys : stage.deploys.succeeded.where(release: true)
       deploy = stage_filter.find_by("deploys.updated_at <= ?", before.to_s(:db))

@@ -4,11 +4,11 @@
 
   <fieldset>
     <%= form.input :name %>
-    <%= form.input :config_file %>
+    <%= form.input :config_file, help: "Can use $deploy_group substitution to have a dynamic file path." %>
     <% if @project.override_resource_names? %>
       <%= form.input :service_name, help: "Override service name with this name. Uses name from yml file if it starts with this name." %>
       <%= form.input :resource_name,
-          pattern: Kubernetes::RoleValidator::VALID_LABEL_VALUE,
+          pattern: Kubernetes::RoleValidator::VALID_CONTAINER_NAME,
           help: "Name for the resource this role will create (service/job), a-Z 0-9 and -"
       %>
     <% end %>

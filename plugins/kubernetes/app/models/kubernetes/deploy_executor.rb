@@ -81,30 +81,35 @@ module Kubernetes
         statuses = resource_statuses(release_docs)
         pod_statuses, non_pod_statuses = statuses.partition { |s| s.kind == "Pod" }
         display_statuses = pod_statuses + non_pod_statuses.reject(&:live) # show what is interesting
-        ready_statuses, not_ready_statuses = statuses.partition(&:live)
-        failure = too_many_not_ready?(pod_statuses) || !non_pod_statuses.all?(&:live)
+        not_ready = too_many_not_ready(statuses)
 
-        if waiting_for_ready
+        if waiting_for_ready # readiness phase
           print_statuses("Deploy status:", display_statuses, exact: false) if display_statuses.any?
 
-          if failure
-            if stopped = not_ready_statuses.select(&:finished).presence
-              print_statuses("UNSTABLE, resources failed:", stopped, exact: true)
+          if not_ready
+            if failed = too_many_failed(statuses)
+              print_statuses("UNSTABLE, resources failed:", failed, exact: true)
               return false, statuses
             elsif time_left(wait_start_time, timeout) == 0
               @output.puts "TIMEOUT, pods took too long to get live"
               return false, statuses
+            else # rubocop:disable Style/EmptyElse
+              # keep waiting for more ready
             end
-          elsif ready_statuses.all?(&:finished)
+          elsif statuses.select(&:live).all?(&:finished)
             return success, statuses
           else
             @output.puts "READY, starting stability test"
             waiting_for_ready = false
             wait_start_time = Time.now.to_i
           end
-        else
-          if failure
-            print_statuses("UNSTABLE, resources not ready:", not_ready_statuses, exact: true)
+        else # stability phase
+          if not_ready
+            if failed = too_many_failed(statuses)
+              print_statuses("UNSTABLE, resources failed:", failed, exact: true)
+            else
+              print_statuses("UNSTABLE, resources not ready:", not_ready, exact: true)
+            end
             return false, statuses
           else
             remaining = time_left(wait_start_time, STABILITY_CHECK_DURATION)
@@ -141,14 +146,34 @@ module Kubernetes
         end.each(&:check)
       end
 
-      pods = fetch_pods
-      non_pod_statuses + release_docs.flat_map { |release_doc| pod_statuses(pods, release_doc) }
+      pods = fetch_grouped(:pods, 'v1')
+
+      # Pods that get OutOfcpu/OutOfmemory will be marked as Failed.
+      # Scheduler will create a replacement pod. Need to ignore Failed pods when reporting statuses.
+      pods.reject! { |p| p.dig(:status, :phase) == 'Failed' && p.dig(:spec, :restartPolicy) != 'Never' }
+
+      replica_sets = fetch_replica_sets(release_docs)
+      non_pod_statuses +
+        release_docs.flat_map do |release_doc|
+          replica_set_statuses(replica_sets, release_doc) + pod_statuses(pods, release_doc)
+        end
     end
 
-    # efficient pod fetching by querying once per cluster instead of once per deploy group
-    def fetch_pods
-      @release.clients.flat_map do |client, query|
-        SamsonKubernetes.retry_on_connection_errors { client.get_pods(query).fetch(:items) }
+    # efficient fetching by querying once per cluster/namespace instead of once per deploy group and role
+    # NOTE: finds pods of prerequisite during actual rollout
+    def fetch_grouped(type, version)
+      @release.clients(version).flat_map do |client, query|
+        SamsonKubernetes.retry_on_connection_errors { client.send("get_#{type}", query).fetch(:items) }
+      end
+    end
+
+    # efficient way to get all ReplicaSets since they often have errors when pods cannot come up
+    # ideally we'd fetch all resources that are owned by the resources we deployed, but that's much harder
+    def fetch_replica_sets(release_docs)
+      if release_docs.any? { |rd| rd.resource_template.any? { |r| r[:kind] == "Deployment" } }
+        fetch_grouped(:replica_sets, 'apps/v1')
+      else
+        [] # save time
       end
     end
 
@@ -239,34 +264,27 @@ module Kubernetes
       end
     end
 
+    # we don't need to keep track of "missing" here since pod statuses already make the deploy wait
+    def replica_set_statuses(replica_sets, release_doc)
+      replica_sets = filter_resources(replica_sets, release_doc)
+      build_status_for_resources replica_sets, release_doc, "ReplicaSet", expected: replica_sets.size
+    end
+
     def pod_statuses(pods, release_doc)
-      group = release_doc.deploy_group
       role = release_doc.kubernetes_role
 
-      pods = pods.select do |pod|
-        labels = pod.dig_fetch(:metadata, :labels)
-        Integer(labels.fetch(:role_id)) == role.id && Integer(labels.fetch(:deploy_group_id)) == group.id
-      end
+      pods = filter_resources(pods, release_doc)
 
       # when autoscaling there might be more than min pods, so we need to check all of them to find the healthiest
       # NOTE: we should be able to remove the `role.autoscaled?` check, just keeping it to minimize blast radius
-      max_pods =
+      expected =
         if role.autoscaled?
           [release_doc.desired_pod_count, pods.size].max
         else
           release_doc.desired_pod_count
         end
 
-      statuses = Array.new(max_pods) do |i|
-        ResourceStatus.new(
-          resource: pods[i],
-          kind: "Pod",
-          role: role,
-          deploy_group: group,
-          prerequisite: release_doc.prerequisite?,
-          start: @deploy_start_time
-        )
-      end.each(&:check)
+      statuses = build_status_for_resources(pods, release_doc, "Pod", expected: expected)
 
       # If a role is autoscaled, there is a chance pods can be deleted during a deployment.
       # Sort them by "most alive" and use the min ones, so we ensure at least that number of pods work.
@@ -284,6 +302,30 @@ module Kubernetes
       statuses
     end
 
+    def filter_resources(resources, release_doc)
+      resources.select do |resource|
+        labels = resource.dig_fetch(:metadata, :labels)
+        Integer(labels.fetch(:role_id)) == release_doc.kubernetes_role_id &&
+          Integer(labels.fetch(:deploy_group_id)) == release_doc.deploy_group_id
+      end
+    end
+
+    def build_status_for_resources(resources, release_doc, kind, expected:)
+      group = release_doc.deploy_group
+      role = release_doc.kubernetes_role
+
+      Array.new(expected) do |i|
+        ResourceStatus.new(
+          resource: resources[i],
+          kind: kind,
+          role: role,
+          deploy_group: group,
+          prerequisite: release_doc.prerequisite?,
+          start: @deploy_start_time
+        )
+      end.each(&:check)
+    end
+
     def print_statuses(message, statuses, exact:)
       @output.puts message
       lines = statuses.map do |status|
@@ -292,7 +334,7 @@ module Kubernetes
 
       # for big deploys, do not print all the identical pods
       lines.group_by(&:itself).each_value do |group|
-        group = [group.first, "  ... #{group.size - 1} identical"] if lines.size >= 10 && group.size > 2
+        group = ["#{group.first} x#{group.size}"] if lines.size >= 10 && group.size > 2
         group.each { |l| @output.puts l }
       end
     end
@@ -421,16 +463,26 @@ module Kubernetes
       end
     end
 
-    def too_many_not_ready?(statuses)
-      statuses.group_by(&:role).each_value.any? do |group|
-        group.count { |s| !s.live } > allowed_not_ready(group.size)
-      end
+    def too_many_not_ready(statuses)
+      too_many_matching_per_role(statuses, "KUBERNETES_ALLOW_NOT_READY_PERCENT") { |s| !s.live }
     end
 
-    def allowed_not_ready(size)
-      return 0 if size == 0
-      percent = Float(ENV["KUBERNETES_ALLOW_NOT_READY_PERCENT"] || "0")
-      (size / 100.0) * percent
+    def too_many_failed(statuses)
+      too_many_matching_per_role(statuses, "KUBERNETES_ALLOW_FAILED_PERCENT") { |s| !s.live && s.finished }
+    end
+
+    # @return [[<status>], nil]
+    def too_many_matching_per_role(statuses, flag, &block)
+      bad = statuses.select(&block) # always return full list for debugging
+      pod_statuses, non_pod_statuses = statuses.partition { |s| s.kind == "Pod" }
+
+      return bad if non_pod_statuses.any?(&block) # static failures are deadly
+
+      percent = Float(ENV[flag] || "0")
+      pod_statuses.group_by(&:role).each_value.detect do |group|
+        allowed = (group.size / 100.0) * percent
+        return bad if group.count(&block) > allowed
+      end
     end
 
     def success

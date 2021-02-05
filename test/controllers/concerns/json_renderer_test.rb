@@ -57,6 +57,12 @@ describe "JsonRenderer Integration" do
       json['deploy_groups'].first.keys.must_include "kubernetes_cluster_id"
     end
 
+    it "does not render missing has_one as nil" do
+      Kubernetes::Cluster.delete_all
+      get '/deploy_groups.json', params: {includes: 'kubernetes_cluster'}
+      json['kubernetes_clusters'].must_equal []
+    end
+
     it "can add custom things via yield" do
       project = projects(:test)
       stage = stages(:test_staging)

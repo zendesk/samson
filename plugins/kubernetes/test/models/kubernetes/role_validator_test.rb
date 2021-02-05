@@ -26,7 +26,7 @@ describe Kubernetes::RoleValidator do
         deployment_role[1],
         {
           kind: 'StatefulSet',
-          apiVersion: 'extensions/v1beta1',
+          apiVersion: 'apps/v1',
           metadata: {name: 'my-map', labels: labels},
           spec: {
             serviceName: 'foobar',
@@ -133,16 +133,28 @@ describe Kubernetes::RoleValidator do
         errors.must_equal ["Project and role labels must be consistent across resources"]
       end
 
-      it "shows eviction deadlock" do
-        role.last[:spec][:minAvailable] = 2
-        errors.must_equal [
-          "PodDisruptionBudget spec.minAvailable must be lower than spec.replicas to avoid eviction deadlock"
-        ]
-      end
-
-      it "allows correct minAvailable eviction" do
-        role.last[:spec][:minAvailable] = 1
-        errors.must_equal nil
+      [
+        [:minAvailable, 1, true],
+        [:minAvailable, 2, false],
+        [:minAvailable, "0%", true],
+        [:minAvailable, "10%", true],
+        [:minAvailable, "90%", false],
+        [:minAvailable, "100%", false],
+        [:maxUnavailable, 1, true],
+        [:maxUnavailable, 0, false],
+        [:maxUnavailable, "100%", true],
+        [:maxUnavailable, "90%", true],
+        [:maxUnavailable, "10%", true],
+        [:maxUnavailable, "0%", false],
+      ].each do |config, value, allowed|
+        it "#{allowed ? "allows" : "forbids"} setting #{config} to #{value}" do
+          role.last[:spec][config] = value
+          if allowed
+            errors.must_be_nil
+          else
+            errors.first.must_include "avoid eviction deadlock"
+          end
+        end
       end
     end
 
@@ -180,11 +192,6 @@ describe Kubernetes::RoleValidator do
       errors.must_be_nil
     end
 
-    it "reports numeric cpu" do
-      role.first[:spec][:template][:spec][:containers].first[:resources] = {limits: {cpu: 1}}
-      errors.must_include "Numeric cpu resources are not supported"
-    end
-
     it "does not fail on missing containers" do
       role.first[:spec][:template][:spec].delete(:containers)
       errors.must_be_nil
@@ -211,9 +218,9 @@ describe Kubernetes::RoleValidator do
     end
 
     it "reports invalid labels" do
-      role.first[:metadata][:labels][:role] = 'foo_bar'
+      role.first[:metadata][:labels][:role] = '_foo_'
       errors.must_include(
-        'Deployment metadata.labels.role is "foo_bar", but must match /\\A[a-zA-Z0-9]([-a-zA-Z0-9.]*[a-zA-Z0-9])?\\z/'
+        'Deployment metadata.labels.role is "_foo_", but must match /\\A[a-zA-Z0-9]([-a-zA-Z0-9_.]*[a-zA-Z0-9])?\\z/'
       )
     end
 
@@ -254,41 +261,6 @@ describe Kubernetes::RoleValidator do
     it "fails when apiVersion is missing" do
       role[1].delete(:apiVersion)
       errors.must_include "Needs apiVersion specified"
-    end
-
-    describe "#validate_ingress_annotations_allowed" do
-      before do
-        role.first[:kind] = "Ingress"
-        role.first[:metadata][:annotations] = {
-          "nginx.ingress.kubernetes.io/whitelist-source-range": "*"
-        }
-      end
-
-      it "allows annotations when setting is not enabled" do
-        assert_nil errors
-      end
-
-      describe "when setting is enable" do
-        with_env KUBERNETES_INGRESS_NGINX_ANNOTATION_ALLOWED: "bar"
-
-        it "blocks annotations" do
-          errors.must_equal [
-            "Annotation nginx.ingress.kubernetes.io/whitelist-source-range is not allowed on Ingress" \
-            " unless foo is in KUBERNETES_INGRESS_NGINX_ANNOTATION_ALLOWED"
-          ]
-        end
-
-        it "allows other annotations" do
-          role.first[:metadata][:annotations] = {"meh/whitelist-source-range": "*"}
-          assert_nil errors
-        end
-
-        it "allows when allowed" do
-          with_env KUBERNETES_INGRESS_NGINX_ANNOTATION_ALLOWED: "bar,foo,baz" do
-            assert_nil errors
-          end
-        end
-      end
     end
 
     describe "#validate_datadog_annotations" do
@@ -358,7 +330,7 @@ describe Kubernetes::RoleValidator do
       before { role.each { |r| r[:kind] = "foo" } }
 
       it "fails when there are duplicate kinds" do
-        errors.to_s.must_include "Only use a maximum of 1 of each kind in a role"
+        errors.to_s.must_include "Only use 1 per kind foo in a role"
       end
 
       it "ignores when using project namespace" do
@@ -372,7 +344,17 @@ describe Kubernetes::RoleValidator do
           r[:metadata][:name] = "same"
           r.dig_set([:metadata, :annotations], "samson/keep_name": "true")
         end
-        errors.to_s.must_include "Only use a maximum of 1 of each kind in a role"
+        errors.to_s.must_include "Only use 1 per kind Service in a role"
+      end
+
+      it "allows duplicate kinds and names in different namespaces services use hardcoded but duplicate names" do
+        role.each do |r|
+          r[:kind] = "Service"
+          r[:metadata][:name] = "same"
+          r.dig_set([:metadata, :annotations], "samson/keep_name": "true")
+        end
+        role.last[:metadata][:namespace] = "other"
+        errors.must_be_nil
       end
 
       it "allows duplicate kinds with distinct names" do
@@ -414,7 +396,10 @@ describe Kubernetes::RoleValidator do
         end
 
         it "fails" do
-          errors.must_equal ["metadata.labels.team must be set", "spec.template.metadata.labels.team must be set"]
+          errors.must_equal [
+            "Deployment metadata.labels.team must be set",
+            "Deployment spec.template.metadata.labels.team must be set"
+          ]
         end
 
         it "does not fail when disabled" do
@@ -652,26 +637,6 @@ describe Kubernetes::RoleValidator do
       end
     end
 
-    describe "#validate_load_balancer" do
-      before { role[1][:metadata][:namespace] = "foo" }
-
-      it "allows when not configured" do
-        errors.must_be_nil
-      end
-
-      it "allows when namespace is allowed" do
-        with_env KUBERNETES_ALLOWED_LOAD_BALANCER_NAMESPACES: "foo" do
-          errors.must_be_nil
-        end
-      end
-
-      it "does not allow when namespace is not allowed" do
-        with_env KUBERNETES_ALLOWED_LOAD_BALANCER_NAMESPACES: "bar" do
-          errors.must_equal ["LoadBalancer is not allowed in foo namespace"]
-        end
-      end
-    end
-
     describe "#validate_daemon_set_supported" do
       before do
         role[0][:kind] = "DaemonSet"
@@ -684,7 +649,7 @@ describe Kubernetes::RoleValidator do
       end
 
       it "complains about unsupported apiVersion" do
-        role[0][:apiVersion] = "extensions/v1beta1"
+        role[0][:apiVersion] = "foo/v1"
         errors.must_equal ["set DaemonSet apiVersion to apps/v1"]
       end
 

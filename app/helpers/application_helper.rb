@@ -81,7 +81,7 @@ module ApplicationHelper
     when Project, DeployGroup, Environment, User, Samson::Secrets::VaultServer then [resource.name, resource]
     when Command then ["Command ##{resource.id}", resource]
     when UserProjectRole then ["Role for ##{resource.user.name}", resource.user]
-    when Stage then
+    when Stage
       name = resource.name
       name = (resource.lock.warning? ? warning_icon : lock_icon) + " " + name if resource.lock
       [name, [resource.project, resource]]
@@ -193,11 +193,11 @@ module ApplicationHelper
     return "" if object.errors.empty?
 
     content_tag :ul do
-      lis = object.errors.map do |attribute, message|
+      lis = object.errors.map do |error|
         content_tag(:li) do
           content = "".html_safe
-          content << object.errors.full_message(attribute, message)
-          values = (object.respond_to?(attribute) ? Array.wrap(object.send(attribute)) : [])
+          content << object.errors.full_message(error.attribute, error.message)
+          values = (object.respond_to?(error.attribute) ? Array.wrap(object.send(error.attribute)) : [])
           if values.first.is_a?(ActiveRecord::Base)
             values.each do |value|
               content << render_nested_errors(value, seen)
@@ -251,9 +251,9 @@ module ApplicationHelper
     end
   end
 
-  def search_form(options = {}, &block)
+  def search_form(top_pad: true, **options, &block)
     form_tag '?', options.merge(method: :get, class: "clearfix") do
-      button = submit_tag("Search", class: "btn btn-default form-control", style: "margin-top: 25px")
+      button = submit_tag("Search", class: "btn btn-default form-control", style: ("margin-top: 25px" if top_pad))
       capture(&block) << content_tag(:div, button, class: "col-md-1 clearfix")
     end
   end

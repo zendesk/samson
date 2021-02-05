@@ -471,6 +471,12 @@ describe Deploy do
     end
   end
 
+  describe "#status_url" do
+    it "builds an address for a deploy status" do
+      deploy.status_url.must_equal "http://www.test-url.com/projects/foo/deploys/#{deploy.id}/status.json"
+    end
+  end
+
   describe "#short_reference" do
     it "returns the first seven characters if the reference looks like a SHA" do
       deploy = Deploy.new(reference: "8e7c20937de160905e8ffb13be72eb483ab4170a")
@@ -687,6 +693,10 @@ describe Deploy do
 
     it "includes the summary" do
       deploy.as_json.fetch("summary").must_equal deploy.summary_for_timeline
+    end
+
+    it "does not include the status_url" do
+      deploy.as_json.wont_include "status_url"
     end
   end
 

@@ -8,6 +8,7 @@ SingleCov.covered!
 describe JobQueue do
   fake_job = Class.new do
     attr_reader :deploy
+
     def initialize(deploy)
       @deploy = deploy
     end
@@ -17,6 +18,7 @@ describe JobQueue do
   fake_execution = Class.new do
     attr_reader :id, :job
     attr_writer :thread
+
     def initialize(id, job)
       @id = id
       @job = job
@@ -168,16 +170,14 @@ describe JobQueue do
     end
 
     describe 'queue length' do
-      def assert_queue_length_notifications
+      def assert_queue_length_notifications(&block)
         states = [
           [1, 0], # add active
           [1, 1], # add queued
           [1, 0], # done active ... enqueue queued
           [0, 0], # done queued
         ]
-        states.each do |t, q|
-          yield(t, q)
-        end
+        states.each(&block)
         with_a_queued_job {} # noop
       end
 

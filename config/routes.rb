@@ -21,6 +21,7 @@ Samson::Application.routes.draw do
       member do
         post :buddy_check
         get :changeset
+        get :status
       end
     end
 
@@ -174,5 +175,5 @@ Samson::Application.routes.draw do
   resources :access_requests, only: [:new, :create]
 
   use_doorkeeper # adds oauth/* routes
-  resources :oauth_test, only: [:index, :show] if %w[development test].include?(Rails.env)
+  resources :oauth_test, only: [:index, :show] if ['development', 'test'].include?(Rails.env)
 end

@@ -21,22 +21,16 @@ end
 task :asset_compilation_environment do
   ENV['SECRET_TOKEN'] = 'foo'
   ENV['GITHUB_TOKEN'] = 'foo'
-
-  config = Rails.application.config
-  def config.database_configuration
-    {}
-  end
+  ENV['DATABASE_URL'] = 'do-not-use-db'
 
   ar = ActiveRecord::Base
   def ar.establish_connection
   end
-
-  # for https://github.com/airbrake/airbrake/issues/1022
-  def ar.connection_config
-    {}
-  end
 end
 Rake::Task['assets:precompile'].prerequisites.unshift :asset_compilation_environment
+
+# we don't use yarn but rails wants to use it and it blows up
+Rake::Task['yarn:install'].clear
 
 namespace :test do
   task migrate_without_plugins: :environment do
@@ -86,7 +80,7 @@ task :flay do
 
   files = Dir["{config,lib,app,plugins/*/{config,lib,app}}/**/*.{rb,erb}"]
   files -= [
-    'plugins/slack_app/app/models/slack_message.rb', # cannot depend on other plugin ... maybe extract
+    'plugins/slack_app/app/models/samson_slack_app/slack_message.rb', # cannot depend on other plugin ... maybe extract
     'app/views/admin/secrets/index.html.erb', # search box
     'plugins/slack_webhooks/app/views/samson_slack_webhooks/_fields.html.erb', # cannot reuse form.input
     'plugins/pipelines/app/views/samson_pipelines/_stage_show.html.erb', # super simple html

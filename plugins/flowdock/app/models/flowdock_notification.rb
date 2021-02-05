@@ -13,9 +13,10 @@ class FlowdockNotification
     flowdock_service.notify_chat(message, ['buddy-request'])
   end
 
-  def buddy_request_completed(buddy, approved = true)
-    buddy_request_content = buddy_request_completed_message(approved, buddy)
-    flowdock_service.notify_chat(buddy_request_content, %w[buddy-request completed])
+  # TODO: delete this dead code
+  def buddy_request_completed(buddy, **args)
+    buddy_request_content = buddy_request_completed_message(buddy, **args)
+    flowdock_service.notify_chat(buddy_request_content, ['buddy-request', 'completed'])
   end
 
   def deliver
@@ -35,7 +36,7 @@ class FlowdockNotification
 
   private
 
-  def buddy_request_completed_message(approved, buddy)
+  def buddy_request_completed_message(buddy, approved:)
     if user == buddy
       "#{user.name} bypassed deploy #{deploy_url}"
     else

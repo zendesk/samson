@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  push:
+    branches:
+    - master
+  pull_request:
+
+jobs:
+  main:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    env:
+      RAILS_ENV: test
+      POSTGRES_PORT: 5432
+      PGPASSWORD: postgres
+    services:
+      # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres
+        # Provide the password for postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: yes
+          MYSQL_DATABASE: test
+        ports:
+        - 3306:3306
+        options: --health-cmd "mysqladmin ping" --health-interval 10s --health-timeout 5s --health-retries 10
+    strategy:
+      fail-fast: false
+      matrix:
+        name:
+        - "assets:precompile"
+        - "brakeman"
+        - "rubocop"
+        - "flay"
+        - "bundle_audit"
+        run: ["bundle exec rake $NAME"]
+        include:
+        - name: test mysql w/o plugins
+          run: |
+            export PLUGINS='' DATABASE_URL=mysql2://travis@127.0.0.1/samson_test?reconnect=true BUNDLE_WITHOUT=postgres:sqlite SILENCE_MIGRATIONS=1
+            bundle exec rake db:create test:migrate_without_plugins
+        - name: test mysql
+          run: |
+            export DATABASE_URL=mysql2://travis@127.0.0.1/samson_test?reconnect=true BUNDLE_WITHOUT=postgres:sqlite SILENCE_MIGRATIONS=1
+            bundle exec rake db:create db:migrate default
+        - name: test postgres
+          run: |
+            export DATABASE_URL=postgresql://postgres@127.0.0.1/samson_test BUNDLE_WITHOUT=mysql:sqlite SILENCE_MIGRATIONS=1
+            bundle exec rake db:create db:migrate default
+        - name: test sqlite
+          run: |
+            export DATABASE_URL=sqlite3://null$PWD/db/test.sqlite3 BUNDLE_WITHOUT=postgres:mysql SILENCE_MIGRATIONS=1
+            bundle exec rake db:create db:migrate default
+        - name: fossa
+          run: |
+            export BINDIR=$(pwd) && curl -H 'Cache-Control:no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install.sh | bash
+            ([[ -z "$FOSSA_API_KEY" ]] && [[ "$GITHUB_EVENT_NAME" != "pull_request" ]]) || (./fossa init && ./fossa analyze)
+    steps:
+    - uses: zendesk/checkout@v2
+    - uses: zendesk/setup-ruby@v1
+    - name: Vendor Cache
+      id: vendor-cache
+      uses: zendesk/cache@v2
+      with:
+        path: vendor/bundle1
+        key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
+    - name: before_install
+      run: |
+        sudo apt update
+        sudo apt-get install -y libsqlite3-dev
+        bundle config path vendor/bundle
+        bundle config set deployment 'true'
+        bundle install --jobs=3 --retry=3
+        mysql --host 127.0.0.1 --port 3306 -u root -e 'set GLOBAL innodb_large_prefix = true'
+        mysql --host 127.0.0.1 --port 3306 -u root -e 'set GLOBAL innodb_file_per_table = true'
+        mysql --host 127.0.0.1 --port 3306 -u root -e 'set GLOBAL innodb_file_format = "barracuda"'
+        mysql --host 127.0.0.1 --port 3306 -u root -e "create user 'travis'@'%'"
+        mysql --host 127.0.0.1 --port 3306 -u root -e "GRANT ALL ON *.* TO 'travis'@'%';"
+    - env:
+        NAME: ${{ matrix.name }}
+        FOSSA_API_KEY: ${{ secrets.FOSSA_API_KEY }}
+      run: ${{ matrix.run }}

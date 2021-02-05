@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-# rubocop:disable Metrics/LineLength
+# rubocop:disable Layout/LineLength
 require_relative '../test_helper'
 
 SingleCov.covered!
@@ -81,6 +81,7 @@ describe ApplicationHelper do
   describe "#controller_action" do
     it "works" do
       stubs(action_name: "foo")
+      stubs(controller_name: "test")
       controller_action.must_equal "test foo"
     end
   end
@@ -579,6 +580,11 @@ describe ApplicationHelper do
       result.must_include "method=\"get\""
       result.must_include "class=\"btn btn-default form-control\""
     end
+
+    it "can redner without padding" do
+      search_form { "Hello" }.must_include "margin-top"
+      search_form(top_pad: false) { "Hello" }.wont_include "margin-top"
+    end
   end
 
   describe "#search_select" do
@@ -639,7 +645,7 @@ describe ApplicationHelper do
   end
 
   describe '#list_with_show_more' do
-    let(:items) { %w[foo bar baz] }
+    let(:items) { ['foo', 'bar', 'baz'] }
 
     it 'only shows `display_limit` records' do
       tag = unordered_list(items, display_limit: 2, show_more_tag: content_tag(:li, 'More')) { |item| item }
@@ -786,4 +792,4 @@ describe ApplicationHelper do
     end
   end
 end
-# rubocop:enable Metrics/LineLength
+# rubocop:enable Layout/LineLength

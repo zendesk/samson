@@ -15,7 +15,7 @@ $(function(){
       }
     });
 
-    if(filled.size() == 0) {
+    if(filled.length == 0) {
       $fieldset.find('> legend').
         click(function(){ $fieldset.find('> *').not('legend').toggle() }).click().
         css('cursor', 'pointer').

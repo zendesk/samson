@@ -4,11 +4,21 @@ require_relative '../../test_helper'
 SingleCov.covered!
 
 describe Integrations::BaseController do
-  class BaseTestController < Integrations::BaseController
+  class BaseTestController < Integrations::BaseController # rubocop:disable Lint/ConstantDefinitionInBlock
   end
 
   tests BaseTestController
-  use_test_routes BaseTestController
+
+  # We need to keep the `status_project_deploy_url` route around for the `?includes=status_url` test
+  use_test_routes BaseTestController do
+    resources :projects do
+      resources :deploys do
+        member do
+          get :status
+        end
+      end
+    end
+  end
 
   let(:sha) { "dc395381e650f3bac18457909880829fc20e34ba" }
   let(:project) { projects(:test) }
@@ -99,12 +109,14 @@ describe Integrations::BaseController do
       post :create, params: {test_route: true, token: token, foo: "bar"}
       assert_response :success
       result = WebhookRecorder.read(project)
-      log = "INFO: Branch master is release branch: true\n"
+      log = "INFO: Create release for branch [master], service_type [ci], service_name [base_test]: true\n"
 
+      project.reload
       result.fetch(:log).must_equal log
       result.fetch(:response_code).must_equal 200
       JSON.parse(result.fetch(:response_body), symbolize_names: true).must_equal(
-        deploy_ids: [], messages: log
+        deploy_ids: [], messages: log,
+        release: JSON.parse(project.releases.first.to_json, symbolize_names: true)
       )
       result.fetch(:request_params).must_equal("token" => "[FILTERED]", "foo" => "bar")
     end
@@ -132,7 +144,7 @@ describe Integrations::BaseController do
     end
 
     it "fails with invalid token" do
-      post :create, params: {test_route: true, token: token + 'x'}
+      post :create, params: {test_route: true, token: "#{token}x"}
       assert_response :unauthorized
       json.must_equal(deploy_ids: [], messages: 'Invalid token')
     end
@@ -154,6 +166,17 @@ describe Integrations::BaseController do
       @controller.request.env["PATH_INFO"].must_equal "/test/hidden-project-not-found-token"
     end
 
+    it "can deploy branch and commit" do
+      Project.any_instance.expects(:webhook_stages_for).returns([stages(:test_staging)])
+      assert_difference 'Deploy.count', +1 do
+        post :create, params: {test_route: true, token: token, deploy_branch_with_commit: "true"}
+        assert_response :success
+      end
+      deploy = Deploy.first
+      deploy.reference.must_equal "master"
+      deploy.job.commit.must_equal sha
+    end
+
     describe "when deploy hooks are setup" do
       let(:deploy1) { deploys(:succeeded_test) }
       let(:deploy2) { deploys(:succeeded_production_test) }
@@ -169,13 +192,48 @@ describe Integrations::BaseController do
         post :create, params: {test_route: true, token: token}
 
         expected_messages = <<~MESSAGES
-          INFO: Branch master is release branch: true
-          INFO: Deploying to Staging
-          INFO: Deploying to Production
+          INFO: Create release for branch [master], service_type [ci], service_name [base_test]: true
+          INFO: Deploying #{deploy1.id} to Staging
+          INFO: Deploying #{deploy2.id} to Production
         MESSAGES
 
+        project.reload
         assert_response :success
-        json.must_equal(deploy_ids: [deploy1.id, deploy2.id], messages: expected_messages)
+        json.must_equal(
+          deploy_ids: [deploy1.id, deploy2.id],
+          messages: expected_messages,
+          release: JSON.parse(project.releases.first.to_json, symbolize_names: true)
+        )
+      end
+
+      it 'does not include status_urls by default' do
+        DeployService.any_instance.expects(:deploy).times(2).returns(deploy1, deploy2)
+
+        post :create, params: {test_route: true, token: token}
+
+        assert_response :success
+        json.wont_include :status_urls
+      end
+
+      it 'returns the status URLs if they are asked for' do
+        DeployService.any_instance.expects(:deploy).times(2).returns(deploy1, deploy2)
+
+        post :create, params: {test_route: true, token: token, includes: 'status_urls'}
+
+        expected_messages = <<~MESSAGES
+          INFO: Create release for branch [master], service_type [ci], service_name [base_test]: true
+          INFO: Deploying #{deploy1.id} to Staging
+          INFO: Deploying #{deploy2.id} to Production
+        MESSAGES
+
+        project.reload
+        assert_response :success
+        json.must_equal(
+          deploy_ids: [deploy1.id, deploy2.id],
+          messages: expected_messages,
+          status_urls: [deploy1.status_url, deploy2.status_url],
+          release: JSON.parse(project.releases.first.to_json, symbolize_names: true)
+        )
       end
 
       it 'records deploy failures but continues' do
@@ -183,13 +241,18 @@ describe Integrations::BaseController do
         post :create, params: {test_route: true, token: token}
 
         message = <<~MSG
-          INFO: Branch master is release branch: true
+          INFO: Create release for branch [master], service_type [ci], service_name [base_test]: true
           ERROR: Failed deploying to Staging: Stage is locked
-          INFO: Deploying to Production
+          INFO: Deploying #{Deploy.first.id} to Production
         MSG
 
+        project.reload
         assert_response :unprocessable_entity
-        json.must_equal(deploy_ids: [Deploy.first.id], messages: message)
+        json.must_equal(
+          deploy_ids: [Deploy.first.id],
+          messages: message,
+          release: JSON.parse(project.releases.first.to_json, symbolize_names: true)
+        )
       end
 
       it 'uses the release version to make the deploy easy to understand' do

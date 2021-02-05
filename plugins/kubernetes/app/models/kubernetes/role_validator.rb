@@ -3,7 +3,8 @@ module Kubernetes
   class RoleValidator
     # per https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#syntax-and-character-set
     # not perfect since the actual rules are stricter
-    VALID_LABEL_VALUE = /\A[a-zA-Z0-9]([-a-zA-Z0-9.]*[a-zA-Z0-9])?\z/.freeze # also used in js ... cannot use /i
+    VALID_LABEL_VALUE = /\A[a-zA-Z0-9]([-a-zA-Z0-9_.]*[a-zA-Z0-9])?\z/.freeze
+    VALID_CONTAINER_NAME = /\A[a-zA-Z0-9]([-a-zA-Z0-9.]*[a-zA-Z0-9])?\z/.freeze # also used in js ... cannot use /i
 
     # for non-namespace deployments: names that should not be changed since they will break dependencies
     IMMUTABLE_NAME_KINDS = [
@@ -35,19 +36,16 @@ module Kubernetes
       validate_container_resources
       validate_job_restart_policy
       validate_pod_disruption_budget
-      validate_numeric_cpu_limits
       validate_security_context
       validate_project_and_role_consistent
       validate_team_labels
       validate_not_matching_team
       validate_stateful_set_service_consistent
       validate_daemon_set_supported
-      validate_load_balancer
       unless validate_annotations
         validate_prerequisites_kinds
         validate_prerequisites_consistency
         validate_datadog_annotations
-        validate_ingress_annotations_allowed
       end
       validate_env_values
       validate_host_volume_paths
@@ -96,17 +94,6 @@ module Kubernetes
 
     private
 
-    def validate_load_balancer
-      allowed = ENV["KUBERNETES_ALLOWED_LOAD_BALANCER_NAMESPACES"].to_s.split(",")
-      return if allowed.empty?
-      bad = @elements.map do |e|
-        next unless e[:kind] == "Service" && e.dig(:spec, :type) == "LoadBalancer"
-        namespace = e.dig(:metadata, :namespace) || "unset"
-        namespace unless allowed.include?(namespace)
-      end.compact
-      @errors << "LoadBalancer is not allowed in #{bad.join(", ")} namespace" if bad.any?
-    end
-
     def validate_name
       @errors << "Needs a metadata.name" unless map_attributes([:metadata, :name]).all?
     end
@@ -138,17 +125,21 @@ module Kubernetes
       # do not validate on global since we hope to be on namespace soon
       return if !@project || !@project.override_resource_names?
 
-      # ignore service since we generate their names
+      # ignore services where we generate their names
       elements = @elements.reject { |e| !e[:kind] || (e[:kind] == "Service" && !self.class.keep_name?(e)) }
 
       # group by kind+name and to sure we have no duplicates
       groups = elements.group_by do |e|
         user_supplied = (ALLOWED_DUPLICATE_KINDS.include?(e.fetch(:kind)) || self.class.keep_name?(e))
-        [e.fetch(:kind), user_supplied ? e.dig(:metadata, :name) : "hardcoded"]
+        [e.fetch(:kind), e.dig(:metadata, :namespace), user_supplied ? e.dig(:metadata, :name) : "hardcoded"]
       end.values
-      return if groups.all? { |group| group.size == 1 }
+      bad = groups.select { |group| group.size > 1 }
+      return if bad.empty?
 
-      @errors << "Only use a maximum of 1 of each kind in a role (except #{ALLOWED_DUPLICATE_KINDS.to_sentence})"
+      bad_kinds = bad.map { |g| g.first[:kind] }
+      @errors <<
+        "Only use 1 per kind #{bad_kinds.join(", ")} in a role\n" \
+        "To bypass: assign a namespace to the project, or set metadata.annotations.samson/keep_name=\"true\""
     end
 
     def validate_api_version
@@ -171,36 +162,10 @@ module Kubernetes
       end
     end
 
-    # spec actually allows this, but blows up when used
-    def validate_numeric_cpu_limits
-      (pod_containers + init_containers).flatten(1).each do |container|
-        [:requests, :limits].each do |scope|
-          path = [:resources, scope, :cpu]
-          next if [NilClass, String].include?(container.dig(*path).class)
-          @errors << "Numeric cpu resources are not supported"
-        end
-      end
-    end
-
     def validate_security_context
       templates.each do |template|
         next unless template.dig(:spec, :securityContext, :readOnlyRootFilesystem)
         @errors << "securityContext.readOnlyRootFilesystem can only be set at the container level"
-      end
-    end
-
-    def validate_ingress_annotations_allowed
-      flag = "KUBERNETES_INGRESS_NGINX_ANNOTATION_ALLOWED"
-      return unless permalink = @project&.permalink
-      return unless allowed = ENV[flag].to_s.split(",").presence
-      return if allowed.include? permalink
-
-      @elements.each do |e|
-        next unless e[:kind] == "Ingress"
-        (e.dig(:metadata, :annotations) || {}).each_key do |key|
-          next unless key.to_s.start_with?("nginx.ingress.kubernetes.io/")
-          @errors << "Annotation #{key} is not allowed on Ingress unless #{permalink} is in #{flag}"
-        end
       end
     end
 
@@ -254,7 +219,7 @@ module Kubernetes
       name = meta[:name]
       namespace = meta[:namespace]
       return name unless namespace
-      namespace + "/" + name
+      "#{namespace}/#{name}"
     end
 
     def validate_not_matching_team
@@ -271,7 +236,7 @@ module Kubernetes
       return unless ENV["KUBERNETES_ENFORCE_TEAMS"]
       @elements.each do |element|
         metadata_paths(element).map { |p| p + [:labels, :team] }.each do |path|
-          @errors << "#{path.join(".")} must be set" unless element.dig(*path)
+          @errors << "#{element[:kind]} #{path.join(".")} must be set" unless element.dig(*path)
         end
       end
     end
@@ -286,7 +251,7 @@ module Kubernetes
     def validate_daemon_set_supported
       return unless daemon_set = @elements.detect { |t| t[:kind] == "DaemonSet" }
 
-      if daemon_set.dig(:apiVersion) != "apps/v1"
+      if daemon_set[:apiVersion] != "apps/v1"
         @errors << "set DaemonSet apiVersion to apps/v1"
         return
       end
@@ -299,7 +264,7 @@ module Kubernetes
       unless daemon_set.dig(:spec, :updateStrategy, :rollingUpdate, :maxUnavailable)
         @errors << "set DaemonSet spec.updateStrategy.rollingUpdate.maxUnavailable, the default of 1 is too slow" \
           " (pick something between '25%' and '100%')"
-        return
+        nil
       end
     end
 
@@ -312,14 +277,14 @@ module Kubernetes
       names = (pod_containers + init_containers).flatten(1).map { |c| c[:name] }
       if names.any?(&:nil?)
         @errors << "Containers need a name"
-      elsif bad = names.grep_v(VALID_LABEL_VALUE).presence
-        @errors << "Container name #{bad.join(", ")} did not match #{VALID_LABEL_VALUE.source}"
+      elsif bad = names.grep_v(VALID_CONTAINER_NAME).presence
+        @errors << "Container name #{bad.join(", ")} did not match #{VALID_CONTAINER_NAME.source}"
       end
     end
 
     # keep in sync with TemplateFiller#set_resource_usage
     def validate_container_resources
-      (pod_containers.map { |c| c[1..-1] || [] } + init_containers).flatten(1).each do |container|
+      (pod_containers.map { |c| c[1..] || [] } + init_containers).flatten(1).each do |container|
         [
           [:resources, :requests, :cpu],
           [:resources, :requests, :memory],
@@ -347,11 +312,19 @@ module Kubernetes
 
     def validate_pod_disruption_budget
       return unless budget = @elements.detect { |e| e[:kind] == "PodDisruptionBudget" }
-      return unless min = budget.dig(:spec, :minAvailable)
+
+      min = budget.dig(:spec, :minAvailable)
+      max = budget.dig(:spec, :maxUnavailable)
+      return if !min && !max
+
       @elements.each do |e|
         next unless replicas = e.dig(:spec, :replicas)
-        next if min < replicas
-        @errors << "PodDisruptionBudget spec.minAvailable must be lower than spec.replicas to avoid eviction deadlock"
+        next if min && percentage_available(min, replicas) < replicas
+        next if max && percentage_available(max, replicas) > 0
+
+        @errors <<
+          "PodDisruptionBudget spec.minAvailable/spec.maxUnavailable " \
+          "must leave at least 1 replica for termination, to avoid eviction deadlock"
       end
     end
 
@@ -402,6 +375,14 @@ module Kubernetes
 
     # helpers below
 
+    def percentage_available(num, total)
+      if num.is_a?(Integer)
+        num
+      else
+        (Float(num[/\d+/]) * total / 100).ceil # kubernetes rounds up
+      end
+    end
+
     def pod_containers
       map_attributes([:spec, :containers], elements: templates)
     end
@@ -430,7 +411,7 @@ module Kubernetes
         path.each_with_index.inject(e) do |el, (p, i)|
           el = el[p]
           if el.is_a?(Array)
-            break map_attributes(path[(i + 1)..-1], elements: el).flatten(1)
+            break map_attributes(path[(i + 1)..], elements: el).flatten(1)
           else
             el || break
           end

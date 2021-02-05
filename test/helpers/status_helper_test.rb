@@ -24,13 +24,13 @@ describe StatusHelper do
       deploy.stage.update_column(:average_deploy_time, 3)
       deploy.expects(:active?).returns(true)
 
-      status_panel(deploy).must_include 'ETA: 00:00:03.'
+      status_panel(deploy).must_include 'Expected duration: 00:00:03.'
     end
 
     it 'does not show duration text for jobs' do
       job.expects(:active?).returns(true)
 
-      status_panel(job).wont_include 'ETA: 00:00:03.'
+      status_panel(job).wont_include 'Expected duration: 00:00:03.'
     end
   end
 

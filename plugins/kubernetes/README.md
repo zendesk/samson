@@ -243,9 +243,20 @@ Then configure an ENV var with that same name and a value that is valid JSON.
  - To set string values as env vars, use quotes, i.e. `"foo"`
  - To set values inside of arrays use numbers as index `spec.containers.0.name`
 
-### Allow randomly not-ready pods during readiness check
+### Allowing to override static/db env vars
 
-Set `KUBERNETES_ALLOW_NOT_READY_PERCENT=10` to allow up to 10% of pods per role being not-ready,
+If you want to override or remove env vars like PROJECT,ROLE,TAG ... set this:
+
+`metadata.annotations.container-nameofcontainer-samson/keep_env_var: "TAG,ROLE"`
+
+### Allow randomly not-ready pods during readiness & stability check
+
+Set `KUBERNETES_ALLOW_NOT_READY_PERCENT=20` to allow up to 20% of pods per role being not-ready,
+this is useful when dealing with large deployments that have some random failures.
+
+### Allow randomly failing pods during readiness & stability check
+
+Set `KUBERNETES_ALLOW_FAILED_PERCENT=10` to allow up to 10% of pods per role being failed,
 this is useful when dealing with large deployments that have some random failures.
 
 ### Disabling service selector validation
@@ -253,10 +264,6 @@ this is useful when dealing with large deployments that have some random failure
 To debug services or to create resources that needs to reference a selector that doesn't include team/role (like a Gateway), you can disable selector validation with:
 
 `metadata.annotations.samson/service_selector_across_roles: "true"`
-
-### Blocking LoadBalancer usage
-
-Set `KUBERNETES_ALLOWED_LOAD_BALANCER_NAMESPACES=foo,bar` to block all other namespaces from using them.
 
 ### Updating matchLabels
 
@@ -269,15 +276,6 @@ If you still want to change a matchLabel, for example project/role:
  - manually delete pods from old Deployment (`kubectl delete pods -l project=old-name,role=old-role`)
  - unset annotations from step 1
 
-### Blocking Ingress Nginx annotations
-
-Annotations like `nginx.ingress.kubernetes.io/whitelist-source-range` can make apps publicly accessible.
-To block them except for allowed projects, use:
-
-```
-KUBERNETES_INGRESS_NGINX_ANNOTATION_ALLOWED=project-permalink,[project-permalink,...]
-```
-
 ### Kritis
 
 Allow users to set kritis breakglass per deploy-group or deploy by setting environment variable `KRITIS_BREAKGLASS_SUPPORTED=true`
@@ -286,6 +284,11 @@ Allow users to set kritis breakglass per deploy-group or deploy by setting envir
 
 Environment variables do not get set on init container by default, but it can be opted in with:
 `metadata.annotations.container-nameofcontainer-samson/set_env_vars: "true"`
+
+### Not setting environment variables in sidecars
+
+Environment variables get set on sidecar container by default, but it can be opted out with:
+`metadata.annotations.container-nameofcontainer-samson/set_env_vars: "false"`
 
 ### Istio sidecar injection via annotation
 
@@ -309,6 +312,28 @@ Delete old resource and create new when an update fails because it `cannot chang
 metadata.annotation.samson/force_update: "true"
 ```
 
+### Forcing a delete-create to get back to a clean state
+
+Delete old resource and create new.
+Can be useful for Service migration from NodePort to ClusterIP, or similar scenarios where we want a clean slate.
+
+```
+metadata.annotation.samson/recreate: "true"
+```
+
 ### Static config per deploy group
 
-Set the kubernetes roles to `kubernetes/$deploy_group/server.yml`
+Set the kubernetes roles to `kubernetes/$deploy_group/server.yml` 
+
+### Ignoring warning events
+
+If a warning event fails deploys, but application owners deem them safe to ignore, add this:
+
+`metadata.annotations.samson/ignore_events="FailedCreate,AnotherEvent"`
+
+... still consider opening a samson PR if the event is universally to be ignored.
+
+### Copying secrets to created namespaces
+
+When using the namespaces UI to create new namespaces, set `KUBERNETES_COPY_SECRETS_TO_NEW_NAMESPACE=my-docker-auth,other-stuff`,
+it will then copy that secret from the `default` namespace to any newly created namespace.

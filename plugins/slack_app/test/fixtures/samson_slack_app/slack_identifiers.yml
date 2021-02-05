@@ -1,0 +1,15 @@
+deployer:
+  identifier: 'Udeployer'
+  user_id: <%= ActiveRecord::FixtureSet.identify(:deployer) %>
+
+deployer_buddy:
+  identifier: 'Ubuddy'
+  user_id: <%= ActiveRecord::FixtureSet.identify(:deployer_buddy) %>
+
+super_admin:
+  identifier: 'Uadmin'
+  user_id: <%= ActiveRecord::FixtureSet.identify(:super_admin) %>
+
+github_viewer:
+  identifier: 'Ugithubviewer'
+  user_id: <%= ActiveRecord::FixtureSet.identify(:github_viewer) %>

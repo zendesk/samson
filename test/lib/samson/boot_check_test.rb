@@ -14,7 +14,7 @@ describe Samson::BootCheck do
       end
 
       it "does not warn when everything is ok" do
-        Thread.stubs(:list).returns([1])
+        Thread.stubs(:list).returns([stub("Thread", backtrace: ['ruby_thread_local_var'])])
         Samson::BootCheck.expects(:const_defined?)
         ActiveRecord::Base.expects(:descendants).returns([])
         ActionController::Base.expects(:descendants).returns([])

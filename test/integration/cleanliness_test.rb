@@ -41,16 +41,6 @@ describe "cleanliness" do
     File.read('Gemfile.lock').wont_include 'rails-assets-bootstrap '
   end
 
-  if ENV['USE_UTF8MB4'] && ActiveRecord::Base.connection.adapter_name =~ /mysql/i
-    it "uses the right row format in mysql" do
-      status = ActiveRecord::Base.connection.execute('show table status').to_a
-      refute_empty status
-      status.each do |table|
-        table[3].must_equal "Dynamic", "#{table[0]} is not Dynamic"
-      end
-    end
-  end
-
   it "does not have public actions on base controller" do
     found = ApplicationController.action_methods.to_a
     found.reject! { |a| a =~ /^(_conditional_callback_around_|_callback_before_)/ }
@@ -63,7 +53,7 @@ describe "cleanliness" do
 
   it "does not use setup/teardown" do
     assert_content all_tests do |content|
-      if content.match?(/^\s+(setup|teardown)[\s\{]/)
+      if content.match?(/^\s+(setup|teardown)[\s{]/)
         "uses setup or teardown, but should use before or after"
       end
     end
@@ -72,7 +62,7 @@ describe "cleanliness" do
   # rails does not run validations on :destroy, so we should not run them on soft-delete (which is an update)
   it 'discourages use of soft_delete without validate: false' do
     assert_content all_code do |content|
-      if content.match?(/[\. ]soft_delete\!?$/)
+      if content.match?(/[. ]soft_delete!?$/)
         'prefer soft_delete(validate: false)'
       end
     end
@@ -282,5 +272,17 @@ describe "cleanliness" do
         #{bad.join("\n")}
       TEXT
     )
+  end
+
+  it "does not override default routes from plugins" do
+    core = File.read("config/routes.rb").scan(/^  resources :([^\s,]+)/).flatten
+    core.size.must_be :>, 10
+
+    routes = Dir["{#{Samson::Hooks.plugins.map(&:folder).join(",")}}/config/routes.rb"]
+    bad = routes.flat_map do |route|
+      redeclared = File.read(route).scan(/^  resources :(\S+) do/).flatten & core
+      redeclared.map { |b| "#{route} do not re-declare core object routes #{b}, use `only: []`" }
+    end
+    assert bad.empty?, bad.join("\n")
   end
 end

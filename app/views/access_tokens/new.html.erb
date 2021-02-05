@@ -7,7 +7,7 @@
       <%= form.select :application_id, options_for_select(Doorkeeper::Application.all.map { |a| [a.name, a.id] }), {}, {class: 'form-control'} %>
     <% end %>
     <%= form.input :description %>
-    <%= form.input :scopes, help: I18n.t('doorkeeper.applications.help.scopes') %>
+    <%= form.input :scopes, pattern: /\A[a-z_ ]+\z/, help: I18n.t('doorkeeper.applications.help.scopes') %>
 
     <%= form.actions %>
   <% end %>

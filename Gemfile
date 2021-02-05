@@ -5,7 +5,7 @@ ruby File.read('.ruby-version').strip
 
 # gems that have rails engines are are always needed
 group :preload do
-  gem 'rails', '6.0.2.1'
+  gem 'rails', '~> 6.1.0'
   gem 'dotenv'
   gem 'connection_pool'
   gem 'marco-polo'
@@ -18,7 +18,6 @@ group :preload do
   gem 'doorkeeper'
 end
 
-gem 'bundler'
 gem 'dogstatsd-ruby'
 gem 'puma'
 gem 'attr_encrypted'
@@ -112,7 +111,7 @@ group :development, :test do
 end
 
 group :test do
-  gem 'minitest-rails', git: "https://github.com/blowmage/minitest-rails.git", branch: "master" # need >v6.0.0
+  gem 'minitest-rails'
   gem 'rails-controller-testing'
   gem 'maxitest'
   gem 'mocha'

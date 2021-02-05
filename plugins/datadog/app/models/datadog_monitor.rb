@@ -30,7 +30,7 @@ class DatadogMonitor
 
     private
 
-    def request(path, params: {}, fallback:)
+    def request(path, fallback:, params: {})
       query = params.merge(api_key: API_KEY, application_key: APP_KEY).to_query
       url = "https://api.datadoghq.com#{path}?#{query}"
       response = Faraday.new(request: {open_timeout: 2, timeout: 4}).get(url)

@@ -1,45 +1,52 @@
 <% environments = Environment.all %>
 <div class="form-group">
   <%= form.label :name, 'Deploy Groups', class: 'col-lg-2 control-label' %>
-  <div class=<%= "col-lg-#{2 + environments.length}" %> >
-    <% if environments.length > 0 %>
-      <%= hidden_field_tag "#{form.object_name}[deploy_group_ids][]" %>
-      <table class="table table-condensed text-left deploy-groups">
-        <thead>
-        <tr>
-          <% environments.each do |environment| %>
-            <th>
-              <%= label_tag do %>
-                <%= check_box_tag '', nil, false, class: "env-toggle-all", data: {target: "#{environment.permalink}_checkbox" } %>
-                <%= environment.name %>
-              <% end %>
-            </th>
-          <% end %>
-        </tr>
-        </thead>
-        <tbody>
-        <% rows = environments.map { |e| [e, e.deploy_groups] } %>
-        <% rows.map { |_, dgs| dgs.size }.max.times do |index| %>
+
+  <div class=<%= "col-lg-#{2 + environments.length}" %> style="margin-top:8px" >
+    <% if environments.length == 0 %>
+      <p>-- No Deploy Groups configured --</p>
+    <% else %>
+      <details <%= "open" unless action_name == "edit" %>>
+        <summary>
+          <%= @stage.deploy_groups.map { |dg| dg.name }.join(", ") %>
+        </summary>
+
+        <%= hidden_field_tag "#{form.object_name}[deploy_group_ids][]" %>
+        <table class="table table-condensed text-left deploy-groups">
+          <thead>
           <tr>
-            <% rows.each do |environment, deploy_groups| %>
-              <% if group = deploy_groups[index] %>
-                <td>
-                  <%= label_tag do %>
-                    <% checked = form.object.deploy_group_ids.include?(group.id) %>
-                    <%= check_box_tag "#{form.object_name}[deploy_group_ids][]", group.id, checked, class: "#{environment.permalink}_checkbox" %>
-                    <%= group.name %>
-                  <% end %>
-                </td>
-              <% else %>
-                <td></td>
-              <% end %>
+            <% environments.each do |environment| %>
+              <th>
+                <%= label_tag do %>
+                  <%= check_box_tag nil, nil, false, id: nil, class: "env-toggle-all", data: {target: "#{environment.permalink}_checkbox" } %>
+                  <%= environment.name %>
+                <% end %>
+              </th>
             <% end %>
           </tr>
-        <% end %>
-        </tbody>
-      </table>
-    <% else %>
-      <p>-- No Deploy Groups configured --</p>
+          </thead>
+          <tbody>
+          <% rows = environments.map { |e| [e, e.deploy_groups] } %>
+          <% rows.map { |_, dgs| dgs.size }.max.times do |index| %>
+            <tr>
+              <% rows.each do |environment, deploy_groups| %>
+                <% if group = deploy_groups[index] %>
+                  <td>
+                    <%= label_tag do %>
+                      <% checked = form.object.deploy_group_ids.include?(group.id) %>
+                      <%= check_box_tag "#{form.object_name}[deploy_group_ids][]", group.id, checked, id: nil, class: "#{environment.permalink}_checkbox" %>
+                      <%= group.name %>
+                    <% end %>
+                  </td>
+                <% else %>
+                  <td></td>
+                <% end %>
+              <% end %>
+            </tr>
+          <% end %>
+          </tbody>
+        </table>
+      </details>
     <% end %>
   </div>
 </div>

@@ -22,10 +22,18 @@
   <% end %>
 
   <%= form_for @group, html: { class: "form-horizontal" } do |form| %>
+    <%= render 'shared/errors', object: @group %>
+
     <fieldset <%= disabled %>>
       <%= form.input :name %>
       <%= form.input :comment, as: :text_area, input_html: {size: "80x4"} %>
       <%= form.input :owners, help: "Github team names or email to contact with questions (comma separated)" %>
+      <% if ExternalEnvironmentVariableGroup.configured? %>
+        <%= form.input :external_url do %>
+          <%= form.text_field :external_url, class: "form-control", placeholder: ExternalEnvironmentVariableGroup::S3_URL_FORMAT %>
+          <%= link_to 'Preview', preview_external_environment_variable_group_path("fake", url: @group.external_url) if @group.external_url? %>
+        <% end %>
+      <% end %>
     </fieldset>
 
     <% if @group.projects.length > 0 %>

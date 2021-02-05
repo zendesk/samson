@@ -1,5 +1,4 @@
 # frozen_string_literal: true
-require 'thread_safe'
 
 # Allows fanning out a stream to multiple listening threads. Each thread will
 # have to call `#each`, and will receive each chunk of data that is written
@@ -27,8 +26,8 @@ class OutputBuffer
   PADDING = " " * 11
 
   def initialize
-    @listeners = ThreadSafe::Array.new
-    @previous = ThreadSafe::Array.new
+    @listeners = Concurrent::Array.new
+    @previous = Concurrent::Array.new
     @closed = false
     @line_finished = true
     @mutex = Mutex.new
@@ -89,6 +88,14 @@ class OutputBuffer
     end
   ensure
     @mutex.synchronize { @listeners.delete(queue) }
+  end
+
+  # make a shallow copy of the buffer so we can close and serialize it
+  def closed_copy
+    copy = OutputBuffer.new
+    copy.instance_variable_set(:@previous, @previous)
+    copy.close
+    copy
   end
 
   private

@@ -8,6 +8,8 @@ module Kubernetes
   # run an example file through `kubectl create/replace/delete -f test.yml -v8`
   # and see what it does internally ... simple create/update/delete requests or special magic ?
   module Resource
+    DELETE_BACKOFF = [0.0, 0.1, 0.2, 0.5, 1, 2, 4, 8, 16, 32].freeze # seconds
+
     module PatchReplace
       def patch_replace?
         !@delete_resource && !server_side_apply? && exist?
@@ -15,8 +17,7 @@ module Kubernetes
 
       # Some kinds can be updated only using PATCH requests.
       def deploy
-        return super unless patch_replace?
-        patch_replace
+        patch_replace? ? patch_replace : super
       end
 
       private
@@ -26,9 +27,7 @@ module Kubernetes
         patch_paths.each do |keys|
           update.dig_set keys, @template.dig_fetch(*keys)
         end
-        with_header 'application/json-patch+json' do
-          request :patch, name, [{op: "replace", path: "/spec", value: update.fetch(:spec)}], namespace
-        end
+        request :json_patch, name, [{op: "replace", path: "/spec", value: update.fetch(:spec)}], namespace
       end
     end
 
@@ -62,7 +61,12 @@ module Kubernetes
           if @delete_resource
             delete
           else
-            update
+            if recreate?
+              delete
+              create
+            else
+              update
+            end
           end
         else
           create
@@ -83,11 +87,11 @@ module Kubernetes
 
       # wait for delete to finish before doing further work so we don't run into duplication errors
       # - first wait is 0 since the request itself already took a few ms
-      # - sum of waits should be ~30s which is the default delete timeout
+      # - we wait long because deleting a deployment will wait for all its' pods to go away which can take time
       def delete
         return true unless exist?
         request_delete
-        backoff_wait([0.0, 0.1, 0.2, 0.5, 1, 2, 4, 8, 16], "delete resource") do
+        backoff_wait(DELETE_BACKOFF, "delete resource") do
           expire_resource_cache
           return true unless exist?
         end
@@ -120,12 +124,16 @@ module Kubernetes
 
       private
 
+      def recreate?
+        @template.dig(:metadata, :annotations, :"samson/recreate") == "true"
+      end
+
       def server_side_apply?
         @template.dig(:metadata, :annotations, :"samson/server_side_apply") == "true"
       end
 
       def error_location
-        "#{name} #{namespace} #{@deploy_group.name}"
+        "#{kind} #{name} #{namespace} #{@deploy_group.name}"
       end
 
       def backoff_wait(backoff, reason)
@@ -136,8 +144,10 @@ module Kubernetes
         raise "Unable to #{reason} (#{error_location})"
       end
 
+      # ensure deletion of child resources like pods before the method completes,
+      # to not run into conflicts when deploying the same resource right after
       def request_delete
-        request(:delete, name, namespace)
+        request(:delete, name, namespace, delete_options: {propagationPolicy: "Foreground"})
         expire_resource_cache
       end
 
@@ -162,7 +172,6 @@ module Kubernetes
 
       # TODO: remove the expire_cache and assign @resource but that breaks a bunch of deploy_executor tests
       def update
-        ensure_not_updating_match_labels
         if server_side_apply?
           server_side_apply template_for_update
         else
@@ -181,44 +190,8 @@ module Kubernetes
         end
       end
 
-      # TODO: remove name hack https://github.com/abonas/kubeclient/issues/427
       def server_side_apply(template)
-        with_header 'application/apply-patch+yaml' do # NOTE: we send json but say +yaml since +json gives a 415
-          request(:patch, "#{name}?fieldManager=samson&force=true", template, namespace)
-        end
-      end
-
-      # https://github.com/abonas/kubeclient/issues/268
-      def with_header(header)
-        kubeclient = client
-        old = kubeclient.headers['Content-Type']
-        kubeclient.headers['Content-Type'] = header
-        yield
-      ensure
-        kubeclient.headers['Content-Type'] = old
-      end
-
-      def ensure_not_updating_match_labels
-        return if @delete_resource # deployments do an update when deleting
-
-        # blue-green deploy is allowed to do this, see template_filler.rb + deploy_executor.rb
-        return if @template.dig(:spec, :selector, :matchLabels, :blue_green)
-
-        # allow manual migration when user is aware of the issue and wants to do manual cleanup
-        return if @template.dig(:metadata, :annotations, :"samson/allow_updating_match_labels") == "true"
-
-        static = [:spec, :selector, :matchLabels]
-        # fallback is only for tests that use simple replies
-        old_labels = @resource.dig(*static) || {}
-        new_labels = @template.dig(*static) || {}
-
-        if new_labels.any? { |k, v| old_labels[k] != v }
-          raise(
-            Samson::Hooks::UserError,
-            "Updating #{static.join(".")} from #{old_labels.inspect} to #{new_labels.inspect} " \
-            "can only be done by deleting and redeploying or old pods would not be deleted."
-          )
-        end
+        request :apply, template, field_manager: "samson", force: true
       end
 
       def template_for_update
@@ -251,27 +224,6 @@ module Kubernetes
         end
       end
 
-      def pods(res = resource)
-        ids = res.dig_fetch(:spec, :template, :metadata, :labels).values_at(:release_id, :deploy_group_id)
-        selector = Kubernetes::Release.pod_selector(*ids, query: true)
-        client_request(pod_client, :get_pods, label_selector: selector, namespace: namespace).fetch(:items)
-      end
-
-      def delete_pods
-        old_pods = pods
-        yield
-        old_pods.each do |pod|
-          ignore_404 do
-            client_request(
-              pod_client,
-              :delete_pod,
-              pod.dig_fetch(:metadata, :name),
-              pod.dig_fetch(:metadata, :namespace)
-            )
-          end
-        end
-      end
-
       def request(verb, *args)
         SamsonKubernetes.retry_on_connection_errors do
           begin
@@ -288,11 +240,11 @@ module Kubernetes
             end
           rescue Kubeclient::HttpError => e
             message = e.message.to_s
-            if verb != :get && e.error_code == 409
+            if verb == :update && e.error_code == 409
               # Update version and retry if we ran into a conflict from VersionedUpdate
               args[0][:metadata][:resourceVersion] = fetch_resource.dig(:metadata, :resourceVersion)
               raise # retry
-            elsif message.include?(" is invalid:") || message.include?(" no kind ")
+            elsif message.match?(/ is invalid:| no kind | admission webhook /)
               raise Samson::Hooks::UserError, e.message
             else
               raise
@@ -316,10 +268,6 @@ module Kubernetes
         @deploy_group.kubernetes_cluster.client(@template.fetch(:apiVersion))
       end
 
-      def pod_client
-        @deploy_group.kubernetes_cluster.client('v1')
-      end
-
       def restore_template
         original = @template
         @template = original.deep_dup
@@ -336,9 +284,8 @@ module Kubernetes
     end
 
     class Immutable < Base
-      def deploy
-        delete
-        create
+      def recreate?
+        true
       end
     end
 
@@ -364,30 +311,6 @@ module Kubernetes
           *(@template.dig(:spec, :ports) || []).each_with_index.map { |_, i| "spec.ports.#{i}.nodePort" },
           *ENV["KUBERNETES_SERVICE_PERSISTENT_FIELDS"].to_s.split(/\s,/)
         ]
-      end
-    end
-
-    class Deployment < Base
-      def request_delete
-        # Make kubernetes kill all the pods by scaling down
-        restore_template do
-          @template.dig_set [:spec, :replicas], 0
-          update
-        end
-
-        # Wait for there to be zero pods
-        loop do
-          sleep TICK
-          # prevent cases when status.replicas are missing
-          # e.g. running locally on Minikube, after scale replicas to zero
-          # $ kubectl scale deployment {DEPLOYMENT_NAME} --replicas 0
-          # "replicas" key is actually removed from "status" map
-          # $ {"status":{"conditions":[...],"observedGeneration":2}}
-          break if fetch_resource.dig(:status, :replicas).to_i == 0
-        end
-
-        # delete the actual deployment
-        super
       end
     end
 
@@ -445,29 +368,9 @@ module Kubernetes
 
         super
       end
-
-      def delete
-        res = resource
-        super
-        # wait for pods to die, before we create new pods, since they would error if they have the same name
-        backoff_wait([0.0, 0.1, 0.2, 0.5, 1, 2, 4, 8, 16], "delete pods") do
-          return true if pods(res).empty?
-        end
-      end
     end
 
     class Job < Immutable
-      def revert(_previous)
-        delete
-      end
-
-      private
-
-      # deleting the job leaves the pods running, so we have to delete them manually
-      # kubernetes is a little more careful with running pods, but we just want to get rid of them
-      def request_delete
-        delete_pods { super }
-      end
     end
 
     class CronJob < VersionedUpdate
@@ -476,10 +379,16 @@ module Kubernetes
       end
     end
 
+    class PodTemplate < VersionedUpdate
+      def desired_pod_count
+        0 # PodTemplates don't actually create pods
+      end
+    end
+
     class Pod < Immutable
     end
 
-    class PodDisruptionBudget < Immutable
+    class PodDisruptionBudget < VersionedUpdate
       def initialize(*)
         super
         @delete_resource ||= @template[:delete] # allow deletion through release_doc logic

@@ -14,18 +14,21 @@ module Kubernetes
         "FailedRescale",
         "FailedGetResourceMetric",
         "FailedGetExternalMetric",
-        "FailedComputeMetricsReplicas"
+        "FailedComputeMetricsReplicas",
+        "FailedUpdateStatus"
       ],
       PodDisruptionBudget: [
         "CalculateExpectedPodCountFailed",
         "NoControllers"
+      ],
+      Service: [
+        "FailedToUpdateEndpointSlices"
       ]
     }.freeze
 
     attr_reader :resource, :role, :deploy_group, :kind, :details, :live, :finished, :pod
-    attr_writer :details
 
-    def initialize(resource:, role: nil, deploy_group:, prerequisite: false, start:, kind:)
+    def initialize(resource:, deploy_group:, start:, kind:, role: nil, prerequisite: false)
       @resource = resource
       @kind = kind
       @role = role
@@ -50,7 +53,7 @@ module Kubernetes
           @details = "Live"
           @live = true
           @finished = @pod.completed?
-        elsif (@pod.events = failures(kind)) && @pod.waiting_for_resources?
+        elsif (@pod.events = bad_events(kind)) && @pod.waiting_for_resources? # TODO: rename/refactor pod.events
           @details = "Waiting for resources (#{@pod.phase}, #{@pod.reason})"
         elsif @pod.events_indicate_failure?
           @details = "Error event"
@@ -61,7 +64,7 @@ module Kubernetes
       else
         @finished = true # non-pods are never "Missing" because samson creates them directly
 
-        if failures(kind).any?
+        if bad_events(kind).any?
           @details = "Error event"
         else
           @details = "Live"
@@ -108,11 +111,12 @@ module Kubernetes
     end
 
     # ignore known events that randomly happen
-    def failures(kind)
+    def bad_events(kind)
       failures = events(type: "Warning")
-      if ignored = IGNORED_EVENT_REASONS[kind.to_sym]
-        failures.reject! { |e| ignored.include? e[:reason] }
-      end
+      ignored =
+        @resource.dig(:metadata, :annotations, :"samson/ignore_events").to_s.split(",") +
+        (IGNORED_EVENT_REASONS[kind.to_sym] || [])
+      failures.reject! { |e| ignored.include? e[:reason] } if ignored.any?
       failures
     end
   end

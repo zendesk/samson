@@ -2,7 +2,7 @@
 
 class Stage < ActiveRecord::Base
   AUTOMATED_NAME = 'Automated Deploys'
-  NON_CLONEABLE_ATTRIBUTES = %w[id next_stage_ids prerequisite_stage_ids is_template permalink].freeze
+  NON_CLONEABLE_ATTRIBUTES = ['id', 'next_stage_ids', 'prerequisite_stage_ids', 'is_template', 'permalink'].freeze
 
   has_soft_deletion default_scope: true
 
@@ -92,9 +92,16 @@ class Stage < ActiveRecord::Base
 
   def create_deploy(user, attributes = {})
     before_command = attributes.delete(:before_command)
+    commit = attributes.delete(:commit)
     deploys.create(attributes.merge(release: !no_code_deployed, project: project)) do |deploy|
       commands = before_command.to_s.dup << script
-      deploy.build_job(project: project, user: user, command: commands, commit: deploy.reference)
+      deploy.build_job(
+        project: project,
+        user: user,
+        command: commands,
+        commit: commit || deploy.reference,
+        bypass_global_lock_check: true
+      )
     end
   end
 

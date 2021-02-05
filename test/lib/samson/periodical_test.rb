@@ -12,6 +12,15 @@ describe Samson::Periodical do
   ensure
     registered[:periodical_deploy].replace old
   end
+
+  def with_enabled(v)
+    old = Samson::Periodical.enabled
+    Samson::Periodical.enabled = v
+    yield
+  ensure
+    Samson::Periodical.enabled = old
+  end
+
   let(:custom_error) { Class.new(StandardError) }
 
   # kill all threads that concurrent leaves behind and make it create new ones when called again
@@ -25,14 +34,7 @@ describe Samson::Periodical do
 
   before_and_after { Samson::Periodical.instance_variable_set(:@env_settings, nil) }
 
-  around do |test|
-    begin
-      Samson::Periodical.enabled = true
-      test.call
-    ensure
-      Samson::Periodical.enabled = false
-    end
-  end
+  around { |test| with_enabled(true, &test) }
 
   around do |test|
     begin
@@ -139,9 +141,9 @@ describe Samson::Periodical do
     it "sends errors to error notifier" do
       Samson::ErrorNotifier.expects(:notify).
         with(instance_of(ArgumentError), error_message: "Samson::Periodical foo failed")
-      Samson::Periodical.register(:foo, 'bar', now: true) { raise ArgumentError }
-      tasks = Samson::Periodical.run
-      sleep 0.05 # let task execute
+      Samson::Periodical.register(:foo, 'bar', execution_interval: 0.05) { raise ArgumentError }
+      tasks = with_enabled(false) { Samson::Periodical.run }
+      sleep 0.08 # let task execute once
       tasks.first.shutdown
     end
 
@@ -151,6 +153,18 @@ describe Samson::Periodical do
       Samson::Periodical.register(:foo, 'bar') { raise ArgumentError }
       tasks = Samson::Periodical.run
       tasks.first.shutdown
+    end
+
+    # cannot use 0.1s since % math and scheduler do not support it
+    it "runs consistent_start_time task when they are first due" do
+      freeze_time # we need to make sure the scheduler always wait 1s
+      ran = []
+      Samson::Periodical.register(:foo, 'bar', consistent_start_time: true, execution_interval: 1) { ran << 1 }
+      Samson::Periodical.run
+      sleep 0.8
+      ran.size.must_equal 0
+      sleep 0.3
+      ran.size.must_equal 1
     end
   end
 
@@ -227,25 +241,35 @@ describe Samson::Periodical do
 
     it 'counts running tasks' do
       mutex = Mutex.new.lock
-      Samson::Periodical.register(:foo, 'bar', active: true, now: true) { mutex.lock }
-      tasks = Samson::Periodical.run
-      sleep 0.02 # Allow task to start
+      Samson::Periodical.register(:foo, 'bar', active: true, execution_interval: 0.015) { mutex.lock }
 
+      # start tasks
+      tasks = with_enabled(false) { Samson::Periodical.run }
+      sleep 0.03
       Samson::Periodical.running_task_count.must_equal 1
-      mutex.unlock
-      sleep 0.02 # Allow task to finish
 
+      # finish tasks
+      mutex.unlock
+      sleep 0.03
       Samson::Periodical.running_task_count.must_equal 0
+
       tasks.first.shutdown
     end
 
     it 'correctly counts down when task raised' do
-      Samson::ErrorNotifier.expects(:notify)
-      Samson::Periodical.register(:foo, 'bar', active: true, now: true) { raise }
-      tasks = Samson::Periodical.run
-      sleep 0.02 # Allow task to finish
+      ran = false
+      Samson::Periodical.register(:foo, 'bar', active: true, execution_interval: 0.015) do
+        ran = true
+        raise
+      end
 
+      Samson::ErrorNotifier.expects(:notify)
+      tasks = with_enabled(false) { Samson::Periodical.run }
+
+      sleep 0.02 # Allow task to finish
       Samson::Periodical.running_task_count.must_equal 0
+      assert ran
+
       tasks.first.shutdown
     end
   end
@@ -257,6 +281,11 @@ describe Samson::Periodical do
   end
 
   it "runs everything" do
+    User.create!(
+      name: "Periodical",
+      email: "periodical@example.com",
+      external_id: Samson::PeriodicalDeploy::EXTERNAL_ID
+    )
     stub_request(:get, "https://www.githubstatus.com/api/v2/status.json")
     Samson::Periodical.send(:registered).each_key do |task|
       Samson::Periodical.run_once task

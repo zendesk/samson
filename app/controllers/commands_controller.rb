@@ -36,9 +36,10 @@ class CommandsController < ResourceController
 
   def authorize_custom_project_admin!
     projects =
-      if action_name == 'create'
+      case action_name
+      when 'create'
         [project_from_params]
-      elsif action_name == 'update'
+      when 'update'
         projects = [@command.project]
         projects << project_from_params if resource_params.key?(:project_id) # moving: need to be able to write both
         projects

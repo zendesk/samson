@@ -4,10 +4,7 @@ require_relative "../test_helper"
 SingleCov.covered!
 
 describe ExternalEnvironmentVariableGroupsController do
-  before do
-    ExternalEnvironmentVariableGroup.any_instance.
-      expects(:read).times(2).returns("a" => "b")
-  end
+  with_env EXTERNAL_ENV_GROUP_S3_REGION: "us-east-1", EXTERNAL_ENV_GROUP_S3_BUCKET: "a-bucket"
 
   let(:project) { projects(:test) }
   let(:group) do
@@ -18,11 +15,30 @@ describe ExternalEnvironmentVariableGroupsController do
       project: project
     )
   end
+
   as_a :viewer do
     describe "#preview" do
+      before do
+        ExternalEnvironmentVariableGroup.any_instance.stubs(:read).returns("a" => "b")
+      end
+
       it "renders" do
         get :preview, params: {id: group.id}
         assert_response :success
+      end
+
+      it "renders fake group" do
+        get :preview, params: {id: "fake", url: "foo"}
+        assert_response :success
+      end
+
+      describe "a json GET to #index" do
+        it "succeeds" do
+          get :index, format: :json
+          assert_response :success
+          json_response = JSON.parse response.body
+          json_response.keys.must_include 'groups'
+        end
       end
 
       describe "a json GET to #preview" do

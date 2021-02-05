@@ -6,7 +6,7 @@ if token = ENV['ROLLBAR_ACCESS_TOKEN']
       config.access_token = token
       config.environment = Rails.env
       if url = ENV['ROLLBAR_URL']
-        config.endpoint = url + '/api/1/item/'
+        config.endpoint = "#{url}/api/1/item/"
       end
       if web_base = ENV['ROLLBAR_WEB_BASE'] || url
         config.web_base = web_base

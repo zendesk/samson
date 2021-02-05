@@ -72,11 +72,9 @@ describe ProjectsHelper do
     let(:current_user) { users(:admin) }
     let(:project) { projects(:test) }
 
-    def config_mock
+    def config_mock(&block)
       Rails.application.config.samson.github.stub(:web_url, "github.com") do
-        Rails.application.config.samson.gitlab.stub(:web_url, "gitlab.com") do
-          yield
-        end
+        Rails.application.config.samson.gitlab.stub(:web_url, "gitlab.com", &block)
       end
     end
 

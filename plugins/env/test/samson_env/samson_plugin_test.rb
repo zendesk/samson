@@ -32,8 +32,8 @@ describe SamsonEnv do
 
     it "writes group .env files" do
       fire
-      Dir[".env*"].sort.must_equal [".env.pod-100"]
-      File.read(".env.pod-100").must_equal "HELLO=\"world\"\nWORLD=\"hello\"\n"
+      Dir[".env*"].sort.must_equal [".env.pod100"]
+      File.read(".env.pod100").must_equal "HELLO=\"world\"\nWORLD=\"hello\"\n"
     end
 
     it "removes base .env  file if it exists" do # not sure why we do this
@@ -144,13 +144,12 @@ describe SamsonEnv do
 
     it "links to external env var group" do
       group = ExternalEnvironmentVariableGroup.new(
-          name: "A",
-          description: "B",
-          url: "https://a-bucket.s3.amazonaws.com/key?versionId=version_id",
-          project: project
-        )
-      group.expects(:read).returns(true)
-      group.save!
+        name: "A",
+        description: "B",
+        url: "https://a-bucket.s3.amazonaws.com/key?versionId=version_id",
+        project: project
+      )
+      group.save!(validate: false)
       fire(group).must_equal ["A", ""]
     end
 
@@ -217,45 +216,6 @@ describe SamsonEnv do
     end
   end
 
-  describe 'view callbacks' do
-    before do
-      view_context.instance_variable_set(:@project, project)
-    end
-
-    # see plugins/env/app/views/samson_env/_fields.html.erb
-    describe :project_form do
-      let(:checkbox) { 'id="project_use_env_repo"' }
-      let(:dep_env_repo) { 'zendesk/test' }
-      let(:repo_link) { "href=\"https://github.com/#{dep_env_repo}/projects/#{project.permalink}.env.erb\"" }
-
-      def with_form
-        view_context.form_for project do |form|
-          yield form
-        end
-      end
-
-      def render_view
-        with_form do |form|
-          Samson::Hooks.render_views(:project_form, view_context, form: form)
-        end
-      end
-
-      it 'renders use_env_repo checkbox when DEPLOYMENT_ENV_REPO is present' do
-        with_env DEPLOYMENT_ENV_REPO: dep_env_repo do
-          view = render_view
-          view.must_include checkbox
-          view.must_include repo_link
-        end
-      end
-
-      it 'does not render use_env_repo checkbox when DEPLOYMENT_ENV_REPO is nil' do
-        view = render_view
-        view.wont_include checkbox
-        view.wont_include repo_link
-      end
-    end
-  end
-
   describe :stage_permitted_params do
     it "allows environment attributes" do
       Samson::Hooks.only_callbacks_for_plugin("env", :stage_permitted_params) do
@@ -270,6 +230,22 @@ describe SamsonEnv do
         environment_variables_attributes: [
           :name, :value, :scope_type_and_id, :_destroy, :id
         ]
+      )
+    end
+  end
+
+  describe :project_allowed_includes do
+    it "includes external env var groups with external env configured" do
+      with_env EXTERNAL_ENV_GROUP_S3_REGION: "us-east-1", EXTERNAL_ENV_GROUP_S3_BUCKET: "a-bucket" do
+        Samson::Hooks.fire(:project_allowed_includes).must_include(
+          [:external_environment_variable_groups]
+        )
+      end
+    end
+
+    it "does not include external env var groups when not configured" do
+      Samson::Hooks.fire(:project_allowed_includes).must_equal(
+        [[]]
       )
     end
   end

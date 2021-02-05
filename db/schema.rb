@@ -2,15 +2,15 @@
 # of editing this file, please use the migrations feature of Active Record to
 # incrementally modify your database, and then regenerate this schema definition.
 #
-# This file is the source Rails uses to define your schema when running `rails
-# db:schema:load`. When creating a new database, `rails db:schema:load` tends to
+# This file is the source Rails uses to define your schema when running `bin/rails
+# db:schema:load`. When creating a new database, `bin/rails db:schema:load` tends to
 # be faster and is potentially less error prone than running all of your
 # migrations from scratch. Old migrations may fail to apply correctly if those
 # migrations use external dependencies or application code.
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_01_10_213328) do
+ActiveRecord::Schema.define(version: 2020_09_23_223936) do
 
   create_table "audits" do |t|
     t.integer "auditable_id", null: false
@@ -70,7 +70,7 @@ ActiveRecord::Schema.define(version: 2020_01_10_213328) do
     t.integer "user_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.string "filters", default: "{}", null: false
+    t.text "filters"
     t.string "status", default: "pending", null: false
   end
 
@@ -154,6 +154,7 @@ ActiveRecord::Schema.define(version: 2020_01_10_213328) do
     t.string "name", null: false
     t.text "comment"
     t.string "owners"
+    t.string "external_url"
     t.index ["name"], name: "index_environment_variable_groups_on_name", unique: true, length: 191
   end
 
@@ -241,7 +242,6 @@ ActiveRecord::Schema.define(version: 2020_01_10_213328) do
     t.string "config_context"
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.string "ip_prefix"
     t.string "auth_method", default: "context", null: false
     t.string "api_endpoint"
     t.text "encrypted_client_cert"
@@ -452,7 +452,6 @@ ActiveRecord::Schema.define(version: 2020_01_10_213328) do
     t.boolean "build_with_gcb", default: false, null: false
     t.boolean "show_gcr_vulnerabilities", default: false, null: false
     t.boolean "jenkins_status_checker", default: false, null: false
-    t.boolean "use_env_repo", default: false, null: false
     t.integer "kubernetes_rollout_timeout"
     t.integer "kubernetes_namespace_id"
     t.string "jira_issue_prefix"

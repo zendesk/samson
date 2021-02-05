@@ -127,6 +127,16 @@ describe OutputBuffer do
     end
   end
 
+  describe "#closed_copy" do
+    it "has the same content" do
+      buffer.write("X\n")
+      copy = buffer.closed_copy
+      refute buffer.closed?
+      assert copy.closed?
+      TerminalOutputScanner.new(copy).to_s.must_equal "[04:05:06] X\n"
+    end
+  end
+
   def build_listener
     Thread.new do
       content = []

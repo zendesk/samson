@@ -35,7 +35,7 @@ describe Samson::Parallelizer do
 
     it "re-raises exceptions outside the thread" do
       e = assert_raises RuntimeError do
-        Samson::Parallelizer.map([1, 2, 3]) { raise "foo" }
+        Samson::Parallelizer.map([1, 2, 3]) { raise "foo" } # rubocop:disable Lint/UnreachableLoop
       end
       e.message.must_equal "foo"
     end

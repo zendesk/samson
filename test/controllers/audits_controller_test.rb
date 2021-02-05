@@ -47,6 +47,34 @@ describe AuditsController do
           assigns(:audits).size.must_equal 21
         end
       end
+
+      it "does not show users metadata for privacy" do
+        Audited.audit_class.as_user(user) { user.update(email: "private@foo.com") }
+        user.audits.size.must_equal 1
+        with_env HIDE_USER_AUDITS: "true" do
+          get :index
+          assert_template :index
+          response.body.wont_include user.email
+        end
+      end
+
+      it "can filter by changed key" do
+        get :index, params: {search: {key: "name"}}
+        assert_template :index
+        assigns(:audits).size.must_equal 1
+      end
+
+      it "can filter by changed value" do
+        get :index, params: {search: {value: "Staging"}}
+        assert_template :index
+        assigns(:audits).size.must_equal 1
+      end
+
+      it "can filter by changed key+value" do
+        get :index, params: {search: {key: "name", value: "Staging"}}
+        assert_template :index
+        assigns(:audits).size.must_equal 1
+      end
     end
 
     describe "#show" do

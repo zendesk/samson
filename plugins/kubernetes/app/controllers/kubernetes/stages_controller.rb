@@ -9,8 +9,9 @@ class Kubernetes::StagesController < ResourceController
   # used internally for deploy tab preview as well as an external API to render manifests for external tools
   def manifest_preview
     git_ref = params[:git_ref] || current_project.release_branch || DEFAULT_BRANCH
-    git_sha = current_project.repository.commit_from_ref(git_ref)
-    raise Samson::Hooks::UserError, 'Git reference not found' if git_sha.blank?
+    git_sha =
+      current_project.repository.commit_from_ref(git_ref) ||
+      raise(Samson::Hooks::UserError, 'Git reference not found')
 
     # resolving builds can take some time, best to leave it off by default
     resolve_build = params[:resolve_build] == 'true'
@@ -25,7 +26,7 @@ class Kubernetes::StagesController < ResourceController
     output = OutputBuffer.new
     deploy_executor = Kubernetes::DeployExecutor.new(job, output)
     release_docs = deploy_executor.preview_release_docs(resolve_build: resolve_build)
-    template_fillers = release_docs.map(&:verification_template)
+    template_fillers = release_docs.flat_map(&:verification_templates)
 
     # build yaml file with comment header for debugging
     log = "# Manifest preview for #{current_project.name} - #{current_stage.name}. Git ref: #{git_ref} (#{git_sha})\n" +
@@ -41,6 +42,6 @@ class Kubernetes::StagesController < ResourceController
   private
 
   def yaml_comment(message)
-    "# #{message.split("\n").join("\n# ")}\n"
+    message.split("\n").map { |l| "# #{l}" }.join("\n")
   end
 end

@@ -3,7 +3,13 @@ module Kubernetes
   module Api
     class Pod
       INIT_CONTAINER_KEY = :'pod.beta.kubernetes.io/init-containers'
-      WAITING_FOR_RESOURCES = ["FailedScheduling", "FailedCreatePodSandBox", "FailedAttachVolume"].freeze
+      WAITING_FOR_RESOURCES = [
+        "FailedScheduling",
+        "FailedCreatePodSandBox",
+        "FailedAttachVolume",
+        "OutOfcpu",
+        "OutOfmemory"
+      ].freeze
 
       attr_writer :events
 

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class DeleteOrphanedOutboundWebhooks < ActiveRecord::Migration[6.0]
   class OutboundWebhook < ActiveRecord::Base
   end

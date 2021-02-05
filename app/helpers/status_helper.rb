@@ -36,7 +36,7 @@ module StatusHelper
       content << " [Process ID: #{job.pid}]"
       if is_deploy
         content << content_tag(:br)
-        content << "ETA: #{duration_text deployable.stage.average_deploy_time}"
+        content << "Expected duration: #{duration_text deployable.stage.average_deploy_time}"
       end
     end
 

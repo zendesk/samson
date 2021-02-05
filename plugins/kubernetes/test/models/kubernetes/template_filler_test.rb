@@ -20,6 +20,7 @@ describe Kubernetes::TemplateFiller do
   let(:project) { doc.kubernetes_release.project }
 
   before do
+    kubernetes_fake_raw_template
     doc.send(:resource_template=, YAML.load_stream(read_kubernetes_sample_file('kubernetes_deployment.yml')))
     doc.kubernetes_release.builds = [builds(:docker_build)]
 
@@ -334,39 +335,6 @@ describe Kubernetes::TemplateFiller do
           template.to_hash[:metadata][:name].must_equal 'foo-2'
         end
       end
-
-      describe "clusterIP" do
-        let(:ip) { template.to_hash[:spec][:clusterIP] }
-
-        before do
-          doc.deploy_group.kubernetes_cluster.update_column(:ip_prefix, '123.34')
-          raw_template[:spec][:clusterIP] = "1.2.3.4"
-        end
-
-        it "replaces ip prefix" do
-          ip.must_equal '123.34.3.4'
-        end
-
-        it "replaces with trailing ." do
-          doc.deploy_group.kubernetes_cluster.update_column(:ip_prefix, '123.34.')
-          ip.must_equal '123.34.3.4'
-        end
-
-        it "does nothing when service has no clusterIP" do
-          raw_template[:spec].delete(:clusterIP)
-          ip.must_be_nil
-        end
-
-        it "does nothing when ip prefix is blank" do
-          doc.deploy_group.kubernetes_cluster.update_column(:ip_prefix, '')
-          ip.must_equal '1.2.3.4'
-        end
-
-        it "leaves None alone" do
-          raw_template[:spec][:clusterIP] = "None"
-          ip.must_equal 'None'
-        end
-      end
     end
 
     describe "statefulset" do
@@ -455,7 +423,10 @@ describe Kubernetes::TemplateFiller do
 
         it "allows selecting dockerfile for init containers" do
           with_init_container "samson/dockerfile": 'Dockerfile', name: 'foo'
-          init_containers[0].must_equal("samson/dockerfile": "Dockerfile", image: image, name: "foo")
+          init_containers[0].must_equal(image: image, name: "foo")
+          template.to_hash.
+            dig(:spec, :template, :metadata, :annotations, :"container-foo-samson/dockerfile").
+            must_equal "Dockerfile"
         end
 
         it "raises if an init container does not specify a dockerfile" do
@@ -568,17 +539,9 @@ describe Kubernetes::TemplateFiller do
       it "fills then environment with string values" do
         env = container.fetch(:env)
         env.map { |x| x.fetch(:name) }.sort.must_equal(
-          %w[
-            REVISION
-            TAG
-            PROJECT
-            ROLE
-            DEPLOY_ID
-            DEPLOY_GROUP
-            POD_NAME
-            POD_NAMESPACE
-            POD_IP
-            KUBERNETES_CLUSTER_NAME
+          [
+            'REVISION', 'TAG', 'PROJECT', 'ROLE', 'DEPLOY_ID', 'DEPLOY_GROUP',
+            'POD_NAME', 'POD_NAMESPACE', 'POD_IP', 'KUBERNETES_CLUSTER_NAME'
           ].sort
         )
         env.map { |x| x.key?(:value) && x[:value].class.must_equal(String, "#{x.inspect} needs a String value") }
@@ -602,6 +565,13 @@ describe Kubernetes::TemplateFiller do
         end
       end
 
+      it "does not add env when requested" do
+        pod = raw_template[:spec][:template]
+        pod[:spec][:containers][0][:"samson/set_env_vars"] = "false"
+        pod[:spec][:containers][0][:env] = [{foo: "bar"}]
+        container[:env].must_equal [{foo: "bar"}]
+      end
+
       it "overrides container env with deploy_env so samson can modify env variables" do
         raw_template[:spec][:template][:spec][:containers].first[:env] = [{name: 'FromEnv', value: 'THIS-IS-BAD'}]
         # plugins can return string or symbol keys, we should be prepared for both
@@ -610,6 +580,14 @@ describe Kubernetes::TemplateFiller do
             [{name: 'FromEnv', value: 'THIS-IS-GOOD'}]
           )
         end
+      end
+
+      it "does not override container env var when requested" do
+        raw_template[:spec][:template][:spec][:containers].first[:env] = [{name: 'TAG', value: 'OVERRIDE'}]
+        raw_template[:spec][:template][:spec][:containers].first[:"samson/keep_env_var"] = "TAG"
+        container.fetch(:env).select { |e| e[:name] == 'TAG' }.must_equal(
+          [{name: 'TAG', value: 'OVERRIDE'}]
+        )
       end
 
       describe "with multiple containers" do
@@ -692,8 +670,13 @@ describe Kubernetes::TemplateFiller do
       end
 
       it "adds to existing volume definitions in the puller" do
-        raw_template[:spec][:template][:spec][:volumes] = [{}, {}]
-        template.to_hash[:spec][:template][:spec][:volumes].count.must_equal 5
+        raw_template[:spec][:template][:spec][:volumes] = [{}]
+        template.to_hash[:spec][:template][:spec][:volumes].count.must_equal 4
+      end
+
+      it "does not duplicate definitions" do
+        raw_template[:spec][:template][:spec][:volumes] = [{name: "vaultauth", secret: {secretName: "vaultauth"}}]
+        template.to_hash[:spec][:template][:spec][:volumes].count.must_equal 3
       end
 
       it "adds to existing volume definitions in the primary container" do
@@ -803,6 +786,30 @@ describe Kubernetes::TemplateFiller do
       end
     end
 
+    describe "podtemplate" do
+      let(:result) { template.to_hash }
+      let(:containers) { result.dig_fetch(:template, :spec, :containers) }
+      let(:container) { containers.first }
+      let(:build) { builds(:docker_build) }
+      let(:image) { build.docker_repo_digest }
+
+      before do
+        raw_template.replace(
+          YAML.safe_load(
+            read_kubernetes_sample_file('kubernetes_podtemplate.yml')
+          ).deep_symbolize_keys
+        )
+      end
+
+      it "does not populate spec attribute" do
+        result.fetch(:spec, nil).must_be_nil
+      end
+
+      it "overrides image" do
+        container.fetch(:image).must_equal image
+      end
+    end
+
     describe "pod" do
       before do
         original_metadata = raw_template.fetch(:metadata)
@@ -855,10 +862,14 @@ describe Kubernetes::TemplateFiller do
     end
 
     describe "preStop" do
+      def lifecycle_defined?
+        template.to_hash.dig_fetch(:spec, :template, :spec, :containers, 0).key?(:lifecycle)
+      end
+
       before { raw_template[:spec][:template][:spec][:ports] = [{name: "foo"}] }
 
-      it "does not add preStop" do
-        refute template.to_hash.dig_fetch(:spec, :template, :spec, :containers, 0).key?(:lifecycle)
+      it "does not add preStop when not enabled" do
+        refute lifecycle_defined?
       end
 
       describe "with preStop enabled" do
@@ -886,6 +897,18 @@ describe Kubernetes::TemplateFiller do
             raw_template.dig_fetch(:spec, :template, :spec, :containers, 0)[:"samson/preStop"] = "disabled"
             refute template.to_hash.dig(:spec, :template, :spec, :terminationGracePeriodSeconds)
           end
+
+          it "prefers annotation over deprecated container config" do
+            raw_template[:spec][:template][:metadata][:annotations] =
+              {'container-some-project-samson/preStop': 'disabled'}
+            raw_template.dig_fetch(:spec, :template, :spec, :containers, 0)[:"samson/preStop"] = "nope"
+            refute template.to_hash.dig(:spec, :template, :spec, :terminationGracePeriodSeconds)
+          end
+        end
+
+        it "does not add preStop to DaemonSet" do
+          raw_template[:kind] = 'DaemonSet'
+          refute lifecycle_defined?
         end
 
         it "does not add preStop when it was already defined" do
@@ -898,12 +921,12 @@ describe Kubernetes::TemplateFiller do
 
         it "does not add preStop when opted out" do
           raw_template.dig_fetch(:spec, :template, :spec, :containers, 0)[:"samson/preStop"] = "disabled"
-          refute template.to_hash.dig_fetch(:spec, :template, :spec, :containers, 0).key?(:lifecycle)
+          refute lifecycle_defined?
         end
 
         it "does not add preStop when there are no ports that could create problems" do
           raw_template.dig_fetch(:spec, :template, :spec, :containers, 0).delete(:ports)
-          refute template.to_hash.dig_fetch(:spec, :template, :spec, :containers, 0).key?(:lifecycle)
+          refute lifecycle_defined?
         end
       end
     end
@@ -1050,6 +1073,23 @@ describe Kubernetes::TemplateFiller do
           "Unable to set path spec.foo for Deployment in role app-server: KeyError key not found: \"FOO\""
         )
       end
+
+      it "can configure with dynamic env vars" do
+        EnvironmentVariable.create!(parent: projects(:test), name: 'NAME_AS_JSON', value: '"foo-$TAG"')
+        EnvironmentVariable.create!(parent: projects(:test), name: 'TAG_AS_JSON', value: '"$TAG"')
+        raw_template[:metadata][:annotations] = {
+          "samson/keep_name": "true",
+          "samson/set_via_env_json-metadata.name": "NAME_AS_JSON",
+          "samson/set_via_env_json-spec.matches_service": "NAME_AS_JSON",
+          "samson/set_via_env_json-spec.template.metadata.labels.tag": "TAG_AS_JSON"
+        }
+        t = template.to_hash
+        t.dig(:metadata, :name).must_equal "foo-master"
+        t.dig(:spec, :matches_service).must_equal "foo-master"
+        t.dig(:spec, :template, :metadata, :labels, :tag).must_equal "master"
+        t.dig(:spec, :template, :spec, :containers, 0, :env).
+          detect { |h| h[:name] == "TAG_AS_JSON" }[:value].must_equal '"master"'
+      end
     end
 
     describe "set_kritis_breakglass" do
@@ -1096,6 +1136,14 @@ describe Kubernetes::TemplateFiller do
         pod_annotation.must_equal 'true'
         pod_label.must_equal 'true'
         resource_label.must_equal 'true'
+      end
+
+      it "adds the ISTIO_STATUS env var" do
+        template.to_hash.dig(:spec, :template, :spec, :containers).each do |container|
+          istio_status_var = container[:env].detect { |ev| ev[:name] == 'ISTIO_STATUS' }
+          value = istio_status_var.dig(:valueFrom, :fieldRef, :fieldPath)
+          value.must_equal "metadata.annotations['sidecar.istio.io/status']"
+        end
       end
 
       it "has no effect when not enabled" do
@@ -1180,11 +1228,11 @@ describe Kubernetes::TemplateFiller do
     end
 
     it "allows selecting a dockerfile" do
-      raw_template[:spec][:template][:spec][:containers][0][:'samson/dockerfile'] = 'Bar'
+      raw_template[:spec][:template][:metadata][:annotations] = {'container-some-project-samson/dockerfile': 'Bar'}
       template.build_selectors.must_equal [["Bar", nil]]
     end
 
-    it "ignores images that should not be built" do
+    it "ignores images that should not be built via attribute" do
       raw_template[:spec][:template][:spec][:containers][0][:'samson/dockerfile'] = 'none'
       template.build_selectors.must_equal []
     end
@@ -1209,6 +1257,7 @@ describe Kubernetes::TemplateFiller do
 
       it "still allows selecting a dockerfile" do
         raw_template[:spec][:template][:spec][:containers] << {'samson/dockerfile': 'bar', image: 'baz', name: 'foo'}
+        raw_template[:spec][:template][:metadata][:annotations] = {'container-foo-samson/dockerfile': 'bar'}
         template.build_selectors.must_equal [["Dockerfile", nil], ["bar", nil]]
       end
     end
@@ -1228,8 +1277,11 @@ describe Kubernetes::TemplateFiller do
       end
 
       it "does not include images that should not be built" do
-        raw_template[:spec][:template][:spec][:containers][0][:'samson/dockerfile'] = 'none'
-        raw_template[:spec][:template][:spec][:containers] << {'samson/dockerfile': 'bar', image: 'baz', name: 'baz'}
+        raw_template[:spec][:template][:metadata][:annotations] = {
+          'container-some-project-samson/dockerfile': 'none',
+          'container-baz-samson/dockerfile': 'bar'
+        }
+        raw_template[:spec][:template][:spec][:containers] << {image: 'baz', name: 'baz'}
 
         template.build_selectors.must_equal [[nil, 'baz']]
       end
