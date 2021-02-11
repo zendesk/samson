@@ -1,22 +1,8 @@
 <% if can? :write, :locks, resource %>
   <% prefix ||= "" %>
-  <% warning = {resource: resource, warning: true, icon: warning_icon, text: "#{prefix}Warn", disabled: false} %>
-  <% locking = {resource: resource, warning: false, icon: lock_icon, text: "#{prefix}Lock", disabled: false} %>
+  <% warning = {resource: resource, warning: true, icon: warning_icon, text: "Add #{prefix}Warning", disabled: false} %>
+  <% locking = {resource: resource, warning: false, icon: lock_icon, text: "Add #{prefix}Lock", disabled: false} %>
 
-  <% if lock %>
-    <% if lock.warning? %>
-      <%= link_to lock, class: 'btn btn-default', method: :delete do %>
-        <%= warning_icon %> Resolve
-      <% end %>
-      <%= render '/locks/lock_button', locking.merge(disabled: true) %>
-    <% else %>
-      <%= render '/locks/lock_button', warning.merge(disabled: true) %>
-      <%= link_to lock, class: 'btn btn-default', method: :delete do %>
-        <%= lock_icon %> Unlock
-      <% end %>
-    <% end %>
-  <% else %>
-    <%= render '/locks/lock_button', warning %>
-    <%= render '/locks/lock_button', locking %>
-  <% end %>
+  <%= render '/locks/lock_button', warning %>
+  <%= render '/locks/lock_button', locking %>
 <% end %>

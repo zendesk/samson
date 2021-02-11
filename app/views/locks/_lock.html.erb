@@ -1,8 +1,18 @@
-<div class="alert alert-warning">
+<div class="alert alert-<%= lock.warning? ? "warning" : "danger" %> clearfix">
+  <% if ((lock.global? && show_resolve == :global) || lock.resource_equal?(show_resolve)) && can?(:write, :locks, show_resolve) %>
+    <%= link_to lock, class: 'btn btn-default btn-sm pull-right', method: :delete do %>
+      <% if lock.warning? %>
+        <%= warning_icon %> Resolve
+      <% else %>
+        <%= lock_icon %> Unlock
+      <% end %>
+    <% end %>
+  <% end %>
+
   <% if lock.warning? %>
     <%= warning_icon %> <%= lock_affected(lock) %> Warning:
   <% else %>
-    <%= lock_icon %> Deployments to <%= lock_affected(lock) %> were locked
+    <%= lock_icon %> Deployments to <%= lock_affected(lock) %> Locked:
   <% end %>
   <%= sanitize lock.reason %>
   <i>

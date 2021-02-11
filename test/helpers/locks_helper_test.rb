@@ -78,6 +78,8 @@ describe LocksHelper do
     it "can render global" do
       Lock.create!(user: users(:admin))
       global_locks # caches
+
+      view.expects(:can?).with(:write, :locks, :global).returns(true)
       assert_sql_queries 1 do # loads user to render the lock
         render_locks(:global).must_include "ALL STAGES"
       end
@@ -85,7 +87,25 @@ describe LocksHelper do
 
     it "can render specific locks" do
       Lock.create!(user: users(:admin), resource: stage)
-      render_locks(stage).must_include "Deployments to stage were locked"
+      view.expects(:can?).with(:write, :locks, stage).returns(true)
+      render_locks(stage).must_include "Deployments to Stage Staging Locked"
+    end
+
+    it "shows unlock only for that resource" do
+      lock = Lock.create!(user: users(:admin), resource: stage)
+      view.expects(:can?).with(:write, :locks, stage).returns(true)
+      assert_includes render_locks(stage), "Unlock"
+      lock.destroy
+
+      Lock.create!(user: users(:admin))
+      global_locks # caches
+      refute_includes render_locks(stage), "Unlock"
+    end
+
+    it "does not show unlock without permission" do
+      Lock.create!(user: users(:admin), resource: stage)
+      view.expects(:can?).with(:write, :locks, stage).returns(false)
+      refute_includes render_locks(stage), "Unlock"
     end
 
     it "does not render when there is no locks" do
@@ -117,7 +137,7 @@ describe LocksHelper do
 
     it "is environment for environment" do
       lock.resource = environments(:production)
-      lock_affected(lock).must_equal "<a href=\"/environments/production\">Production</a>"
+      lock_affected(lock).must_equal "<a href=\"/environments/production\">Environment Production</a>"
     end
 
     it "is project name for Project" do
@@ -127,7 +147,7 @@ describe LocksHelper do
 
     it "shows simple text for stage since user can only see it on that page" do
       lock.resource = stage
-      lock_affected(lock).must_equal "stage"
+      lock_affected(lock).must_equal "Stage Staging"
     end
   end
 end

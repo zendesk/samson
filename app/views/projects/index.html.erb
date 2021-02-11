@@ -1,22 +1,26 @@
+<%= render_locks :global %>
+
 <%= page_title do %>
   <%= icon_tag 'star' %> Projects
 <% end %>
 
-<%= search_form do %>
-  <%= render 'shared/search_query' %>
-<% end %>
-
-<div class="row dashboard">
-  <%= render @projects %>
-</div>
-
 <div class="admin-actions">
   <% if current_user.admin? %>
     <div class="pull-right">
-      <%= render "locks/button", lock: global_locks.first, resource: nil, prefix: "Global " %>
+      <%= render "locks/button", resource: nil, prefix: "Global " %>
       <%= link_to "New", new_project_path, class: "btn btn-default" %>
     </div>
   <% end %>
 
   <%= paginate @pagy %>
 </div>
+
+<%= search_form do %>
+  <%= render 'shared/search_query' %>
+<% end %>
+
+
+<div class="row dashboard">
+  <%= render @projects %>
+</div>
+
