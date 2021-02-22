@@ -7,7 +7,7 @@ module Samson
       end
 
       def bypass_enabled?
-        !Samson::EnvCheck.set?("SKIP_BUDDY_BYPASS_FEATURE")
+        !Samson::EnvCheck.set?("DISABLE_BUDDY_BYPASS_FEATURE")
       end
 
       # how long can the same commit be deployed ?

@@ -22,6 +22,24 @@ describe Samson::BuddyCheck do
     end
   end
 
+  describe ".bypass_enabled?" do
+    it "is disabled when set" do
+      with_env DISABLE_BUDDY_BYPASS_FEATURE: "1" do
+        refute Samson::BuddyCheck.bypass_enabled?
+      end
+    end
+
+    it "is enabled when false" do
+      with_env DISABLE_BUDDY_BYPASS_FEATURE: "false" do
+        assert Samson::BuddyCheck.bypass_enabled?
+      end
+    end
+
+    it "is enabled when not set" do
+      assert Samson::BuddyCheck.bypass_enabled?
+    end
+  end
+
   describe ".grace_period" do
     it "is 4 hours by default" do
       Samson::BuddyCheck.grace_period.must_equal 4.hours
