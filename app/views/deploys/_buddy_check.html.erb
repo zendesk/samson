@@ -16,9 +16,11 @@
 
     <div>
       <%= cancel_button deploy: @deploy, project: @project %>
-      or
-      <% confirm = "Are you sure this is an emergency and you cannot find a buddy?\n#{strip_tags(details)}" %>
-      <%= link_to "Bypass", buddy_check_project_deploy_path(@project, @deploy), method: :post, data: {confirm: confirm}, class: "btn btn-danger" %>
+      <% if Samson::BuddyCheck.bypass_enabled? %>
+        or
+        <% confirm = "Are you sure this is an emergency and you cannot find a buddy?\n#{strip_tags(details)}" %>
+        <%= link_to "Bypass", buddy_check_project_deploy_path(@project, @deploy), method: :post, data: {confirm: confirm}, class: "btn btn-danger" %>
+      <% end %>
     </div>
   <% elsif deployer_for_project? %>
     <p>This deploy requires a buddy.</p>
