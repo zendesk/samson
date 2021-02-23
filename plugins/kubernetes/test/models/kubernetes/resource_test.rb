@@ -277,6 +277,14 @@ describe Kubernetes::Resource do
           end
         end
       end
+
+      it "uses background deletion to avoid bugs with foreground deletion when we do not need to clean up pods" do
+        assert_request(:delete, url, with: ->(r) { r.body.must_include "Background" }, to_return: {body: "{}"}) do
+          assert_request(:get, url, to_return: [{body: {spec: {replicas: 0}}.to_json}, {status: 404}]) do
+            resource.delete
+          end
+        end
+      end
     end
 
     describe "#uid" do
