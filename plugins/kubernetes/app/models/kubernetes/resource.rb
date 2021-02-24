@@ -147,7 +147,9 @@ module Kubernetes
       # ensure deletion of child resources like pods before the method completes,
       # to not run into conflicts when deploying the same resource right after
       def request_delete
-        request(:delete, name, namespace, delete_options: {propagationPolicy: "Foreground"})
+        # we saw deployment deletions that did not work in foreground, so allow scale down and then delete
+        propagation = (resource.dig(:spec, :replicas) == 0 ? "Background" : "Foreground")
+        request(:delete, name, namespace, delete_options: {propagationPolicy: propagation})
         expire_resource_cache
       end
 
