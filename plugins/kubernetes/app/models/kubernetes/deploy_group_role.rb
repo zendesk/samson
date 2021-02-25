@@ -15,7 +15,7 @@ module Kubernetes
     validates :requests_cpu, :requests_memory, :limits_memory, :limits_cpu, :replicas, presence: true
     validates :requests_cpu, numericality: {greater_than_or_equal_to: 0}
     validates :limits_cpu, numericality: {greater_than: 0}
-    validates :requests_memory, :limits_memory, numericality: {greater_than_or_equal_to: 4}
+    validates :requests_memory, :limits_memory, numericality: {greater_than_or_equal_to: Kubernetes::Role::MIN_MEMORY}
     validate :requests_below_limits
     validate :limits_close_to_requests
     validate :requests_below_usage_limits

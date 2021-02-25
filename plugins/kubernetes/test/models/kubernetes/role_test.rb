@@ -342,7 +342,7 @@ describe Kubernetes::Role do
       role.defaults[:replicas].must_equal 1
     end
 
-    it "does not fail without primary kind" do
+    it "seeds to minimum without primary kind (rbac / configmaps etc)" do
       labels = {project: 'some-project', role: 'some-role'}
       map = {
         kind: 'ConfigMap',
@@ -352,7 +352,13 @@ describe Kubernetes::Role do
         labels: labels
       }
       config_content_yml.replace(map.to_yaml)
-      assert_nil(role.defaults)
+      role.defaults.must_equal(
+        replicas: 1,
+        requests_cpu: 0,
+        requests_memory: 4,
+        limits_cpu: 0.01,
+        limits_memory: 4
+      )
     end
 
     it "finds in pod template" do
