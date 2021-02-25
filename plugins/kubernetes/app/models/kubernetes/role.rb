@@ -20,6 +20,7 @@ module Kubernetes
       "" => 1,
       'm' => 0.001
     }.freeze
+    MIN_MEMORY = 4
 
     self.table_name = 'kubernetes_roles'
     GENERATED = '-change-me-'
@@ -127,7 +128,10 @@ module Kubernetes
 
     # TODO: support dynamic folders
     def defaults
-      return unless resource = role_config_file('HEAD', deploy_group: nil, ignore_errors: true)&.primary
+      return unless config = role_config_file('HEAD', deploy_group: nil, ignore_errors: true)
+      unless resource = config.primary
+        return {replicas: 1, requests_cpu: 0, requests_memory: MIN_MEMORY, limits_cpu: 0.01, limits_memory: MIN_MEMORY}
+      end
       spec = RoleConfigFile.templates(resource).dig(0, :spec) || raise # primary always has templates
 
       replicas =
@@ -137,21 +141,21 @@ module Kubernetes
           resource.dig(:spec, :replicas) || 1
         end
 
-      return unless limits = spec.dig(:containers, 0, :resources, :limits)
-      return unless limits_cpu = parse_resource_value(limits[:cpu], KUBE_CPU_VALUES)
-      return unless limits_memory = parse_memory_value(limits)
-
       if requests = spec.dig(:containers, 0, :resources, :requests)
         requests_cpu = parse_resource_value(requests[:cpu], KUBE_CPU_VALUES)
         requests_memory = parse_memory_value(requests)
       end
 
+      return unless limits = spec.dig(:containers, 0, :resources, :limits)
+      return unless limits_cpu = parse_resource_value(limits[:cpu], KUBE_CPU_VALUES)
+      return unless limits_memory = parse_memory_value(limits)
+
       {
-        limits_cpu: limits_cpu,
-        limits_memory: limits_memory.round,
         requests_cpu: requests_cpu || limits_cpu,
         requests_memory: (requests_memory || limits_memory).round,
-        replicas: replicas
+        replicas: replicas,
+        limits_cpu: limits_cpu,
+        limits_memory: limits_memory.round,
       }
     end
 
