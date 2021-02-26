@@ -123,11 +123,17 @@ describe Kubernetes::DeployGroupRole do
   end
 
   describe ".seed!" do
-    describe "with missing role" do
-      def seed!
-        Kubernetes::DeployGroupRole.seed!(stage).map(&:errors).flat_map(&:full_messages)
-      end
+    def seed!
+      Kubernetes::DeployGroupRole.seed!(stage).map(&:errors).flat_map(&:full_messages)
+    end
 
+    it "does nothing when not missing" do
+      refute_difference 'Kubernetes::DeployGroupRole.count' do
+        seed!.must_equal []
+      end
+    end
+
+    describe "with missing role" do
       let(:created_role) do
         Kubernetes::DeployGroupRole.where(
           deploy_group: deploy_groups(:pod100),
@@ -152,14 +158,26 @@ describe Kubernetes::DeployGroupRole do
 
       it "does nothing when there is no deployment" do
         Kubernetes::Util.expects(:parse_file).returns([])
-        seed!.must_equal ["Role has no defaults"]
+        seed!.must_equal ["Error found when validating kubernetes/app_server.yml\nNo content found"]
         refute created_role
       end
 
       it "does nothing when there are no limits" do
         assert content.sub!('resources', 'no_resources')
-        seed!.must_equal ["Role has no defaults"]
+        seed!.must_equal ["Unable to read defaults from role config file"]
         refute created_role
+      end
+
+      it "ignores invalid configurations" do
+        assert content.sub!('cpu: 500m', 'cpu: 100m') # limit below requests
+        seed!.must_equal ["Requests cpu must be less than or equal to the limit"]
+        created_role.must_be_nil
+      end
+
+      it "ignores invalid files" do
+        assert content.sub!('project: ', 'x: ') # invalid
+        seed!.to_s.must_include "Project and role labels must be consistent across resources"
+        created_role.must_be_nil
       end
 
       describe "when role would be above limits" do
@@ -186,12 +204,6 @@ describe Kubernetes::DeployGroupRole do
         it "lets the role be invalid" do
           seed!.to_s.must_include "Requests cpu (0.25 * 2) must be less than"
         end
-      end
-
-      it "ignores invalid roles" do
-        assert content.sub!('cpu: 500m', 'cpu: 100m') # limit below requests
-        seed!.must_equal ["Requests cpu must be less than or equal to the limit"]
-        created_role.must_be_nil
       end
     end
   end

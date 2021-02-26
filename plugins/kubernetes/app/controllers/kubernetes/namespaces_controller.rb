@@ -21,10 +21,7 @@ class Kubernetes::NamespacesController < ResourceController
     errors = []
 
     project.kubernetes_roles.not_deleted.each do |role|
-      config = role.role_config_file(
-        reference,
-        project: project, ignore_missing: true, ignore_errors: false, deploy_group: nil
-      )
+      config = role.role_config_file(reference, project: project, ignore_missing: true, deploy_group: nil)
       unless config
         errors << "Unable to read #{role.config_file}"
         next

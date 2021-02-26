@@ -2,7 +2,7 @@
   <%= redirect_to_field %>
   <%= render 'shared/errors', object: form.object %>
   <%
-    defaults = form.object.kubernetes_role&.defaults || {}
+    defaults = form.object.kubernetes_role&.defaults || {} rescue {}
     updating = form.object.persisted?
   %>
 

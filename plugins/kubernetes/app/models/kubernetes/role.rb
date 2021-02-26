@@ -99,7 +99,7 @@ module Kubernetes
         project.kubernetes_roles.not_deleted.select do |role|
           role.role_config_file(
             git_sha,
-            project: project, ignore_missing: true, ignore_errors: false, pull: true, deploy_group: nil
+            project: project, ignore_missing: true, pull: true, deploy_group: nil
           )
         end
       end
@@ -128,8 +128,7 @@ module Kubernetes
 
     # TODO: support dynamic folders
     def defaults
-      return unless config = role_config_file('HEAD', deploy_group: nil, ignore_errors: true)
-      unless resource = config.primary
+      unless resource = role_config_file('HEAD', deploy_group: nil).primary
         return {replicas: 1, requests_cpu: 0, requests_memory: MIN_MEMORY, limits_cpu: 0.01, limits_memory: MIN_MEMORY}
       end
       spec = RoleConfigFile.templates(resource).dig(0, :spec) || raise # primary always has templates
@@ -160,12 +159,10 @@ module Kubernetes
     end
 
     # allows passing the project to reuse the repository cache when doing multiple lookups
-    def role_config_file(reference, deploy_group:, ignore_errors:, project: project(), **args) # rubocop:disable Style/MethodCallWithoutArgsParentheses
+    def role_config_file(reference, deploy_group:, project: project(), **args) # rubocop:disable Style/MethodCallWithoutArgsParentheses
       file = config_file
       file = file.sub('$deploy_group', deploy_group.env_value) if deploy_group && dynamic_folders?
       self.class.role_config_file(project, file, reference, **args)
-    rescue Samson::Hooks::UserError
-      ignore_errors ? nil : raise
     end
 
     def manual_deletion_required?

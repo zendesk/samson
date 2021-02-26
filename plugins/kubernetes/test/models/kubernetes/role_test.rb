@@ -420,14 +420,14 @@ describe Kubernetes::Role do
       role.defaults.must_be_nil
     end
 
-    it "ignores when there is no config" do
+    it "fails when there is no config" do
       GitRepository.any_instance.stubs(file_content: nil)
-      role.defaults.must_be_nil
+      assert_raises(Samson::Hooks::UserError) { role.defaults }
     end
 
-    it "ignores when config is invalid" do
+    it "fails when config is invalid" do
       assert config_content_yml.sub!('Service', 'Deployment')
-      refute role.defaults
+      assert_raises(Samson::Hooks::UserError) { role.defaults }
     end
   end
 
@@ -484,7 +484,7 @@ describe Kubernetes::Role do
         expects(:file_content).with('kubernetes/pod100/foo.yaml', "master", anything).
         returns(read_kubernetes_sample_file('kubernetes_job.yml'))
       role.config_file = "kubernetes/$deploy_group/foo.yaml"
-      assert role.role_config_file("master", deploy_group: deploy_groups(:pod100), ignore_errors: false)
+      assert role.role_config_file("master", deploy_group: deploy_groups(:pod100))
     end
   end
 end

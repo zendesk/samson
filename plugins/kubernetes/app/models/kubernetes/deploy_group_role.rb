@@ -86,11 +86,17 @@ module Kubernetes
             limits_memory: defaults.fetch(:limits_memory)
           )
         else
-          dgr = DeployGroupRole.new(kubernetes_role: role, deploy_group: deploy_group)
-          dgr.errors.add(:base, "Role has no defaults")
-          dgr
+          show_seeding_error role, deploy_group, "Unable to read defaults from role config file"
         end
+      rescue Samson::Hooks::UserError => e
+        show_seeding_error role, deploy_group, e.message
       end
+    end
+
+    private_class_method def self.show_seeding_error(role, deploy_group, text)
+      dgr = DeployGroupRole.new(kubernetes_role: role, deploy_group: deploy_group)
+      dgr.errors.add(:base, text)
+      dgr
     end
 
     def requests_below_limits

@@ -213,7 +213,7 @@ module Kubernetes
       @raw_template ||=
         kubernetes_role.role_config_file(
           kubernetes_release.git_sha,
-          project: kubernetes_release.project, pull: true, ignore_errors: false, deploy_group: deploy_group
+          project: kubernetes_release.project, pull: true, deploy_group: deploy_group
         ).elements
     end
   end
