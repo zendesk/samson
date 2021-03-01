@@ -128,7 +128,7 @@ module Kubernetes
 
     # TODO: support dynamic folders
     def defaults
-      unless resource = role_config_file('HEAD', deploy_group: nil).primary
+      unless resource = role_config_file(project.release_branch, deploy_group: nil).primary
         return {replicas: 1, requests_cpu: 0, requests_memory: MIN_MEMORY, limits_cpu: 0.01, limits_memory: MIN_MEMORY}
       end
       spec = RoleConfigFile.templates(resource).dig(0, :spec) || raise # primary always has templates
