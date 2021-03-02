@@ -271,6 +271,13 @@ describe Kubernetes::Api::Pod do
       pod_with_client.events_indicate_failure?
     end
 
+    let(:probe) { {} }
+
+    before do
+      pod_attributes[:spec][:containers][0][:readinessProbe] = probe
+      pod_attributes[:spec][:containers][0][:livenessProbe] = probe
+    end
+
     it "is true" do
       assert events_indicate_failure?
     end
@@ -285,14 +292,25 @@ describe Kubernetes::Api::Pod do
         event.merge!(type: 'Warning', reason: 'Unhealthy', message: +"Readiness probe failed: Get ", count: 1)
       end
 
+      it "is true with unknown event" do
+        event[:message] = "wut"
+        assert events_indicate_failure?
+      end
+
       it "is false with single Readiness event" do
+        refute events_indicate_failure?
+      end
+
+      it "tries to find probe from all containers" do
+        pod_attributes[:spec][:containers][1] = {
+          readinessProbe: pod_attributes[:spec][:containers][0].delete(:readinessProbe)
+        }
         refute events_indicate_failure?
       end
 
       it "fails with unknown probe failure" do
         assert event[:message].sub!('Readiness', 'Crazyness')
-        e = assert_raises(RuntimeError) { events_indicate_failure? }
-        e.message.must_equal "Unknown probe Crazyness probe failed: Get "
+        assert events_indicate_failure?
       end
 
       describe "with multiple Readiness failures" do
@@ -303,7 +321,7 @@ describe Kubernetes::Api::Pod do
         end
 
         it "is false with less then threshold" do
-          pod_attributes[:spec][:containers][0][:readinessProbe] = {failureThreshold: 30}
+          probe[:failureThreshold] = 30
           refute events_indicate_failure?
         end
       end
