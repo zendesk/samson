@@ -73,7 +73,8 @@ function refStatusTypeahead(options){
       var item = $("<li>");
       $ref_problem_list.append(item);
       // State and status comes from GitHub or Samson
-      item.html(status.state + ": " + status.description);
+      var description = (status.description.toString() === "" ? status.context : status.description);
+      item.html(status.state + ": " + description);
       if(status.target_url) {
         item.append(' <a href="' + status.target_url + '">details</a>');
       }
