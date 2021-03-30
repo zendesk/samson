@@ -155,7 +155,7 @@ Prefer `spec.updateStrategy.type=RollingUpdate`
 
 ### Server-side apply
 
-Set `metadata.annotation.samson/server_side_apply='true'` and use a valid template.
+Set `metadata.annotations.samson/server_side_apply='true'` and use a valid template.
 This only works for kubernetes 1.16+ clusters, but will soon be the default way samson works,
 see [kubernetes docs](https://kubernetes.io/docs/reference/using-api/api-concepts/#server-side-apply) for details.
 
@@ -309,7 +309,7 @@ Delete old resource and create new when an update fails because it `cannot chang
 (Should not be used with `persistentVolumeReclaimPolicy` set to `Delete`)
 
 ```
-metadata.annotation.samson/force_update: "true"
+metadata.annotations.samson/force_update: "true"
 ```
 
 ### Forcing a delete-create to get back to a clean state
@@ -318,7 +318,7 @@ Delete old resource and create new.
 Can be useful for Service migration from NodePort to ClusterIP, or similar scenarios where we want a clean slate.
 
 ```
-metadata.annotation.samson/recreate: "true"
+metadata.annotations.samson/recreate: "true"
 ```
 
 ### Static config per deploy group
