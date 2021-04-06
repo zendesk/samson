@@ -140,6 +140,15 @@ describe ProjectsController do
           assert_response :success
         end
 
+        it "does not N+1" do
+          with_caching do
+            get :show, params: {id: project.to_param} # fill cache
+            assert_nplus1_queries 2 do
+              get :show, params: {id: project.to_param}
+            end
+          end
+        end
+
         it "does not find soft deleted" do
           project.soft_delete!(validate: false)
           assert_raises ActiveRecord::RecordNotFound do

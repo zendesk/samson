@@ -21,7 +21,8 @@
     </thead>
     <tbody>
       <% if @project.stages.to_a.any? %>
-        <%= render partial: "stage", collection: @project.stages, cached: ->(stage) { [@project.permalink, stage, Lock.cache_key, deployer_for_project?] } %>
+        <% static_cache_key = [@project.permalink, Lock.cache_key, deployer_for_project?] # avoid N+1 %>
+        <%= render partial: "stage", collection: @project.stages, cached: ->(stage) { [stage, *static_cache_key] } %>
       <% else %>
         <tr>
           <td colspan="3">
