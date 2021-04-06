@@ -43,7 +43,7 @@ class ActiveSupport::TestCase
     list = queries.map { |q, v| "#{q}:\n#{v.map { |x| "  #{x}" }.join("\n")}" }.join("\n")
     actual.must_equal(
       expected,
-      "Expected #{expected} nplus1 queries, but found #{queries.count}:\n#{list}"
+      "Expected #{expected} nplus1 queries, but found #{actual}:\n#{list}"
     )
   end
 end

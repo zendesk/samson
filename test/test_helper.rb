@@ -234,6 +234,14 @@ ActiveSupport::TestCase.class_eval do
     before(&block)
     after(&block)
   end
+
+  def with_caching
+    caching = ActionController::Base.perform_caching
+    ActionController::Base.perform_caching = true
+    yield
+  ensure
+    ActionController::Base.perform_caching = caching
+  end
 end
 
 # Helpers for controller tests
