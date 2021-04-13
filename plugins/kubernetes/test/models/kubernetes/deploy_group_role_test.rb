@@ -222,30 +222,6 @@ describe Kubernetes::DeployGroupRole do
     end
   end
 
-  describe "#limits_close_to_requests" do
-    it "shows no error when limits are ok" do
-      assert_valid deploy_group_role
-    end
-
-    it "allows 0 with up to 1 cpu" do
-      deploy_group_role.requests_cpu = 0
-      deploy_group_role.limits_cpu = 1.0
-      assert_valid deploy_group_role
-    end
-
-    it "shows an error if the limits are more than 10x the requests" do
-      deploy_group_role.limits_cpu = 2.0
-      deploy_group_role.limits_memory = 2048
-      refute_valid deploy_group_role
-      deploy_group_role.errors.full_messages.must_equal(
-        [
-          "Limits cpu must be less than 10x requested cpu",
-          "Limits memory must be less than 10x requested memory"
-        ]
-      )
-    end
-  end
-
   describe "#requests_below_usage_limits" do
     before { usage_limit }
 
