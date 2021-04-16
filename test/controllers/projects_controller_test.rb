@@ -192,6 +192,15 @@ describe ProjectsController do
             project.keys.must_include "external_environment_variable_groups"
           end
         end
+
+        it "renders locks if requested" do
+          Lock.create!(user: user, resource: project)
+          get :show, params: {id: project.to_param, includes: "lock", format: :json}
+          assert_response :success
+          project = JSON.parse(response.body)
+          project.keys.must_include "locks"
+          refute_empty project['locks']
+        end
       end
     end
 
