@@ -72,7 +72,8 @@ class ProjectsController < ResourceController
   def allowed_includes
     [
       :environment_variable_groups,
-      :environment_variables_with_scope
+      :environment_variables_with_scope,
+      :lock
     ] + Samson::Hooks.fire(:project_allowed_includes).flatten(1)
   end
 
