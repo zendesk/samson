@@ -185,13 +185,6 @@ module Samson
       end
     end
 
-    # remove initializers that use the database
-    if ENV["PRECOMPILE"]
-      bad = ["active_record.check_schema_cache_dump", "active_record.set_configs"]
-      Rails.application.initializers.find { |a| bad.include?(a.name) }.
-        context_class.instance.initializers.reject! { |a| bad.include?(a.name) }
-    end
-
     config.active_support.deprecation = :raise
 
     # avoid permission errors in production and cleanliness test failures in test
@@ -218,3 +211,10 @@ end
 require 'samson/hooks'
 require_relative "logging"
 require_relative "../app/models/job_queue" # need to load early or dev reload will lose the .enabled
+
+# remove initializers that use the database, this triggers initializer building so needs to come after all engines
+if ENV["PRECOMPILE"]
+  bad = ["active_record.check_schema_cache_dump", "active_record.set_configs"]
+  Rails.application.initializers.find { |a| bad.include?(a.name) }.
+    context_class.instance.initializers.reject! { |a| bad.include?(a.name) }
+end
