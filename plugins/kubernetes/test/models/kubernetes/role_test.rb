@@ -355,9 +355,9 @@ describe Kubernetes::Role do
       role.defaults.must_equal(
         replicas: 1,
         requests_cpu: 0,
-        requests_memory: 4,
+        requests_memory: 6,
         limits_cpu: 0.01,
-        limits_memory: 4
+        limits_memory: 6
       )
     end
 
@@ -438,7 +438,7 @@ describe Kubernetes::Role do
         project: project,
         replicas: 1,
         requests_cpu: 0.5,
-        requests_memory: 5,
+        requests_memory: 7,
         limits_cpu: 1,
         limits_memory: 10,
         deploy_group: deploy_groups(:pod2)

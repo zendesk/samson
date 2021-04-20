@@ -20,7 +20,7 @@ module Kubernetes
       "" => 1,
       'm' => 0.001
     }.freeze
-    MIN_MEMORY = 4
+    MIN_MEMORY = 6
 
     self.table_name = 'kubernetes_roles'
     GENERATED = '-change-me-'
