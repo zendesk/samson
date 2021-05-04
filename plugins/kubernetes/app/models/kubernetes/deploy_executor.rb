@@ -503,8 +503,7 @@ module Kubernetes
       # - only do this for one single deploy group since they are all identical
       element_groups = grouped_deploy_group_roles.first.map do |deploy_group_role|
         deploy_group_role.kubernetes_role.role_config_file(
-          @job.commit,
-          ignore_errors: false, deploy_group: deploy_group_role.deploy_group
+          @job.commit, deploy_group: deploy_group_role.deploy_group
         ).elements
       end.compact
       Kubernetes::RoleValidator.validate_groups(element_groups)

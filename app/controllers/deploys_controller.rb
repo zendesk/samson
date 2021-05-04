@@ -84,8 +84,11 @@ class DeploysController < ApplicationController
   end
 
   def buddy_check
-    @deploy.confirm_buddy!(current_user) if @deploy.pending?
-
+    if !Samson::BuddyCheck.bypass_enabled? && @deploy.user == current_user
+      flash.now[:alert] = "Buddy bypass is disabled"
+    else
+      @deploy.confirm_buddy!(current_user) if @deploy.pending?
+    end
     redirect_to [current_project, @deploy]
   end
 

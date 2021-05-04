@@ -123,11 +123,17 @@ describe Kubernetes::DeployGroupRole do
   end
 
   describe ".seed!" do
-    describe "with missing role" do
-      def seed!
-        Kubernetes::DeployGroupRole.seed!(stage).map(&:errors).flat_map(&:full_messages)
-      end
+    def seed!
+      Kubernetes::DeployGroupRole.seed!(stage).map(&:errors).flat_map(&:full_messages)
+    end
 
+    it "does nothing when not missing" do
+      refute_difference 'Kubernetes::DeployGroupRole.count' do
+        seed!.must_equal []
+      end
+    end
+
+    describe "with missing role" do
       let(:created_role) do
         Kubernetes::DeployGroupRole.where(
           deploy_group: deploy_groups(:pod100),
@@ -152,14 +158,26 @@ describe Kubernetes::DeployGroupRole do
 
       it "does nothing when there is no deployment" do
         Kubernetes::Util.expects(:parse_file).returns([])
-        seed!.must_equal ["Role has no defaults"]
+        seed!.must_equal ["Error found when validating kubernetes/app_server.yml\nNo content found"]
         refute created_role
       end
 
       it "does nothing when there are no limits" do
         assert content.sub!('resources', 'no_resources')
-        seed!.must_equal ["Role has no defaults"]
+        seed!.must_equal ["Unable to read defaults from role config file"]
         refute created_role
+      end
+
+      it "ignores invalid configurations" do
+        assert content.sub!('cpu: 500m', 'cpu: 100m') # limit below requests
+        seed!.must_equal ["Requests cpu must be less than or equal to the limit"]
+        created_role.must_be_nil
+      end
+
+      it "ignores invalid files" do
+        assert content.sub!('project: ', 'x: ') # invalid
+        seed!.to_s.must_include "Project and role labels must be consistent across resources"
+        created_role.must_be_nil
       end
 
       describe "when role would be above limits" do
@@ -187,12 +205,6 @@ describe Kubernetes::DeployGroupRole do
           seed!.to_s.must_include "Requests cpu (0.25 * 2) must be less than"
         end
       end
-
-      it "ignores invalid roles" do
-        assert content.sub!('cpu: 500m', 'cpu: 100m') # limit below requests
-        seed!.must_equal ["Requests cpu must be less than or equal to the limit"]
-        created_role.must_be_nil
-      end
     end
   end
 
@@ -205,30 +217,6 @@ describe Kubernetes::DeployGroupRole do
         [
           "Requests cpu must be less than or equal to the limit",
           "Requests memory must be less than or equal to the limit"
-        ]
-      )
-    end
-  end
-
-  describe "#limits_close_to_requests" do
-    it "shows no error when limits are ok" do
-      assert_valid deploy_group_role
-    end
-
-    it "allows 0 with up to 1 cpu" do
-      deploy_group_role.requests_cpu = 0
-      deploy_group_role.limits_cpu = 1.0
-      assert_valid deploy_group_role
-    end
-
-    it "shows an error if the limits are more than 10x the requests" do
-      deploy_group_role.limits_cpu = 2.0
-      deploy_group_role.limits_memory = 2048
-      refute_valid deploy_group_role
-      deploy_group_role.errors.full_messages.must_equal(
-        [
-          "Limits cpu must be less than 10x requested cpu",
-          "Limits memory must be less than 10x requested memory"
         ]
       )
     end

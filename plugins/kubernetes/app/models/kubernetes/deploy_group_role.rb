@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 module Kubernetes
   class DeployGroupRole < ActiveRecord::Base
-    MAX_LIMITS_TO_REQUESTS_RATIO = 10
     NO_CPU_LIMIT_ALLOWED = Samson::EnvCheck.set?("KUBERNETES_NO_CPU_LIMIT_ALLOWED")
 
     self.table_name = 'kubernetes_deploy_group_roles'
@@ -15,9 +14,8 @@ module Kubernetes
     validates :requests_cpu, :requests_memory, :limits_memory, :limits_cpu, :replicas, presence: true
     validates :requests_cpu, numericality: {greater_than_or_equal_to: 0}
     validates :limits_cpu, numericality: {greater_than: 0}
-    validates :requests_memory, :limits_memory, numericality: {greater_than_or_equal_to: 4}
+    validates :requests_memory, :limits_memory, numericality: {greater_than_or_equal_to: Kubernetes::Role::MIN_MEMORY}
     validate :requests_below_limits
-    validate :limits_close_to_requests
     validate :requests_below_usage_limits
     validate :delete_on_0_replicas
 
@@ -86,11 +84,17 @@ module Kubernetes
             limits_memory: defaults.fetch(:limits_memory)
           )
         else
-          dgr = DeployGroupRole.new(kubernetes_role: role, deploy_group: deploy_group)
-          dgr.errors.add(:base, "Role has no defaults")
-          dgr
+          show_seeding_error role, deploy_group, "Unable to read defaults from role config file"
         end
+      rescue Samson::Hooks::UserError => e
+        show_seeding_error role, deploy_group, e.message
       end
+    end
+
+    private_class_method def self.show_seeding_error(role, deploy_group, text)
+      dgr = DeployGroupRole.new(kubernetes_role: role, deploy_group: deploy_group)
+      dgr.errors.add(:base, text)
+      dgr
     end
 
     def requests_below_limits
@@ -99,16 +103,6 @@ module Kubernetes
       end
       if limits_memory && requests_memory && requests_memory > limits_memory
         errors.add :requests_memory, "must be less than or equal to the limit"
-      end
-    end
-
-    def limits_close_to_requests
-      minimum_requested_cpu = [requests_cpu.to_f, 1.0 / MAX_LIMITS_TO_REQUESTS_RATIO].max
-      if limits_cpu && limits_cpu > minimum_requested_cpu * MAX_LIMITS_TO_REQUESTS_RATIO
-        errors.add :limits_cpu, "must be less than #{MAX_LIMITS_TO_REQUESTS_RATIO}x requested cpu"
-      end
-      if limits_memory && requests_memory && limits_memory > requests_memory * MAX_LIMITS_TO_REQUESTS_RATIO
-        errors.add :limits_memory, "must be less than #{MAX_LIMITS_TO_REQUESTS_RATIO}x requested memory"
       end
     end
 

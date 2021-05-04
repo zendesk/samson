@@ -110,10 +110,6 @@ module Samson
         end
       end
 
-      def add_assets_to_precompile
-        engine.config.assets.precompile += ["#{name}/application.css", "#{name}/application.js"]
-      end
-
       def engine
         @engine ||= Kernel.const_get("::Samson#{@name.camelize}::SamsonPlugin")
       end
@@ -200,7 +196,6 @@ module Samson
         Samson::Hooks.plugins.
           each(&:setup_and_require).
           each(&:add_migrations).
-          each(&:add_assets_to_precompile).
           each(&:add_decorators)
       end
 

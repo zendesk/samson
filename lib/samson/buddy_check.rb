@@ -6,6 +6,10 @@ module Samson
         Samson::EnvCheck.set?("BUDDY_CHECK_FEATURE")
       end
 
+      def bypass_enabled?
+        !Samson::EnvCheck.set?("DISABLE_BUDDY_BYPASS_FEATURE")
+      end
+
       # how long can the same commit be deployed ?
       def grace_period
         Integer(ENV["BUDDY_CHECK_GRACE_PERIOD"].presence || "4").hours

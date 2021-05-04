@@ -96,9 +96,7 @@ module Kubernetes
       def events_indicating_failure
         @events_indicating_failure ||= begin
           bad = @events.dup
-          bad.reject! do |e|
-            e[:reason] == "Unhealthy" && e[:message] =~ /\A\S+ness probe failed/ && !probe_failed_to_often?(e)
-          end
+          bad.reject! { |event| ignored_probe_failure?(event) }
           bad
         end
       end
@@ -151,20 +149,20 @@ module Kubernetes
         Timeout.timeout(timeout, &block)
       end
 
-      def probe_failed_to_often?(event)
-        probe =
-          case event[:message]
-          when /\AReadiness/ then :readinessProbe
-          when /\ALiveness/ then :livenessProbe
-          else raise("Unknown probe #{event[:message]}")
-          end
-        event[:count] >= failure_threshold(probe)
+      def ignored_probe_failure?(event)
+        return false unless event[:reason] == "Unhealthy"
+        return false unless probe = event[:message][/\A(\S+) probe failed/, 1]
+        return false unless threshold = failure_threshold(:"#{probe.downcase}Probe")
+        event[:count] < threshold
       end
 
       # per http://kubernetes.io/docs/api-reference/v1/definitions/ default is 3
       # by default checks every 10s so that gives us 30s to pass
+      # TODO: do not guess from which container the failure came
       def failure_threshold(probe)
-        @pod.dig(:spec, :containers, 0, probe, :failureThreshold) || 3
+        @pod.dig(:spec, :containers).detect do |c|
+          return c[probe][:failureThreshold] || 3 if c[probe]
+        end
       end
 
       def ready?

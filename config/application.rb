@@ -43,7 +43,10 @@ module Samson
   class Application < Rails::Application
     # Settings in config/environments/* take precedence over those specified here.
     # Application configuration should go into files in config/initializers
-    config.load_defaults 6.0
+    config.load_defaults 6.1
+
+    # the new default of `true` breaks test/models/user_test.rb see https://github.com/rails/rails/issues/40867
+    config.active_record.has_many_inversing = false
 
     # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
     config.force_ssl = (ENV["FORCE_SSL"] == "1")
@@ -182,13 +185,6 @@ module Samson
       end
     end
 
-    # remove initializers that use the database
-    if ENV["PRECOMPILE"]
-      bad = ["active_record.check_schema_cache_dump", "active_record.set_configs"]
-      Rails.application.initializers.find { |a| bad.include?(a.name) }.
-        context_class.instance.initializers.reject! { |a| bad.include?(a.name) }
-    end
-
     config.active_support.deprecation = :raise
 
     # avoid permission errors in production and cleanliness test failures in test
@@ -215,3 +211,10 @@ end
 require 'samson/hooks'
 require_relative "logging"
 require_relative "../app/models/job_queue" # need to load early or dev reload will lose the .enabled
+
+# remove initializers that use the database, this triggers initializer building so needs to come after all engines
+if ENV["PRECOMPILE"]
+  bad = ["active_record.check_schema_cache_dump", "active_record.set_configs"]
+  Rails.application.initializers.find { |a| bad.include?(a.name) }.
+    context_class.instance.initializers.reject! { |a| bad.include?(a.name) }
+end

@@ -140,6 +140,15 @@ describe ProjectsController do
           assert_response :success
         end
 
+        it "does not N+1" do
+          with_caching do
+            get :show, params: {id: project.to_param} # fill cache
+            assert_nplus1_queries 2 do
+              get :show, params: {id: project.to_param}
+            end
+          end
+        end
+
         it "does not find soft deleted" do
           project.soft_delete!(validate: false)
           assert_raises ActiveRecord::RecordNotFound do
@@ -182,6 +191,15 @@ describe ProjectsController do
             project = JSON.parse(response.body)
             project.keys.must_include "external_environment_variable_groups"
           end
+        end
+
+        it "renders locks if requested" do
+          Lock.create!(user: user, resource: project)
+          get :show, params: {id: project.to_param, includes: "lock", format: :json}
+          assert_response :success
+          project = JSON.parse(response.body)
+          project.keys.must_include "locks"
+          refute_empty project['locks']
         end
       end
     end

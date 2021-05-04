@@ -24,7 +24,10 @@ class AccessTokensController < ResourceController
   def redirect_after_save
     redirect_to(
       redirect_to_from_params,
-      notice: "Token created: copy this token, it will not be shown again: <b>#{@resource.token}</b>".html_safe
+      notice: <<~HTML.html_safe
+        Token created: copy this token, it will not be shown again: <b>#{@resource.token}</b><br/>
+        Use with 'Authorization: Bearer #{@resource.token}' header.
+      HTML
     )
   end
 

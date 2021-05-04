@@ -24,6 +24,7 @@ describe Changeset::PullRequest do
   let(:data) { Sawyer::Resource.new(sawyer_agent, user: user, merged_by: merged_by, body: body, number: 5566) }
   let(:user) { Sawyer::Resource.new(sawyer_agent, login: 'foo') }
   let(:merged_by) { Sawyer::Resource.new(sawyer_agent, login: 'bar') }
+  let(:emojis) { ['❤️', '💜', '🇨🇦', '🇫🇷', '🇬🇧', '🇯🇵', '🇺🇸', '👧🏾', '👪', '👨‍👩‍👦', '💑', '👩‍❤️‍👨', '💏', '👩‍❤️‍💋‍👨'].join }
 
   describe ".find" do
     it "finds the pull request" do
@@ -447,6 +448,44 @@ describe Changeset::PullRequest do
     it "finds risks with closing hashes in atx style markdown headers" do
       body.replace(+<<~BODY)
         ## Risks ##
+          - Planes
+      BODY
+      pr.risks.must_equal "  - Planes"
+    end
+
+    it "does not find risks if title does not start with risk" do
+      body.replace(+<<~BODY)
+        # No risks
+          - Planes
+        No Risks
+        =====
+          - Planes
+        ## No Risks ##
+          - Planes
+      BODY
+      pr.risks.must_be_nil
+    end
+
+    it "finds risks even with emojis in title" do
+      body.replace(+<<~BODY)
+        # #{emojis} Risks #{emojis}
+          - Planes
+      BODY
+      pr.risks.must_equal "  - Planes"
+    end
+
+    it "finds risks even with emojis in title with underline style markdown headers" do
+      body.replace(+<<~BODY)
+        #{emojis} Risks #{emojis}
+        =====
+          - Planes
+      BODY
+      pr.risks.must_equal "  - Planes"
+    end
+
+    it "finds risks even with emojis in title with closing hashes in atx style markdown headers" do
+      body.replace(+<<~BODY)
+        ## #{emojis} Risks #{emojis} ##
           - Planes
       BODY
       pr.risks.must_equal "  - Planes"

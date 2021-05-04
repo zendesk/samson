@@ -32,7 +32,13 @@ module Samson
       def toggle(to)
         return if !!@enabled == to
         @enabled = to
-        ActiveRecord::Base.connection_handler.prevent_writes = to
+        # what .connected_to does under the hood, but without block
+        stack = ActiveRecord::Base.connected_to_stack
+        if @enabled
+          stack << {role: :writing, prevent_writes: true, klasses: [ActiveRecord::Base]}
+        else
+          stack.pop
+        end
         update_prompt
       end
 

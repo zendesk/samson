@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 1
+SingleCov.covered!
 
 describe DeploysController do
   def self.with_and_without_project(&block)
@@ -602,6 +602,19 @@ describe DeploysController do
 
         assert_redirected_to project_deploy_path(project, deploy)
         deploy.reload.buddy.must_equal user
+      end
+
+      it 'alert when buddy bypass disabled' do
+        with_env DISABLE_BUDDY_BYPASS_FEATURE: "true" do
+          deploy.job.update_column(:user_id, user.id)
+          DeployService.stubs(:new).with(deploy.user).returns(deploy_service)
+
+          post :buddy_check, params: {project_id: project.to_param, id: deploy.id}
+
+          refute deploy.buddy
+          assert_redirected_to project_deploy_path(project, deploy)
+          assert flash[:alert]
+        end
       end
     end
 

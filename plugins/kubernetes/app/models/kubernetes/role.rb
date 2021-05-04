@@ -20,6 +20,7 @@ module Kubernetes
       "" => 1,
       'm' => 0.001
     }.freeze
+    MIN_MEMORY = 6
 
     self.table_name = 'kubernetes_roles'
     GENERATED = '-change-me-'
@@ -98,7 +99,7 @@ module Kubernetes
         project.kubernetes_roles.not_deleted.select do |role|
           role.role_config_file(
             git_sha,
-            project: project, ignore_missing: true, ignore_errors: false, pull: true, deploy_group: nil
+            project: project, ignore_missing: true, pull: true, deploy_group: nil
           )
         end
       end
@@ -127,40 +128,41 @@ module Kubernetes
 
     # TODO: support dynamic folders
     def defaults
-      return unless resource = role_config_file('HEAD', deploy_group: nil, ignore_errors: true)&.primary
-      spec = resource.fetch(:spec)
-      if resource[:kind] == "Pod"
-        replicas = 0 # these are one-off tasks most of the time, so we should not count them in totals
-      else
-        replicas = spec[:replicas] || 1
-        spec = spec.dig(:template, :spec) || {}
+      unless resource = role_config_file(project.release_branch, deploy_group: nil).primary
+        return {replicas: 1, requests_cpu: 0, requests_memory: MIN_MEMORY, limits_cpu: 0.01, limits_memory: MIN_MEMORY}
       end
+      spec = RoleConfigFile.templates(resource).dig(0, :spec) || raise # primary always has templates
 
-      return unless limits = spec.dig(:containers, 0, :resources, :limits)
-      return unless limits_cpu = parse_resource_value(limits[:cpu], KUBE_CPU_VALUES)
-      return unless limits_memory = parse_memory_value(limits)
+      replicas =
+        if resource[:kind] == "Pod"
+          0 # these are one-off tasks most of the time, so we should not count them in totals
+        else
+          resource.dig(:spec, :replicas) || 1
+        end
 
       if requests = spec.dig(:containers, 0, :resources, :requests)
         requests_cpu = parse_resource_value(requests[:cpu], KUBE_CPU_VALUES)
         requests_memory = parse_memory_value(requests)
       end
 
+      return unless limits = spec.dig(:containers, 0, :resources, :limits)
+      return unless limits_cpu = parse_resource_value(limits[:cpu], KUBE_CPU_VALUES)
+      return unless limits_memory = parse_memory_value(limits)
+
       {
-        limits_cpu: limits_cpu,
-        limits_memory: limits_memory.round,
         requests_cpu: requests_cpu || limits_cpu,
         requests_memory: (requests_memory || limits_memory).round,
-        replicas: replicas
+        replicas: replicas,
+        limits_cpu: limits_cpu,
+        limits_memory: limits_memory.round,
       }
     end
 
     # allows passing the project to reuse the repository cache when doing multiple lookups
-    def role_config_file(reference, deploy_group:, ignore_errors:, project: project(), **args) # rubocop:disable Style/MethodCallWithoutArgsParentheses
+    def role_config_file(reference, deploy_group:, project: project(), **args) # rubocop:disable Style/MethodCallWithoutArgsParentheses
       file = config_file
       file = file.sub('$deploy_group', deploy_group.env_value) if deploy_group && dynamic_folders?
       self.class.role_config_file(project, file, reference, **args)
-    rescue Samson::Hooks::UserError
-      ignore_errors ? nil : raise
     end
 
     def manual_deletion_required?

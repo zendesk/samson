@@ -96,7 +96,7 @@ describe Kubernetes::DeployGroupRolesController do
             kubernetes_role_id: kubernetes_roles(:app_server).id,
             deploy_group_id: deploy_group.id,
             requests_cpu: 0.5,
-            requests_memory: 5,
+            requests_memory: 7,
             limits_cpu: 1,
             limits_memory: 10,
             replicas: 1

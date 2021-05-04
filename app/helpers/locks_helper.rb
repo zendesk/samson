@@ -26,20 +26,22 @@ module LocksHelper
 
   def render_locks(resource)
     locks = (resource == :global ? global_locks : Lock.for_resource(resource))
-    render partial: '/locks/lock', collection: locks, as: :lock if locks.any?
+    render partial: '/locks/lock', collection: locks, as: :lock, locals: {show_resolve: resource} if locks.any?
   end
 
   def resource_lock_icon(resource)
-    return unless lock = Lock.for_resource(resource).first
-    text = (lock.warning? ? "#{warning_icon} Warning" : "#{lock_icon} Locked")
-    content_tag :span, text.html_safe, class: "label label-warning", title: strip_tags(lock.summary)
+    return unless locks = Lock.for_resource(resource).presence
+    text = (locks.all?(&:warning?) ? "#{warning_icon} Warning" : "#{lock_icon} Locked")
+    text += " (#{locks.count})" if locks.count > 1
+    title = locks.map { |lock| strip_tags(lock.summary) }.join("\n")
+    content_tag :span, text.html_safe, class: "label label-warning", title: title
   end
 
   def lock_affected(lock)
     if lock.resource_type == "Stage"
-      "stage"
+      "Stage #{lock.resource.name}"
     elsif lock.resource
-      link_to_resource lock.resource
+      link_to_resource lock.resource, with_locks: false
     else
       link_to "ALL STAGES", projects_path
     end

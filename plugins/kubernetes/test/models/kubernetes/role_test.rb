@@ -32,6 +32,16 @@ describe Kubernetes::Role do
       spec: {containers: [{name: 'foo', resources: {limits: {cpu: '0.5', memory: '300Mi'}}}]}
     }
   end
+  let(:pod_template) do
+    {
+      kind: 'PodTemplate',
+      apiVersion: 'v1',
+      metadata: {name: 'foo', labels: {role: 'migrate', project: 'bar'}},
+      template: {
+        spec: {containers: [{name: 'foo', resources: {limits: {cpu: '0.5', memory: '300Mi'}}}]}
+      }
+    }
+  end
   let(:config_content) do
     YAML.load_stream(read_kubernetes_sample_file('kubernetes_deployment.yml'))
   end
@@ -332,7 +342,7 @@ describe Kubernetes::Role do
       role.defaults[:replicas].must_equal 1
     end
 
-    it "does not fail without spec" do
+    it "seeds to minimum without primary kind (rbac / configmaps etc)" do
       labels = {project: 'some-project', role: 'some-role'}
       map = {
         kind: 'ConfigMap',
@@ -340,14 +350,25 @@ describe Kubernetes::Role do
         metadata: {name: 'datadog', labels: labels},
         namespace: 'default',
         labels: labels
-      }.to_yaml
-      config_content_yml.prepend("#{map}\n---\n")
+      }
+      config_content_yml.replace(map.to_yaml)
       role.defaults.must_equal(
-        replicas: 2,
-        requests_cpu: 0.25,
-        requests_memory: 50,
+        replicas: 1,
+        requests_cpu: 0,
+        requests_memory: 6,
+        limits_cpu: 0.01,
+        limits_memory: 6
+      )
+    end
+
+    it "finds in pod template" do
+      config_content_yml.replace(pod_template.to_yaml)
+      role.defaults.must_equal(
+        replicas: 1,
+        requests_cpu: 0.5,
+        requests_memory: 300,
         limits_cpu: 0.5,
-        limits_memory: 100
+        limits_memory: 300
       )
     end
 
@@ -399,14 +420,14 @@ describe Kubernetes::Role do
       role.defaults.must_be_nil
     end
 
-    it "ignores when there is no config" do
+    it "fails when there is no config" do
       GitRepository.any_instance.stubs(file_content: nil)
-      role.defaults.must_be_nil
+      assert_raises(Samson::Hooks::UserError) { role.defaults }
     end
 
-    it "ignores when config is invalid" do
+    it "fails when config is invalid" do
       assert config_content_yml.sub!('Service', 'Deployment')
-      refute role.defaults
+      assert_raises(Samson::Hooks::UserError) { role.defaults }
     end
   end
 
@@ -417,7 +438,7 @@ describe Kubernetes::Role do
         project: project,
         replicas: 1,
         requests_cpu: 0.5,
-        requests_memory: 5,
+        requests_memory: 7,
         limits_cpu: 1,
         limits_memory: 10,
         deploy_group: deploy_groups(:pod2)
@@ -463,7 +484,7 @@ describe Kubernetes::Role do
         expects(:file_content).with('kubernetes/pod100/foo.yaml', "master", anything).
         returns(read_kubernetes_sample_file('kubernetes_job.yml'))
       role.config_file = "kubernetes/$deploy_group/foo.yaml"
-      assert role.role_config_file("master", deploy_group: deploy_groups(:pod100), ignore_errors: false)
+      assert role.role_config_file("master", deploy_group: deploy_groups(:pod100))
     end
   end
 end

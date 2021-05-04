@@ -161,7 +161,8 @@ class Changeset::PullRequest
 
   def section_content(section_title, text)
     # ### Risks or Risks followed by === / ---
-    desired_header_regexp = "^(?:\\s*#+\\s*#{section_title}.*|\\s*#{section_title}.*\\n\\s*(?:-{2,}|={2,}))\\n"
+    desired_header_regexp = "^(?:\\s*#+\\s*\\W*\\s*#{section_title}.*"\
+      "|\\s*\\W*\\s*#{section_title}.*\\n\\s*(?:-{2,}|={2,}))\\n"
     content_regexp = '([\W\w]*?)' # capture all section content, including new lines, but not next header
     next_header_regexp = '(?=^(?:\s*#+|.*\n\s*(?:-{2,}|={2,}\s*\n))|\z)'
 

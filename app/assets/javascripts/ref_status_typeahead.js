@@ -72,8 +72,10 @@ function refStatusTypeahead(options){
       if (status.state === "success") return;
       var item = $("<li>");
       $ref_problem_list.append(item);
-      // State and status comes from GitHub or Samson
-      item.html(status.state + ": " + status.description);
+      // State and status comes from GitHub or Samson,
+      // safe to use .html for context/description since we sanitize in commit_statuses_controller.rb
+      var description = (status.description && status.description !== "" ? status.description : status.context);
+      item.html(status.state + ": " + description);
       if(status.target_url) {
         item.append(' <a href="' + status.target_url + '">details</a>');
       }
