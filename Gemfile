@@ -5,17 +5,17 @@ ruby File.read('.ruby-version').strip
 
 # gems that have rails engines are are always needed
 group :preload do
-  gem 'rails', '~> 6.1.0'
+  gem 'rails', '~> 6.1.3', '>= 6.1.3.2'
   gem 'dotenv'
   gem 'connection_pool'
-  gem 'marco-polo'
+  gem 'marco-polo', '>= 2.0.0'
 
   # AR extensions
   gem 'goldiloader'
   gem 'pagy'
   gem 'audited'
   gem 'soft_deletion'
-  gem 'doorkeeper'
+  gem 'doorkeeper', '>= 5.4.0'
 end
 
 gem 'dogstatsd-ruby'
@@ -30,7 +30,7 @@ gem 'omniauth-google-oauth2'
 gem 'omniauth-ldap'
 gem 'omniauth-gitlab'
 gem 'omniauth-bitbucket'
-gem 'omniauth-rails_csrf_protection' # remove once https://github.com/omniauth/omniauth/pull/809 is resolved
+gem 'omniauth-rails_csrf_protection' , '>= 0.1.2' # remove once https://github.com/omniauth/omniauth/pull/809 is resolved
 gem 'octokit'
 gem 'faraday'
 gem 'faraday-http-cache'
@@ -43,7 +43,7 @@ gem 'net-http-persistent'
 gem 'concurrent-ruby'
 # Can delete once this PR https://github.com/hashicorp/vault-ruby/pull/188 is merged and changes reconciled
 gem 'vault', git: 'https://github.com/zendesk/vault-ruby.git', ref: '96be391a2fd50a42871c8b9dc3c59fddbdbdc556'
-gem 'lograge'
+gem 'lograge', '>= 0.9.0'
 gem 'logstash-event'
 gem 'diffy'
 gem 'validates_lengths_from_database'
@@ -68,11 +68,11 @@ end
 
 group :assets do
   gem 'sprockets', '~> 3.7'
-  gem 'sass-rails'
+  gem 'sass-rails', '>= 6.0.0'
   gem 'uglifier'
   gem 'bootstrap-sass', '>= 3.4.1'
-  gem 'momentjs-rails'
-  gem 'bootstrap3-datetimepicker-rails'
+  gem 'momentjs-rails', '>= 2.20.1'
+  gem 'bootstrap3-datetimepicker-rails', '>= 4.17.47'
 
   source 'https://rails-assets.org' do
     gem 'rails-assets-bootstrap-select'
@@ -111,8 +111,8 @@ group :development, :test do
 end
 
 group :test do
-  gem 'minitest-rails'
-  gem 'rails-controller-testing'
+  gem 'minitest-rails', '>= 6.1.0'
+  gem 'rails-controller-testing', '>= 1.0.4'
   gem 'maxitest'
   gem 'mocha'
   gem 'webmock'
