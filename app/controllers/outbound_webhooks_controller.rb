@@ -52,7 +52,7 @@ class OutboundWebhooksController < ResourceController
   end
 
   def resources_path
-    @project ? [@project, 'webhooks'] : super
+    @project ? [@project, :webhooks] : super
   end
 
   def resource_params
