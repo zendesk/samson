@@ -24,7 +24,7 @@ class WebhooksController < ResourceController
   end
 
   def resources_path
-    [@project, 'webhooks']
+    [@project, :webhooks]
   end
 
   def resource_params
