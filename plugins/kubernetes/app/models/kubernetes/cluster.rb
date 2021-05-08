@@ -81,6 +81,13 @@ module Kubernetes
       Gem::Version.new(version)
     end
 
+    # Externally used by the kubernetes connectivity smoke tests
+    def connection_valid?
+      client('v1').api_valid?
+    rescue StandardError
+      false
+    end
+
     private
 
     def client_key_object
@@ -93,12 +100,6 @@ module Kubernetes
 
     def kubeconfig
       @kubeconfig ||= Kubeclient::Config.read(config_filepath)
-    end
-
-    def connection_valid?
-      client('v1').api_valid?
-    rescue StandardError
-      false
     end
 
     def test_client_connection
