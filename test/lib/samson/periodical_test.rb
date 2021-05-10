@@ -287,6 +287,7 @@ describe Samson::Periodical do
       external_id: Samson::PeriodicalDeploy::EXTERNAL_ID
     )
     stub_request(:get, "https://www.githubstatus.com/api/v2/status.json")
+    stub_request(:get, "http://foobar.server/api")
     Samson::Periodical.send(:registered).each_key do |task|
       Samson::Periodical.run_once task
     end
