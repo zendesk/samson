@@ -389,6 +389,7 @@ describe Job do
     it 'reports for deploy' do
       assert_instrument(
         stage: job&.deploy&.stage&.permalink,
+        kubernetes: job&.deploy&.stage&.kubernetes,
         project: project.permalink,
         type: job&.deploy ? 'deploy' : 'build',
         status: 'succeeded',
@@ -403,6 +404,7 @@ describe Job do
       job.update_column(:status, 'succeeded')
       assert_instrument(
         stage: job&.deploy&.stage&.permalink,
+        kubernetes: job&.deploy&.stage&.kubernetes,
         project: project.permalink,
         type: job&.deploy ? 'deploy' : 'build',
         status: 'succeeded',
