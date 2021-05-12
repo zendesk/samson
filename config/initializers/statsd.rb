@@ -65,6 +65,10 @@ ActiveSupport::Notifications.subscribe("job_status.samson") do |*, payload|
     "stage:#{payload.fetch(:stage)}",
   ]
 
+  # report if things were run with kubernetes
+  kubernetes = payload.fetch(:kubernetes)
+  tags << "kubernetes:#{kubernetes}" unless kubernetes.nil?
+
   payload.fetch(:cycle_time).each do |key, value|
     Samson.statsd.timing "jobs.deploy.cycle_time.#{key}", value * 1000, tags: tags
   end

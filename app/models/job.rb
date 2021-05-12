@@ -113,6 +113,10 @@ class Job < ActiveRecord::Base
     JobQueue.executing?(id)
   end
 
+  def kubernetes?
+    deploy && defined?(SamsonKubernetes::SamsonPlugin) && deploy&.stage&.kubernetes
+  end
+
   def waiting_for_restart?
     !JobQueue.enabled && pending?
   end
@@ -179,6 +183,7 @@ class Job < ActiveRecord::Base
   def report_state
     payload = {
       stage: deploy&.stage&.permalink,
+      kubernetes: kubernetes?,
       project: project.permalink,
       type: deploy ? 'deploy' : 'build',
       status: status,
