@@ -32,7 +32,7 @@ describe Samson::TimeSum do
         (0..10).must_include(payload[:parts][:db]) # ms
         true
       end
-      result = Samson::TimeSum.instrument("execute_job.samson", project: "foo", stage: "bar", production: false) do
+      result = Samson::TimeSum.instrument("execute_job.samson", project: "foo", stage: "bar", kubernetes: false, production: false) do
         User.first
       end
       result.must_equal User.first
@@ -45,7 +45,7 @@ describe Samson::TimeSum do
         true
       end
       assert_raises ArgumentError do
-        Samson::TimeSum.instrument("execute_job.samson", project: "foo", stage: "bar", production: false) do
+        Samson::TimeSum.instrument("execute_job.samson", project: "foo", stage: "bar", kubernetes: false, production: false) do
           raise ArgumentError
         end
       end

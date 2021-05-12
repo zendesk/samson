@@ -23,6 +23,10 @@ ActiveSupport::Notifications.subscribe("execute_job.samson") do |_, start, finis
   production = payload.fetch(:production)
   tags << "production:#{production}" unless production.nil?
 
+  # report if things were run with kubernetes
+  kubernetes = payload.fetch(:kubernetes)
+  tags << "kubernetes:#{kubernetes}" unless kubernetes.nil?
+
   Samson.statsd.batch do |statsd|
     statsd.timing "execute_shell.time", duration, tags: tags
     (payload[:parts] || {}).each do |part, time|
