@@ -84,7 +84,7 @@ module ApplicationHelper
     when UserProjectRole then ["Role for ##{resource.user.name}", resource.user]
     when Project, Stage
       name = resource.name
-      name = (resource.lock.warning? ? warning_icon : lock_icon) + " " + name if with_locks && resource.lock
+      name = (resource.lock.first.warning? ? warning_icon : lock_icon) + " " + name if with_locks && resource.lock.first
       [name, resource.is_a?(Project) ? resource : [resource.project, resource]]
     when Deploy then ["Deploy ##{resource.id}", [resource.project, resource]]
     when SecretSharingGrant then [resource.key, resource]
