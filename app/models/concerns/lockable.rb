@@ -4,7 +4,8 @@ module Lockable
   extend ActiveSupport::Concern
 
   included do
-    has_many :lock, as: :resource, dependent: :destroy
+    has_one :lock, as: :resource, dependent: :destroy
+    has_many :locks, as: :resource, dependent: :destroy
   end
 
   def locked_by?(lock)
