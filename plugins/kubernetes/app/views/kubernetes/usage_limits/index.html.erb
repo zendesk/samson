@@ -26,7 +26,7 @@
         <th>Scope</th>
         <th>CPU</th>
         <th>Memory</th>
-        <th><%= link_to "New", new_kubernetes_usage_limit_path, class: "btn btn-default" %></th>
+        <th><%= link_to "New", new_kubernetes_usage_limit_path(kubernetes_usage_limit: {project_id: @project&.id}), class: "btn btn-default" %></th>
       </tr>
 
       <% @kubernetes_usage_limits.each do |usage_limit| %>
