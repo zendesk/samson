@@ -63,7 +63,7 @@ describe EnvironmentVariable do
       end
 
       it "add to env hash" do
-        response = {deploy_group.permalink => {"FOO" => +"one"}}
+        response = {deploy_group.permalink => {"FOO" => +"one"}, "*" => {"FOO" => "two"}}
         ExternalEnvironmentVariableGroup.any_instance.expects(:read).returns(response)
         EnvironmentVariable.env(deploy, deploy_group, resolve_secrets: false).must_equal "FOO" => "one"
       end
@@ -77,8 +77,14 @@ describe EnvironmentVariable do
         e.message.must_include "The specified key does not exist."
       end
 
+      it "uses wildcard env groups if specific deploy group not available" do
+        response = {"*" => {"FOO" => +"one"}}
+        ExternalEnvironmentVariableGroup.any_instance.expects(:read).returns(response)
+        EnvironmentVariable.env(deploy, deploy_group, resolve_secrets: false).must_equal "FOO" => "one"
+      end
+
       it "ignores env groups without deploy group" do
-        response = {"ABC" => {"FOO" => "one"}}
+        response = {"ABC" => {"FOO" => +"one"}}
         ExternalEnvironmentVariableGroup.any_instance.expects(:read).returns(response)
         EnvironmentVariable.env(deploy, deploy_group, resolve_secrets: false).must_equal({})
       end
