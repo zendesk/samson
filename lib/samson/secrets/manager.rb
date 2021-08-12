@@ -94,6 +94,20 @@ module Samson
           id_parts.size
         end
 
+        # useful for console sessions
+        # copies secrets over to new deploy group, needs cleanup of old secrets once project is deployed everywhere
+        # since otherwise in the meantime existing deploys would be unable to restart due to missing secrets
+        def copy_project(project, from_deploy_group, to_deploy_group)
+          id_parts = ids.map { |id| parse_id(id) }
+          id_parts.select! do |parts|
+            parts.fetch(:project_permalink) == project && parts.fetch(:deploy_group_permalink) == from_deploy_group
+          end
+          id_parts.each do |parts|
+            copy(generate_id(parts), generate_id(parts.merge(deploy_group_permalink: to_deploy_group)))
+          end
+          id_parts.size
+        end
+
         def exist?(id)
           backend.read_multi([id]).values.map(&:nil?) == [false]
         end
