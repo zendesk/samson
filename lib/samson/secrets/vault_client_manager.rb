@@ -103,7 +103,7 @@ module Samson
       private
 
       def with_retries(&block)
-        Vault.with_retries(Vault::HTTPConnectionError, attempts: 3, &block)
+        Vault.with_retries(Vault::HTTPConnectionError, attempts: 5, wait_time: 0.1, &block)
       end
 
       # - local server for deploy-group specific id
