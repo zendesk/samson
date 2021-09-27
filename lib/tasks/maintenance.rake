@@ -78,4 +78,43 @@ namespace :maintenance do
       from_stage.destroy! if delete_empty && from_stage.deploy_groups.empty?
     end
   end
+
+  desc "delete deploy group from all stages"
+  task delete_deploy_group_for_all_projects: :environment do
+    # note: the project view is cached based on this key. after deleting the deploy group, we can bust the cache for all projects by adding a temporary global warning
+
+    projects = Project.all
+    delete = ENV.fetch("DELETE") #set to deploy group permalink
+    delete_group = DeployGroup.find_by_permalink!(delete)
+    puts "Found #{projects.size} projects"
+
+    actions = projects.map do |project|
+      from_stages = project.stages.select { |stage| stage.deploy_groups.map(&:permalink).include? delete }
+      [project, from_stages]
+    end
+
+    actions.select! do |project, from_stages|
+      if from_stages.empty?
+        puts "Unable to find configured stage for #{delete_group.name} in #{project.name}"
+      else
+        true
+      end
+    end
+
+    puts "----------DELETING BELOW STAGES-----------"
+    actions.each do |proj, from_stages|
+      from_stages.each do |from_stage|
+        puts "Proj: #{proj.name}, Stage: #{from_stage.name}"
+      end
+    end
+
+    puts "Confirm? y/n"
+    abort unless $stdin.gets.strip == "y"
+
+    actions.each do |_, from_stages|
+      from_stages.each do |from_stage|
+        from_stage.deploy_groups -= [delete_group]
+      end
+    end
+  end
 end
