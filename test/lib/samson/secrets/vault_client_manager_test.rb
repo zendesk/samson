@@ -122,7 +122,7 @@ describe Samson::Secrets::VaultClientManager do
         :put,
         "http://vault-land.com/v1/auth/token/renew-self",
         to_timeout: [],
-        times: 12 # 2 servers with 1 initial try and 3 re-tries
+        times: 12 # 2 servers with 1 initial try and 5 re-tries
       ) { manager.renew_token }
     end
   end
