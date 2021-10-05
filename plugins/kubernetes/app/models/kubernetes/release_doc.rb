@@ -160,7 +160,6 @@ module Kubernetes
         :"samson/override_project_label",
         :"samson/keep_name"
       )
-      annotations[:"samson/updateTimestamp"] = Time.now.utc.iso8601
 
       budget = {
         apiVersion: "policy/v1beta1",
