@@ -273,7 +273,9 @@ describe Kubernetes::Resource do
             resource.expects(:sleep).times(tries)
 
             e = assert_raises(RuntimeError) { resource.delete }
-            e.message.must_equal "Unable to delete resource (ConfigMap some-project pod1 Pod1)"
+            e.message.must_equal(
+              "Unable to delete resource (try scaling to 0 first without deletion) (ConfigMap some-project pod1 Pod1)"
+            )
           end
         end
       end
