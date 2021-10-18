@@ -88,10 +88,12 @@ module Kubernetes
       # wait for delete to finish before doing further work so we don't run into duplication errors
       # - first wait is 0 since the request itself already took a few ms
       # - we wait long because deleting a deployment will wait for all its' pods to go away which can take time
+      # - foreground deletion sometimes hangs forever, so suggest to scale to 0 first
       def delete
         return true unless exist?
         request_delete
-        backoff_wait(DELETE_BACKOFF, "delete resource") do
+        error_message = "delete resource (try scaling to 0 first without deletion)"
+        backoff_wait(DELETE_BACKOFF, error_message) do
           expire_resource_cache
           return true unless exist?
         end
