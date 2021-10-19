@@ -63,6 +63,24 @@ describe ReleaseService do
       assert_equal release.version, stage.deploys.first.reference
     end
 
+    it "ignores existing github releases" do
+      GITHUB.unstub(:create_release)
+      GITHUB.stubs(:create_release).
+        raises(Octokit::UnprocessableEntity.new(body: "code: already_exists"))
+      assert_difference "Release.count", +1 do
+        service.release(commit: commit, author: author)
+      end
+    end
+
+    it "does not ignore github release error" do
+      GITHUB.unstub(:create_release)
+      GITHUB.stubs(:create_release).
+        raises(Octokit::UnprocessableEntity.new({}))
+      assert_raises Octokit::UnprocessableEntity do
+        service.release(commit: commit, author: author)
+      end
+    end
+
     context 'with release_deploy_conditions hook' do
       let!(:stage) { project.stages.create!(name: "release", deploy_on_release: true) }
 
