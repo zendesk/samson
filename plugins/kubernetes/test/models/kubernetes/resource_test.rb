@@ -212,6 +212,26 @@ describe Kubernetes::Resource do
           assert_raises(Samson::Hooks::UserError) { resource.send(:create) }
         end
       end
+
+      describe "creating crds" do
+        let(:kind) { "ConstraintTemplate" }
+        let(:api_version) { 'constraints.gatekeeper.sh/v1beta1' }
+
+        it "waits for CRDs to be created to not fail next resource" do
+          stub_request(:get, "http://foobar.server/apis/constraints.gatekeeper.sh/v1beta1").
+            to_return(body: {
+              "resources" => [
+                {"name" => "constrainttemplate", "namespaced" => false, "kind" => "ConstraintTemplate"}
+              ]
+            }.to_json)
+
+          url = "http://foobar.server/apis/constraints.gatekeeper.sh/v1beta1/namespaces/pod1/constrainttemplate"
+          assert_request(:post, url, to_return: {body: {}.to_json}) do
+            resource.expects(:sleep).times(1)
+            resource.send(:create)
+          end
+        end
+      end
     end
 
     describe "#exist?" do

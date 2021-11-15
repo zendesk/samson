@@ -268,6 +268,17 @@ describe Kubernetes::ReleaseDoc do
         "Bar" => {"namespaced" => false}
       )
     end
+
+    it "supports opa" do
+      doc.resource_template.replace(
+        [
+          {kind: "Pod"},
+          {kind: "ConstraintTemplate", spec: {crd: {spec: {scope: "Namespaced", names: {kind: "Foo"}}}}}
+        ]
+      )
+
+      doc.custom_resource_definitions.must_equal "Foo" => {"namespaced" => true}
+    end
   end
 
   describe "#deploy" do
