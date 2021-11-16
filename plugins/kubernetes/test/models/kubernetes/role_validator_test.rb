@@ -723,7 +723,9 @@ describe Kubernetes::RoleValidator do
       primary = role.first
       primary2 = primary.dup
       primary2[:metadata] = {labels: {role: "meh", project: "other"}}
-      validate_error([[primary], [primary2]]).must_equal "metadata.labels.project must be consistent"
+      validate_error([[primary], [primary2]]).must_equal(
+        "metadata.labels.project must be consistent but found [\"some-project\", \"other\"]"
+      )
     end
 
     it "is invalid with different role labels in a single role" do
