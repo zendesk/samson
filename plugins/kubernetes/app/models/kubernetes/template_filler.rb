@@ -25,6 +25,7 @@ module Kubernetes
         set_namespace
         set_project_labels if template.dig(:metadata, :annotations, :"samson/override_project_label")
         set_deploy_url
+        set_update_timestamp
 
         if RoleValidator::IMMUTABLE_NAME_KINDS.include?(kind)
           # names have a fixed pattern so we cannot override them
@@ -617,6 +618,10 @@ module Kubernetes
       if sleep_time + buffer > grace_period
         pod_template[:spec][:terminationGracePeriodSeconds] = sleep_time + buffer
       end
+    end
+
+    def set_update_timestamp
+      (template.dig(:metadata, :annotations) || {})[:"samson/updateTimestamp"] = Time.now.utc.iso8601
     end
 
     def init_containers

@@ -5,6 +5,7 @@
 [![DockerHub Status](https://img.shields.io/docker/stars/zendesk/samson.svg)](https://hub.docker.com/r/zendesk/samson)
 
 Samson is a web interface for deployments. [Live Demo](https://samson-demo.herokuapp.com)
+It is currently in maintenance mode (bugfix, but no new features) because we are migrating off it.
 
 **View the current status of all your projects:**
 

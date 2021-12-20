@@ -212,6 +212,26 @@ describe Kubernetes::Resource do
           assert_raises(Samson::Hooks::UserError) { resource.send(:create) }
         end
       end
+
+      describe "creating crds" do
+        let(:kind) { "ConstraintTemplate" }
+        let(:api_version) { 'constraints.gatekeeper.sh/v1beta1' }
+
+        it "waits for CRDs to be created to not fail next resource" do
+          stub_request(:get, "http://foobar.server/apis/constraints.gatekeeper.sh/v1beta1").
+            to_return(body: {
+              "resources" => [
+                {"name" => "constrainttemplate", "namespaced" => false, "kind" => "ConstraintTemplate"}
+              ]
+            }.to_json)
+
+          url = "http://foobar.server/apis/constraints.gatekeeper.sh/v1beta1/namespaces/pod1/constrainttemplate"
+          assert_request(:post, url, to_return: {body: {}.to_json}) do
+            resource.expects(:sleep).times(1)
+            resource.send(:create)
+          end
+        end
+      end
     end
 
     describe "#exist?" do
@@ -273,7 +293,9 @@ describe Kubernetes::Resource do
             resource.expects(:sleep).times(tries)
 
             e = assert_raises(RuntimeError) { resource.delete }
-            e.message.must_equal "Unable to delete resource (ConfigMap some-project pod1 Pod1)"
+            e.message.must_equal(
+              "Unable to delete resource (try scaling to 0 first without deletion) (ConfigMap some-project pod1 Pod1)"
+            )
           end
         end
       end

@@ -1121,7 +1121,7 @@ describe Kubernetes::TemplateFiller do
       end
     end
 
-    describe 'istio sidecar injection' do
+    describe "istio sidecar injection" do
       with_env ISTIO_INJECTION_SUPPORTED: "true"
 
       before { doc.deploy_group_role.inject_istio_annotation = true }
@@ -1160,6 +1160,13 @@ describe Kubernetes::TemplateFiller do
         pod_annotation.must_be_nil
         pod_label.must_be_nil
         resource_label.must_be_nil
+      end
+    end
+
+    describe "updateTimestamp" do
+      it "sets updateTimestamp" do
+        Time.stubs(:now).returns(Time.parse("2018-01-01"))
+        template.to_hash[:metadata][:annotations][:"samson/updateTimestamp"].must_equal "2018-01-01T00:00:00Z"
       end
     end
   end

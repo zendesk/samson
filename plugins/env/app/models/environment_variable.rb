@@ -78,7 +78,7 @@ class EnvironmentVariable < ActiveRecord::Base
         all_groups = Rails.cache.fetch("env-#{group.url}-read", expires_in: EXTERNAL_VARIABLE_CACHE_DURATION) do
           group.read
         end
-        all_groups[deploy_group.permalink]
+        all_groups[deploy_group.permalink] || all_groups["*"]
       end.compact.inject({}, :merge!)
     rescue StandardError => e
       raise Samson::Hooks::UserError, "Error reading env vars from external env-groups: #{e.message}"

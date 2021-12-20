@@ -7,7 +7,7 @@ module Kubernetes
     attr_reader :path, :elements
 
     # from https://github.com/helm/helm/blob/release-3.0/pkg/releaseutil/kind_sorter.go#L27-L61
-    DEPLOY_SORT_ORDER = [
+    DEPLOY_SORT_ORDER = ([
       "Namespace",
       "NetworkPolicy",
       "ResourceQuota",
@@ -40,8 +40,8 @@ module Kubernetes
       "Job",
       "CronJob",
       "Ingress",
-      "APIService",
-    ].freeze
+      "APIService"
+    ] + ReleaseDoc::CRD_CREATING.keys).freeze
 
     DEPLOY_KINDS = ['Deployment', 'DaemonSet', 'StatefulSet'].freeze
     SERVICE_KINDS = ['Service'].freeze

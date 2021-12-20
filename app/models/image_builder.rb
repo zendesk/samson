@@ -63,7 +63,7 @@ class ImageBuilder
             executor.verbose_command(build_command)
           )
         end
-        executor.output.messages.scan(/Successfully built ([a-f\d]{12,})/).last&.first
+        executor.output.messages.scan(/(?:Successfully built |writing image sha256:)([a-f\d]{12,})/).last&.last
       end
     end
 
