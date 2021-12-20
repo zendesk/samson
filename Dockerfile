@@ -13,7 +13,7 @@ RUN apt-get update \
     openssh-client \
     curl \
     gnupg2 \
-  && curl -sL https://deb.nodesource.com/setup_6.x | bash - \
+  && curl -sL https://deb.nodesource.com/setup_12.x | bash - \
   && apt-get install nodejs npm -y \
   && rm -rf /var/lib/apt/lists/* \
   && gem update --system 3.2.32 \
