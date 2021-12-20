@@ -23,7 +23,7 @@ Complicated to start, but easy to develop from.
 ```bash
 # install the database you want to use, samson needs mysql, postgresql, or sqlite
 sudo apt-get install mysql-dev pg-dev nodejs
-brew install postgresql sqlite mysql
+brew install postgresql sqlite mysql nodejs
 
 bin/setup # Run the setup script to use the test credentials.
 ./bin/rails s
@@ -66,7 +66,7 @@ To restart the server use `kill -USR1 <pid>` which makes it restart without losi
 ### Environment variables
 
 Set environment variables in your `.env` file, see `.env.example` for documentation on what is required/available.
-Alternatively set them directly in heroku or the process environment. 
+Alternatively set them directly in heroku or the process environment.
 
 ### Advanced features
 

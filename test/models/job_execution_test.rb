@@ -318,9 +318,10 @@ describe JobExecution do
   end
 
   it "reports to statsd" do
+    expected_tags = ['project:duck', 'stage:stage4', 'production:false', 'kubernetes:false']
+
     Samson.statsd.stubs(:timing)
-    Samson.statsd.expects(:timing).
-      with('execute_shell.time', anything, tags: ['project:duck', 'stage:stage4', 'production:false'])
+    Samson.statsd.expects(:timing).with('execute_shell.time', anything, tags: expected_tags)
     assert execute_job
   end
 

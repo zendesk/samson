@@ -23,6 +23,10 @@ ActiveSupport::Notifications.subscribe("execute_job.samson") do |_, start, finis
   production = payload.fetch(:production)
   tags << "production:#{production}" unless production.nil?
 
+  # report if things were run with kubernetes
+  kubernetes = payload.fetch(:kubernetes)
+  tags << "kubernetes:#{kubernetes}" unless kubernetes.nil?
+
   Samson.statsd.batch do |statsd|
     statsd.timing "execute_shell.time", duration, tags: tags
     (payload[:parts] || {}).each do |part, time|
@@ -60,6 +64,10 @@ ActiveSupport::Notifications.subscribe("job_status.samson") do |*, payload|
     "project:#{payload.fetch(:project)}",
     "stage:#{payload.fetch(:stage)}",
   ]
+
+  # report if things were run with kubernetes
+  kubernetes = payload.fetch(:kubernetes)
+  tags << "kubernetes:#{kubernetes}" unless kubernetes.nil?
 
   payload.fetch(:cycle_time).each do |key, value|
     Samson.statsd.timing "jobs.deploy.cycle_time.#{key}", value * 1000, tags: tags

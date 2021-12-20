@@ -209,6 +209,18 @@ describe Samson::Secrets::Manager do
     end
   end
 
+  describe ".copy_project" do
+    it "copies secrets and tells user how many were copied" do
+      create_secret "global/bar/pod2/bar" # should not touch other projects
+      create_secret "global/foo/pod1/bar" # should not touch other deploy groups
+
+      secret # trigger creation of foo/pod2 secret
+      Samson::Secrets::Manager.copy_project("foo", "pod2", "pod3").must_equal 1
+      assert Samson::Secrets::Manager.read('production/foo/pod2/hello') # original exists
+      assert Samson::Secrets::Manager.read('production/foo/pod3/hello') # copied exists
+    end
+  end
+
   describe ".exist?" do
     it "is true when when it exists" do
       Samson::Secrets::Manager.exist?(secret.id).must_equal true

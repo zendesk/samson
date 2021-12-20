@@ -142,6 +142,7 @@ class JobExecution
     payload = {
       stage: (@stage&.name || "none"),
       project: @job.project.name,
+      kubernetes: kubernetes?,
       production: @stage&.production?
     }
 

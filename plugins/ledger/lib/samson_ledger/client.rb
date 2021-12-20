@@ -39,6 +39,7 @@ module SamsonLedger
           id:            deploy.id,
           name:          deploy.project.name,
           actor:         deploy.user.name,
+          actor_service: deploy.project.permalink,
           status:        deploy.status,
           started_at:    deploy.updated_at.iso8601,
           summary:       deploy.summary,

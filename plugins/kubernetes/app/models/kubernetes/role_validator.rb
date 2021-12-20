@@ -82,7 +82,7 @@ module Kubernetes
         end
 
         projects = element_groups.flat_map { |e| e.map { |r| r.dig(:metadata, :labels, :project) } }.uniq
-        errors << "metadata.labels.project must be consistent" if projects.size != 1
+        errors << "metadata.labels.project must be consistent but found #{projects.inspect}" if projects.size != 1
       end
 
       raise Samson::Hooks::UserError, errors.join(", ") if errors.any?

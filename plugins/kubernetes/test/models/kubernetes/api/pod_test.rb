@@ -289,7 +289,13 @@ describe Kubernetes::Api::Pod do
 
     describe "probe failures" do
       before do
-        event.merge!(type: 'Warning', reason: 'Unhealthy', message: +"Readiness probe failed: Get ", count: 1)
+        event.merge!(
+          involvedObject: {fieldPath: "spec.containers{container1}"},
+          type: 'Warning',
+          reason: 'Unhealthy',
+          message: +"Readiness probe failed: Get ",
+          count: 1
+        )
       end
 
       it "is true with unknown event" do
@@ -301,15 +307,26 @@ describe Kubernetes::Api::Pod do
         refute events_indicate_failure?
       end
 
-      it "tries to find probe from all containers" do
-        pod_attributes[:spec][:containers][1] = {
-          readinessProbe: pod_attributes[:spec][:containers][0].delete(:readinessProbe)
-        }
+      it "finds probe by container name" do
+        containers = pod_attributes[:spec][:containers]
+        containers << containers.first.dup
+        containers[1][:name] = containers[0][:name]
+        containers[0][:name] = "nope"
         refute events_indicate_failure?
       end
 
       it "fails with unknown probe failure" do
         assert event[:message].sub!('Readiness', 'Crazyness')
+        assert events_indicate_failure?
+      end
+
+      it "fails with unknown container failure" do
+        pod_attributes[:spec][:containers][0][:name] = "foo"
+        assert events_indicate_failure?
+      end
+
+      it "fails when container is not readable" do
+        event[:involvedObject].delete :fieldPath
         assert events_indicate_failure?
       end
 
