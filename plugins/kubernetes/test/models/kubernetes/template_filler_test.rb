@@ -190,6 +190,8 @@ describe Kubernetes::TemplateFiller do
     end
 
     describe "namespace" do
+      before { doc.created_cluster_resources = {} }
+
       it "keeps namespaces when set" do
         raw_template[:metadata][:namespace] = "default"
         template.to_hash[:metadata][:namespace].must_equal 'default'
@@ -224,11 +226,7 @@ describe Kubernetes::TemplateFiller do
 
       it "can read CRDs from currently deploying role" do
         raw_template[:kind] = "MyCustomResource"
-        doc.resource_template.replace(
-          [
-            {kind: "CustomResourceDefinition", spec: {scope: "Namespaced", names: {kind: "MyCustomResource"}}},
-          ]
-        )
+        doc.created_cluster_resources = {"MyCustomResource" => {"namespaced" => true}}
         template.to_hash[:metadata][:namespace].must_equal "pod1"
       end
     end

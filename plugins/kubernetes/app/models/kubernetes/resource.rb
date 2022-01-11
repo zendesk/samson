@@ -171,7 +171,7 @@ module Kubernetes
           end
         end
         expire_resource_cache
-        sleep 10 if ReleaseDoc::CRD_CREATING.keys.include?(kind)
+        sleep 10 if Release::CRD_CREATING.keys.include?(kind)
       rescue Kubeclient::ResourceNotFoundError => e
         raise Samson::Hooks::UserError, e.message
       end
