@@ -41,7 +41,7 @@ module Kubernetes
       "CronJob",
       "Ingress",
       "APIService"
-    ] + ReleaseDoc::CRD_CREATING.keys).freeze
+    ] + Release::CRD_CREATING.keys).freeze
 
     DEPLOY_KINDS = ['Deployment', 'DaemonSet', 'StatefulSet'].freeze
     SERVICE_KINDS = ['Service'].freeze

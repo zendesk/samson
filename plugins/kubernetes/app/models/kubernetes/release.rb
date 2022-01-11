@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 module Kubernetes
   class Release < ActiveRecord::Base
+    CRD_CREATING = {
+      "ConstraintTemplate" => [:spec, :crd] # OPA
+    }.freeze
+
     self.table_name = 'kubernetes_releases'
 
     belongs_to :user, inverse_of: false
@@ -83,6 +87,20 @@ module Kubernetes
           )
         end
       end
+
+      # to verify the template when creating a new CRD we need to know which CRDs are in this deploy
+      resources = release_docs.uniq(&:kubernetes_role).flat_map { |rd| rd.send :raw_template }
+      crds =
+        resources.select { |t| t[:kind] == "CustomResourceDefinition" } + # vanilla
+        CRD_CREATING.flat_map do |kind, nesting|
+          resources.select { |t| t[:kind] == kind }.map { |t| t.dig(*nesting) }
+        end
+      created_cluster_resources = crds.each_with_object({}) do |crd, h|
+        h[crd.dig(:spec, :names, :kind)] = {"namespaced" => crd.dig(:spec, :scope) == "Namespaced"}
+      end
+
+      release_docs.each { |rd| rd.created_cluster_resources = created_cluster_resources }
+
       raise Samson::Hooks::UserError, 'No roles or deploy groups given' if release_docs.empty?
     end
   end

@@ -94,7 +94,7 @@ module Kubernetes
 
       resource =
         resources["resources"].find { |r| r["kind"] == kind } || # in cluster
-        @doc.custom_resource_definitions[kind] || # in this deploy
+        @doc.created_cluster_resources[kind] || # in this deploy
         raise(
           Samson::Hooks::UserError,
           "Cluster \"#{cluster.name}\" does not support #{api_version} #{kind} (cached 1h)"

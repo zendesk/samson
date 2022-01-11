@@ -90,8 +90,36 @@ describe Kubernetes::Release do
       Kubernetes::Release.build_release_with_docs(release_params).release_docs.must_be :empty?
     end
 
+    it "adds created_cluster_resources" do
+      role_config_file << <<~YAML
+        ---
+        apiVersion: templates.gatekeeper.sh/v1
+        kind: ConstraintTemplate
+        metadata:
+          name: foo
+          labels:
+            project: some-project
+            role: some-role
+        spec:
+          crd:
+            spec:
+              names:
+                kind: Foobar
+      YAML
+      expect_file_contents_from_repo
+      release = Kubernetes::Release.build_release_with_docs(release_params)
+      assert_valid release.release_docs.first
+      assert_valid release
+      release.release_docs.first.created_cluster_resources.must_equal(
+        "Foobar" => {"namespaced" => false}
+      )
+    end
+
     describe "blue green" do
-      before { app_server.blue_green = true }
+      before do
+        expect_file_contents_from_repo
+        app_server.blue_green = true
+      end
 
       it 'defaults to blue when not using blue_green' do
         app_server.blue_green = false
