@@ -376,9 +376,13 @@ module Kubernetes
     def grouped_deploy_group_roles
       @grouped_deploy_group_roles ||= begin
         ignored_role_ids = @job.deploy.stage.kubernetes_stage_roles.where(ignored: true).pluck(:kubernetes_role_id)
+        deploy_groups = @job.deploy.stage.deploy_groups.to_a
+
+        raise(Samson::Hooks::UserError, "No deploy groups are configured for this stage.") if deploy_groups.empty?
+
         deploy_group_roles = Kubernetes::DeployGroupRole.where(
           project_id: @job.project_id,
-          deploy_group: @job.deploy.stage.deploy_groups.map(&:id)
+          deploy_group: deploy_groups.map(&:id)
         ).where.not(kubernetes_role_id: ignored_role_ids)
 
         # roles that exist in the repo for this sha
@@ -387,7 +391,7 @@ module Kubernetes
           reject { |role| ignored_role_ids.include?(role.id) }
 
         # check that all roles have a matching deploy_group_role and all roles are configured
-        @job.deploy.stage.deploy_groups.map do |deploy_group|
+        deploy_groups.map do |deploy_group|
           # fail early here, this was randomly not there, also fixes an n+1
           deploy_group.kubernetes_cluster || raise
 
