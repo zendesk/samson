@@ -342,6 +342,15 @@ describe Kubernetes::DeployExecutor do
         e.message.must_include "Missing env variables [\"FOO\", \"BAR\"]"
       end
 
+      it "fails before building when deploy groups are empty" do
+        stage.update(deploy_groups: [])
+
+        e = assert_raises Samson::Hooks::UserError do
+          refute execute
+        end
+        e.message.must_equal "No deploy groups are configured for this stage."
+      end
+
       it "fails before building when role config is missing" do
         GitRepository.any_instance.stubs(:file_content).with('kubernetes/resque_worker.yml', commit, anything).
           returns(nil)
