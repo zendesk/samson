@@ -5,7 +5,7 @@ module Samson
     class ServerGoneAway < ActiveRecord::StatementInvalid;
     end
 
-    def execute(*)
+    def execute(...)
       super
     rescue ActiveRecord::StatementInvalid => e
       if e.message.include?('MySQL server has gone away')

@@ -40,7 +40,7 @@ class DatadogMonitorQuery < ActiveRecord::Base
       monitor.query = self
       monitor.url([])
     else
-      q = URI.encode query.tr(",", " ") # rubocop:disable Lint/UriEscapeUnescape .to_query/CGI.escape do not work here
+      q = URI::Parser.new.escape query.tr(",", " ") # TODO: try Addressable::URI.escape .to_query/CGI.escape do not work
       "#{DatadogMonitor::BASE_URL}/monitors/manage?q=#{q}"
     end
   end

@@ -33,7 +33,7 @@ module Samson
       time_taken = nil
       GC.disable
       dump = ActiveSupport::Deprecation.silence do
-        StackProf.run(options) do
+        StackProf.run(**options) do
           time_taken = Benchmark.realtime(&block)
         end
       end
