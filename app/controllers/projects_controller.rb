@@ -40,6 +40,11 @@ class ProjectsController < ResourceController
     @project.stages.build(name: "Production")
   end
 
+  def show
+    @pagy, @stages = pagy(@project.stages, page: params[:page], items: Integer(params[:per_page] || 25))
+    super
+  end
+
   def deploy_group_versions
     before = params[:before] ? Time.parse(params[:before]) : Time.now
     deploy_group_versions = @project.last_deploy_by_group(before).transform_values(&:as_json)

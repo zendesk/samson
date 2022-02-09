@@ -20,9 +20,9 @@
       </tr>
     </thead>
     <tbody>
-      <% if @project.stages.to_a.any? %>
+      <% if @stages.any? || @page.page != 1 %>
         <% static_cache_key = [@project.permalink, Lock.cache_key, deployer_for_project?] # avoid N+1 %>
-        <%= render partial: "stage", collection: @project.stages, cached: ->(stage) { [stage, *static_cache_key] } %>
+        <%= render partial: "stage", collection: @stages, cached: ->(stage) { [stage, *static_cache_key] } %>
       <% else %>
         <tr>
           <td colspan="3">
@@ -32,4 +32,8 @@
       <% end %>
     </tbody>
   </table>
+
+  <div class="admin-actions">
+    <%= paginate @pagy %>
+  </div>
 </section>
