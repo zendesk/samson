@@ -345,7 +345,7 @@ describe CommitStatus do
         stub_github_api(
           check_run_url, check_runs: [{
             conclusion: 'success',
-            output: {summary: '<p>Huzzah!</p>'},
+            output: {summary: "<p>Huzzah!</p>"},
             name: 'Travis CI',
             html_url: 'https://coolbeans.com',
             started_at: started_at,

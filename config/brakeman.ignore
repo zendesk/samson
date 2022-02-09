@@ -1,37 +1,22 @@
 {
   "ignored_warnings": [
     {
-      "warning_type": "Cross-Site Scripting",
-      "warning_code": 4,
-      "fingerprint": "3fc89350d41082dbd68a0c57c3978ad86224e2eac077d6421f7c3b0ef88ea884",
-      "check_name": "LinkToHref",
-      "message": "Potentially unsafe model attribute in `link_to` href",
-      "file": "plugins/datadog/app/views/samson_datadog/_monitor_list.html.erb",
-      "line": 3,
-      "link": "https://brakemanscanner.org/docs/warning_types/link_to_href",
-      "code": "link_to((Unresolved Model).new.name, (Unresolved Model).new.url(Stage.find(params.fetch(:id)).deploy_groups), :class => (\"label label-#{({ \"OK\" => \"success\", \"Alert\" => \"danger\", \"Warn\" => \"warning\" }[(Unresolved Model).new.state(Stage.find(params.fetch(:id)).deploy_groups)] or \"info\")}\"))",
-      "render_path": [
-        {
-          "type": "controller",
-          "class": "Datadog::MonitorsController",
-          "method": "index",
-          "line": 6,
-          "file": "plugins/datadog/app/controllers/datadog/monitors_controller.rb",
-          "rendered": {
-            "name": "samson_datadog/_monitor_list",
-            "file": "plugins/datadog/app/views/samson_datadog/_monitor_list.html.erb"
-          }
-        }
-      ],
-      "location": {
-        "type": "template",
-        "template": "samson_datadog/_monitor_list"
-      },
-      "user_input": "(Unresolved Model).new.url(Stage.find(params.fetch(:id)).deploy_groups)",
+      "warning_type": "Unmaintained Dependency",
+      "warning_code": 123,
+      "fingerprint": "425dcb3af9624f11f12d777d6f9fe05995719975a155c30012baa6b9dc3487df",
+      "check_name": "EOLRuby",
+      "message": "Support for Ruby 2.6.3 ends on 2022-03-31",
+      "file": "Gemfile.lock",
+      "line": 488,
+      "link": "https://brakemanscanner.org/docs/warning_types/unmaintained_dependency/",
+      "code": null,
+      "render_path": null,
+      "location": null,
+      "user_input": null,
       "confidence": "Weak",
       "note": ""
     }
   ],
-  "updated": "2019-11-07 15:01:13 -0800",
-  "brakeman_version": "4.7.1"
+  "updated": "2022-02-09 16:28:19 -0800",
+  "brakeman_version": "5.2.1"
 }
