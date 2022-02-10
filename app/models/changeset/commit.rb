@@ -23,6 +23,10 @@ class Changeset::Commit
     @author ||= Changeset::GithubUser.new(@data.author) if @data.author
   end
 
+  def summary
+    summary = @data.commit.message.split("\n").first
+  end
+
   def sha
     @data.sha
   end
@@ -33,8 +37,7 @@ class Changeset::Commit
 
   # @return [Integer, NilClass]
   def pull_request_number
-    commit_message = @data.commit.message
-    if number = commit_message[PULL_REQUEST_MERGE_MESSAGE, 1] || commit_message[PULL_REQUEST_SQUASH_MESSAGE, 1]
+    if number = summary[PULL_REQUEST_MERGE_MESSAGE, 1] || summary[PULL_REQUEST_SQUASH_MESSAGE, 1]
       Integer(number)
     end
   end
