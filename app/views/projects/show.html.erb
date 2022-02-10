@@ -23,8 +23,19 @@
     </thead>
     <tbody>
       <% if @stages.any? || @page.page != 1 %>
-        <% static_cache_key = [@project.permalink, Lock.cache_key, deployer_for_project?] # avoid N+1 %>
-        <%= render partial: "stage", collection: @stages, cached: ->(stage) { [stage, *static_cache_key] } %>
+        <%
+          # expire the cache when the project or any of the stages (and their deploy-groups/envs) gets locked
+          # a little expensive, but better than expiring when anything gets locked (confirmed that it's not doing N+1s)
+          project_locks = Lock.for_resource(@project)
+          static_cache_key = [@project.permalink, deployer_for_project?]
+
+          cache_key = ->(stage) do
+            last_lock_change = (project_locks + Lock.for_resource(stage)).map(&:updated_at).max
+            [stage, last_lock_change, *static_cache_key]
+          end
+        %>
+
+          <%= render partial: "stage", collection: @stages, cached: cache_key %>
       <% else %>
         <tr>
           <td colspan="3">
