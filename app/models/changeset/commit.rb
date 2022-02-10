@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 class Changeset::Commit
-  PULL_REQUEST_MESSAGE = /\A.*\(#(\d+)\)$/.freeze
+  PULL_REQUEST_MERGE_MESSAGE = /\AMerge pull request #(\d+)/.freeze
+  PULL_REQUEST_SQUASH_MESSAGE = /\A.*\(#(\d+)\)$/.freeze
 
   attr_reader :project
 
@@ -32,7 +33,8 @@ class Changeset::Commit
 
   # @return [Integer, NilClass]
   def pull_request_number
-    if number = @data.commit.message[PULL_REQUEST_MESSAGE, 1]
+    commit_message = @data.commit.message
+    if number = commit_message[PULL_REQUEST_MERGE_MESSAGE, 1] || commit_message[PULL_REQUEST_SQUASH_MESSAGE, 1]
       Integer(number)
     end
   end
