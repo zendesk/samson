@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 class Changeset::Commit
-  PULL_REQUEST_MERGE_MESSAGE = /\AMerge pull request #(\d+)/.freeze
-  PULL_REQUEST_SQUASH_MESSAGE = /\A.*\(#(\d+)\)$/.freeze
+  PULL_REQUEST_MESSAGE = /\A.*\(#(\d+)\)$/.freeze
 
   attr_reader :project
 
@@ -23,11 +22,6 @@ class Changeset::Commit
     @author ||= Changeset::GithubUser.new(@data.author) if @data.author
   end
 
-  def summary
-    summary = @data.commit.message.split("\n").first
-    summary.truncate(80)
-  end
-
   def sha
     @data.sha
   end
@@ -38,7 +32,7 @@ class Changeset::Commit
 
   # @return [Integer, NilClass]
   def pull_request_number
-    if number = summary[PULL_REQUEST_MERGE_MESSAGE, 1] || summary[PULL_REQUEST_SQUASH_MESSAGE, 1]
+    if number = @data.commit.message[PULL_REQUEST_MESSAGE, 1]
       Integer(number)
     end
   end
