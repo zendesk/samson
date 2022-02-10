@@ -7,6 +7,8 @@
 
   <%= Samson::Hooks.render_views(:project_dashboard, self) %>
 
+  <%= render "stage_name_filter" %>
+
   <table class="project-stages table table-condensed">
     <thead>
       <tr>

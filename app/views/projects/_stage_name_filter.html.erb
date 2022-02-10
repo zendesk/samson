@@ -1,0 +1,12 @@
+<% if @pagy.last != 1 || (search = params[:stage_name].presence)%>
+  <%= form_tag "?", method: :get, html: { class: "form-horizontal" } do |form| %>
+    <div class="input-group">
+      <%= text_field_tag :stage_name, search, class: 'form-control', placeholder: 'Search stage names' %>
+      <span class="input-group-btn">
+          <button type="submit" class="btn btn-default" type="button">
+            <span class="glyphicon glyphicon-search"></span>
+          </button>
+        </span>
+    </div>
+  <% end %>
+<% end %>
