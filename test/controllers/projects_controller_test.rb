@@ -155,6 +155,12 @@ describe ProjectsController do
             get :show, params: {id: project.to_param}
           end
         end
+
+        it "can filter by name" do
+          get :show, params: {id: project.to_param, stage_name: "oduction"}
+          assert_response :success
+          assigns[:stages].map(&:name).must_equal ["Production", "Production Pod"]
+        end
       end
 
       describe "as JSON" do

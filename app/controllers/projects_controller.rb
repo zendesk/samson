@@ -40,6 +40,19 @@ class ProjectsController < ResourceController
     @project.stages.build(name: "Production")
   end
 
+  def show
+    stages = @project.stages
+
+    # for large projects we allow filtering by stage name
+    if (search = params[:stage_name]).presence
+      query = ActiveRecord::Base.send(:sanitize_sql_like, search)
+      stages = stages.where(Stage.arel_table[:name].matches("%#{query}%"))
+    end
+
+    @pagy, @stages = pagy(stages, page: params[:page], items: Integer(params[:per_page] || 25))
+    super
+  end
+
   def deploy_group_versions
     before = params[:before] ? Time.parse(params[:before]) : Time.now
     deploy_group_versions = @project.last_deploy_by_group(before).transform_values(&:as_json)
