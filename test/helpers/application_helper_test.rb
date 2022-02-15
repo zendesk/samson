@@ -80,6 +80,11 @@ describe ApplicationHelper do
       result = markdown("Hey ~~FOO~~ bar")
       result.must_equal "<p>Hey <del>FOO</del> bar</p>\n"
     end
+
+    it "supports nil" do
+      result = markdown(nil)
+      result.must_equal ""
+    end
   end
 
   describe "#controller_action" do

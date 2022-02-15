@@ -29,7 +29,7 @@ module ApplicationHelper
   # options: https://github.com/gjtorikian/commonmarker#extensions
   def markdown(str)
     sanitize CommonMarker.render_html(
-      str,
+      str.to_s,
       [:STRIKETHROUGH_DOUBLE_TILDE, :LIBERAL_HTML_TAG, :UNSAFE],
       [:strikethrough, :tasklist, :autolink, :table]
     )
