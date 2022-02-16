@@ -22,7 +22,7 @@
       </tr>
     </thead>
     <tbody>
-      <% if @stages.any? || @page.page != 1 %>
+      <% if @stages.any? || @pagy.page != 1 %>
         <%
           # expire the cache when the project or any of the stages (and their deploy-groups/envs) gets locked
           # a little expensive, but better than expiring when anything gets locked (confirmed that it's not doing N+1s)
