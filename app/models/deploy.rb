@@ -50,7 +50,8 @@ class Deploy < ActiveRecord::Base
   # job has almost identical code, keep it in sync
   def summary(show_project: false)
     project_name = " #{project&.name}" if show_project
-    deploy_details = "#{short_reference} to#{project_name} #{stage&.name}"
+    groups = stage.deploy_groups.map(&:name).join(" ")
+    deploy_details = "#{short_reference} to#{project_name} #{stage&.name} #{groups}"
     if ["cancelled", "cancelling"].include?(status)
       canceller_name = job.canceller&.name || "Samson"
       "#{canceller_name} #{summary_action} #{job.user.name}'s deploy#{deploy_buddy} of #{deploy_details}"
