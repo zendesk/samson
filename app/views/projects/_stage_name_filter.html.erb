@@ -1,12 +1,13 @@
-<% if @pagy.last != 1 || (search = params[:stage_name].presence)%>
-  <%= form_tag "?", method: :get, html: { class: "form-horizontal" } do |form| %>
-    <div class="input-group">
-      <%= text_field_tag :stage_name, search, class: 'form-control', placeholder: 'Search stage names' %>
-      <span class="input-group-btn">
-          <button type="submit" class="btn btn-default" type="button">
-            <span class="glyphicon glyphicon-search"></span>
-          </button>
-        </span>
+<% if @pagy.pages > 1 || params[:search] %>
+  <%= search_form top_pad: false do %>
+    <div class="col-sm-4">
+      <%= label_tag 'Name' %>
+      <%= text_field_tag 'search[name]', params.dig(:search, :name), class: "form-control" %>
+    </div>
+
+    <div class="col-sm-1">
+      <%= label_tag "failed" %>&nbsp;&nbsp;&nbsp;
+      <%= check_box_tag 'search[failed]', "true", params.dig(:search, :failed) %>
     </div>
   <% end %>
 <% end %>
