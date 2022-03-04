@@ -157,9 +157,16 @@ describe ProjectsController do
         end
 
         it "can filter by name" do
-          get :show, params: {id: project.to_param, stage_name: "oduction"}
+          get :show, params: {id: project.to_param, search: {name: "oduction"}}
           assert_response :success
           assigns[:stages].map(&:name).must_equal ["Production", "Production Pod"]
+        end
+
+        it "can filter by failed" do
+          deploys(:succeeded_test).destroy # only leave the failed deploy
+          get :show, params: {id: project.to_param, search: {failed: "true"}}
+          assert_response :success
+          assigns[:stages].map(&:name).must_equal ["Staging"]
         end
       end
 

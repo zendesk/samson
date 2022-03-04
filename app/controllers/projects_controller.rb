@@ -43,13 +43,20 @@ class ProjectsController < ResourceController
   def show
     stages = @project.stages
 
-    # for large projects we allow filtering by stage name
-    if (search = params[:stage_name]).presence
-      query = ActiveRecord::Base.send(:sanitize_sql_like, search)
+    # for large projects we allow filtering
+    if (name = params.dig(:search, :name)).presence
+      query = ActiveRecord::Base.send(:sanitize_sql_like, name)
       stages = stages.where(Stage.arel_table[:name].matches("%#{query}%"))
     end
 
-    @pagy, @stages = pagy(stages, page: params[:page], items: Integer(params[:per_page] || 25))
+    if params.dig(:search, :failed) == "true"
+      # inefficient and slow, but rarely used
+      @pagy = Pagy.new(count: stages.size, page: 1, items: stages.size)
+      @stages = stages.select { |s| ["cancelling", "cancelled", "errored", "failed"].include?(s.last_deploy&.status) }
+    else
+      @pagy, @stages = pagy(stages, page: params[:page], items: Integer(params[:per_page] || 25))
+    end
+
     super
   end
 
