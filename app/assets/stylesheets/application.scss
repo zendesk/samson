@@ -69,3 +69,12 @@ summary {
   border: 1px solid #a94442;
   display: inline-block;
 }
+
+.top-banner {
+  padding: 0.3em;
+  text-align: center;
+  background: #ffbd29;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}

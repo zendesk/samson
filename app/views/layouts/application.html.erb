@@ -14,6 +14,11 @@
   </head>
 
   <body class="<%= controller_action %>">
+    <% if ENV.fetch("PRODUCTION_FREEZE", "false") == "true" %>
+      <div class="top-banner">
+        <%= raw ENV.fetch("PRODUCTION_FREEZE_MESSAGE", "A deploy freeze is in place") %>
+      </div>
+    <% end %>
     <div class="wrap">
       <%= render "layouts/header" %>
       <div class="container">
