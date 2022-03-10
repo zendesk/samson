@@ -14,9 +14,9 @@
   </head>
 
   <body class="<%= controller_action %>">
-    <% if ENV.fetch("PRODUCTION_FREEZE", "false") == "true" %>
+    <% if ENV.fetch("GLOBAL_DEPLOY_WARNING", "false") == "true" %>
       <div class="top-banner">
-        <%= raw ENV.fetch("PRODUCTION_FREEZE_MESSAGE", "A deploy freeze is in place") %>
+        <%= raw ENV.fetch("GLOBAL_DEPLOY_WARNING_MESSAGE", "A deploy warning is in place, please contact Samson owner") %>
       </div>
     <% end %>
     <div class="wrap">
