@@ -204,7 +204,7 @@ class DeploysController < ApplicationController
       end
     end
     deploys = deploys.where.not(deleted_at: nil) if search_deleted
-    pagy(deploys, page: params[:page], items: 30)
+    pagy(deploys, page: params[:page], items: [Integer(params[:per_page] || "30"), 100].min)
   end
 
   def stage
