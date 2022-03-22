@@ -13,10 +13,23 @@ class Kubernetes::ClustersController < ResourceController
 
   def index
     @kubernetes_clusters = ::Kubernetes::Cluster.all.sort_by { |c| Samson::NaturalOrder.convert(c.name) }
-    if params[:capacity]
-      @cluster_nodes = Samson::Parallelizer.map(@kubernetes_clusters) do |cluster|
-        [cluster.id, cluster.schedulable_nodes]
-      end.to_h
+
+    respond_to do |format|
+      format.html do
+        if params[:capacity]
+          @cluster_nodes = Samson::Parallelizer.map(@kubernetes_clusters) do |cluster|
+            [cluster.id, cluster.schedulable_nodes]
+          end.to_h
+        end
+      end
+      format.json do
+        render_as_json(
+          :kubernetes_clusters,
+          @kubernetes_clusters,
+          nil,
+          allowed_includes: [:deploy_groups]
+        )
+      end
     end
   end
 
