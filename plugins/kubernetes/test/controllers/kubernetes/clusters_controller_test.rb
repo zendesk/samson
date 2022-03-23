@@ -27,6 +27,11 @@ describe Kubernetes::ClustersController do
         get :index, params: {capacity: true}
         assert_template :index
       end
+
+      it "renders json" do
+        get :index, format: :json
+        JSON.parse(response.body).keys.must_equal ["kubernetes_clusters"]
+      end
     end
 
     describe "#show" do
