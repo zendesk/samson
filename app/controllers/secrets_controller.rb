@@ -115,6 +115,15 @@ class SecretsController < ApplicationController
   end
 
   def show
+    respond_to do |format|
+      format.html do
+        render :show
+      end
+
+      format.json do
+        render json: {secret: @secret}
+      end
+    end
   end
 
   def update
@@ -143,7 +152,10 @@ class SecretsController < ApplicationController
     end
 
     attributes[:user_id] = current_user.id
+
     if Samson::Secrets::Manager.write(id, attributes)
+      @secret = Samson::Secrets::Manager.read(id, include_value: true)
+      @secret[:value] = nil unless @secret.fetch(:visible)
       successful_response "Secret #{id} saved."
     else
       failure_response 'Failed to save.'
@@ -187,17 +199,31 @@ class SecretsController < ApplicationController
   end
 
   def successful_response(notice)
-    flash[:notice] = notice
-    if params[:commit] == ResourceController::ADD_MORE
-      redirect_to new_secret_path(secret: params[:secret].except(:value).to_unsafe_h)
-    else
-      redirect_to action: :index
+    respond_to do |format|
+      format.html do
+        flash[:notice] = notice
+        if params[:commit] == ResourceController::ADD_MORE
+          redirect_to new_secret_path(secret: params[:secret].except(:value).to_unsafe_h)
+        else
+          redirect_to action: :index
+        end
+      end
+      format.json do
+        render json: {secret: @secret}
+      end
     end
   end
 
   def failure_response(message)
-    flash[:alert] = message
-    render :show
+    respond_to do |format|
+      format.html do
+        flash[:alert] = message
+        render :show
+      end
+      format.json do
+        render json: {error: message}, status: :bad_request
+      end
+    end
   end
 
   def find_secret
