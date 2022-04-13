@@ -13,6 +13,9 @@ module Kubernetes
     STABILITY_CHECK_DURATION = Integer(ENV.fetch('KUBERNETES_STABILITY_CHECK_DURATION', 1.minute))
     TICK = Integer(ENV.fetch('KUBERNETES_STABILITY_CHECK_TICK', 10.seconds))
     RESTARTED = "Restarted"
+    STATIC_KINDS = [
+      "CustomResourceDefinition", "ConfigMap", "Role", "RoleBinding", "ClusterRole", "ClusterRoleBinding", "Namespace"
+    ].freeze
 
     def initialize(job, output)
       @output = output
@@ -132,8 +135,13 @@ module Kubernetes
         # do not report on the status when we are about to delete
         next [] if doc.delete_resource
 
+        resources = doc.resources.dup
+
         # ignore pods since we report on them via pod_statuses
-        resources = doc.resources.reject { |r| r.is_a?(Kubernetes::Resource::Pod) }
+        resources.reject! { |r| r.is_a?(Kubernetes::Resource::Pod) }
+
+        # ignore static things we don't need to check events for
+        resources.reject! { |r| STATIC_KINDS.include?(r.kind) }
 
         resources.map! do |resource|
           ResourceStatus.new(
