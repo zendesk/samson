@@ -989,6 +989,15 @@ describe Kubernetes::DeployExecutor do
     end
   end
 
+  describe "#resource_statuses" do
+    it "does not check status for static kinds" do
+      doc = Kubernetes::ReleaseDoc.new(kubernetes_role: Kubernetes::Role.new)
+      doc.send :resource_template=, [{"kind" => "Role"}]
+      executor.expects(:fetch_grouped).returns [] # no pods found ... ideally we should not even look for pods
+      executor.send(:resource_statuses, [doc]).must_equal []
+    end
+  end
+
   describe "#print_statuses" do
     let(:status) do
       s = Kubernetes::ResourceStatus.new(
