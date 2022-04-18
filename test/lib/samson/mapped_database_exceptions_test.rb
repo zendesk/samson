@@ -3,7 +3,6 @@
 require_relative '../../test_helper'
 
 if defined?(ActiveRecord::ConnectionAdapters::Mysql2Adapter) # Only used when using mysql
-
   SingleCov.covered! uncovered: 1
 
   describe Samson::MappedDatabaseExceptions do

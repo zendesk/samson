@@ -415,7 +415,9 @@ describe JobQueue do
           sleep 0.1 # make sure it waits
           e = $!
         end
+
       subject.instance.instance_variable_get(:@threads)[1] = t
+      sleep 0.01 # make thread start
       subject.clear
       maxitest_wait_for_extra_threads
       e.class.must_equal RuntimeError

@@ -109,7 +109,7 @@ module Kubernetes
         env = {}
 
         [:REVISION, :TAG, :DEPLOY_ID, :DEPLOY_GROUP].each do |k|
-          env[k.to_s] = deploy_metadata.fetch(k.downcase).to_s
+          env[k.to_s] = deploy_metadata.fetch(k.downcase).to_s.dup # .dup since nil.to_s is frozen ""
         end
 
         [:PROJECT, :ROLE].each do |k|
