@@ -794,7 +794,7 @@ describe ApplicationHelper do
       html = render_collection_check_boxes(:project, :stages, project.stages)
       html.must_equal <<~HTML.gsub /^\s+|\n/, ""
         <div class="col-lg-4 col-lg-offset-2">
-          <input type="hidden" name="project[stages][]" value="" />
+          <input type="hidden" name="project[stages][]" value="" autocomplete=\"off\" />
           <input type="checkbox" value="0" name="project[stages][]" id="project_stages_0" /> <label for="project_stages_0">Staging</label>
           <br />
           <input type="checkbox" value="1" name="project[stages][]" id="project_stages_1" /> <label for="project_stages_1">Production</label>
