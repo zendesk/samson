@@ -4,8 +4,8 @@ module SamsonEnv
     <ul>
       <li>$VAR / ${VAR} replacements supported</li>
       <li>Priority is Deploy, Stage, Project, DeployGroup, Environment, All</li>
-      <li>Secrets can be used with secret://key_of_secret</li>
-      <li>env vars are written to .env{.deploy-group} files and need to be loaded by the app via Dotenv library or <code>set -a;source .env;set +a</code></li>
+      <li>non-kubernetes: Secrets can be used with secret://key_of_secret</li>
+      <li>non-kubernetes: env vars are written to .env{.deploy-group} files and need to be loaded by the app via Dotenv library or <code>set -a;source .env;set +a</code></li>
     </ul>
   TEXT
 
