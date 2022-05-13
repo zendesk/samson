@@ -74,6 +74,7 @@ class GitRepository
 
   # @return [content, nil]
   def file_content(file, reference, pull: true)
+    raise ArgumentError, "no reference give" if reference.blank?
     pull = false if mirror_current? # no need to pull when we are up-to-date
     instance_cache [:file_content, file, reference, pull] do
       next if !pull && !mirrored?
