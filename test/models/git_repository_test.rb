@@ -283,6 +283,12 @@ describe GitRepository do
       repository.file_content('foox', 'a' * 40).must_be_nil
     end
 
+    it "complains about bad calls" do
+      assert_raises ArgumentError do
+        repository.file_content('foox', "")
+      end.message.must_include "no reference"
+    end
+
     describe "when checkout exists" do
       # create a checkout without marking "mirror_current?"
       before { Project.new(id: project.id, repository_url: repo_temp_dir).repository.send(:ensure_mirror_current) }

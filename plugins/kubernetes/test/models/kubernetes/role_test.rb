@@ -372,6 +372,12 @@ describe Kubernetes::Role do
       )
     end
 
+    it "finds from default branch when project has no release_branch" do
+      GitRepository.any_instance.expects(:file_content).with(anything, "master", anything).returns(config_content_yml)
+      project.release_branch = ""
+      assert role.defaults
+    end
+
     it "finds values for any kind of resource" do
       assert config_content_yml.sub!('Deployment', 'Job')
       assert config_content_yml.sub!(/\n\n---.*/m, '')
