@@ -24,14 +24,14 @@
     <tbody>
       <% if @pagy.count != 0 %>
         <%
-          # expire the cache when the project or any of the stages (and their deploy-groups/envs) gets locked
+          # expire the cache when the project or any of the stages (and their deploy-groups/envs) gets locked or unlocked
           # a little expensive, but better than expiring when anything gets locked (confirmed that it's not doing N+1s)
           project_locks = Lock.for_resource(@project)
           static_cache_key = [@project.permalink, deployer_for_project?]
 
           cache_key = ->(stage) do
-            last_lock_change = (project_locks + Lock.for_resource(stage)).map(&:updated_at).max
-            [stage, last_lock_change, *static_cache_key]
+            lock_changed = (project_locks + Lock.for_resource(stage)).sum(&:updated_at)
+            [stage, lock_changed, *static_cache_key]
           end
         %>
 
