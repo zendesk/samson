@@ -929,6 +929,61 @@ describe Kubernetes::TemplateFiller do
       end
     end
 
+    describe "TopologySpreadConstraints" do
+      def topology_spread_constraints_defined?
+        template.to_hash.dig(:spec, :template, :spec, :topologySpreadConstraints)&.any?
+      end
+
+      def pod_template_selector
+        raw_template[:spec][:selector]
+      end
+
+      def topology_spread_constraint(topology_key: 'topology.kubernetes.io/zone')
+        {
+          topologyKey: topology_key,
+          maxSkew: 1,
+          whenUnsatisfiable: 'ScheduleAnyway',
+          labelSelector: pod_template_selector,
+        }
+      end
+
+      it "does not add topologySpreadConstraints when not enabled" do
+        refute topology_spread_constraints_defined?
+      end
+
+      describe "with topologySpreadConstraints enabled" do
+        around { |t| stub_const Kubernetes::TemplateFiller, :KUBERNETES_ADD_POD_TOPOLOGY_SPREAD, true, &t }
+
+        it "adds the default topologySpreadConstraints" do
+          template.to_hash.dig_fetch(:spec, :template, :spec, :topologySpreadConstraints).must_equal(
+            [topology_spread_constraint]
+          )
+        end
+
+        it "does not add topologySpreadConstraints to DaemonSet" do
+          raw_template[:kind] = 'DaemonSet'
+          refute topology_spread_constraints_defined?
+        end
+
+        it "does not add topologySpreadConstraints when it was already defined" do
+          hostname_topology_key = 'topology.kubernetes.io/hostname'
+          raw_template.dig_fetch(:spec, :template, :spec)[:topologySpreadConstraints] = [
+            topology_spread_constraint(topology_key: hostname_topology_key)
+          ]
+          template.to_hash.dig(:spec, :template, :spec, :topologySpreadConstraints, 0, :topologyKey).must_equal(
+            hostname_topology_key
+          )
+        end
+
+        it "does not add topologySpreadConstraints when opted out" do
+          raw_template[:spec][:template][:metadata][:annotations] = {
+            "samson/podTopologySpread": "disabled"
+          }
+          refute topology_spread_constraints_defined?
+        end
+      end
+    end
+
     describe "HorizontalPodAutoscaler" do
       before do
         raw_template[:apiVersion] = 'autoscaling/v1'

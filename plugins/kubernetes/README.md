@@ -221,6 +221,20 @@ and increase the `spec.terminationGracePeriodSeconds` if necessary.
 - Set `KUBERNETES_ADD_PRESTOP=true` to enable
 - Set `KUBERNETES_PRESTOP_SLEEP_DURATION=30` in seconds to override default sleep duration (3 seconds)
 
+### Adding a default Pod TopologySpreadConstraint
+
+In order to control how Pods are spread across the cluster among failure domains, you can set a default 
+[`TopologySpreadConstraint`](https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/)
+to help achieve high availability as well as efficient resource utilization.
+
+(will only add if pod `metadata.annotations.samson/podTopologySpread` is not set to `disabled` and a `topologySpreadConstraints` is not defined)
+
+- Set `KUBERNETES_ADD_POD_TOPOLOGY_SPREAD` to enable
+- Set `KUBERNETES_POD_TOPOLOGY_SPREAD_TOPOLOGY_KEY` to override default `topologyKey` (`topology.kubernetes.io/zone`)
+- Set `KUBERNETES_POD_TOPOLOGY_SPREAD_MAX_SKEW` to override default `maxSkew` (`1`)
+- Set `KUBERNETES_POD_TOPOLOGY_SPREAD_WHEN_UNSATISFIABLE` to override default `whenUnsatisfiable` (`ScheduleAnyway`)
+
+
 ### Showing logs on succeeded deploys
 
 Set `metadata.annoations.samson/show_logs_on_deploy: 'true'` on pods, to see logs when the deploy succeeds.

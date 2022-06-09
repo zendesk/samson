@@ -6,6 +6,7 @@ module Kubernetes
 
     SECRET_PULLER_IMAGE = ENV['SECRET_PULLER_IMAGE'].presence
     KUBERNETES_ADD_PRESTOP = Samson::EnvCheck.set?('KUBERNETES_ADD_PRESTOP')
+    KUBERNETES_ADD_POD_TOPOLOGY_SPREAD = Samson::EnvCheck.set?('KUBERNETES_ADD_POD_TOPOLOGY_SPREAD')
     SECRET_PREFIX = "secret/"
     DOCKERFILE_NONE = 'none'
     DEFAULT_TERMINATION_GRACE_PERIOD = 30
@@ -40,6 +41,7 @@ module Kubernetes
           set_history_limit if kind == 'Deployment'
           make_stateful_set_match_service if kind == 'StatefulSet'
           set_pre_stop if kind == 'Deployment'
+          set_pod_topology_spread if kind == 'Deployment'
           set_name
           (set_replica_target || validate_replica_target_is_supported) if kind != 'PodTemplate'
           set_spec_template_metadata
@@ -618,6 +620,25 @@ module Kubernetes
       if sleep_time + buffer > grace_period
         pod_template[:spec][:terminationGracePeriodSeconds] = sleep_time + buffer
       end
+    end
+
+    def set_pod_topology_spread
+      return unless KUBERNETES_ADD_POD_TOPOLOGY_SPREAD
+      return unless (pod_template.dig(:spec, :topologySpreadConstraints) || []).empty?
+      return if pod_annotations[:"samson/podTopologySpread"] == "disabled"
+
+      topology_key = ENV['KUBERNETES_POD_TOPOLOGY_SPREAD_TOPOLOGY_KEY'] || 'topology.kubernetes.io/zone'
+      max_skew = Integer(ENV['KUBERNETES_POD_TOPOLOGY_SPREAD_MAX_SKEW'] || '1')
+      constraint = ENV['KUBERNETES_POD_TOPOLOGY_SPREAD_WHEN_UNSATISFIABLE'] || 'ScheduleAnyway'
+
+      pod_template[:spec][:topologySpreadConstraints] = [
+        {
+          topologyKey: topology_key,
+          maxSkew: max_skew,
+          whenUnsatisfiable: constraint,
+          labelSelector: template.dig_fetch(:spec, :selector),
+        }
+      ]
     end
 
     def set_update_timestamp
