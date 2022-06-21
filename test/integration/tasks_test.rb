@@ -19,14 +19,13 @@ describe "db" do
   end
 
   it "produces the current schema from checked in migrations" do
-    # Loading all tasks results in a circular import due to Sentry::Tasks.
+    # Loading all tasks here results in a circular import due to Sentry::Tasks. Only loading the necessary task.
     load File.join(Rails.root, 'lib', 'tasks', 'dump.rake')
     Rake::Task["db:schema:dump"].execute
     if ActiveRecord::Base.connection.adapter_name.match?(/mysql/i)
       # additional expected diff can be mitigated in lib/tasks/dump.rake where we hook into db:schema:dump
       content = File.read("db/schema.rb")
       refute content.include?("4294967295"), "replace 4294967295 with 1073741823 in db/schema.rb\n#{content}"
-
       diff = `git diff -- db/schema.rb`
       assert diff.empty?, diff
     end
