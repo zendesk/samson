@@ -157,7 +157,7 @@ module Kubernetes
       )
 
       budget = {
-        apiVersion: "policy/v1beta1",
+        apiVersion: "policy/v1",
         kind: "PodDisruptionBudget",
         metadata: {
           name: deployment.dig(:metadata, :name),

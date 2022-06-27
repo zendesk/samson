@@ -950,7 +950,7 @@ describe Kubernetes::TemplateFiller do
 
     describe "PodDisruptionBudget" do
       before do
-        raw_template[:apiVersion] = 'policy/v1beta1'
+        raw_template[:apiVersion] = 'policy/v1'
         raw_template[:kind] = 'PodDisruptionBudget'
         raw_template[:spec][:template][:spec].delete(:containers)
       end
@@ -984,7 +984,7 @@ describe Kubernetes::TemplateFiller do
       end
 
       it "modified budgets so we do not get errors when 2 budgets match the same pod" do
-        raw_template[:apiVersion] = 'policy/v1beta1'
+        raw_template[:apiVersion] = 'policy/v1'
         raw_template[:kind] = 'PodDisruptionBudget'
         raw_template[:spec].delete(:template)
         hash = template.to_hash

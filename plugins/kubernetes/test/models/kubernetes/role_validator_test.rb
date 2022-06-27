@@ -118,7 +118,7 @@ describe Kubernetes::RoleValidator do
       before do
         role.push(
           kind: 'PodDisruptionBudget',
-          apiVersion: 'policy/v1beta1',
+          apiVersion: 'policy/v1',
           metadata: {name: 'foo', labels: labels},
           spec: {selector: {matchLabels: labels}}
         )

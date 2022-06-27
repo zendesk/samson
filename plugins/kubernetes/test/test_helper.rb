@@ -146,7 +146,7 @@ class ActiveSupport::TestCase
         {"name" => "horizontalpodautoscalers/status", "namespaced" => true, "kind" => "HorizontalPodAutoscaler"},
       ]
     },
-    "policy/v1beta1" => {
+    "policy/v1" => {
       "kind" => "APIResourceList",
       "resources" => [
         {"name" => "poddisruptionbudgets", "namespaced" => true, "kind" => "PodDisruptionBudget"}
