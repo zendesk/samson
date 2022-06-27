@@ -374,7 +374,7 @@ GEM
       socksify (>= 1.7.0)
       terminal-table (>= 1.4.0)
       thor (>= 0.16.0)
-    jmespath (1.4.0)
+    jmespath (1.6.1)
     json (2.3.0)
     jsonpath (1.1.0)
       multi_json
@@ -498,7 +498,7 @@ GEM
       nio4r (~> 2.0)
     pyu-ruby-sasl (0.0.3.3)
     racc (1.6.0)
-    rack (2.2.3)
+    rack (2.2.3.1)
     rack-mini-profiler (1.1.4)
       rack (>= 1.2.0)
     rack-test (1.1.0)
