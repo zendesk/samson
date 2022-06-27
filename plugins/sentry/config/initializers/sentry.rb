@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-unless ENV['SENTRY_DSN'].nil?
+if sentry_dns = ENV['SENTRY_DSN']
   Sentry.init do |config|
-    config.dsn = ENV['SENTRY_DSN']
+    config.dsn = sentry_dns
     config.breadcrumbs_logger = [:active_support_logger, :http_logger]
     config.environment = Rails.env
 
