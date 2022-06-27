@@ -772,7 +772,7 @@ describe Kubernetes::Resource do
 
   describe Kubernetes::Resource::PodDisruptionBudget do
     let(:kind) { 'PodDisruptionBudget' }
-    let(:api_version) { 'policy/v1beta1' }
+    let(:api_version) { 'policy/v1' }
 
     describe "#deploy" do
       it "updates" do

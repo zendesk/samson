@@ -236,7 +236,7 @@ describe Kubernetes::ReleaseDoc do
       end
 
       it "does not add a second PDB" do
-        template[1][:apiVersion] = "policy/v1beta1"
+        template[1][:apiVersion] = "policy/v1"
         template[1][:kind] = "PodDisruptionBudget"
         create!
         create!.resource_template.size.must_equal 2
