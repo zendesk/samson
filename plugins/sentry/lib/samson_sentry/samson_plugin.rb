@@ -9,5 +9,6 @@ module SamsonSentry
 end
 
 Samson::Hooks.callback :error do |exception, **options|
-  Sentry.capture_exception(exception, options)
+  sentry_options = options.slice(:contexts, :extra, :tags, :user, :level, :fingerprint)
+  Sentry.capture_exception(exception, sentry_options)
 end
