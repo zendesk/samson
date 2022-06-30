@@ -10,7 +10,6 @@ if sentry_dsn = ENV['SENTRY_DSN']
     config.traces_sample_rate = 1
   end
 
-
   # make events clickable see https://github.com/getsentry/sentry-ruby/issues/1786
   unless ENV["SENTRY_PROJECT"].nil?
     Sentry::LoggingHelper.prepend(Module.new do
