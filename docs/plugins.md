@@ -26,6 +26,7 @@ Available plugins:
  - [Release Number From CI](https://github.com/redbubble/samson-release-number-from-ci)
  - [NewRelic](https://github.com/zendesk/samson/tree/master/plugins/new_relic)
  - [Pipelined deploys](https://github.com/zendesk/samson/tree/master/plugins/pipelines)
+ - [Sentry](https://github.com/zendesk/samson/tree/master/plugins/sentry)
  - [Slack deploys](https://github.com/zendesk/samson/tree/master/plugins/slack_app)
  - [Slack notifications](https://github.com/zendesk/samson/tree/master/plugins/slack_webhooks)
  - [Zendesk notifications](https://github.com/zendesk/samson/tree/master/plugins/zendesk)

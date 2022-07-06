@@ -92,15 +92,16 @@ describe Samson::Hooks do
       mock_exception = mock
       Airbrake.expects(:notify).with(mock_exception, foo: 'bar').once
       Rollbar.expects(:error).never
+      Sentry.expects(:error).never
 
-      hooks.size.must_equal 2
+      hooks.size.must_equal 3
 
       Samson::Hooks.only_callbacks_for_plugin('samson_airbrake', :error) do
         hooks.size.must_equal 1
         Samson::Hooks.fire(:error, mock_exception, foo: 'bar').size.must_equal 1
       end
 
-      hooks.size.must_equal 2
+      hooks.size.must_equal 3
     end
   end
 

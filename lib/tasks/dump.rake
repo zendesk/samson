@@ -5,7 +5,6 @@ task "db:schema:dump" do
   next unless ActiveRecord::Base.connection.adapter_name.match?(/mysql/i)
   file = "db/schema.rb"
   schema = File.read(file)
-  schema.gsub!(/, charset: "utf8mb4".* do/, " do") ||
-    raise("Unable to replace in:\n#{schema.split("\n").first(20).join("\n")}\n...")
+  schema.gsub!(/, charset: "utf8mb4".* do/, " do")
   File.write(file, schema)
 end
