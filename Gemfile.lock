@@ -317,7 +317,7 @@ GEM
     ddtrace (0.45.0)
       msgpack
     debug_inspector (0.0.3)
-    diffy (3.2.0)
+    diffy (3.4.2)
     dogstatsd-ruby (3.0.0)
     domain_name (0.5.20190701)
       unf (>= 0.0.5, < 1.0.0)
