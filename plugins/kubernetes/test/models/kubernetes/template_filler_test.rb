@@ -1032,11 +1032,11 @@ describe Kubernetes::TemplateFiller do
         template.to_hash[:metadata][:annotations][:"foo.bar/baz"].must_equal "bar"
       end
 
-      it "sets annotations with . in the keyname" do
+      it "can set arbitrary paths that include dots by escaping them" do
         raw_template[:metadata][:annotations] = {
-          "samson/set_via_env_json-metadata.annotations.foo.bar/baz\\.zende\\.sk" => "FOO"
+          "samson/set_via_env_json-metadata.baz\\.zende\\.sk/foo" => "FOO"
         }
-        template.to_hash[:metadata][:annotations][:"foo.bar/baz.zende.sk"].must_equal "bar"
+        template.to_hash[:metadata][:"baz.zende.sk/foo"].must_equal "bar"
       end
 
       it "sets labels with ." do

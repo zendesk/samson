@@ -73,8 +73,14 @@ module Kubernetes
     end
 
     def self.dig_path(path)
-      path = path.split(/\.(labels|annotations)\./) # make sure we do not split inside of labels or annotations
+      # make sure we do not split inside of labels or annotations
+      path = path.split(/\.(labels|annotations)\./)
+
+      # split on . but not on \\.
       path[0..0] = path[0].split(/(?<=[^\\])\./)
+      path.map! { |k| k.gsub("\\.", ".") }
+
+      # support numbers for array index
       path.map! { |k| k.match?(/^\d+$/) ? Integer(k) : k.to_sym }
     end
 
