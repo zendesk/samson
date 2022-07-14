@@ -1032,6 +1032,13 @@ describe Kubernetes::TemplateFiller do
         template.to_hash[:metadata][:annotations][:"foo.bar/baz"].must_equal "bar"
       end
 
+      it "sets annotations with . in the keyname" do
+        raw_template[:metadata][:annotations] = {
+          "samson/set_via_env_json-metadata.annotations.foo.bar/baz\\.zende\\.sk" => "FOO"
+        }
+        template.to_hash[:metadata][:annotations][:"foo.bar/baz.zende.sk"].must_equal "bar"
+      end
+
       it "sets labels with ." do
         raw_template[:metadata][:annotations] = {
           "samson/set_via_env_json-metadata.labels.foo.bar/baz" => "FOO"
