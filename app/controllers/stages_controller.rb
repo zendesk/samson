@@ -63,7 +63,8 @@ class StagesController < ResourceController
       :active_deploy,
       :lock,
       :locks,
-      :deploy_groups
+      :deploy_groups,
+      :commands
     ]
   end
 
