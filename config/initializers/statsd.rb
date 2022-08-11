@@ -79,6 +79,10 @@ ActiveSupport::Notifications.subscribe("system_stats.samson") do |*, payload|
   payload.each { |key, value| Samson.statsd.gauge key.to_s, value }
 end
 
+ActiveSupport::Notifications.subscribe("secret_cache.samson") do |*, payload|
+  Samson.statsd.increment "secret_cache.#{payload[:action]}"
+end
+
 # basic web stats
 ActiveSupport::Notifications.subscribe("process_action.action_controller") do |_, start, finish, _, payload|
   duration = 1000.0 * (finish - start)
