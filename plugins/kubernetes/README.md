@@ -337,3 +337,12 @@ If a warning event fails deploys, but application owners deem them safe to ignor
 
 When using the namespaces UI to create new namespaces, set `KUBERNETES_COPY_SECRETS_TO_NEW_NAMESPACE=my-docker-auth,other-stuff`,
 it will then copy that secret from the `default` namespace to any newly created namespace.
+
+### Adding Well-Known Labels
+
+In accordance with [Kubernetes Well-Known Labels](https://kubernetes.io/docs/reference/labels-annotations-taints/#app-kubernetes-io-managed-by),
+Samson can set the labels:
+- `app.kubernetes.io/managed-by` to `samson`
+- `app.kubernetes.io/name` to the resource name
+
+This feature can be enabled by setting `KUBERNETES_ADD_WELL_KNOWN_LABELS=true`.
