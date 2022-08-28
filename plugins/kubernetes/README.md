@@ -343,6 +343,6 @@ it will then copy that secret from the `default` namespace to any newly created 
 In accordance with [Kubernetes Well-Known Labels](https://kubernetes.io/docs/reference/labels-annotations-taints/#app-kubernetes-io-managed-by),
 Samson can set the labels:
 - `app.kubernetes.io/managed-by` to `samson`
-- `app.kubernetes.io/name` to the resource name
+- `app.kubernetes.io/name` to the project permalink
 
 This feature can be enabled by setting `KUBERNETES_ADD_WELL_KNOWN_LABELS=true`.

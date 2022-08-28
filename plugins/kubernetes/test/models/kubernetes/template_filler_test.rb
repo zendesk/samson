@@ -1194,8 +1194,8 @@ describe Kubernetes::TemplateFiller do
 
       it "adds app.kubernetes.io/name label if not set" do
         result = template.to_hash
-        result.dig(:metadata, :labels, :"app.kubernetes.io/name").must_equal result[:metadata][:name]
-        result.dig(:spec, :template, :metadata, :labels, :"app.kubernetes.io/name").must_equal result[:metadata][:name]
+        result.dig(:metadata, :labels, :"app.kubernetes.io/name").must_equal project.permalink
+        result.dig(:spec, :template, :metadata, :labels, :"app.kubernetes.io/name").must_equal project.permalink
       end
 
       it "does not add app.kubernetes.io/name label if already set" do

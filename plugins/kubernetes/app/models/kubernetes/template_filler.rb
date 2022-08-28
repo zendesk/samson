@@ -27,6 +27,7 @@ module Kubernetes
         set_project_labels if template.dig(:metadata, :annotations, :"samson/override_project_label")
         set_deploy_url
         set_update_timestamp
+        set_well_known_labels
 
         if RoleValidator::IMMUTABLE_NAME_KINDS.include?(kind)
           # names have a fixed pattern so we cannot override them
@@ -59,8 +60,6 @@ module Kubernetes
         else
           set_name
         end
-
-        set_well_known_labels # last in order to ensure app name has been set
 
         template
       end
@@ -641,7 +640,7 @@ module Kubernetes
         labels[:"app.kubernetes.io/managed-by"] = "samson"
 
         # do not overwrite existing name label, if already set
-        labels[:"app.kubernetes.io/name"] = template[:metadata][:name] unless labels.key?(:"app.kubernetes.io/name")
+        labels[:"app.kubernetes.io/name"] ||= project.permalink
       end
     end
 
