@@ -163,13 +163,16 @@ module Samson
         end
 
         def expire_lookup_cache
+          ActiveSupport::Notifications.instrument("secret_cache.samson", {action: "expire"})
           cache.delete(SECRET_LOOKUP_CACHE)
         end
 
         private
 
         def fetch_lookup_cache
+          ActiveSupport::Notifications.instrument("secret_cache.samson", {action: "fetch"})
           cache.fetch(SECRET_LOOKUP_CACHE) do
+            ActiveSupport::Notifications.instrument("secret_cache.samson", {action: "rebuild"})
             backend.ids.each_slice(1000).each_with_object({}) do |slice, all|
               read_multi(slice, include_value: true).each do |id, secret|
                 all[id] = lookup_cache_value(secret)
