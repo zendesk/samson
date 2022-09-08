@@ -6,6 +6,7 @@ module Kubernetes
 
     SECRET_PULLER_IMAGE = ENV['SECRET_PULLER_IMAGE'].presence
     KUBERNETES_ADD_PRESTOP = Samson::EnvCheck.set?('KUBERNETES_ADD_PRESTOP')
+    KUBERNETES_ADD_WELL_KNOWN_LABELS = Samson::EnvCheck.set?('KUBERNETES_ADD_WELL_KNOWN_LABELS')
     SECRET_PREFIX = "secret/"
     DOCKERFILE_NONE = 'none'
     DEFAULT_TERMINATION_GRACE_PERIOD = 30
@@ -26,6 +27,7 @@ module Kubernetes
         set_project_labels if template.dig(:metadata, :annotations, :"samson/override_project_label")
         set_deploy_url
         set_update_timestamp
+        set_well_known_labels
 
         if RoleValidator::IMMUTABLE_NAME_KINDS.include?(kind)
           # names have a fixed pattern so we cannot override them
@@ -206,11 +208,9 @@ module Kubernetes
     # TODO: unify into with label verification logic in role_validator
     def set_project_labels
       [
-        [:metadata, :labels],
+        *metadata_labels_paths,
         [:spec, :selector],
         [:spec, :selector, :matchLabels],
-        [:spec, :template, :metadata, :labels],
-        [:spec, :jobTemplate, :spec, :template, :metadata, :labels]
       ].each do |path|
         template.dig(*path)[:project] = project.permalink if template.dig(*path, :project)
       end
@@ -630,6 +630,20 @@ module Kubernetes
       (template.dig(:metadata, :annotations) || {})[:"samson/updateTimestamp"] = Time.now.utc.iso8601
     end
 
+    def set_well_known_labels
+      return unless KUBERNETES_ADD_WELL_KNOWN_LABELS
+
+      metadata_labels_paths.each do |path|
+        next unless labels = template.dig(*path)
+
+        # always overwrite managed-by label since it is managed by samson
+        labels[:"app.kubernetes.io/managed-by"] = "samson"
+
+        # do not overwrite existing name label, if already set
+        labels[:"app.kubernetes.io/name"] ||= project.permalink
+      end
+    end
+
     def init_containers
       @init_containers ||= (pod_template ? Api::Pod.init_containers(pod_template) : [])
     end
@@ -640,6 +654,14 @@ module Kubernetes
 
     def all_containers
       pod_containers + init_containers
+    end
+
+    def metadata_labels_paths
+      [
+        [:metadata, :labels],
+        [:spec, :template, :metadata, :labels],
+        [:spec, :jobTemplate, :spec, :template, :metadata, :labels]
+      ]
     end
   end
 end

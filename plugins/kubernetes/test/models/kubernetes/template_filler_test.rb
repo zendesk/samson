@@ -1174,6 +1174,38 @@ describe Kubernetes::TemplateFiller do
         template.to_hash[:metadata][:annotations][:"samson/updateTimestamp"].must_equal "2018-01-01T00:00:00Z"
       end
     end
+
+    describe "well known labels" do
+      around { |t| stub_const Kubernetes::TemplateFiller, :KUBERNETES_ADD_WELL_KNOWN_LABELS, true, &t }
+
+      it "adds app.kubernetes.io/managed-by label to resources and templates" do
+        result = template.to_hash
+        result.dig(:metadata, :labels, :"app.kubernetes.io/managed-by").must_equal "samson"
+        result.dig(:spec, :template, :metadata, :labels, :"app.kubernetes.io/managed-by").must_equal "samson"
+      end
+
+      it "adds app.kubernetes.io/managed-by label to jobTemplate template" do
+        raw_template.replace(YAML.safe_load(read_kubernetes_sample_file("kubernetes_cron_job.yml")).deep_symbolize_keys)
+        doc.replica_target = 1
+        result = template.to_hash
+        result.dig(:spec, :jobTemplate, :spec, :template, :metadata, :labels, :"app.kubernetes.io/managed-by").
+          must_equal "samson"
+      end
+
+      it "adds app.kubernetes.io/name label if not set" do
+        result = template.to_hash
+        result.dig(:metadata, :labels, :"app.kubernetes.io/name").must_equal project.permalink
+        result.dig(:spec, :template, :metadata, :labels, :"app.kubernetes.io/name").must_equal project.permalink
+      end
+
+      it "does not add app.kubernetes.io/name label if already set" do
+        raw_template[:metadata][:labels] = {"app.kubernetes.io/name": "Bar"}
+        raw_template[:spec][:template][:metadata][:labels] = {"app.kubernetes.io/name": "Bar"}
+        result = template.to_hash
+        result.dig(:metadata, :labels, :"app.kubernetes.io/name").must_equal "Bar"
+        result.dig(:spec, :template, :metadata, :labels, :"app.kubernetes.io/name").must_equal "Bar"
+      end
+    end
   end
 
   describe "#verify" do
