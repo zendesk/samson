@@ -31,7 +31,7 @@ gem 'omniauth-ldap'
 gem 'omniauth-gitlab'
 gem 'omniauth-bitbucket'
 gem 'omniauth-rails_csrf_protection' # remove once https://github.com/omniauth/omniauth/pull/809 is resolved
-gem 'octokit'
+gem 'octokit', '4.25.0'
 gem 'faraday'
 gem 'faraday-http-cache'
 gem 'warden'
