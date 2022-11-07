@@ -609,6 +609,7 @@ describe Kubernetes::TemplateFiller do
 
       around do |test|
         stub_const Kubernetes::TemplateFiller, :SECRET_PULLER_IMAGE, "docker-registry.example.com/foo:bar", &test
+        stub_const Kubernetes::TemplateFiller, :SECRET_PULLER_TYPE, "secret-sidecar", &test
       end
 
       before do
@@ -622,9 +623,9 @@ describe Kubernetes::TemplateFiller do
         init_containers.first[:name].must_equal('secret-puller')
         init_containers.first[:env].must_equal(
           [
-            {name: "VAULT_TLS_VERIFY", value: "false"},
-            {name: "VAULT_MOUNT", value: "secret"},
-            {name: "VAULT_PREFIX", value: "apps"}
+            {name: "VAULT_ADDR", valueFrom: {secretKeyRef: {name: "vaultauth", key: "address"}}},
+            {name: "VAULT_ROLE", value: "foo"},
+            {name: "VAULT_TOKEN", valueFrom: {secretKeyRef: {name: "vaultauth", key: "authsecret"}}}
           ]
         )
 
@@ -633,11 +634,6 @@ describe Kubernetes::TemplateFiller do
           "secret/FOO": "global/global/global/bar",
           "container-secret-puller-samson/dockerfile": "none"
         )
-      end
-
-      it "adds vault kv v2 hint so puller knows to use the new api" do
-        vault_server.update_column :versioned_kv, true
-        init_containers.first[:env].last.must_equal name: "VAULT_PREFIX", value: "apps"
       end
 
       it "fails when vault is not configured" do
@@ -669,12 +665,12 @@ describe Kubernetes::TemplateFiller do
 
       it "adds to existing volume definitions in the puller" do
         raw_template[:spec][:template][:spec][:volumes] = [{}]
-        template.to_hash[:spec][:template][:spec][:volumes].count.must_equal 4
+        template.to_hash[:spec][:template][:spec][:volumes].count.must_equal 5
       end
 
       it "does not duplicate definitions" do
         raw_template[:spec][:template][:spec][:volumes] = [{name: "vaultauth", secret: {secretName: "vaultauth"}}]
-        template.to_hash[:spec][:template][:spec][:volumes].count.must_equal 3
+        template.to_hash[:spec][:template][:spec][:volumes].count.must_equal 4
       end
 
       it "adds to existing volume definitions in the primary container" do
@@ -702,6 +698,12 @@ describe Kubernetes::TemplateFiller do
         e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
         e.message.must_include "bar\n  (tried: production/foo/pod1/bar"
         e.message.must_include "baz\n  (tried: production/foo/pod1/baz" # shows all at once for easier debugging
+      end
+
+      describe "container changes for secret sidecar" do
+        it "sets the init container command" do
+          init_containers.first[:command].must_equal('/bin/secret-sidecar-v2')
+        end
       end
 
       describe "converting secrets in env to annotations" do
