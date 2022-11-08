@@ -5,6 +5,7 @@ module Kubernetes
     attr_reader :template
 
     SECRET_PULLER_IMAGE = ENV['SECRET_PULLER_IMAGE'].presence
+    SECRET_PULLER_TYPE = ENV.fetch('SECRET_PULLER_TYPE', 'samson_secret_puller')
     KUBERNETES_ADD_PRESTOP = Samson::EnvCheck.set?('KUBERNETES_ADD_PRESTOP')
     KUBERNETES_ADD_WELL_KNOWN_LABELS = Samson::EnvCheck.set?('KUBERNETES_ADD_WELL_KNOWN_LABELS')
     SECRET_PREFIX = "secret/"
@@ -309,25 +310,45 @@ module Kubernetes
         image: SECRET_PULLER_IMAGE,
         imagePullPolicy: 'IfNotPresent',
         name: 'secret-puller',
-        volumeMounts: [
-          {mountPath: "/vault-auth", name: "vaultauth"},
-          {mountPath: "/secretkeys", name: "secretkeys"},
-          secret_vol
-        ],
         securityContext: {
           readOnlyRootFilesystem: true,
           runAsNonRoot: true
         },
-        env: [
+        resources: {
+          requests: {cpu: "100m", memory: "64Mi"},
+          limits: {cpu: "100m", memory: "100Mi"}
+        }
+      }
+
+      # Modifies init container to use internal secret-sidecar instead of
+      # public samson_secret_puller
+      if SECRET_PULLER_TYPE == 'secret-sidecar'
+        container[:command] = '/bin/secret-sidecar-v2'
+
+        container[:volumeMounts] = [
+          {moountPath: "/secrets-meta", name: "secrets-meta"},
+          {mountPath: "/podinfo", name: "secretkeys"},
+          secret_vol
+        ]
+
+        container[:env] = [
+          {name: "VAULT_ADDR", valueFrom: {secretKeyRef: {name: "vaultauth", key: "address"}}},
+          {name: "VAULT_ROLE", value: project.permalink},
+          {name: "VAULT_TOKEN", valueFrom: {secretKeyRef: {name: "vaultauth", key: "authsecret"}}}
+        ]
+      else
+        container[:volumeMounts] = [
+          {mountPath: "/vault-auth", name: "vaultauth"},
+          {mountPath: "/secretkeys", name: "secretkeys"},
+          secret_vol
+        ]
+        container[:env] = [
           {name: "VAULT_TLS_VERIFY", value: vault_client.options.fetch(:ssl_verify).to_s},
           {name: "VAULT_MOUNT", value: Samson::Secrets::VaultClientManager::MOUNT},
           {name: "VAULT_PREFIX", value: Samson::Secrets::VaultClientManager::PREFIX}
-        ],
-        resources: {
-          requests: {cpu: "100m", memory: "64Mi"},
-          limits: {cpu: "100m", memory: "64Mi"}
-        }
-      }
+        ]
+      end
+
       init_containers.unshift container
 
       # mark the container as not needing a dockerfile
@@ -344,6 +365,7 @@ module Kubernetes
       volumes = (pod_template[:spec][:volumes] ||= [])
       volumes.concat [
         {name: secret_vol.fetch(:name), emptyDir: {medium: 'Memory'}},
+        {name: "secrets-meta", emptyDir: {medium: "Memory"}},
         {name: "vaultauth", secret: {secretName: "vaultauth"}},
         {
           name: "secretkeys",

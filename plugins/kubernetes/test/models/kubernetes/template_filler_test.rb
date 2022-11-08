@@ -669,12 +669,12 @@ describe Kubernetes::TemplateFiller do
 
       it "adds to existing volume definitions in the puller" do
         raw_template[:spec][:template][:spec][:volumes] = [{}]
-        template.to_hash[:spec][:template][:spec][:volumes].count.must_equal 4
+        template.to_hash[:spec][:template][:spec][:volumes].count.must_equal 5
       end
 
       it "does not duplicate definitions" do
         raw_template[:spec][:template][:spec][:volumes] = [{name: "vaultauth", secret: {secretName: "vaultauth"}}]
-        template.to_hash[:spec][:template][:spec][:volumes].count.must_equal 3
+        template.to_hash[:spec][:template][:spec][:volumes].count.must_equal 4
       end
 
       it "adds to existing volume definitions in the primary container" do
@@ -702,6 +702,17 @@ describe Kubernetes::TemplateFiller do
         e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
         e.message.must_include "bar\n  (tried: production/foo/pod1/bar"
         e.message.must_include "baz\n  (tried: production/foo/pod1/baz" # shows all at once for easier debugging
+      end
+
+      it "with secret-sidecar" do
+        stub_const Kubernetes::TemplateFiller, :SECRET_PULLER_TYPE, "secret-sidecar" do
+          init_containers.first[:command].must_equal('/bin/secret-sidecar-v2')
+          init_containers.first[:env].must_equal [
+            {name: "VAULT_ADDR", valueFrom: {secretKeyRef: {name: "vaultauth", key: "address"}}},
+            {name: "VAULT_ROLE", value: "foo"},
+            {name: "VAULT_TOKEN", valueFrom: {secretKeyRef: {name: "vaultauth", key: "authsecret"}}}
+          ]
+        end
       end
 
       describe "converting secrets in env to annotations" do
