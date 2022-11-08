@@ -609,7 +609,6 @@ describe Kubernetes::TemplateFiller do
 
       around do |test|
         stub_const Kubernetes::TemplateFiller, :SECRET_PULLER_IMAGE, "docker-registry.example.com/foo:bar", &test
-        stub_const Kubernetes::TemplateFiller, :SECRET_PULLER_TYPE, "secret-sidecar", &test
       end
 
       before do
@@ -623,9 +622,9 @@ describe Kubernetes::TemplateFiller do
         init_containers.first[:name].must_equal('secret-puller')
         init_containers.first[:env].must_equal(
           [
-            {name: "VAULT_ADDR", valueFrom: {secretKeyRef: {name: "vaultauth", key: "address"}}},
-            {name: "VAULT_ROLE", value: "foo"},
-            {name: "VAULT_TOKEN", valueFrom: {secretKeyRef: {name: "vaultauth", key: "authsecret"}}}
+            {name: "VAULT_TLS_VERIFY", value: "false"},
+            {name: "VAULT_MOUNT", value: "secret"},
+            {name: "VAULT_PREFIX", value: "apps"}
           ]
         )
 
@@ -634,6 +633,11 @@ describe Kubernetes::TemplateFiller do
           "secret/FOO": "global/global/global/bar",
           "container-secret-puller-samson/dockerfile": "none"
         )
+      end
+
+      it "adds vault kv v2 hint so puller knows to use the new api" do
+        vault_server.update_column :versioned_kv, true
+        init_containers.first[:env].last.must_equal name: "VAULT_PREFIX", value: "apps"
       end
 
       it "fails when vault is not configured" do
@@ -700,9 +704,14 @@ describe Kubernetes::TemplateFiller do
         e.message.must_include "baz\n  (tried: production/foo/pod1/baz" # shows all at once for easier debugging
       end
 
-      describe "container changes for secret sidecar" do
-        it "sets the init container command" do
+      it "with secret-sidecar" do
+        stub_const Kubernetes::TemplateFiller, :SECRET_PULLER_TYPE, "secret-sidecar" do
           init_containers.first[:command].must_equal('/bin/secret-sidecar-v2')
+          init_containers.first[:env].must_equal [
+            {name: "VAULT_ADDR", valueFrom: {secretKeyRef: {name: "vaultauth", key: "address"}}},
+            {name: "VAULT_ROLE", value: "foo"},
+            {name: "VAULT_TOKEN", valueFrom: {secretKeyRef: {name: "vaultauth", key: "authsecret"}}}
+          ]
         end
       end
 

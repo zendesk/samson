@@ -299,10 +299,6 @@ module Kubernetes
       end
     end
 
-    def inject_secret_sidecar?
-      SECRET_PULLER_TYPE == 'secret-sidecar'
-    end
-
     # Sets up the secret-puller and the various mounts that are required
     # if the secret-puller service is enabled
     # /vaultauth is a secrets volume in the cluster
@@ -314,20 +310,10 @@ module Kubernetes
         image: SECRET_PULLER_IMAGE,
         imagePullPolicy: 'IfNotPresent',
         name: 'secret-puller',
-        volumeMounts: [
-          {mountPath: "/vault-auth", name: "vaultauth"},
-          {mountPath: "/secretkeys", name: "secretkeys"},
-          secret_vol
-        ],
         securityContext: {
           readOnlyRootFilesystem: true,
           runAsNonRoot: true
         },
-        env: [
-          {name: "VAULT_TLS_VERIFY", value: vault_client.options.fetch(:ssl_verify).to_s},
-          {name: "VAULT_MOUNT", value: Samson::Secrets::VaultClientManager::MOUNT},
-          {name: "VAULT_PREFIX", value: Samson::Secrets::VaultClientManager::PREFIX}
-        ],
         resources: {
           requests: {cpu: "100m", memory: "64Mi"},
           limits: {cpu: "100m", memory: "100Mi"}
@@ -336,7 +322,7 @@ module Kubernetes
 
       # Modifies init container to use internal secret-sidecar instead of
       # public samson_secret_puller
-      if inject_secret_sidecar?
+      if SECRET_PULLER_TYPE == 'secret-sidecar'
         container[:command] = '/bin/secret-sidecar-v2'
 
         container[:volumeMounts] = [
@@ -349,6 +335,17 @@ module Kubernetes
           {name: "VAULT_ADDR", valueFrom: {secretKeyRef: {name: "vaultauth", key: "address"}}},
           {name: "VAULT_ROLE", value: project.permalink},
           {name: "VAULT_TOKEN", valueFrom: {secretKeyRef: {name: "vaultauth", key: "authsecret"}}}
+        ]
+      else
+        container[:volumeMounts] = [
+          {mountPath: "/vault-auth", name: "vaultauth"},
+          {mountPath: "/secretkeys", name: "secretkeys"},
+          secret_vol
+        ]
+        container[:env] = [
+          {name: "VAULT_TLS_VERIFY", value: vault_client.options.fetch(:ssl_verify).to_s},
+          {name: "VAULT_MOUNT", value: Samson::Secrets::VaultClientManager::MOUNT},
+          {name: "VAULT_PREFIX", value: Samson::Secrets::VaultClientManager::PREFIX}
         ]
       end
 
