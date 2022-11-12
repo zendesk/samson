@@ -4,7 +4,7 @@
 [![FOSSA Status](https://app.fossa.io/api/projects/custom%2B4071%2Fgit%40github.com%3Azendesk%2Fsamson.git.svg?type=shield)](https://app.fossa.io/projects/custom%2B4071%2Fgit%40github.com%3Azendesk%2Fsamson.git?ref=badge_shield)
 [![DockerHub Status](https://img.shields.io/docker/stars/zendesk/samson.svg)](https://hub.docker.com/r/zendesk/samson)
 
-Samson is a web interface for deployments. [Live Demo](https://samson-demo.herokuapp.com)
+Samson is a web interface for deployments. [Live Demo](https://samson.onrender.com)
 It is currently in maintenance mode (bugfix, but no new features) because we are migrating off it.
 
 **View the current status of all your projects:**
