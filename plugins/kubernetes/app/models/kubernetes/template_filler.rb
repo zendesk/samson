@@ -323,7 +323,7 @@ module Kubernetes
       # Modifies init container to use internal secret-sidecar instead of
       # public samson_secret_puller
       if SECRET_PULLER_TYPE == 'secret-sidecar'
-        container[:command] = '/bin/secret-sidecar-v2'
+        container[:command] = ['/bin/secret-sidecar-v2']
 
         container[:volumeMounts] = [
           {moountPath: "/secrets-meta", name: "secrets-meta"},
