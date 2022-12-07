@@ -706,7 +706,7 @@ describe Kubernetes::TemplateFiller do
 
       it "with secret-sidecar" do
         stub_const Kubernetes::TemplateFiller, :SECRET_PULLER_TYPE, "secret-sidecar" do
-          init_containers.first[:command].must_equal('/bin/secret-sidecar-v2')
+          init_containers.first[:command].must_equal(['/bin/secret-sidecar-v2'])
           init_containers.first[:env].must_equal [
             {name: "VAULT_ADDR", valueFrom: {secretKeyRef: {name: "vaultauth", key: "address"}}},
             {name: "VAULT_ROLE", value: "foo"},
