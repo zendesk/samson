@@ -326,7 +326,7 @@ module Kubernetes
         container[:command] = ['/bin/secret-sidecar-v2']
 
         container[:volumeMounts] = [
-          {moountPath: "/secrets-meta", name: "secrets-meta"},
+          {mountPath: "/secrets-meta", name: "secrets-meta"},
           {mountPath: "/podinfo", name: "secretkeys"},
           secret_vol
         ]
