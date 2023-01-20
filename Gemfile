@@ -5,7 +5,7 @@ ruby File.read('.ruby-version').strip
 
 # gems that have rails engines are are always needed
 group :preload do
-  gem 'rails', '~> 6.1.5'
+  gem 'rails', '~> 6.1.7', '>= 6.1.7.1'
   gem 'dotenv'
   gem 'connection_pool'
   gem 'marco-polo'
@@ -67,7 +67,7 @@ group :sqlite do
 end
 
 group :assets do
-  gem 'sprockets', '~> 3.7'
+  gem 'sprockets', '~> 3.7', '>= 3.7.2'
   gem 'sass-rails'
   gem 'uglifier'
   gem 'bootstrap-sass', '>= 3.4.1'
