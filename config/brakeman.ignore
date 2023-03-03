@@ -1,7 +1,7 @@
 {
   "ignored_warnings": [
-
+    "CheckEOLRuby"
   ],
   "updated": "2022-04-18 09:15:10 -0700",
-  "brakeman_version": "5.2.2"
+  "brakeman_version": "5.4.1"
 }
