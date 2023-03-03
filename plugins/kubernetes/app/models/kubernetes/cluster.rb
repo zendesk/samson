@@ -41,7 +41,12 @@ module Kubernetes
         else raise "Unsupported auth method #{auth_method}"
         end
 
-        endpoint += '/apis' unless type.match? /^v\d+/ # TODO: remove by fixing via https://github.com/abonas/kubeclient/issues/284
+        # TODO: remove by fixing via https://github.com/abonas/kubeclient/issues/284
+        path, version_number = type.scan(/(.*)\/(\S+)$/).first
+        if path
+          endpoint += "/apis/#{path}"
+          type = version_number
+        end
 
         Kubeclient::Client.new(
           endpoint,

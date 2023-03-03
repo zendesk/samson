@@ -54,7 +54,8 @@ class ImageBuilder
             cache_option = " --cache-from #{cache_from.shellescape}"
           end
 
-          build_command = "docker build#{file}#{tag} .#{cache_option}"
+          # USER needs to be set or logrus fails with "while creating logrus local file hook"
+          build_command = "USER=nobody docker build#{file}#{tag} .#{cache_option}"
 
           return unless executor.execute(
             "cd #{dir.shellescape}",

@@ -109,7 +109,7 @@ describe Kubernetes::Cluster do
     end
 
     it 'can build for other types' do
-      cluster.client('policy/v1').api_endpoint.to_s.must_equal 'http://foobar.server/apis'
+      cluster.client('policy/v1').api_endpoint.to_s.must_equal 'http://foobar.server/apis/policy'
     end
   end
 

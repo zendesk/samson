@@ -212,7 +212,7 @@ describe Kubernetes::TemplateFiller do
       end
 
       it "alerts on unknown namespace" do
-        stub_request(:get, "http://foobar.server/apis/vwtf").to_return(status: 404)
+        stub_request(:get, "http://foobar.server/api/vwtf").to_return(status: 404)
         raw_template[:apiVersion] = "vwtf"
         e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
         e.message.must_equal "Cluster \"test\" does not support vwtf Deployment (cached 1h)"
