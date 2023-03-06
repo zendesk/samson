@@ -334,7 +334,8 @@ module Kubernetes
         container[:env] = [
           {name: "VAULT_ADDR", valueFrom: {secretKeyRef: {name: "vaultauth", key: "address"}}},
           {name: "VAULT_ROLE", value: project.permalink},
-          {name: "VAULT_TOKEN", valueFrom: {secretKeyRef: {name: "vaultauth", key: "authsecret"}}}
+          {name: "VAULT_TOKEN", valueFrom: {secretKeyRef: {name: "vaultauth", key: "authsecret"}}},
+          {name: "RUN_ONCE", value: "true"}
         ]
       else
         container[:volumeMounts] = [

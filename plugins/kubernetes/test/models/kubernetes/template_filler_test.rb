@@ -710,7 +710,8 @@ describe Kubernetes::TemplateFiller do
           init_containers.first[:env].must_equal [
             {name: "VAULT_ADDR", valueFrom: {secretKeyRef: {name: "vaultauth", key: "address"}}},
             {name: "VAULT_ROLE", value: "foo"},
-            {name: "VAULT_TOKEN", valueFrom: {secretKeyRef: {name: "vaultauth", key: "authsecret"}}}
+            {name: "VAULT_TOKEN", valueFrom: {secretKeyRef: {name: "vaultauth", key: "authsecret"}}},
+            {name: "RUN_ONCE", value: "true"}
           ]
         end
       end
