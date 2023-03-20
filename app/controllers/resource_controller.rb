@@ -143,7 +143,7 @@ class ResourceController < ApplicationController
   end
 
   def render_resource_as_json(**args)
-    render_as_json resource_name, @resource, nil, **args, allowed_includes: allowed_includes
+    render_as_json(resource_name, @resource, nil, allowed_includes: allowed_includes, **args)
   end
 
   def set_resource

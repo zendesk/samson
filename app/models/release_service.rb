@@ -23,7 +23,7 @@ class ReleaseService
   private
 
   def push_tag_to_git_repository(version, commit)
-    GITHUB.create_release(@project.repository_path, version, target_commitish: commit)
+    GITHUB.create_release(@project.repository_path, version, **{ target_commitish: commit })
   rescue Octokit::UnprocessableEntity => e
     raise unless e.message.include?("code: already_exists")
   end

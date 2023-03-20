@@ -45,7 +45,7 @@ describe DashboardsHelper do
     end
 
     it 'returns correct link' do
-      display_version(1, 1).must_equal link_to('v2.0', project_deploy_path(1, 1))
+      display_version(1, '1').must_equal link_to('v2.0', project_deploy_path(1, 1))
     end
   end
 
