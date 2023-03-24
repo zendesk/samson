@@ -33,14 +33,14 @@ module SamsonGcloud
         command = [
           "gcloud", "container", "images", "add-tag", digest, "#{base}:#{tag}", "--quiet", *SamsonGcloud.cli_options
         ]
-        success, output = Samson::CommandExecutor.execute(*command, timeout: 10, whitelist_env: ["PATH"])
+        result = Samson::CommandExecutor.execute(*command, timeout: 10, whitelist_env: ["PATH"])
         job_output.write <<~TEXT
           #{Samson::OutputUtils.timestamp} Tagging GCR image:
           #{command.join(" ")}
-          #{output.strip}
+          #{result[:output].strip}
         TEXT
-        job_output.puts "FAILED" unless success
-        success
+        job_output.puts "FAILED" unless result[:status]
+        result[:status]
       end
 
       def cache_last_tagged(key, value)
