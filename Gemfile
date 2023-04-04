@@ -5,7 +5,7 @@ ruby File.read('.ruby-version').strip
 
 # gems that have rails engines are are always needed
 group :preload do
-  gem 'rails', '~> 6.1.7'
+  gem 'rails', '~> 6.1.7', '>= 6.1.7.3'
   gem 'dotenv'
   gem 'connection_pool'
   gem 'marco-polo'
@@ -24,12 +24,12 @@ gem 'puma'
 gem 'attr_encrypted'
 gem 'sawyer'
 gem 'dalli'
-gem 'omniauth'
-gem 'omniauth-oauth2'
+gem 'omniauth', '>= 2.1.0'
+gem 'omniauth-oauth2', '>= 1.7.1'
 gem 'omniauth-github', git: "https://github.com/omniauth/omniauth-github.git" # needs >1.3.0
 gem 'omniauth-google-oauth2'
 gem 'omniauth-ldap'
-gem 'omniauth-gitlab'
+gem 'omniauth-gitlab', '>= 3.0.0'
 gem 'omniauth-bitbucket'
 gem 'omniauth-rails_csrf_protection' # remove once https://github.com/omniauth/omniauth/pull/809 is resolved
 gem 'octokit'
@@ -68,7 +68,7 @@ group :sqlite do
 end
 
 group :assets do
-  gem 'sprockets', '~> 3.7'
+  gem 'sprockets', '~> 4.2', '>= 4.2.0'
   gem 'sass-rails'
   gem 'uglifier'
   gem 'bootstrap-sass', '>= 3.4.1'
