@@ -172,27 +172,8 @@ PATH
       zendesk_api
 
 GEM
-  remote: https://rails-assets.org/
-  specs:
-    rails-assets-bootstrap-select (1.10.0)
-      rails-assets-jquery (>= 1.8)
-    rails-assets-jquery (3.4.1)
-    rails-assets-jquery-cookie (1.4.1)
-      rails-assets-jquery (>= 1.2)
-    rails-assets-jquery-ui (1.12.1)
-      rails-assets-jquery (>= 1.6)
-    rails-assets-jquery-ujs (1.2.0)
-      rails-assets-jquery (> 1.8)
-    rails-assets-jsSHA (2.3.1)
-    rails-assets-jstimezonedetect (1.0.5)
-    rails-assets-typeahead.js (0.11.1)
-      rails-assets-jquery (>= 1.7)
-    rails-assets-underscore (1.8.3)
-    rails-assets-x-editable (1.5.1)
-      rails-assets-jquery (>= 1.6)
-
-GEM
   remote: https://rubygems.org/
+  remote: https://rails-assets.org/
   specs:
     actioncable (6.1.7.3)
       actionpack (= 6.1.7.3)
@@ -419,7 +400,7 @@ GEM
       mime-types-data (~> 3.2015)
     mime-types-data (3.2023.0218.1)
     mini_mime (1.1.2)
-    mini_portile2 (2.8.1)
+    mini_portile2 (2.8.2)
     minitest (5.11.3)
     minitest-rails (6.1.0)
       minitest (~> 5.10)
@@ -440,12 +421,12 @@ GEM
     netrc (0.11.0)
     newrelic_rpm (6.7.0.359)
     nio4r (2.5.8)
-    nokogiri (1.14.2)
+    nokogiri (1.14.3)
       mini_portile2 (~> 2.8.0)
       racc (~> 1.4)
-    nokogiri (1.14.2-x86_64-darwin)
+    nokogiri (1.14.3-x86_64-darwin)
       racc (~> 1.4)
-    nokogiri (1.14.2-x86_64-linux)
+    nokogiri (1.14.3-x86_64-linux)
       racc (~> 1.4)
     oauth (0.5.6)
     oauth2 (1.4.4)
@@ -533,6 +514,22 @@ GEM
       bundler (>= 1.15.0)
       railties (= 6.1.7.3)
       sprockets-rails (>= 2.0.0)
+    rails-assets-bootstrap-select (1.10.0)
+      rails-assets-jquery (>= 1.8)
+    rails-assets-jquery (3.4.1)
+    rails-assets-jquery-cookie (1.4.1)
+      rails-assets-jquery (>= 1.2)
+    rails-assets-jquery-ui (1.12.1)
+      rails-assets-jquery (>= 1.6)
+    rails-assets-jquery-ujs (1.2.0)
+      rails-assets-jquery (> 1.8)
+    rails-assets-jsSHA (2.3.1)
+    rails-assets-jstimezonedetect (1.0.5)
+    rails-assets-typeahead.js (0.11.1)
+      rails-assets-jquery (>= 1.7)
+    rails-assets-underscore (1.8.3)
+    rails-assets-x-editable (1.5.1)
+      rails-assets-jquery (>= 1.6)
     rails-controller-testing (1.0.5)
       actionpack (>= 5.0.1.rc1)
       actionview (>= 5.0.1.rc1)
@@ -768,7 +765,7 @@ DEPENDENCIES
   webmock
 
 RUBY VERSION
-   ruby 2.7.6p219
+   ruby 2.7.8
 
 BUNDLED WITH
    2.3.25
