@@ -14,185 +14,9 @@ GIT
     vault (0.12.0)
       aws-sigv4
 
-PATH
-  remote: plugins/airbrake_hook
-  specs:
-    samson_airbrake_hook (0.0.0)
-
-PATH
-  remote: plugins/airbrake
-  specs:
-    samson_airbrake (0.0.0)
-      airbrake
-
-PATH
-  remote: plugins/assertible
-  specs:
-    samson_assertible (0.0.0)
-
-PATH
-  remote: plugins/aws_ecr
-  specs:
-    samson_aws_ecr (0.0.0)
-      aws-sdk-ecr
-
-PATH
-  remote: plugins/aws_sts
-  specs:
-    samson_aws_sts (0.0.0)
-      aws-sdk-core
-
-PATH
-  remote: plugins/datadog_tracer
-  specs:
-    samson_datadog_tracer (0.0.1)
-      ddtrace
-
-PATH
-  remote: plugins/datadog
-  specs:
-    samson_datadog (0.0.0)
-      faraday
-
-PATH
-  remote: plugins/env
-  specs:
-    samson_env (0.0.0)
-      aws-sdk-s3
-      dotenv
-
-PATH
-  remote: plugins/flowdock
-  specs:
-    samson_flowdock (0.0.0)
-      flowdock
-
-PATH
-  remote: plugins/gcloud
-  specs:
-    gcloud_image_tagger (0.0.0)
-
-PATH
-  remote: plugins/github
-  specs:
-    samson_github (0.0.0)
-
-PATH
-  remote: plugins/gitlab
-  specs:
-    samson_gitlab (0.0.0)
-      git_diff_parser
-      gitlab
-
-PATH
-  remote: plugins/jenkins_status_checker
-  specs:
-    samson_jenkins_status_checker (0.0.0)
-      jenkins_api_client (~> 2.0)
-
-PATH
-  remote: plugins/jenkins
-  specs:
-    samson_jenkins (0.0.0)
-      jenkins_api_client (~> 2.0)
-
-PATH
-  remote: plugins/jira
-  specs:
-    samson_jira (0.0.0)
-      faraday
-
-PATH
-  remote: plugins/kubernetes
-  specs:
-    samson_kubernetes (0.0.1)
-      kubeclient
-
-PATH
-  remote: plugins/ledger
-  specs:
-    samson_ledger (0.0.1)
-      faraday
-
-PATH
-  remote: plugins/new_relic
-  specs:
-    samson_new_relic (0.0.0)
-      newrelic_rpm
-
-PATH
-  remote: plugins/pipelines
-  specs:
-    samson_pipelines (0.0.0)
-
-PATH
-  remote: plugins/prerequisite_stages
-  specs:
-    samson_prerequisite_stages (0.0.0)
-
-PATH
-  remote: plugins/rollbar_dashboards
-  specs:
-    samson_rollbar_dashboards (0.0.0)
-
-PATH
-  remote: plugins/rollbar_hook
-  specs:
-    samson_rollbar_hook (0.0.0)
-
-PATH
-  remote: plugins/rollbar
-  specs:
-    samson_rollbar (0.0.0)
-      rollbar
-      rollbar-user_informer
-
-PATH
-  remote: plugins/sentry
-  specs:
-    samson_sentry (0.0.0)
-      sentry-rails
-      sentry-user_informer
-
-PATH
-  remote: plugins/slack_app
-  specs:
-    samson_slack_app (0.0.0)
-
-PATH
-  remote: plugins/slack_webhooks
-  specs:
-    samson_slack_webhooks (0.0.0)
-      faraday
-
-PATH
-  remote: plugins/zendesk
-  specs:
-    samson_zendesk (0.0.0)
-      zendesk_api
-
-GEM
-  remote: https://rails-assets.org/
-  specs:
-    rails-assets-bootstrap-select (1.10.0)
-      rails-assets-jquery (>= 1.8)
-    rails-assets-jquery (3.4.1)
-    rails-assets-jquery-cookie (1.4.1)
-      rails-assets-jquery (>= 1.2)
-    rails-assets-jquery-ui (1.12.1)
-      rails-assets-jquery (>= 1.6)
-    rails-assets-jquery-ujs (1.2.0)
-      rails-assets-jquery (> 1.8)
-    rails-assets-jsSHA (2.3.1)
-    rails-assets-jstimezonedetect (1.0.5)
-    rails-assets-typeahead.js (0.11.1)
-      rails-assets-jquery (>= 1.7)
-    rails-assets-underscore (1.8.3)
-    rails-assets-x-editable (1.5.1)
-      rails-assets-jquery (>= 1.6)
-
 GEM
   remote: https://rubygems.org/
+  remote: https://rails-assets.org/
   specs:
     actioncable (6.1.7.3)
       actionpack (= 6.1.7.3)
@@ -257,38 +81,19 @@ GEM
       zeitwerk (~> 2.3)
     addressable (2.8.1)
       public_suffix (>= 2.0.2, < 6.0)
-    airbrake (11.0.1)
-      airbrake-ruby (~> 5.1)
-    airbrake-ruby (5.2.0)
-      rbtree3 (~> 0.5)
     ansible (0.2.2)
     ar_multi_threaded_transactional_tests (0.5.0)
       activerecord (>= 4.2.0, < 6.2.0)
     ast (2.4.1)
     attr_encrypted (3.1.0)
       encryptor (~> 3.0.0)
-    audited (4.10.0)
-      activerecord (>= 4.2, < 6.2)
+    audited (5.3.3)
+      activerecord (>= 5.0, < 7.1)
+      request_store (~> 1.2)
     autoprefixer-rails (9.4.8)
       execjs
     awesome_print (1.6.1)
     aws-eventstream (1.1.0)
-    aws-partitions (1.329.0)
-    aws-sdk-core (3.100.0)
-      aws-eventstream (~> 1, >= 1.0.2)
-      aws-partitions (~> 1, >= 1.239.0)
-      aws-sigv4 (~> 1.1)
-      jmespath (~> 1.0)
-    aws-sdk-ecr (1.3.0)
-      aws-sdk-core (~> 3)
-      aws-sigv4 (~> 1.0)
-    aws-sdk-kms (1.23.0)
-      aws-sdk-core (~> 3, >= 3.58.0)
-      aws-sigv4 (~> 1.1)
-    aws-sdk-s3 (1.45.0)
-      aws-sdk-core (~> 3, >= 3.58.0)
-      aws-sdk-kms (~> 1)
-      aws-sigv4 (~> 1.1)
     aws-sigv4 (1.1.4)
       aws-eventstream (~> 1.0, >= 1.0.2)
     binding_of_caller (0.8.0)
@@ -306,8 +111,6 @@ GEM
       bundler (>= 1.2.0, < 3)
       thor (~> 1.0)
     byebug (8.2.5)
-    chef-utils (18.1.29)
-      concurrent-ruby
     coderay (1.1.1)
     commonmarker (0.23.8)
     concurrent-ruby (1.2.2)
@@ -316,13 +119,9 @@ GEM
       safe_yaml (~> 1.0.0)
     crass (1.0.6)
     dalli (3.2.3)
-    ddtrace (0.45.0)
-      msgpack
     debug_inspector (0.0.3)
     diffy (3.4.2)
     dogstatsd-ruby (3.0.0)
-    domain_name (0.5.20190701)
-      unf (>= 0.0.5, < 1.0.0)
     doorkeeper (5.4.0)
       railties (>= 5)
     dotenv (2.2.1)
@@ -335,23 +134,13 @@ GEM
     faraday-http-cache (2.0.0)
       faraday (~> 0.8)
     ffi (1.15.5)
-    ffi-compiler (1.0.1)
-      ffi (>= 1.0.0)
-      rake
     flay (2.12.0)
       erubis (~> 2.7.0)
       path_expander (~> 1.0)
       ruby_parser (~> 3.0)
       sexp_processor (~> 4.0)
-    flowdock (0.7.1)
-      httparty (~> 0.7)
-      multi_json
     forking_test_runner (1.2.0)
       parallel_tests (>= 1.3.7)
-    git_diff_parser (3.1.0)
-    gitlab (4.10.0)
-      httparty (~> 0.14, >= 0.14.0)
-      terminal-table (~> 1.5, >= 1.5.1)
     globalid (1.1.0)
       activesupport (>= 5.0)
     goldiloader (3.2.0)
@@ -359,44 +148,11 @@ GEM
       activesupport (>= 4.2, < 6.3)
     hashdiff (0.3.4)
     hashie (3.6.0)
-    http (5.1.1)
-      addressable (~> 2.8)
-      http-cookie (~> 1.0)
-      http-form_data (~> 2.2)
-      llhttp-ffi (~> 0.4.0)
-    http-accept (1.7.0)
-    http-cookie (1.0.5)
-      domain_name (~> 0.5)
-    http-form_data (2.3.0)
-    httparty (0.21.0)
-      mini_mime (>= 1.0.0)
-      multi_xml (>= 0.5.2)
-    i18n (1.12.0)
+    i18n (1.13.0)
       concurrent-ruby (~> 1.0)
-    inflection (1.0.0)
     interception (0.5)
-    jenkins_api_client (2.0.0)
-      addressable (~> 2.7)
-      json (>= 1.0)
-      mixlib-shellout (>= 1.1.0)
-      nokogiri (~> 1.6)
-      socksify (>= 1.7.0)
-      terminal-table (>= 1.4.0)
-      thor (>= 0.16.0)
-    jmespath (1.6.2)
-    json (2.6.3)
-    jsonpath (1.1.2)
-      multi_json
     jwt (2.2.1)
-    kubeclient (4.11.0)
-      http (>= 3.0, < 6.0)
-      jsonpath (~> 1.0)
-      recursive-open-struct (~> 1.1, >= 1.1.1)
-      rest-client (~> 2.0)
     large_object_store (1.3.4)
-    llhttp-ffi (0.4.0)
-      ffi-compiler (~> 1.0)
-      rake (~> 13.0)
     lograge (0.12.0)
       actionpack (>= 4)
       activesupport (>= 4)
@@ -415,17 +171,12 @@ GEM
       minitest (>= 5.0.0, < 5.12.0)
     metaclass (0.0.4)
     method_source (0.8.2)
-    mime-types (3.4.1)
-      mime-types-data (~> 3.2015)
-    mime-types-data (3.2023.0218.1)
     mini_mime (1.1.2)
     mini_portile2 (2.8.1)
     minitest (5.11.3)
     minitest-rails (6.1.0)
       minitest (~> 5.10)
       railties (~> 6.1.0)
-    mixlib-shellout (3.2.7)
-      chef-utils
     mocha (1.2.1)
       metaclass (~> 0.0.1)
     momentjs-rails (2.29.4.1)
@@ -437,8 +188,6 @@ GEM
     mysql2 (0.5.3)
     net-http-persistent (2.9.4)
     net-ldap (0.16.1)
-    netrc (0.11.0)
-    newrelic_rpm (6.7.0.359)
     nio4r (2.5.8)
     nokogiri (1.14.2)
       mini_portile2 (~> 2.8.0)
@@ -533,6 +282,22 @@ GEM
       bundler (>= 1.15.0)
       railties (= 6.1.7.3)
       sprockets-rails (>= 2.0.0)
+    rails-assets-bootstrap-select (1.10.0)
+      rails-assets-jquery (>= 1.8)
+    rails-assets-jquery (3.4.1)
+    rails-assets-jquery-cookie (1.4.1)
+      rails-assets-jquery (>= 1.2)
+    rails-assets-jquery-ui (1.12.1)
+      rails-assets-jquery (>= 1.6)
+    rails-assets-jquery-ujs (1.2.0)
+      rails-assets-jquery (> 1.8)
+    rails-assets-jsSHA (2.3.1)
+    rails-assets-jstimezonedetect (1.0.5)
+    rails-assets-typeahead.js (0.11.1)
+      rails-assets-jquery (>= 1.7)
+    rails-assets-underscore (1.8.3)
+    rails-assets-x-editable (1.5.1)
+      rails-assets-jquery (>= 1.6)
     rails-controller-testing (1.0.5)
       actionpack (>= 5.0.1.rc1)
       actionview (>= 5.0.1.rc1)
@@ -550,21 +315,10 @@ GEM
       thor (~> 1.0)
     rainbow (3.0.0)
     rake (13.0.6)
-    rbtree3 (0.6.0)
-    recursive-open-struct (1.1.3)
     regexp_parser (1.8.2)
     request_store (1.4.0)
       rack (>= 1.4)
-    rest-client (2.1.0)
-      http-accept (>= 1.7.0, < 2.0)
-      http-cookie (>= 1.0.2, < 2.0)
-      mime-types (>= 1.16, < 4.0)
-      netrc (~> 0.8)
     rexml (3.2.5)
-    rollbar (2.19.1)
-      multi_json
-    rollbar-user_informer (0.1.0)
-      rollbar (~> 2.15)
     rubocop (0.93.1)
       parallel (~> 1.10)
       parser (>= 2.7.1.5)
@@ -597,19 +351,9 @@ GEM
     sawyer (0.8.2)
       addressable (>= 2.3.5)
       faraday (> 0.8, < 2.0)
-    sentry-rails (5.4.2)
-      railties (>= 5.0)
-      sentry-ruby (~> 5.4.2)
-    sentry-ruby (5.4.2)
-      concurrent-ruby (~> 1.0, >= 1.0.2)
-    sentry-user_informer (0.2.0)
-      rack
-      railties (>= 6.1.0, < 7.1.0)
-      sentry-rails (~> 5.4)
     sexp_processor (4.12.1)
     single_cov (1.3.2)
     slop (3.6.0)
-    socksify (1.7.1)
     soft_deletion (1.6.0)
       activerecord (>= 4.2.0, < 6.2.0)
     sprockets (3.7.2)
@@ -621,17 +365,12 @@ GEM
       sprockets (>= 3.0.0)
     sqlite3 (1.4.2)
     stackprof (0.2.12)
-    terminal-table (1.8.0)
-      unicode-display_width (~> 1.1, >= 1.1.1)
     thor (1.2.1)
     tilt (2.0.10)
     tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
     uglifier (3.2.0)
       execjs (>= 0.3.0, < 3)
-    unf (0.1.4)
-      unf_ext
-    unf_ext (0.0.8.2)
     unicode-display_width (1.8.0)
     validates_lengths_from_database (0.8.0)
       activerecord (>= 4)
@@ -644,13 +383,7 @@ GEM
     websocket-driver (0.7.5)
       websocket-extensions (>= 0.1.0)
     websocket-extensions (0.1.5)
-    zeitwerk (2.6.7)
-    zendesk_api (1.16.0)
-      faraday (~> 0.9)
-      hashie (>= 3.5.2, < 4.0.0)
-      inflection
-      mime-types
-      multipart-post (~> 2.0)
+    zeitwerk (2.6.8)
 
 PLATFORMS
   ruby
@@ -662,7 +395,7 @@ DEPENDENCIES
   ansible
   ar_multi_threaded_transactional_tests
   attr_encrypted
-  audited
+  audited (>= 5.3.3)
   awesome_print
   bootsnap
   bootstrap-sass (>= 3.4.1)
@@ -682,7 +415,6 @@ DEPENDENCIES
   faraday-http-cache
   flay
   forking_test_runner
-  gcloud_image_tagger!
   goldiloader
   large_object_store
   lograge
@@ -728,32 +460,6 @@ DEPENDENCIES
   rails-controller-testing
   rubocop
   rubocop-rails
-  samson_airbrake!
-  samson_airbrake_hook!
-  samson_assertible!
-  samson_aws_ecr!
-  samson_aws_sts!
-  samson_datadog!
-  samson_datadog_tracer!
-  samson_env!
-  samson_flowdock!
-  samson_github!
-  samson_gitlab!
-  samson_jenkins!
-  samson_jenkins_status_checker!
-  samson_jira!
-  samson_kubernetes!
-  samson_ledger!
-  samson_new_relic!
-  samson_pipelines!
-  samson_prerequisite_stages!
-  samson_rollbar!
-  samson_rollbar_dashboards!
-  samson_rollbar_hook!
-  samson_sentry!
-  samson_slack_app!
-  samson_slack_webhooks!
-  samson_zendesk!
   sass-rails
   sawyer
   single_cov

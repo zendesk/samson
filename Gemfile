@@ -13,7 +13,7 @@ group :preload do
   # AR extensions
   gem 'goldiloader'
   gem 'pagy'
-  gem 'audited'
+  gem 'audited', '>= 5.3.3'
   gem 'soft_deletion'
   gem 'doorkeeper', '~> 5.4.0' # TODO: upgrade breaks `rails c`
   gem 'mail', '~> 2.7.0' # TODO: upgrade breaks `rails c`
