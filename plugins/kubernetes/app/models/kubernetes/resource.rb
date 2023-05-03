@@ -131,7 +131,11 @@ module Kubernetes
       end
 
       def server_side_apply?
-        @template.dig(:metadata, :annotations, :"samson/server_side_apply") == "true"
+        self.class.server_side_apply?(@template)
+      end
+
+      public_class_method def self.server_side_apply?(template)
+        template.dig(:metadata, :annotations, :"samson/server_side_apply") == "true"
       end
 
       def error_location

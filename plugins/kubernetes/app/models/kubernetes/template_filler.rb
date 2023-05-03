@@ -44,7 +44,11 @@ module Kubernetes
           make_stateful_set_match_service if kind == 'StatefulSet'
           set_pre_stop if kind == 'Deployment'
           set_name
-          (set_replica_target || validate_replica_target_is_supported) if kind != 'PodTemplate'
+          if ['Deployment', 'StatefulSet'].include?(kind)
+            set_replica_target
+          else
+            validate_replica_target_is_supported
+          end
           set_spec_template_metadata
           set_docker_image unless verification
           set_resource_usage
@@ -385,17 +389,16 @@ module Kubernetes
     end
 
     def set_replica_target
-      key = [:spec, :replicas]
-      target =
-        if ['StatefulSet', 'Deployment'].include?(template[:kind])
-          template
-        else
-          # custom resource that has replicas set on itself or it's template
-          templates = [template] + (template[:spec] || {}).values_at(*RoleConfigFile.template_keys(template))
-          templates.detect { |c| c.dig(*key) }
+      if template.dig(:metadata, :annotations, :"samson/NoReplicas") == "true"
+        if template.dig(:spec, :replicas)
+          raise Samson::Hooks::UserError, "Do not set spec.replicas with NoReplicas"
         end
-
-      target&.dig_set key, @doc.replica_target
+        unless Kubernetes::Resource::Base.server_side_apply?(template)
+          raise Samson::Hooks::UserError, "Set metadata.annotations.samson/server_side_apply: 'true' with NoReplicas"
+        end
+      else
+        template.dig_set [:spec, :replicas], @doc.replica_target
+      end
     end
 
     def validate_replica_target_is_supported
