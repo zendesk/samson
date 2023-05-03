@@ -136,16 +136,6 @@ describe Kubernetes::TemplateFiller do
       result.dig(:spec, :template, :metadata, :annotations, :"samson/deploy_url").must_be :blank?
     end
 
-    it "sets replicas for templates" do
-      raw_template[:apiVersion] = "zendesk.com/v1alpha1"
-      raw_template[:kind] = "ShardedDeployment"
-      raw_template[:spec].delete :replicas
-      raw_template[:spec][:template][:spec][:replicas] = 1
-      result = template.to_hash
-      result[:spec][:replicas].must_be_nil
-      result[:spec][:template][:spec][:replicas].must_equal 2
-    end
-
     it "does not fail when env/secrets are missing during deletion" do
       raw_template[:spec][:template][:metadata][:annotations] = {"secret/FOO": "bar"}
       doc.replica_target = 0
@@ -169,13 +159,6 @@ describe Kubernetes::TemplateFiller do
     end
 
     describe "name" do
-      it "sets name for unknown non-primary kinds" do
-        raw_template[:apiVersion] = "zendesk.com/v1alpha1"
-        raw_template[:kind] = "ShardedDeployment"
-        raw_template[:spec][:template][:spec].delete(:containers)
-        template.to_hash[:metadata][:name].must_equal "test-app-server"
-      end
-
       it "keeps resource name when keep_name is set" do
         raw_template[:metadata][:name] = "foobar"
         raw_template[:metadata][:annotations] = {"samson/keep_name": 'true'}
@@ -225,9 +208,36 @@ describe Kubernetes::TemplateFiller do
       end
 
       it "can read CRDs from currently deploying role" do
+        doc.replica_target = 1
         raw_template[:kind] = "MyCustomResource"
         doc.created_cluster_resources = {"MyCustomResource" => {"namespaced" => true}}
         template.to_hash[:metadata][:namespace].must_equal "pod1"
+      end
+    end
+
+    describe "NoReplicas" do
+      before do
+        raw_template[:spec].delete :replicas
+        raw_template[:metadata][:annotations] = {
+          "samson/NoReplicas": "true",
+          "samson/server_side_apply": "true"
+        }
+      end
+
+      it "can set no replicas" do
+        template.to_hash[:spec].keys.wont_include :replicas
+      end
+
+      it "warns when user set replicas which would be confusing" do
+        raw_template[:spec][:replicas] = 2
+        e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
+        e.message.must_include "NoReplicas"
+      end
+
+      it "warns when server_side_apply is disabled, which would pick the default of 1" do
+        raw_template[:metadata][:annotations][:"samson/server_side_apply"] = "false"
+        e = assert_raises(Samson::Hooks::UserError) { template.to_hash }
+        e.message.must_include "NoReplicas"
       end
     end
 
@@ -804,6 +814,7 @@ describe Kubernetes::TemplateFiller do
       let(:image) { build.docker_repo_digest }
 
       before do
+        doc.replica_target = 1
         raw_template.replace(
           YAML.safe_load(
             read_kubernetes_sample_file('kubernetes_podtemplate.yml')
@@ -917,6 +928,7 @@ describe Kubernetes::TemplateFiller do
         end
 
         it "does not add preStop to DaemonSet" do
+          doc.replica_target = 1
           raw_template[:kind] = 'DaemonSet'
           refute lifecycle_defined?
         end
