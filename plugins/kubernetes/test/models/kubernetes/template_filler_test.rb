@@ -823,11 +823,17 @@ describe Kubernetes::TemplateFiller do
       end
 
       it "does not populate spec attribute" do
-        result.fetch(:spec, nil).must_be_nil
+        refute result.key? :spec
       end
 
       it "overrides image" do
         container.fetch(:image).must_equal image
+      end
+
+      it "allows 0 replicas" do
+        doc.replica_target = 0
+        result
+        refute result.key? :spec
       end
     end
 

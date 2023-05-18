@@ -46,6 +46,8 @@ module Kubernetes
           set_name
           if ['Deployment', 'StatefulSet'].include?(kind)
             set_replica_target
+          elsif kind == "PodTemplate"
+            # do nothing: the template has resources so setting to 0 is nice to make them not count in the math
           else
             validate_replica_target_is_supported
           end
