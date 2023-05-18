@@ -2,10 +2,10 @@
   "ignored_warnings": [
     {
       "warning_type": "Unmaintained Dependency",
-      "warning_code": 123,
-      "fingerprint": "40be17ee84017c91503dab23873e24bdd71665ab665bf6f351cfc09ff83e6582",
+      "warning_code": 121,
+      "fingerprint": "edf687f759ec9765bd5db185dbc615c80af77d6e7e19386fc42934e7a80307af",
       "check_name": "EOLRuby",
-      "message": "Support for Ruby 2.7.6 ends on 2023-03-31",
+      "message": "Support for Ruby 2.7.6 ended on 2023-03-31",
       "file": ".ruby-version",
       "line": 1,
       "link": "https://brakemanscanner.org/docs/warning_types/unmaintained_dependency/",
@@ -13,13 +13,13 @@
       "render_path": null,
       "location": null,
       "user_input": null,
-      "confidence": "Medium",
+      "confidence": "High",
       "cwe_id": [
         1104
       ],
       "note": ""
     }
   ],
-  "updated": "2023-03-03 09:41:30 -0800",
+  "updated": "2023-05-17 17:52:33 -0700",
   "brakeman_version": "5.4.1"
 }
