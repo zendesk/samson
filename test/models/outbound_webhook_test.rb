@@ -91,21 +91,22 @@ describe OutboundWebhook do
     let(:connection) { webhook.send(:connection) }
 
     it "does not add auth when not configured" do
-      refute_includes connection.headers, 'Authorization'
+      webhook.auth_type = "None"
+      refute_includes connection.builder.handlers, Faraday::Request::Authorization
     end
 
-    it "adds basic auth" do
+    it "adds auth with Basic authentication" do
       webhook.auth_type = "Basic"
       webhook.username = "adminuser"
       webhook.password = "abc123"
-      assert_equal connection.headers['Authorization'], 'Basic YWRtaW51c2VyOmFiYzEyMw=='
+      assert_includes connection.builder.handlers, Faraday::Request::Authorization
     end
 
-    it "adds token auth" do
+    it "adds auth with token authentication" do
       webhook.auth_type = "Token"
       webhook.username = "adminuser"
       webhook.password = "abc123"
-      assert_equal connection.headers['Authorization'], 'Token abc123'
+      assert_includes connection.builder.handlers, Faraday::Request::Authorization
     end
 
     it "fails on unsupported type" do

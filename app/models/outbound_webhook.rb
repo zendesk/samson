@@ -100,8 +100,8 @@ class OutboundWebhook < ActiveRecord::Base
 
       case auth_type
       when "None" # rubocop:disable Lint/EmptyWhen noop
-      when "Basic" then connection.basic_auth(username, password)
-      when "Bearer", "Token" then connection.authorization auth_type, password
+      when "Basic" then connection.request :authorization, :basic, username, password
+      when "Bearer", "Token" then connection.request :authorization, auth_type, password
       else raise ArgumentError, "Unsupported auth_type #{auth_type.inspect}"
       end
     end
