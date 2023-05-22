@@ -8,7 +8,7 @@ require 'faraday-http-cache'
 # to reproduce/remove: rename a repository and try to create a diff with the old name
 # it should return a NullComparison and not a broken Changeset with nil commits
 # tested via test/models/changeset_test.rb
-class Octokit::RedirectAsError < Faraday::Response::Middleware
+class Octokit::RedirectAsError < Faraday::Middleware
   private
 
   def on_complete(response)
