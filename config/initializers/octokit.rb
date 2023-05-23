@@ -23,6 +23,7 @@ Octokit.middleware = Faraday::RackBuilder.new do |builder|
   builder.response :logger, Rails.logger
   builder.use Octokit::Response::RaiseError
   builder.use Octokit::RedirectAsError
+  builder.use Octokit::Middleware::FollowRedirects, limit:0 # Raise a RedirectLimitReached error if a request is redirected.
   builder.adapter Faraday.default_adapter
 end
 
