@@ -7,12 +7,12 @@ describe DashboardsHelper do
   describe '#project_multi_deploys?' do
     it 'has no warnings for same deploy across all deploy groups' do
       prep_versions('v1.0')
-      project_has_different_deploys?(@versions['1']).must_equal false
+      project_has_different_deploys?(@versions[1]).must_equal false
     end
 
     it 'has warnings for different deploy across all deploy groups' do
       prep_versions('v1.1')
-      project_has_different_deploys?(@versions['1']).must_equal true
+      project_has_different_deploys?(@versions[1]).must_equal true
     end
   end
 
@@ -53,9 +53,9 @@ describe DashboardsHelper do
     @versions = Hashie::Mash.new(
       0 => {},
       1 => {
-        '1' => {reference: ref, id: 1},
-        '2' => {reference: 'v1.0'},
-        '3' => {reference: 'v1.0'}
+        1 => {reference: ref, id: 1},
+        2 => {reference: 'v1.0'},
+        3 => {reference: 'v1.0'}
       }
     )
   end
