@@ -338,6 +338,9 @@ GEM
     faraday-multipart (1.0.4)
       multipart-post (~> 2)
     faraday-net_http (3.0.2)
+    faraday-net_http_persistent (2.1.0)
+      faraday (~> 2.5)
+      net-http-persistent (~> 4.0)
     ffi (1.15.5)
     ffi-compiler (1.0.1)
       ffi (>= 1.0.0)
@@ -439,7 +442,8 @@ GEM
     multi_xml (0.6.0)
     multipart-post (2.3.0)
     mysql2 (0.5.3)
-    net-http-persistent (2.9.4)
+    net-http-persistent (4.0.2)
+      connection_pool (~> 2.2)
     net-ldap (0.16.1)
     netrc (0.11.0)
     newrelic_rpm (6.7.0.359)
@@ -687,6 +691,7 @@ DEPENDENCIES
   dotenv
   faraday (~> 2.7)
   faraday-http-cache
+  faraday-net_http_persistent (~> 2.0)
   flay
   forking_test_runner
   gcloud_image_tagger!

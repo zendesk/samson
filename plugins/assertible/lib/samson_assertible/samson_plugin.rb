@@ -10,7 +10,7 @@ module SamsonAssertible
         return unless deploy.stage.notify_assertible? && deploy.succeeded?
 
         conn = Faraday.new(url: 'https://assertible.com')
-        conn.basic_auth(deploy_token, '')
+        conn.request :authorization, :basic, deploy_token, ''
         conn.post(
           '/deployments',
           {
