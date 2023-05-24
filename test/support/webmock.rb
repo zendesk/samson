@@ -39,12 +39,12 @@ ActiveSupport::TestCase.class_eval do
     after { @assert_requests.each { |assert_args| assert_requested(*assert_args) } }
   end
 
-  def stub_github_api(path, response = {}, status = 200)
+  def stub_github_api(path, response = {}, status = 200, headers = {})
     url = "https://api.github.com/#{path}"
     stub_request(:get, url).to_return(
       status: status,
       body: JSON.dump(response),
-      headers: {'Content-Type' => 'application/json'}
+      headers: {'Content-Type' => 'application/json'}.merge(headers)
     )
   end
 end
