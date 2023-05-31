@@ -8,7 +8,7 @@ require 'faraday-http-cache'
 # to reproduce/remove: rename a repository and try to create a diff with the old name
 # it should return a NullComparison and not a broken Changeset with nil commits
 # tested via test/models/changeset_test.rb
-class Octokit::RedirectAsError < Faraday::Response::Middleware
+class Octokit::RedirectAsError < Faraday::Middleware
   private
 
   def on_complete(response)
@@ -23,6 +23,8 @@ Octokit.middleware = Faraday::RackBuilder.new do |builder|
   builder.response :logger, Rails.logger
   builder.use Octokit::Response::RaiseError
   builder.use Octokit::RedirectAsError
+  # Raise a RedirectLimitReached error if a request is redirected.
+  builder.use Octokit::Middleware::FollowRedirects, limit: 0
   builder.adapter Faraday.default_adapter
 end
 

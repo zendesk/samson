@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 require 'zendesk_api'
 require 'net/http/persistent'
+require 'faraday/net_http_persistent'
 
 class ZendeskNotification
   cattr_accessor(:zendesk_url) { ENV['ZENDESK_URL'] }

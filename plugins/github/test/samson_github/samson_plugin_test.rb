@@ -143,8 +143,16 @@ describe SamsonDatadog do
 
     # tests config/initializers/octokit.rb patch
     it "catches exception and returns NullComparison" do
-      stub_github_api("repos/foo/bar/compare/a...b", {}, 301)
-      assert_raises(Octokit::RepositoryUnavailable) { fire("a", "b") }.message.must_include "GET https://api.github"
+      stub_github_api(
+        "repos/foo/bar/compare/a...b",
+        {},
+        301,
+        {'location': 'https://api.github.com/repos/foobar/bar/compare'}
+      )
+
+      assert_raises(Octokit::Middleware::RedirectLimitReached) { fire("a", "b") }.message.must_include(
+        "too many redirects; last one to: https://api.github"
+      )
     end
   end
 end

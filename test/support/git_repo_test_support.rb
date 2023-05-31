@@ -70,7 +70,8 @@ module GitRepoTestHelper
 
   def init_repo_commands
     <<-SHELL
-      git init
+      git init --initial-branch=master
+      git config protocol.file.allow always
       git config user.email "test@example.com"
       git config user.name "Test User"
       git config commit.gpgsign false
