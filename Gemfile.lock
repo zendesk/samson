@@ -455,7 +455,6 @@ GEM
       racc (~> 1.4)
     nokogiri (1.14.3-x86_64-linux)
       racc (~> 1.4)
-    oauth (0.5.6)
     oauth2 (1.4.11)
       faraday (>= 0.17.3, < 3.0)
       jwt (>= 1.0, < 3.0)
@@ -468,10 +467,8 @@ GEM
     omniauth (1.9.2)
       hashie (>= 3.4.6)
       rack (>= 1.6.2, < 3)
-    omniauth-bitbucket (0.0.2)
-      multi_json (~> 1.7)
-      omniauth (~> 1.1)
-      omniauth-oauth (~> 1.0)
+    omniauth-atlassian-bitbucket (0.1.0)
+      omniauth-oauth2
     omniauth-gitlab (1.0.2)
       omniauth (~> 1.0)
       omniauth-oauth2 (~> 1.0)
@@ -485,9 +482,6 @@ GEM
       omniauth (~> 1.0)
       pyu-ruby-sasl (~> 0.0.3.2)
       rubyntlm (~> 0.3.4)
-    omniauth-oauth (1.1.0)
-      oauth
-      omniauth (~> 1.0)
     omniauth-oauth2 (1.7.3)
       oauth2 (>= 1.4, < 3)
       omniauth (>= 1.9, < 3)
@@ -709,7 +703,7 @@ DEPENDENCIES
   net-http-persistent
   octokit
   omniauth
-  omniauth-bitbucket
+  omniauth-atlassian-bitbucket
   omniauth-github!
   omniauth-gitlab
   omniauth-google-oauth2
