@@ -309,7 +309,7 @@ GEM
     chef-utils (18.1.29)
       concurrent-ruby
     coderay (1.1.1)
-    commonmarker (0.23.8)
+    commonmarker (0.23.9)
     concurrent-ruby (1.2.2)
     connection_pool (2.2.1)
     crack (0.4.3)
