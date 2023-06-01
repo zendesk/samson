@@ -53,8 +53,8 @@ end
 desc "'Run brakeman, use `bundle exec brakeman --add-engine-path 'plugins/*' -I` to add or remove obsolete ignores"
 task :brakeman do
   system("brakeman --no-pager --add-engine-path 'plugins/*'") ||
-  # TODO: Need to readd --ensure-latest once upgraded to ruby 3.0
-  # system("brakeman --no-pager --add-engine-path 'plugins/*' --ensure-latest") ||
+    # TODO: Need to readd --ensure-latest once upgraded to ruby 3.0
+    # system("brakeman --no-pager --add-engine-path 'plugins/*' --ensure-latest") ||
     abort("Fix the found issues, or add new ignored with:\nbundle exec brakeman --add-engine-path 'plugins/*' -I")
 end
 
