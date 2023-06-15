@@ -7,8 +7,10 @@ describe DatadogMonitor do
   def assert_datadog(status: 200, times: 1, **params, &block)
     assert_request(
       :get, monitor_url,
-      to_return: {body: api_response.merge(params).to_json, status: status},
-      times: times,
+      **{
+        to_return: {body: api_response.merge(params).to_json, status: status},
+        times: times
+      },
       &block
     )
   end

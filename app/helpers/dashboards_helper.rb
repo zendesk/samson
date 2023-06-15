@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 module DashboardsHelper
   def project_has_different_deploys?(deploy_group_versions)
-        deploy_group_versions.values.map(&:reference).uniq.count > 1
+    deploy_group_versions.values.map(&:reference).uniq.count > 1
   end
 
   def dashboard_project_row_style(project_id)

@@ -7,7 +7,7 @@
 
 <%= search_form do %>
   <%= search_select :action, ["create", "update", "destroy"] %>
-  <%= search_select :auditable_type, audited_classes.sort, label: "Resource" %>
+  <%= search_select :auditable_type, audited_classes.sort, **{ label: "Resource" } %>
   <%= search_select :user_id, User.pluck(:name, :id), live: true, label: "By" %>
   <div class="col-sm-2">
     <%= label_tag 'Changed Key' %>

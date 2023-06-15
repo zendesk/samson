@@ -239,7 +239,7 @@ class Deploy < ActiveRecord::Base
       end
     end
 
-    hash = super(methods: [:status, :url, :production, :commit] + methods )
+    hash = super(methods: [:status, :url, :production, :commit] + methods)
     hash["summary"] = summary_for_timeline
     hash
   end

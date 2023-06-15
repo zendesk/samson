@@ -206,7 +206,7 @@ describe JobExecution do
     end
   end
 
-  it 'mastertains a cache of build artifacts between runs' do
+  it 'maintains a cache of build artifacts between runs' do
     job.command = 'echo hello > $CACHE_DIR/foo'
     execute_job
 

@@ -79,8 +79,7 @@ module Samson
             ssl_verify: tls_verify,
             token: token,
             versioned_kv: versioned_kv?
-          )
-        )
+          ))
       end
 
       private
