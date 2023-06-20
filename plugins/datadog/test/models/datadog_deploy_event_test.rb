@@ -27,13 +27,13 @@ describe DatadogDeployEvent do
 
     it 'delivers correct event with deploy updated_at' do
       assert_request(:post, url, with: {body: expected_body}) do
-        deliver(**{tags: [], time: happened})
+        deliver(tags: [], time: happened)
       end
     end
 
     it 'delivers correct event with additional tags' do
       assert_request(:post, url, with: {body: expected_body(tags: ['one', 'two', 'deploy'])}) do
-        deliver(**{tags: ['one', 'two'], time: happened})
+        deliver(tags: ['one', 'two'], time: happened)
       end
     end
 
@@ -46,7 +46,7 @@ describe DatadogDeployEvent do
       }
 
       assert_request(:post, url, with: {body: expected_body(expected_values)}) do
-        deliver(**{tags: [], time: happened})
+        deliver(tags: [], time: happened)
       end
     end
 
@@ -58,27 +58,27 @@ describe DatadogDeployEvent do
         title: 'Super Admin failed to deploy staging to Staging'
       }
       assert_request(:post, url, with: {body: expected_body(expected_values)}) do
-        deliver(**{tags: [], time: happened})
+        deliver(tags: [], time: happened)
       end
     end
 
     it 'logs success message if status is 202' do
       assert_request(:post, url, with: {body: expected_body}, to_return: {status: 202}) do
-        deliver(**{tags: [], time: happened})
+        deliver(tags: [], time: happened)
       end
     end
 
     it 'logs failure message if status is not 202' do
       Samson::ErrorNotifier.expects(:notify)
       assert_request(:post, url, with: {body: expected_body}, to_return: {status: 400}) do
-        deliver(**{tags: [], time: happened})
+        deliver(tags: [], time: happened)
       end
     end
 
     it "notifies of errors but does not block deploys when datadog is unreachable" do
       Samson::ErrorNotifier.expects(:notify)
       assert_request(:post, url, with: {body: expected_body}, to_timeout: []) do
-        deliver(**{tags: [], time: happened})
+        deliver(tags: [], time: happened)
       end
     end
 
@@ -91,7 +91,7 @@ describe DatadogDeployEvent do
       deploy.stubs(:kubernetes_release).returns Kubernetes::Release.new(release_docs: [doc])
 
       assert_request(:post, url, with: {body: expected_body(expected_values)}) do
-        deliver(**{tags: [], time: happened})
+        deliver(tags: [], time: happened)
       end
     end
   end

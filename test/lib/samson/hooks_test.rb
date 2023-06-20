@@ -98,7 +98,7 @@ describe Samson::Hooks do
 
       Samson::Hooks.only_callbacks_for_plugin('samson_airbrake', :error) do
         hooks.size.must_equal 1
-        Samson::Hooks.fire(:error, mock_exception, **{foo: 'bar'}).size.must_equal 1
+        Samson::Hooks.fire(:error, mock_exception, foo: 'bar').size.must_equal 1
       end
 
       hooks.size.must_equal 3
