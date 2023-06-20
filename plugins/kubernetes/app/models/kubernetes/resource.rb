@@ -401,7 +401,7 @@ module Kubernetes
     end
 
     class PodDisruptionBudget < VersionedUpdate
-      def initialize(*)
+      def initialize(...)
         super
         @delete_resource ||= @template[:delete] # allow deletion through release_doc logic
       end

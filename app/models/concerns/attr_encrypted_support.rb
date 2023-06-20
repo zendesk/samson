@@ -11,7 +11,14 @@ module AttrEncryptedSupport
     base.extend ClassMethods
   end
 
-  def as_json(except: [], **options)
+  def as_json(*args, except: [], **options)
+    # account for difference in variable passing in activesupport
+    args.each do |arg|
+      if arg.is_a?(Hash) && arg.key?(:except)
+        except += arg[:except]
+      end
+    end
+
     except += [
       :encryption_key_sha,
       *self.class.encrypted_attributes.keys.flat_map do |column|
