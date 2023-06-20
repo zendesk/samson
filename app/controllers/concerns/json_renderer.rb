@@ -57,7 +57,7 @@ module JsonRenderer
       end
 
     # prepare resources for include collection
-    resource_json = resource.as_json(methods: requested_inlines)
+    resource_json = resource.as_json(**{ methods: requested_inlines })
     resource_list =
       if resource.is_a?(ActiveRecord::Base)
         [[resource, resource_json]]
