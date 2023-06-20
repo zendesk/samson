@@ -7,7 +7,7 @@ describe DatadogMonitor do
   def assert_datadog(status: 200, times: 1, **params, &block)
     assert_request(
       :get, monitor_url,
-      **{
+      {
         to_return: {body: api_response.merge(params).to_json, status: status},
         times: times
       },
@@ -16,7 +16,7 @@ describe DatadogMonitor do
   end
 
   def assert_datadog_timeout(&block)
-    assert_request(:get, monitor_url, to_timeout: [], &block)
+    assert_request(:get, monitor_url, { to_timeout: [] }, &block)
   end
 
   let(:monitor) { DatadogMonitor.new(123) }
@@ -43,44 +43,44 @@ describe DatadogMonitor do
     before { monitor.query = DatadogMonitorQuery.new(match_target: "pod", match_source: "deploy_group.permalink") }
 
     it "returns simple state when asking for global state" do
-      assert_datadog(overall_state: "OK") do
+      assert_datadog(**{ overall_state: "OK" }) do
         monitor.state([]).must_equal "OK"
       end
     end
 
     it "returns simple state when match_source was not set" do
-      assert_datadog(overall_state: "OK") do
+      assert_datadog(**{ overall_state: "OK" }) do
         monitor.query.match_source = ""
         monitor.state(groups).must_equal "OK"
       end
     end
 
     it "shows unknown using fallback monitor" do
-      assert_datadog overall_state: nil do
+      assert_datadog(**{ overall_state: nil }) do
         monitor.state(groups).must_be_nil
       end
     end
 
     it "shows OK when groups are not alerting" do
-      assert_datadog(state: {groups: {}}) do
+      assert_datadog(**{ state: { groups: {} } }) do
         monitor.state(groups).must_equal "OK"
       end
     end
 
     it "shows Alert when groups are alerting" do
-      assert_datadog alerting_groups do
+      assert_datadog(**alerting_groups) do
         monitor.state(groups).must_equal "Alert"
       end
     end
 
     it "shows Alert when nested groups are alerting" do
-      assert_datadog(state: {groups: {"foo:bar,pod:pod1,bar:foo": {status: "Alert"}}}) do
+      assert_datadog(**{ state: { groups: { "foo:bar,pod:pod1,bar:foo": { status: "Alert" } } } }) do
         monitor.state(groups).must_equal "Alert"
       end
     end
 
     it "shows Warn when nested groups are warning" do
-      assert_datadog(state: {groups: {"foo:bar,pod:pod1,bar:foo": {status: "Warn"}}}) do
+      assert_datadog(**{ state: { groups: { "foo:bar,pod:pod1,bar:foo": { status: "Warn" } } } }) do
         monitor.state(groups).must_equal "Warn"
       end
     end
@@ -91,19 +91,19 @@ describe DatadogMonitor do
         "foo:bar2,pod:pod1,bar:foo": {status: "Alert"},
         "foo:bar3,pod:pod1,bar:foo": {status: "Warn"}
       }
-      assert_datadog(state: {groups: state_groups}) do
+      assert_datadog(**{ state: { groups: state_groups } }) do
         monitor.state(groups).must_equal "Alert"
       end
     end
 
     it "shows OK when other groups are alerting" do
-      assert_datadog(state: {groups: {"pod:pod3": {status: "Alert"}}}) do
+      assert_datadog(**{ state: { groups: { "pod:pod3": { status: "Alert" } } } }) do
         monitor.state(groups).must_equal "OK"
       end
     end
 
     it "raises on unknown source" do
-      assert_datadog(state: {groups: {"pod:pod3": {status: "Alert"}}}) do
+      assert_datadog(**{ state: { groups: { "pod:pod3": { status: "Alert" } } } }) do
         monitor.query.match_source = "wut"
         assert_raises(ArgumentError) { monitor.state(groups) }
       end
@@ -112,7 +112,7 @@ describe DatadogMonitor do
     it "produces no extra sql queries" do
       stage = stages(:test_production) # preload
       assert_sql_queries 1 do # group-stage and groups
-        assert_datadog alerting_groups do
+        assert_datadog(**alerting_groups) do
           monitor.state(stage.deploy_groups)
         end
       end
@@ -121,7 +121,7 @@ describe DatadogMonitor do
     it "runs no sql query when there are no alerts" do
       stage = stages(:test_production) # preload
       assert_sql_queries 0 do
-        assert_datadog(state: {groups: {}}) do
+        assert_datadog(**{ state: { groups: {} } }) do
           monitor.state(stage.deploy_groups)
         end
       end
@@ -129,14 +129,14 @@ describe DatadogMonitor do
 
     it "can match on environment" do
       monitor.query.match_source = "environment.permalink"
-      assert_datadog(state: {groups: {"pod:production": {status: "Alert"}}}) do
+      assert_datadog(**{ state: { groups: { "pod:production": { status: "Alert" } } } }) do
         monitor.state(groups).must_equal "Alert"
       end
     end
 
     it "can match on deploy_group.env_value" do
       monitor.query.match_source = "deploy_group.env_value"
-      assert_datadog(state: {groups: {"pod:pod1": {status: "Alert"}}}) do
+      assert_datadog(**{ state: { groups: { "pod:pod1": { status: "Alert" } } } }) do
         monitor.state(groups).must_equal "Alert"
       end
     end
@@ -145,14 +145,14 @@ describe DatadogMonitor do
       before { monitor.query.match_source = "kubernetes_cluster.permalink" }
 
       it "can query by cluster" do
-        assert_datadog(state: {groups: {"pod:foo1": {status: "Alert"}}}) do
+        assert_datadog(**{ state: { groups: { "pod:foo1": { status: "Alert" } } } }) do
           groups.each { |g| g.kubernetes_cluster.name = "Foo 1" }
           monitor.state(groups).must_equal "Alert"
         end
       end
 
       it "ignores missing clusters" do
-        assert_datadog(state: {groups: {"pod:foo1": {status: "Alert"}}}) do
+        assert_datadog(**{ state: { groups: { "pod:foo1": { status: "Alert" } } } }) do
           groups.each { |g| g.kubernetes_cluster = nil }
           monitor.state(groups).must_equal "OK"
         end
@@ -162,7 +162,7 @@ describe DatadogMonitor do
 
   describe "#name" do
     it "is there" do
-      assert_datadog(overall_state: "OK") do
+      assert_datadog(**{ overall_state: "OK" }) do
         monitor.name.must_equal "Monitor Slow foo"
       end
     end
@@ -175,7 +175,7 @@ describe DatadogMonitor do
     end
 
     it "is error when request fails" do
-      assert_datadog(overall_state: "OK", status: 404) do
+      assert_datadog(**{ overall_state: "OK", status: 404 }) do
         silence_stderr { monitor.name.must_equal "api error" }
       end
     end
@@ -201,13 +201,13 @@ describe DatadogMonitor do
 
   describe "caching" do
     it "caches the api response" do
-      assert_datadog(overall_state: "OK") do
+      assert_datadog(**{ overall_state: "OK" }) do
         2.times { monitor.name }
       end
     end
 
     it "expires the cache when reloaded" do
-      assert_datadog(overall_state: "OK", times: 2) do
+      assert_datadog(**{ overall_state: "OK", times: 2 }) do
         monitor.name
         monitor.reload_from_api
         monitor.name
