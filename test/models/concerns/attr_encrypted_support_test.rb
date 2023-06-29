@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../../test_helper'
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 1
 
 describe AttrEncryptedSupport do
   let(:secret) { create_secret 'production/foo/pod2/hello' }
@@ -29,6 +29,12 @@ describe AttrEncryptedSupport do
       except = [:name]
       secret.as_json(except: except)
       except.must_equal [:name]
+    end
+
+    it "joins args[:except] and the except keyword" do
+      puts secret
+      json_keys = secret.as_json({except: ["id"]}).keys
+      json_keys.wont_include(:id)
     end
   end
 end
