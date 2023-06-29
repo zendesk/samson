@@ -56,15 +56,15 @@ jobs:
         - name: test mysql
           run: |
             export DATABASE_URL=mysql2://travis@127.0.0.1/samson_test?reconnect=true BUNDLE_WITHOUT=postgres:sqlite SILENCE_MIGRATIONS=1
-            bundle exec rake db:create db:migrate default --trace
+            bundle exec rake db:create db:migrate default
         - name: test postgres
           run: |
             export DATABASE_URL=postgresql://postgres@127.0.0.1/samson_test BUNDLE_WITHOUT=mysql:sqlite SILENCE_MIGRATIONS=1
-            bundle exec rake db:create db:migrate default --trace
+            bundle exec rake db:create db:migrate default
         - name: test sqlite
           run: |
             export DATABASE_URL=sqlite3://null$PWD/db/test.sqlite3 BUNDLE_WITHOUT=postgres:mysql SILENCE_MIGRATIONS=1
-            bundle exec rake db:create db:migrate default --trace
+            bundle exec rake db:create db:migrate default
     steps:
     - uses: zendesk/checkout@v2
     - uses: zendesk/setup-ruby@v1

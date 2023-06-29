@@ -15,7 +15,7 @@ task default: :test
 
 Rake::Task['test'].clear
 task :test do
-  sh "EAGER_LOAD=1 bundle exec forking-test-runner test plugins/*/test --merge-coverage --quiet"
+  sh "EAGER_LOAD=1 forking-test-runner test plugins/*/test --merge-coverage --quiet"
 end
 
 task :asset_compilation_environment do
