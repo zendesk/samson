@@ -5,7 +5,7 @@ ruby File.read('.ruby-version').strip
 
 # gems that have rails engines are are always needed
 group :preload do
-  gem 'rails', '~> 6.1.7.3'
+  gem 'rails', '~> 6.1.7.4'
   gem 'dotenv'
   gem 'connection_pool'
   gem 'marco-polo'
@@ -15,7 +15,7 @@ group :preload do
   gem 'pagy'
   gem 'audited'
   gem 'soft_deletion'
-  gem 'doorkeeper', '~> 5.4.0' # TODO: upgrade breaks `rails c`
+  gem 'doorkeeper'
   gem 'mail', '~> 2.7.0' # TODO: upgrade breaks `rails c`
 end
 
@@ -52,6 +52,7 @@ gem 'validates_lengths_from_database'
 gem 'large_object_store'
 gem 'parallel'
 gem 'stackprof'
+gem 'webrick'
 
 # treat included plugins like gems
 Dir[File.join(Bundler.root, 'plugins/*/')].each { |f| gemspec path: f }
@@ -98,7 +99,7 @@ group :debugging do
 end
 
 group :development, :staging do
-  gem 'rack-mini-profiler'
+  gem 'rack-mini-profiler', '~>3.1.0'
 end
 
 group :development, :test do

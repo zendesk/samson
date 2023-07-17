@@ -77,8 +77,8 @@ Samson::Hooks.callback :before_docker_build do |tmp_dir, build, _|
 end
 
 # TODO: use for write_env_files
-Samson::Hooks.callback :deploy_env do |*args|
-  EnvironmentVariable.env(*args)
+Samson::Hooks.callback :deploy_env do |*args, **kwargs|
+  EnvironmentVariable.env(*args, **kwargs)
 end
 
 Samson::Hooks.callback(:link_parts_for_resource) do

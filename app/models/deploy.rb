@@ -231,7 +231,14 @@ class Deploy < ActiveRecord::Base
     ]
   end
 
-  def as_json(methods: [])
+  def as_json(*args, methods: [])
+    # patch activesupport's lack of kwarg passing
+    args.each do |arg|
+      if arg.is_a?(Hash) && arg[:methods]
+        methods += arg[:methods]
+      end
+    end
+
     hash = super(methods: [:status, :url, :production, :commit] + methods)
     hash["summary"] = summary_for_timeline
     hash

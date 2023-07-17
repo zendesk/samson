@@ -33,14 +33,14 @@ describe UserCsvPresenter do
 
     def csv_completeness_test(options = {}, expected = {})
       meta_rows = 3
-      UserCsvPresenter.to_csv(options).split("\n").size.must_equal expected + meta_rows
-      UserCsvPresenter.to_csv(options).split("\n")[-2].split(",")[-1].to_i.must_equal expected
+      UserCsvPresenter.to_csv(**options).split("\n").size.must_equal expected + meta_rows
+      UserCsvPresenter.to_csv(**options).split("\n")[-2].split(",")[-1].to_i.must_equal expected
     end
 
     # on updating #csv_line this test helper may need to be updated
     # This tests the optimized logic against the non-optimized logic.
     def csv_accuracy_test(options = {})
-      actual = CSV.parse(UserCsvPresenter.to_csv(options))
+      actual = CSV.parse(UserCsvPresenter.to_csv(**options))
       actual.shift
       actual.pop(2)
       actual.each do |csv_row|

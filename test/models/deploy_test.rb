@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../test_helper'
 
-SingleCov.covered! uncovered: 3
+SingleCov.covered! uncovered: 4
 
 describe Deploy do
   let(:project) { projects(:test) }
@@ -697,6 +697,12 @@ describe Deploy do
 
     it "does not include the status_url" do
       deploy.as_json.wont_include "status_url"
+    end
+
+    it "joins args[:methods] and the methods keyword" do
+      json = deploy.as_json({methods: ["methods"]}).fetch("methods")
+      json.must_include("as_json", "id")
+      json.must_be_kind_of Array
     end
   end
 

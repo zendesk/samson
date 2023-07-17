@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 class DeployNotificationsChannel < ActionCable::Channel::Base
   def self.broadcast(count)
-    ActionCable.server.broadcast channel_name, count: count
+    ActionCable.server.broadcast(channel_name, {count: count})
   end
 
   # called when using javascript App.cable.subscriptions.create
