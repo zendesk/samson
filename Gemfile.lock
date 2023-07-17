@@ -517,7 +517,7 @@ GEM
     pyu-ruby-sasl (0.0.3.3)
     racc (1.7.1)
     rack (2.2.7)
-    rack-mini-profiler (1.1.4)
+    rack-mini-profiler (3.1.0)
       rack (>= 1.2.0)
     rack-test (2.1.0)
       rack (>= 1.3)
@@ -721,7 +721,7 @@ DEPENDENCIES
   pry-rescue
   pry-stack_explorer
   puma
-  rack-mini-profiler
+  rack-mini-profiler (~> 3.1.0)
   rails (~> 6.1.7.4)
   rails-assets-bootstrap-select!
   rails-assets-jquery!
