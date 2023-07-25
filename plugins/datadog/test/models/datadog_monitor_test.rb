@@ -7,16 +7,14 @@ describe DatadogMonitor do
   def assert_datadog(status: 200, times: 1, **params, &block)
     assert_request(
       :get, monitor_url,
-      {
-        to_return: {body: api_response.merge(params).to_json, status: status},
-        times: times
-      },
+      to_return: {body: api_response.merge(params).to_json, status: status},
+      times: times,
       &block
     )
   end
 
   def assert_datadog_timeout(&block)
-    assert_request(:get, monitor_url, {to_timeout: []}, &block)
+    assert_request(:get, monitor_url, to_timeout: [], &block)
   end
 
   let(:monitor) { DatadogMonitor.new(123) }
@@ -56,7 +54,7 @@ describe DatadogMonitor do
     end
 
     it "shows unknown using fallback monitor" do
-      assert_datadog(overall_state: nil) do
+      assert_datadog overall_state: nil do
         monitor.state(groups).must_be_nil
       end
     end
@@ -68,7 +66,7 @@ describe DatadogMonitor do
     end
 
     it "shows Alert when groups are alerting" do
-      assert_datadog(**alerting_groups) do
+      assert_datadog alerting_groups do
         monitor.state(groups).must_equal "Alert"
       end
     end
@@ -112,7 +110,7 @@ describe DatadogMonitor do
     it "produces no extra sql queries" do
       stage = stages(:test_production) # preload
       assert_sql_queries 1 do # group-stage and groups
-        assert_datadog(**alerting_groups) do
+        assert_datadog alerting_groups do
           monitor.state(stage.deploy_groups)
         end
       end

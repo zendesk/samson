@@ -48,7 +48,7 @@ class AccessTokensController < ResourceController
 
   def render_resource_as_json(**args)
     # Override constraints in Doorkeeper::AccessToken
-    render_as_json resource_name, @resource.serializable_hash, nil, allowed_includes: nil, **args
+    render_as_json resource_name, @resource.serializable_hash, nil, **args, allowed_includes: nil
   end
 
   def resource_params

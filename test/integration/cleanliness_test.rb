@@ -5,7 +5,7 @@ SingleCov.not_covered!
 
 # kitchen sink for 1-off tests
 describe "cleanliness" do
-  let_all(:all_models) do
+  def all_models
     roots = (Samson::Hooks.plugins.map(&:folder).map { |f| "#{f}/" } + [""])
     models = Dir["{#{roots.join(",")}}app/models/**/*.rb"].grep_v(/\/concerns\//)
     models.size.must_be :>, 20

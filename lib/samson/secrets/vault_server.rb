@@ -73,12 +73,13 @@ module Samson
 
       def create_client
         VaultClientWrapper.new(
-          **DEFAULT_CLIENT_OPTIONS,
-          address: address,
-          ssl_cert_store: cert_store,
-          ssl_verify: tls_verify,
-          token: token,
-          versioned_kv: versioned_kv?
+          DEFAULT_CLIENT_OPTIONS.merge(
+            address: address,
+            ssl_cert_store: cert_store,
+            ssl_verify: tls_verify,
+            token: token,
+            versioned_kv: versioned_kv?
+          )
         )
       end
 
