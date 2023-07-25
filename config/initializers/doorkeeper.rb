@@ -11,6 +11,15 @@ module Doorkeeper
   autoload :Application, 'doorkeeper/orm/active_record/application'
   autoload :BaseRecord, 'doorkeeper/orm/active_record/base_record'
   autoload :RedirectUriValidator, 'doorkeeper/orm/active_record/redirect_uri_validator'
+  module Orm
+    module ActiveRecord
+      class << self
+        undef initialize_models!
+        def initialize_models!
+        end
+      end
+    end
+  end
 end
 
 Doorkeeper.configure do

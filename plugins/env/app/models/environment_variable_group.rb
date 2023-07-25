@@ -22,13 +22,7 @@ class EnvironmentVariableGroup < ActiveRecord::Base
     environment_variables.sort_by(&:id).map(&:name).uniq
   end
 
-  def as_json(*args, methods: [], **options)
-    # account for difference in variable passing in activesupport
-    args.each do |arg|
-      if arg.is_a?(Hash) && arg.key?(:methods)
-        methods += arg[:methods]
-      end
-    end
+  def as_json(methods: [], **options)
     super({methods: [:variable_names] + methods}.merge(options))
   end
 

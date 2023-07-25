@@ -10,7 +10,7 @@ module Samson
       def initialize(versioned_kv:, **client_args)
         @versioned_kv = versioned_kv
 
-        super(**client_args)
+        super client_args
       end
 
       # Overwrite Vault::Client#kv to provide unified interface for interacting with KeyValue store
