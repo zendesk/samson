@@ -5,7 +5,7 @@ ruby File.read('.ruby-version').strip
 
 # gems that have rails engines are are always needed
 group :preload do
-  gem 'rails', '~> 6.1.7.3'
+  gem 'rails', '~> 6.1.7.4'
   gem 'dotenv'
   gem 'connection_pool'
   gem 'marco-polo'
@@ -15,7 +15,7 @@ group :preload do
   gem 'pagy'
   gem 'audited'
   gem 'soft_deletion'
-  gem 'doorkeeper', '~> 5.4.0' # TODO: upgrade breaks `rails c`
+  gem 'doorkeeper', '~> 5.6.6' # TODO: upgrade breaks `rails c`
   gem 'mail', '~> 2.7.0' # TODO: upgrade breaks `rails c`
 end
 
