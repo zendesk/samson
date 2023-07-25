@@ -30,7 +30,7 @@ gem 'omniauth-github', git: "https://github.com/omniauth/omniauth-github.git" # 
 gem 'omniauth-google-oauth2'
 gem 'omniauth-ldap'
 gem 'omniauth-gitlab'
-gem 'omniauth-atlassian-bitbucket'
+gem 'omniauth-bitbucket'
 gem 'omniauth-rails_csrf_protection' # remove once https://github.com/omniauth/omniauth/pull/809 is resolved
 gem 'octokit'
 gem 'faraday', '~> 2.7'

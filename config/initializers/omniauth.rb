@@ -61,7 +61,7 @@ Rails.application.config.middleware.use OmniAuth::Builder do
   end
 
   if Rails.application.config.samson.auth.bitbucket
-    require 'omniauth-atlassian-bitbucket'
+    require 'omniauth-bitbucket'
     provider(
       :bitbucket,
       ENV.fetch('BITBUCKET_KEY'),
