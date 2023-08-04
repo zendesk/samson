@@ -6,7 +6,14 @@ module Kubernetes
 
       if filename.ends_with?('.yml', '.yaml')
         # NOTE: this will always return an array of entries
-        YAML.load_stream(contents, filepath)
+        documents = []
+
+        YAML.parse_stream(contents, filename: filename).children.each do |child|
+          temp_stream = Psych::Nodes::Stream.new
+          temp_stream.children << child
+          documents << YAML.safe_load(temp_stream.to_yaml, [Symbol], aliases: true)
+        end
+        documents
       elsif filename.ends_with?('.json')
         JSON.parse(contents)
       else
