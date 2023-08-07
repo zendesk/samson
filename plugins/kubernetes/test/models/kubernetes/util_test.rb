@@ -41,5 +41,14 @@ describe Kubernetes::Util do
       output[0].must_equal('name' => 'foo', 'value' => 999)
       output[1].must_equal('name' => 'other_key', 'value' => 1000, 'password' => 12345)
     end
+
+    it 'only loads allowed classes' do
+      yaml_input = <<~YAML
+        ---
+          - !ruby/object:Gem::Installer
+              i: x
+      YAML
+      assert_raises(Psych::DisallowedClass) { Kubernetes::Util.parse_file(yaml_input, 'file.yaml') }
+    end
   end
 end
