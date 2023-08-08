@@ -20,14 +20,11 @@ module Kubernetes
     end
 
     def self.yaml_safe_load_stream(contents, filename)
-      documents = []
-
-      YAML.parse_stream(contents, filename: filename).children.each do |child|
+      YAML.parse_stream(contents, filename: filename).children.map do |child|
         temp_stream = Psych::Nodes::Stream.new
         temp_stream.children << child
-        documents << YAML.safe_load(temp_stream.to_yaml, [Symbol], aliases: true)
+        YAML.safe_load(temp_stream.to_yaml, [Symbol], aliases: true)
       end
-      documents
     end
   end
 end
