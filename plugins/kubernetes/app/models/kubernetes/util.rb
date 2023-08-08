@@ -6,7 +6,7 @@ module Kubernetes
 
       if filename.ends_with?('.yml', '.yaml')
         # NOTE: this will always return an array of entries
-        YAML.load_stream(contents, filepath)
+        yaml_safe_load_stream(contents, filename)
       elsif filename.ends_with?('.json')
         JSON.parse(contents)
       else
@@ -17,6 +17,14 @@ module Kubernetes
     def self.log(message, extra_info = {})
       msg_log = {message: message}.merge(extra_info).to_json
       Rails.logger.info(msg_log)
+    end
+
+    def self.yaml_safe_load_stream(contents, filename)
+      YAML.parse_stream(contents, filename: filename).children.map do |child|
+        temp_stream = Psych::Nodes::Stream.new
+        temp_stream.children << child
+        YAML.safe_load(temp_stream.to_yaml, [Symbol], aliases: true)
+      end
     end
   end
 end

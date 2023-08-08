@@ -111,7 +111,8 @@ module Samson
       Date,
       Time,
       ActiveSupport::HashWithIndifferentAccess,
-      BigDecimal
+      BigDecimal,
+      Symbol
     ]
 
     # Used for all Samson specific configuration.
