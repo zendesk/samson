@@ -14,7 +14,6 @@ module Doorkeeper
   module Orm
     module ActiveRecord
       class << self
-        undef initialize_models!
         def initialize_models!
         end
       end
