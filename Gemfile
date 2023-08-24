@@ -24,6 +24,7 @@ gem 'puma'
 gem 'attr_encrypted'
 gem 'sawyer'
 gem 'dalli'
+gem 'oauth2', '~>2.0.9'
 gem 'omniauth'
 gem 'omniauth-oauth2'
 gem 'omniauth-github', git: "https://github.com/omniauth/omniauth-github.git" # needs >1.3.0
