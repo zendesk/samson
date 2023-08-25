@@ -44,7 +44,7 @@ if ENV["RAILS_LOG_WITH_LOGRAGE"]
   config.lograge.custom_options = ->(event) do
     # show params for every request
     unwanted_keys = ['format', 'action', 'controller']
-    params = event.payload.dig(:params).reject { |key, _| unwanted_keys.include? key }
+    params = event.payload[:params].reject { |key, _| unwanted_keys.include? key }
     params['commits'] = '... truncated ...' if params['commits'] # lots of metadata from github we don't need
     request = event.payload[:headers].instance_variable_get(:@req)
     {
