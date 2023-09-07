@@ -5,7 +5,7 @@ ruby File.read('.ruby-version').strip
 
 # gems that have rails engines are are always needed
 group :preload do
-  gem 'rails', '~> 6.1.7.6'
+  gem 'rails', '~> 6.1.7.3'
   gem 'dotenv'
   gem 'connection_pool'
   gem 'marco-polo'
@@ -20,11 +20,10 @@ group :preload do
 end
 
 gem 'dogstatsd-ruby'
-gem 'puma', '~>5.6.7'
+gem 'puma'
 gem 'attr_encrypted'
 gem 'sawyer'
 gem 'dalli'
-gem 'oauth2', '~>2.0.9'
 gem 'omniauth'
 gem 'omniauth-oauth2'
 gem 'omniauth-github', git: "https://github.com/omniauth/omniauth-github.git" # needs >1.3.0

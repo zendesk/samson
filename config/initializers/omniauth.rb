@@ -38,8 +38,8 @@ Rails.application.config.middleware.use OmniAuth::Builder do
       ENV.fetch("GITLAB_SECRET"),
       client_options: {
         site: Rails.application.config.samson.gitlab.web_url,
-        authorize_url: 'oauth/authorize',
-        token_url: 'oauth/token'
+        authorize_url: '/oauth/authorize',
+        token_url: '/oauth/token'
       }
     )
   end
