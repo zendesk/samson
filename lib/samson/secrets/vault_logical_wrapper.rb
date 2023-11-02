@@ -20,7 +20,7 @@ module Samson
         super(full_path(id), data)
       end
 
-      def delete(id)
+      def delete(id)fe
         super(full_path(id))
       end
 
