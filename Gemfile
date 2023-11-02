@@ -5,7 +5,7 @@ ruby File.read('.ruby-version').strip
 
 # gems that have rails engines are are always needed
 group :preload do
-  gem 'rails', '~> 6.1.7.3'
+  gem 'rails', '~> 6.1.7.6'
   gem 'dotenv'
   gem 'connection_pool'
   gem 'marco-polo'
@@ -20,11 +20,12 @@ group :preload do
 end
 
 gem 'dogstatsd-ruby'
-gem 'puma'
+gem 'puma', '~>5.6.7'
 gem 'attr_encrypted'
 gem 'sawyer'
 gem 'dalli'
 gem 'omniauth', '>=2.0'
+gem 'oauth2', '~>2.0.9'
 gem 'omniauth-oauth2'
 gem 'omniauth-github'
 gem 'omniauth-google-oauth2'
