@@ -29,7 +29,9 @@ gem 'omniauth', '~>2.0'
 gem 'omniauth-oauth2'
 gem 'omniauth-github', git: "https://github.com/omniauth/omniauth-github.git" # needs >1.3.0
 gem 'omniauth-google-oauth2'
-gem 'omniauth-ldap', git: 'https://github.com/omniauth/omniauth-ldap.git', ref: 'fb485bb4613074b224b8d6b28ad1c7f366a6b6d8'
+gem 'omniauth-ldap',
+  git: 'https://github.com/omniauth/omniauth-ldap.git',
+  ref: 'fb485bb4613074b224b8d6b28ad1c7f366a6b6d8'
 gem 'omniauth-gitlab'
 gem 'omniauth-atlassian-bitbucket'
 gem 'omniauth-rails_csrf_protection' # remove once https://github.com/omniauth/omniauth/pull/809 is resolved
