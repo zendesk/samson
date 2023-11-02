@@ -43,9 +43,11 @@ Samson::Periodical.register :periodical_deploy, "Deploy periodical stages", cons
   Samson::PeriodicalDeploy.run
 end
 
-Samson::Periodical.register :report_process_stats, "Report process stats" do
-  Samson::ProcessUtils.report_to_statsd
-end
+# These are unqueried and were removed at the request of the metrics cost optimization project
+# Uncomment if creating a monitor for process stats.
+# Samson::Periodical.register :report_process_stats, "Report process stats" do
+#   Samson::ProcessUtils.report_to_statsd
+# end
 
 Samson::Periodical.register :repo_provider_status, "Refresh repo provider status" do
   Samson::RepoProviderStatus.refresh
