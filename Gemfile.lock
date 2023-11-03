@@ -19,8 +19,8 @@ GIT
 
 GIT
   remote: https://github.com/zendesk/vault-ruby.git
-  revision: cacb44d48f21a953a39fd9a71c1c33bcb42d77f0
-  ref: cacb44d48f21a953a39fd9a71c1c33bcb42d77f0
+  revision: 96be391a2fd50a42871c8b9dc3c59fddbdbdc556
+  ref: 96be391a2fd50a42871c8b9dc3c59fddbdbdc556
   specs:
     vault (0.12.0)
       aws-sigv4

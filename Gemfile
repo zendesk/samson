@@ -47,7 +47,7 @@ gem 'coderay'
 gem 'net-http-persistent'
 gem 'concurrent-ruby'
 # Can delete once this PR https://github.com/hashicorp/vault-ruby/pull/188 is merged and changes reconciled
-gem 'vault', git: 'https://github.com/zendesk/vault-ruby.git', ref: 'cacb44d48f21a953a39fd9a71c1c33bcb42d77f0'
+gem 'vault', git: 'https://github.com/zendesk/vault-ruby.git', ref: '96be391a2fd50a42871c8b9dc3c59fddbdbdc556'
 gem 'lograge'
 gem 'logstash-event'
 gem 'diffy'
