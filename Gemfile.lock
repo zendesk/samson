@@ -335,7 +335,7 @@ GEM
     dogstatsd-ruby (3.0.0)
     domain_name (0.5.20190701)
       unf (>= 0.0.5, < 1.0.0)
-    doorkeeper (5.4.0)
+    doorkeeper (5.6.6)
       railties (>= 5)
     dotenv (2.2.1)
     encryptor (3.0.0)
@@ -525,7 +525,7 @@ GEM
     puma (5.6.7)
       nio4r (~> 2.0)
     pyu-ruby-sasl (0.0.3.3)
-    racc (1.7.2)
+    racc (1.7.3)
     rack (2.2.8)
     rack-mini-profiler (1.1.4)
       rack (>= 1.2.0)
@@ -566,7 +566,7 @@ GEM
       rake (>= 12.2)
       thor (~> 1.0)
     rainbow (3.0.0)
-    rake (13.0.6)
+    rake (13.1.0)
     rbtree3 (0.6.0)
     recursive-open-struct (1.1.3)
     regexp_parser (1.8.2)
@@ -644,7 +644,7 @@ GEM
     stackprof (0.2.12)
     terminal-table (1.8.0)
       unicode-display_width (~> 1.1, >= 1.1.1)
-    thor (1.2.2)
+    thor (1.3.0)
     tilt (2.0.10)
     tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
@@ -699,7 +699,7 @@ DEPENDENCIES
   dalli
   diffy
   dogstatsd-ruby
-  doorkeeper (~> 5.4.0)
+  doorkeeper (~> 5.6.0)
   dotenv
   faraday (~> 2.7)
   faraday-http-cache

@@ -15,7 +15,7 @@ group :preload do
   gem 'pagy'
   gem 'audited'
   gem 'soft_deletion'
-  gem 'doorkeeper', '~> 5.4.0' # TODO: upgrade breaks `rails c`
+  gem 'doorkeeper', '~> 5.6.0' # TODO: upgrade breaks `rails c`
   gem 'mail', '~> 2.7.0' # TODO: upgrade breaks `rails c`
 end
 
