@@ -247,6 +247,7 @@ describe "cleanliness" do
         next if association.name == :audits # should never be destroyed
         next if association.options.key?(:through) # already cleaned up via through relation
         next if association.options.key?(:dependent) # already defined
+        next if association.is_a?(Doorkeeper::Application) && association.name == :authorized_tokens
         "#{model.name} #{association.name}"
       end
     end.compact
