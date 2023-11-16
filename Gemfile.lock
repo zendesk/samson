@@ -686,7 +686,7 @@ DEPENDENCIES
   ansible
   ar_multi_threaded_transactional_tests
   attr_encrypted
-  audited (~> 5.4.0)
+  audited
   awesome_print
   bootsnap
   bootstrap-sass (>= 3.4.1)
