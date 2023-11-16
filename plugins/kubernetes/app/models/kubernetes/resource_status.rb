@@ -24,6 +24,11 @@ module Kubernetes
       ],
       Service: [
         "FailedToUpdateEndpointSlices"
+      ],
+      StatefulSet: [
+        # Regression from k8s 1.27: https://github.com/kubernetes/kubernetes/pull/115331
+        # Pending backport in: https://github.com/kubernetes/kubernetes/pull/121921
+        "RecreatingFailedPod"
       ]
     }.freeze
 

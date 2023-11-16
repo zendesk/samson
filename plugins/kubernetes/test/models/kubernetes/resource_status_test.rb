@@ -90,6 +90,12 @@ describe Kubernetes::ResourceStatus do
         expect_event_request { details.must_equal "Live" }
       end
 
+      it "ignores known bad events for statefulset" do
+        resource[:kind] = "StatefulSet"
+        events[0].merge!(type: "Warning", reason: "RecreatingFailedPod")
+        expect_event_request { details.must_equal "Live" }
+      end
+
       describe "with bad event" do
         before { events[0].merge!(type: "Warning", reason: "Boom") }
 
