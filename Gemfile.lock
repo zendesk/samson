@@ -278,8 +278,8 @@ GEM
     ast (2.4.1)
     attr_encrypted (3.1.0)
       encryptor (~> 3.0.0)
-    audited (4.10.0)
-      activerecord (>= 4.2, < 6.2)
+    audited (5.0.0)
+      activerecord (>= 5.0, < 6.2)
     autoprefixer-rails (9.4.8)
       execjs
     awesome_print (1.6.1)
@@ -685,7 +685,7 @@ DEPENDENCIES
   ansible
   ar_multi_threaded_transactional_tests
   attr_encrypted
-  audited
+  audited (= 5.0.0)
   awesome_print
   bootsnap
   bootstrap-sass (>= 3.4.1)
