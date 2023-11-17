@@ -18,7 +18,7 @@ Project.class_eval do
     super
   end
 
-  def audited_changes
+  def audited_changes(...)
     super.merge(environment_variables_changes)
   end
 

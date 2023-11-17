@@ -220,8 +220,8 @@ class Stage < ActiveRecord::Base
 
   private
 
-  def audited_changes
-    super.merge(script_changes)
+  def audited_changes(...)
+    super.merge(**script_changes)
   end
 
   def script_changes
