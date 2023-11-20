@@ -63,9 +63,6 @@
             <li><%= link_to "Vault Servers", vault_servers_path %></li>
           <% end %>
           <li><%= link_to "Reports", csv_exports_path %></li>
-          <% if current_user&.super_admin? %>
-            <li><%= link_to "OAuth Applications", oauth_applications_path %></li>
-          <% end %>
           <%= Samson::Hooks.render_views(:manage_menu, self) %>
         </ul>
       </li>
