@@ -20,7 +20,8 @@ module Kubernetes
       PodDisruptionBudget: [
         "CalculateExpectedPodCountFailed",
         "NoControllers",
-        "NoPods"
+        "NoPods",
+        "UnmanagedPods"
       ],
       Service: [
         "FailedToUpdateEndpointSlices"
