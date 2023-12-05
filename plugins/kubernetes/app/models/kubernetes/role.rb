@@ -162,7 +162,12 @@ module Kubernetes
     # allows passing the project to reuse the repository cache when doing multiple lookups
     def role_config_file(reference, deploy_group:, project: project(), **args) # rubocop:disable Style/MethodCallWithoutArgsParentheses
       file = config_file
-      file = file.sub('$deploy_group', deploy_group.env_value) if deploy_group && dynamic_folders?
+      if deploy_group && dynamic_folders?
+        file = file.
+          sub('$deploy_group', deploy_group.env_value).
+          sub('$environment', deploy_group.environment.permalink)
+      end
+
       self.class.role_config_file(project, file, reference, **args)
     end
 
