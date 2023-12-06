@@ -4,7 +4,7 @@
 
   <fieldset>
     <%= form.input :name %>
-    <%= form.input :config_file, help: "Can use $deploy_group substitution to have a dynamic file path." %>
+    <%= form.input :config_file, help: "Can use <code>$deploy_group</code> and <code>$environment</code> substitutions to have a dynamic file path." %>
     <% if @project.override_resource_names? %>
       <%= form.input :service_name, help: "Override service name with this name. Uses name from yml file if it starts with this name." %>
       <%= form.input :resource_name,
