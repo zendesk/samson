@@ -492,5 +492,13 @@ describe Kubernetes::Role do
       role.config_file = "kubernetes/$deploy_group/foo.yaml"
       assert role.role_config_file("master", deploy_group: deploy_groups(:pod100))
     end
+
+    it "can read from dynamic deploy_group_permalink" do
+      GitRepository.any_instance.
+        expects(:file_content).with('kubernetes/pod100/foo.yaml', "master", anything).
+        returns(read_kubernetes_sample_file('kubernetes_job.yml'))
+      role.config_file = "kubernetes/$deploy_group_permalink/foo.yaml"
+      assert role.role_config_file("master", deploy_group: deploy_groups(:pod100))
+    end
   end
 end

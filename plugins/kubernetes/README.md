@@ -334,6 +334,12 @@ metadata.annotations.samson/recreate: "true"
 
 Set the kubernetes roles to `kubernetes/$deploy_group/server.yml` 
 
+You may also reference the permalink of a deploy group via `kubernetes/$deploy_group_permalink/server.yml`
+
+### Static config per environment
+
+Set the kubernetes roles to `kubernetes/$environment/server.yml`
+
 ### Ignoring warning events
 
 If a warning event fails deploys, but application owners deem them safe to ignore, add this:

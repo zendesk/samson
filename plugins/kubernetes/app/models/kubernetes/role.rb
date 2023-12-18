@@ -164,6 +164,7 @@ module Kubernetes
       file = config_file
       if deploy_group && dynamic_folders?
         file = file.
+          sub('$deploy_group_permalink', deploy_group.permalink).
           sub('$deploy_group', deploy_group.env_value).
           sub('$environment', deploy_group.environment.permalink)
       end
