@@ -28,7 +28,13 @@ class Changeset::Commit
   end
 
   def summary_long
-    @data.commit.message.split("\n").first
+    summary = @data.commit.message.split("\n").first
+
+    if summary.nil?
+      return ""
+    end
+
+    summary
   end
 
   def sha
