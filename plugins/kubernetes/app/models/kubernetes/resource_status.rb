@@ -25,6 +25,11 @@ module Kubernetes
       ],
       Service: [
         "FailedToUpdateEndpointSlices"
+      ],
+      # karmada can fail to sync a resource when something else also updated the resource,
+      # this does not necessarily indicate that sync will be broken forever
+      All: [
+        'ApplyPolicyFailed'
       ]
     }.freeze
 
@@ -117,8 +122,9 @@ module Kubernetes
       failures = events(type: "Warning")
       ignored =
         @resource.dig(:metadata, :annotations, :"samson/ignore_events").to_s.split(",") +
-        (IGNORED_EVENT_REASONS[kind.to_sym] || [])
-      failures.reject! { |e| ignored.include? e[:reason] } if ignored.any?
+        (IGNORED_EVENT_REASONS[kind.to_sym] || []) +
+        IGNORED_EVENT_REASONS[:All]
+      failures.reject! { |e| ignored.include? e[:reason] }
       failures
     end
   end
