@@ -6,7 +6,7 @@ SingleCov.covered!
 describe Integrations::TravisController do
   extend IntegrationsControllerTestHelper
 
-  def post(_action, options)
+  def post(_action, **options)
     options[:params][:payload] = options[:params][:payload].to_json
     super
   end

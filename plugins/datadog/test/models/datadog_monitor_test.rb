@@ -66,7 +66,7 @@ describe DatadogMonitor do
     end
 
     it "shows Alert when groups are alerting" do
-      assert_datadog alerting_groups do
+      assert_datadog(**alerting_groups) do
         monitor.state(groups).must_equal "Alert"
       end
     end
@@ -110,7 +110,7 @@ describe DatadogMonitor do
     it "produces no extra sql queries" do
       stage = stages(:test_production) # preload
       assert_sql_queries 1 do # group-stage and groups
-        assert_datadog alerting_groups do
+        assert_datadog(**alerting_groups) do
           monitor.state(stage.deploy_groups)
         end
       end
