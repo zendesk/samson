@@ -32,7 +32,7 @@ class CsvExportsController < ApplicationController
         case params[:type]
         when "users"
           options = user_filter
-          send_data UserCsvPresenter.to_csv(options), type: :csv, filename: "Users_#{options[:datetime]}.csv"
+          send_data UserCsvPresenter.to_csv(**options), type: :csv, filename: "Users_#{options[:datetime]}.csv"
         when "deploy_group_usage"
           date_time_now = Time.now.strftime "%Y%m%d_%H%M"
           send_data DeployGroupUsageCsvPresenter.to_csv, type: :csv, filename: "DeployGroupUsage_#{date_time_now}.csv"
