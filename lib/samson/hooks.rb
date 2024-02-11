@@ -178,8 +178,8 @@ module Samson
       end
 
       # use
-      def fire(name, *args)
-        traced(name) { hooks(name).map { |hook| hook.call(*args) } }
+      def fire(name, *args, **kwargs)
+        traced(name) { hooks(name).map { |hook| hook.call(*args, **kwargs) } }
       end
 
       def render_views(name, view, *args)
