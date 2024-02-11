@@ -63,7 +63,9 @@ task :bundle_audit do
   # TODO: remove CVE-2015-9284 once https://github.com/omniauth/omniauth/pull/809 is resolved
   # TODO: remove CVE-2022-0759 once local development works on newer version
   # TODO: remove GHSA-hjp3-5g2q-7jww will need ruby 3.0
-  sh "bundle-audit check --update --ignore CVE-2015-9284 CVE-2022-0759 GHSA-hjp3-5g2q-7jww CVE-2023-34246"
+  # TODO: remove GHSA-xc9x-jj77-9p9j will need ruby 3.0
+  sh "bundle-audit check --update " \
+     "--ignore CVE-2015-9284 CVE-2022-0759 GHSA-hjp3-5g2q-7jww CVE-2023-34246 GHSA-xc9x-jj77-9p9j"
 end
 
 desc "Run rubocop"
