@@ -22,7 +22,8 @@ class EnvironmentVariableGroup < ActiveRecord::Base
     environment_variables.sort_by(&:id).map(&:name).uniq
   end
 
-  def as_json(methods: [], **options)
+  def as_json(options = {})
+    methods = options.delete(:methods) || []
     super({methods: [:variable_names] + methods}.merge(options))
   end
 

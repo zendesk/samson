@@ -11,14 +11,15 @@ module AttrEncryptedSupport
     base.extend ClassMethods
   end
 
-  def as_json(except: [], **options)
-    except += [
+  def as_json(options = {})
+    options[:except] ||= []
+    options[:except] += [
       :encryption_key_sha,
       *self.class.encrypted_attributes.keys.flat_map do |column|
         [column, :"encrypted_#{column}_iv", :"encrypted_#{column}"]
       end
     ]
-    super(except: except, **options)
+    super(options)
   end
 
   private
