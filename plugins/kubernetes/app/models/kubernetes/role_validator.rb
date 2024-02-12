@@ -3,8 +3,8 @@ module Kubernetes
   class RoleValidator
     # per https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#syntax-and-character-set
     # not perfect since the actual rules are stricter
-    VALID_LABEL_VALUE = /\A[a-zA-Z0-9]([-a-zA-Z0-9_.]*[a-zA-Z0-9])?\z/.freeze
-    VALID_CONTAINER_NAME = /\A[a-zA-Z0-9]([-a-zA-Z0-9.]*[a-zA-Z0-9])?\z/.freeze # also used in js ... cannot use /i
+    VALID_LABEL_VALUE = /\A[a-zA-Z0-9]([-a-zA-Z0-9_.]*[a-zA-Z0-9])?\z/
+    VALID_CONTAINER_NAME = /\A[a-zA-Z0-9]([-a-zA-Z0-9.]*[a-zA-Z0-9])?\z/ # also used in js ... cannot use /i
 
     # for non-namespace deployments: names that should not be changed since they will break dependencies
     IMMUTABLE_NAME_KINDS = [
@@ -15,7 +15,7 @@ module Kubernetes
     # we either generate multiple names or allow custom names
     ALLOWED_DUPLICATE_KINDS = ((['Service'] + IMMUTABLE_NAME_KINDS)).freeze
 
-    DATADOG_AD_REGEXP = %r{(?:service-discovery|ad)\.datadoghq\.com/([^.]+)\.}.freeze
+    DATADOG_AD_REGEXP = %r{(?:service-discovery|ad)\.datadoghq\.com/([^.]+)\.}
 
     def initialize(elements, project:)
       @project = project

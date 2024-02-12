@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 class Release < ActiveRecord::Base
-  NUMBER_REGEX = /\A#{Samson::RELEASE_NUMBER}\z/.freeze
-  VERSION_REGEX = /\Av(#{Samson::RELEASE_NUMBER})\z/.freeze
+  NUMBER_REGEX = /\A#{Samson::RELEASE_NUMBER}\z/
+  VERSION_REGEX = /\Av(#{Samson::RELEASE_NUMBER})\z/
 
   belongs_to :project, touch: true, inverse_of: :releases
   belongs_to :author, class_name: "User", inverse_of: false
