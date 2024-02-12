@@ -13,6 +13,7 @@ SingleCov.setup :minitest, branches: true unless defined?(Spring)
 $LOAD_PATH.delete 'lib'
 $LOAD_PATH.delete 'test'
 
+require 'maxitest/global_must'
 require_relative '../config/environment'
 require 'rails/test_help'
 require 'minitest/rails'
@@ -22,7 +23,7 @@ require 'maxitest/autorun'
 require 'maxitest/timeout'
 require 'maxitest/threads'
 require 'webmock/minitest'
-require 'mocha/setup'
+require 'mocha/minitest'
 
 # Use ActiveSupport::TestCase for everything that was not matched before
 MiniTest::Spec::DSL::TYPES[-1] = [//, ActiveSupport::TestCase]

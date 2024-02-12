@@ -257,6 +257,34 @@ Rails/HelperInstanceVariable:
 Rails/FilePath:
   Enabled: false
 
+# TODO: enable
+Rails/FindEach:
+  Enabled: false
+
+# TODO: enable
+Rails/IndexBy:
+  Enabled: false
+
+# TODO: enable
+Rails/IndexWith:
+  Enabled: false
+
+# we don't always need environment
+Rails/RakeEnvironment:
+  Enabled: false
+
+# TODO: enable
+Rails/ApplicationController:
+  Enabled: false
+
+# TODO: enable
+Rails/ContentTag:
+  Enabled: false
+
+# TODO: enable
+Rails/UniqueValidationWithoutIndex:
+  Enabled: false
+
 Gemspec/RequiredRubyVersion:
   Enabled: false
 
@@ -265,4 +293,7 @@ Style/AccessorGrouping:
 
 # produces false-positives with html-safe, see app/helpers/application_helper.rb
 Style/StringConcatenation:
+  Enabled: false
+
+Style/HashSyntax:
   Enabled: false

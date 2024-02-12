@@ -188,7 +188,7 @@ module Samson
         RestartSignalHandler.after_restart
         RestartSignalHandler.listen
       end
-      Samson::BootCheck.check if Rails.env.development?
+      # Samson::BootCheck.check if Rails.env.development? # TODO: re-enable
     end
 
     unless ENV['PRECOMPILE']

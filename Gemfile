@@ -8,7 +8,7 @@ group :preload do
   gem 'rails', '~> 6.1.7.6'
   gem 'dotenv'
   gem 'connection_pool'
-  gem 'marco-polo'
+  gem 'marco-polo' # TODO: https://github.com/arches/marco-polo/pull/16
 
   # AR extensions
   gem 'goldiloader'
@@ -39,6 +39,7 @@ gem 'octokit'
 gem 'faraday', '~> 2.7'
 gem 'faraday-net_http_persistent', '~> 2.0'
 gem 'faraday-http-cache'
+gem 'faraday-retry'
 gem 'warden'
 gem 'active_hash'
 gem 'ansible'
@@ -55,6 +56,9 @@ gem 'validates_lengths_from_database'
 gem 'large_object_store'
 gem 'parallel'
 gem 'stackprof'
+gem 'net-smtp'
+gem 'net-pop'
+gem 'net-imap'
 
 # treat included plugins like gems
 Dir[File.join(Bundler.root, 'plugins/*/')].each { |f| gemspec path: f }
