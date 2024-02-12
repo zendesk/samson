@@ -19,7 +19,7 @@ module Samson
         if @versioned_kv
           @kv ||= VaultKvWrapper.new(self, Samson::Secrets::VaultClientManager::MOUNT)
         else
-          @logical ||= VaultLogicalWrapper.new(self)
+          @logical ||= VaultLogicalWrapper.new(self) # rubocop:disable Naming/MemoizedInstanceVariableName
         end
       end
     end
