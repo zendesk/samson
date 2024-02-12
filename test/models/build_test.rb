@@ -20,11 +20,13 @@ describe Build do
   let(:current_commit) { "af0798b05e10ac6b8381f85b38ae3973278e71ba" }
 
   def valid_build(attributes = {})
-    Build.new(attributes.reverse_merge(
-      project: project,
-      git_ref: 'master',
-      creator: users(:admin)
-    ))
+    Build.new(
+      attributes.reverse_merge(
+        project: project,
+        git_ref: 'master',
+        creator: users(:admin)
+      )
+    )
   end
 
   describe 'validations' do

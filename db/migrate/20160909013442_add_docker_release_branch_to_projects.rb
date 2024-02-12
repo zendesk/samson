@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 class AddDockerReleaseBranchToProjects < ActiveRecord::Migration[5.0]
   class Project < ActiveRecord::Base; end
+
   def change
     add_column :projects, :docker_release_branch, :string
     Project.all.each do |project|

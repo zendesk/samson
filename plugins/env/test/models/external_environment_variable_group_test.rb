@@ -120,7 +120,7 @@ describe ExternalEnvironmentVariableGroup do
 
     it "returns false without env's" do
       with_env EXTERNAL_ENV_GROUP_S3_REGION: nil,
-      EXTERNAL_ENV_GROUP_S3_BUCKET: nil do
+        EXTERNAL_ENV_GROUP_S3_BUCKET: nil do
         refute ExternalEnvironmentVariableGroup.configured?
       end
     end
@@ -151,7 +151,7 @@ describe ExternalEnvironmentVariableGroup do
 
     it "tries reading from a DR bucket if available" do
       with_env EXTERNAL_ENV_GROUP_S3_DR_REGION: "us-east-1",
-      EXTERNAL_ENV_GROUP_S3_DR_BUCKET: "dr-bucket" do
+        EXTERNAL_ENV_GROUP_S3_DR_BUCKET: "dr-bucket" do
         response = {"FOO" => "one"}.to_yaml
         s3.expects(:get_object).times(2).with(
           bucket: 'a-bucket', key: 'key', version_id: 'version_id'

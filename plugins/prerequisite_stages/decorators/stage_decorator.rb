@@ -1,20 +1,22 @@
 # frozen_string_literal: true
 Stage.class_eval do
-  prepend(Module.new do
-    def prerequisite_stages
-      prerequisite_stage_ids.any? ? Stage.where(id: prerequisite_stage_ids) : []
-    end
+  prepend(
+Module.new do
+  def prerequisite_stages
+    prerequisite_stage_ids.any? ? Stage.where(id: prerequisite_stage_ids) : []
+  end
 
-    def undeployed_prerequisite_stages(commit)
-      return [] unless stages = prerequisite_stages.presence
+  def undeployed_prerequisite_stages(commit)
+    return [] unless stages = prerequisite_stages.presence
 
-      deployed_stages = stages.joins(deploys: :job).where(
-        jobs: {status: 'succeeded', commit: commit}
-      )
+    deployed_stages = stages.joins(deploys: :job).where(
+      jobs: {status: 'succeeded', commit: commit}
+    )
 
-      stages - deployed_stages
-    end
-  end)
+    stages - deployed_stages
+  end
+end
+)
 
   serialize :prerequisite_stage_ids, Array
 
