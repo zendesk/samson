@@ -66,6 +66,7 @@ module Samson
     when "memory"
       config.cache_store = :memory_store # to debug cache keys, bundle open activesupport -> active_support/cache.rb#log
     when "memcached"
+      require_relative "initializers/sockify"
       options = {
         value_max_bytes: 3000000,
         compress: true,
