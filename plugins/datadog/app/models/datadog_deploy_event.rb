@@ -2,7 +2,7 @@
 require 'faraday'
 require 'digest/md5'
 
-# Note: might be able to replace this with Samson.statsd.event
+# NOTE: might be able to replace this with Samson.statsd.event
 class DatadogDeployEvent
   def self.deliver(deploy, tags:, time:)
     status =
