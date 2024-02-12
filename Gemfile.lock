@@ -505,7 +505,7 @@ GEM
     omniauth-rails_csrf_protection (1.0.1)
       actionpack (>= 4.2)
       omniauth (~> 2.0)
-    pagy (3.14.0)
+    pagy (4.11.0)
     parallel (1.24.0)
     parallel_tests (2.32.0)
       parallel
@@ -803,7 +803,7 @@ DEPENDENCIES
   webmock
 
 RUBY VERSION
-   ruby 2.7.8p225
+   ruby 3.0.6p216
 
 BUNDLED WITH
    2.4.22
