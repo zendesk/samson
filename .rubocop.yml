@@ -3,15 +3,12 @@ require:
 
 AllCops:
   DisplayCopNames: true
-  NewCops: enable
+  NewCops: disable
   Exclude:
   - db/schema.rb
   - vendor/**/*
   - tmp/**/*
   - node_modules/**/*
-
-Layout/LineLength:
-  Max: 120
 
 Metrics/ClassLength:
   Enabled: false
