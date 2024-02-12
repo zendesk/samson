@@ -99,7 +99,7 @@ class OutboundWebhook < ActiveRecord::Base
       connection.adapter  Faraday.default_adapter
 
       case auth_type
-      when "None" # rubocop:disable Lint/EmptyWhen noop
+      when "None" # noop
       when "Basic" then connection.request :authorization, :basic, username, password
       when "Bearer", "Token" then connection.request :authorization, auth_type, password
       else raise ArgumentError, "Unsupported auth_type #{auth_type.inspect}"
@@ -109,7 +109,7 @@ class OutboundWebhook < ActiveRecord::Base
 
   def validate_auth
     case auth_type
-    when "None" # rubocop:disable Lint/EmptyWhen noop
+    when "None" # noop
     when "Basic" then errors.add :username, "and password must be set" if !username? || !password?
     when "Bearer", "Token" then errors.add :password, "must be set" unless password?
     else errors.add(:auth_type, "unknown, supported types are #{AUTH_TYPES.to_sentence}")

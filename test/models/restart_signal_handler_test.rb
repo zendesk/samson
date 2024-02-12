@@ -6,10 +6,12 @@ SingleCov.covered!
 describe RestartSignalHandler do
   def handle
     @puma_restarted = false
-    Signal.expects(:trap).with('SIGUSR1').returns(-> do
-      @puma_restarted = true
-      Thread.current.kill # simulates passing signal to puma and it calling exec
-    end)
+    Signal.expects(:trap).with('SIGUSR1').returns(
+      -> do
+        @puma_restarted = true
+        Thread.current.kill # simulates passing signal to puma and it calling exec
+      end
+    )
     handler = RestartSignalHandler.listen
     Thread.pass # make sure listener thread starts
     Thread.new { handler.send(:signal_restart) }.join

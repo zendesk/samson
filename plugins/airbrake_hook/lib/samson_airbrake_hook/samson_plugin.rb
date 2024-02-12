@@ -5,7 +5,7 @@ module SamsonAirbrakeHook
 
   class Notification
     class << self
-      VALID_RAILS_ENV = /^[a-z]+$/.freeze
+      VALID_RAILS_ENV = /^[a-z]+$/
       SECRET_KEY = 'airbrake_api_key'
 
       def deliver_for(deploy)

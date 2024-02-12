@@ -382,11 +382,13 @@ describe CommitStatus do
         stub_github_api(check_suite_url, check_suites: [])
         stub_github_api(check_run_url, check_runs: [])
 
-        status.statuses.must_equal([{
-          state: 'pending',
+        status.statuses.must_equal(
+[{
+  state: 'pending',
           description: "No status was reported for this commit on GitHub. " \
           "See https://developer.github.com/v3/checks/ and https://github.com/blog/1227-commit-status-api for details."
-        }])
+}]
+)
       end
 
       it 'shows pending suites' do

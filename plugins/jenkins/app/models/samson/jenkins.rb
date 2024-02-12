@@ -20,7 +20,7 @@ module Samson
       "Build Parameters starting with #{JENKINS_BUILD_PARAMETRS_PREFIX} are updated "\
       "automatically by Samson. Please disable automatic updating "\
       "of this jenkins job from the above mentioned samson projects "\
-      "before manually editing build parameters or description."
+      "before manually editing build parameters or description.".freeze
     JENKINS_BUILD_PARAMETERS = {
       buildStartedBy: "Samson username of the person who started the deployment.",
       originatedFrom: "Samson project + stage + commit hash from github tag",

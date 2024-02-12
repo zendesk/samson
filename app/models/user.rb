@@ -7,7 +7,7 @@ class User < ActiveRecord::Base
   include HasRole
 
   TIME_FORMATS = ['local', 'utc', 'relative'].freeze
-  GITHUB_USERNAME_REGEX = /\A[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}\Z/i.freeze
+  GITHUB_USERNAME_REGEX = /\A[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}\Z/i
 
   has_soft_deletion default_scope: true
   include SoftDeleteWithDestroy

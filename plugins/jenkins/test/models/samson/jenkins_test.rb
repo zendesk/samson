@@ -45,8 +45,10 @@ describe Samson::Jenkins do
 
   def stub_post_config(body)
     stub_request(:post, "http://www.test-url.com/job/test_job/config.xml").
-      with(body: body,
-           headers: {Authorization: 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}).
+      with(
+        body: body,
+        headers: {Authorization: 'Basic dXNlckB0ZXN0LmNvbTpqYXBpa2V5'}
+      ).
       to_return(status: 200, body: "")
   end
 

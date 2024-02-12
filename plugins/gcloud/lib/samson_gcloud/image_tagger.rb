@@ -4,7 +4,7 @@ module SamsonGcloud
     PRODUCTION_TAG = 'production'
 
     class << self
-      # Note: not tagging builds from different project since that would be confusing ...
+      # NOTE: not tagging builds from different project since that would be confusing ...
       # ideally do not tag any builds for projects that use shared builds ... but that is hard to know atm
       def tag(deploy, output)
         return unless needs_tag?(deploy)

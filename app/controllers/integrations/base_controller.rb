@@ -144,12 +144,14 @@ class Integrations::BaseController < ApplicationController
       options = {git_sha: commit, dockerfile: dockerfile}
       next if scope.where(options).first
 
-      build = project.builds.create!(options.merge(
-        git_ref: branch,
-        description: message,
-        creator: user,
-        name: "Release #{branch}"
-      ))
+      build = project.builds.create!(
+        options.merge(
+          git_ref: branch,
+          description: message,
+          creator: user,
+          name: "Release #{branch}"
+        )
+      )
       DockerBuilderService.new(build).run(tag_as_latest: true)
     end
   end

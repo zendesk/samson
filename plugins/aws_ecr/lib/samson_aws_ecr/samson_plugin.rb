@@ -3,7 +3,7 @@ require 'aws-sdk-ecr'
 
 module SamsonAwsEcr
   class SamsonPlugin < Rails::Engine
-    AMAZON_REGISTRY = /\A.*\.dkr.ecr.([\w\-]+).amazonaws.com\z/.freeze
+    AMAZON_REGISTRY = /\A.*\.dkr.ecr.([\w-]+).amazonaws.com\z/
 
     class << self
       # we make sure the repo exists so pushes do not fail

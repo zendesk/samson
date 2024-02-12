@@ -2,8 +2,8 @@
 require 'aws-sdk-s3'
 
 class ExternalEnvironmentVariableGroup < ActiveRecord::Base
-  S3_URL_REGEX = /\Ahttps:\/\/([^.]+)\.s3\.amazonaws\.com\/([\w\W]+)\Z/i.freeze
-  S3_URL_FORMAT = "https://#{ENV['EXTERNAL_ENV_GROUP_S3_BUCKET']}.s3.amazonaws.com/[key]?versionId=[version_id]"
+  S3_URL_REGEX = /\Ahttps:\/\/([^.]+)\.s3\.amazonaws\.com\/([\w\W]+)\Z/i
+  S3_URL_FORMAT = "https://#{ENV['EXTERNAL_ENV_GROUP_S3_BUCKET']}.s3.amazonaws.com/[key]?versionId=[version_id]".freeze
   HELP_TEXT = ENV.fetch(
     "EXTERNAL_ENV_GROUP_HELP_TEXT",
     "Use external service to manage environment variable groups"

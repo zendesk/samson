@@ -42,9 +42,11 @@ class Kubernetes::DeployGroupRolesController < ResourceController
         {notice: "Missing roles seeded."}
       else
         errors = ["Roles failed to seed, fill them in manually."]
-        errors.concat(created.map do |dgr|
-          "#{dgr.kubernetes_role.name} for #{dgr.deploy_group.name}: #{dgr.errors.full_messages.to_sentence}"
-        end)
+        errors.concat(
+          created.map do |dgr|
+            "#{dgr.kubernetes_role.name} for #{dgr.deploy_group.name}: #{dgr.errors.full_messages.to_sentence}"
+          end
+        )
         max = 4 # header + 3
         message = errors.first(max).join("\n")
         message << " ..." if errors.size > max

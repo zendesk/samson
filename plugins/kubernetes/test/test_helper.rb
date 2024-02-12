@@ -28,11 +28,13 @@ class ActiveSupport::TestCase
   end
 
   def create_kubernetes_cluster(attributes = {})
-    cluster = Kubernetes::Cluster.new({
-      name: 'Foo',
-      config_filepath: File.join(File.dirname(__FILE__), 'cluster_config.yml'),
-      config_context: 'test'
-    }.merge(attributes))
+    cluster = Kubernetes::Cluster.new(
+      {
+        name: 'Foo',
+        config_filepath: File.join(File.dirname(__FILE__), 'cluster_config.yml'),
+        config_context: 'test'
+      }.merge(attributes)
+    )
     cluster.save!(validate: false)
     cluster
   end

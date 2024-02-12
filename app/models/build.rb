@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 class Build < ActiveRecord::Base
-  SHA1_REGEX = /\A[0-9a-f]{40}\Z/i.freeze
-  SHA256_REGEX = /\A(sha256:)?[0-9a-f]{64}\Z/i.freeze
-  DIGEST_REGEX = /\A[\w.-]+[\w.-]*(:\d+)?[\w.\/-]*@sha256:[0-9a-f]{64}\Z/i.freeze
+  SHA1_REGEX = /\A[0-9a-f]{40}\Z/i
+  SHA256_REGEX = /\A(sha256:)?[0-9a-f]{64}\Z/i
+  DIGEST_REGEX = /\A[\w.-]+[\w.-]*(:\d+)?[\w.\/-]*@sha256:[0-9a-f]{64}\Z/i
 
   belongs_to :project, inverse_of: :builds
   belongs_to :docker_build_job, class_name: 'Job', optional: true, inverse_of: false

@@ -56,7 +56,7 @@ module SamsonLedger
       end
 
       def pull_requests(changeset)
-        # Note: All HTML is sanitized at rendering time on Ledger.
+        # NOTE: All HTML is sanitized at rendering time on Ledger.
         results = changeset.pull_requests.map do |pull_request|
           github_users = pull_request.users.compact.map do |user|
             "<a href='#{user.url}'><img src='#{user.avatar_url}' width=20 height=20 /></a>"

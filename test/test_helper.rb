@@ -342,14 +342,16 @@ ActionController::TestCase.class_eval do
   end
 
   # catch warden throw ... which would normally go into warden middleware and then be an unauthorized response
-  prepend(Module.new do
-    def process(...)
-      catch(:warden) { return super(...) }
-      response.status = :unauthorized
-      response.body = ":warden caught in test_helper.rb"
-      response
+  prepend(
+    Module.new do
+      def process(...)
+        catch(:warden) { return super(...) }
+        response.status = :unauthorized
+        response.body = ":warden caught in test_helper.rb"
+        response
+      end
     end
-  end)
+  )
 end
 
 ActionDispatch::IntegrationTest.class_eval do
