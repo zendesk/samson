@@ -101,7 +101,7 @@ group :debugging do
 end
 
 group :development, :staging do
-  gem 'rack-mini-profiler', '~> 2.3.2'
+  gem 'rack-mini-profiler'
 end
 
 group :development, :test do
