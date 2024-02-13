@@ -336,7 +336,7 @@ GEM
       msgpack
     debug_inspector (0.0.3)
     diffy (3.4.2)
-    dogstatsd-ruby (3.3.0)
+    dogstatsd-ruby (5.6.1)
     domain_name (0.6.20240107)
     doorkeeper (5.6.8)
       railties (>= 5)
