@@ -110,6 +110,11 @@ describe Kubernetes::ResourceStatus do
           }
           expect_event_request { details.must_equal "Error event" }
         end
+
+        it "ignores karmada sync" do
+          events[0][:reason] = "ApplyPolicyFailed"
+          expect_event_request { details.must_equal "Live" }
+        end
       end
     end
   end
