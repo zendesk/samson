@@ -24,8 +24,8 @@ module SamsonDatadogTracer
         raise "#{scope} wrapper already defined for #{method}"
       end
       klass.alias_method without, method
-      klass.define_method(method) do |*args, &block|
-        callback.call { send(without, *args, &block) }
+      klass.define_method(method) do |*args, **kwargs, &block|
+        callback.call { send(without, *args, **kwargs, &block) }
       end
       klass.send visibility, method
       klass.send visibility, without
