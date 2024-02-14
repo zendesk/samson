@@ -51,6 +51,7 @@ gem 'concurrent-ruby'
 gem 'vault', git: 'https://github.com/zendesk/vault-ruby.git', ref: '96be391a2fd50a42871c8b9dc3c59fddbdbdc556'
 gem 'lograge'
 gem 'logstash-event'
+gem 'hashdiff', git: 'https://github.com/liufengyun/hashdiff.git' # fails to install on ruby 3.2 from gem when deploying
 gem 'diffy'
 gem 'validates_lengths_from_database'
 gem 'large_object_store'

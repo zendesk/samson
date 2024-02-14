@@ -1,4 +1,10 @@
 GIT
+  remote: https://github.com/liufengyun/hashdiff.git
+  revision: 3832f805bddfa5e738a6d82b51ab4a27b61169b6
+  specs:
+    hashdiff (1.1.0)
+
+GIT
   remote: https://github.com/omniauth/omniauth-github.git
   revision: f27bb4e018150d87e9444ad13955acfc9e76f4d7
   specs:
@@ -383,7 +389,6 @@ GEM
     goldiloader (3.2.0)
       activerecord (>= 4.2, < 6.3)
       activesupport (>= 4.2, < 6.3)
-    hashdiff (1.1.0)
     hashie (5.0.0)
     http (5.2.0)
       addressable (~> 2.8)
@@ -737,6 +742,7 @@ DEPENDENCIES
   forking_test_runner
   gcloud_image_tagger!
   goldiloader
+  hashdiff!
   large_object_store
   lograge
   logstash-event
