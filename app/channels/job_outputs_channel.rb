@@ -87,17 +87,17 @@ class JobOutputsChannel < ActionCable::Channel::Base
     execution.viewers.push current_user
     builder = EventBuilder.new(execution.job)
     execution.output.each do |event, data|
-      transmit event: event, data: builder.payload(event, data)
+      transmit({event: event, data: builder.payload(event, data)})
     end
   end
 
   # send fake output (reproduce by deploying a bad ref)
   def stream_finished_output(job)
     builder = EventBuilder.new(job)
-    transmit event: :started, data: builder.payload(:started, nil)
+    transmit({event: :started, data: builder.payload(:started, nil)})
     job.output.each_line do |line|
-      transmit event: :message, data: builder.payload(:message, line)
+      transmit({event: :message, data: builder.payload(:message, line)})
     end
-    transmit event: :finished, data: builder.payload(:finished, nil)
+    transmit({event: :finished, data: builder.payload(:finished, nil)})
   end
 end
