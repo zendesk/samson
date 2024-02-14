@@ -23,7 +23,7 @@ module Kubernetes
       YAML.parse_stream(contents, filename: filename).children.map do |child|
         temp_stream = Psych::Nodes::Stream.new
         temp_stream.children << child
-        YAML.safe_load(temp_stream.to_yaml, [Symbol], aliases: true)
+        YAML.safe_load(temp_stream.to_yaml, permitted_classes: [Symbol], aliases: true)
       end
     end
   end

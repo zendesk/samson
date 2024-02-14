@@ -29,7 +29,7 @@ describe Samson::Secrets::VaultServer do
     it "is invalid with an invalid cert" do
       server.ca_cert = "nope"
       refute_valid server
-      server.errors.full_messages.must_equal ["Ca cert is invalid: not enough data"]
+      server.errors.full_messages.must_equal ["Ca cert is invalid: PEM_read_bio_X509: no start line"]
     end
 
     it "is invalid with duplicate name" do

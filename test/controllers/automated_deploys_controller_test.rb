@@ -64,7 +64,8 @@ describe AutomatedDeploysController do
       end
 
       it "raises when seting the email would have no effect" do
-        assert_raises(ArgumentError) { assert_created }
+        e = assert_raises(Minitest::UnexpectedError) { assert_created }
+        e.error.class.must_equal ArgumentError
       end
     end
 
