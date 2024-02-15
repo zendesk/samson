@@ -108,7 +108,7 @@ Kubernetes::Release
 
 ### Docker Images
 
-(To opt out of this feature set `metadata.annotations.container-nameofcontainer-samson/dockerfile: none`)
+(To opt out of this feature set in pod-template `metadata.annotations.container-nameofcontainer-samson/dockerfile: none`)
 
 For each container (including init containers) Samson finds or creates a matching Docker image for the Git SHA that is being deployed.
 Samson always sets the Docker digest, and not a tag, to make deployments immutable.
