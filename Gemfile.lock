@@ -442,7 +442,7 @@ GEM
     mail (2.7.1)
       mini_mime (>= 0.1.1)
     marcel (1.0.2)
-    marco-polo (2.0.1)
+    marco-polo (2.0.3)
       railties (>= 6)
     maxitest (3.7.0)
       minitest (>= 5.0.0, < 5.15.0)
