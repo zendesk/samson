@@ -23,7 +23,7 @@ module Samson
 
         # Not implemented, just bogus values to be able to debug UI in development+test
         # versions in vault are unsorted above 10 -> (10,1,2,3...) and have symbol keys
-        def history(*)
+        def history(id, resolve: true)
           {
             foo: "bar",
             current_version: 4,
