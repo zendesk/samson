@@ -5,7 +5,7 @@ ruby File.read('.ruby-version').strip
 
 # gems that have rails engines are are always needed
 group :preload do
-  gem 'rails', '~> 6.1.7.6'
+  gem 'rails', '~> 6.1.7.7'
   gem 'dotenv'
   gem 'connection_pool'
   gem 'marco-polo' # TODO: https://github.com/arches/marco-polo/pull/16
