@@ -24,7 +24,7 @@ module Samson
         # Not implemented, just bogus values to be able to debug UI in development+test
         # versions in vault are unsorted above 10 -> (10,1,2,3...) and have symbol keys
         # method signature matches real backend's .history method
-        def history(id, *_, resolve: true, **_)
+        def history(id, resolve: true)
           if id.nil? || resolve.nil? || !id.nil?
             {
               foo: "bar",
