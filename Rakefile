@@ -89,6 +89,8 @@ task :flay do
     'plugins/kubernetes/app/models/kubernetes/deploy_group_role.rb', # similar but slightly different validations
     'plugins/flowdock/app/views/samson_flowdock/_fields.html.erb', # simple html
     'plugins/datadog/app/views/samson_datadog/_datadog_monitor_queries_fields.html.erb', # simple html
+    'plugins/zendesk/app/views/samson_zendesk/notification.erb', # simple text
+    'app/views/deploy_mailer/_commit_info.text.erb', # simple text
   ]
   flay = Flay.run([*files, '--mass', '25']) # mass threshold is shown mass / occurrences
   abort "Code duplication found" if flay.report.any?
