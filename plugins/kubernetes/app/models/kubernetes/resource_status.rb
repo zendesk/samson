@@ -29,7 +29,8 @@ module Kubernetes
       # karmada can fail to sync a resource when something else also updated the resource,
       # this does not necessarily indicate that sync will be broken forever
       All: [
-        'ApplyPolicyFailed'
+        'ApplyPolicyFailed',
+        'SyncFailed'
       ]
     }.freeze
 
