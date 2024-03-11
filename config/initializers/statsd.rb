@@ -6,8 +6,13 @@ class << Samson
 end
 
 raise "use STATSD_HOST and STATSD_PORT" if File.exist?("config/statsd.yml")
-Samson.statsd = Datadog::Statsd.new(ENV['STATSD_HOST'] || '127.0.0.1', ENV['STATSD_PORT'] || '8125')
-Samson.statsd.namespace = "samson.app"
+Samson.statsd = Datadog::Statsd.new(
+  ENV['STATSD_HOST'] || '127.0.0.1',
+  ENV['STATSD_PORT'] || '8125',
+  logger: Rails.logger,
+  namespace: 'samson.app',
+  single_thread: Rails.env.test?
+)
 
 Samson.statsd.event "Startup", "Samson startup" if ENV['SERVER_MODE']
 
@@ -27,11 +32,9 @@ ActiveSupport::Notifications.subscribe("execute_job.samson") do |_, start, finis
   kubernetes = payload.fetch(:kubernetes)
   tags << "kubernetes:#{kubernetes}" unless kubernetes.nil?
 
-  Samson.statsd.batch do |statsd|
-    statsd.timing "execute_shell.time", duration, tags: tags
-    (payload[:parts] || {}).each do |part, time|
-      statsd.timing "execute_shell.parts", time, tags: tags + ["part:#{part}"]
-    end
+  Samson.statsd.timing "execute_shell.time", duration, tags: tags
+  (payload[:parts] || {}).each do |part, time|
+    Samson.statsd.timing "execute_shell.parts", time, tags: tags + ["part:#{part}"]
   end
   Rails.logger.info(payload.merge(total: duration, message: "Job execution finished"))
 end

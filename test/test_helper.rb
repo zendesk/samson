@@ -13,6 +13,7 @@ SingleCov.setup :minitest, branches: true unless defined?(Spring)
 $LOAD_PATH.delete 'lib'
 $LOAD_PATH.delete 'test'
 
+require 'maxitest/global_must'
 require_relative '../config/environment'
 require 'rails/test_help'
 require 'minitest/rails'
@@ -22,7 +23,7 @@ require 'maxitest/autorun'
 require 'maxitest/timeout'
 require 'maxitest/threads'
 require 'webmock/minitest'
-require 'mocha/setup'
+require 'mocha/minitest'
 
 # Use ActiveSupport::TestCase for everything that was not matched before
 MiniTest::Spec::DSL::TYPES[-1] = [//, ActiveSupport::TestCase]
@@ -226,7 +227,7 @@ ActiveSupport::TestCase.class_eval do
 
   def self.only_callbacks_for_plugin(callback)
     line = caller(1..1).first
-    plugin_name = line[/\/plugins\/([^\/]+)/, 1] || raise("not called from a plugin not #{line}")
+    plugin_name = line[/^plugins\/([^\/]+)/, 1] || raise("not called from a plugin not #{line}")
     around { |t| Samson::Hooks.only_callbacks_for_plugin(plugin_name, callback, &t) }
   end
 
@@ -342,14 +343,16 @@ ActionController::TestCase.class_eval do
   end
 
   # catch warden throw ... which would normally go into warden middleware and then be an unauthorized response
-  prepend(Module.new do
-    def process(*args)
-      catch(:warden) { return super }
-      response.status = :unauthorized
-      response.body = ":warden caught in test_helper.rb"
-      response
+  prepend(
+    Module.new do
+      def process(...)
+        catch(:warden) { return super(...) }
+        response.status = :unauthorized
+        response.body = ":warden caught in test_helper.rb"
+        response
+      end
     end
-  end)
+  )
 end
 
 ActionDispatch::IntegrationTest.class_eval do

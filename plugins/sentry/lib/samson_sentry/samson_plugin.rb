@@ -5,13 +5,18 @@
 # test: enable sentry (see Readme.md) + `rails c` + `Sentry.capture_message 'foo'` while sentry is enabled
 if ENV["SENTRY_PROJECT"].present?
   require "sentry/utils/logging_helper"
-  Sentry::LoggingHelper.prepend(Module.new do
-    def log_info(message)
-      super(message.sub(
-        /(\S+) to Sentry/, "https://sentry.io/organizations/#{ENV["SENTRY_PROJECT"]}/issues/?query=\\1 to Sentry"
-      ))
+  Sentry::LoggingHelper.prepend(
+    Module.new do
+      def log_info(message)
+        super(
+          message.sub(
+            /(\S+) to Sentry/,
+            "https://sentry.io/organizations/#{ENV["SENTRY_PROJECT"]}/issues/?query=\\1 to Sentry"
+          )
+        )
+      end
     end
-  end)
+  )
 end
 
 require "sentry-rails"
@@ -24,5 +29,5 @@ end
 
 Samson::Hooks.callback :error do |exception, **options|
   sentry_options = options.slice(:contexts, :extra, :tags, :user, :level, :fingerprint)
-  Sentry.capture_exception(exception, sentry_options)
+  Sentry.capture_exception(exception, **sentry_options)
 end

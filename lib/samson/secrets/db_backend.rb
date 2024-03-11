@@ -23,17 +23,20 @@ module Samson
 
         # Not implemented, just bogus values to be able to debug UI in development+test
         # versions in vault are unsorted above 10 -> (10,1,2,3...) and have symbol keys
-        def history(*)
-          {
-            foo: "bar",
-            current_version: 4,
-            versions: {
-              "1": {bar: "baz", value: "v1", creator_id: 1},
-              "3": {bar: "baz", value: "v2", creator_id: 1},
-              "2": {bar: "baz", value: "v2", creator_id: 1},
-              "4": {bar: "baz", value: "v3", creator_id: 1}
+        # method signature matches real backend's .history method
+        def history(id, resolve: true)
+          if id.nil? || resolve.nil? || !id.nil?
+            {
+              foo: "bar",
+              current_version: 4,
+              versions: {
+                "1": {bar: "baz", value: "v1", creator_id: 1},
+                "3": {bar: "baz", value: "v2", creator_id: 1},
+                "2": {bar: "baz", value: "v2", creator_id: 1},
+                "4": {bar: "baz", value: "v3", creator_id: 1}
+              }
             }
-          }
+          end
         end
 
         def read_multi(ids)

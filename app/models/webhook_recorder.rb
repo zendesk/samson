@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 class WebhookRecorder
   KEY = 'WebhookRecorder-v2'
-  NATIVE_HEADER = /^[_A-Z]+$/.freeze
+  NATIVE_HEADER = /^[_A-Z]+$/
   IGNORED_HEADERS = ["QUERY_STRING", "RAW_POST_DATA"].freeze
 
   class << self

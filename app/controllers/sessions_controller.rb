@@ -98,11 +98,13 @@ class SessionsController < ApplicationController
       uid = auth_hash.uid
     end
 
-    user = find_or_create_user_from_hash(options.merge(
-      external_id: "#{strategy.name}-#{uid}",
-      name: auth_hash.info.name,
-      email: auth_hash.info.email
-    ))
+    user = find_or_create_user_from_hash(
+      options.merge(
+        external_id: "#{strategy.name}-#{uid}",
+        name: auth_hash.info.name,
+        email: auth_hash.info.email
+      )
+    )
 
     if user.persisted?
       self.current_user = user

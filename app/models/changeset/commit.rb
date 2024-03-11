@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 class Changeset::Commit
-  PULL_REQUEST_MERGE_MESSAGE = /\AMerge pull request #(\d+)/.freeze
-  PULL_REQUEST_SQUASH_MESSAGE = /\A.*\(#(\d+)\)$/.freeze
+  PULL_REQUEST_MERGE_MESSAGE = /\AMerge pull request #(\d+)/
+  PULL_REQUEST_SQUASH_MESSAGE = /\A.*\(#(\d+)\)$/
 
   attr_reader :project
 
@@ -28,7 +28,7 @@ class Changeset::Commit
   end
 
   def summary_long
-    @data.commit.message.split("\n").first
+    @data.commit.message.split("\n").first || ""
   end
 
   def sha

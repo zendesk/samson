@@ -172,9 +172,9 @@ describe "Samson::FormBuilder Helper" do
 
   # NOTE: ideally don't use a plugin model, but we need something with accepts_nested_attributes_for
   describe '#fields_for_many' do
-    def render(*args)
+    def render(*args, **kwargs)
       project.rollbar_dashboards_settings.build # TODO: this does not get rendered
-      builder.fields_for_many(*args) do |p|
+      builder.fields_for_many(*args, **kwargs) do |p|
         p.text_field :base_url, placeholder: 'thing!'
       end
     end

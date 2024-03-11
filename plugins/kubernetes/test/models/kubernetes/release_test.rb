@@ -148,20 +148,26 @@ describe Kubernetes::Release do
 
     it "returns scoped queries" do
       release = kubernetes_releases(:test_release)
-      stub_request(:get, %r{namespaces/pod1/pods\?labelSelector=release_id=\d+,deploy_group_id=\d+}).to_return(body: {
-        resourceVersion: "1",
-        items: [{}, {}]
-      }.to_json)
+      stub_request(:get, %r{namespaces/pod1/pods\?labelSelector=release_id=\d+,deploy_group_id=\d+}).
+        to_return(
+          body: {
+            resourceVersion: "1",
+            items: [{}, {}]
+          }.to_json
+        )
       release.clients("v1").map { |c, q| c.get_pods(q).fetch(:items) }.first.size.must_equal 2
     end
 
     it "can scope queries by resource namespace" do
       release = kubernetes_releases(:test_release)
       Kubernetes::Resource::Base.any_instance.stubs(namespace: "default")
-      stub_request(:get, %r{http://foobar.server/api/v1/namespaces/default/pods}).to_return(body: {
-        resourceVersion: "1",
-        items: [{}, {}]
-      }.to_json)
+      stub_request(:get, %r{http://foobar.server/api/v1/namespaces/default/pods}).
+        to_return(
+          body: {
+            resourceVersion: "1",
+            items: [{}, {}]
+          }.to_json
+        )
       release.clients("v1").map { |c, q| c.get_pods(q).fetch(:items) }.first.size.must_equal 2
     end
   end

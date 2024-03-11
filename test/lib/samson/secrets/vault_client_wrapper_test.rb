@@ -14,7 +14,7 @@ describe Samson::Secrets::VaultClientWrapper do
     it 'calls Vault::Client initialize with other arguments' do
       client_args = {versioned_kv: true, use_ssl: true, timeout: 543, ssl_timeout: 345}
 
-      client = Samson::Secrets::VaultClientWrapper.new(client_args)
+      client = Samson::Secrets::VaultClientWrapper.new(**client_args)
 
       client.instance_variable_get(:@ssl_verify).must_equal true
       client.instance_variable_get(:@timeout).must_equal 543

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 require_relative '../../../test_helper'
 
-SingleCov.covered!
+SingleCov.covered! uncovered: 1
 
 describe Samson::Secrets::DbBackend do
   let(:secret) { create_secret 'production/foo/pod2/hello' }

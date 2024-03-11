@@ -8,7 +8,7 @@ module Samson
     module Manager
       ID_PARTS = [:environment_permalink, :project_permalink, :deploy_group_permalink, :key].freeze
       ID_PART_SEPARATOR = "/"
-      SECRET_ID_REGEX = %r{[\w/-]+}.freeze
+      SECRET_ID_REGEX = %r{[\w/-]+}
       SECRET_LOOKUP_CACHE = 'secret_lookup_cache_v3'
       SECRET_LOOKUP_CACHE_MUTEX = Mutex.new
       VALUE_HASHED_BASE = Digest::SHA2.hexdigest("#{Samson::Application.config.secret_key_base}usedforhashing")
@@ -38,7 +38,7 @@ module Samson
         end
 
         def history(id, include_value: false, **options)
-          history = backend.history(id, options) || raise(ActiveRecord::RecordNotFound)
+          history = backend.history(id, **options) || raise(ActiveRecord::RecordNotFound)
           unless include_value
             last_value = nil
             history.fetch(:versions).each_value do |data|

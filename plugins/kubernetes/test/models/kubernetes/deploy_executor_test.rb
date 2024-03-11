@@ -404,24 +404,26 @@ describe Kubernetes::DeployExecutor do
         # make the worker a job and keep the app server
         Kubernetes::ReleaseDoc.any_instance.unstub(:raw_template)
         GitRepository.any_instance.unstub(:file_content)
-        GitRepository.any_instance.stubs(:file_content).with('kubernetes/resque_worker.yml', commit, anything).returns({
-          'kind' => 'Job',
-          'apiVersion' => 'batch/v1',
-          'spec' => {
-            'template' => {
-              'metadata' => {'labels' => {'project' => 'some-project', 'role' => 'migrate'}},
-              'spec' => {
-                'containers' => [{'name' => 'job', 'image' => 'docker-registry.zende.sk/truth_service:latest'}],
-                'restartPolicy' => 'Never'
+        GitRepository.any_instance.stubs(:file_content).with('kubernetes/resque_worker.yml', commit, anything).returns(
+          {
+            'kind' => 'Job',
+            'apiVersion' => 'batch/v1',
+            'spec' => {
+              'template' => {
+                'metadata' => {'labels' => {'project' => 'some-project', 'role' => 'migrate'}},
+                'spec' => {
+                  'containers' => [{'name' => 'job', 'image' => 'docker-registry.zende.sk/truth_service:latest'}],
+                  'restartPolicy' => 'Never'
+                }
               }
+            },
+            'metadata' => {
+              'name' => 'test',
+              'labels' => {'project' => 'some-project', 'role' => 'migrate'},
+              'annotations' => {'samson/prerequisite' => 'true'}
             }
-          },
-          'metadata' => {
-            'name' => 'test',
-            'labels' => {'project' => 'some-project', 'role' => 'migrate'},
-            'annotations' => {'samson/prerequisite' => 'true'}
-          }
-        }.to_yaml)
+          }.to_yaml
+        )
         GitRepository.any_instance.stubs(:file_content).with('kubernetes/app_server.yml', commit, anything).
           returns(read_kubernetes_sample_file('kubernetes_deployment.yml'))
 

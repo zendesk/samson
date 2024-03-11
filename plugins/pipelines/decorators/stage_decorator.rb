@@ -1,20 +1,22 @@
 # frozen_string_literal: true
 Stage.class_eval do
-  prepend(Module.new do
-    # Return true if any stages in the pipeline are marked production
-    def production?(check_next_stages: true)
-      super() || (check_next_stages && pipeline_next_stages.any?(&:production?))
-    end
+  prepend(
+    Module.new do
+      # Return true if any stages in the pipeline are marked production
+      def production?(check_next_stages: true)
+        super() || (check_next_stages && pipeline_next_stages.any?(&:production?))
+      end
 
-    def production_for_approval?
-      production?(check_next_stages: false)
-    end
+      def production_for_approval?
+        production?(check_next_stages: false)
+      end
 
-    # Return true if any stages in the pipeline deploy to production
-    def deploy_requires_approval?
-      super || pipeline_next_stages.any?(&:deploy_requires_approval?)
+      # Return true if any stages in the pipeline deploy to production
+      def deploy_requires_approval?
+        super || pipeline_next_stages.any?(&:deploy_requires_approval?)
+      end
     end
-  end)
+  )
 
   serialize :next_stage_ids, Array
 

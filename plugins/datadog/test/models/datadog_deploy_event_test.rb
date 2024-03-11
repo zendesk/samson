@@ -7,8 +7,8 @@ describe DatadogDeployEvent do
   let(:deploy) { deploys(:succeeded_test) }
 
   describe '.deliver' do
-    def deliver(*args)
-      DatadogDeployEvent.deliver(deploy, *args)
+    def deliver(**args)
+      DatadogDeployEvent.deliver(deploy, **args)
     end
 
     def expected_body(overrides = {})

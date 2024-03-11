@@ -3,7 +3,7 @@ require 'kubeclient'
 
 module Kubernetes
   class Namespace < ActiveRecord::Base
-    NAME_PATTERN = /\A[a-z]+[a-z\d-]+\z/.freeze
+    NAME_PATTERN = /\A[a-z]+[a-z\d-]+\z/
 
     self.table_name = 'kubernetes_namespaces'
     audited

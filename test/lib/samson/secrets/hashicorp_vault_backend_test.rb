@@ -95,10 +95,14 @@ describe Samson::Secrets::HashicorpVaultBackend do
 
     it "does not resolve deleted versions" do
       id = "production/foo/pod2/bar"
-      versions_body = {data: {versions: {
-        "v1" => {foo: "bar", destroyed: false, deletion_time: "2019-10-29"},
-        "v2" => {foo: "bar2", destroyed: false, deletion_time: ""}
-      }}}
+      versions_body = {
+        data: {
+          versions: {
+            "v1" => {foo: "bar", destroyed: false, deletion_time: "2019-10-29"},
+            "v2" => {foo: "bar2", destroyed: false, deletion_time: ""}
+          }
+        }
+      }
       version_body = {data: {data: {vault: 1}, metadata: {v2: {metadata: {foo: "bar2", destroyed: false}}}}}
       assert_vault_request :get, id, versioned_kv: "metadata", body: versions_body.to_json do
         assert_vault_request :get, "#{id}?version=v2", versioned_kv: "data", body: version_body.to_json do

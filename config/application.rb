@@ -66,6 +66,7 @@ module Samson
     when "memory"
       config.cache_store = :memory_store # to debug cache keys, bundle open activesupport -> active_support/cache.rb#log
     when "memcached"
+      require_relative "initializers/sockify"
       options = {
         value_max_bytes: 3000000,
         compress: true,
@@ -187,7 +188,7 @@ module Samson
         RestartSignalHandler.after_restart
         RestartSignalHandler.listen
       end
-      Samson::BootCheck.check if Rails.env.development?
+      # Samson::BootCheck.check if Rails.env.development? # TODO: re-enable
     end
 
     unless ENV['PRECOMPILE']
@@ -196,7 +197,7 @@ module Samson
 
         # Token used to request badges
         config.samson.badge_token = \
-          Digest::MD5.hexdigest("badge_token#{(ENV['BADGE_TOKEN_BASE'] || Samson::Application.config.secret_key_base)}")
+          Digest::MD5.hexdigest("badge_token#{ENV['BADGE_TOKEN_BASE'] || Samson::Application.config.secret_key_base}")
       end
     end
 

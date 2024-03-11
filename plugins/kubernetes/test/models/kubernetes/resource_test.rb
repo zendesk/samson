@@ -834,9 +834,7 @@ describe Kubernetes::Resource do
         metadata: {name: 'some-project', namespace: 'pod1'},
         spec: {
           resources: {
-            requests: {
-
-            }
+            requests: {}
           }
         }
       }

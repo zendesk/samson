@@ -57,8 +57,8 @@ class SeedAuditedFromVersions < ActiveRecord::Migration[5.1]
       if current_state == :bad
         {}
       else
-        previous_state = YAML.load(version.object || "{}").except(*IGNORED) # rubocop:disable Security/YAMLLoad
-        current_state = YAML.load(current_state || "{}").except(*IGNORED) # # rubocop:disable Security/YAMLLoad
+        previous_state = YAML.load(version.object || "{}").except(*IGNORED)
+        current_state = YAML.load(current_state || "{}").except(*IGNORED)
 
         # audited has a strange behavior where the create/destroy changes don't have arrays but just a value
         simple = ["create", "destroy"].include?(version.event)

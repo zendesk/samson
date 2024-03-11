@@ -60,10 +60,7 @@ end
 
 desc 'Scan for gem vulnerabilities'
 task :bundle_audit do
-  # TODO: remove CVE-2015-9284 once https://github.com/omniauth/omniauth/pull/809 is resolved
-  # TODO: remove CVE-2022-0759 once local development works on newer version
-  # TODO: remove GHSA-hjp3-5g2q-7jww will need ruby 3.0
-  sh "bundle-audit check --update --ignore CVE-2015-9284 CVE-2022-0759 GHSA-hjp3-5g2q-7jww CVE-2023-34246"
+  sh "bundle-audit check --update"
 end
 
 desc "Run rubocop"
@@ -92,6 +89,8 @@ task :flay do
     'plugins/kubernetes/app/models/kubernetes/deploy_group_role.rb', # similar but slightly different validations
     'plugins/flowdock/app/views/samson_flowdock/_fields.html.erb', # simple html
     'plugins/datadog/app/views/samson_datadog/_datadog_monitor_queries_fields.html.erb', # simple html
+    'plugins/zendesk/app/views/samson_zendesk/notification.erb', # simple text
+    'app/views/deploy_mailer/_commit_info.text.erb', # simple text
   ]
   flay = Flay.run([*files, '--mass', '25']) # mass threshold is shown mass / occurrences
   abort "Code duplication found" if flay.report.any?

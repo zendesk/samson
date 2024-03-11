@@ -17,12 +17,18 @@ describe SlackAppController do
   let(:project) { projects(:test) }
 
   def expects_new_deploy
-    Changeset.expects(:new).returns(stub(pull_requests: [stub(
-      url: 'http://sams.on',
-      number: 123,
-      title: 'sample PR',
-      risks: '- Kittens'
-    )]))
+    Changeset.expects(:new).returns(
+      stub(
+        pull_requests: [
+          stub(
+            url: 'http://sams.on',
+            number: 123,
+            title: 'sample PR',
+            risks: '- Kittens'
+          )
+        ]
+      )
+    )
   end
 
   def post_command(id, params = {})

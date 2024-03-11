@@ -20,7 +20,8 @@ module Kubernetes
       PodDisruptionBudget: [
         "CalculateExpectedPodCountFailed",
         "NoControllers",
-        "NoPods"
+        "NoPods",
+        "UnmanagedPods"
       ],
       Service: [
         "FailedToUpdateEndpointSlices"
@@ -29,6 +30,12 @@ module Kubernetes
         # Regression from k8s 1.27: https://github.com/kubernetes/kubernetes/pull/115331
         # Pending backport in: https://github.com/kubernetes/kubernetes/pull/121921
         "RecreatingFailedPod"
+      ],
+      # karmada can fail to sync a resource when something else also updated the resource,
+      # this does not necessarily indicate that sync will be broken forever
+      All: [
+        'ApplyPolicyFailed',
+        'SyncFailed'
       ]
     }.freeze
 
@@ -121,8 +128,9 @@ module Kubernetes
       failures = events(type: "Warning")
       ignored =
         @resource.dig(:metadata, :annotations, :"samson/ignore_events").to_s.split(",") +
-        (IGNORED_EVENT_REASONS[kind.to_sym] || [])
-      failures.reject! { |e| ignored.include? e[:reason] } if ignored.any?
+        (IGNORED_EVENT_REASONS[kind.to_sym] || []) +
+        IGNORED_EVENT_REASONS[:All]
+      failures.reject! { |e| ignored.include? e[:reason] }
       failures
     end
   end

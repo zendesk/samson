@@ -231,8 +231,8 @@ class Deploy < ActiveRecord::Base
     ]
   end
 
-  def as_json(methods: [])
-    hash = super(methods: [:status, :url, :production, :commit] + methods)
+  def as_json(options = {})
+    hash = super({methods: [:status, :url, :production, :commit] + options.fetch(:methods, [])})
     hash["summary"] = summary_for_timeline
     hash
   end

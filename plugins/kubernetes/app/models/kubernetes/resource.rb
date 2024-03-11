@@ -401,8 +401,8 @@ module Kubernetes
     end
 
     class PodDisruptionBudget < VersionedUpdate
-      def initialize(*)
-        super
+      def initialize(...)
+        super(...)
         @delete_resource ||= @template[:delete] # allow deletion through release_doc logic
       end
     end
@@ -427,9 +427,9 @@ module Kubernetes
       end
     end
 
-    def self.build(*args)
+    def self.build(*args, **kwargs)
       klass = "Kubernetes::Resource::#{args.first.fetch(:kind)}".safe_constantize || VersionedUpdate
-      klass.new(*args)
+      klass.new(*args, **kwargs)
     end
   end
 end

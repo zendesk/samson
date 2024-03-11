@@ -3,7 +3,6 @@ DeployGroup.class_eval do
   has_one(
     :cluster_deploy_group,
     class_name: 'Kubernetes::ClusterDeployGroup',
-    foreign_key: :deploy_group_id,
     inverse_of: :deploy_group,
     dependent: :destroy
   )

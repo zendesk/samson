@@ -20,7 +20,7 @@ describe ImageBuilder do
 
     def call(options = {})
       defaults = {tag_as_latest: false, dockerfile: 'Dockerfile', tag: 'tag', cache_from: 'cache'}
-      ImageBuilder.build_image("foo", build, executor, defaults.merge(options))
+      ImageBuilder.build_image("foo", build, executor, **defaults.merge(options))
     end
 
     it "builds and pushes" do

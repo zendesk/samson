@@ -178,13 +178,13 @@ module Samson
       end
 
       # use
-      def fire(name, *args)
-        traced(name) { hooks(name).map { |hook| hook.call(*args) } }
+      def fire(name, *args, **kwargs)
+        traced(name) { hooks(name).map { |hook| hook.call(*args, **kwargs) } }
       end
 
-      def render_views(name, view, *args)
+      def render_views(name, view, *args, **kwargs)
         hooks(name).each_with_object("".html_safe) do |partial, html|
-          html << view.render(partial, *args)
+          html << view.render(partial, *args, **kwargs)
         end
       end
 

@@ -5,10 +5,10 @@ ruby File.read('.ruby-version').strip
 
 # gems that have rails engines are are always needed
 group :preload do
-  gem 'rails', '~> 6.1.7.6'
+  gem 'rails', '~> 6.1.7.7'
   gem 'dotenv'
   gem 'connection_pool'
-  gem 'marco-polo'
+  gem 'marco-polo' # TODO: https://github.com/arches/marco-polo/pull/16
 
   # AR extensions
   gem 'goldiloader'
@@ -39,6 +39,7 @@ gem 'octokit'
 gem 'faraday', '~> 2.7'
 gem 'faraday-net_http_persistent', '~> 2.0'
 gem 'faraday-http-cache'
+gem 'faraday-retry'
 gem 'warden'
 gem 'active_hash'
 gem 'ansible'
@@ -50,11 +51,15 @@ gem 'concurrent-ruby'
 gem 'vault', git: 'https://github.com/zendesk/vault-ruby.git', ref: '96be391a2fd50a42871c8b9dc3c59fddbdbdc556'
 gem 'lograge'
 gem 'logstash-event'
+gem 'hashdiff', git: 'https://github.com/liufengyun/hashdiff.git' # fails to install on ruby 3.2 from gem when deploying
 gem 'diffy'
 gem 'validates_lengths_from_database'
 gem 'large_object_store'
 gem 'parallel'
 gem 'stackprof'
+gem 'net-smtp'
+gem 'net-pop'
+gem 'net-imap'
 
 # treat included plugins like gems
 Dir[File.join(Bundler.root, 'plugins/*/')].each { |f| gemspec path: f }
