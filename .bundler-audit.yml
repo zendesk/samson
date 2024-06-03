@@ -1,3 +1,0 @@
----
-ignore:
-  - CVE-2024-34341 # actiontext is not being used in this project https://github.com/advisories/GHSA-qjqp-xr96-cj99

@@ -216,13 +216,6 @@ GEM
       activesupport (= 6.1.7.7)
       nio4r (~> 2.0)
       websocket-driver (>= 0.6.1)
-    actionmailbox (6.1.7.7)
-      actionpack (= 6.1.7.7)
-      activejob (= 6.1.7.7)
-      activerecord (= 6.1.7.7)
-      activestorage (= 6.1.7.7)
-      activesupport (= 6.1.7.7)
-      mail (>= 2.7.1)
     actionmailer (6.1.7.7)
       actionpack (= 6.1.7.7)
       actionview (= 6.1.7.7)
@@ -237,12 +230,6 @@ GEM
       rack-test (>= 0.6.3)
       rails-dom-testing (~> 2.0)
       rails-html-sanitizer (~> 1.0, >= 1.2.0)
-    actiontext (6.1.7.7)
-      actionpack (= 6.1.7.7)
-      activerecord (= 6.1.7.7)
-      activestorage (= 6.1.7.7)
-      activesupport (= 6.1.7.7)
-      nokogiri (>= 1.8.5)
     actionview (6.1.7.7)
       activesupport (= 6.1.7.7)
       builder (~> 3.1)
@@ -259,13 +246,6 @@ GEM
     activerecord (6.1.7.7)
       activemodel (= 6.1.7.7)
       activesupport (= 6.1.7.7)
-    activestorage (6.1.7.7)
-      actionpack (= 6.1.7.7)
-      activejob (= 6.1.7.7)
-      activerecord (= 6.1.7.7)
-      activesupport (= 6.1.7.7)
-      marcel (~> 1.0)
-      mini_mime (>= 1.1.0)
     activesupport (6.1.7.7)
       concurrent-ruby (~> 1.0, >= 1.0.2)
       i18n (>= 1.6, < 2)
@@ -440,7 +420,6 @@ GEM
       nokogiri (>= 1.12.0)
     mail (2.7.1)
       mini_mime (>= 0.1.1)
-    marcel (1.0.3)
     marco-polo (2.0.3)
       railties (>= 6)
     maxitest (3.7.0)
@@ -558,21 +537,6 @@ GEM
       rack (~> 2.2, >= 2.2.4)
     rack-test (2.1.0)
       rack (>= 1.3)
-    rails (6.1.7.7)
-      actioncable (= 6.1.7.7)
-      actionmailbox (= 6.1.7.7)
-      actionmailer (= 6.1.7.7)
-      actionpack (= 6.1.7.7)
-      actiontext (= 6.1.7.7)
-      actionview (= 6.1.7.7)
-      activejob (= 6.1.7.7)
-      activemodel (= 6.1.7.7)
-      activerecord (= 6.1.7.7)
-      activestorage (= 6.1.7.7)
-      activesupport (= 6.1.7.7)
-      bundler (>= 1.15.0)
-      railties (= 6.1.7.7)
-      sprockets-rails (>= 2.0.0)
     rails-controller-testing (1.0.5)
       actionpack (>= 5.0.1.rc1)
       actionview (>= 5.0.1.rc1)
@@ -715,7 +679,10 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
+  actioncable (~> 6.1.7)
+  actionmailer (~> 6.1.7)
   active_hash
+  activerecord (~> 6.1.7)
   ansible
   ar_multi_threaded_transactional_tests
   attr_encrypted
@@ -778,7 +745,6 @@ DEPENDENCIES
   pry-stack_explorer
   puma (~> 5.6.7)
   rack-mini-profiler
-  rails (~> 6.1.7.7)
   rails-assets-bootstrap-select!
   rails-assets-jquery!
   rails-assets-jquery-cookie!
@@ -790,6 +756,7 @@ DEPENDENCIES
   rails-assets-underscore!
   rails-assets-x-editable!
   rails-controller-testing
+  railties (~> 6.1.7)
   rubocop
   rubocop-rails
   samson_airbrake!
@@ -823,6 +790,7 @@ DEPENDENCIES
   single_cov
   soft_deletion
   sprockets (~> 3.7)
+  sprockets-rails
   sqlite3
   stackprof
   uglifier
