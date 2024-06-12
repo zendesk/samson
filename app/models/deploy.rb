@@ -217,7 +217,7 @@ class Deploy < ActiveRecord::Base
 
   def self.csv_header
     [
-      "Deploy Number", "Project Name", "Deploy Summary", "Deploy Commit", "Deploy Status", "Deploy Updated",
+      "Deploy Number", "Project Name", "Permalink", "Deploy Summary", "Deploy Commit", "Deploy Status", "Deploy Updated",
       "Deploy Created", "Deployer Name", "Deployer Email", "Buddy Name", "Buddy Email", "Stage Name",
       "Production Flag", "Code deployed", "Project Deleted On", "Deploy Groups"
     ]
@@ -225,7 +225,7 @@ class Deploy < ActiveRecord::Base
 
   def csv_line
     [
-      id, project.name, summary, commit, job.status, updated_at, start_time, user&.name, user&.email,
+      id, project.name, summary, project_permalink, commit, job.status, updated_at, start_time, user&.name, user&.email,
       buddy_name, buddy_email, stage.name, production, !stage.no_code_deployed, project.deleted_at,
       stage.deploy_group_names.join('|')
     ]
