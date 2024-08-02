@@ -566,8 +566,8 @@ GEM
       http-cookie (>= 1.0.2, < 2.0)
       mime-types (>= 1.16, < 4.0)
       netrc (~> 0.8)
-    rexml (3.2.8)
-      strscan (>= 3.0.9)
+    rexml (3.3.4)
+      strscan
     rollbar (2.27.1)
     rollbar-user_informer (0.1.0)
       rollbar (~> 2.15)
