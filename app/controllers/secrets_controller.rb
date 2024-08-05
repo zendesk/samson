@@ -228,7 +228,7 @@ class SecretsController < ApplicationController
 
   def find_secret
     @secret = Samson::Secrets::Manager.read(id, include_value: true)
-    @secret[:value] = nil unless @secret.fetch(:visible)
+    @secret[:value] = nil unless @secret[:visible]
   end
 
   def find_writable_project_permalinks
