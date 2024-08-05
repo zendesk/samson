@@ -526,6 +526,12 @@ describe SecretsController do
         assert_template :show
       end
 
+      it "renders when secret only has value key" do
+        Samson::Secrets::Manager.stubs(:read).returns({value: 'test'})
+        get :show, params: {id: secret.id}
+        assert_template :show
+      end
+
       it "renders with unknown project" do
         secret.update_column(:id, 'oops/bar')
         get :show, params: {id: secret.id}
