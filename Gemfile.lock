@@ -566,8 +566,8 @@ GEM
       http-cookie (>= 1.0.2, < 2.0)
       mime-types (>= 1.16, < 4.0)
       netrc (~> 0.8)
-    rexml (3.2.8)
-      strscan (>= 3.0.9)
+    rexml (3.3.4)
+      strscan
     rollbar (2.27.1)
     rollbar-user_informer (0.1.0)
       rollbar (~> 2.15)
@@ -800,7 +800,7 @@ DEPENDENCIES
   webmock
 
 RUBY VERSION
-   ruby 3.2.4p170
+   ruby 3.2.5p208
 
 BUNDLED WITH
-   2.5.11
+   2.5.17
