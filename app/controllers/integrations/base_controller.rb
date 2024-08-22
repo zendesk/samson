@@ -18,7 +18,7 @@ class Integrations::BaseController < ApplicationController
       create_release = project.create_release?(branch, service_type, service_name)
       record_log(
         :info,
-        "Create release for branch [#{branch}], service_type [#{service_type}], service_name [#{service_name}]: " \
+        "Create release for project [#{project.name}], branch [#{branch}], service_type [#{service_type}], service_name [#{service_name}]: " \
         "#{create_release}"
       )
       release = find_or_create_release if create_release

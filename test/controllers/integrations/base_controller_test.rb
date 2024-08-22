@@ -109,7 +109,7 @@ describe Integrations::BaseController do
       post :create, params: {test_route: true, token: token, foo: "bar"}
       assert_response :success
       result = WebhookRecorder.read(project)
-      log = "INFO: Create release for branch [master], service_type [ci], service_name [base_test]: true\n"
+      log = "INFO: Create release for project [Foo], branch [master], service_type [ci], service_name [base_test]: true\n"
 
       project.reload
       result.fetch(:log).must_equal log
@@ -192,7 +192,7 @@ describe Integrations::BaseController do
         post :create, params: {test_route: true, token: token}
 
         expected_messages = <<~MESSAGES
-          INFO: Create release for branch [master], service_type [ci], service_name [base_test]: true
+          INFO: Create release for project [Foo], branch [master], service_type [ci], service_name [base_test]: true
           INFO: Deploying #{deploy1.id} to Staging
           INFO: Deploying #{deploy2.id} to Production
         MESSAGES
@@ -221,7 +221,7 @@ describe Integrations::BaseController do
         post :create, params: {test_route: true, token: token, includes: 'status_urls'}
 
         expected_messages = <<~MESSAGES
-          INFO: Create release for branch [master], service_type [ci], service_name [base_test]: true
+          INFO: Create release for project [Foo], branch [master], service_type [ci], service_name [base_test]: true
           INFO: Deploying #{deploy1.id} to Staging
           INFO: Deploying #{deploy2.id} to Production
         MESSAGES
@@ -241,7 +241,7 @@ describe Integrations::BaseController do
         post :create, params: {test_route: true, token: token}
 
         message = <<~MSG
-          INFO: Create release for branch [master], service_type [ci], service_name [base_test]: true
+          INFO: Create release for project [Foo], branch [master], service_type [ci], service_name [base_test]: true
           ERROR: Failed deploying to Staging: Stage is locked
           INFO: Deploying #{Deploy.first.id} to Production
         MSG
