@@ -109,7 +109,8 @@ describe Integrations::BaseController do
       post :create, params: {test_route: true, token: token, foo: "bar"}
       assert_response :success
       result = WebhookRecorder.read(project)
-      log = "INFO: Create release for project [Foo], branch [master], service_type [ci], service_name [base_test]: true\n"
+      log = "INFO: Create release for project [Foo], branch [master], service_type [ci], " \
+            "service_name [base_test]: true\n"
 
       project.reload
       result.fetch(:log).must_equal log
