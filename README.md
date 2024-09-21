@@ -1,7 +1,6 @@
 <img src="https://github.com/zendesk/samson/raw/master/app/assets/images/logo_light.png" width=400/>
 
 ![Build status](https://github.com/zendesk/samson/workflows/repo-checks/badge.svg)
-[![FOSSA Status](https://app.fossa.io/api/projects/custom%2B4071%2Fgit%40github.com%3Azendesk%2Fsamson.git.svg?type=shield)](https://app.fossa.io/projects/custom%2B4071%2Fgit%40github.com%3Azendesk%2Fsamson.git?ref=badge_shield)
 [![DockerHub Status](https://img.shields.io/docker/stars/zendesk/samson.svg)](https://hub.docker.com/r/zendesk/samson)
 
 Samson is a web interface for deployments. [Live Demo](https://samson.onrender.com)
