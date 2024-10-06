@@ -1,0 +1,2 @@
+ignore:
+  - CVE-2024-6484 # ignore until a patch is available https://github.com/advisories/GHSA-9mvj-f7w8-pvh2
