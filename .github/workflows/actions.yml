@@ -88,5 +88,4 @@ jobs:
         mysql --host 127.0.0.1 --port 3306 -u root -e "GRANT ALL ON *.* TO 'travis'@'%';"
     - env:
         NAME: ${{ matrix.name }}
-        FOSSA_API_KEY: ${{ secrets.FOSSA_API_KEY }}
       run: ${{ matrix.run }}
