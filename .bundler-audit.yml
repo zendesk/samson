@@ -1,2 +1,6 @@
+# ignores for `rake bundle_audit`
+# - 1 ignore per line
+# - leave a comment why we can safely ignore it and where to find more details
+# - leave file with `ignore: []` if ignore list is empty
 ignore:
   - CVE-2024-6484 # ignore until a patch is available https://github.com/advisories/GHSA-9mvj-f7w8-pvh2
