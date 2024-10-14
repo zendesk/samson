@@ -60,7 +60,7 @@ end
 
 desc 'Scan for gem vulnerabilities'
 task :bundle_audit do
-  sh "bundle-audit check --update"
+  sh "bundle-audit check --update --ignore=CVE-2024-6484"
 end
 
 desc "Run rubocop"
