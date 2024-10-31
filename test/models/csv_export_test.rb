@@ -95,7 +95,7 @@ describe CsvExport do
 
   describe "#download_name" do
     it "includes created at" do
-      @csv_export.download_name.must_include @csv_export.created_at.to_s(:number)
+      @csv_export.download_name.must_include @csv_export.created_at.to_fs(:number)
     end
 
     it "includes project permalink if filtered and created at" do
@@ -103,7 +103,7 @@ describe CsvExport do
       project.update_attribute(:deleted_at, Time.now)
       @csv_export.update_attribute(:filters, 'stages.project_id': project.id)
       @csv_export.download_name.must_include project.permalink
-      @csv_export.download_name.must_include @csv_export.created_at.to_s(:number)
+      @csv_export.download_name.must_include @csv_export.created_at.to_fs(:number)
     end
 
     it "does not includes double underscore if filtered and invalid project id" do

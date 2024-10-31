@@ -73,7 +73,7 @@ module Samson
           {
             value: secret.value,
             visible: secret.visible,
-            deprecated_at: secret.deprecated_at&.to_s(:db),
+            deprecated_at: secret.deprecated_at&.to_fs(:db),
             comment: secret.comment,
             updater_id: secret.updater_id,
             creator_id: secret.creator_id,

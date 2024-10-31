@@ -17,7 +17,7 @@ describe DashboardsController do
       end
 
       it 'renders a super old timestamp' do
-        get :show, params: {id: environment, before: Time.at(0).to_s(:db)}
+        get :show, params: {id: environment, before: Time.at(0).to_fs(:db)}
         assert_response :success
       end
     end

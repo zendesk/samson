@@ -201,6 +201,9 @@ module Samson
       end
     end
 
+    # without it `rake assets:precompile` fails
+    ActiveRecord.legacy_connection_handling = false
+
     config.active_support.deprecation = :raise
 
     # avoid permission errors in production and cleanliness test failures in test

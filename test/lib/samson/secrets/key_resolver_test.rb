@@ -60,7 +60,7 @@ describe Samson::Secrets::KeyResolver do
         "global/global/global/bar",
         value: 'dsffd',
         comment: '',
-        deprecated_at: Time.now.to_s(:db),
+        deprecated_at: Time.now.to_fs(:db),
         user_id: users(:admin).id,
         visible: true
       )

@@ -12,7 +12,7 @@
 
   <% if deploy = stage.last_deploy %>
     <td>
-      <%= link_to deploy.short_reference, [@project, deploy], title: "#{deploy.reference} at #{deploy.updated_at.to_s(:db)}" %>
+      <%= link_to deploy.short_reference, [@project, deploy], title: "#{deploy.reference} at #{deploy.updated_at.to_fs(:db)}" %>
       by
       <%= deploy.user.name %>
       <%= status_badge deploy.job.status %>
