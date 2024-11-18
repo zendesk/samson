@@ -24,7 +24,7 @@ describe SamsonAirbrake do
     it 'shows debug info and calls notify_sync if sync is true' do
       mock_notice = mock
       mock_exception = mock
-      Airbrake.expects(:notify_sync).with(mock_exception, foo: 'bar').once.returns(mock_notice)
+      Airbrake.expects(:notify_sync).with(mock_exception, {foo: 'bar'}).once.returns(mock_notice)
       SamsonAirbrake::SamsonPlugin.expects(:exception_debug_info).with(mock_notice).once
 
       Samson::Hooks.only_callbacks_for_plugin('airbrake', :error) do
@@ -34,7 +34,7 @@ describe SamsonAirbrake do
 
     it 'calls notify if sync is false/nil' do
       mock_exception = mock
-      Airbrake.expects(:notify).with(mock_exception, foo: 'bar').once
+      Airbrake.expects(:notify).with(mock_exception, {foo: 'bar'}).once
 
       Samson::Hooks.only_callbacks_for_plugin('airbrake', :error) do
         Samson::Hooks.fire(:error, mock_exception, foo: 'bar')
