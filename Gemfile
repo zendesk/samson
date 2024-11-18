@@ -127,7 +127,6 @@ group :development, :test do
 end
 
 group :test do
-  gem 'minitest-rails'
   gem 'rails-controller-testing'
   gem 'maxitest'
   gem 'mocha'
