@@ -87,13 +87,13 @@ describe GitRepository do
   describe "#commit_from_ref" do
     it 'returns the full commit id' do
       create_repo_with_tags
-      repository.commit_from_ref('master').must_match /^[0-9a-f]{40}$/
+      repository.commit_from_ref('master').must_match(/^[0-9a-f]{40}$/)
     end
 
     it 'returns the full commit id when given a short commit id' do
       create_repo_with_tags
       short_commit_id = (execute_on_remote_repo "git rev-parse --short HEAD").strip
-      repository.commit_from_ref(short_commit_id).must_match /^[0-9a-f]{40}$/
+      repository.commit_from_ref(short_commit_id).must_match(/^[0-9a-f]{40}$/)
     end
 
     it 'returns nil if ref does not exist' do
@@ -103,7 +103,7 @@ describe GitRepository do
 
     it 'returns the commit of a branch' do
       create_repo_with_an_additional_branch('my_branch')
-      repository.commit_from_ref('my_branch').must_match /^[0-9a-f]{40}$/
+      repository.commit_from_ref('my_branch').must_match(/^[0-9a-f]{40}$/)
     end
 
     it 'returns the commit of a named tag' do
@@ -118,7 +118,7 @@ describe GitRepository do
       SHELL
 
       sha = repository.commit_from_ref('annotated_tag')
-      sha.must_match /^[0-9a-f]{40}$/
+      sha.must_match(/^[0-9a-f]{40}$/)
       repository.commit_from_ref('test_branch').must_equal(sha)
     end
 
@@ -148,7 +148,7 @@ describe GitRepository do
         git commit -a -m 'untagged commit'
       SHELL
       repository.fuzzy_tag_from_ref('master~').must_equal 'v1'
-      repository.fuzzy_tag_from_ref('master').must_match /^v1-1-g[0-9a-f]{7}$/
+      repository.fuzzy_tag_from_ref('master').must_match(/^v1-1-g[0-9a-f]{7}$/)
     end
 
     it 'returns tag when it is ambiguous' do
@@ -310,12 +310,12 @@ describe GitRepository do
       end
 
       it "caches" do
-        Samson::CommandExecutor.expects(:execute).times(2).returns([true, "x"])
+        Samson::CommandExecutor.expects(:execute).times(2).returns(status: true, output: "x")
         4.times { repository.file_content('foo', sha).must_equal "x" }
       end
 
       it "caches sha too" do
-        Samson::CommandExecutor.expects(:execute).times(3).returns([true, "x"])
+        Samson::CommandExecutor.expects(:execute).times(3).returns(status: true, output: "x")
         4.times { |i| repository.file_content("foo-#{i.odd?}", sha).must_equal "x" }
       end
 
@@ -344,7 +344,7 @@ describe GitRepository do
         it "does not cache when requesting for an update" do
           repository.unstub(:ensure_mirror_current)
           repository.expects(:ensure_mirror_current)
-          Samson::CommandExecutor.expects(:execute).times(2).returns([true, "x"])
+          Samson::CommandExecutor.expects(:execute).times(2).returns(status: true, output: "x")
           repository.file_content('foo', 'HEAD', pull: false).must_equal "x"
           4.times { repository.file_content('foo', 'HEAD', pull: true).must_equal "x" }
         end
