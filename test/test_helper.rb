@@ -9,14 +9,13 @@ SingleCov::APP_FOLDERS << 'presenters'
 SingleCov.rewrite { |path| path.sub("/lib/decorators/", "/decorators/") }
 SingleCov.setup :minitest, branches: true unless defined?(Spring)
 
-# rake adds these, but we don't need them / want to be consistent with using `ruby x_test.rb`
+# rake adds these, but we don't need them and want to be consistent with using `ruby x_test.rb`
 $LOAD_PATH.delete 'lib'
 $LOAD_PATH.delete 'test'
 
 require 'maxitest/global_must'
 require_relative '../config/environment'
 require 'rails/test_help'
-require 'minitest/rails'
 require 'rails-controller-testing'
 Rails::Controller::Testing.install
 require 'maxitest/autorun'
@@ -25,13 +24,16 @@ require 'maxitest/threads'
 require 'webmock/minitest'
 require 'mocha/minitest'
 
+# Add spec DSL to the TestCase class
+ActiveSupport.on_load(:active_support_test_case) { extend Minitest::Spec::DSL }
+
 # Use ActiveSupport::TestCase for everything that was not matched before
 MiniTest::Spec::DSL::TYPES[-1] = [//, ActiveSupport::TestCase]
 
 # Use ActionController::TestCase for Controllers
 MiniTest::Spec::DSL::TYPES.unshift [/Controller$/, ActionController::TestCase]
 
-# Use ActionDispatch::IntegrationTest for everything that is marked Integration
+# Use ActionDispatch::IntegrationTest for everything that is Controller or marked Integration
 MiniTest::Spec::DSL::TYPES.unshift [/Integration$/, ActionDispatch::IntegrationTest]
 
 # Use ActionView::TestCase for Helpers
@@ -56,6 +58,8 @@ Dir["test/support/*"].each { |f| require File.expand_path(f) }
 ActiveSupport::TestCase.class_eval do
   include ApplicationHelper
   include Warden::Test::Helpers
+
+  alias_method :refute_difference, :assert_no_difference
 
   fixtures :all
 
