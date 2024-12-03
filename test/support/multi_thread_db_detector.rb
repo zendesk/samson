@@ -15,7 +15,7 @@ end
 # transaction and would pollute the DB for the subsequent tests
 ActiveRecord::ConnectionAdapters::AbstractAdapter.prepend(
   Module.new do
-    def log(*)
+    def log(*, **)
       if Thread.current != Thread.main && !MultiThreadDbDetector.in_with_connection
         raise "Using AR outside the main thread and not inside a with_connection block, this will break the transaction"
       else
