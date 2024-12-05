@@ -261,7 +261,7 @@ GEM
     airbrake-ruby (6.2.2)
       rbtree3 (~> 0.6)
     ansible (0.2.2)
-    ar_multi_threaded_transactional_tests (0.6.0)
+    ar_multi_threaded_transactional_tests (0.6.1)
       activerecord (>= 6.1.0, < 7.2.0)
     ast (2.4.2)
     attr_encrypted (4.1.1)
