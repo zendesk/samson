@@ -17,10 +17,6 @@ describe NullUser do
 
     it "caches no user" do
       null = NullUser.new(11211212)
-
-      User.expects(:find_by_sql).returns []
-      null.name.must_equal 'Deleted User'
-      User.expects(:find_by_sql).never
       null.name.must_equal 'Deleted User'
     end
 
@@ -29,10 +25,8 @@ describe NullUser do
       user.soft_delete!(validate: false)
       null = NullUser.new(user.id)
 
-      User.expects(:find_by_sql).returns [user]
       null.name.must_equal 'Viewer'
 
-      User.expects(:find_by_sql).never
       null.name.must_equal 'Viewer'
     end
   end

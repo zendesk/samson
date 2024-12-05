@@ -5,7 +5,7 @@ ruby File.read('.ruby-version').strip
 
 # gems that have rails engines are are always needed
 group :preload do
-  rails_version = '~> 6.1.7'
+  rails_version = '~> 7.0.8.6'
   gem 'railties', rails_version
   gem 'actioncable', rails_version
   gem 'actionmailer', rails_version

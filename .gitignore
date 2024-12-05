@@ -20,6 +20,7 @@
 
 # rake assets:precompile results
 /public/assets
+/public/assets_dev
 
 # app/models/git_repository.rb repository storage
 /cached_repos/

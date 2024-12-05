@@ -7,8 +7,10 @@ development:
   <% uri.path = "/samson_development" %>
   url: <%= uri %>
   pool: <%= ENV['RAILS_MAX_THREADS'] %>
+  reconnect: true
 
 test:
   <% uri.path = "/samson_test#{ENV['TEST_ENV_NUMBER']}"%>
   url: <%= uri %>
   pool: <%= ENV['RAILS_MAX_THREADS'] %>
+  reconnect: true

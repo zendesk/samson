@@ -84,7 +84,7 @@ class Kubernetes::ClustersController < ResourceController
         namespace: namespace,
         annotations: {
           via: "Samson",
-          created_at: Time.now.to_s(:db)
+          created_at: Time.now.to_fs(:db)
         }
       },
       data: {

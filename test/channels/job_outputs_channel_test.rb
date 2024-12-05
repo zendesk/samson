@@ -22,10 +22,11 @@ describe JobOutputsChannel do
     end
 
     it "renders a finished" do
+      path = "/assets/favicons/32x32_green.png" # if this test fails with a sha then rm -rf public/assets
       builder.payload(:finished, nil).must_equal(
         title: "Staging deploy - Foo",
         notification: "Samson deploy finished:\nFoo / Staging succeeded",
-        favicon_path: "/assets/favicons/32x32_green.png"
+        favicon_path: path
       )
     end
 

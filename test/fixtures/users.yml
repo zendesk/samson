@@ -1,6 +1,6 @@
 DEFAULTS: &DEFAULTS
-  last_login_at: <%= 1.day.ago.to_s(:db) %>
-  last_seen_at: <%= 1.minute.ago.to_s(:db) %>
+  last_login_at: <%= 1.day.ago.to_fs(:db) %>
+  last_seen_at: <%= 1.minute.ago.to_fs(:db) %>
 
 super_admin:
   name: "Super Admin"
