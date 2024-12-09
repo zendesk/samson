@@ -3,7 +3,7 @@ class DashboardsController < ApplicationController
   before_action :find_environment
 
   def show
-    @before = Time.parse(params[:before] || Time.now.to_s(:db))
+    @before = Time.parse(params[:before] || Time.now.to_fs(:db))
     @deploy_groups = @environment.deploy_groups
     @projects = Project.all
     @failed_deploys = (params[:failed_deploys] == "true")

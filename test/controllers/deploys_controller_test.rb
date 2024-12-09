@@ -369,9 +369,9 @@ describe DeploysController do
       it "filters by updated_at (finished_at)" do
         t = Time.now - 1.day
         expected = Deploy.last(3)
-        expected.each_with_index { |d, i| d.update_column :updated_at, (t + i).to_s(:db) }
+        expected.each_with_index { |d, i| d.update_column :updated_at, (t + i).to_fs(:db) }
 
-        get :index, params: {search: {updated_at: [t.to_s(:db), (t + 2).to_s(:db)]}}, format: "json"
+        get :index, params: {search: {updated_at: [t.to_fs(:db), (t + 2).to_fs(:db)]}}, format: "json"
 
         assert_response :ok
         assigns[:deploys].map(&:id).sort.must_equal expected.map(&:id).sort

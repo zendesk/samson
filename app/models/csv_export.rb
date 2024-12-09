@@ -26,7 +26,7 @@ class CsvExport < ActiveRecord::Base
   end
 
   def download_name
-    "deploys_#{filters_project}#{created_at.to_s(:number)}.csv"
+    "deploys_#{filters_project}#{created_at.to_fs(:number)}.csv"
   end
 
   def path_file
