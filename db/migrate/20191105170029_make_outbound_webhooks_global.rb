@@ -20,7 +20,7 @@ class MakeOutboundWebhooksGlobal < ActiveRecord::Migration[5.2]
     OutboundWebhook.find_each do |wh|
       OutboundWebhookStage.create!(stage_id: wh.stage_id, outbound_webhook_id: wh.id) do |o|
         o.created_at = wh.created_at
-        o.updated_at = o.updated_at
+        o.updated_at = wh.updated_at
       end
     end
 
