@@ -55,7 +55,7 @@ module Kubernetes
     def validate_template
       return errors.add :template, "needs to be set" if template.blank?
       return errors.add :template, "needs to be a Hash" unless parsed_template.is_a?(Hash)
-      return errors.add :template, "needs metadata.labels.team" unless parsed_template.dig("metadata", "labels", "team")
+      errors.add :template, "needs metadata.labels.team" unless parsed_template.dig("metadata", "labels", "team")
     rescue Psych::Exception
       errors.add :template, "needs to be valid yaml"
     end
