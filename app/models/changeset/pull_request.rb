@@ -7,7 +7,7 @@ class Changeset::PullRequest
   WEBHOOK_FILTER = /(^|\s)\[samson review\]($|\s)/i
 
   # Matches URLs to JIRA issues.
-  JIRA_ISSUE_URL = %r[https?://[\da-z.\-]+\.[a-z.]{2,6}/browse/#{CODE_ONLY}(?=#{PUNCT}|$)]
+  JIRA_ISSUE_URL = %r[https?://[\da-z.-]+\.[a-z.]{2,6}/browse/#{CODE_ONLY}(?=#{PUNCT}|$)]
 
   # Matches "VOICE-1234" or "[VOICE-1234]"
   JIRA_CODE_TITLE = /(\[)*(#{CODE_ONLY})(\])*/
