@@ -264,7 +264,7 @@ module Kubernetes
       @output.puts "\n#{resource_identifier(status)} events:"
 
       groups = events.group_by { |e| [e[:type], e[:reason], (e[:message] || "").split("\n").sort] }
-      groups.each do |_, event_group|
+      groups.each_value do |event_group|
         count = sum_event_group(event_group)
         counter = " x#{count}" if count != 1
         e = event_group.first

@@ -213,7 +213,7 @@ module Samson
           # rails test does not trigger after_run and rake does not work with at_exit
           # https://github.com/rails/rails/pull/26515
           callback = -> do
-            links.each { |_, to| File.delete(to) rescue false } # rubocop:disable Style/RescueModifier
+            links.each { |(_, to)| File.delete(to) rescue false } # rubocop:disable Style/RescueModifier
           end
           if Minitest.respond_to?(:run_with_rails_extension) && Minitest.run_with_rails_extension
             at_exit(&callback)
