@@ -335,7 +335,7 @@ describe JobQueue do
         mock_timer_task = mock(execute: true)
         expected_task_params = {now: true, timeout_interval: 10, execution_interval: 1.second}
         instance.expects(:dequeue_staggered_job)
-        Concurrent::TimerTask.expects(:new).with(expected_task_params).yields.returns(mock_timer_task)
+        Concurrent::TimerTask.expects(:new).with(**expected_task_params).yields.returns(mock_timer_task)
 
         with_staggering_enabled do
           instance.send(:start_staggered_job_dequeuer)

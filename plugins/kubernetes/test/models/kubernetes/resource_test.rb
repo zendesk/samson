@@ -390,12 +390,12 @@ describe Kubernetes::Resource do
 
       it "retries on conflict with updated version" do
         resource.send(:client).expects(:update_config_map).
-          with(metadata: {resourceVersion: "old"}).
+          with({metadata: {resourceVersion: "old"}}).
           raises(Kubeclient::HttpError.new(409, 'Conflict', {}))
         resource.send(:client).expects(:get_config_map).
           returns(metadata: {resourceVersion: "new"})
         resource.send(:client).expects(:update_config_map).
-          with(metadata: {resourceVersion: "new"}).
+          with({metadata: {resourceVersion: "new"}}).
           returns({})
 
         resource.send(:request, :update, metadata: {resourceVersion: "old"})
