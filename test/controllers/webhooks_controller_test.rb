@@ -82,7 +82,7 @@ describe WebhooksController do
 
       it "shows validation errors" do
         put :update, params: {project_id: project.to_param, id: webhook.id, webhook: {stage_id: nil}}, format: :json
-        assert_response 422
+        assert_response :unprocessable_entity
       end
     end
 

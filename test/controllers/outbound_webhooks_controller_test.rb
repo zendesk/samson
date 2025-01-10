@@ -150,7 +150,7 @@ describe OutboundWebhooksController do
       it "fails to update via json" do
         params[:url] = ""
         patch :update, params: {id: webhook.id, outbound_webhook: params}, format: :json
-        assert_response 422
+        assert_response :unprocessable_entity
       end
     end
 
