@@ -80,7 +80,7 @@ class ProjectsController < ResourceController
   end
 
   def destroy_callback
-    if to = (ENV["PROJECT_DELETED_NOTIFY_ADDRESS"] || created_email)
+    if to = ENV["PROJECT_DELETED_NOTIFY_ADDRESS"] || created_email
       ProjectMailer.deleted_email(to, current_user, @project).deliver_now
     end
   end

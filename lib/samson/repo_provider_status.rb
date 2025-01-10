@@ -5,10 +5,8 @@ module Samson
 
     class << self
       def errors
-        (
-          Rails.cache.read(CACHE_KEY) ||
+        Rails.cache.read(CACHE_KEY) ||
           ["To see repo provider status information, add repo_provider_status:60 to PERIODICAL environment variable."]
-        )
       end
 
       def refresh

@@ -140,7 +140,7 @@ class JobExecution
 
     cmds = commands(dir)
     payload = {
-      stage: (@stage&.name || "none"),
+      stage: @stage&.name || "none",
       project: @job.project.name,
       kubernetes: kubernetes?,
       production: @stage&.production?
@@ -201,7 +201,7 @@ class JobExecution
       DEPLOYER_NAME: @job.user.name,
       REFERENCE: @reference,
       REVISION: @job.commit,
-      TAG: (@job.tag || @job.commit),
+      TAG: @job.tag || @job.commit,
 
       # for shared notification scripts
       PROJECT_NAME: @job.project.name,

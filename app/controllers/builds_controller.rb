@@ -168,10 +168,9 @@ class BuildsController < ApplicationController
 
   def registering_external_build?
     return @registering_external_build if defined?(@registering_external_build)
-    @registering_external_build = (
+    @registering_external_build =
       action_name == "create" &&
-      EXTERNAL_BUILD_ATTRIBUTES.any? { |e| params.dig(:build, e).present? }
-    )
+        EXTERNAL_BUILD_ATTRIBUTES.any? { |e| params.dig(:build, e).present? }
   end
 
   def scope

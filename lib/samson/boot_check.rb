@@ -18,8 +18,8 @@ module Samson
           bad = [
             ActiveRecord::Base.descendants.map(&:name) - ["Audited::Audit"],
             ActionController::Base.descendants.map(&:name) - ["RollbarTestController"],
-            (const_defined?(:Mocha) && "mocha"),
-            (extra_threads.any? && "Extra threads: #{extra_threads}")
+            const_defined?(:Mocha) && "mocha",
+            extra_threads.any? && "Extra threads: #{extra_threads}"
           ].flatten.select { |x| x }
           raise "#{bad.join(", ")} should not be loaded" if bad.any?
         end

@@ -5,7 +5,7 @@ module UserProjectRolesHelper
     global_access = (user.role_id >= role_id.to_i)
     disabled = (user.role_id > role_id.to_i)
     project_access = (user_project_role_id.to_i >= role_id.to_i)
-    checked = (global_access || project_access)
+    checked = global_access || project_access
     title = "User is a global #{user.role.name.capitalize}" if global_access
 
     label_tag nil, class: ('disabled' if disabled), title: title do

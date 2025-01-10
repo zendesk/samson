@@ -44,7 +44,7 @@ module Samson
         possible = possible_builds
         needed.delete_if do |dockerfile, image|
           found = self.class.detect_build_by_selector!(
-            possible, dockerfile, image, fail: (last_try && build_disabled), project: @job.project
+            possible, dockerfile, image, fail: last_try && build_disabled, project: @job.project
           )
           if found
             all << found
