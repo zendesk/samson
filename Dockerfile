@@ -1,4 +1,4 @@
-FROM ruby:3.2.5-slim
+FROM ruby:3.3.6-slim
 
 # Install dependencies
 RUN \

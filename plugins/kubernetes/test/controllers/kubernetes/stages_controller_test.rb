@@ -32,20 +32,20 @@ describe Kubernetes::StagesController do
       it 'fails if reference invalid' do
         GitRepository.any_instance.expects(:commit_from_ref)
         get :manifest_preview, params: {project_id: project.id, id: stage.id}
-        assert_response 400, '# Git reference not found'
+        assert_response :bad_request, '# Git reference not found'
       end
 
       it 'captures template validation errors' do
         Kubernetes::DeployExecutor.any_instance.stubs(:preview_release_docs).raises(Samson::Hooks::UserError, "foobar")
         get :manifest_preview, params: {project_id: project.id, id: stage.id}
-        assert_response 400, '# foobar'
+        assert_response :bad_request, '# foobar'
       end
 
       it 'builds kubernetes manifest' do
         GitRepository.any_instance.expects(:commit_from_ref).returns(git_sha)
 
         get :manifest_preview, params: {project_id: project.id, id: stage.id}
-        assert_response 200
+        assert_response :ok
         yaml = YAML.load_stream(response.body)
         yaml.dig(0, "metadata", "name").must_equal "test-app-server"
         yaml.dig(0, "metadata", "namespace").must_equal "pod1"

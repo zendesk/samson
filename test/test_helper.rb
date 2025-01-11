@@ -254,7 +254,7 @@ ActionController::TestCase.class_eval do
   class << self
     def unauthorized(method, action, params = {})
       it "is unauthorized when doing a #{method} to #{action} with #{params}" do
-        public_send method, action, params: params, format: (@request_format || :html)
+        public_send method, action, params: params, format: @request_format || :html
         assert_response :unauthorized
       end
     end

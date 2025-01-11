@@ -130,7 +130,7 @@ module Kubernetes
 
       # group by kind+name and to sure we have no duplicates
       groups = elements.group_by do |e|
-        user_supplied = (ALLOWED_DUPLICATE_KINDS.include?(e.fetch(:kind)) || self.class.keep_name?(e))
+        user_supplied = ALLOWED_DUPLICATE_KINDS.include?(e.fetch(:kind)) || self.class.keep_name?(e)
         [e.fetch(:kind), e.dig(:metadata, :namespace), user_supplied ? e.dig(:metadata, :name) : "hardcoded"]
       end.values
       bad = groups.select { |group| group.size > 1 }
