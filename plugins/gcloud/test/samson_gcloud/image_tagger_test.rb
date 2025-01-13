@@ -16,7 +16,7 @@ describe SamsonGcloud::ImageTagger do
       Samson::CommandExecutor.expects(:execute).with(
         'gcloud', 'container', 'images', 'add-tag', 'gcr.io/sdfsfsdf@some-sha', "gcr.io/sdfsfsdf:#{tag}",
         '--quiet', *opts, *auth_options, anything
-      ).returns([true, "OUT"])
+      ).returns(status: true, output: "OUT")
     end
 
     with_env DOCKER_FEATURE: 'true', GCLOUD_PROJECT: '123', GCLOUD_ACCOUNT: 'acc'
@@ -53,7 +53,7 @@ describe SamsonGcloud::ImageTagger do
     end
 
     it "tries again when tagging failed" do
-      Samson::CommandExecutor.expects(:execute).returns([false, 'x']).times(2)
+      Samson::CommandExecutor.expects(:execute).returns(status: false, output: 'x').times(2)
       2.times { tag }
     end
 
@@ -72,7 +72,7 @@ describe SamsonGcloud::ImageTagger do
 
     it "tags other regions" do
       build.update_column(:docker_repo_digest, 'asia.gcr.io/sdfsfsdf@some-sha')
-      Samson::CommandExecutor.expects(:execute).returns([true, "OUT"])
+      Samson::CommandExecutor.expects(:execute).returns(status: true, output: "OUT")
       tag
     end
 
@@ -89,7 +89,7 @@ describe SamsonGcloud::ImageTagger do
     end
 
     it "shows tagging errors" do
-      Samson::CommandExecutor.expects(:execute).returns([false, "NOPE"])
+      Samson::CommandExecutor.expects(:execute).returns(status: false, output: "NOPE")
       tag
       output_serialized.must_include "NOPE"
     end

@@ -33,6 +33,9 @@ class ReleaseService
     Samson::Retry.until_result tries: tries, wait_time: 1, error: "Unable to find ref" do
       @project.repo_commit_from_ref(tag)
     end
+  rescue RuntimeError
+    ::Rails.logger.error("Failed ensuring git repository #{@project.repository.executor.output.string}")
+    raise
   end
 
   def start_deploys(release)

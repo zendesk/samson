@@ -46,7 +46,7 @@ describe SamsonGcloud::ImageBuilder do
     end
 
     it "can use cache" do
-      Samson::CommandExecutor.expects(:execute).returns([true, "sha256:abc\n"])
+      Samson::CommandExecutor.expects(:execute).returns(status: true, output: "sha256:abc\n")
       old = 'gcr.io/something-old@sha256:abc'
       build_image(cache_from: old)
       File.read("some-dir/cloudbuild.yml").must_equal <<~YML
@@ -63,7 +63,7 @@ describe SamsonGcloud::ImageBuilder do
     end
 
     it "does not use cache when image is not available" do
-      Samson::CommandExecutor.expects(:execute).returns([true, "\n"])
+      Samson::CommandExecutor.expects(:execute).returns(status: true, output: "\n")
       build_image(cache_from: 'gcr.io/something-old')
       File.read("some-dir/cloudbuild.yml").must_equal <<~YML
         steps:
