@@ -101,6 +101,12 @@ describe GitRepository do
       repository.commit_from_ref('NOT A VALID REF').must_be_nil
     end
 
+    it 'logs an error if ref does not exist' do
+      create_repo_with_tags
+      Rails.logger.expects(:error).with { |message| message.must_match(/^Failed to run command/) }
+      repository.commit_from_ref('NOT A VALID REF')
+    end
+
     it 'returns the commit of a branch' do
       create_repo_with_an_additional_branch('my_branch')
       repository.commit_from_ref('my_branch').must_match /^[0-9a-f]{40}$/
