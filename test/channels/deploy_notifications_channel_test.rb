@@ -8,7 +8,7 @@ describe DeployNotificationsChannel do
 
   describe '.broadcast' do
     it "sends to self" do
-      ActionCable.server.expects(:broadcast).with("deploy_notifications", count: 5)
+      ActionCable.server.expects(:broadcast).with("deploy_notifications", {count: 5})
       DeployNotificationsChannel.broadcast 5
     end
   end

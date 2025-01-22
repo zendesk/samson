@@ -90,7 +90,7 @@ describe Samson::Hooks do
 
     it 'removes all callbacks for hook except for the one for the specified plugin' do
       mock_exception = mock
-      Airbrake.expects(:notify).with(mock_exception, foo: 'bar').once
+      Airbrake.expects(:notify).with(mock_exception, {foo: 'bar'}).once
       Rollbar.expects(:error).never
       Sentry.expects(:error).never
 

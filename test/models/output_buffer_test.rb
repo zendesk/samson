@@ -140,7 +140,7 @@ describe OutputBuffer do
   def build_listener
     Thread.new do
       content = []
-      buffer.each { |_, chunk| content << chunk }
+      buffer.each { |(_, chunk)| content << chunk }
       content
     end
   end

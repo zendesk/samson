@@ -25,7 +25,7 @@ class Webhook < ActiveRecord::Base
   end
 
   def self.source_matches?(release_source, service_type, service_name)
-    release_source == 'any' || release_source == "any_#{service_type}" || release_source == service_name
+    ['any', "any_#{service_type}", service_name].include?(release_source)
   end
 
   private

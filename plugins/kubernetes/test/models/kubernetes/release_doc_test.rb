@@ -314,9 +314,9 @@ describe Kubernetes::ReleaseDoc do
       doc.instance_variable_set(:@previous_resources, [{SER: "VICE"}, {DE: "PLOY"}])
       resources = doc.send(:resources)
       resources.detect { |r| r.kind == "Deployment" }.
-        expects(:revert).with(DE: "PLOY")
+        expects(:revert).with({DE: "PLOY"})
       resources.detect { |r| r.kind == "Service" }.
-        expects(:revert).with(SER: "VICE")
+        expects(:revert).with({SER: "VICE"})
       doc.revert
     end
 

@@ -29,7 +29,9 @@ describe Samson::Secrets::VaultServer do
     it "is invalid with an invalid cert" do
       server.ca_cert = "nope"
       refute_valid server
-      server.errors.full_messages.must_equal ["Ca cert is invalid: PEM_read_bio_X509: no start line"]
+      server.errors.full_messages.must_equal(
+        ["Ca cert is invalid: PEM_read_bio_X509: no start line (Expecting: CERTIFICATE)"]
+      )
     end
 
     it "is invalid with duplicate name" do
@@ -78,7 +80,7 @@ describe Samson::Secrets::VaultServer do
       key = "global/global/global/a"
       from.client.kv.expects(:list_recursive).returns([key])
       from.client.kv.expects(:read).with(key).returns(stub(data: {foo: :bar}))
-      to.client.kv.expects(:write).with(key, foo: :bar)
+      to.client.kv.expects(:write).with(key, {foo: :bar})
       to.sync!(from)
     end
 
@@ -88,7 +90,7 @@ describe Samson::Secrets::VaultServer do
 
       from.client.kv.expects(:list_recursive).returns([key])
       from.client.kv.expects(:read).with(key).returns(stub(data: {foo: :bar}))
-      to.client.kv.expects(:write).with(key, foo: :bar)
+      to.client.kv.expects(:write).with(key, {foo: :bar})
       to.sync!(from)
     end
 
@@ -96,7 +98,7 @@ describe Samson::Secrets::VaultServer do
       key = scoped_key
       from.client.kv.expects(:list_recursive).returns([key])
       from.client.kv.expects(:read).with(key).returns(stub(data: {foo: :bar}))
-      to.client.kv.expects(:write).with(key, foo: :bar)
+      to.client.kv.expects(:write).with(key, {foo: :bar})
       to.sync!(from)
     end
 

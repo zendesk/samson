@@ -73,7 +73,7 @@ namespace :maintenance do
     puts "Confirm? y/n"
     abort unless $stdin.gets.strip == "y"
 
-    actions.each do |_, from_stage|
+    actions.each do |(_, from_stage)|
       from_stage.deploy_groups -= [delete_group]
       from_stage.destroy! if delete_empty && from_stage.deploy_groups.empty?
     end

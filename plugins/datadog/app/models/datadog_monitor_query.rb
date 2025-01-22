@@ -71,7 +71,7 @@ class DatadogMonitorQuery < ActiveRecord::Base
     # match_tag is not in monitors grouping so it will never alert
     if match_target?
       monitors.each do |m|
-        groups = (m.response[:query][/\.by\(([^)]*)\)/, 1] || m.response[:query][/ by {([^}]*)}/, 1])
+        groups = m.response[:query][/\.by\(([^)]*)\)/, 1] || m.response[:query][/ by {([^}]*)}/, 1]
         next if groups.to_s.tr('"\'', '').split(",").include?(match_target)
 
         errors.add(

@@ -288,12 +288,12 @@ describe DeploysController do
 
       it "ignores empty status" do
         get :index, params: {search: {status: ' '}}, format: "json"
-        assert_response 200
+        assert_response :ok
       end
 
       it "fails with invalid status" do
         get :index, params: {search: {status: 'bogus_status'}}, format: "json"
-        assert_response 400
+        assert_response :bad_request
       end
 
       it "filters by project" do
@@ -427,13 +427,13 @@ describe DeploysController do
         it "refuses to search all stages by permalink since that is most likely not what the user wanted" do
           params.delete(:project_id)
           get :index, params: params, format: "json"
-          assert_response 400
+          assert_response :bad_request
         end
 
         it "refuses to search stage by permalink + other conditions since that makes little sense" do
           params[:search][:production] = true
           get :index, params: params, format: "json"
-          assert_response 400
+          assert_response :bad_request
         end
       end
     end

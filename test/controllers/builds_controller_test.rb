@@ -231,7 +231,7 @@ describe BuildsController do
           build.update_columns docker_repo_digest: digest, external_status: 'succeeded'
 
           create create_args.merge(docker_repo_digest: digest.reverse)
-          assert_response 422
+          assert_response :unprocessable_entity
 
           build.reload
           build.external_status.must_equal 'succeeded'

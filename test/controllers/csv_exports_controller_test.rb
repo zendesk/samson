@@ -262,7 +262,7 @@ describe CsvExportsController do
             get :show, params: {id: -9999, format: :json}
             @response.media_type.must_equal "application/json"
             @response.body.must_include "not found"
-            assert_response 404
+            assert_response :not_found
           end
         end
 
@@ -271,7 +271,7 @@ describe CsvExportsController do
             get :show, params: {id: -9999, format: :csv}
             @response.media_type.must_equal "text/csv"
             @response.body.must_include "not found"
-            assert_response 404
+            assert_response :not_found
           end
         end
       end
