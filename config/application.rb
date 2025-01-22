@@ -51,10 +51,16 @@ require_relative "../lib/samson/env_check"
 module Samson
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
-    config.load_defaults 6.1
+    config.load_defaults 7.0
 
     # the new default of `true` breaks test/models/user_test.rb see https://github.com/rails/rails/issues/40867
     config.active_record.has_many_inversing = false
+
+    # the new default of `true` breaks redirecting to shields.io.
+    config.action_controller.raise_on_open_redirects = false
+
+    # the new default of `true` breaks tests.
+    config.active_support.executor_around_test_case = false
 
     # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
     config.force_ssl = (ENV["FORCE_SSL"] == "1")
