@@ -3,4 +3,4 @@
 require_relative 'application'
 
 # Initialize the Rails application.
-Samson::Application.initialize!
+Rails.application.initialize!

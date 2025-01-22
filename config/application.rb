@@ -1,11 +1,20 @@
 # frozen_string_literal: true
 require_relative 'boot'
+
+require 'rails'
+# Pick the frameworks you want:
+require 'active_model/railtie'
+# require 'active_job/railtie'
 require 'active_record/railtie'
+# require "active_storage/engine"
 require 'action_controller/railtie'
-require 'action_view/railtie'
 require 'action_mailer/railtie'
+# require "action_mailbox/engine"
+# require "action_text/engine"
+require 'action_view/railtie'
 require 'action_cable/engine'
 require 'rails/test_unit/railtie'
+
 require 'sprockets/railtie'
 
 abort "Do not run server with PRECOMPILE env var set" if ENV["SERVER_MODE"] && ENV["PRECOMPILE"]
@@ -41,8 +50,7 @@ require_relative "../lib/samson/env_check"
 
 module Samson
   class Application < Rails::Application
-    # Settings in config/environments/* take precedence over those specified here.
-    # Application configuration should go into files in config/initializers
+    # Initialize configuration defaults for originally generated Rails version.
     config.load_defaults 6.1
 
     # the new default of `true` breaks test/models/user_test.rb see https://github.com/rails/rails/issues/40867
