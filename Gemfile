@@ -11,6 +11,8 @@ group :preload do
   gem 'actionmailer', rails_version
   gem 'activerecord', rails_version
 
+  gem 'mutex_m' # An undeclared activesupport dependency. Remove once running Rails 7.1.
+
   gem 'dotenv'
   gem 'connection_pool'
   gem 'marco-polo' # TODO: https://github.com/arches/marco-polo/pull/16
