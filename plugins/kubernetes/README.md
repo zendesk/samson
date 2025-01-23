@@ -222,7 +222,7 @@ To make Samson leave your resource name alone, set `metadata.annotations.samson/
 When not using kubernetes services to route requests, requests can be lost during a deployment,
 since old pods shut down before everyone all clients are refreshed.
 
-To prevent this, samson can automatically add `container[].lifecycle.preStop` `/bin/sleep <INT>`
+To prevent this, samson can automatically add `container[].lifecycle.preStop.sleep.seconds: <INT>`
 and increase the `spec.terminationGracePeriodSeconds` if necessary.
 
 (will only add if `preStop` hook is not set and pod `metadata.annotations.container-nameofcontainer-samson/preStop` is not set to `disabled` and container has ports)
