@@ -643,7 +643,7 @@ module Kubernetes
       # add prestop sleep
       sleep_time = Integer(ENV['KUBERNETES_PRESTOP_SLEEP_DURATION'] || '3')
       containers.each do |container|
-        (container[:lifecycle] ||= {})[:preStop] = {exec: {command: ["/bin/sleep", sleep_time.to_s]}}
+        (container[:lifecycle] ||= {})[:preStop] = {sleep: {seconds: sleep_time}}
       end
 
       # shut down after prestop sleeping is done
