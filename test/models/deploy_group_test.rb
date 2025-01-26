@@ -122,9 +122,9 @@ describe DeployGroup do
   it "expires stages when saving" do
     stage.deploy_groups << deploy_group
     stage.update_column(:updated_at, 1.minute.ago)
-    old = stage.updated_at.to_s(:db)
+    old = stage.updated_at.to_fs(:db)
     deploy_group.save!
-    stage.reload.updated_at.to_s(:db).wont_equal old
+    stage.reload.updated_at.to_fs(:db).wont_equal old
   end
 
   describe "#template_stages" do

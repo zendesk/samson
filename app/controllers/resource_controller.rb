@@ -195,7 +195,7 @@ class ResourceController < ApplicationController
       csv << ['-', 'url:', request.original_url]
     end
 
-    file = "#{controller_name}_#{Time.now.to_s(:db).tr(':', '-')}.csv"
+    file = "#{controller_name}_#{Time.now.to_fs(:db).tr(':', '-')}.csv"
     send_data csv, type: :csv, filename: file
   end
 end

@@ -15,7 +15,7 @@ module AttrEncryptedSupport
     options[:except] ||= []
     options[:except] += [
       :encryption_key_sha,
-      *self.class.encrypted_attributes.keys.flat_map do |column|
+      *self.class.attr_encrypted_encrypted_attributes.keys.flat_map do |column|
         [column, :"encrypted_#{column}_iv", :"encrypted_#{column}"]
       end
     ]

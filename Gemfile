@@ -5,12 +5,15 @@ ruby File.read('.ruby-version').strip
 
 # gems that have rails engines are are always needed
 group :preload do
-  rails_version = '~> 6.1.7'
+  rails_version = '~> 7.0.8'
   gem 'railties', rails_version
   gem 'actioncable', rails_version
   gem 'actionmailer', rails_version
   gem 'activerecord', rails_version
 
+  gem 'mutex_m' # An undeclared activesupport dependency. Remove once running Rails 7.1.
+
+  gem 'csv'
   gem 'dotenv'
   gem 'connection_pool'
   gem 'marco-polo' # TODO: https://github.com/arches/marco-polo/pull/16

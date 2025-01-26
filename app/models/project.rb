@@ -249,7 +249,7 @@ class Project < ActiveRecord::Base
   def deploys_by_group(before, include_failed_deploys: false)
     stages.each_with_object({}) do |stage, result|
       stage_filter = include_failed_deploys ? stage.deploys : stage.deploys.succeeded.where(release: true)
-      deploy = stage_filter.find_by("deploys.updated_at <= ?", before.to_s(:db))
+      deploy = stage_filter.find_by("deploys.updated_at <= ?", before.to_fs(:db))
       next unless deploy
       stage.deploy_groups.pluck(:id).each { |id| (result[id] ||= []) << deploy }
     end

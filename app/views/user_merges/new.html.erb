@@ -8,7 +8,7 @@ Delete selected empty user and change #<%= @user.id %> <%= @user.name_and_email 
   <h2>Users with the same name or email</h2>
   <ul>
     <% candidates.each do |user| %>
-      <li>ID <%= user.id %> <%= link_to user.name_and_email, user %>, last seen <%= user.last_seen_at&.to_s(:db) || "Never" %></li>
+      <li>ID <%= user.id %> <%= link_to user.name_and_email, user %>, last seen <%= user.last_seen_at&.to_fs(:db) || "Never" %></li>
     <% end %>
   </ul>
 <% end %>
