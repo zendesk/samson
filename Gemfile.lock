@@ -318,6 +318,7 @@ GEM
       bigdecimal
       rexml
     crass (1.0.6)
+    csv (3.3.2)
     dalli (3.2.7)
       base64
     date (3.3.4)
@@ -697,6 +698,7 @@ DEPENDENCIES
   commonmarker
   concurrent-ruby
   connection_pool
+  csv
   dalli
   diffy
   dogstatsd-ruby

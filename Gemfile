@@ -13,6 +13,7 @@ group :preload do
 
   gem 'mutex_m' # An undeclared activesupport dependency. Remove once running Rails 7.1.
 
+  gem 'csv'
   gem 'dotenv'
   gem 'connection_pool'
   gem 'marco-polo' # TODO: https://github.com/arches/marco-polo/pull/16
