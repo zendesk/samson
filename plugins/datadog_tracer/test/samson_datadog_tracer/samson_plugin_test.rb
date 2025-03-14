@@ -1,17 +1,10 @@
 # frozen_string_literal: true
 require_relative "../test_helper"
+require 'ddtrace'
 
 SingleCov.covered!
 
 describe SamsonDatadogTracer do
-  let(:fake_tracer) do
-    Class.new do
-      def self.trace(*)
-        yield
-      end
-    end
-  end
-
   describe ".enabled?" do
     it "is false by default" do
       refute SamsonDatadogTracer.enabled?
@@ -51,10 +44,18 @@ describe SamsonDatadogTracer do
       end.new
     end
 
-    it "wraps methods in a trace call" do
-      Datadog.expects(:tracer).times(3).returns(fake_tracer)
+    it "wraps public method in a trace call" do
+      Datadog::Tracing.expects(:trace).yields.returns(:pub)
       instance.send(:pub_method).must_equal(:pub)
+    end
+
+    it "wraps protected method in a trace call" do
+      Datadog::Tracing.expects(:trace).yields.returns(:pro)
       instance.send(:pro_method).must_equal(:pro)
+    end
+
+    it "wraps private method in a trace call" do
+      Datadog::Tracing.expects(:trace).yields.returns(:pri)
       instance.send(:pri_method).must_equal(:pri)
     end
 
@@ -111,13 +112,13 @@ describe SamsonDatadogTracer do
 
   describe "trace_scope hook" do
     it "skips tracer when disabled" do
-      Datadog.expects(:tracer).never
+      Datadog::Tracing.expects(:trace).never
       Samson::PerformanceTracer.trace_execution_scoped(:foo) { 1 }.must_equal 1
     end
 
     it "trigger tracer when enabled" do
       with_env DATADOG_TRACER: "1" do
-        Datadog.expects(:tracer).returns(fake_tracer)
+        Datadog::Tracing.expects(:trace).yields.returns(1)
         Samson::PerformanceTracer.trace_execution_scoped(:foo) { 1 }.must_equal 1
       end
     end
