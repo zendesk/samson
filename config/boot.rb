@@ -1,6 +1,11 @@
 # frozen_string_literal: true
 require 'bundler/setup'
 
+# Work-around for bug in active-support 7.0.8.7, since concurrent-ruby v1.3.5
+# stopped requiring logger, read more at https://github.com/rails/rails/issues/54260.
+# Remove this require once running on Rails 7.1+.
+require 'logger'
+
 raise "ENV clearing failed" if File.expand_path(ENV.fetch("BUNDLE_GEMFILE")) != File.expand_path("Gemfile")
 
 ENV["RAILS_ENV"] = "test" if ARGV[0] == "test" # configure test env early for `bundle exec rails test some_test.rb`
