@@ -1,10 +1,4 @@
 GIT
-  remote: https://github.com/liufengyun/hashdiff.git
-  revision: b7734e3a29d6680b8371a7bc2c8fe149961b8abd
-  specs:
-    hashdiff (1.1.2)
-
-GIT
   remote: https://github.com/omniauth/omniauth-github.git
   revision: f27bb4e018150d87e9444ad13955acfc9e76f4d7
   specs:
@@ -376,6 +370,7 @@ GEM
     goldiloader (5.4.0)
       activerecord (>= 6.1, < 8.1)
       activesupport (>= 6.1, < 8.1)
+    hashdiff (1.1.2)
     hashie (5.0.0)
     http (5.2.0)
       addressable (~> 2.8)
@@ -731,7 +726,7 @@ DEPENDENCIES
   forking_test_runner
   gcloud_image_tagger!
   goldiloader
-  hashdiff!
+  hashdiff
   large_object_store
   lograge
   logstash-event
@@ -897,7 +892,7 @@ CHECKSUMS
   gitlab (4.20.1) sha256=08bb40fcbcb54817bb1a5067308afe2445a4919c86212fc072d24d1e4784145c
   globalid (1.2.1) sha256=70bf76711871f843dbba72beb8613229a49429d1866828476f9c9d6ccc327ce9
   goldiloader (5.4.0) sha256=277a86ff424b963bc9d98d8f4d10bb7eea0eb010d3209893dea7092302350b73
-  hashdiff (1.1.2)
+  hashdiff (1.1.2) sha256=2c30eeded6ed3dce8401d2b5b99e6963fe5f14ed85e60dd9e33c545a44b71a77
   hashie (5.0.0) sha256=9d6c4e51f2a36d4616cbc8a322d619a162d8f42815a792596039fc95595603da
   http (5.2.0) sha256=b99ed3c65376e0fd8107647fbaf5a8ab4f66c347d1271fb74cea757e209c6115
   http-accept (1.7.0) sha256=c626860682bfbb3b46462f8c39cd470fd7b0584f61b3cc9df5b2e9eb9972a126
