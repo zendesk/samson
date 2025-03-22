@@ -489,16 +489,16 @@ GEM
     netrc (0.11.0)
     newrelic_rpm (9.17.0)
     nio4r (2.7.4)
-    nokogiri (1.18.3)
+    nokogiri (1.18.5)
       mini_portile2 (~> 2.8.2)
       racc (~> 1.4)
-    nokogiri (1.18.3-aarch64-linux-gnu)
+    nokogiri (1.18.5-aarch64-linux-gnu)
       racc (~> 1.4)
-    nokogiri (1.18.3-arm64-darwin)
+    nokogiri (1.18.5-arm64-darwin)
       racc (~> 1.4)
-    nokogiri (1.18.3-x86_64-darwin)
+    nokogiri (1.18.5-x86_64-darwin)
       racc (~> 1.4)
-    nokogiri (1.18.3-x86_64-linux-gnu)
+    nokogiri (1.18.5-x86_64-linux-gnu)
       racc (~> 1.4)
     oauth2 (2.0.9)
       faraday (>= 0.17.3, < 3.0)
@@ -973,11 +973,11 @@ CHECKSUMS
   netrc (0.11.0) sha256=de1ce33da8c99ab1d97871726cba75151113f117146becbe45aa85cb3dabee3f
   newrelic_rpm (9.17.0) sha256=00e3c4166654d4492dea2079f4c1dea2b1f26af0b2af27680b39f8ad3daa0632
   nio4r (2.7.4) sha256=d95dee68e0bb251b8ff90ac3423a511e3b784124e5db7ff5f4813a220ae73ca9
-  nokogiri (1.18.3) sha256=6b9fc3b14fd0cedd21f6cad8cf565123ba7401e56b5d0aec180c23cdca28fd5a
-  nokogiri (1.18.3-aarch64-linux-gnu) sha256=cab20305133078a8f6b60cf96311b48319175038cc7772e5ec586ff624cb7838
-  nokogiri (1.18.3-arm64-darwin) sha256=ce088965cd424b8e752d82087dcf017069d55791f157098ed1f671d966857610
-  nokogiri (1.18.3-x86_64-darwin) sha256=d729406bb5a7b1bbe7ed3c0922336dd2c46085ed444d6de2a0a4c33950a4edea
-  nokogiri (1.18.3-x86_64-linux-gnu) sha256=3c7ad5cee39855ed9c746065f39b584b9fd2aaff61df02d0f85ba8d671bbe497
+  nokogiri (1.18.5) sha256=c8a6f8da9418ac21345124bc79b94701f036fa05b27dfec4a6dc148d5fa136dc
+  nokogiri (1.18.5-aarch64-linux-gnu) sha256=3f12540863e45db38236257be30a8605cd1d2d074c38a63c6f1307fd968a477c
+  nokogiri (1.18.5-arm64-darwin) sha256=df7731e550a7653c003ed142cc8bc3c611c15fae3b7be4ff317b61dfe32842d9
+  nokogiri (1.18.5-x86_64-darwin) sha256=28659cf43eedb652ae2fb94a8c7a14d368b6944db97e63b4158c8d5d5b4f49d8
+  nokogiri (1.18.5-x86_64-linux-gnu) sha256=195f4a139961f3c892ac22fda6ae4e665919e6573149f0adc786adc8c20402be
   oauth2 (2.0.9) sha256=b21f9defcf52dc1610e0dfab4c868342173dcd707fd15c777d9f4f04e153f7fb
   octokit (6.1.1) sha256=920e4a9d820205f70738f58de6a7e6ef0e2f25b27db954b5806a63105207b0bf
   omniauth (2.0.4) sha256=403d011497d4b0cd70573d5cde739808d9a4187813c6992d022b15b5db2c581c
@@ -1108,4 +1108,4 @@ RUBY VERSION
    ruby 3.3.7p123
 
 BUNDLED WITH
-   2.6.5
+   2.6.6
