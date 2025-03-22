@@ -5,5 +5,5 @@ Gem::Specification.new 'samson_datadog_tracer', '0.0.1' do |s|
   s.email = ['ssubramanian@zendesk.com']
   s.files = Dir['{config,lib}/**/*']
 
-  s.add_runtime_dependency 'ddtrace'
+  s.add_runtime_dependency 'datadog', '~> 2'
 end
