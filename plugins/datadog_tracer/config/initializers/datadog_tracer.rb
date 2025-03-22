@@ -6,7 +6,7 @@ if SamsonDatadogTracer.enabled?
     '/cable',
   ].freeze
 
-  require 'ddtrace'
+  require 'datadog'
   Datadog.configure do |c|
     c.agent.host = ENV['STATSD_HOST'] || '127.0.0.1'
     c.tags = {
