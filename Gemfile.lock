@@ -308,20 +308,20 @@ GEM
     coderay (1.1.3)
     commonmarker (0.23.11)
     concurrent-ruby (1.3.5)
-    connection_pool (2.5.0)
+    connection_pool (2.5.3)
     crack (0.4.6)
       bigdecimal
       rexml
     crass (1.0.6)
     csv (3.3.2)
     dalli (3.2.8)
-    datadog (2.12.2)
+    datadog (2.15.0)
       datadog-ruby_core_source (~> 3.4)
       libdatadog (~> 16.0.1.1.0)
-      libddwaf (~> 1.18.0.0.1)
+      libddwaf (~> 1.22.0.0.2)
       logger
       msgpack
-    datadog-ruby_core_source (3.4.0)
+    datadog-ruby_core_source (3.4.1)
     date (3.4.1)
     debug_inspector (1.2.0)
     diffy (3.4.3)
@@ -348,11 +348,11 @@ GEM
       net-http-persistent (>= 4.0.4, < 5)
     faraday-retry (2.2.1)
       faraday (~> 2.0)
-    ffi (1.17.1)
-    ffi (1.17.1-aarch64-linux-gnu)
-    ffi (1.17.1-arm64-darwin)
-    ffi (1.17.1-x86_64-darwin)
-    ffi (1.17.1-x86_64-linux-gnu)
+    ffi (1.17.2)
+    ffi (1.17.2-aarch64-linux-gnu)
+    ffi (1.17.2-arm64-darwin)
+    ffi (1.17.2-x86_64-darwin)
+    ffi (1.17.2-x86_64-linux-gnu)
     ffi-compiler (1.3.2)
       ffi (>= 1.15.5)
       rake
@@ -420,20 +420,20 @@ GEM
     libdatadog (16.0.1.1.0)
     libdatadog (16.0.1.1.0-aarch64-linux)
     libdatadog (16.0.1.1.0-x86_64-linux)
-    libddwaf (1.18.0.0.1)
+    libddwaf (1.22.0.0.2)
       ffi (~> 1.0)
-    libddwaf (1.18.0.0.1-aarch64-linux)
+    libddwaf (1.22.0.0.2-aarch64-linux)
       ffi (~> 1.0)
-    libddwaf (1.18.0.0.1-arm64-darwin)
+    libddwaf (1.22.0.0.2-arm64-darwin)
       ffi (~> 1.0)
-    libddwaf (1.18.0.0.1-x86_64-darwin)
+    libddwaf (1.22.0.0.2-x86_64-darwin)
       ffi (~> 1.0)
-    libddwaf (1.18.0.0.1-x86_64-linux)
+    libddwaf (1.22.0.0.2-x86_64-linux)
       ffi (~> 1.0)
     llhttp-ffi (0.5.1)
       ffi-compiler (~> 1.0)
       rake (~> 13.0)
-    logger (1.6.6)
+    logger (1.7.0)
     lograge (0.14.0)
       actionpack (>= 4)
       activesupport (>= 4)
@@ -465,7 +465,7 @@ GEM
       railties (>= 3.1)
     msgpack (1.8.0)
     multi_json (1.15.0)
-    multi_xml (0.7.1)
+    multi_xml (0.7.2)
       bigdecimal (~> 3.1)
     multipart-post (2.4.1)
     mutex_m (0.3.0)
@@ -874,13 +874,13 @@ CHECKSUMS
   coderay (1.1.3) sha256=dc530018a4684512f8f38143cd2a096c9f02a1fc2459edcfe534787a7fc77d4b
   commonmarker (0.23.11) sha256=9d1d35d358740151bce29235aebfecc63314fb57dd89a83e72d4061b4fe3d2bf
   concurrent-ruby (1.3.5) sha256=813b3e37aca6df2a21a3b9f1d497f8cbab24a2b94cab325bffe65ee0f6cbebc6
-  connection_pool (2.5.0) sha256=233b92f8d38e038c1349ccea65dd3772727d669d6d2e71f9897c8bf5cd53ebfc
+  connection_pool (2.5.3) sha256=cfd74a82b9b094d1ce30c4f1a346da23ee19dc8a062a16a85f58eab1ced4305b
   crack (0.4.6) sha256=ee251d0aab36ab196946b851fd129870d66bdde4855cfdb3078d86a619c28864
   crass (1.0.6) sha256=dc516022a56e7b3b156099abc81b6d2b08ea1ed12676ac7a5657617f012bd45d
   csv (3.3.2) sha256=6ff0c135e65e485d1864dde6c1703b60d34cc9e19bed8452834a0b28a519bd4e
   dalli (3.2.8) sha256=2e63595084d91fae2655514a02c5d4fc0f16c0799893794abe23bf628bebaaa5
-  datadog (2.12.2) sha256=245fe9922523f052a95f47c874c8030f1b045de15cb36e40118995b37f69c791
-  datadog-ruby_core_source (3.4.0) sha256=542afb1203f7b4bc19307d273b860649965860dbd5bbd9161cd363af772f0e27
+  datadog (2.15.0) sha256=f6c02a56730b928c3dd350ca30b770d7550a9454af94274a344cb6334eb75235
+  datadog-ruby_core_source (3.4.1) sha256=fa40f1c3c8f764b6651a6443382b57d39aeb3c9f94b5af98f499bcfc678a2fb9
   date (3.4.1) sha256=bf268e14ef7158009bfeaec40b5fa3c7271906e88b196d958a89d4b408abe64f
   debug_inspector (1.2.0) sha256=9bdfa02eebc3da163833e6a89b154084232f5766087e59573b70521c77ea68a2
   diffy (3.4.3) sha256=4264b9e7db00d1cd426fcd32e36565779163cedc2340a95b0e6f025e71f9aaa7
@@ -897,11 +897,11 @@ CHECKSUMS
   faraday-net_http (3.4.0) sha256=a1f1e4cd6a2cf21599c8221595e27582d9936819977bbd4089a601f24c64e54a
   faraday-net_http_persistent (2.3.0) sha256=33d4948cabe9f8148222c4ca19634c71e1f25595cccf9da2e02ace8d754f1bb1
   faraday-retry (2.2.1) sha256=4146fed14549c0580bf14591fca419a40717de0dd24f267a8ec2d9a728677608
-  ffi (1.17.1) sha256=26f6b0dbd1101e6ffc09d3ca640b2a21840cc52731ad8a7ded9fb89e5fb0fc39
-  ffi (1.17.1-aarch64-linux-gnu) sha256=c5d22cb545a3a691d46060f1343c461d1a8d38c3fd71b96b4cbbe6906bf1fd38
-  ffi (1.17.1-arm64-darwin) sha256=a8e04f79d375742c54ee7f9fff4b4022b87200a4ec0eb082128d3b6559e67b4d
-  ffi (1.17.1-x86_64-darwin) sha256=0036199c290462dd7f03bc22933644c1685b7834a21788062bd5df48c72aa7a6
-  ffi (1.17.1-x86_64-linux-gnu) sha256=8c0ade2a5d19f3672bccfe3b58e016ae5f159e3e2e741c856db87fcf07c903d0
+  ffi (1.17.2) sha256=297235842e5947cc3036ebe64077584bff583cd7a4e94e9a02fdec399ef46da6
+  ffi (1.17.2-aarch64-linux-gnu) sha256=c910bd3cae70b76690418cce4572b7f6c208d271f323d692a067d59116211a1a
+  ffi (1.17.2-arm64-darwin) sha256=54dd9789be1d30157782b8de42d8f887a3c3c345293b57ffb6b45b4d1165f813
+  ffi (1.17.2-x86_64-darwin) sha256=981f2d4e32ea03712beb26e55e972797c2c5a7b0257955d8667ba58f2da6440e
+  ffi (1.17.2-x86_64-linux-gnu) sha256=05d2026fc9dbb7cfd21a5934559f16293815b7ce0314846fee2ac8efbdb823ea
   ffi-compiler (1.3.2) sha256=a94f3d81d12caf5c5d4ecf13980a70d0aeaa72268f3b9cc13358bcc6509184a0
   flay (2.13.3) sha256=664cea795a61a8bff71b9a3e4d5fca50f70308c99f6be93b522fc75ff25dd289
   flowdock (0.7.1) sha256=cfa95b2ac96e5f883f6e419d7a891f76cfcc17a28c416b6b714bbdffc8dbd912
@@ -932,13 +932,13 @@ CHECKSUMS
   libdatadog (16.0.1.1.0) sha256=e1418fdbc5cf7ecd402ffa1e055e71e7eb00497df4ead178207941d720062e5c
   libdatadog (16.0.1.1.0-aarch64-linux) sha256=a2e7d77884e4b614fd6fb32ed2b3270937ba451a36ebdf5ceee99c370701cc5e
   libdatadog (16.0.1.1.0-x86_64-linux) sha256=9d72153c63a34ddb0a6c024b850a2219dea0a73a13625866ad885b4020fe9abf
-  libddwaf (1.18.0.0.1) sha256=a8c4b33a1853cc9b1cacac6f42b8980ba1f5c53b046060b6350cae59fe752da2
-  libddwaf (1.18.0.0.1-aarch64-linux) sha256=5d0ec4e24e9e3fd394f41bfd5172320da106b21d03b1c572057420c658559604
-  libddwaf (1.18.0.0.1-arm64-darwin) sha256=a6c453bd5acfeb8efdc110fd4907d79f5316eaef9e70076f76138928f5c4fc81
-  libddwaf (1.18.0.0.1-x86_64-darwin) sha256=9e5a4a6a8dd71bcb767e4eedad08d52161086fe5991a20638bf75f7da55666fb
-  libddwaf (1.18.0.0.1-x86_64-linux) sha256=5865c3bd99bbf7b05d21bd720d4b39ffe3de0b4e9bef4b5bd5e6f39a4657fbf5
+  libddwaf (1.22.0.0.2) sha256=c4ccf484de31fb3433cccd24c5fde6050bb15482fc5a83b2554c685737fd9cbf
+  libddwaf (1.22.0.0.2-aarch64-linux) sha256=b235de2361a05fc8e413c5e33d7e6f2b1e26603a6d86ba5d4aecf43dea6060e5
+  libddwaf (1.22.0.0.2-arm64-darwin) sha256=0b43beccc1b604e2f4d2fbd4488adc902836f42195b2aeb2f3401502ce5f55b1
+  libddwaf (1.22.0.0.2-x86_64-darwin) sha256=1506745daefb03ae99e53ade683a304c319cde89fdce200a594a3f276c9345c6
+  libddwaf (1.22.0.0.2-x86_64-linux) sha256=6b6d55f67a287ff80fe306d625f393e37246d2022689d879f65dbab3a5b5287c
   llhttp-ffi (0.5.1) sha256=9a25a7fc19311f691a78c9c0ac0fbf4675adbd0cca74310228fdf841018fa7bc
-  logger (1.6.6) sha256=dd618d24e637715472732e7eed02e33cfbdf56deaad225edd0f1f89d38024017
+  logger (1.7.0) sha256=196edec7cc44b66cfb40f9755ce11b392f21f7967696af15d274dde7edff0203
   lograge (0.14.0) sha256=42371a75823775f166f727639f5ddce73dd149452a55fc94b90c303213dc9ae1
   logstash-event (1.2.02) sha256=89a7dc60fac67070a5f60ba07409e541b09cb58906c391e90cb74b9f217467ae
   loofah (2.24.0) sha256=61e6a710883abb8210887f3dc868cf3ed66594c509d9ff6987621efa6651ee1e
@@ -956,7 +956,7 @@ CHECKSUMS
   momentjs-rails (2.29.4.1) sha256=c7f9bc583872b628f8723319f4ae12a646c858c1c3ddb352bc75d5a7aa0b9e01
   msgpack (1.8.0) sha256=e64ce0212000d016809f5048b48eb3a65ffb169db22238fb4b72472fecb2d732
   multi_json (1.15.0) sha256=1fd04138b6e4a90017e8d1b804c039031399866ff3fbabb7822aea367c78615d
-  multi_xml (0.7.1) sha256=4fce100c68af588ff91b8ba90a0bb3f0466f06c909f21a32f4962059140ba61b
+  multi_xml (0.7.2) sha256=307a96dc48613badb7b2fc174fd4e62d7c7b619bc36ea33bfd0c49f64f5787ce
   multipart-post (2.4.1) sha256=9872d03a8e552020ca096adadbf5e3cb1cd1cdd6acd3c161136b8a5737cdb4a8
   mutex_m (0.3.0) sha256=cfcb04ac16b69c4813777022fdceda24e9f798e48092a2b817eb4c0a782b0751
   mysql2 (0.5.6) sha256=70f447d45d6b3cc16b00f7dd30366f708a81b4093a35d026ff7135d778d8da33
