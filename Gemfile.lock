@@ -675,7 +675,7 @@ GEM
     stackprof (0.2.12)
     terminal-table (3.0.2)
       unicode-display_width (>= 1.1.1, < 3)
-    thor (1.3.2)
+    thor (1.4.0)
     tilt (2.6.0)
     timeout (0.4.3)
     tzinfo (2.0.6)
@@ -1087,7 +1087,7 @@ CHECKSUMS
   sqlite3 (1.7.3-x86_64-linux) sha256=522a3285660dec8253465880c97980e873db0d79060900be8d14194217a3ee73
   stackprof (0.2.12) sha256=9cc4f37647d6260e757a3af58f03865ac839a5647047fa002c3a8a67099df5ec
   terminal-table (3.0.2) sha256=f951b6af5f3e00203fb290a669e0a85c5dd5b051b3b023392ccfd67ba5abae91
-  thor (1.3.2) sha256=eef0293b9e24158ccad7ab383ae83534b7ad4ed99c09f96f1a6b036550abbeda
+  thor (1.4.0) sha256=8763e822ccb0f1d7bee88cde131b19a65606657b847cc7b7b4b82e772bcd8a3d
   tilt (2.6.0) sha256=263d748466e0d83e510aa1a2e2281eff547937f0ef06be33d3632721e255f76b
   timeout (0.4.3) sha256=9509f079b2b55fe4236d79633bd75e34c1c1e7e3fb4b56cb5fda61f80a0fe30e
   tzinfo (2.0.6) sha256=8daf828cc77bcf7d63b0e3bdb6caa47e2272dcfaf4fbfe46f8c3a9df087a829b
