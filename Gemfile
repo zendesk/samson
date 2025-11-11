@@ -5,7 +5,7 @@ ruby File.read('.ruby-version').strip
 
 # gems that have rails engines are are always needed
 group :preload do
-  rails_version = '~> 7.1.5'
+  rails_version = '~> 7.0.8'
   gem 'railties', rails_version
   gem 'actioncable', rails_version
   gem 'actionmailer', rails_version
@@ -29,8 +29,6 @@ end
 
 gem 'dogstatsd-ruby'
 gem 'rack', '>= 2.2.20'
-gem 'rexml', '>= 3.4.2'
-gem 'uri', '>= 1.0.4'
 gem 'puma', '~>5.6.7'
 gem 'attr_encrypted'
 gem 'sawyer'
