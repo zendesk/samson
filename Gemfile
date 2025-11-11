@@ -28,6 +28,7 @@ group :preload do
 end
 
 gem 'dogstatsd-ruby'
+gem 'rack', '>= 2.2.19'
 gem 'puma', '~>5.6.7'
 gem 'attr_encrypted'
 gem 'sawyer'
