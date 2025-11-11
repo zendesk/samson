@@ -829,7 +829,7 @@ DEPENDENCIES
   pry-rescue
   pry-stack_explorer
   puma (~> 5.6.7)
-  rack (>= 2.2.19)
+  rack (>= 2.2.20)
   rack-mini-profiler
   rails-assets-bootstrap-select!
   rails-assets-jquery!

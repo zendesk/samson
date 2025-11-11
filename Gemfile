@@ -28,7 +28,7 @@ group :preload do
 end
 
 gem 'dogstatsd-ruby'
-gem 'rack', '>= 2.2.19'
+gem 'rack', '>= 2.2.20'
 gem 'rexml', '>= 3.4.2'
 gem 'uri', '>= 1.0.4'
 gem 'puma', '~>5.6.7'
@@ -73,7 +73,7 @@ gem 'net-pop'
 gem 'net-imap'
 
 # treat included plugins like gems
-Dir[File.join(Bundler.root, 'plugins/*/')].each { |f| gemspec path: f }
+Dir['plugins/*/'].each { |f| gemspec path: f }
 
 group :mysql do
   gem 'mysql2'
