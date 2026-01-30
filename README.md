@@ -1,3 +1,5 @@
+# Maintainer needed: Zendesk is not using this anymore, so if you use it and want to maintain it, [let us know](https://github.com/zendesk/samson/issues/4145)
+
 <img src="https://github.com/zendesk/samson/raw/master/app/assets/images/logo_light.png" width=400/>
 
 ![Build status](https://github.com/zendesk/samson/workflows/repo-checks/badge.svg)
