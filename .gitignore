@@ -27,3 +27,6 @@
 
 # csv export folder
 /export/
+
+# bundler config
+/vendor/bundle

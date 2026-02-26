@@ -21,7 +21,7 @@ ActiveRecord::Schema.define(version: 2020_09_23_223936) do
     t.string "user_type"
     t.string "username"
     t.string "action", null: false
-    t.text "audited_changes", size: :long
+    t.text "audited_changes", limit: 4294967295
     t.integer "version", default: 0, null: false
     t.string "comment"
     t.string "remote_address"
@@ -60,7 +60,7 @@ ActiveRecord::Schema.define(version: 2020_09_23_223936) do
   end
 
   create_table "commands", id: :integer do |t|
-    t.text "command", size: :medium
+    t.text "command", limit: 16777215
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer "project_id"
@@ -139,7 +139,7 @@ ActiveRecord::Schema.define(version: 2020_09_23_223936) do
     t.integer "project_id", null: false
     t.boolean "kubernetes_rollback", default: true, null: false
     t.boolean "kubernetes_reuse_build", default: false, null: false
-    t.text "env_state", size: :medium
+    t.text "env_state", limit: 16777215
     t.integer "triggering_deploy_id"
     t.boolean "redeploy_previous_when_failed", default: false, null: false
     t.boolean "kubernetes_ignore_kritis_vulnerabilities", default: false, null: false
@@ -214,7 +214,7 @@ ActiveRecord::Schema.define(version: 2020_09_23_223936) do
     t.integer "user_id", null: false
     t.integer "project_id", null: false
     t.string "status", default: "pending"
-    t.text "output", size: :long
+    t.text "output", limit: 4294967295
     t.datetime "created_at"
     t.datetime "updated_at"
     t.string "commit"
@@ -285,7 +285,7 @@ ActiveRecord::Schema.define(version: 2020_09_23_223936) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer "deploy_group_id"
-    t.text "resource_template", size: :long
+    t.text "resource_template", limit: 4294967295
     t.boolean "delete_resource", default: false, null: false
     t.index ["kubernetes_release_id"], name: "index_kubernetes_release_docs_on_kubernetes_release_id"
     t.index ["kubernetes_role_id"], name: "index_kubernetes_release_docs_on_kubernetes_role_id"
@@ -655,7 +655,7 @@ ActiveRecord::Schema.define(version: 2020_09_23_223936) do
     t.integer "item_id", null: false
     t.string "event", null: false
     t.string "whodunnit"
-    t.text "object", size: :long
+    t.text "object", limit: 4294967295
     t.datetime "created_at"
     t.index ["item_type", "item_id"], name: "index_versions_on_item_type_and_item_id", length: { item_type: 191 }
   end
